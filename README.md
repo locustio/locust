@@ -1,11 +1,10 @@
-Locust
-======
+<img src="http://github.com/cgbystrom/locust/raw/master/public/locust_banner.png" width="901" height="129"><br>
 Scalable user load testing tool.
 
 Locust is an easy-to-use user load testing tool. Intended for load testing web sites (or other systems) and figuring
 out how many concurrent users your system can handle.
 
-The idea is that during a test, a swarm of locusts will attack your website. They will hammer it until they find the breaking point of your site. The behavior of each locust (or test user if you will) is defined by you and the swarming process is monitored from web UI in real-time. This will help you battle test and identify bottlenecks in your code before letting real users in.
+The idea is that during a test, a swarm of locusts will attack your website. They will hammer it until they find the breaking point of your site. The behavior of each locust (or test user if you will) is defined by you and the swarming process is monitored from a web UI in real-time. This will help you battle test and identify bottlenecks in your code before letting real users in.
 
 The scalability comes from being completely event-based. Thus making it possible to support thousands of concurrent users on a single machine.
 In contrast to many other event-based apps it doesn't use callbacks. Instead it uses light-weight processes, similar Erlang but without the quirkiness.
