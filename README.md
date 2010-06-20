@@ -12,21 +12,21 @@ This allows you write very expressive scenarios without complicating your code w
 
 
 ### Features
-* *Write user test scenarios in plain-old Python*<br>
+* **Write user test scenarios in plain-old Python**<br>
  No need for clunky UIs or bloated XML, just code as you normally would. Based on coroutines instead of callbacks (aka boomerang code) also makes it look and behave like synchronous Python code.
 
-* *Scalable - supports thousands users*<br>
+* **Scalable - supports thousands users**<br>
  Being event based it can handle thousands of users in a single process.
  Even if you simulate that many users, not all are actively hitting your system. Often, users are idle figuring out what to do next.
 
-* *Web-based UI*<br>
+* **Web-based UI**<br>
  Locust has a neat HTML+JS that shows all relevent test details in real-time. And since the UI is web-based,
  it's cross-platform and easily extendable. Monitoring your data through a console or log files is ineffective and stupid
 
-* *Can test any system*<br>
+* **Can test any system**<br>
  Even though Locust is oriented towards testing websites, it can be used to test almost any system. Just write a client for what you wish to test and swarm it with locusts! It's super easy!
 
-* *Hackable*<br>
+* **Hackable**<br>
  Locust is very small and very hackable. All heavy-lifting parts of I/O and coroutines is delegated to gevent.
 
 ## Example
