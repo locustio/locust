@@ -1,8 +1,5 @@
 <img src="http://github.com/cgbystrom/locust/raw/master/public/locust_banner.png" width="901" height="129"><br><br>
 
-Background
-Todo
-
 Locust is an easy-to-use user load testing tool. Intended for load testing web sites (or other systems) and figuring
 out how many concurrent users your system can handle.
 
@@ -14,7 +11,7 @@ Each locust swarming your site is actually running inside it's own process (or g
 This allows you to write very expressive scenarios in Python without complicating your code with callbacks.
 
 
-### Features
+## Features
 * **Write user test scenarios in plain-old Python**<br>
  No need for clunky UIs or bloated XML, just code as you normally would. Based on coroutines instead of callbacks (aka boomerang code) allows code to look and behave like normal, blocking Python code.
 
@@ -53,12 +50,12 @@ To get started, you simply need write a normal Python function to define the beh
         # Loop ended, function will exit. Locust dies
 
 
-### Getting started
+## Getting started
 Locust assume you have the following installed:
 
 * Python 2.6
 * gevent (coroutine library, see http://www.gevent.org/)
-* bottle (the web UI uses this, install with 'easy_install -U bottle')
+* bottle (the web UI uses bottle, install with "easy_install -U bottle")
 
 After you've installed those dependencies, clone this repo and fire up:
 
