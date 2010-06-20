@@ -1,4 +1,4 @@
-locust
+Locust
 ======
 Scalable user load testing tool.
 
@@ -12,21 +12,21 @@ This allows you write very expressive scenarios without complicating your code w
 
 
 ### Features
-* Write user test scenarios in plain-old Python.
+* *Write user test scenarios in plain-old Python*<br>
  No need for clunky UIs or bloated XML, just code as you normally would. Based on coroutines instead of callbacks (aka boomerang code) also makes it look and behave like synchronous Python code.
 
-* Scalable - supports thousands users
+* *Scalable - supports thousands users*<br>
  Being event based it can handle thousands of users in a single process.
  Even if you simulate that many users, not all are actively hitting your system. Often, users are idle figuring out what to do next.
 
-* Web-based UI
+* *Web-based UI*<br>
  Locust has a neat HTML+JS that shows all relevent test details in real-time. And since the UI is web-based,
  it's cross-platform and easily extendable. Monitoring your data through a console or log files is ineffective and stupid
 
-* Can test any system
+* *Can test any system*<br>
  Even though Locust is oriented towards testing websites, it can be used to test almost any system. Just write a client for what you wish to test and swarm it with locusts! It's super easy!
 
-* Hackable
+* *Hackable*<br>
  Locust is very small and very hackable. All heavy-lifting parts of I/O and coroutines is delegated to gevent.
 
 ## Example
@@ -51,6 +51,7 @@ To get started you simple need write a normal Python function (or greenlet) to d
 
 ### Getting started
 Locust assume you have the following installed:
+
 * Python 2.6
 * gevent
 * bottle
@@ -64,7 +65,7 @@ This will start a small example demonstrating Locust. Open http://localhost:8089
 
 ## Authors
 
-- Carl Bystr&ouml;m (I'm @cgbystrom on Twitter or see my blog http://www.pedantique.org/)
+- Carl Bystr&ouml;m (@<a href="http://twitter.com/cgbystrom">cgbystrom</a> on Twitter)
 
 ## License
 
