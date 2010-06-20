@@ -1,5 +1,7 @@
-<img src="http://github.com/cgbystrom/locust/raw/master/public/locust_banner.png" width="901" height="129"><br>
-Scalable user load testing tool.
+<img src="http://github.com/cgbystrom/locust/raw/master/public/locust_banner.png" width="901" height="129"><br><br>
+
+Background
+Todo
 
 Locust is an easy-to-use user load testing tool. Intended for load testing web sites (or other systems) and figuring
 out how many concurrent users your system can handle.
@@ -30,6 +32,7 @@ This allows you to write very expressive scenarios in Python without complicatin
 * **Hackable**<br>
  Locust is very small and very hackable and I intend to keep it that way. All heavy-lifting of evented I/O and coroutines are delegated to gevent. The brittleness of alternative testing tools was the reason I created Locust.
 
+
 ## Example
 Below is a quick little example of how easy it is to write tests.
 To get started, you simply need write a normal Python function to define the behavior of your swarming locusts.
@@ -54,14 +57,46 @@ To get started, you simply need write a normal Python function to define the beh
 Locust assume you have the following installed:
 
 * Python 2.6
-* gevent
-* bottle
+* gevent (coroutine library, see http://www.gevent.org/)
+* bottle (the web UI uses this, install with 'easy_install -U bottle')
 
 After you've installed those dependencies, clone this repo and fire up:
 
     python example.py
 
 This will start a small example demonstrating Locust. Open http://localhost:8089 in your browser to start the test.
+
+## Background
+Locust was created because I was fed up with existing solutions. None of them are solving the right problem and to me, they are missing the point.
+I've tried both Apache JMeter and Tsung. Both tools are quite ok to use, I've used the former many times benchmarking stuff at work. JMeter comes with UI which you might think for second is a good thing. But you soon realize it's a PITA to "code" your testing scenarios through some point-and-click interface. Secondly, JMeter is thread-bound. This means for every user you want to simulate, you need a separate thread. Needless to say, benchmarking thousands of users on a single machine just isn't feasible.
+
+Tsung, on the other hand, does not have these thread issues as it's written Erlang. It can make use of the light-weight processes offered by BEAM itself and happily scale up. But when it comes to defining the scenarios, Tsung is as limited as JMeter. It offers an XML-based DSL to define how a user should behave when testing. I guess you can imagine the horror of "coding" this. Displaying any sorts of graphs or reports when completed requires you post-process the log files generated from the test. Only then can you get an understanding of how the test went. Silly.
+
+Anyway, I've tried to address these issues when creating Locust. Hopefully none of the above painpoints should exist.
+However, the current version of Locust has only a fraction of the features. Mostly because this project is so young and I haven't been able to put the time in. But it's also because I want Locust to stay minimal. Java GUIs and XML DSLs don't belong here.
+
+I guess you could say I'm really just trying to scratch my own itch here. I hope others will find it as useful as I do.
+
+## Roadmap
+Fair to say, Locust is still early in development. Just the basics have been put into place.
+This means you probably are missing some features. But really, you shouldn't despair.
+It's really easy to hack in new features. Every thing is normal Python together with HTML, CSS and JavaScript.
+
+There are a few things that could be useful to implement:
+
+* **Support for workers**
+As you need to scale beyond a single process, a way of dealing with remote processes is needed.
+Most likely way of solving this would be to add support for worker process that are controlled from a master process.
+
+* **Charts/graphs**
+A way to represent the numbers more visually through charts/graphs/sparklines. The Raphael JS library looks like a good candidate for doing this.
+
+* **Use Web Sockets instead of polling**
+While not that important, it would be nice to use Web Sockets instead of dirty old AJAX polling.
+However, polling works just fine right now as the number of users using the web UI are expected to quite few :)
+
+* **View resource utilization of "victims"**
+To see the load of the machines currently being swarmed would be nice. Helpful when tracking sluggish requests.
 
 
 ## Authors
