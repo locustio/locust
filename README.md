@@ -29,6 +29,9 @@ This allows you to write very expressive scenarios in Python without complicatin
 * **Hackable**<br>
  Locust is very small and very hackable and I intend to keep it that way. All heavy-lifting of evented I/O and coroutines are delegated to gevent. The brittleness of alternative testing tools was the reason I created Locust.
 
+## Screencast
+
+<a href="http://www.screencast.com/t/YTYxNWM5N"><img src="http://github.com/cgbystrom/locust/raw/master/public/screencast_thumbnail.png" width="300" height="300"></a>
 
 ## Example
 Below is a quick little example of how easy it is to write tests.
