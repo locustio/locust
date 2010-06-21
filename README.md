@@ -37,7 +37,20 @@ This allows you to write very expressive scenarios in Python without complicatin
 Below is a quick little example of how easy it is to write tests.
 To get started, you simply need write a normal Python function to define the behavior of your swarming locusts.
 
-<script src="http://gist.github.com/447635.js?file=locust_example.py"></script>
+    import locust
+    import gevent
+    from clients import HTTPClient
+    from gevent import wsgi
+
+    # Defines the behaviour of a locust (aka a website user :)
+    def website_user(name):
+        c = HTTPClient('http://localhost:8088')
+        for i in range(0, 10):
+            c.get('/fast', name='Fast page')
+            gevent.sleep(5)
+            c.get('/slow', name='Slow page')
+
+    locust.prepare_swarm_from_web(website_user, hatch_rate=5, max=20)
 
 
 ## Getting started
