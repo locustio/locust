@@ -1,0 +1,43 @@
+* {
+    font-family: Helvetica, Arial, sans-serif;
+    color: #d1ad78;
+}
+
+body {
+    background: #3b2505 url("/public/background.png") repeat-x center top;
+    padding: 0;
+    margin: 0;
+}
+
+#content {
+    background: url("/public/locust_banner.png") no-repeat center top;
+    width: 900px;
+    margin: 0 auto;
+    display: block;
+    height: 200px;
+    padding-top: 115px;
+}
+
+#start { color: black; float: right; }
+
+#stats {
+    margin-top: 30px;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#stats thead {
+    background-color: #684109;
+    padding: 0; margin: 0;
+}
+
+#stats td { padding: 3px; margin: 0; }
+
+em {
+    width: 100%;
+    color: white;
+    display: block;
+    margin-left: 180px;
+    font-size: 20px;
+    font-family: Palatino, Times New Roman, serif;
+}

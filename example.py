@@ -5,16 +5,25 @@ from clients import HTTPClient
 from gevent import wsgi
 
 # Defines the behaviour of a locust (aka a website user :)
-# This is the interesting part!
 def website_user(name):
     c = HTTPClient('http://localhost:8088')
+
     for i in range(0, 10):
+
+        # Request the fast page, wait for the response
         c.get('/fast', name='Fast page')
+        
+        # Think for 5 seconds
+        gevent.sleep(5)
+        
+        # Do a few more requests
         c.get('/slow', name='Slow page')
         c.get('/consistent', name='Consistent page')
 
+    # End of function, locust dies.
 
-# Simple WSGI server simulating fast and slow responses
+
+# Simple WSGI server simulating fast and slow responses.
 def test_server(env, start_response):
     if env['PATH_INFO'] == '/fast':
         start_response('200 OK', [('Content-Type', 'text/html')])
@@ -38,10 +47,9 @@ wsgi.WSGIServer(('', 8088), test_server).start()
 
 # Start a web server where you can control the swarming
 # from a web-based UI (recommended).
-# website_user is a greenlet/function defining behavior of a locust (aka a user)
-# Hatch rate is how many locusts are created per second. A value of 4 means: hatch 4 every second
-# Max defines how many locusts that may get hatched
-locust.prepare_swarm_from_web(website_user, hatch_rate=4, max=10)
+# Open http://localhost:8089 to start the test.
+
+locust.prepare_swarm_from_web(website_user, hatch_rate=5, max=20)
 
 # Immediately start swarming and print statistics to stdout every 1s
 #locust.swarm(website_user, hatch_rate=4, max=10)
