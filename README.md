@@ -31,26 +31,13 @@ This allows you to write very expressive scenarios in Python without complicatin
 
 ## Screencast
 
-<a href="http://www.screencast.com/t/YTYxNWM5N"><img src="http://github.com/cgbystrom/locust/raw/master/public/screencast_thumbnail.png" width="300" height="300"></a>
+<a href="http://www.screencast.com/t/YTYxNWM5N"><img src="http://github.com/cgbystrom/locust/raw/master/public/screencast_thumbnail.png" width="400" height="300"></a>
 
 ## Example
 Below is a quick little example of how easy it is to write tests.
 To get started, you simply need write a normal Python function to define the behavior of your swarming locusts.
 
-    def website_user(name):
-        c = HTTPClient('http://localhost:8088')
-        for i in range(0, 10):
-            # Request the fast page, wait for the response
-            c.get('/fast', name='Fast page')
-            # Response received!
-
-            # Think for 5 seconds
-            gevent.sleep(5)
-            
-            # Done thinking. Request the slow page...
-            c.get('/slow', name='Slow page')
-
-        # Loop ended, function will exit. Locust dies
+<script src="http://gist.github.com/447635.js?file=locust_example.py"></script>
 
 
 ## Getting started
