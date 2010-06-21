@@ -1,12 +1,60 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"> 
 <html>
 <head> 
-  <title>Locust</title> 
+    <title>Locust</title> 
+    <link rel="stylesheet" type="text/css" href="/public/style.css" media="screen">
 </head> 
 <body> 
-    <div id="content" style="margin: 0 auto; width: 700px; height: 100px;"></div>
-    <script src="http://static.ukijs.org/pkg/0.2.2/uki.js"></script> 
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script> 
-    <script src="/public/locust.js"></script> 
+    <div id="content">
+        <input id="start" type="button" value="Start swarming">
+        <table id="stats">
+            <thead>
+                <tr>
+                    <td>Name</td>
+                    <td># requests</td>
+                    <td>Average</td>
+                    <td>Min</td>
+                    <td>Max</td>
+                    <td># reqs/sec</td>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <script type="text/javascript" src="/public/jquery-1.4.min.js"></script> 
+    <script type="text/javascript" src="/public/jquery.jqote2.min.js"></script> 
+    <script type="text/x-jqote-template" id="stats-template">
+        <![CDATA[
+        <tr>
+            <td><%= this[0] %></td>
+            <td><%= this[1] %></td>
+            <td><%= this[2] %></td>
+            <td><%= this[3] %></td>
+            <td><%= this[4] %></td>
+            <td><%= this[5] %></td>
+        </tr>
+        ]]>
+    </script>
+    <script type="text/javascript">
+        var tpl = $('#stats-template');
+        
+        $('#start').click(function () {
+            $.get('/swarm');
+            updateStats();
+        });
+        
+        function updateStats() {
+            $.get('/stats/requests', function (data) {
+                $('#stats tbody').empty();
+                $('#stats tbody').jqoteapp(tpl, eval(data));
+                setTimeout(updateStats, 1000);
+            });
+        }
+
+    </script>
+    <object id="scPlayer" width="400" height="300"> <param name="movie" value="http://content.screencast.com/users/cgbystrom/folders/Jing/media/cd06425a-9a2b-4d95-a643-e6e071b410d3/jingswfplayer.swf"></param> <param name="quality" value="high"></param> <param name="bgcolor" value="#FFFFFF"></param> <param name="flashVars" value="thumb=http://content.screencast.com/users/cgbystrom/folders/Jing/media/cd06425a-9a2b-4d95-a643-e6e071b410d3/FirstFrame.jpg&containerwidth=1420&containerheight=995&content=http://content.screencast.com/users/cgbystrom/folders/Jing/media/cd06425a-9a2b-4d95-a643-e6e071b410d3/00000001.swf"></param> <param name="allowFullScreen" value="true"></param> <param name="scale" value="showall"></param> <param name="allowScriptAccess" value="always"></param> <param name="base" value="http://content.screencast.com/users/cgbystrom/folders/Jing/media/cd06425a-9a2b-4d95-a643-e6e071b410d3/"></param>  <embed src="http://content.screencast.com/users/cgbystrom/folders/Jing/media/cd06425a-9a2b-4d95-a643-e6e071b410d3/jingswfplayer.swf" quality="high" bgcolor="#FFFFFF" width="1420" height="995" type="application/x-shockwave-flash" allowScriptAccess="always" flashVars="thumb=http://content.screencast.com/users/cgbystrom/folders/Jing/media/cd06425a-9a2b-4d95-a643-e6e071b410d3/FirstFrame.jpg&containerwidth=1420&containerheight=995&content=http://content.screencast.com/users/cgbystrom/folders/Jing/media/cd06425a-9a2b-4d95-a643-e6e071b410d3/00000001.swf" allowFullScreen="true" base="http://content.screencast.com/users/cgbystrom/folders/Jing/media/cd06425a-9a2b-4d95-a643-e6e071b410d3/" scale="showall"></embed> </object>
+    
 </body>
 </html>
