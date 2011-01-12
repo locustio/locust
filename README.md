@@ -1,5 +1,7 @@
 <img src="http://github.com/cgbystrom/locust/raw/master/public/locust_banner.png" width="901" height="129"><br><br>
 
+**This branch is experimental, and probably in a funky state. Doing some major experimental refactoring.**
+
 Locust is an easy-to-use user load testing tool. Intended for load testing web sites (or other systems) and figuring
 out how many concurrent users your system can handle.
 
