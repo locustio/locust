@@ -1,6 +1,6 @@
+import locust
 import bottle
 import gevent
-import locust
 import json
 from bottle import route, run, send_file
 from gevent import wsgi
@@ -50,5 +50,5 @@ def start(locust, hatch_rate, max):
 bottle.debug(True)
 
 if __name__ == '__main__':
-    start()
+    start(locust, 5, 20)
     gevent.sleep(1000000)

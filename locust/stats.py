@@ -1,6 +1,7 @@
 import time
 import gevent
 
+from urllib2 import URLError
 from functools import wraps
 
 class RequestStats(object):
@@ -12,16 +13,19 @@ class RequestStats(object):
         self.num_reqs_per_sec = {}
         self.num_failures = 0
         
-        self.response_times = []
+        self.response_times = [0]
 
     def log(self, response_time, failure=False):
         self.num_reqs += 1
-        self.num_failures += 1
 
         sec = int(time.time())
         num = self.num_reqs_per_sec.setdefault(sec, 0)
         self.num_reqs_per_sec[sec] += 1
-        self.response_times.append(response_time)
+        
+        if not failure:
+            self.response_times.append(response_time)
+        else:
+            self.num_failures += 1
 
     def avg_response_time(self):
         return round(avg(self.response_times), 1)
@@ -37,12 +41,6 @@ class RequestStats(object):
 
     def percentile_90_response_time(self):
         return 0
-
-    def num_requests(self):
-        return self.num_reqs
-
-    def num_failures(self):
-        return self.num_failures
 
     def reqs_per_sec(self):
         timestamp = int(time.time())
@@ -60,8 +58,9 @@ class RequestStats(object):
         }
 
     def __str__(self):
-        return "%20s %7d %7d %7d %7d %7d" % (self.name,
-            self.num_requests(),
+        return "%20s %7d %8d %7d %7d %7d %7d" % (self.name,
+            self.num_reqs,
+            self.num_failures,
             self.avg_response_time(),
             self.min_response_time(),
             self.max_response_time(),
@@ -83,12 +82,15 @@ def median(values):
 
 def log_request(f):
     def wrapper(*args, **kwargs):
-        start = time.time()
-        retval = f(*args, **kwargs)
-        response_time = int((time.time() - start) * 1000)
         name = kwargs.get('name', args[1])
-        RequestStats.get(name).log(response_time)
-        return retval
+        try:
+            start = time.time()
+            retval = f(*args, **kwargs)
+            response_time = int((time.time() - start) * 1000)
+            RequestStats.get(name).log(response_time)
+            return retval
+        except URLError, e:
+            RequestStats.get(name).log(0, True)
     return wrapper
 
 
