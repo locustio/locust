@@ -7,6 +7,19 @@ import web
 from stats import RequestStats
 from clients import HTTPClient, HttpBrowser
 
+def require_once(required_func):
+    def decorator_func(func):
+        def wrapper(l):
+            if not "_required_once" in l.__dict__:
+                l.__dict__["_required_once"] = {}
+            
+            if not str(required_func) in l._required_once:
+                required_func(l)
+                l._required_once[str(required_func)] = True
+                
+            return func(l)
+        return wrapper
+    return decorator_func
 
 class Locust(object):
     def __init__(self):
@@ -24,7 +37,7 @@ class Locust(object):
 locusts = []
 
 def hatch(locust, hatch_rate, max):
-    print "Hatching and swarming..."
+    print "Hatching and swarming %i clients at the rate %i clients/s..." % (max, hatch_rate)
     while True:
         for i in range(0, hatch_rate):
             if len(locusts) >= max:
