@@ -55,6 +55,24 @@ def parse_options():
 		              default=False,
 		              help="print non-verbose list of possible commands and exit"
 		              )
+	
+	# Number of clients
+	parser.add_option('-c', '--clients',
+		              action='store',
+	                  type='int',
+		              dest='num_clients',
+		              default=1,
+		              help="Number of concurrent clients"
+		              )
+	
+	# Client hatch rate
+	parser.add_option('-r', '--hatch-rate',
+		              action='store',
+	                  type='int',
+		              dest='hatch_rate',
+		              default=1,
+		              help="The rate per second in which clients are spawned"
+		              )
 
 	# Add in options which are also destined to show up as `env` vars.
 	for option in env_options:
@@ -179,7 +197,7 @@ def main():
 		sys.exit(1)
 
 	docstring, locusts = load_locustfile(locustfile)
-
+	
 	if options.list_commands:
 		print "Available Locusts:"
 		for name in locusts:
@@ -190,7 +208,7 @@ def main():
 		if not arg in locusts.keys():
 			"Unknown Locust: %s" % (arg)
 		else:
-			swarm(locusts[arg], hatch_rate=500, max=30000)
+			swarm(locusts[arg], hatch_rate=options.hatch_rate, max=options.num_clients)
 
 	gevent.sleep(100000)
 	sys.exit(0)
