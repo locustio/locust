@@ -43,6 +43,22 @@ def require_once(required_func):
         return wrapper
     return decorator_func
 
+class LocustMeta(type):
+    """
+    Meta class for the main Locust class. It's used to allow Locust classes to specify task execution 
+    ratio using an {int:task} dict.
+    """
+    
+    def __new__(meta, classname, bases, classDict):
+        if "tasks" in classDict and isinstance(classDict["tasks"], dict):
+            tasks = []
+            for count, task in classDict["tasks"].iteritems():
+                for i in xrange(0, count):
+                    tasks.append(task)
+            classDict["tasks"] = tasks
+        
+        return type.__new__(meta, classname, bases, classDict)
+
 class Locust(object):
     """
     Locust base class defining a locust user/client.
@@ -53,6 +69,8 @@ class Locust(object):
     
     """Maximum waiting time between the execution of locust tasks"""
     max_wait = 1000
+    
+    __metaclass__ = LocustMeta
     
     def __init__(self):
         self.client = HttpBrowser(self.host)
