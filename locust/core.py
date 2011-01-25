@@ -81,7 +81,7 @@ class Locust(object):
             if not self._task_queue:
                 self.schedule_task(self.get_next_task())
             self._task_queue.pop(0)(self)
-            gevent.sleep(random.randint(self.min_wait, self.max_wait) / 1000.0)
+            self.wait()
     
     def schedule_task(self, task, first=False):
         if first:
@@ -91,6 +91,9 @@ class Locust(object):
     
     def get_next_task(self):
         return random.choice(self.tasks)
+    
+    def wait(self):
+        gevent.sleep(random.randint(self.min_wait, self.max_wait) / 1000.0)
 
 
 locusts = []
