@@ -14,8 +14,13 @@ def require_once(required_func):
                 l.__dict__["_required_once"] = {}
             
             if not str(required_func) in l._required_once:
-                required_func(l)
+                # when the required task has not been run in the current client, we schedule it to
+                # be the next task in queue, and we also reschedule the original task to be run 
+                # immediately after the required task
                 l._required_once[str(required_func)] = True
+                l.schedule_task(func, first=True)
+                l.schedule_task(required_func, first=True)                
+                return
                 
             return func(l)
         return wrapper
@@ -24,14 +29,23 @@ def require_once(required_func):
 class Locust(object):
     def __init__(self):
         self.client = HttpBrowser(self.host)
+        self._task_queue = []
     
     def __call__(self):
         while (True):
-            self.perform_task()
+            if not self._task_queue:
+                self.schedule_task(self.get_next_task())
+            self._task_queue.pop(0)(self)
             gevent.sleep(random.randint(self.min_wait, self.max_wait) / 1000.0)
     
-    def perform_task(self):
-        random.choice(self.tasks)(self)
+    def schedule_task(self, task, first=False):
+        if first:
+            self._task_queue.insert(0, task)
+        else:
+            self._task_queue.append(task)
+    
+    def get_next_task(self):
+        return random.choice(self.tasks)
 
 
 locusts = []
