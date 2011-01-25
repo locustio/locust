@@ -1,4 +1,5 @@
 import urllib2
+import urllib
 from stats import log_request
 
 class HTTPClient(object):
@@ -25,7 +26,7 @@ class HttpBrowser(object):
     
     @log_request
     def post(self, url, data, name=None):
-        f = self.opener.open(self.base_url + url, data)
+        f = self.opener.open(self.base_url + url, urllib.urlencode(data))
         data = f.read()
         f.close()
         return data
