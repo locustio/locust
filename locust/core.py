@@ -8,6 +8,23 @@ from stats import RequestStats
 from clients import HTTPClient, HttpBrowser
 
 def require_once(required_func):
+    """
+    @require_once decorator is used on a locust task in order to make sure another locust 
+    task (the argument to require_once) is run once (per client) before the decorated 
+    task.
+    
+    The require_once decorator respects the wait time of the Locust class, by inserting the
+    locust tasks at the beginning of the task execution queue.
+    
+    Example::
+    
+        def login(l):
+            l.client.post("/login", {"username":"joe_hill", "password":"organize"})
+        
+        @require_once(login)
+        def inbox(l):
+            l.client.get("/inbox")
+    """
     def decorator_func(func):
         def wrapper(l):
             if not "_required_once" in l.__dict__:
@@ -27,6 +44,16 @@ def require_once(required_func):
     return decorator_func
 
 class Locust(object):
+    """
+    Locust base class defining a locust user/client.
+    """
+    
+    """Minimum waiting time between two execution of locust tasks"""
+    min_wait = 1000
+    
+    """Maximum waiting time between the execution of locust tasks"""
+    max_wait = 1000
+    
     def __init__(self):
         self.client = HttpBrowser(self.host)
         self._task_queue = []
