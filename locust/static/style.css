@@ -4,13 +4,13 @@
 }
 
 body {
-    background: #3b2505 url("/public/background.png") repeat-x center top;
+    background: #3b2505 url("background.png") repeat-x center top;
     padding: 0;
     margin: 0;
 }
 
 #content {
-    background: url("/public/locust_banner.png") no-repeat center top;
+    background: url("locust_banner.png") no-repeat center top;
     width: 900px;
     margin: 0 auto;
     display: block;
