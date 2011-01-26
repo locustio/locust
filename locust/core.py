@@ -128,6 +128,7 @@ def print_stats():
 def swarm(locust, hatch_rate=1, max=1):
     hatch_greenlet = gevent.spawn(hatch, locust, hatch_rate, max)
     gevent.spawn(print_stats)
+    gevent.spawn(web.start, locust, hatch_rate, max)
     return hatch_greenlet
 
 def prepare_swarm_from_web(locust, hatch_rate=1, max=1):
