@@ -1,5 +1,6 @@
 import locust
-from core import Locust, swarm
+from core import Locust, hatch, print_stats
+import web
 
 import gevent
 import sys
@@ -72,6 +73,15 @@ def parse_options():
 		              dest='hatch_rate',
 		              default=1,
 		              help="The rate per second in which clients are spawned"
+		              )
+	
+	# Client hatch rate
+	parser.add_option('-t', '--timeout',
+		              action='store',
+	                  type='int',
+		              dest='timeout',
+		              default=None,
+		              help="Number of seconds before a locust will timeout"
 		              )
 
 	# Add in options which are also destined to show up as `env` vars.
@@ -208,7 +218,14 @@ def main():
 		if not arg in locusts.keys():
 			"Unknown Locust: %s" % (arg)
 		else:
-			swarm(locusts[arg], hatch_rate=options.hatch_rate, max=options.num_clients)
-
+			# spawn client spawning/hatching greenlet
+			hatch_greenlet = gevent.spawn(hatch, locusts[arg], options.hatch_rate, options.num_clients, stop_timeout=options.timeout)
+	
+	# spawn stats printing greenlet
+	gevent.spawn(print_stats)
+	
+	# spawn web greenlet
+	gevent.spawn(web.start, options.hatch_rate, options.num_clients)	
+	
 	gevent.sleep(100000)
 	sys.exit(0)
