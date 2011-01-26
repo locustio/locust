@@ -1,30 +1,32 @@
-import locust
-import bottle
 import gevent
 import json
 import os.path
-from bottle import route, run, send_file
 from gevent import wsgi
 from stats import RequestStats
 
+from core import hatch
+
+from flask import Flask, make_response
+app = Flask("Locust Monitor")
+app.root_path = os.path.dirname(__file__)
+
 _locust = None
-_hatch_rate = 1
-_max = 1
+_num_clients = None
+_hatch_rate = None
 
-@route('/public/:filename')
-def static_file(filename):
-    send_file(filename, root=os.path.join(os.path.dirname(__file__), 'public'))
-
-@route('/')
+@app.route('/')
 def index():
-    send_file('index.html', root=os.path.join(os.path.dirname(__file__), 'public'))
+    response = make_response(open(os.path.join(app.root_path, "static", "index.html")).read())
+    response.headers["Content-type"] = "text/html"
+    return response
 
-#@route('/swarm')
-#def start():
-#    locust.swarm(_locust, _hatch_rate, _max)
-#    return {'message': 'Swarming started'}
+@app.route('/swarm')
+def swarm():
+    from core import locust_runner
+    locust_runner.start_hatching()
+    return {'message': 'Swarming started'}
 
-@route('/stats/requests')
+@app.route('/stats/requests')
 def request_stats():
     stats = []
 
@@ -40,15 +42,9 @@ def request_stats():
 
     return json.dumps(stats)
 
-def start(hatch_rate, max):
-    global _hatch_rate, _max
+def start(locust, hatch_rate, num_clients):
+    global _locust, _hatch_rate, _num_clients
+    _locust = locust
     _hatch_rate = hatch_rate
-    _max = max
-    app = bottle.default_app()
+    _num_clients = num_clients
     wsgi.WSGIServer(('', 8089), app).start()
-
-bottle.debug(True)
-
-if __name__ == '__main__':
-    start(locust, 5, 20)
-    gevent.sleep(1000000)

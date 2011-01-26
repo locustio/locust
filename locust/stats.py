@@ -94,4 +94,11 @@ def log_request(f):
             RequestStats.get(name).log(0, True)
     return wrapper
 
-
+def print_stats():
+    while True:
+        print "%20s %7s %8s %7s %7s %7s %7s" % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'req/s')
+        print "-" * 80
+        for r in RequestStats.requests.itervalues():
+            print r
+        print ""
+        gevent.sleep(2)

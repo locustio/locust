@@ -4,8 +4,10 @@ monkey.patch_all(thread=False)
 
 from time import time
 import random
+import socket
+from hotqueue import HotQueue
+
 import web
-from stats import RequestStats
 from clients import HTTPClient, HttpBrowser
 
 def require_once(required_func):
@@ -108,6 +110,7 @@ class Locust(object):
 
 
 locusts = []
+locust_runner = None
 
 def hatch(locust, hatch_rate, num_clients, host=None, stop_timeout=None):
     if host is not None:
@@ -120,6 +123,7 @@ def hatch(locust, hatch_rate, num_clients, host=None, stop_timeout=None):
         for i in range(0, hatch_rate):
             if len(locusts) >= num_clients:
                 print "All locusts hatched"
+                gevent.joinall(locusts)
                 return
             new_locust = gevent.spawn(locust())
             new_locust.link(on_death)
@@ -131,12 +135,68 @@ def on_death(locust):
     locusts.remove(locust)
     if len(locusts) == 0:
         print "All locusts dead"
- 
-def print_stats():
-    while True:
-        print "%20s %7s %8s %7s %7s %7s %7s" % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'req/s')
-        print "-" * 80
-        for r in RequestStats.requests.itervalues():
-            print r
-        print ""
-        gevent.sleep(2)
+
+
+class LocustRunner(object):
+    def __init__(self, locust_class, hatch_rate, num_clients, host=None):
+        self.locust_class = locust_class
+        self.hatch_rate = hatch_rate
+        self.num_clients = num_clients
+        self.host = host
+
+class LocalLocustRunner(LocustRunner):
+    def start_hatching(self):
+        hatch_greenlet = gevent.spawn(hatch, self.locust_class, self.hatch_rate, self.num_clients, self.host)
+
+class DistributedLocustRunner(LocustRunner):
+    def __init__(self, locust_class, hatch_rate, num_clients, host=None, redis_host="localhost", redis_port=6379):
+        super(DistributedLocustRunner, self).__init__(locust_class, hatch_rate, num_clients, host)
+        
+        # set up the redis queus that will be used to communicate between master and slaves
+        self.work_queue = HotQueue("locust_work_queue", host=redis_host, port=redis_port, db=0)
+        self.client_report_queue = HotQueue("locust_client_report_queue", host=redis_host, port=redis_port, db=0)
+        self.stats_report_queue = HotQueue("locust_stats_report_queue", host=redis_host, port=redis_port, db=0)
+
+class MasterLocustRunner(DistributedLocustRunner):
+    def __init__(self, *args, **kwargs):
+        super(MasterLocustRunner, self).__init__(*args, **kwargs)
+        self.ready_clients = []
+        gevent.spawn(self.client_tracker)
+        gevent.spawn(self.stats_aggregator)
+    
+    def start_hatching(self):
+        print "starting to hatch..", self.ready_clients
+        for client in self.ready_clients:
+            self.work_queue.put({"hatch_rate":self.hatch_rate, "num_clients":self.num_clients, "host":self.host, "stop_timeout":30})
+    
+    def client_tracker(self):
+        for client in self.client_report_queue.consume():
+            self.ready_clients.append(client)
+            print "Client %r reported as ready. Currently %i clients ready to swarm." % (client, len(self.ready_clients))
+    
+    def stats_aggregator(self):
+        for report in self.stats_report_queue.consume():
+            print report
+
+class SlaveLocustRunner(DistributedLocustRunner):
+    def __init__(self, *args, **kwargs):
+        super(SlaveLocustRunner, self).__init__(*args, **kwargs)
+        self.client_report_queue.put(socket.gethostname())
+        gevent.spawn(self.worker)
+        #gevent.spawn(self.stats_reporter)
+    
+    def start_hatching(self):
+        raise Exception("Should never be called for a slave process")
+    
+    def worker(self):
+        for job in self.work_queue.consume():
+            print "job recieved: %r" % job
+            hatch(self.locust_class, job["hatch_rate"], job["num_clients"], job["host"], stop_timeout=job["stop_timeout"])
+    
+    def stats_reporter(self):
+        while True:
+            self.stats_report_queue.put({
+                "client":socket.gethostname()
+            })
+            gevent.sleep(5)
+
