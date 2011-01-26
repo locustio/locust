@@ -40,9 +40,8 @@ def request_stats():
 
     return json.dumps(stats)
 
-def start(locust, hatch_rate, max):
-    global _locust, _hatch_rate, _max
-    _locust = locust
+def start(hatch_rate, max):
+    global _hatch_rate, _max
     _hatch_rate = hatch_rate
     _max = max
     app = bottle.default_app()

@@ -2,6 +2,7 @@ import gevent
 from gevent import monkey
 monkey.patch_all(thread=False)
 
+from time import time
 import random
 import web
 from stats import RequestStats
@@ -70,14 +71,24 @@ class Locust(object):
     """Maximum waiting time between the execution of locust tasks"""
     max_wait = 1000
     
+    """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
+    host = None
+    
+    """Number of seconds after which the Locust will die. If None it won't timeout."""
+    stop_timeout = None
+    
     __metaclass__ = LocustMeta
     
     def __init__(self):
         self.client = HttpBrowser(self.host)
         self._task_queue = []
+        self._time_start = time()
     
     def __call__(self):
         while (True):
+            if self.stop_timeout is not None and time() - self._time_start > self.stop_timeout:
+                return
+            
             if not self._task_queue:
                 self.schedule_task(self.get_next_task())
             self._task_queue.pop(0)(self)
@@ -98,11 +109,16 @@ class Locust(object):
 
 locusts = []
 
-def hatch(locust, hatch_rate, max):
-    print "Hatching and swarming %i clients at the rate %i clients/s..." % (max, hatch_rate)
+def hatch(locust, hatch_rate, num_clients, host=None, stop_timeout=None):
+    if host is not None:
+        locust.host = host
+    if stop_timeout is not None:
+        locust.stop_timeout = stop_timeout
+    
+    print "Hatching and swarming %i clients at the rate %i clients/s..." % (num_clients, hatch_rate)
     while True:
         for i in range(0, hatch_rate):
-            if len(locusts) >= max:
+            if len(locusts) >= num_clients:
                 print "All locusts hatched"
                 return
             new_locust = gevent.spawn(locust())
@@ -124,15 +140,3 @@ def print_stats():
             print r
         print ""
         gevent.sleep(2)
-
-def swarm(locust, hatch_rate=1, max=1):
-    hatch_greenlet = gevent.spawn(hatch, locust, hatch_rate, max)
-    gevent.spawn(print_stats)
-    gevent.spawn(web.start, locust, hatch_rate, max)
-    return hatch_greenlet
-
-def prepare_swarm_from_web(locust, hatch_rate=1, max=1):
-    web.start(locust, hatch_rate, max)
-    gevent.sleep(200000)
-
-
