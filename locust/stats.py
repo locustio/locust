@@ -50,7 +50,8 @@ class RequestStats(object):
     
     def to_dict(self):
         return {
-            'num_reqs': self.num_requests(),
+            'num_reqs': self.num_reqs,
+            'num_failures': self.num_failures,
             'avg': self.avg_response_time(),
             'min': self.min_response_time(),
             'max': self.max_response_time(),

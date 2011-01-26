@@ -2,6 +2,7 @@ import locust
 import bottle
 import gevent
 import json
+import os.path
 from bottle import route, run, send_file
 from gevent import wsgi
 from stats import RequestStats
@@ -12,16 +13,16 @@ _max = 1
 
 @route('/public/:filename')
 def static_file(filename):
-    send_file(filename, root='public')
+    send_file(filename, root=os.path.join(os.path.dirname(__file__), 'public'))
 
 @route('/')
 def index():
-    send_file('index.html', root='public')
+    send_file('index.html', root=os.path.join(os.path.dirname(__file__), 'public'))
 
-@route('/swarm')
-def start():
-    locust.swarm(_locust, _hatch_rate, _max)
-    return {'message': 'Swarming started'}
+#@route('/swarm')
+#def start():
+#    locust.swarm(_locust, _hatch_rate, _max)
+#    return {'message': 'Swarming started'}
 
 @route('/stats/requests')
 def request_stats():
@@ -30,7 +31,7 @@ def request_stats():
     for s in RequestStats.requests.itervalues():
         stats.append([
             s.name,
-            s.num_requests(),
+            s.num_reqs,
             s.avg_response_time(),
             s.min_response_time(),
             s.max_response_time(),
