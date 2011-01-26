@@ -1,4 +1,4 @@
-<img src="http://github.com/cgbystrom/locust/raw/master/public/locust_banner.png" width="901" height="129"><br><br>
+<img src="http://github.com/heyman/locust/raw/master/public/locust_banner.png" width="901" height="129"><br><br>
 
 **This branch is experimental, and probably in a funky state. Doing some major experimental refactoring.**
 
@@ -17,7 +17,7 @@ This allows you to write very expressive scenarios in Python without complicatin
 * **Write user test scenarios in plain-old Python**<br>
  No need for clunky UIs or bloated XML, just code as you normally would. Based on coroutines instead of callbacks (aka boomerang code) allows code to look and behave like normal, blocking Python code.
 
-* **Scalable - supports thousands users**<br>
+* **Scalable - supports thousands of users**<br>
  Being event based, Locust can handle thousands of users in a single process.
  Part of the reason behind this is that even if you simulate that many users, not all are actively hitting your system. Often, users are idle figuring out what to do next. Request per second != number of users online.
 
@@ -31,42 +31,47 @@ This allows you to write very expressive scenarios in Python without complicatin
 * **Hackable**<br>
  Locust is very small and very hackable and I intend to keep it that way. All heavy-lifting of evented I/O and coroutines are delegated to gevent. The brittleness of alternative testing tools was the reason I created Locust.
 
-## Screencast
-
-<a href="http://www.screencast.com/t/YTYxNWM5N"><img src="http://github.com/cgbystrom/locust/raw/master/public/screencast_thumbnail.png" width="400" height="300"></a>
-
 ## Example
 Below is a quick little example of how easy it is to write tests.
+
+To get started, you define a number of locust tasks, which is normal Python callables that takes one 
+argument (the Locust class instance). These tasks are gathered in a Locust class under the *task* attribute. 
+The Locust class also allows one to specify minimum and maximum wait time between the execution of 
+tasks (per user/client), as well as other things.
+
 To get started, you simply need write a normal Python function to define the behavior of your swarming locusts.
 
-    import locust
-    import gevent
-    from clients import HTTPClient
-    from gevent import wsgi
-
-    # Defines the behaviour of a locust (aka a website user :)
-    def website_user(name):
-        c = HTTPClient('http://localhost:8088')
-        for i in range(0, 10):
-            c.get('/fast', name='Fast page')
-            gevent.sleep(5)
-            c.get('/slow', name='Slow page')
-
-    locust.prepare_swarm_from_web(website_user, hatch_rate=5, max=20)
-
+    from locust.core import Locust, require_once
+    
+    def login(l):
+        l.client.post("/login", {"username":"ellen_key", "password":"education"})
+    
+    def index(l):
+        l.client.get("/")
+    
+    @require_once(login)
+    def profile(l):
+        l.client.get("/profile")
+    
+    class WebsiteUser(Locust):
+        tasks = {2:index, 1:profile}
+        min_wait=2000
+        max_wait=10000
 
 ## Getting started
-Locust assume you have the following installed:
 
-* Python 2.6
-* gevent (coroutine library, see http://www.gevent.org/)
-* bottle (the web UI uses bottle, install with "easy_install -U bottle")
+First install Locust's requirements (gevent, greenlet, bottle) using:
 
-After you've installed those dependencies, clone this repo and fire up:
+    pip install -r requirements.txt
 
-    python example.py
+Then install locust:
 
-This will start a small example demonstrating Locust. Open http://localhost:8089 in your browser to start the test.
+    python setup.py install
+
+(Soon locust will be installabe through: pip install locust.)
+
+When Locust is installed, take a look at the documentation on how to create a locustfile or check out one of the examples.
+
 
 ## Background
 Locust was created because I was fed up with existing solutions. None of them are solving the right problem and to me, they are missing the point.
@@ -100,10 +105,14 @@ However, polling works just fine right now as the number of users using the web 
 * **View resource utilization of "victims"**
 To see the load of the machines currently being swarmed would be nice. Helpful when tracking sluggish requests.
 
+## Old screencast
+
+<a href="http://www.screencast.com/t/YTYxNWM5N"><img src="http://github.com/cgbystrom/locust/raw/master/public/screencast_thumbnail.png" width="400" height="300"></a>
 
 ## Authors
 
 - Carl Bystr&ouml;m (@<a href="http://twitter.com/cgbystrom">cgbystrom</a> on Twitter)
+- <a href="http://heyman.info">Jonatan Heyman</a> (@<a href="http://twitter.com/jonatanheyman">jonatanheyman</a> on Twitter)
 
 ## License
 
