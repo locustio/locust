@@ -291,5 +291,11 @@ def main():
 	elif options.slave:
 		core.locust_runner = SlaveLocustRunner(locust_class, options.hatch_rate, options.num_clients, redis_host=options.redis_host, redis_port=options.redis_port)
 	
-	gevent.sleep(100000)
+	try:
+		gevent.sleep(100000)
+	except KeyboardInterrupt, e:
+		print ""
+		print "Exiting, bye.."
+		print ""
+	
 	sys.exit(0)
