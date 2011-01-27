@@ -5,10 +5,12 @@ monkey.patch_all(thread=False)
 from time import time
 import random
 import socket
+from hashlib import md5
 from hotqueue import HotQueue
 
 import web
 from clients import HTTPClient, HttpBrowser
+from stats import RequestStats
 
 def require_once(required_func):
     """
@@ -143,6 +145,10 @@ class LocustRunner(object):
         self.hatch_rate = hatch_rate
         self.num_clients = num_clients
         self.host = host
+    
+    @property
+    def request_stats(self):
+        return RequestStats.requests
 
 class LocalLocustRunner(LocustRunner):
     def start_hatching(self):
@@ -161,6 +167,7 @@ class MasterLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
         super(MasterLocustRunner, self).__init__(*args, **kwargs)
         self.ready_clients = []
+        self.client_stats = {}
         gevent.spawn(self.client_tracker)
         gevent.spawn(self.stats_aggregator)
     
@@ -176,14 +183,26 @@ class MasterLocustRunner(DistributedLocustRunner):
     
     def stats_aggregator(self):
         for report in self.stats_report_queue.consume():
-            print report
+            if not report["stats"]:
+                continue
+            #print "stats report recieved from %s:" % report["client_id"], report["stats"]
+            self.client_stats[report["client_id"]] = report["stats"]
+    
+    @property
+    def request_stats(self):
+        stats = {}
+        for client_id, client_stats in self.client_stats.iteritems():
+            for entry_name, entry in client_stats.iteritems():
+                stats[entry_name] = stats.setdefault(entry_name, RequestStats(entry_name)) + entry
+        return stats
 
 class SlaveLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
-        self.client_report_queue.put(socket.gethostname())
+        self.client_id = socket.gethostname() + "_" + md5(str(time() + random.randint(0,10000))).hexdigest()
+        self.client_report_queue.put(self.client_id)
         gevent.spawn(self.worker)
-        #gevent.spawn(self.stats_reporter)
+        gevent.spawn(self.stats_reporter)
     
     def start_hatching(self):
         raise Exception("Should never be called for a slave process")
@@ -196,7 +215,8 @@ class SlaveLocustRunner(DistributedLocustRunner):
     def stats_reporter(self):
         while True:
             self.stats_report_queue.put({
-                "client":socket.gethostname()
+                "client_id": self.client_id,
+                "stats": self.request_stats,
             })
             gevent.sleep(5)
 

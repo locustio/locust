@@ -2,7 +2,9 @@ import time
 import gevent
 
 from urllib2 import URLError
-from functools import wraps
+
+class RequestStatsAdditionError(Exception):
+    pass
 
 class RequestStats(object):
     requests = {}
@@ -13,59 +15,67 @@ class RequestStats(object):
         self.num_reqs_per_sec = {}
         self.num_failures = 0
         
-        self.response_times = [0]
+        self.total_response_time = 0
+        self.min_response_time = None
+        self.max_response_time = 0
 
     def log(self, response_time, failure=False):
         self.num_reqs += 1
+        self.total_response_time += response_time
 
         sec = int(time.time())
         num = self.num_reqs_per_sec.setdefault(sec, 0)
         self.num_reqs_per_sec[sec] += 1
         
         if not failure:
-            self.response_times.append(response_time)
+            if self.min_response_time is None:
+                self.min_response_time = response_time
+                
+            self.min_response_time = min(self.min_response_time, response_time)
+            self.max_response_time = max(self.max_response_time, response_time)
         else:
             self.num_failures += 1
-
+    
+    @property
     def avg_response_time(self):
-        return round(avg(self.response_times), 1)
-
-    def median_response_time(self):
-        return median(self.response_times)
-
-    def min_response_time(self):
-        return min(self.response_times)
-
-    def max_response_time(self):
-        return max(self.response_times)
-
-    def percentile_90_response_time(self):
-        return 0
-
+        return self.total_response_time / self.num_reqs
+    
+    @property
     def reqs_per_sec(self):
         timestamp = int(time.time())
         reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(timestamp - 5, timestamp)]
         return avg(reqs)
-
+    
+    def __add__(self, other):
+        if self.name != other.name:
+            raise RequestStatsAdditionError("Trying to add two RequestStats objects of different names (%s and %s)" % (self.name, other.name))
+        
+        new = RequestStats(other.name)
+        new.num_reqs = self.num_reqs + other.num_reqs
+        new.num_failures = self.num_failures + other.num_failures
+        new.total_response_time = self.total_response_time + other.total_response_time
+        new.min_response_time = min(self.min_response_time, other.min_response_time) or other.min_response_time
+        new.max_response_time = max(self.max_response_time, other.max_response_time)
+        return new
     
     def to_dict(self):
         return {
             'num_reqs': self.num_reqs,
             'num_failures': self.num_failures,
-            'avg': self.avg_response_time(),
-            'min': self.min_response_time(),
-            'max': self.max_response_time(),
-            'req_per_sec': self.reqs_per_sec()
+            'avg': self.avg_response_time,
+            'min': self.min_response_time,
+            'max': self.max_response_time,
+            'req_per_sec': self.reqs_per_sec
         }
 
     def __str__(self):
         return "%20s %7d %8d %7d %7d %7d %7d" % (self.name,
             self.num_reqs,
             self.num_failures,
-            self.avg_response_time(),
-            self.min_response_time(),
-            self.max_response_time(),
-            self.reqs_per_sec())
+            self.avg_response_time,
+            self.min_response_time,
+            self.max_response_time,
+            self.reqs_per_sec)
 
     @classmethod
     def get(cls, name):
@@ -95,10 +105,11 @@ def log_request(f):
     return wrapper
 
 def print_stats():
+    from core import locust_runner
     while True:
         print "%20s %7s %8s %7s %7s %7s %7s" % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'req/s')
         print "-" * 80
-        for r in RequestStats.requests.itervalues():
+        for r in locust_runner.request_stats.itervalues():
             print r
         print ""
         gevent.sleep(2)
