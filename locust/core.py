@@ -168,8 +168,8 @@ class MasterLocustRunner(DistributedLocustRunner):
         super(MasterLocustRunner, self).__init__(*args, **kwargs)
         self.ready_clients = []
         self.client_stats = {}
-        gevent.spawn(self.client_tracker)
-        gevent.spawn(self.stats_aggregator)
+        gevent.spawn(self.client_tracker).link_exception()
+        gevent.spawn(self.stats_aggregator).link_exception()
     
     def start_hatching(self):
         print "Sending hatch jobs to %i ready clients" % len(self.ready_clients)
@@ -201,11 +201,11 @@ class SlaveLocustRunner(DistributedLocustRunner):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + md5(str(time() + random.randint(0,10000))).hexdigest()
         self.client_report_queue.put(self.client_id)
-        gevent.spawn(self.worker)
-        gevent.spawn(self.stats_reporter)
+        gevent.spawn(self.worker).link_exception()
+        gevent.spawn(self.stats_reporter).link_exception()
     
     def start_hatching(self):
-        raise Exception("Should never be called for a slave process")
+        raise Exception("start_hatching should never be called for a slave process")
     
     def worker(self):
         for job in self.work_queue.consume():
