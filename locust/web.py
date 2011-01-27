@@ -8,6 +8,7 @@ from core import hatch
 
 from flask import Flask, make_response
 app = Flask("Locust Monitor")
+app.debug = True
 app.root_path = os.path.dirname(__file__)
 
 _locust = None
@@ -24,20 +25,21 @@ def index():
 def swarm():
     from core import locust_runner
     locust_runner.start_hatching()
-    return {'message': 'Swarming started'}
+    return json.dumps({'message': 'Swarming started'})
 
 @app.route('/stats/requests')
 def request_stats():
+    from core import locust_runner
     stats = []
 
-    for s in RequestStats.requests.itervalues():
+    for s in locust_runner.request_stats.itervalues():
         stats.append([
             s.name,
             s.num_reqs,
-            s.avg_response_time(),
-            s.min_response_time(),
-            s.max_response_time(),
-            s.reqs_per_sec()
+            s.avg_response_time,
+            s.min_response_time,
+            s.max_response_time,
+            s.reqs_per_sec,
         ])
 
     return json.dumps(stats)
