@@ -1,6 +1,6 @@
 import locust
 import core
-from core import Locust, hatch, MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
+from core import Locust, WebLocust, hatch, MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
 from stats import print_stats
 import web
 
@@ -10,19 +10,7 @@ import os
 import inspect
 from optparse import OptionParser, make_option
 
-_internals = []
-
-env_options = [
-    make_option('-H', '--hosts',
-                default=[],
-                help="comma-separated list of hosts to operate on"
-                ),
-
-    make_option('-f', '--locustfile',
-                default='locust',
-                help="Python module file to import, e.g. '../other.py'"
-                ),
-]
+_internals = [Locust, WebLocust]
 
 def parse_options():
 	"""
@@ -32,8 +20,21 @@ def parse_options():
 	"""
 
 	# Initialize
-	parser = OptionParser(usage="locust [options] <command>[:arg1,arg2=val2,host=foo,hosts='h1;h2',...] ...")
-
+	parser = OptionParser(usage="locust [options] <locust class> ...")
+	
+	parser.add_option(
+	    '-H', '--host',
+	    dest="host",
+	    default=None,
+	    help="Host to load test"
+	),
+	parser.add_option(
+	    '-f', '--locustfile',
+	    dest='locustfile',
+	    default='locustfile',
+	    help="Python module file to import, e.g. '../other.py'"
+	),
+	
 	# Version number (optparse gives you --version but we have to do it
 	# ourselves to get -V too. sigh)
 	parser.add_option(
@@ -51,15 +52,6 @@ def parse_options():
 	    dest='list_commands',
 	    default=False,
 	    help="print list of possible commands and exit"
-	)
-
-	# Like --list, but text processing friendly
-	parser.add_option(
-	    '--shortlist',
-	    action='store_true',
-	    dest='shortlist',
-	    default=False,
-	    help="print non-verbose list of possible commands and exit"
 	)
 	
 	# if we shgould print stats in the console
@@ -135,10 +127,6 @@ def parse_options():
 	    default=6379,
 	    help="Redis port to use for distributed load testing"
 	)
-
-	# Add in options which are also destined to show up as `env` vars.
-	for option in env_options:
-		parser.add_option(option)
 
 	# Finalize
 	# Return three-tuple of parser + the output from parse_args (opt obj, args)
@@ -266,6 +254,10 @@ def main():
 			print "    " + name
 		sys.exit(0)
 	
+	if not arguments:
+		sys.stderr.write("You must specify a Locust class!\n")
+		sys.exit(1)
+		
 	# make sure specified Locust exists
 	if not arguments[0] in locusts.keys():
 		sys.stderr.write("Unknown Locust: %s\n" % (arguments[0]))
@@ -278,14 +270,14 @@ def main():
 		gevent.spawn(web.start, locust_class, options.hatch_rate, options.num_clients)
 	
 	if not options.master and not options.slave:
-		core.locust_runner = LocalLocustRunner(locust_class, options.hatch_rate, options.num_clients)
+		core.locust_runner = LocalLocustRunner(locust_class, options.hatch_rate, options.num_clients, options.host)
 		if options.no_web:
 			# spawn client spawning/hatching greenlet
 			core.locust_runner.start_hatching()
 	elif options.master:
-		core.locust_runner = MasterLocustRunner(locust_class, options.hatch_rate, options.num_clients, redis_host=options.redis_host, redis_port=options.redis_port)
+		core.locust_runner = MasterLocustRunner(locust_class, options.hatch_rate, options.num_clients, host=options.host, redis_host=options.redis_host, redis_port=options.redis_port)
 	elif options.slave:
-		core.locust_runner = SlaveLocustRunner(locust_class, options.hatch_rate, options.num_clients, redis_host=options.redis_host, redis_port=options.redis_port)
+		core.locust_runner = SlaveLocustRunner(locust_class, options.hatch_rate, options.num_clients, host=options.host, redis_host=options.redis_host, redis_port=options.redis_port)
 	
 	if options.print_stats or options.no_web:
 		# spawn stats printing greenlet
