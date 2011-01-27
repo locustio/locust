@@ -14,5 +14,5 @@ def profile(l):
 class WebsiteUser(Locust):
     host = "http://127.0.0.1:6060"
     tasks = {2:index, 1:profile}
-    min_wait=3000
-    max_wait=3000
+    min_wait=2000
+    max_wait=5000

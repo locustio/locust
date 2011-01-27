@@ -172,7 +172,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         gevent.spawn(self.stats_aggregator)
     
     def start_hatching(self):
-        print "starting to hatch..", self.ready_clients
+        print "Sending hatch jobs to %i ready clients" % len(self.ready_clients)
         for client in self.ready_clients:
             self.work_queue.put({"hatch_rate":self.hatch_rate, "num_clients":self.num_clients, "host":self.host, "stop_timeout":30})
     
