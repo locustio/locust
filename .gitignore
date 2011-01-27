@@ -1,0 +1,3 @@
+*.pyc
+locust.wpr
+locust.egg-info/**
