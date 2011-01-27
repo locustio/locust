@@ -69,14 +69,14 @@ class Locust(object):
     Locust base class defining a locust user/client.
     """
     
+    """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
+    host = None
+    
     """Minimum waiting time between two execution of locust tasks"""
     min_wait = 1000
     
     """Maximum waiting time between the execution of locust tasks"""
     max_wait = 1000
-    
-    """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
-    host = None
     
     """Number of seconds after which the Locust will die. If None it won't timeout."""
     stop_timeout = None
@@ -84,7 +84,6 @@ class Locust(object):
     __metaclass__ = LocustMeta
     
     def __init__(self):
-        self.client = HttpBrowser(self.host)
         self._task_queue = []
         self._time_start = time()
     
@@ -109,6 +108,16 @@ class Locust(object):
     
     def wait(self):
         gevent.sleep(random.randint(self.min_wait, self.max_wait) / 1000.0)
+
+class WebLocust(Locust):
+    """
+    Locust class that creates a client attribute on instantiation. 
+    The client attribute is a simple HTTP client with support for keeping a user session between requests.
+    """
+    
+    def __init__(self):
+        super(WebLocust, self).__init__()
+        self.client = HttpBrowser(self.host)
 
 
 locusts = []
