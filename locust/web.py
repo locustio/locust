@@ -31,8 +31,14 @@ def swarm():
 def request_stats():
     from core import locust_runner
     stats = []
-
+    
+    total_requests = 0
+    total_rps = 0
+    
     for s in locust_runner.request_stats.itervalues():
+        total_requests += s.num_reqs
+        total_rps += s.reqs_per_sec
+        
         stats.append([
             s.name,
             s.num_reqs,
@@ -41,6 +47,8 @@ def request_stats():
             s.max_response_time,
             s.reqs_per_sec,
         ])
+    
+    stats.append(["Total", total_requests, "", "", "", round(total_rps, 2)])
 
     return json.dumps(stats)
 
