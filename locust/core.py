@@ -94,11 +94,13 @@ class Locust(object):
             
             if not self._task_queue:
                 self.schedule_task(self.get_next_task())
-            self._task_queue.pop(0)(self)
+            task = self._task_queue.pop(0)
+            task["callable"](self, *task["args"])
             self.wait()
     
-    def schedule_task(self, task, first=False):
-        if first:
+    def schedule_task(self, task_callable, *args, **kwargs):
+        task = {"callable":task_callable, "args":args}
+        if "first" in kwargs:
             self._task_queue.insert(0, task)
         else:
             self._task_queue.append(task)
@@ -183,7 +185,7 @@ class MasterLocustRunner(DistributedLocustRunner):
     def start_hatching(self):
         print "Sending hatch jobs to %i ready clients" % len(self.ready_clients)
         for client in self.ready_clients:
-            self.work_queue.put({"hatch_rate":self.hatch_rate, "num_clients":self.num_clients, "host":self.host, "stop_timeout":30})
+            self.work_queue.put({"hatch_rate":self.hatch_rate, "num_clients":self.num_clients, "host":self.host, "stop_timeout":60})
     
     def client_tracker(self):
         for client in self.client_report_queue.consume():
@@ -227,5 +229,5 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 "client_id": self.client_id,
                 "stats": self.request_stats,
             })
-            gevent.sleep(5)
+            gevent.sleep(3)
 
