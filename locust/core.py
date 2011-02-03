@@ -12,6 +12,9 @@ import web
 from clients import HTTPClient, HttpBrowser
 from stats import RequestStats
 
+class LocustError(Exception):
+    pass
+
 def require_once(required_func):
     """
     @require_once decorator is used on a locust task in order to make sure another locust 
@@ -119,6 +122,8 @@ class WebLocust(Locust):
     
     def __init__(self):
         super(WebLocust, self).__init__()
+        if self.host is None:
+            raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
         self.client = HttpBrowser(self.host)
 
 
