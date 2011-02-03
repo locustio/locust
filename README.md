@@ -94,6 +94,38 @@ or if the locustfile is located elsewhere run:
     locust -f ../locust_files/my_locust_file.py -l
 
 
+## Writing a locustfile
+
+A locustfile is a normal python file. The only requirement is that it declares at least one class, let's call it the locust class, that inherits from the Locust class
+(or, when load testing a web application, the WebLocust class). The locust class has to declare a *tasks* attribute which is either a list of python callables or a 
+*<callable : int>* dict. A locust class represents one website user. Locust will spawn one instance of the locust class for each user that is being simulated. The task 
+attribute defines the different tasks that a website user might do. The tasks are python callables, that recieves one argument - the locust class instance representing 
+the user that is performing the task. Here is an extremely simple example of a locustfile (this locsutfile won't actually load test anything):
+
+    def my_task(l):
+        pass
+    
+    class MyLocust(WebLocust):
+        tasks = [my_task]
+
+### The *min_wait* and *max_wait* attributes
+
+Additionally to the tasks attribute, one usually want to declare the *min_wait* and *max_wait* attributes. These are the minimum and maximum time, in milliseconds, that
+a user will wait between executing each task. *min_wait* and *max_wait* defaults to 1000, and therefore a locust will always wait 1 second between each task if *min_wait*
+and *max_wait* is not declared.
+
+### The *tasks* attribute
+
+As stated above, the tasks attribute defines the different tasks a locust user will perform. If the tasks attribute is specified as a list, each time a task is to be performed,
+it will be randomly chosen from the *tasks* attribute. If however, *tasks* is a dict - with callables as keys and ints as values - the task that is to be executed will be
+chosen at random but with the int as ratio. So with a tasks that looks like this:
+
+    {my_task: 3, another_task:1}
+
+*my_task* would be 3 times more likely to be executed thatn *another_task*.
+
+
+
 ## Background
 Locust was created because we were fed up with existing solutions. None of them are solving the right problem and to me, they are missing the point.
 We've tried both Apache JMeter and Tsung. Both tools are quite ok to use, we've used the former many times benchmarking stuff at work. JMeter comes with UI which you might think for second is a good thing. But you soon realize it's a PITA to "code" your testing scenarios through some point-and-click interface. Secondly, JMeter is thread-bound. This means for every user you want to simulate, you need a separate thread. Needless to say, benchmarking thousands of users on a single machine just isn't feasible.
