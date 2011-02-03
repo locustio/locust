@@ -13,6 +13,6 @@ def profile(l):
 
 class WebsiteUser(WebLocust):
     host = "http://127.0.0.1:6060"
-    tasks = {2:index, 1:profile}
+    tasks = {index:2, profile:1}
     min_wait=2000
     max_wait=5000

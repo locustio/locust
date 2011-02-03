@@ -67,7 +67,7 @@ Below is a quick little example of a simple locustfile.py:
         l.client.get("/profile")
     
     class WebsiteUser(WebLocust):
-        tasks = {2:index, 1:profile}
+        tasks = {index:2, profile:1}
         min_wait=5000
         max_wait=9000
 

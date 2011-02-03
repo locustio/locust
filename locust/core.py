@@ -57,7 +57,7 @@ class LocustMeta(type):
     def __new__(meta, classname, bases, classDict):
         if "tasks" in classDict and isinstance(classDict["tasks"], dict):
             tasks = []
-            for count, task in classDict["tasks"].iteritems():
+            for task, count in classDict["tasks"].iteritems():
                 for i in xrange(0, count):
                     tasks.append(task)
             classDict["tasks"] = tasks
