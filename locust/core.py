@@ -8,7 +8,6 @@ import socket
 from hashlib import md5
 from hotqueue import HotQueue
 
-import web
 from clients import HTTPClient, HttpBrowser
 from stats import RequestStats
 
