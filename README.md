@@ -114,6 +114,16 @@ Additionally to the tasks attribute, one usually want to declare the *min_wait* 
 a user will wait between executing each task. *min_wait* and *max_wait* defaults to 1000, and therefore a locust will always wait 1 second between each task if *min_wait*
 and *max_wait* is not declared.
 
+With the following locustfile, each user would wait between 5 and 15 seconds between tasks:
+
+    def my_task(l):
+        pass
+    
+    class MyLocust(WebLocust):
+        tasks = [my_task]
+        min_wait = 5000
+        max_wait = 15000
+
 ### The *tasks* attribute
 
 As stated above, the tasks attribute defines the different tasks a locust user will perform. If the tasks attribute is specified as a list, each time a task is to be performed,
@@ -122,7 +132,10 @@ chosen at random but with the int as ratio. So with a tasks that looks like this
 
     {my_task: 3, another_task:1}
 
-*my_task* would be 3 times more likely to be executed thatn *another_task*.
+*my_task* would be 3 times more likely to be executed than *another_task*.
+
+### Making HTTP requests
+
 
 
 
