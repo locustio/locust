@@ -54,7 +54,7 @@ Locust uses locustfiles to define it's tests. Take a look at the documentation o
 ## Getting started
 Below is a quick little example of a simple locustfile.py:
 
-    from locust.core import Locust, require_once
+    from locust import WebLocust, require_once
     
     def login(l):
         l.client.post("/login", {"username":"ellen_key", "password":"education"})
@@ -102,6 +102,8 @@ A locustfile is a normal python file. The only requirement is that it declares a
 attribute defines the different tasks that a website user might do. The tasks are python callables, that recieves one argument - the locust class instance representing 
 the user that is performing the task. Here is an extremely simple example of a locustfile (this locsutfile won't actually load test anything):
 
+    from locust import WebLocust
+    
     def my_task(l):
         pass
     
@@ -116,6 +118,8 @@ and *max_wait* is not declared.
 
 With the following locustfile, each user would wait between 5 and 15 seconds between tasks:
 
+    from locust import WebLocust
+    
     def my_task(l):
         pass
     

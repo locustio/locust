@@ -1,4 +1,4 @@
-from locust.core import WebLocust, require_once
+from locust import WebLocust, require_once
 import random
 
 def login(l):
