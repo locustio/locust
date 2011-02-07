@@ -71,17 +71,31 @@ class Locust(object):
     Locust base class defining a locust user/client.
     """
     
-    """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
+    tasks = None
+    """
+    List or dict with python callables that represents a locust user task.
+    
+    If tasks is a list, the task to be performed will be picked randomly.
+    
+    If task is a *<callable:int>* dict, the task to be performed will be picked randomly, but each task will be
+    weighted according to it's corresponding int value. So in the following case *task1* will be three times more
+    likely to be picked than *task2*::
+    
+        class User(Locust):
+            tasks = {task1: 3, task2: 1}
+    """
+    
     host = None
+    """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
     
-    """Minimum waiting time between two execution of locust tasks"""
     min_wait = 1000
+    """Minimum waiting time between two execution of locust tasks"""
     
-    """Maximum waiting time between the execution of locust tasks"""
     max_wait = 1000
+    """Maximum waiting time between the execution of locust tasks"""
     
-    """Number of seconds after which the Locust will die. If None it won't timeout."""
     stop_timeout = None
+    """Number of seconds after which the Locust will die. If None it won't timeout."""
     
     __metaclass__ = LocustMeta
     
@@ -115,9 +129,13 @@ class Locust(object):
 
 class WebLocust(Locust):
     """
-    Locust class that creates a client attribute on instantiation. 
-    The client attribute is a simple HTTP client with support for keeping a user session between requests.
+    Locust class that inherits from Locust and creates a *client* attribute on instantiation. 
+    
+    The *client* attribute is a simple HTTP client with support for keeping a user session between requests.
     """
+    
+    client = None
+    """Instance of HttpBrowser that is created upon instantiation of WebLocust"""
     
     def __init__(self):
         super(WebLocust, self).__init__()
