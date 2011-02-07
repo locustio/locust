@@ -1,6 +1,7 @@
 import time
 import gevent
 from copy import copy
+from decorator import decorator
 
 from urllib2 import URLError
 
@@ -107,7 +108,7 @@ def log_request(f):
             return retval
         except URLError, e:
             RequestStats.get(name).log(0, True)
-    return wrapper
+    return decorator(wrapper, f)
 
 def print_stats():
     from core import locust_runner
