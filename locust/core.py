@@ -135,7 +135,10 @@ class WebLocust(Locust):
     """
     
     client = None
-    """Instance of HttpBrowser that is created upon instantiation of WebLocust"""
+    """
+    Instance of HttpBrowser that is created upon instantiation of WebLocust. 
+    The client support cookies, and therefore keeps the session between HTTP requests.
+    """
     
     def __init__(self):
         super(WebLocust, self).__init__()
