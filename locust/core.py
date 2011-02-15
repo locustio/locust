@@ -43,7 +43,7 @@ def require_once(required_func):
                 # immediately after the required task
                 l._required_once[str(required_func)] = True
                 l.schedule_task(func, first=True)
-                l.schedule_task(required_func, first=True)                
+                required_func(l)
                 return
                 
             return func(l)
