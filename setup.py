@@ -31,4 +31,5 @@ setup(
             'locust = locust.main:main',
         ]
     },
+    test_suite='locust.test.runtests',
 )
