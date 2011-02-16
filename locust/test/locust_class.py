@@ -10,7 +10,12 @@ class TestLocustClass(unittest.TestCase):
 			tasks = {t1:5, t2:2}
 			
 		l = MyLocust()
-		self.assertEqual(l.tasks, [t1, t1, t1, t1, t1, t2, t2])
+		
+		t1_count = len([t for t in l.tasks if t == t1])
+		t2_count = len([t for t in l.tasks if t == t2])
+		
+		self.assertEqual(t1_count, 5)
+		self.assertEqual(t2_count, 2)
 	
 	def test_require_once(self):
 		self.t1_executed = False
