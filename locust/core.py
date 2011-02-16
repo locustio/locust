@@ -96,7 +96,10 @@ class Locust(object):
     
     stop_timeout = None
     """Number of seconds after which the Locust will die. If None it won't timeout."""
-    
+
+    weight = 10
+    """Weight"""
+
     __metaclass__ = LocustMeta
     
     def __init__(self):
@@ -153,12 +156,19 @@ class WebLocust(Locust):
 locusts = []
 locust_runner = None
 
-def hatch(locust, hatch_rate, num_clients, host=None, stop_timeout=None):
-    if host is not None:
-        locust.host = host
-    if stop_timeout is not None:
-        locust.stop_timeout = stop_timeout
-    
+def hatch(locust_list, hatch_rate, num_clients, host=None, stop_timeout=None):
+    pool = []
+    for locust in locust_list:
+        if host is not None:
+            locust.host = host
+        if stop_timeout is not None:
+            locust.stop_timeout = stop_timeout
+
+        for x in xrange(0, locust.weight):
+            pool.append(locust)
+
+    print pool
+
     print "Hatching and swarming %i clients at the rate %i clients/s..." % (num_clients, hatch_rate)
     while True:
         for i in range(0, hatch_rate):
@@ -166,7 +176,11 @@ def hatch(locust, hatch_rate, num_clients, host=None, stop_timeout=None):
                 print "All locusts hatched"
                 gevent.joinall(locusts)
                 return
-            new_locust = gevent.spawn(locust())
+
+            random_locust = random.choice(pool)()
+            print random_locust
+
+            new_locust = gevent.spawn(random_locust)
             new_locust.link(on_death)
             locusts.append(new_locust)
         print "%i locusts hatched" % (len(locusts))
