@@ -153,7 +153,7 @@ class WebLocust(Locust):
 locusts = []
 locust_runner = None
 
-def hatch(locust_list, hatch_rate, num_clients, host=None, stop_timeout=None):
+def hatch(locust_list, hatch_rate, num_clients, num_requests=None, host=None, stop_timeout=None):
     print "Creating bucket of locusts, occurence depending on weight..."
     bucket = []
     for locust in locust_list:
@@ -165,8 +165,16 @@ def hatch(locust_list, hatch_rate, num_clients, host=None, stop_timeout=None):
         for x in xrange(0, locust.weight):
             bucket.append(locust)
 
+    if num_requests:
+        print "Preparing to perform %d requests" % (num_requests)
+        
     print "Hatching and swarming %i clients at the rate %i clients/s..." % (num_clients, hatch_rate)
     while True:
+        if num_requests and RequestStats.total_num_requests >= num_requests:
+            print "Total num of requests reached!"
+            gevent.killall(locusts)
+            raise KeyboardInterrupt
+
         for i in range(0, hatch_rate):
             if len(locusts) >= num_clients:
                 print "All locusts hatched"
@@ -186,10 +194,11 @@ def on_death(locust):
 
 
 class LocustRunner(object):
-    def __init__(self, locust_classes, hatch_rate, num_clients, host=None):
+    def __init__(self, locust_classes, hatch_rate, num_clients, num_requests=None, host=None):
         self.locust_classes = locust_classes
         self.hatch_rate = hatch_rate
         self.num_clients = num_clients
+        self.num_requests = num_requests
         self.host = host
     
     @property
@@ -198,7 +207,7 @@ class LocustRunner(object):
 
 class LocalLocustRunner(LocustRunner):
     def start_hatching(self):
-        hatch_greenlet = gevent.spawn(hatch, self.locust_classes, self.hatch_rate, self.num_clients, self.host)
+        hatch_greenlet = gevent.spawn(hatch, self.locust_classes, self.hatch_rate, self.num_clients, self.num_requests, self.host)
 
 class DistributedLocustRunner(LocustRunner):
     def __init__(self, locust_classes, hatch_rate, num_clients, host=None, redis_host="localhost", redis_port=6379):
@@ -220,7 +229,7 @@ class MasterLocustRunner(DistributedLocustRunner):
     def start_hatching(self):
         print "Sending hatch jobs to %i ready clients" % len(self.ready_clients)
         for client in self.ready_clients:
-            self.work_queue.put({"hatch_rate":self.hatch_rate, "num_clients":self.num_clients, "host":self.host, "stop_timeout":60})
+            self.work_queue.put({"hatch_rate":self.hatch_rate, "num_clients":self.num_clients, "num_requests": self.num_requests, "host":self.host, "stop_timeout":60})
     
     def client_tracker(self):
         for client in self.client_report_queue.consume():
@@ -256,7 +265,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
     def worker(self):
         for job in self.work_queue.consume():
             print "job recieved: %r" % job
-            hatch(self.locust_classes, job["hatch_rate"], job["num_clients"], job["host"], stop_timeout=job["stop_timeout"])
+            hatch(self.locust_classes, job["hatch_rate"], job["num_clients"], job["num_requests"], job["host"], stop_timeout=job["stop_timeout"])
     
     def stats_reporter(self):
         while True:
