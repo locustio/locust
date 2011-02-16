@@ -98,7 +98,7 @@ def parse_options():
         action='store',
         type='int',
         dest='num_requests',
-        default=1,
+        default=1000,
         help="Number of requests to perform"
     )
 
