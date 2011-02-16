@@ -110,12 +110,22 @@ def log_request(f):
             RequestStats.get(name).log(0, True)
     return decorator(wrapper, f)
 
-def print_stats():
+def print_stats(stats):
+    print "%20s %7s %8s %7s %7s %7s %7s" % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'req/s')
+    print "-" * 80
+    for r in stats.itervalues():
+        print r
+    print ""
+
+def stats_printer():
     from core import locust_runner
     while True:
-        print "%20s %7s %8s %7s %7s %7s %7s" % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'req/s')
-        print "-" * 80
-        for r in locust_runner.request_stats.itervalues():
-            print r
-        print ""
+        print_stats(locust_runner.request_stats)
         gevent.sleep(2)
+
+def request_printer():
+    from core import locust_runner
+    while True:
+        total_reqs = sum([r.num_reqs for r in locust_runner.request_stats.itervalues()])
+        print "%d requests" % total_reqs
+        gevent.sleep(5)
