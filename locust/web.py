@@ -1,10 +1,6 @@
-import gevent
 import json
 import os.path
 from gevent import wsgi
-from stats import RequestStats
-
-from core import hatch
 
 from flask import Flask, make_response
 app = Flask("Locust Monitor")
@@ -13,6 +9,7 @@ app.root_path = os.path.dirname(__file__)
 
 _locust = None
 _num_clients = None
+_num_requests = None
 _hatch_rate = None
 
 @app.route('/')
@@ -52,9 +49,10 @@ def request_stats():
 
     return json.dumps(stats)
 
-def start(locust, hatch_rate, num_clients):
-    global _locust, _hatch_rate, _num_clients
+def start(locust, hatch_rate, num_clients, num_requests):
+    global _locust, _hatch_rate, _num_clients, _num_requests
     _locust = locust
     _hatch_rate = hatch_rate
     _num_clients = num_clients
+    _num_requests = num_requests
     wsgi.WSGIServer(('', 8089), app).start()

@@ -164,16 +164,14 @@ def hatch(locust_list, hatch_rate, num_clients, num_requests=None, host=None, st
 
         for x in xrange(0, locust.weight):
             bucket.append(locust)
-
-    if num_requests:
-        print "Preparing to perform %d requests" % (num_requests)
         
-    print "Hatching and swarming %i clients at the rate %i clients/s..." % (num_clients, hatch_rate)
+    print "Hatching and swarming %i clients at the rate %i clients/s for %d requests..." % (num_clients, hatch_rate, num_requests)
     while True:
+        print RequestStats.total_num_requests
         if num_requests and RequestStats.total_num_requests >= num_requests:
-            print "Total num of requests reached!"
+            print "Total num of requests reached."
             gevent.killall(locusts)
-            raise KeyboardInterrupt
+            return
 
         for i in range(0, hatch_rate):
             if len(locusts) >= num_clients:
