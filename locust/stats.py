@@ -10,6 +10,7 @@ class RequestStatsAdditionError(Exception):
 
 class RequestStats(object):
     requests = {}
+    total_num_requests = 0
 
     def __init__(self, name):
         self.name = name
@@ -23,6 +24,7 @@ class RequestStats(object):
 
     def log(self, response_time, failure=False):
         self.num_reqs += 1
+        self.total_num_requests += 1
         self.total_response_time += response_time
 
         sec = int(time.time())
