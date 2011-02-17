@@ -58,11 +58,30 @@ class LocustMeta(type):
     """
     
     def __new__(meta, classname, bases, classDict):
-        if "tasks" in classDict and isinstance(classDict["tasks"], dict):
+        def _inflate_list(tasks):
+            task_list = []
+            for task in tasks:
+                task_list.extend(_inflate(task))
+            return task_list
+
+        def _inflate_task(task):
+            if isinstance(task, tuple):
+                func, count = task
+                return [func for x in xrange(0, count)]
+            else:
+                return [task]
+
+        def _inflate(task):
+            if isinstance(task, list):
+                return _inflate_list(task)
+            else:
+                return _inflate_task(task)
+
+        if "tasks" in classDict and classDict["tasks"]:
             tasks = []
-            for task, count in classDict["tasks"].iteritems():
-                for i in xrange(0, count):
-                    tasks.append(task)
+            for task in classDict["tasks"]:
+                tasks.extend(_inflate(task))
+
             classDict["tasks"] = tasks
         
         return type.__new__(meta, classname, bases, classDict)
