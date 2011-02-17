@@ -34,7 +34,7 @@ This allows you to write very expressive scenarios in Python without complicatin
 
 ## Documentation
 
-More info and documentation can be found at: http://locust.readthedocs.org/
+More info and documentation can be found at: <a href="http://locust.readthedocs.org/">http://locust.readthedocs.org/</a>
 
 
 ## Authors
