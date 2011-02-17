@@ -110,9 +110,12 @@ class Locust(object):
             
             if not self._task_queue:
                 self.schedule_task(self.get_next_task())
-            task = self._task_queue.pop(0)
-            task["callable"](self, *task["args"])
+            self.execute_next_task()
             self.wait()
+    
+    def execute_next_task(self):
+        task = self._task_queue.pop(0)
+        task["callable"](self, *task["args"])
     
     def schedule_task(self, task_callable, *args, **kwargs):
         task = {"callable":task_callable, "args":args}
