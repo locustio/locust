@@ -50,4 +50,26 @@ class TestWebLocustClass(WebserverTestCase):
 		my_locust = MyLocust()
 		t1(my_locust)
 		self.assertEqual(self.response, "This is an ultra fast response")
-
+	
+	def test_client_request_headers(self):
+		class MyLocust(WebLocust):
+			host = "http://127.0.0.1:%i" % self.port
+		
+		locust = MyLocust()
+		self.assertEqual("hello", locust.client.get("/request_header_test", {"X-Header-Test":"hello"}))
+	
+	def test_client_get(self):
+		class MyLocust(WebLocust):
+			host = "http://127.0.0.1:%i" % self.port
+		
+		locust = MyLocust()
+		self.assertEqual("GET", locust.client.get("/request_method"))
+	
+	def test_client_post(self):
+		class MyLocust(WebLocust):
+			host = "http://127.0.0.1:%i" % self.port
+		
+		locust = MyLocust()
+		self.assertEqual("POST", locust.client.post("/request_method", {"arg":"hello world"}))
+		self.assertEqual("hello world", locust.client.post("/post", {"arg":"hello world"}))
+	
