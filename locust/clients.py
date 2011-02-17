@@ -25,21 +25,23 @@ class HttpBrowser(object):
         urllib2.install_opener(self.opener)
     
     @log_request
-    def get(self, path, name=None):
+    def get(self, path, headers=None, name=None):
         """
         Make an HTTP GET request.
         
         Arguments:
         
         * *path* is the relative path to request.
+        * *headers* is an optional dict with HTTP request headers
         """
-        f = self.opener.open(self.base_url + path)
+        request = urllib2.Request(self.base_url + path, None, headers)
+        f = self.opener.open(request)
         data = f.read()
         f.close()
         return data
     
     @log_request
-    def post(self, path, data, name=None):
+    def post(self, path, data, headers=None, name=None):
         """
         Make an HTTP POST request.
         
@@ -47,13 +49,15 @@ class HttpBrowser(object):
         
         * *path* is the relative path to request.
         * *data* dict with the data that will be sent in the body of the POST request
+        * *headers* is an optional dict with HTTP request headers
         
         Example::
         
             client = HttpBrowser("http://example.com")
             client.post("/post", {"user":"joe_hill"})
         """
-        f = self.opener.open(self.base_url + path, urllib.urlencode(data))
+        request = urllib2.Request(self.base_url + path, urllib.urlencode(data), headers)
+        f = self.opener.open(request)
         data = f.read()
         f.close()
         return data
