@@ -93,16 +93,16 @@ class Locust(object):
     
     tasks = None
     """
-    List or dict with python callables that represents a locust user task.
-    
+    List with python callables that represents a locust user task.
+
     If tasks is a list, the task to be performed will be picked randomly.
-    
-    If task is a *<callable:int>* dict, the task to be performed will be picked randomly, but each task will be
+
+    If tasks is a *<callable,int>* list of two-tuples, the task to be performed will be picked randomly, but each task will be
     weighted according to it's corresponding int value. So in the following case *task1* will be three times more
     likely to be picked than *task2*::
-    
+
         class User(Locust):
-            tasks = {task1: 3, task2: 1}
+            tasks = [(task1, 3), (task2, 1)]
     """
     
     host = None
@@ -118,17 +118,16 @@ class Locust(object):
     """Number of seconds after which the Locust will die. If None it won't timeout."""
 
     weight = 10
-    """Probability of locust beeing choosen. The higher the weight, the greater is the chance of it beeing chosen."""
+    """Probability of locust being chosen. The higher the weight, the greater is the chance of it beeing chosen."""
 
     __metaclass__ = LocustMeta
     
     def __init__(self):
         self._task_queue = []
         self._time_start = time()
-        self._is_alive = True
-    
+
     def __call__(self):
-        while (True):
+        while True:
             if self.stop_timeout is not None and time() - self._time_start > self.stop_timeout:
                 return
 
@@ -150,9 +149,6 @@ class Locust(object):
     
     def wait(self):
         gevent.sleep(random.randint(self.min_wait, self.max_wait) / 1000.0)
-
-    def kill(self):
-        self._is_alive = False
 
 class WebLocust(Locust):
     """
