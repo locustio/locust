@@ -25,7 +25,7 @@ class HttpBrowser(object):
         urllib2.install_opener(self.opener)
     
     @log_request
-    def get(self, path, headers=None, name=None):
+    def get(self, path, headers={}, name=None):
         """
         Make an HTTP GET request.
         
@@ -41,7 +41,7 @@ class HttpBrowser(object):
         return data
     
     @log_request
-    def post(self, path, data, headers=None, name=None):
+    def post(self, path, data, headers={}, name=None):
         """
         Make an HTTP POST request.
         
