@@ -10,7 +10,7 @@ class RequestStatsAdditionError(Exception):
 
 class RequestStats(object):
     requests = {}
-    total_num_requests = 0
+    request_observers = []
 
     def __init__(self, name):
         self.name = name
@@ -24,13 +24,12 @@ class RequestStats(object):
 
     def log(self, response_time, failure=False):
         self.num_reqs += 1
-        self.total_num_requests += 1
         self.total_response_time += response_time
 
         sec = int(time.time())
         num = self.num_reqs_per_sec.setdefault(sec, 0)
         self.num_reqs_per_sec[sec] += 1
-        
+
         if not failure:
             if self.min_response_time is None:
                 self.min_response_time = response_time
@@ -39,7 +38,16 @@ class RequestStats(object):
             self.max_response_time = max(self.max_response_time, response_time)
         else:
             self.num_failures += 1
-    
+
+        gevent.spawn(self.notify, response_time, failure)
+
+    def notify(self, response_time, failure):
+        for observer in self.request_observers:
+            try:
+                observer(response_time, failure)
+            except Exception:
+                pass
+
     @property
     def avg_response_time(self):
         return self.total_response_time / self.num_reqs
@@ -113,21 +121,16 @@ def log_request(f):
     return decorator(wrapper, f)
 
 def print_stats(stats):
+    print ""
     print "%20s %7s %8s %7s %7s %7s %7s" % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'req/s')
     print "-" * 80
     for r in stats.itervalues():
         print r
+    print "-" * 80
     print ""
 
 def stats_printer():
     from core import locust_runner
-    while True:
+    while locust_runner.is_alive:
         print_stats(locust_runner.request_stats)
         gevent.sleep(2)
-
-def request_printer():
-    from core import locust_runner
-    while True:
-        total_reqs = sum([r.num_reqs for r in locust_runner.request_stats.itervalues()])
-        print "%d requests" % total_reqs
-        gevent.sleep(5)

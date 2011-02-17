@@ -1,5 +1,6 @@
 import gevent
 from gevent import monkey
+from gevent.pool import Group
 monkey.patch_all(thread=False)
 
 from time import time
@@ -9,7 +10,7 @@ from hashlib import md5
 from hotqueue import HotQueue
 
 from clients import HTTPClient, HttpBrowser
-from stats import RequestStats
+from stats import RequestStats, print_stats
 
 class LocustError(Exception):
     pass
@@ -98,19 +99,20 @@ class Locust(object):
     """Number of seconds after which the Locust will die. If None it won't timeout."""
 
     weight = 10
-    """Weight"""
+    """Probability of locust beeing choosen. The higher the weight, the greater is the chance of it beeing chosen."""
 
     __metaclass__ = LocustMeta
     
     def __init__(self):
         self._task_queue = []
         self._time_start = time()
+        self._is_alive = True
     
     def __call__(self):
         while (True):
             if self.stop_timeout is not None and time() - self._time_start > self.stop_timeout:
                 return
-            
+
             if not self._task_queue:
                 self.schedule_task(self.get_next_task())
             self.execute_next_task()
@@ -133,6 +135,9 @@ class Locust(object):
     def wait(self):
         gevent.sleep(random.randint(self.min_wait, self.max_wait) / 1000.0)
 
+    def kill(self):
+        self._is_alive = False
+
 class WebLocust(Locust):
     """
     Locust class that inherits from Locust and creates a *client* attribute on instantiation. 
@@ -153,13 +158,16 @@ class WebLocust(Locust):
         self.client = HttpBrowser(self.host)
 
 
-locusts = []
+locusts = Group()
 locust_runner = None
 
 def hatch(locust_list, hatch_rate, num_clients, num_requests=None, host=None, stop_timeout=None):
-    print "Creating bucket of locusts, occurence depending on weight..."
     bucket = []
     for locust in locust_list:
+        if not locust.tasks:
+            print "Notice: Found locust (%s) got no tasks. Skipping..." % locust.__name__
+            continue
+
         if host is not None:
             locust.host = host
         if stop_timeout is not None:
@@ -167,32 +175,28 @@ def hatch(locust_list, hatch_rate, num_clients, num_requests=None, host=None, st
 
         for x in xrange(0, locust.weight):
             bucket.append(locust)
-        
-    print "Hatching and swarming %i clients at the rate %i clients/s for %d requests..." % (num_clients, hatch_rate, num_requests)
-    while True:
-        print RequestStats.total_num_requests
-        if num_requests and RequestStats.total_num_requests >= num_requests:
-            print "Total num of requests reached."
-            gevent.killall(locusts)
-            return
 
+    print ""
+    print "Hatching and swarming %i clients at the rate %i clients/s for %d requests..." % (num_clients, hatch_rate, num_requests)
+    print ""
+    occurence_count = dict([(l.__name__, 0) for l in locust_list])
+    while locust_runner.is_alive:
         for i in range(0, hatch_rate):
             if len(locusts) >= num_clients:
-                print "All locusts hatched"
-                gevent.joinall(locusts)
+                print "All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in occurence_count.iteritems()])
+                print ""
+                locusts.join()
                 return
 
-            new_locust = gevent.spawn(random.choice(bucket)())
+            locust = random.choice(bucket)
+            occurence_count[locust.__name__] += 1
+            new_locust = locusts.spawn(locust())
             new_locust.link(on_death)
-            locusts.append(new_locust)
-        print "%i locusts hatched" % (len(locusts))
         gevent.sleep(1)
 
 def on_death(locust):
-    locusts.remove(locust)
     if len(locusts) == 0:
-        print "All locusts dead"
-
+        print "All locusts dead\n"
 
 class LocustRunner(object):
     def __init__(self, locust_classes, hatch_rate, num_clients, num_requests=None, host=None):
@@ -201,10 +205,26 @@ class LocustRunner(object):
         self.num_clients = num_clients
         self.num_requests = num_requests
         self.host = host
-    
+        self.current_num_requests = 0
+        self.is_alive = True
+        RequestStats.request_observers.append(self.log_request)
+
     @property
     def request_stats(self):
         return RequestStats.requests
+
+    def log_request(self, *args, **kwargs):
+        self.current_num_requests += 1
+        if self.current_num_requests >= self.num_requests:
+            print "%d requests performed, killing all locusts..." % self.current_num_requests
+            locusts.kill()
+            print_stats(RequestStats.requests)
+            self.kill()
+        elif self.current_num_requests % 10 == 0:
+            print "%d requests performed" % self.current_num_requests
+
+    def kill(self):
+        self.is_alive = False
 
 class LocalLocustRunner(LocustRunner):
     def start_hatching(self):
