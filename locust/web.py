@@ -55,4 +55,4 @@ def start(locust, hatch_rate, num_clients, num_requests):
     _hatch_rate = hatch_rate
     _num_clients = num_clients
     _num_requests = num_requests
-    wsgi.WSGIServer(('', 8089), app).start()
+    wsgi.WSGIServer(('', 8089), app).serve_forever()
