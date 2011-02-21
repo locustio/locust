@@ -294,11 +294,11 @@ def main():
         core.locust_runner = MasterLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, redis_host=options.redis_host, redis_port=options.redis_port)
     elif options.slave:
         core.locust_runner = SlaveLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, redis_host=options.redis_host, redis_port=options.redis_port)
-
-    if options.print_stats:
+    
+    if not options.web or options.print_stats:
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
-        
+    
     try:
         print ""
         print "Starting Locust %s" % version
@@ -311,4 +311,7 @@ def main():
         print "Exiting, bye.."
         print ""
 
-    sys.exit(0)if __name__ == '__main__':    main()
+    sys.exit(0)
+
+if __name__ == '__main__':
+    main()
