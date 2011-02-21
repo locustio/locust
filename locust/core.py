@@ -107,6 +107,9 @@ class Locust(object):
     
     host = None
     """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
+
+    basic_auth = None
+    """HTTP Basic Authentication two-tuple. i.e: ('user', 'password')"""
     
     min_wait = 1000
     """Minimum waiting time between two execution of locust tasks"""
@@ -167,13 +170,13 @@ class WebLocust(Locust):
         super(WebLocust, self).__init__()
         if self.host is None:
             raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
-        self.client = HttpBrowser(self.host)
+        self.client = HttpBrowser(self.host, self.basic_auth)
 
 
 locusts = Group()
 locust_runner = None
 
-def hatch(locust_list, hatch_rate, num_clients, num_requests=None, host=None, stop_timeout=None):
+def hatch(locust_list, hatch_rate, num_clients, host=None, basic_auth=None, stop_timeout=None):
     bucket = []
     for locust in locust_list:
         if not locust.tasks:
@@ -182,6 +185,8 @@ def hatch(locust_list, hatch_rate, num_clients, num_requests=None, host=None, st
 
         if host is not None:
             locust.host = host
+        if basic_auth is not None:
+            locust.basic_auth = basic_auth
         if stop_timeout is not None:
             locust.stop_timeout = stop_timeout
 
@@ -211,12 +216,13 @@ def on_death(locust):
         print "All locusts dead\n"
 
 class LocustRunner(object):
-    def __init__(self, locust_classes, hatch_rate, num_clients, num_requests=None, host=None):
+    def __init__(self, locust_classes, hatch_rate, num_clients, num_requests=None, host=None, basic_auth=None):
         self.locust_classes = locust_classes
         self.hatch_rate = hatch_rate
         self.num_clients = num_clients
         self.num_requests = num_requests
         self.host = host
+        self.basic_auth = basic_auth
         self.current_num_requests = 0
         self.is_alive = True
         RequestStats.request_observers.append(self.log_request)
@@ -235,12 +241,21 @@ class LocustRunner(object):
         elif self.current_num_requests % 10 == 0:
             print "%d requests performed" % self.current_num_requests
 
+    def reset(self, stats=True):
+        self.current_num_requests = 0
+        self.is_alive = True
+        if stats:
+            RequestStats.requests = {}
+
     def kill(self):
         self.is_alive = False
 
 class LocalLocustRunner(LocustRunner):
     def start_hatching(self):
-        hatch_greenlet = gevent.spawn(hatch, self.locust_classes, self.hatch_rate, self.num_clients, self.num_requests, self.host)
+        if self.current_num_requests:
+            self.reset()
+            
+        gevent.spawn(hatch, self.locust_classes, self.hatch_rate, self.num_clients, self.host, self.basic_auth)
 
 class DistributedLocustRunner(LocustRunner):
     def __init__(self, locust_classes, hatch_rate, num_clients, host=None, redis_host="localhost", redis_port=6379):
