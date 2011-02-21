@@ -4,6 +4,9 @@ from copy import copy
 from decorator import decorator
 
 from urllib2 import URLError
+from httplib import BadStatusLine
+
+from exception import InterruptLocust
 
 class RequestStatsAdditionError(Exception):
     pass
@@ -11,6 +14,8 @@ class RequestStatsAdditionError(Exception):
 class RequestStats(object):
     requests = {}
     request_observers = []
+    total_num_requests = 0
+    global_max_requests = None
 
     def __init__(self, name):
         self.name = name
@@ -23,6 +28,8 @@ class RequestStats(object):
         self.max_response_time = 0
 
     def log(self, response_time, failure=False):
+        RequestStats.total_num_requests += 1
+        
         self.num_reqs += 1
         self.total_response_time += response_time
 
@@ -38,15 +45,6 @@ class RequestStats(object):
             self.max_response_time = max(self.max_response_time, response_time)
         else:
             self.num_failures += 1
-
-        gevent.spawn(self.notify, response_time, failure)
-
-    def notify(self, response_time, failure):
-        for observer in self.request_observers:
-            try:
-                observer(response_time, failure)
-            except Exception:
-                pass
 
     @property
     def avg_response_time(self):
@@ -85,7 +83,7 @@ class RequestStats(object):
         }
 
     def __str__(self):
-        return "%20s %7d %8d %7d %7d %7d %7d" % (self.name,
+        return "%40s %7d %8d %7d %7d %7d %7d" % (self.name,
             self.num_reqs,
             self.num_failures,
             self.avg_response_time,
@@ -111,26 +109,28 @@ def log_request(f):
     def wrapper(func, *args, **kwargs):
         name = kwargs.get('name', args[1])
         try:
+            if RequestStats.global_max_requests is not None and RequestStats.total_num_requests >= RequestStats.global_max_requests:
+                raise InterruptLocust("Maximum number of requests reached")
             start = time.time()
             retval = func(*args, **kwargs)
             response_time = int((time.time() - start) * 1000)
             RequestStats.get(name).log(response_time)
             return retval
-        except URLError, e:
+        except (URLError, BadStatusLine), e:
             RequestStats.get(name).log(0, True)
     return decorator(wrapper, f)
 
 def print_stats(stats):
     print ""
-    print "%20s %7s %8s %7s %7s %7s %7s" % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'req/s')
-    print "-" * 80
+    print "%40s %7s %8s %7s %7s %7s %7s" % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'req/s')
+    print "-" * 120
     for r in stats.itervalues():
         print r
-    print "-" * 80
+    print "-" * 120
     print ""
 
 def stats_printer():
     from core import locust_runner
-    while locust_runner.is_alive:
+    while True:
         print_stats(locust_runner.request_stats)
         gevent.sleep(2)
