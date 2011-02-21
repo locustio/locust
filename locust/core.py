@@ -12,8 +12,7 @@ from hotqueue import HotQueue
 from clients import HTTPClient, HttpBrowser
 from stats import RequestStats, print_stats
 
-class LocustError(Exception):
-    pass
+from exception import LocustError, InterruptLocust
 
 def require_once(required_func):
     """
@@ -100,23 +99,25 @@ class Locust(object):
 
     weight = 10
     """Probability of locust beeing choosen. The higher the weight, the greater is the chance of it beeing chosen."""
-
+    
     __metaclass__ = LocustMeta
     
     def __init__(self):
         self._task_queue = []
         self._time_start = time()
-        self._is_alive = True
     
     def __call__(self):
-        while (True):
-            if self.stop_timeout is not None and time() - self._time_start > self.stop_timeout:
-                return
-
-            if not self._task_queue:
-                self.schedule_task(self.get_next_task())
-            self.execute_next_task()
-            self.wait()
+        try:
+            while (True):
+                if self.stop_timeout is not None and time() - self._time_start > self.stop_timeout:
+                    return
+        
+                if not self._task_queue:
+                    self.schedule_task(self.get_next_task())
+                self.execute_next_task()
+                self.wait()
+        except InterruptLocust:
+            pass
     
     def execute_next_task(self):
         task = self._task_queue.pop(0)
@@ -134,9 +135,6 @@ class Locust(object):
     
     def wait(self):
         gevent.sleep(random.randint(self.min_wait, self.max_wait) / 1000.0)
-
-    def kill(self):
-        self._is_alive = False
 
 class WebLocust(Locust):
     """
@@ -161,44 +159,6 @@ class WebLocust(Locust):
 locusts = Group()
 locust_runner = None
 
-def hatch(locust_list, hatch_rate, num_clients, num_requests=None, host=None, stop_timeout=None):
-    bucket = []
-    for locust in locust_list:
-        if not locust.tasks:
-            print "Notice: Found locust (%s) got no tasks. Skipping..." % locust.__name__
-            continue
-
-        if host is not None:
-            locust.host = host
-        if stop_timeout is not None:
-            locust.stop_timeout = stop_timeout
-
-        for x in xrange(0, locust.weight):
-            bucket.append(locust)
-
-    print ""
-    print "Hatching and swarming %i clients at the rate %i clients/s..." % (num_clients, hatch_rate)
-    print ""
-    occurence_count = dict([(l.__name__, 0) for l in locust_list])
-    while locust_runner.is_alive:
-        for i in range(0, hatch_rate):
-            if len(locusts) >= num_clients:
-                print "All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in occurence_count.iteritems()])
-                print ""
-                locusts.join()
-                return
-
-            locust = random.choice(bucket)
-            occurence_count[locust.__name__] += 1
-            new_locust = locusts.spawn(locust())
-            new_locust.link(on_death)
-        print "%i locusts hatched" % len(locusts)
-        gevent.sleep(1)
-
-def on_death(locust):
-    if len(locusts) == 0:
-        print "All locusts dead\n"
-
 class LocustRunner(object):
     def __init__(self, locust_classes, hatch_rate, num_clients, num_requests=None, host=None):
         self.locust_classes = locust_classes
@@ -206,32 +166,57 @@ class LocustRunner(object):
         self.num_clients = num_clients
         self.num_requests = num_requests
         self.host = host
-        self.current_num_requests = 0
-        self.is_alive = True
-        RequestStats.request_observers.append(self.log_request)
+        self.locusts = Group()
 
     @property
     def request_stats(self):
         return RequestStats.requests
-
-    def log_request(self, *args, **kwargs):
-        self.current_num_requests += 1
-        if self.num_requests and self.current_num_requests >= self.num_requests:
-            print "%d requests performed, killing all locusts..." % self.current_num_requests
-            locusts.kill()
-            print_stats(RequestStats.requests)
-            self.kill()
-
-    def kill(self):
-        self.is_alive = False
+    
+    def hatch(self, stop_timeout=None):
+        if self.num_requests is not None:
+            RequestStats.global_max_requests = self.num_requests
+        
+        bucket = []
+        for locust in self.locust_classes:
+            if not locust.tasks:
+                print "Notice: Found locust (%s) got no tasks. Skipping..." % locust.__name__
+                continue
+    
+            if self.host is not None:
+                locust.host = self.host
+            if stop_timeout is not None:
+                locust.stop_timeout = stop_timeout
+    
+            for x in xrange(0, locust.weight):
+                bucket.append(locust)
+        
+        print "\nHatching and swarming %i clients at the rate %i clients/s...\n" % (self.num_clients, self.hatch_rate)
+        occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
+        
+        def spawn_locusts():
+            while True:
+                for i in range(0, self.hatch_rate):
+                    if len(self.locusts) >= self.num_clients:
+                        print "All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in occurence_count.iteritems()]) + "\n"
+                        return
+            
+                    locust = random.choice(bucket)
+                    occurence_count[locust.__name__] += 1
+                    new_locust = self.locusts.spawn(locust())
+                print "%i locusts hatched" % len(self.locusts)
+                gevent.sleep(1)
+        
+        spawn_locusts()
+        self.locusts.join()
+        print "All locusts dead\n"
 
 class LocalLocustRunner(LocustRunner):
     def start_hatching(self):
-        hatch_greenlet = gevent.spawn(hatch, self.locust_classes, self.hatch_rate, self.num_clients, self.num_requests, self.host)
+        self.greenlet = gevent.spawn(self.hatch, self)
 
 class DistributedLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, hatch_rate, num_clients, host=None, redis_host="localhost", redis_port=6379):
-        super(DistributedLocustRunner, self).__init__(locust_classes, hatch_rate, num_clients, host)
+    def __init__(self, locust_classes, hatch_rate, num_clients, num_requests, host=None, redis_host="localhost", redis_port=6379):
+        super(DistributedLocustRunner, self).__init__(locust_classes, hatch_rate, num_clients, num_requests, host)
         
         # set up the redis queus that will be used to communicate between master and slaves
         self.work_queue = HotQueue("locust_work_queue", host=redis_host, port=redis_port, db=0)
@@ -243,8 +228,9 @@ class MasterLocustRunner(DistributedLocustRunner):
         super(MasterLocustRunner, self).__init__(*args, **kwargs)
         self.ready_clients = []
         self.client_stats = {}
-        gevent.spawn(self.client_tracker).link_exception()
-        gevent.spawn(self.stats_aggregator).link_exception()
+        self.greenlet = Group()
+        self.greenlet.spawn(self.client_tracker).link_exception()
+        self.greenlet.spawn(self.stats_aggregator).link_exception()
     
     def start_hatching(self):
         print "Sending hatch jobs to %i ready clients" % len(self.ready_clients)
@@ -276,16 +262,21 @@ class SlaveLocustRunner(DistributedLocustRunner):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + md5(str(time() + random.randint(0,10000))).hexdigest()
         self.client_report_queue.put(self.client_id)
-        gevent.spawn(self.worker).link_exception()
-        gevent.spawn(self.stats_reporter).link_exception()
+        self.greenlet = Group()
+        self.greenlet.spawn(self.worker).link_exception()
+        self.greenlet.spawn(self.stats_reporter).link_exception()
     
     def start_hatching(self):
-        raise Exception("start_hatching should never be called for a slave process")
+        raise LocustError("start_hatching should never be called for a slave process")
     
     def worker(self):
         for job in self.work_queue.consume():
             print "job recieved: %r" % job
-            hatch(self.locust_classes, job["hatch_rate"], job["num_clients"], job["num_requests"], job["host"], stop_timeout=job["stop_timeout"])
+            self.hatch_rate = job["hatch_rate"]
+            self.num_clients = job["num_clients"]
+            self.num_requests = job["num_requests"]
+            self.host = job["host"]
+            self.hatch(stop_timeout=job["stop_timeout"])
     
     def stats_reporter(self):
         while True:

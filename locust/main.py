@@ -99,7 +99,7 @@ def parse_options():
         action='store',
         type='int',
         dest='num_requests',
-        default=0,
+        default=None,
         help="Number of requests to perform"
     )
 
@@ -303,8 +303,7 @@ def main():
         print ""
         print "Starting Locust %s" % version
         print ""
-        while core.locust_runner.is_alive:
-            gevent.sleep(1)
+        core.locust_runner.greenlet.join()
     except KeyboardInterrupt, e:
         print_stats(core.locust_runner.request_stats)
         print ""
