@@ -192,6 +192,7 @@ def hatch(locust_list, hatch_rate, num_clients, num_requests=None, host=None, st
             occurence_count[locust.__name__] += 1
             new_locust = locusts.spawn(locust())
             new_locust.link(on_death)
+        print "%i locusts hatched" % len(locusts)
         gevent.sleep(1)
 
 def on_death(locust):
@@ -220,8 +221,6 @@ class LocustRunner(object):
             locusts.kill()
             print_stats(RequestStats.requests)
             self.kill()
-        elif self.current_num_requests % 10 == 0:
-            print "%d requests performed" % self.current_num_requests
 
     def kill(self):
         self.is_alive = False
