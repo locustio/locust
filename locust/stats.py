@@ -108,17 +108,37 @@ def median(values):
     return sorted(values)[len(values)/2] # TODO: Check for odd/even length
 
 def log_request(f):
-    def wrapper(func, *args, **kwargs):
+    def _wrapper(*args, **kwargs):
         name = kwargs.get('name', args[1])
         try:
             start = time.time()
-            retval = func(*args, **kwargs)
+            retval = f(*args, **kwargs)
             response_time = int((time.time() - start) * 1000)
             RequestStats.get(name).log(response_time)
             return retval
         except URLError, e:
             RequestStats.get(name).log(0, True)
-    return decorator(wrapper, f)
+
+        return f(*args, **kwargs)
+
+    return _wrapper
+
+# TODO Find out why is the kwargs converted to args...
+#
+#def log_request(func):
+#    def wrapper(f, *args, **kwargs):
+#        name = kwargs.get('name', args[1])
+#        print args, kwargs
+#        try:
+#            start = time.time()
+#            retval = f(*args, **kwargs)
+#            response_time = int((time.time() - start) * 1000)
+#            RequestStats.get(name).log(response_time)
+#            return retval
+#        except URLError, e:
+#            RequestStats.get(name).log(0, True)
+#
+#    return decorator(wrapper, func)
 
 def print_stats(stats):
     print ""
