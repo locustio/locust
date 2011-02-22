@@ -53,16 +53,21 @@ def require_once(required_func):
 class LocustMeta(type):
     """
     Meta class for the main Locust class. It's used to allow Locust classes to specify task execution 
-    ratio using an {int:task} dict.
+    ratio using an {task:int} dict, or a [(task0,int), ..., (taskN,int)] list.
     """
     
     def __new__(meta, classname, bases, classDict):
-        if "tasks" in classDict and isinstance(classDict["tasks"], dict):
-            tasks = []
-            for task, count in classDict["tasks"].iteritems():
-                for i in xrange(0, count):
-                    tasks.append(task)
-            classDict["tasks"] = tasks
+        if "tasks" in classDict and classDict["tasks"] is not None:
+            tasks = classDict["tasks"]
+            if isinstance(tasks, dict):
+                tasks = list(tasks.iteritems())
+            
+            if len(tasks) > 0 and isinstance(tasks[0], tuple):
+                new_tasks = []
+                for task, count in tasks:
+                    for i in xrange(0, count):
+                        new_tasks.append(task)
+                classDict["tasks"] = new_tasks
         
         return type.__new__(meta, classname, bases, classDict)
 
