@@ -26,9 +26,8 @@ class RequestStats(object):
         self.num_reqs += 1
         self.total_response_time += response_time
 
-        sec = int(time.time())
-        num = self.num_reqs_per_sec.setdefault(sec, 0)
-        self.num_reqs_per_sec[sec] += 1
+        self.num_reqs_per_sec.setdefault(response_time, 0)
+        self.num_reqs_per_sec[response_time] += 1
 
         if not failure:
             if self.min_response_time is None:
@@ -117,7 +116,8 @@ def log_request(f):
             RequestStats.get(name).log(response_time)
             return retval
         except URLError, e:
-            RequestStats.get(name).log(0, True)
+            response_time = int((time.time() - start) * 1000)
+            RequestStats.get(name).log(response_time, True)
 
         return f(*args, **kwargs)
 
