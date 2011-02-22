@@ -26,6 +26,8 @@ class RequestStats(object):
         self.total_response_time = 0
         self.min_response_time = None
         self.max_response_time = 0
+        
+        self._requests = []
 
     def log(self, response_time, failure=False):
         RequestStats.total_num_requests += 1
@@ -43,12 +45,20 @@ class RequestStats(object):
                 
             self.min_response_time = min(self.min_response_time, response_time)
             self.max_response_time = max(self.max_response_time, response_time)
+            
+            self._requests.insert(0, response_time)
+            if len(self._requests) >= 2000:
+                self._requests = self._requests[0:1000]
         else:
             self.num_failures += 1
 
     @property
     def avg_response_time(self):
         return self.total_response_time / self.num_reqs
+    
+    @property
+    def median_response_time(self):
+        return median(self._requests[0:1000])
     
     @property
     def reqs_per_sec(self):
@@ -83,12 +93,13 @@ class RequestStats(object):
         }
 
     def __str__(self):
-        return "%40s %7d %8d %7d %7d %7d %7d" % (self.name,
+        return " %-40s %7d %12s %7d %7d %7d  | %7d %7d" % (self.name,
             self.num_reqs,
-            self.num_failures,
+            "%d(%.2f%%)" % (self.num_failures, (self.num_failures/float(self.num_reqs))*100),
             self.avg_response_time,
             self.min_response_time or 0,
             self.max_response_time,
+            self.median_response_time,
             self.reqs_per_sec or 0)
 
     @classmethod
@@ -121,8 +132,7 @@ def log_request(f):
     return decorator(wrapper, f)
 
 def print_stats(stats):
-    print ""
-    print "%40s %7s %8s %7s %7s %7s %7s" % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'req/s')
+    print " %-40s %7s %12s %7s %7s %7s  | %7s %7s" % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s')
     print "-" * 120
     for r in stats.itervalues():
         print r
