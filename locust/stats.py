@@ -4,6 +4,9 @@ from copy import copy
 from decorator import decorator
 
 from urllib2 import URLError
+from httplib import BadStatusLine
+
+from exception import InterruptLocust
 
 class RequestStatsAdditionError(Exception):
     pass
@@ -11,6 +14,8 @@ class RequestStatsAdditionError(Exception):
 class RequestStats(object):
     requests = {}
     request_observers = []
+    total_num_requests = 0
+    global_max_requests = None
 
     def __init__(self, name):
         self.name = name
@@ -21,8 +26,12 @@ class RequestStats(object):
         self.total_response_time = 0
         self.min_response_time = None
         self.max_response_time = 0
+        
+        self._requests = []
 
     def log(self, response_time, failure=False):
+        RequestStats.total_num_requests += 1
+        
         self.num_reqs += 1
         self.total_response_time += response_time
 
@@ -35,21 +44,20 @@ class RequestStats(object):
                 
             self.min_response_time = min(self.min_response_time, response_time)
             self.max_response_time = max(self.max_response_time, response_time)
+            
+            self._requests.insert(0, response_time)
+            if len(self._requests) >= 2000:
+                self._requests = self._requests[0:1000]
         else:
             self.num_failures += 1
-
-        gevent.spawn(self.notify, response_time, failure)
-
-    def notify(self, response_time, failure):
-        for observer in self.request_observers:
-            try:
-                observer(response_time, failure)
-            except Exception:
-                pass
 
     @property
     def avg_response_time(self):
         return self.total_response_time / self.num_reqs
+    
+    @property
+    def median_response_time(self):
+        return median(self._requests[0:1000])
     
     @property
     def reqs_per_sec(self):
@@ -84,12 +92,13 @@ class RequestStats(object):
         }
 
     def __str__(self):
-        return "%20s %7d %8d %7d %7d %7d %7d" % (self.name,
+        return " %-40s %7d %12s %7d %7d %7d  | %7d %7d" % (self.name,
             self.num_reqs,
-            self.num_failures,
+            "%d(%.2f%%)" % (self.num_failures, (self.num_failures/float(self.num_reqs))*100),
             self.avg_response_time,
             self.min_response_time or 0,
             self.max_response_time,
+            self.median_response_time,
             self.reqs_per_sec or 0)
 
     @classmethod
@@ -110,47 +119,27 @@ def log_request(f):
     def _wrapper(*args, **kwargs):
         name = kwargs.get('name', args[1])
         try:
+            if RequestStats.global_max_requests is not None and RequestStats.total_num_requests >= RequestStats.global_max_requests:
+                raise InterruptLocust("Maximum number of requests reached")
             start = time.time()
             retval = f(*args, **kwargs)
             response_time = int((time.time() - start) * 1000)
             RequestStats.get(name).log(response_time)
             return retval
-        except URLError, e:
-            response_time = int((time.time() - start) * 1000)
-            RequestStats.get(name).log(response_time, True)
-
-        return f(*args, **kwargs)
-
+        except (URLError, BadStatusLine), e:
+            RequestStats.get(name).log(0, True)
     return _wrapper
 
-# TODO Find out why is the kwargs converted to args...
-#
-#def log_request(func):
-#    def wrapper(f, *args, **kwargs):
-#        name = kwargs.get('name', args[1])
-#        print args, kwargs
-#        try:
-#            start = time.time()
-#            retval = f(*args, **kwargs)
-#            response_time = int((time.time() - start) * 1000)
-#            RequestStats.get(name).log(response_time)
-#            return retval
-#        except URLError, e:
-#            RequestStats.get(name).log(0, True)
-#
-#    return decorator(wrapper, func)
-
 def print_stats(stats):
-    print ""
-    print "%20s %7s %8s %7s %7s %7s %7s" % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'req/s')
-    print "-" * 80
+    print " %-40s %7s %12s %7s %7s %7s  | %7s %7s" % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s')
+    print "-" * 120
     for r in stats.itervalues():
         print r
-    print "-" * 80
+    print "-" * 120
     print ""
 
 def stats_printer():
     from core import locust_runner
-    while locust_runner.is_alive:
+    while True:
         print_stats(locust_runner.request_stats)
         gevent.sleep(2)
