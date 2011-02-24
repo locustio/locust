@@ -2,6 +2,7 @@ import urllib2
 import urllib
 from stats import log_request
 import base64
+from urlparse import urlparse, urlunparse
 
 class HTTPClient(object):
     def __init__(self, base_url):
@@ -29,18 +30,23 @@ class HttpBrowser(object):
     Logs each request so that locust can display statistics.
     """
 
-    def __init__(self, base_url, basic_auth=None):
+    def __init__(self, base_url):
         self.base_url = base_url
         handlers = [urllib2.HTTPCookieProcessor()]
 
-        if basic_auth:
-            if not isinstance(basic_auth, tuple) or len(basic_auth) != 2:
-                print "Invalid basic_auth parameter."
-                print "The basic_auth parameter must be a two-tuple (user, password)."
-            else:
-                user, password = basic_auth
-                auth_handler = HttpBasicAuthHandler(user, password)
-                handlers.append(auth_handler)
+        # Check for basic authentication
+        parsed_url = urlparse(self.base_url)
+        if parsed_url.username and parsed_url.password:
+
+            netloc = parsed_url.hostname
+            if parsed_url.port:
+                netloc += ":%d" % parsed_url.port
+
+            # remove username and password from the base_url
+            self.base_url = urlunparse((parsed_url.scheme, netloc, parsed_url.path, parsed_url.params, parsed_url.query, parsed_url.fragment))
+        
+            auth_handler = HttpBasicAuthHandler(parsed_url.username, parsed_url.password)
+            handlers.append(auth_handler)
 
         self.opener = urllib2.build_opener(*handlers)
         urllib2.install_opener(self.opener)
