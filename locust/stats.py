@@ -1,12 +1,14 @@
 import time
 import gevent
 from copy import copy
-from decorator import decorator
+import math
+import functools
 
 from urllib2 import URLError
 from httplib import BadStatusLine
 
 from exception import InterruptLocust
+from collections import deque
 
 class RequestStatsAdditionError(Exception):
     pass
@@ -24,10 +26,11 @@ class RequestStats(object):
         self.num_failures = 0
         
         self.total_response_time = 0
+        self.response_times = {}
         self.min_response_time = None
         self.max_response_time = 0
         
-        self._requests = []
+        self._requests = deque(maxlen=1000)
 
     def log(self, response_time, failure=False):
         RequestStats.total_num_requests += 1
@@ -35,19 +38,17 @@ class RequestStats(object):
         self.num_reqs += 1
         self.total_response_time += response_time
 
-        self.num_reqs_per_sec.setdefault(response_time, 0)
-        self.num_reqs_per_sec[response_time] += 1
-
         if not failure:
             if self.min_response_time is None:
                 self.min_response_time = response_time
                 
             self.min_response_time = min(self.min_response_time, response_time)
             self.max_response_time = max(self.max_response_time, response_time)
+
+            self.response_times.setdefault(response_time, 0)
+            self.response_times[response_time] += 1
             
-            self._requests.insert(0, response_time)
-            if len(self._requests) >= 2000:
-                self._requests = self._requests[0:1000]
+            self._requests.appendleft(response_time)
         else:
             self.num_failures += 1
 
@@ -57,14 +58,27 @@ class RequestStats(object):
     
     @property
     def median_response_time(self):
-        return median(self._requests[0:1000])
+        return median(self._requests)
     
     @property
     def reqs_per_sec(self):
-        timestamp = int(time.time())
-        reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(timestamp - 10, timestamp)]
-        return avg(reqs)
-    
+        avgTime = avg(self._requests)
+        return 1000 / avgTime if avgTime else 0
+
+    @property
+    def total_reqs_per_sec(self):
+        response_times_list = self.create_response_times_list()
+        avgTime = avg(response_times_list)
+        return 1000 / avgTime if avgTime else 0
+
+    def create_response_times_list(self):
+        inflated_list = []
+        for response_time, count in self.response_times.iteritems():
+            inflated_list.extend([response_time for x in xrange(0, count)])
+        inflated_list.sort()
+
+        return inflated_list
+
     def __add__(self, other):
         if self.name != other.name:
             raise RequestStatsAdditionError("Trying to add two RequestStats objects of different names (%s and %s)" % (self.name, other.name))
@@ -92,14 +106,33 @@ class RequestStats(object):
         }
 
     def __str__(self):
-        return " %-40s %7d %12s %7d %7d %7d  | %7d %7d" % (self.name,
+        return " %-40s %7d %12s %7d %7d %7d  | %7d %7.2f" % (
+            self.name,
             self.num_reqs,
             "%d(%.2f%%)" % (self.num_failures, (self.num_failures/float(self.num_reqs))*100),
             self.avg_response_time,
             self.min_response_time or 0,
             self.max_response_time,
-            self.median_response_time,
-            self.reqs_per_sec or 0)
+            self.median_response_time or 0,
+            self.reqs_per_sec or 0
+        )
+
+    def percentile(self):
+        inflated_list = self.create_response_times_list()
+
+        return " %-40s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d" % (
+            self.name,
+            self.num_reqs,
+            percentile(inflated_list, 0.5),
+            percentile(inflated_list, 0.66),
+            percentile(inflated_list, 0.75),
+            percentile(inflated_list, 0.80),
+            percentile(inflated_list, 0.90),
+            percentile(inflated_list, 0.95),
+            percentile(inflated_list, 0.98),
+            percentile(inflated_list, 0.99),
+            percentile(inflated_list, 1.0)
+        )
 
     @classmethod
     def get(cls, name):
@@ -110,10 +143,32 @@ class RequestStats(object):
         return request
 
 def avg(values):
-    return sum(values, 0.0) / len(values)
+    return sum(values, 0.0) / max(len(values), 1)
 
-def median(values):
-    return sorted(values)[len(values)/2] # TODO: Check for odd/even length
+# TODO Use interpolation or not?
+def percentile(N, percent, key=lambda x:x):
+    """
+    Find the percentile of a list of values.
+
+    @parameter N - is a list of values. Note N MUST BE already sorted.
+    @parameter percent - a float value from 0.0 to 1.0.
+    @parameter key - optional key function to compute value from each element of N.
+
+    @return - the percentile of the values
+    """
+    if not N:
+        return None
+    k = (len(N)-1) * percent
+    f = math.floor(k)
+    c = math.ceil(k)
+    if f == c:
+        return key(N[int(k)])
+    d0 = key(N[int(f)]) * (c-k)
+    d1 = key(N[int(c)]) * (k-f)
+    return d0+d1
+
+# median is 50th percentile.
+median = functools.partial(percentile, percent=0.5)
 
 def log_request(f):
     def _wrapper(*args, **kwargs):
@@ -135,6 +190,15 @@ def print_stats(stats):
     print "-" * 120
     for r in stats.itervalues():
         print r
+    print "-" * 120
+    print ""
+
+def print_percentile_stats(stats):
+    print "Percentage of the requests completed within given times" 
+    print " %-40s %8s %6s %6s %6s %6s %6s %6s %6s %6s %6s" % ('Name', '# reqs', '50%', '66%', '75%', '80%', '90%', '95%', '98%', '99%', '100%')
+    print "-" * 120
+    for r in stats.itervalues():
+        print r.percentile()
     print "-" * 120
     print ""
 

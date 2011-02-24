@@ -9,7 +9,7 @@ import sys
 import os
 import inspect
 from optparse import OptionParser
-from locust.stats import stats_printer, RequestStats
+from locust.stats import stats_printer, RequestStats, print_percentile_stats
 
 _internals = [Locust, WebLocust]
 version = "0.1"
@@ -308,6 +308,7 @@ def main():
         core.locust_runner.greenlet.join()
     except KeyboardInterrupt, e:
         print_stats(core.locust_runner.request_stats)
+        print_percentile_stats(core.locust_runner.request_stats)
         print ""
         print "Exiting, bye.."
         print ""
