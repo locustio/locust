@@ -197,9 +197,25 @@ def print_percentile_stats(stats):
     print "Percentage of the requests completed within given times" 
     print " %-40s %8s %6s %6s %6s %6s %6s %6s %6s %6s %6s" % ('Name', '# reqs', '50%', '66%', '75%', '80%', '90%', '95%', '98%', '99%', '100%')
     print "-" * 120
+    complete_list = []
     for r in stats.itervalues():
         print r.percentile()
+        complete_list.extend(r.create_response_times_list())
     print "-" * 120
+    complete_list.sort()
+    print " %-40s %8s %6d %6d %6d %6d %6d %6d %6d %6d %6d" % (
+        'Total',
+        str(len(complete_list)),
+        percentile(complete_list, 0.5),
+        percentile(complete_list, 0.66),
+        percentile(complete_list, 0.75),
+        percentile(complete_list, 0.8),
+        percentile(complete_list, 0.9),
+        percentile(complete_list, 0.95),
+        percentile(complete_list, 0.98),
+        percentile(complete_list, 0.99),
+        complete_list[-1]
+    )
     print ""
 
 def stats_printer():
