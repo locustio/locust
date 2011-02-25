@@ -13,7 +13,7 @@ from optparse import OptionParser
 from locust.stats import stats_printer, RequestStats, print_percentile_stats
 
 _internals = [Locust, WebLocust]
-version = "0.1"
+version = locust.version
 
 def parse_options():
     """
