@@ -41,6 +41,7 @@ More info and documentation can be found at: <a href="http://locust.readthedocs.
 
 - Carl Bystr&ouml;m (@<a href="http://twitter.com/cgbystrom">cgbystrom</a> on Twitter)
 - <a href="http://heyman.info">Jonatan Heyman</a> (@<a href="http://twitter.com/jonatanheyman">jonatanheyman</a> on Twitter)
+- Joakim Hamrén (@<a href="http://twitter.com/Jahaaja">Jahaaja</a>)
 
 ## License
 
