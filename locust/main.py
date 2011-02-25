@@ -8,6 +8,7 @@ import gevent
 import sys
 import os
 import inspect
+import time
 from optparse import OptionParser
 from locust.stats import stats_printer, RequestStats, print_percentile_stats
 
@@ -302,16 +303,18 @@ def main():
         gevent.spawn(stats_printer)
     
     try:
-        print ""
+        print
         print "Starting Locust %s" % version
-        print ""
+        print
         core.locust_runner.greenlet.join()
     except KeyboardInterrupt, e:
+        time.sleep(0.2)
+        print "\n"
         print_stats(core.locust_runner.request_stats)
         print_percentile_stats(core.locust_runner.request_stats)
-        print ""
+        print
         print "Exiting, bye.."
-        print ""
+        print
 
     sys.exit(0)
 
