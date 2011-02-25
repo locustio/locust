@@ -51,7 +51,7 @@ def simple_webserver(env, start_response):
 
 class WebserverTestCase(unittest.TestCase):
     def setUp(self):
-        self._web_server = gevent.wsgi.WSGIServer(("127.0.0.1", 0), simple_webserver)
+        self._web_server = gevent.wsgi.WSGIServer(("127.0.0.1", 0), simple_webserver, log=None)
         gevent.spawn(lambda: self._web_server.serve_forever())
         gevent.sleep(0)
         self.port = self._web_server.server_port
