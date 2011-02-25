@@ -205,7 +205,9 @@ class LocustRunner(object):
             while True:
                 for i in range(0, self.hatch_rate):
                     if len(self.locusts) >= self.num_clients:
-                        print "All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in occurence_count.iteritems()]) + "\n"
+                        print "All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in occurence_count.iteritems()])
+                        print "Resetting stats\n"
+                        RequestStats.reset_all()
                         return
             
                     locust = random.choice(bucket)
