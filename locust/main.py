@@ -293,7 +293,7 @@ def main():
         # spawn client spawning/hatching greenlet
         if not options.web:
             core.locust_runner.start_hatching()
-            main_greenlet = core.locusts_runner.greenlet
+            main_greenlet = core.locust_runner.greenlet
     elif options.master:
         core.locust_runner = MasterLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, redis_host=options.redis_host, redis_port=options.redis_port)
     elif options.slave:
