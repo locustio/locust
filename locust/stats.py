@@ -68,7 +68,7 @@ class RequestStats(object):
     
     @property
     def median_response_time(self):
-        return median(self._requests)
+        return median(sorted(self._requests))
     
     @property
     def reqs_per_sec(self):
