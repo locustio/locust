@@ -2,3 +2,4 @@
 locust.wpr
 locust.egg-info/**
 docs/_build/**
+.idea/**
