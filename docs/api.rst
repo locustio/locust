@@ -29,3 +29,7 @@ HttpBrowser class
 =======================
 
 .. autofunction:: locust.core.require_once
+
+InterruptLocust Exception
+=========================
+.. autoexception:: locust.exception.InterruptLocust
