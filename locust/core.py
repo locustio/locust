@@ -84,7 +84,7 @@ class Locust(object):
 
     If tasks is a list, the task to be performed will be picked randomly.
 
-    If tasks is a *<callable,int>* list of two-tuples, the task to be performed will be picked randomly, but each task will be
+    If tasks is a *(callable,int)* list of two-tuples, the task to be performed will be picked randomly, but each task will be
     weighted according to it's corresponding int value. So in the following case *task1* will be three times more
     likely to be picked than *task2*::
 
