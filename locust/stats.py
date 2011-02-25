@@ -21,15 +21,22 @@ class RequestStats(object):
 
     def __init__(self, name):
         self.name = name
-        self.num_reqs = 0
         self.num_reqs_per_sec = {}
+        self.reset()
+    
+    @classmethod
+    def reset_all(cls):
+        for name, stats in cls.requests.iteritems():
+            stats.reset()
+    
+    def reset(self):
+        self.start_time = time.time()
+        self.num_reqs = 0
         self.num_failures = 0
-        
         self.total_response_time = 0
         self.response_times = {}
         self.min_response_time = None
         self.max_response_time = 0
-        
         self._requests = deque(maxlen=1000)
 
     def log(self, response_time, failure=False):
@@ -37,6 +44,9 @@ class RequestStats(object):
         
         self.num_reqs += 1
         self.total_response_time += response_time
+        
+        t = int(time.time())
+        self.num_reqs_per_sec[t] = self.num_reqs_per_sec.setdefault(t, 0) + 1
 
         if not failure:
             if self.min_response_time is None:
@@ -62,14 +72,15 @@ class RequestStats(object):
     
     @property
     def reqs_per_sec(self):
-        avgTime = avg(self._requests)
-        return 1000 / avgTime if avgTime else 0
+        timestamp = int(time.time())
+        slice_start_time = max(timestamp - 10, int(self.start_time))
+        
+        reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, timestamp)]
+        return avg(reqs)
 
     @property
     def total_reqs_per_sec(self):
-        response_times_list = self.create_response_times_list()
-        avgTime = avg(response_times_list)
-        return 1000 / avgTime if avgTime else 0
+        return self.num_reqs / (time.time() - self.start_time)
 
     def create_response_times_list(self):
         inflated_list = []
