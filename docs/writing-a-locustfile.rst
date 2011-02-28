@@ -58,6 +58,40 @@ The host attribute is an adress to the host that is to be loaded. Usually, this 
 host attribute in the locust class, it will be used in the case when no --host is specified on the command line.
 
 
+Declaring tasks using the @task decorator
+-----------------------------------------
+
+Additionally to specifying a Locust's tasks using the **tasks** attribute, one can automatically add class methods to the **tasks** list using the **@task** decorator.
+
+Here is an example::
+
+    from locust import Locust, task
+    
+    class MyLocust(Locust):
+        min_wait = 5000
+        max_wait = 15000
+        
+        @task()
+        def my_task(self):
+            print "executing task"
+
+**@task** takes an optional weight argument that can be used to specify the task execution ratio. In the following example *task2* will be executed twice as much as *task1*::
+    
+    from locust import Locust, task
+    
+    def task1(l):
+        pass
+    
+    class MyLocust(Locust):
+        tasks = {task1:3}
+        min_wait = 5000
+        max_wait = 15000
+        
+        @task(6)
+        def task2(self):
+            pass
+
+
 Making HTTP requests using the WebLocust class
 ==============================================
 
@@ -67,8 +101,8 @@ In the above example we let our locust class inherit from Locust. How ever, when
 The difference between the Locust base class and the WebLocust class is that WebLocust creates an HTTP client, that is stored in the *client* attribute, upon instantiation. 
 
 .. autoclass:: locust.core.WebLocust
-	:members: client
-	:noindex:
+    :members: client
+    :noindex:
 
 When inheriting from the WebLocust class, we can use it's client attribute to make HTTP requests against the server. Here is an example of a locust file that can be used
 to load test a site with two urls; **/** and **/about/**::
@@ -95,7 +129,7 @@ The @required_once decorator
 The @required_once decorator is used to make sure that a task is run once, and only once, for each user, before another task is executed. 
 
 .. autofunction:: locust.core.require_once
-	:noindex:
+    :noindex:
 
 For example, this can be useful when you have a locust task that shouldn't be executed before a user has logged in, let's call it inbox. If you have a task called login that
 makes the appropriate login HTTP request(s), then you can decorate the inbox task with::
