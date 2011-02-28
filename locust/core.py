@@ -131,6 +131,14 @@ class Locust(object):
         task["callable"](self, *task["args"])
     
     def schedule_task(self, task_callable, *args, **kwargs):
+        """
+        Add a task to the Locust's task execution queue.
+        
+        Arguments:
+        * task_callable: Locust task to schedule
+        * first: Optional keyword argument. If True, the task will be put first in the queue.
+        * All other non keyword arguments will be passed to the task callable.
+        """
         task = {"callable":task_callable, "args":args}
         if "first" in kwargs:
             self._task_queue.insert(0, task)
