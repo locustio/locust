@@ -1,3 +1,4 @@
+import sys
 import time
 import gevent
 from copy import copy
@@ -192,6 +193,14 @@ def percentile(N, percent, key=lambda x:x):
 median = functools.partial(percentile, percent=0.5)
 
 def log_request(f):
+    # hack to preserve the function spec when generating sphinx documentation
+    # TODO: If sphinx is imported in locustfile, things will not function! Need a better way to check if
+    # sphinx is actually running documentation generation
+    if "sphinx" in sys.modules:
+        import warnings
+        warnings.warn("Sphinx detected, @log_request decorator will have no effect to preserve function spec")
+        return f
+    
     def _wrapper(*args, **kwargs):
         name = kwargs.get('name', args[1])
         try:
