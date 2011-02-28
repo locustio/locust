@@ -64,7 +64,10 @@ class RequestStats(object):
 
     @property
     def avg_response_time(self):
-        return self.total_response_time / self.num_reqs
+        try:
+            return self.total_response_time / self.num_reqs
+        except ZeroDivisionError:
+            return 0
     
     @property
     def median_response_time(self):
@@ -117,10 +120,15 @@ class RequestStats(object):
         }
 
     def __str__(self):
+        try:
+            fail_percent = (self.num_failures/float(self.num_reqs))*100
+        except ZeroDivisionError:
+            fail_percent = 0
+        
         return " %-40s %7d %12s %7d %7d %7d  | %7d %7.2f" % (
             self.name,
             self.num_reqs,
-            "%d(%.2f%%)" % (self.num_failures, (self.num_failures/float(self.num_reqs))*100),
+            "%d(%.2f%%)" % (self.num_failures, fail_percent),
             self.avg_response_time,
             self.min_response_time or 0,
             self.max_response_time,
