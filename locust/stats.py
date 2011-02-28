@@ -18,6 +18,7 @@ class RequestStats(object):
     request_observers = []
     total_num_requests = 0
     global_max_requests = None
+    global_last_request_timestamp = None
 
     def __init__(self, name):
         self.name = name
@@ -41,12 +42,14 @@ class RequestStats(object):
 
     def log(self, response_time, failure=False):
         RequestStats.total_num_requests += 1
-        
+
         self.num_reqs += 1
         self.total_response_time += response_time
         
         t = int(time.time())
         self.num_reqs_per_sec[t] = self.num_reqs_per_sec.setdefault(t, 0) + 1
+        self.last_request_timestamp = t
+        RequestStats.global_last_request_timestamp = t
 
         if not failure:
             if self.min_response_time is None:
@@ -75,15 +78,14 @@ class RequestStats(object):
     
     @property
     def reqs_per_sec(self):
-        timestamp = int(time.time())
-        slice_start_time = max(timestamp - 10, int(self.start_time))
+        slice_start_time = max(self.last_request_timestamp - 10, int(self.start_time))
         
-        reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, timestamp)]
+        reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, self.last_request_timestamp)]
         return avg(reqs)
 
     @property
     def total_reqs_per_sec(self):
-        return self.num_reqs / (time.time() - self.start_time)
+        return self.num_reqs / (RequestStats.global_last_request_timestamp - self.start_time)
 
     def create_response_times_list(self):
         inflated_list = []
