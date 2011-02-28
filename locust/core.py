@@ -227,7 +227,7 @@ class LocustRunner(object):
         spawn_locusts()
         self.locusts.join()
         print "All locusts dead\n"
-        print_percentile_stats() #TODO use an event listener, or such, for this?
+        print_percentile_stats(self.request_stats) #TODO use an event listener, or such, for this?
 
     def log_request(self, *args, **kwargs):
         self.current_num_requests += 1
