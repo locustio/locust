@@ -128,7 +128,10 @@ class Locust(object):
     
     def execute_next_task(self):
         task = self._task_queue.pop(0)
-        task["callable"](self, *task["args"])
+        self.execute_task(task["callable"], *task["args"])
+    
+    def execute_task(self, task, *args):
+        task(self, *args)
     
     def schedule_task(self, task_callable, *args, **kwargs):
         """
