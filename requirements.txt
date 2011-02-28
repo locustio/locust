@@ -2,4 +2,3 @@ greenlet
 gevent
 flask
 hotqueue
-decorator
