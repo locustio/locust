@@ -86,6 +86,17 @@ class TestLocustClass(unittest.TestCase):
         locust.schedule_task(t2, "argument to t2")
         locust.execute_next_task()
         self.assertEqual("argument to t2", self.t2_arg)
+    
+    def test_locust_inheritance(self):
+        def t1(l):
+            pass
+        class MyBaseLocust(Locust):
+            tasks = [t1]
+        class MySubLocust(MyBaseLocust):
+            pass
+        
+        l = MySubLocust()
+        self.assertEqual(1, len(l.tasks))
 
 
 class TestWebLocustClass(WebserverTestCase):
@@ -157,4 +168,3 @@ class TestWebLocustClass(WebserverTestCase):
         
         self.assertEqual(1, RequestStats.get("new name!").num_reqs)
         self.assertEqual(0, RequestStats.get("/ultra_fast").num_reqs)
-
