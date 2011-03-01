@@ -66,6 +66,9 @@ class LocustMeta(type):
     
     def __new__(meta, classname, bases, classDict):
         new_tasks = []
+        for base in bases:
+            if hasattr(base, "tasks") and base.tasks:
+                new_tasks += base.tasks
         
         if "tasks" in classDict and classDict["tasks"] is not None:
             tasks = classDict["tasks"]
@@ -94,7 +97,7 @@ class Locust(object):
     Locust base class defining a locust user/client.
     """
     
-    tasks = None
+    tasks = []
     """
     List with python callables that represents a locust user task.
 
