@@ -210,11 +210,21 @@ def print_stats(stats):
     print " %-40s %7s %12s %7s %7s %7s  | %7s %7s" % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s')
     print "-" * 120
     total_rps = 0
+    total_reqs = 0
+    total_failures = 0
     for r in stats.itervalues():
         total_rps += r.reqs_per_sec
+        total_reqs += r.num_reqs
+        total_failures += r.num_failures
         print r
     print "-" * 120
-    print " %-40s %63.2f" % ('Total', total_rps)
+
+    try:
+        fail_percent = (total_failures/float(total_reqs))*100
+    except ZeroDivisionError:
+        fail_percent = 0
+
+    print " %-40s %7d %12s %43.2f" % ('Total', total_reqs, "%d(%.2f%%)" % (total_failures, fail_percent), total_rps)
     print ""
 
 def print_percentile_stats(stats):
