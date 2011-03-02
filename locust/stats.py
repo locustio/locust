@@ -141,7 +141,6 @@ class RequestStats(object):
 
     def percentile(self):
         inflated_list = self.create_response_times_list()
-
         return " %-40s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d" % (
             self.name,
             self.num_reqs,
@@ -229,23 +228,25 @@ def print_percentile_stats(stats):
     print "-" * 120
     complete_list = []
     for r in stats.itervalues():
-        print r.percentile()
-        complete_list.extend(r.create_response_times_list())
+        if r.response_times:
+            print r.percentile()
+            complete_list.extend(r.create_response_times_list())
     print "-" * 120
     complete_list.sort()
-    print " %-40s %8s %6d %6d %6d %6d %6d %6d %6d %6d %6d" % (
-        'Total',
-        str(len(complete_list)),
-        percentile(complete_list, 0.5),
-        percentile(complete_list, 0.66),
-        percentile(complete_list, 0.75),
-        percentile(complete_list, 0.8),
-        percentile(complete_list, 0.9),
-        percentile(complete_list, 0.95),
-        percentile(complete_list, 0.98),
-        percentile(complete_list, 0.99),
-        complete_list[-1]
-    )
+    if complete_list:
+        print " %-40s %8s %6d %6d %6d %6d %6d %6d %6d %6d %6d" % (
+            'Total',
+            str(len(complete_list)),
+            percentile(complete_list, 0.5),
+            percentile(complete_list, 0.66),
+            percentile(complete_list, 0.75),
+            percentile(complete_list, 0.8),
+            percentile(complete_list, 0.9),
+            percentile(complete_list, 0.95),
+            percentile(complete_list, 0.98),
+            percentile(complete_list, 0.99),
+            complete_list[-1]
+        )
     print ""
 
 def stats_printer():
