@@ -195,7 +195,6 @@ class WebLocust(Locust):
         self.client = HttpBrowser(self.host)
 
 
-locusts = Group()
 locust_runner = None
 
 class LocustRunner(object):
