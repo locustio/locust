@@ -194,6 +194,30 @@ class WebLocust(Locust):
 
         self.client = HttpBrowser(self.host)
 
+class SubLocust(Locust):
+    """
+    Class for making a sub Locust that can be included as a task inside of a normal Locust/WebLocus,
+    as well as inside another sub locust. 
+    
+    When the parent locust enters the sub locust, it will not
+    continue executing it's tasks until a task in the sub locust has called the interrupt() function.
+    """
+    
+    def __init__(self, parent):
+        super(SubLocust, self).__init__()
+        
+        self.parent = parent
+        if isinstance(parent, WebLocust):
+            self.client = parent.client
+        
+        self()
+    
+    def interrupt(self):
+        """
+        Interrupt the SubLocust and hand over execution control back to the parent Locust.
+        """
+        raise InterruptLocust()
+
 
 locust_runner = None
 
