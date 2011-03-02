@@ -224,7 +224,7 @@ class LocustRunner(object):
                         RequestStats.reset_all()
                         return
 
-                    locust = bucket.pop(random.randint(0, len(bucket)))
+                    locust = bucket.pop(random.randint(0, len(bucket)-1))
                     occurence_count[locust.__name__] += 1
                     new_locust = self.locusts.spawn(locust())
                 print "%i locusts hatched" % len(self.locusts)
