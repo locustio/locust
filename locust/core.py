@@ -209,7 +209,7 @@ class LocustRunner(object):
 
             # create locusts depending on weight
             percent = locust.weight / float(weight_sum)
-            num_locusts = int(self.num_clients * percent)
+            num_locusts = int(round(self.num_clients * percent))
             bucket.extend([locust for x in xrange(0, num_locusts)])
 
         print "\nHatching and swarming %i clients at the rate %i clients/s...\n" % (self.num_clients, self.hatch_rate)
