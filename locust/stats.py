@@ -224,7 +224,7 @@ def print_stats(stats):
     except ZeroDivisionError:
         fail_percent = 0
 
-    print " %-40s %7d %12s %43.2f" % ('Total', total_reqs, "%d(%.2f%%)" % (total_failures, fail_percent), total_rps)
+    print " %-40s %7d %12s %42.2f" % ('Total', total_reqs, "%d(%.2f%%)" % (total_failures, fail_percent), total_rps)
     print ""
 
 def print_percentile_stats(stats):
