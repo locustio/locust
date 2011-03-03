@@ -10,7 +10,7 @@ import os
 import inspect
 import time
 from optparse import OptionParser
-from locust.stats import stats_printer, RequestStats, print_percentile_stats
+from locust.stats import stats_printer, RequestStats, print_percentile_stats, print_error_report
 
 _internals = [Locust, WebLocust]
 version = locust.version
@@ -313,6 +313,7 @@ def main():
         print "\n"
         print_stats(core.locust_runner.request_stats)
         print_percentile_stats(core.locust_runner.request_stats)
+        print_error_report()
         print
         print "Exiting, bye.."
         print
