@@ -7,6 +7,7 @@ import functools
 
 from urllib2 import URLError
 from httplib import BadStatusLine
+import socket
 
 from exception import InterruptLocust
 from collections import deque
@@ -20,6 +21,7 @@ class RequestStats(object):
     total_num_requests = 0
     global_max_requests = None
     global_last_request_timestamp = None
+    errors = {}
 
     def __init__(self, name):
         self.name = name
@@ -41,7 +43,7 @@ class RequestStats(object):
         self.max_response_time = 0
         self._requests = deque(maxlen=1000)
 
-    def log(self, response_time, failure=False):
+    def log(self, response_time):
         RequestStats.total_num_requests += 1
 
         self.num_reqs += 1
@@ -52,19 +54,22 @@ class RequestStats(object):
         self.last_request_timestamp = t
         RequestStats.global_last_request_timestamp = t
 
-        if not failure:
-            if self.min_response_time is None:
-                self.min_response_time = response_time
-                
-            self.min_response_time = min(self.min_response_time, response_time)
-            self.max_response_time = max(self.max_response_time, response_time)
-
-            self.response_times.setdefault(response_time, 0)
-            self.response_times[response_time] += 1
+        if self.min_response_time is None:
+            self.min_response_time = response_time
             
-            self._requests.appendleft(response_time)
-        else:
-            self.num_failures += 1
+        self.min_response_time = min(self.min_response_time, response_time)
+        self.max_response_time = max(self.max_response_time, response_time)
+
+        self.response_times.setdefault(response_time, 0)
+        self.response_times[response_time] += 1
+        
+        self._requests.appendleft(response_time)
+    
+    def log_error(self, error):
+        self.num_failures += 1
+        key = repr(error)
+        RequestStats.errors.setdefault(key, 0)
+        RequestStats.errors[key] += 1
 
     @property
     def avg_response_time(self):
@@ -210,8 +215,9 @@ def log_request(f):
             response_time = int((time.time() - start) * 1000)
             RequestStats.get(name).log(response_time)
             return retval
-        except (URLError, BadStatusLine), e:
-            RequestStats.get(name).log(0, True)
+        except (URLError, BadStatusLine, socket.error), e:
+            RequestStats.get(name).log_error(e)
+            
     return _wrapper
 
 def print_stats(stats):
@@ -248,6 +254,15 @@ def print_percentile_stats(stats):
             complete_list[-1]
         )
     print ""
+
+def print_error_report():
+    print "Error report"
+    print " %-18s %-100s" % ("# occurences", "Error")
+    print "-" * 120
+    for error, count in RequestStats.errors.iteritems():
+        print " %-18i %-100s" % (count, error)
+    print "-" * 120
+    print
 
 def stats_printer():
     from core import locust_runner
