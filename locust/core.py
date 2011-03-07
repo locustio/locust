@@ -133,6 +133,8 @@ class Locust(object):
         self._time_start = time()
 
     def __call__(self):
+        if hasattr(self, "on_start"):
+            self.on_start()
         try:
             while (True):
                 if self.stop_timeout is not None and time() - self._time_start > self.stop_timeout:
