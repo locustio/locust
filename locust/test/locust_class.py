@@ -1,4 +1,4 @@
-from locust.core import Locust, require_once, WebLocust
+from locust.core import Locust, require_once, WebLocust, task
 import unittest
 from testcases import WebserverTestCase
 
@@ -16,6 +16,33 @@ class TestLocustClass(unittest.TestCase):
 
         self.assertEqual(t1_count, 5)
         self.assertEqual(t2_count, 2)
+    
+    def test_task_decorator_ratio(self):
+        t1 = lambda l: None
+        t2 = lambda l: None
+        class MyLocust(Locust):
+            tasks = {t1:5, t2:2}
+            
+            @task(3)
+            def t3(self):
+                pass
+            
+            @task(13)
+            def t4(self):
+                pass
+            
+
+        l = MyLocust()
+
+        t1_count = len([t for t in l.tasks if t == t1])
+        t2_count = len([t for t in l.tasks if t == t2])
+        t3_count = len([t for t in l.tasks if t.__name__ == MyLocust.t3.__name__])
+        t4_count = len([t for t in l.tasks if t.__name__ == MyLocust.t4.__name__])
+
+        self.assertEqual(t1_count, 5)
+        self.assertEqual(t2_count, 2)
+        self.assertEqual(t3_count, 3)
+        self.assertEqual(t4_count, 13)
 
     def test_require_once(self):
         self.t1_executed = False
@@ -59,6 +86,17 @@ class TestLocustClass(unittest.TestCase):
         locust.schedule_task(t2, "argument to t2")
         locust.execute_next_task()
         self.assertEqual("argument to t2", self.t2_arg)
+    
+    def test_locust_inheritance(self):
+        def t1(l):
+            pass
+        class MyBaseLocust(Locust):
+            tasks = [t1]
+        class MySubLocust(MyBaseLocust):
+            pass
+        
+        l = MySubLocust()
+        self.assertEqual(1, len(l.tasks))
 
 
 class TestWebLocustClass(WebserverTestCase):
@@ -112,4 +150,21 @@ class TestWebLocustClass(WebserverTestCase):
         self.assertEqual("Authorized", authorized.client.get("/basic_auth"))
         self.assertFalse(locust.client.get("/basic_auth"))
         self.assertFalse(unauthorized.client.get("/basic_auth"))
+    
+    def test_log_request_name_argument(self):
+        from locust.stats import RequestStats
+        self.response = ""
+        
+        class MyLocust(WebLocust):
+            tasks = []
+            host = "http://127.0.0.1:%i" % self.port
+            
+            @task()
+            def t1(l):
+                self.response = l.client.get("/ultra_fast", name="new name!")
 
+        my_locust = MyLocust()
+        my_locust.t1()
+        
+        self.assertEqual(1, RequestStats.get("new name!").num_reqs)
+        self.assertEqual(0, RequestStats.get("/ultra_fast").num_reqs)
