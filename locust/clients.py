@@ -22,6 +22,18 @@ class HttpBasicAuthHandler(urllib2.BaseHandler):
         request.add_header("Authorization", "Basic %s" % base64string)
         return request
 
+class HttpResponse(object):
+    def __init__(self, url, name, code, data, info):
+        self.url = url
+        self._name = name
+        self.code = code
+        self.data = data
+        self._info = info
+    
+    @property
+    def info(self):
+        return self._info()
+
 class HttpBrowser(object):
     """
     Class for performing web requests and holding session cookie between requests (in order
@@ -61,14 +73,15 @@ class HttpBrowser(object):
         * *path* is the relative path to request.
         * *headers* is an optional dict with HTTP request headers
         """
-        request = urllib2.Request(self.base_url + path, None, headers)
+        url = self.base_url + path
+        request = urllib2.Request(url, None, headers)
         f = self.opener.open(request)
         data = f.read()
         f.close()
-        return data
+        return HttpResponse(url, name, f.code, data, f.info)
     
     @log_request
-    def post(self, path, data, headers={}, name=None):
+    def post(self, path, data, headers={}, with_response_data=False, name=None):
         """
         Make an HTTP POST request.
         
@@ -83,9 +96,10 @@ class HttpBrowser(object):
             client = HttpBrowser("http://example.com")
             client.post("/post", {"user":"joe_hill"})
         """
-        request = urllib2.Request(self.base_url + path, urllib.urlencode(data), headers)
+        url = self.base_url + path
+        request = urllib2.Request(url, urllib.urlencode(data), headers)
         f = self.opener.open(request)
         data = f.read()
         f.close()
-        return data
+        return HttpResponse(url, name, f.code, data, f.info)
     
