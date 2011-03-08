@@ -152,7 +152,11 @@ class Locust(object):
         self.execute_task(task["callable"], *task["args"])
     
     def execute_task(self, task, *args):
-        task(self, *args)
+        # check if the function is a method bound to the current locust, and if so, don't pass self as first argument
+        if hasattr(task, "im_self") and task.im_self == self:
+            task(*args)
+        else:
+            task(self, *args)
     
     def schedule_task(self, task_callable, *args, **kwargs):
         """
