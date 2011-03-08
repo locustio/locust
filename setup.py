@@ -27,7 +27,7 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
-    install_requires=["gevent", "flask", "hotqueue", "decorator"],
+    install_requires=["gevent", "flask", "hotqueue"],
     entry_points={
         'console_scripts': [
             'locust = locust.main:main',

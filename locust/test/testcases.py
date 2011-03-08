@@ -7,6 +7,8 @@ from werkzeug.wrappers import Request
 # Simple WSGI server simulating fast and slow responses.
 import base64
 
+from locust.stats import RequestStats
+
 def simple_webserver(env, start_response):
     if env['PATH_INFO'] == '/ultra_fast':
         start_response('200 OK', [('Content-Type', 'text/html')])
@@ -55,6 +57,7 @@ class WebserverTestCase(unittest.TestCase):
         gevent.spawn(lambda: self._web_server.serve_forever())
         gevent.sleep(0)
         self.port = self._web_server.server_port
+        RequestStats.requests = {}
 
     def tearDown(self):
         self._web_server.kill()

@@ -1,3 +1,4 @@
+import sys
 import time
 import gevent
 from copy import copy
@@ -6,6 +7,7 @@ import functools
 
 from urllib2 import URLError
 from httplib import BadStatusLine
+import socket
 
 from exception import InterruptLocust
 from collections import deque
@@ -19,6 +21,7 @@ class RequestStats(object):
     total_num_requests = 0
     global_max_requests = None
     global_last_request_timestamp = None
+    errors = {}
 
     def __init__(self, name):
         self.name = name
@@ -40,7 +43,7 @@ class RequestStats(object):
         self.max_response_time = 0
         self._requests = deque(maxlen=1000)
 
-    def log(self, response_time, failure=False):
+    def log(self, response_time):
         RequestStats.total_num_requests += 1
 
         self.num_reqs += 1
@@ -51,19 +54,22 @@ class RequestStats(object):
         self.last_request_timestamp = t
         RequestStats.global_last_request_timestamp = t
 
-        if not failure:
-            if self.min_response_time is None:
-                self.min_response_time = response_time
-                
-            self.min_response_time = min(self.min_response_time, response_time)
-            self.max_response_time = max(self.max_response_time, response_time)
-
-            self.response_times.setdefault(response_time, 0)
-            self.response_times[response_time] += 1
+        if self.min_response_time is None:
+            self.min_response_time = response_time
             
-            self._requests.appendleft(response_time)
-        else:
-            self.num_failures += 1
+        self.min_response_time = min(self.min_response_time, response_time)
+        self.max_response_time = max(self.max_response_time, response_time)
+
+        self.response_times.setdefault(response_time, 0)
+        self.response_times[response_time] += 1
+        
+        self._requests.appendleft(response_time)
+    
+    def log_error(self, error):
+        self.num_failures += 1
+        key = repr(error)
+        RequestStats.errors.setdefault(key, 0)
+        RequestStats.errors[key] += 1
 
     @property
     def avg_response_time(self):
@@ -140,7 +146,6 @@ class RequestStats(object):
 
     def percentile(self):
         inflated_list = self.create_response_times_list()
-
         return " %-40s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d" % (
             self.name,
             self.num_reqs,
@@ -192,8 +197,16 @@ def percentile(N, percent, key=lambda x:x):
 median = functools.partial(percentile, percent=0.5)
 
 def log_request(f):
+    # hack to preserve the function spec when generating sphinx documentation
+    # TODO: If sphinx is imported in locustfile, things will not function! Need a better way to check if
+    # sphinx is actually running documentation generation
+    if "sphinx" in sys.modules:
+        import warnings
+        warnings.warn("Sphinx detected, @log_request decorator will have no effect to preserve function spec")
+        return f
+    
     def _wrapper(*args, **kwargs):
-        name = kwargs.get('name', args[1])
+        name = kwargs.get('name', args[1]) or args[1]
         try:
             if RequestStats.global_max_requests is not None and RequestStats.total_num_requests >= RequestStats.global_max_requests:
                 raise InterruptLocust("Maximum number of requests reached")
@@ -202,8 +215,9 @@ def log_request(f):
             response_time = int((time.time() - start) * 1000)
             RequestStats.get(name).log(response_time)
             return retval
-        except (URLError, BadStatusLine), e:
-            RequestStats.get(name).log(0, True)
+        except (URLError, BadStatusLine, socket.error), e:
+            RequestStats.get(name).log_error(e)
+            
     return _wrapper
 
 def print_stats(stats):
@@ -233,24 +247,35 @@ def print_percentile_stats(stats):
     print "-" * 120
     complete_list = []
     for r in stats.itervalues():
-        print r.percentile()
-        complete_list.extend(r.create_response_times_list())
+        if r.response_times:
+            print r.percentile()
+            complete_list.extend(r.create_response_times_list())
     print "-" * 120
     complete_list.sort()
-    print " %-40s %8s %6d %6d %6d %6d %6d %6d %6d %6d %6d" % (
-        'Total',
-        str(len(complete_list)),
-        percentile(complete_list, 0.5),
-        percentile(complete_list, 0.66),
-        percentile(complete_list, 0.75),
-        percentile(complete_list, 0.8),
-        percentile(complete_list, 0.9),
-        percentile(complete_list, 0.95),
-        percentile(complete_list, 0.98),
-        percentile(complete_list, 0.99),
-        complete_list[-1]
-    )
+    if complete_list:
+        print " %-40s %8s %6d %6d %6d %6d %6d %6d %6d %6d %6d" % (
+            'Total',
+            str(len(complete_list)),
+            percentile(complete_list, 0.5),
+            percentile(complete_list, 0.66),
+            percentile(complete_list, 0.75),
+            percentile(complete_list, 0.8),
+            percentile(complete_list, 0.9),
+            percentile(complete_list, 0.95),
+            percentile(complete_list, 0.98),
+            percentile(complete_list, 0.99),
+            complete_list[-1]
+        )
     print ""
+
+def print_error_report():
+    print "Error report"
+    print " %-18s %-100s" % ("# occurences", "Error")
+    print "-" * 120
+    for error, count in RequestStats.errors.iteritems():
+        print " %-18i %-100s" % (count, error)
+    print "-" * 120
+    print
 
 def stats_printer():
     from core import locust_runner
