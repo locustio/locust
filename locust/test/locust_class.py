@@ -110,29 +110,29 @@ class TestWebLocustClass(WebserverTestCase):
 
         my_locust = MyLocust()
         t1(my_locust)
-        self.assertEqual(self.response, "This is an ultra fast response")
+        self.assertEqual(self.response.data, "This is an ultra fast response")
 
     def test_client_request_headers(self):
         class MyLocust(WebLocust):
             host = "http://127.0.0.1:%i" % self.port
 
         locust = MyLocust()
-        self.assertEqual("hello", locust.client.get("/request_header_test", {"X-Header-Test":"hello"}))
+        self.assertEqual("hello", locust.client.get("/request_header_test", {"X-Header-Test":"hello"}).data)
 
     def test_client_get(self):
         class MyLocust(WebLocust):
             host = "http://127.0.0.1:%i" % self.port
 
         locust = MyLocust()
-        self.assertEqual("GET", locust.client.get("/request_method"))
+        self.assertEqual("GET", locust.client.get("/request_method").data)
 
     def test_client_post(self):
         class MyLocust(WebLocust):
             host = "http://127.0.0.1:%i" % self.port
 
         locust = MyLocust()
-        self.assertEqual("POST", locust.client.post("/request_method", {"arg":"hello world"}))
-        self.assertEqual("hello world", locust.client.post("/post", {"arg":"hello world"}))
+        self.assertEqual("POST", locust.client.post("/request_method", {"arg":"hello world"}).data)
+        self.assertEqual("hello world", locust.client.post("/post", {"arg":"hello world"}).data)
 
     def test_client_basic_auth(self):
         class MyLocust(WebLocust):
@@ -147,7 +147,7 @@ class TestWebLocustClass(WebserverTestCase):
         locust = MyLocust()
         unauthorized = MyUnauthorizedLocust()
         authorized = MyAuthorizedLocust()
-        self.assertEqual("Authorized", authorized.client.get("/basic_auth"))
+        self.assertEqual("Authorized", authorized.client.get("/basic_auth").data)
         self.assertFalse(locust.client.get("/basic_auth"))
         self.assertFalse(unauthorized.client.get("/basic_auth"))
     
