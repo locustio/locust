@@ -26,10 +26,12 @@ class RequestStats(object):
     def __init__(self, name):
         self.name = name
         self.num_reqs_per_sec = {}
+        self.last_request_timestamp = 0
         self.reset()
     
     @classmethod
     def reset_all(cls):
+        cls.total_num_requests = 0
         for name, stats in cls.requests.iteritems():
             stats.reset()
     
