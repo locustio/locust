@@ -44,6 +44,7 @@ class RequestStats(object):
         self.min_response_time = None
         self.max_response_time = 0
         self._requests = deque(maxlen=1000)
+        self.last_request_timestamp = int(time.time())
 
     def log(self, response_time):
         RequestStats.total_num_requests += 1
