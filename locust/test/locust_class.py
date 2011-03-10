@@ -87,6 +87,23 @@ class TestLocustClass(unittest.TestCase):
         locust.execute_next_task()
         self.assertEqual("argument to t2", self.t2_arg)
     
+    def test_schedule_task_bound_method(self):
+        class MyLocust(Locust):
+            @task()
+            def t1(self):
+                self.t1_executed = True
+                self.schedule_task(self.t2)
+            def t2(self):
+                self.t2_executed = True
+        
+        locust = MyLocust()
+        locust.schedule_task(locust.get_next_task())
+        locust.execute_next_task()
+        self.assertTrue(locust.t1_executed)
+        locust.execute_next_task()
+        self.assertTrue(locust.t2_executed)
+        
+    
     def test_locust_inheritance(self):
         def t1(l):
             pass
@@ -168,3 +185,4 @@ class TestWebLocustClass(WebserverTestCase):
         
         self.assertEqual(1, RequestStats.get("new name!").num_reqs)
         self.assertEqual(0, RequestStats.get("/ultra_fast").num_reqs)
+    
