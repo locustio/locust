@@ -3,6 +3,7 @@ import core
 from core import Locust, WebLocust, MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
 from stats import print_stats
 import web
+import inspectlocust
 
 import gevent
 import sys
@@ -56,6 +57,15 @@ def parse_options():
         dest='list_commands',
         default=False,
         help="print list of possible commands and exit"
+    )
+    
+    # Display ratio table of all tasks
+    parser.add_option(
+        '--show-task-ratio',
+        action='store_true',
+        dest='show_task_ratio',
+        default=False,
+        help="print table of the locust classes' task execution ratio"
     )
 
     # if we shgould print stats in the console
@@ -282,6 +292,15 @@ def main():
             locust_classes = [locusts[n] for n in names]
     else:
         locust_classes = locusts.values()
+    
+    if options.show_task_ratio:
+        print "\n Task ratio per locust class"
+        print "-" * 80
+        inspectlocust.print_task_ratio(locust_classes)
+        print "\n Total task ratio"
+        print "-" * 80
+        inspectlocust.print_task_ratio(locust_classes, total=True)
+        sys.exit(0)
 
     if options.web and not options.slave:
         # spawn web greenlet
