@@ -7,6 +7,7 @@ monkey.patch_all(thread=False)
 from time import time
 import random
 import socket
+import warnings
 from hashlib import md5
 from hotqueue import HotQueue
 
@@ -248,7 +249,7 @@ class LocustRunner(object):
         weight_sum = sum((locust.weight for locust in self.locust_classes))
         for locust in self.locust_classes:
             if not locust.tasks:
-                print "Notice: Found locust (%s) got no tasks. Skipping..." % locust.__name__
+                warnings.warn("Notice: Found locust (%s) got no tasks. Skipping..." % locust.__name__)
                 continue
     
             if self.host is not None:
