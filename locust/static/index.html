@@ -6,12 +6,16 @@
 </head> 
 <body> 
     <div id="content">
-        <input id="start" type="button" value="Start swarming">
+        <form action="/swarm" method="POST" id="swarm_form">
+            Number of users to simulate: <input type="text" name="locust_count" />
+            <input type="submit" value="Start swarming">
+        </form>
         <table id="stats">
             <thead>
                 <tr>
                     <td>Name</td>
                     <td># requests</td>
+                    <td># fails</td>
                     <td>Average</td>
                     <td>Min</td>
                     <td>Max</td>
@@ -34,14 +38,16 @@
             <td><%= this[3] %></td>
             <td><%= this[4] %></td>
             <td><%= this[5] %></td>
+            <td><%= this[6] %></td>
         </tr>
         ]]>
     </script>
     <script type="text/javascript">
         var tpl = $('#stats-template');
         
-        $('#start').click(function () {
-            $.get('/swarm');
+        $('#swarm_form').submit(function(event) {
+            event.preventDefault();
+            $.post($(this).attr("action"), $(this).serialize());
         });
         
         function updateStats() {
