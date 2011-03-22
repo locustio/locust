@@ -336,7 +336,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         print "Sending hatch jobs to %i ready clients" % len(self.ready_clients)
         while self.ready_clients:
             client = self.ready_clients.pop()
-            self.work_queue.put({"hatch_rate":self.hatch_rate, "num_clients":self.num_clients, "num_requests": self.num_requests, "host":self.host, "stop_timeout":60})
+            self.work_queue.put({"hatch_rate":self.hatch_rate, "num_clients":self.num_clients, "num_requests": self.num_requests, "host":self.host, "stop_timeout":None})
     
     def client_tracker(self):
         for client in self.client_report_queue.consume():
