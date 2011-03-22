@@ -317,6 +317,7 @@ def main():
         core.locust_runner = MasterLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, redis_host=options.redis_host, redis_port=options.redis_port)
     elif options.slave:
         core.locust_runner = SlaveLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, redis_host=options.redis_host, redis_port=options.redis_port)
+        main_greenlet = core.locust_runner.greenlet
     
     if not options.web or options.print_stats:
         # spawn stats printing greenlet
