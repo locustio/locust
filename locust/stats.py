@@ -109,6 +109,9 @@ class RequestStats(object):
             raise RequestStatsAdditionError("Trying to add two RequestStats objects of different names (%s and %s)" % (self.name, other.name))
         
         new = RequestStats(other.name)
+        new.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
+        new.start_time = min(self.start_time, other.start_time)
+        
         new.num_reqs = self.num_reqs + other.num_reqs
         new.num_failures = self.num_failures + other.num_failures
         new.total_response_time = self.total_response_time + other.total_response_time
@@ -116,8 +119,8 @@ class RequestStats(object):
         new.max_response_time = max(self.max_response_time, other.max_response_time)
         
         new.num_reqs_per_sec = copy(self.num_reqs_per_sec)
-        for key in other.num_reqs_per_sec:
-            new.num_reqs_per_sec[key] = new.num_reqs_per_sec.setdefault(key, 0) + other.num_reqs_per_sec[key]
+        for key in set(new.num_reqs_per_sec.keys() + other.num_reqs_per_sec.keys()):
+            new.num_reqs_per_sec[key] = new.num_reqs_per_sec.get(key, 0) + other.num_reqs_per_sec.get(key, 0)
         return new
     
     def to_dict(self):
