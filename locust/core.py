@@ -7,6 +7,7 @@ monkey.patch_all(thread=False)
 from time import time
 import random
 import socket
+import warnings
 from hashlib import md5
 from hotqueue import HotQueue
 
@@ -248,7 +249,7 @@ class LocustRunner(object):
         weight_sum = sum((locust.weight for locust in self.locust_classes))
         for locust in self.locust_classes:
             if not locust.tasks:
-                print "Notice: Found locust (%s) got no tasks. Skipping..." % locust.__name__
+                warnings.warn("Notice: Found locust (%s) got no tasks. Skipping..." % locust.__name__)
                 continue
     
             if self.host is not None:
@@ -305,7 +306,9 @@ class LocustRunner(object):
         self.is_alive = False
 
 class LocalLocustRunner(LocustRunner):
-    def start_hatching(self):
+    def start_hatching(self, locust_count=None):
+        if locust_count:
+            self.num_clients = locust_count
         self.greenlet = gevent.spawn(self.hatch, self)
 
 class DistributedLocustRunner(LocustRunner):
@@ -326,9 +329,13 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.greenlet.spawn(self.client_tracker).link_exception()
         self.greenlet.spawn(self.stats_aggregator).link_exception()
     
-    def start_hatching(self):
+    def start_hatching(self, locust_count=None):
+        if locust_count:
+            self.num_clients = locust_count / len(self.ready_clients)
+        
         print "Sending hatch jobs to %i ready clients" % len(self.ready_clients)
-        for client in self.ready_clients:
+        while self.ready_clients:
+            client = self.ready_clients.pop()
             self.work_queue.put({"hatch_rate":self.hatch_rate, "num_clients":self.num_clients, "num_requests": self.num_requests, "host":self.host, "stop_timeout":60})
     
     def client_tracker(self):
@@ -371,6 +378,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
             self.num_requests = job["num_requests"]
             self.host = job["host"]
             self.hatch(stop_timeout=job["stop_timeout"])
+            self.client_report_queue.put(self.client_id)
     
     def stats_reporter(self):
         while True:
