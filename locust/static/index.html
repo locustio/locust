@@ -9,17 +9,20 @@
         <a href="#"></a>
     </div>
     <div id="content">
-        <form action="/swarm" method="POST" id="swarm_form">
-            Number of users to simulate: <input type="text" name="locust_count" />
-            <input type="submit" value="Start swarming">
-        </form>
         <ul class="tabs">
+            <li><a href="#">Run</a></li>
             <li><a href="#">Statistics</a></li>
-            <li><a href="#">Errors</a></li>
+            <li><a href="#">Failures</a></li>
         </ul>
         <div style="clear:left;"></div>
         <div class="panes">
             <div>
+                <form action="/swarm" method="POST" id="swarm_form">
+                    Number of users to simulate: <input type="text" name="locust_count" />
+                    <input type="submit" value="Start swarming">
+                </form>
+            </div>
+            <div style="display:none;">
                 <table id="stats">
                     <thead>
                         <tr>
