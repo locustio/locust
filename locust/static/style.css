@@ -6,6 +6,12 @@ body {
     color: #d1ad78;
 }
 
+a {
+    color: #fff;
+    font-weight: bold;
+    text-decoration: none;
+}
+
 #content {
     background: url("locust_banner.png") no-repeat center top;
     width: 900px;
