@@ -4,31 +4,54 @@
     <title>Locust</title> 
     <link rel="stylesheet" type="text/css" href="/static/style.css" media="screen">
 </head> 
-<body> 
+<body>
+    <div>
+        <a href="#"></a>
+    </div>
     <div id="content">
         <form action="/swarm" method="POST" id="swarm_form">
             Number of users to simulate: <input type="text" name="locust_count" />
             <input type="submit" value="Start swarming">
         </form>
-        <table id="stats">
-            <thead>
-                <tr>
-                    <td>Name</td>
-                    <td># requests</td>
-                    <td># fails</td>
-                    <td>Average</td>
-                    <td>Min</td>
-                    <td>Max</td>
-                    <td># reqs/sec</td>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+        <ul class="tabs">
+            <li><a href="#">Statistics</a></li>
+            <li><a href="#">Errors</a></li>
+        </ul>
+        <div style="clear:left;"></div>
+        <div class="panes">
+            <div>
+                <table id="stats">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th># requests</th>
+                            <th># fails</th>
+                            <th>Average</th>
+                            <th>Min</th>
+                            <th>Max</th>
+                            <th># reqs/sec</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            <div style="display:none;">
+                <table id="errors">
+                    <thead>
+                        <th class="error_count"># fails</th>
+                        <th class="error_type">Type</th>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <script type="text/javascript" src="/static/jquery-1.4.min.js"></script> 
-    <script type="text/javascript" src="/static/jquery.jqote2.min.js"></script> 
+    <script type="text/javascript" src="/static/jquery.jqote2.min.js"></script>
+    <script type="text/javascript" src="/static/jquery.tools.min.js"></script> 
     <script type="text/x-jqote-template" id="stats-template">
         <![CDATA[
         <tr>
@@ -42,8 +65,19 @@
         </tr>
         ]]>
     </script>
+    <script type="text/x-jqote-template" id="errors-template">
+        <![CDATA[
+        <tr>
+            <td><%= this[1] %></td>
+            <td><%= this[0] %></td>
+        </tr>
+        ]]>
+    </script>
     <script type="text/javascript">
-        var tpl = $('#stats-template');
+        $("ul.tabs").tabs("div.panes > div");
+        
+        var stats_tpl = $('#stats-template');
+        var errors_tpl = $('#errors-template');
         
         $('#swarm_form').submit(function(event) {
             event.preventDefault();
@@ -53,7 +87,10 @@
         function updateStats() {
             $.get('/stats/requests', function (data) {
                 $('#stats tbody').empty();
-                $('#stats tbody').jqoteapp(tpl, eval(data));
+                $('#errors tbody').empty();
+                var report = JSON.parse(data);
+                $('#stats tbody').jqoteapp(stats_tpl, report.stats);
+                $('#errors tbody').jqoteapp(errors_tpl, report.errors);
                 setTimeout(updateStats, 1000);
             });
         }

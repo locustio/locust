@@ -50,10 +50,10 @@ def request_stats():
             s.max_response_time,
             s.reqs_per_sec,
         ])
-    
     stats.append(["Total", total_requests, total_fails, "", "", "", round(total_rps, 2)])
-
-    return json.dumps(stats)
+    
+    report = {"stats":stats, "errors":list(locust_runner.errors.iteritems())}
+    return json.dumps(report)
 
 def start(locust, hatch_rate, num_clients, num_requests):
     global _locust, _hatch_rate, _num_clients, _num_requests
