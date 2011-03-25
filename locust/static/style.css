@@ -1,12 +1,9 @@
-* {
-    font-family: Helvetica, Arial, sans-serif;
-    color: #d1ad78;
-}
-
 body {
     background: #3b2505 url("background.png") repeat-x center top;
     padding: 0;
     margin: 0;
+    font-family: Helvetica, Arial, sans-serif;
+    color: #d1ad78;
 }
 
 #content {
@@ -20,18 +17,24 @@ body {
 
 #start { color: black; float: right; }
 
-#stats {
-    margin-top: 30px;
+table {
     width: 100%;
     border-collapse: collapse;
 }
 
-#stats thead {
+thead {
     background-color: #684109;
     padding: 0; margin: 0;
 }
 
-#stats td { padding: 3px; margin: 0; }
+td, th {
+    padding: 3px;
+    margin: 0;
+    text-align: left;
+}
+th.error_count {
+    width: 70px;
+}
 
 em {
     width: 100%;
@@ -40,4 +43,19 @@ em {
     margin-left: 180px;
     font-size: 20px;
     font-family: Palatino, Times New Roman, serif;
+}
+
+ul.tabs {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+ul.tabs li {
+    display: block;
+    float: left;
+    margin-right: 10px;
+}
+
+.panes {
+    margin-top: 15px;
 }
