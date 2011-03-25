@@ -118,13 +118,15 @@ class RequestStats(object):
         new.min_response_time = min(self.min_response_time, other.min_response_time) or other.min_response_time
         new.max_response_time = max(self.max_response_time, other.max_response_time)
         
-        new.num_reqs_per_sec = {}
-        for key in set(self.num_reqs_per_sec.keys() + other.num_reqs_per_sec.keys()):
-            new.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) + other.num_reqs_per_sec.get(key, 0)
+        def merge_dict_add(d1, d2):
+            """Merge two dicts by adding the values from each dict"""
+            merged = {}
+            for key in set(d1.keys() + d2.keys()):
+                merged[key] = d1.get(key, 0) + d2.get(key, 0)
+            return merged
         
-        new.response_times = {}
-        for key in set(self.response_times.keys() + other.response_times.keys()):
-            new.response_times[key] = self.response_times.get(key, 0) + other.response_times.get(key, 0)
+        new.num_reqs_per_sec = merge_dict_add(self.num_reqs_per_sec, other.num_reqs_per_sec)
+        new.response_times = merge_dict_add(self.response_times, other.response_times)
         return new
     
     def to_dict(self):
