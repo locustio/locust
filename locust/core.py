@@ -241,6 +241,10 @@ class LocustRunner(object):
     def request_stats(self):
         return RequestStats.requests
     
+    @property
+    def errors(self):
+        return RequestStats.errors
+    
     def hatch(self, stop_timeout=None):
         if self.num_requests is not None:
             RequestStats.global_max_requests = self.num_requests
@@ -325,6 +329,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         super(MasterLocustRunner, self).__init__(*args, **kwargs)
         self.ready_clients = []
         self.client_stats = {}
+        self.client_errors = {}
         self.greenlet = Group()
         self.greenlet.spawn(self.client_tracker).link_exception()
         self.greenlet.spawn(self.stats_aggregator).link_exception()
@@ -349,6 +354,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                 continue
             #print "stats report recieved from %s:" % report["client_id"], report["stats"]
             self.client_stats[report["client_id"]] = report["stats"]
+            self.client_errors[report["client_id"]] = report["errors"]
     
     @property
     def request_stats(self):
@@ -357,6 +363,14 @@ class MasterLocustRunner(DistributedLocustRunner):
             for entry_name, entry in client_stats.iteritems():
                 stats[entry_name] = stats.setdefault(entry_name, RequestStats(entry_name)) + entry
         return stats
+    
+    @property
+    def errors(self):
+        errors = {}
+        for client_id, client_errors in self.client_errors.iteritems():
+            for err_message, err_count in client_errors.iteritems():
+                errors[err_message] = errors.setdefault(err_message, 0) + err_count
+        return errors
 
 class SlaveLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
@@ -385,5 +399,6 @@ class SlaveLocustRunner(DistributedLocustRunner):
             self.stats_report_queue.put({
                 "client_id": self.client_id,
                 "stats": self.request_stats,
+                "errors": self.errors,
             })
             gevent.sleep(3)
