@@ -149,8 +149,8 @@ def parse_options():
         action='store',
         type='str',
         dest='redis_host',
-        default="localhost",
-        help="Redis host to use for distributed load testing"
+        default="127.0.0.1",
+        help="Redis host to use for distributed load testing. Only used when running with --master or --slave. Defaults to 127.0.0.1."
     )
     parser.add_option(
         '--redis-port',
@@ -158,7 +158,7 @@ def parse_options():
         type='int',
         dest='redis_port',
         default=6379,
-        help="Redis port to use for distributed load testing"
+        help="Redis port to use for distributed load testing. Only used when running with --master or --slave. Defaults to 6379, which is the default Redis port."
     )
 
     # Finalize
