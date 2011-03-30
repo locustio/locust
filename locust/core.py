@@ -194,12 +194,18 @@ class WebLocust(Locust):
     The client support cookies, and therefore keeps the session between HTTP requests.
     """
     
+    gzip = False
+    """
+    If set to True the HTTP client will set headers for accepting gzip, and decode gzip data
+    that is sent back from the server. This attribute is set from the command line.
+    """
+    
     def __init__(self):
         super(WebLocust, self).__init__()
         if self.host is None:
             raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
 
-        self.client = HttpBrowser(self.host)
+        self.client = HttpBrowser(self.host, self.gzip)
 
 class SubLocust(Locust):
     """
