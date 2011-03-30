@@ -85,6 +85,15 @@ def parse_options():
         default=False,
         help="Enable the web monitor (port 8089)"
     )
+    
+    # if the HTTP client should set gzip headers and try to use gzip decoding
+    parser.add_option(
+        '--gzip',
+        action='store_true',
+        dest='gzip',
+        default=False,
+        help="If present, the HTTP client will set request header Accept-Encoding: gzip, and try to gzip decode the response data."
+    )
 
     # if locust should be run in distributed mode as master
     parser.add_option(
@@ -306,6 +315,9 @@ def main():
         # spawn web greenlet
         print "Starting web monitor on port 8089"
         main_greenlet = gevent.spawn(web.start, locust_classes, options.hatch_rate, options.num_clients, options.num_requests)
+    
+    # enable/disable gzip in WebLocust's HTTP client
+    WebLocust.gzip = options.gzip
 
     if not options.master and not options.slave:
         core.locust_runner = LocalLocustRunner(locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.host)
