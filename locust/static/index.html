@@ -58,13 +58,13 @@
     <script type="text/x-jqote-template" id="stats-template">
         <![CDATA[
         <tr>
-            <td><%= this[0] %></td>
-            <td><%= this[1] %></td>
-            <td><%= this[2] %></td>
-            <td><%= this[3] %></td>
-            <td><%= this[4] %></td>
-            <td><%= this[5] %></td>
-            <td><%= this[6] %></td>
+            <td><%= this.name %></td>
+            <td><%= this.num_reqs %></td>
+            <td><%= this.num_failures %></td>
+            <td><%= this.avg_response_time %></td>
+            <td><%= this.min_response_time %></td>
+            <td><%= this.max_response_time %></td>
+            <td><%= this.reqs_per_sec %></td>
         </tr>
         ]]>
     </script>
