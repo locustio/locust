@@ -14,6 +14,7 @@ from collections import deque
 
 class RequestStatsAdditionError(Exception):
     pass
+        
 
 class RequestStats(object):
     requests = {}
@@ -43,7 +44,7 @@ class RequestStats(object):
         self.response_times = {}
         self.min_response_time = None
         self.max_response_time = 0
-        self._requests = deque(maxlen=1000)
+        self._latest_requests = deque(maxlen=1000)
         self.last_request_timestamp = int(time.time())
 
     def log(self, response_time):
@@ -66,7 +67,7 @@ class RequestStats(object):
         self.response_times.setdefault(response_time, 0)
         self.response_times[response_time] += 1
         
-        self._requests.appendleft(response_time)
+        self._latest_requests.appendleft(response_time)
     
     def log_error(self, error):
         self.num_failures += 1
@@ -77,32 +78,35 @@ class RequestStats(object):
     @property
     def avg_response_time(self):
         try:
-            return self.total_response_time / self.num_reqs
+            return float(self.total_response_time) / self.num_reqs
         except ZeroDivisionError:
             return 0
     
     @property
     def median_response_time(self):
-        return median(sorted(self._requests))
+        def median(total, count):
+            """
+            total is the number of requests made
+            count is a dict {response_time: count}
+            """
+            pos = (total - 1) / 2
+            for k in sorted(count.iterkeys()):
+                if pos < count[k]:
+                    return k
+                pos -= count[k]
+        
+        return median(self.num_reqs, self.response_times)
     
     @property
-    def reqs_per_sec(self):
+    def current_rps(self):
         slice_start_time = max(self.last_request_timestamp - 10, int(self.start_time))
         
         reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, self.last_request_timestamp)]
         return avg(reqs)
 
     @property
-    def total_reqs_per_sec(self):
-        return self.num_reqs / (RequestStats.global_last_request_timestamp - self.start_time)
-
-    def create_response_times_list(self):
-        inflated_list = []
-        for response_time, count in self.response_times.iteritems():
-            inflated_list.extend([response_time for x in xrange(0, count)])
-        inflated_list.sort()
-
-        return inflated_list
+    def total_rps(self):
+        return self.num_reqs / max(RequestStats.global_last_request_timestamp - self.start_time, 1)
 
     def __add__(self, other):
         if self.name != other.name:
@@ -129,6 +133,11 @@ class RequestStats(object):
         new.response_times = merge_dict_add(self.response_times, other.response_times)
         return new
     
+    def get_stripped_report(self):
+        report = copy(self)
+        report.response_times = {self.median_response_time:self.num_reqs}
+        return report
+    
     def to_dict(self):
         return {
             'num_reqs': self.num_reqs,
@@ -136,7 +145,7 @@ class RequestStats(object):
             'avg': self.avg_response_time,
             'min': self.min_response_time,
             'max': self.max_response_time,
-            'req_per_sec': self.reqs_per_sec
+            'current_req_per_sec': self.current_rps
         }
 
     def __str__(self):
@@ -153,8 +162,16 @@ class RequestStats(object):
             self.min_response_time or 0,
             self.max_response_time,
             self.median_response_time or 0,
-            self.reqs_per_sec or 0
+            self.current_rps or 0
         )
+    
+    def create_response_times_list(self):
+        inflated_list = []
+        for response_time, count in self.response_times.iteritems():
+            inflated_list.extend([response_time for x in xrange(0, count)])
+        inflated_list.sort()
+
+        return inflated_list
 
     def percentile(self):
         inflated_list = self.create_response_times_list()
@@ -205,9 +222,6 @@ def percentile(N, percent, key=lambda x:x):
     d1 = key(N[int(c)]) * (k-f)
     return d0+d1
 
-# median is 50th percentile.
-median = functools.partial(percentile, percent=0.5)
-
 def log_request(f):
     # hack to preserve the function spec when generating sphinx documentation
     # TODO: If sphinx is imported in locustfile, things will not function! Need a better way to check if
@@ -239,7 +253,7 @@ def print_stats(stats):
     total_reqs = 0
     total_failures = 0
     for r in stats.itervalues():
-        total_rps += r.reqs_per_sec
+        total_rps += r.current_rps
         total_reqs += r.num_reqs
         total_failures += r.num_failures
         print r
