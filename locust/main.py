@@ -67,6 +67,13 @@ def parse_options():
         default=False,
         help="print table of the locust classes' task execution ratio"
     )
+    parser.add_option(
+        '--show-task-ratio-confluence',
+        action='store_true',
+        dest='show_task_ratio_confluence',
+        default=False,
+        help="print the locust classes' task execution ratio in confluence list markup"
+    )
 
     # if we shgould print stats in the console
     parser.add_option(
@@ -309,6 +316,15 @@ def main():
         print "\n Total task ratio"
         print "-" * 80
         inspectlocust.print_task_ratio(locust_classes, total=True)
+        sys.exit(0)
+    
+    if options.show_task_ratio_confluence:
+        print "\nh1. Task ratio per locust class"
+        print
+        inspectlocust.print_task_ratio_confluence(locust_classes)
+        print "\nh1. Total task ratio"
+        print
+        inspectlocust.print_task_ratio_confluence(locust_classes, total=True)
         sys.exit(0)
 
     if options.web and not options.slave:
