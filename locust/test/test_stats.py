@@ -4,6 +4,7 @@ import time
 
 class TestRequestStats(unittest.TestCase):
 	def setUp(self):
+		RequestStats.global_start_time = time.time()
 		self.s = RequestStats("test_entry")
 		self.s.log(45)
 		self.s.log(135)
