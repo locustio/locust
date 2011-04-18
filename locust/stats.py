@@ -73,7 +73,7 @@ class RequestStats(object):
     
     def log_error(self, error):
         self.num_failures += 1
-        key = repr(error)
+        key = "%s" % error
         RequestStats.errors.setdefault(key, 0)
         RequestStats.errors[key] += 1
 
@@ -265,7 +265,6 @@ def log_request(f):
             RequestStats.get(name).log(response_time)
             return retval
         except (URLError, BadStatusLine, socket.error), e:
-            print "error:", e
             RequestStats.get(name).log_error(e)
             
     return _wrapper
