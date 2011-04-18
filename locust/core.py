@@ -5,9 +5,11 @@ from gevent.pool import Group
 monkey.patch_all(thread=False)
 
 from time import time
+import sys
 import random
 import socket
 import warnings
+import traceback
 from hashlib import md5
 from hotqueue import HotQueue
 
@@ -136,8 +138,8 @@ class Locust(object):
     def __call__(self):
         if hasattr(self, "on_start"):
             self.on_start()
-        try:
-            while (True):
+        while (True):
+            try:
                 if self.stop_timeout is not None and time() - self._time_start > self.stop_timeout:
                     return
         
@@ -145,8 +147,10 @@ class Locust(object):
                     self.schedule_task(self.get_next_task())
                 self.execute_next_task()
                 self.wait()
-        except InterruptLocust:
-            pass
+            except InterruptLocust:
+                break
+            except Exception:
+                sys.stderr.write("\n" + traceback.format_exc())
     
     def execute_next_task(self):
         task = self._task_queue.pop(0)
@@ -378,13 +382,6 @@ class MasterLocustRunner(DistributedLocustRunner):
     @property
     def request_stats(self):
         return self._request_stats
-    #@property
-    #def request_stats(self):
-    #    stats = {}
-    #    for client_id, client_stats in self.client_stats.iteritems():
-    #        for entry_name, entry in client_stats.iteritems():
-    #            stats[entry_name] = stats.setdefault(entry_name, RequestStats(entry_name)) + entry
-    #    return stats
     
     @property
     def errors(self):
