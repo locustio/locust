@@ -319,6 +319,8 @@ class LocalLocustRunner(LocustRunner):
     def start_hatching(self, locust_count=None):
         if locust_count:
             self.num_clients = locust_count
+        
+        RequestStats.global_start_time = time()
         self.greenlet = gevent.spawn(self.hatch, self)
 
 class DistributedLocustRunner(LocustRunner):
@@ -339,6 +341,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.greenlet = Group()
         self.greenlet.spawn(self.client_tracker).link_exception()
         self.greenlet.spawn(self.stats_aggregator).link_exception()
+        self._request_stats = {}
     
     def start_hatching(self, locust_count=None):
         if locust_count:
@@ -348,6 +351,8 @@ class MasterLocustRunner(DistributedLocustRunner):
         while self.ready_clients:
             client = self.ready_clients.pop()
             self.work_queue.put({"hatch_rate":self.hatch_rate, "num_clients":self.num_clients, "num_requests": self.num_requests, "host":self.host, "stop_timeout":None})
+        
+        RequestStats.global_start_time = time()
     
     def client_tracker(self):
         for client in self.client_report_queue.consume():
@@ -359,16 +364,27 @@ class MasterLocustRunner(DistributedLocustRunner):
             if not report["stats"]:
                 continue
             #print "stats report recieved from %s:" % report["client_id"], report["stats"]
-            self.client_stats[report["client_id"]] = report["stats"]
+            #self.client_stats[report["client_id"]] = report["stats"]
             self.client_errors[report["client_id"]] = report["errors"]
+            
+            for stats in report["stats"]:
+                if not stats.name in self._request_stats:
+                    self._request_stats[stats.name] = RequestStats(stats.name)
+                self._request_stats[stats.name] += stats
+                RequestStats.global_last_request_timestamp = max(RequestStats.global_last_request_timestamp, stats.last_request_timestamp)
+            
+            key = self._request_stats.keys()[0]
     
     @property
     def request_stats(self):
-        stats = {}
-        for client_id, client_stats in self.client_stats.iteritems():
-            for entry_name, entry in client_stats.iteritems():
-                stats[entry_name] = stats.setdefault(entry_name, RequestStats(entry_name)) + entry
-        return stats
+        return self._request_stats
+    #@property
+    #def request_stats(self):
+    #    stats = {}
+    #    for client_id, client_stats in self.client_stats.iteritems():
+    #        for entry_name, entry in client_stats.iteritems():
+    #            stats[entry_name] = stats.setdefault(entry_name, RequestStats(entry_name)) + entry
+    #    return stats
     
     @property
     def errors(self):
@@ -404,7 +420,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
         while True:
             self.stats_report_queue.put({
                 "client_id": self.client_id,
-                "stats": [s.get_stripped_report() for s in self.request_stats],
+                "stats": [self.request_stats[name].get_stripped_report() for name in self.request_stats if not (self.request_stats[name].num_reqs == 0 and self.request_stats[name].num_failures == 0)],
                 "errors": self.errors,
             })
             gevent.sleep(3)

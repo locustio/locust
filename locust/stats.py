@@ -22,6 +22,7 @@ class RequestStats(object):
     total_num_requests = 0
     global_max_requests = None
     global_last_request_timestamp = None
+    global_start_time = None
     errors = {}
 
     def __init__(self, name):
@@ -46,6 +47,7 @@ class RequestStats(object):
         self.max_response_time = 0
         self._latest_requests = deque(maxlen=1000)
         self.last_request_timestamp = int(time.time())
+        self.num_reqs_per_sec = {}
 
     def log(self, response_time):
         RequestStats.total_num_requests += 1
@@ -84,6 +86,9 @@ class RequestStats(object):
     
     @property
     def median_response_time(self):
+        if not self.response_times:
+            return 0
+        
         def median(total, count):
             """
             total is the number of requests made
@@ -106,21 +111,25 @@ class RequestStats(object):
 
     @property
     def total_rps(self):
-        return self.num_reqs / max(RequestStats.global_last_request_timestamp - self.start_time, 1)
+        if not RequestStats.global_last_request_timestamp:
+            return 0.0
+        
+        return self.num_reqs / max(RequestStats.global_last_request_timestamp - RequestStats.global_start_time, 1)
 
     def __add__(self, other):
-        if self.name != other.name:
-            raise RequestStatsAdditionError("Trying to add two RequestStats objects of different names (%s and %s)" % (self.name, other.name))
+        #if self.name != other.name:
+        #    raise RequestStatsAdditionError("Trying to add two RequestStats objects of different names (%s and %s)" % (self.name, other.name))
         
-        new = RequestStats(other.name)
+        new = RequestStats(self.name)
         new.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
         new.start_time = min(self.start_time, other.start_time)
         
         new.num_reqs = self.num_reqs + other.num_reqs
         new.num_failures = self.num_failures + other.num_failures
         new.total_response_time = self.total_response_time + other.total_response_time
-        new.min_response_time = min(self.min_response_time, other.min_response_time) or other.min_response_time
         new.max_response_time = max(self.max_response_time, other.max_response_time)
+        new.min_response_time = min(self.min_response_time, other.min_response_time) or other.min_response_time
+        
         
         def merge_dict_add(d1, d2):
             """Merge two dicts by adding the values from each dict"""
@@ -135,7 +144,14 @@ class RequestStats(object):
     
     def get_stripped_report(self):
         report = copy(self)
-        report.response_times = {self.median_response_time:self.num_reqs}
+        report.response_times = {report.median_response_time:report.num_reqs}
+        
+        #report.num_reqs_per_sec = {}
+        #slice_start_time = max(self.last_request_timestamp - 10, int(self.start_time))
+        #for t in range(slice_start_time, self.last_request_timestamp):
+        #    report.num_reqs_per_sec[t] = self.num_reqs_per_sec[t]
+        
+        self.reset()
         return report
     
     def to_dict(self):
@@ -173,9 +189,9 @@ class RequestStats(object):
 
         return inflated_list
 
-    def percentile(self):
+    def percentile(self, tpl=" %-40s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
         inflated_list = self.create_response_times_list()
-        return " %-40s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d" % (
+        return tpl % (
             self.name,
             self.num_reqs,
             percentile(inflated_list, 0.5),
@@ -196,6 +212,13 @@ class RequestStats(object):
             request = RequestStats(name)
             cls.requests[name] = request
         return request
+    
+    @classmethod
+    def sum_stats(cls, request_stats, name="Total"):
+        stats = RequestStats(name)
+        for s in request_stats:
+            stats += s
+        return stats
 
 def avg(values):
     return sum(values, 0.0) / max(len(values), 1)
@@ -212,7 +235,7 @@ def percentile(N, percent, key=lambda x:x):
     @return - the percentile of the values
     """
     if not N:
-        return None
+        return 0
     k = (len(N)-1) * percent
     f = math.floor(k)
     c = math.ceil(k)
@@ -242,6 +265,7 @@ def log_request(f):
             RequestStats.get(name).log(response_time)
             return retval
         except (URLError, BadStatusLine, socket.error), e:
+            print "error:", e
             RequestStats.get(name).log_error(e)
             
     return _wrapper
