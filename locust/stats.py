@@ -73,7 +73,7 @@ class RequestStats(object):
     
     def log_error(self, error):
         self.num_failures += 1
-        key = "%s" % error
+        key = "%r: %s" % (error, error)
         RequestStats.errors.setdefault(key, 0)
         RequestStats.errors[key] += 1
 
