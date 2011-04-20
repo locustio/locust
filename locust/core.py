@@ -376,8 +376,6 @@ class MasterLocustRunner(DistributedLocustRunner):
                     self._request_stats[stats.name] = RequestStats(stats.name)
                 self._request_stats[stats.name] += stats
                 RequestStats.global_last_request_timestamp = max(RequestStats.global_last_request_timestamp, stats.last_request_timestamp)
-            
-            key = self._request_stats.keys()[0]
     
     @property
     def request_stats(self):

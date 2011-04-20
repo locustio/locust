@@ -65,9 +65,21 @@ class RequestStats(object):
             
         self.min_response_time = min(self.min_response_time, response_time)
         self.max_response_time = max(self.max_response_time, response_time)
-
-        self.response_times.setdefault(response_time, 0)
-        self.response_times[response_time] += 1
+        
+        # to avoid to much data that has to be transfered to the master node when
+        # running in distributed mode, we save the response time rounded in a dict
+        # so that 147 becomes 150, 3432 becomes 3400 and 58760 becomes 59000
+        if response_time < 100:
+            rounded_response_time = response_time
+        elif response_time < 1000:
+            rounded_response_time = int(round(response_time, -1))
+        elif response_time < 10000:
+            rounded_response_time = int(round(response_time, -2))
+        else:
+            rounded_response_time = int(round(response_time, -3))
+        # increase request count for the rounded key in response time dict
+        self.response_times.setdefault(rounded_response_time, 0)
+        self.response_times[rounded_response_time] += 1
         
         self._latest_requests.appendleft(response_time)
     
@@ -144,7 +156,7 @@ class RequestStats(object):
     
     def get_stripped_report(self):
         report = copy(self)
-        report.response_times = {report.median_response_time:report.num_reqs}
+        #report.response_times = {report.median_response_time:report.num_reqs}
         
         #report.num_reqs_per_sec = {}
         #slice_start_time = max(self.last_request_timestamp - 10, int(self.start_time))
