@@ -1,11 +1,35 @@
 import urllib2
 import urllib
-from stats import log_request
+import time
 import base64
 from urlparse import urlparse, urlunparse
 
+from urllib2 import HTTPError, URLError
+from httplib import BadStatusLine
+import socket
+
 from StringIO import StringIO
 import gzip
+
+import events
+
+def log_request(f):
+    def _wrapper(*args, **kwargs):
+        name = kwargs.get('name', args[1]) or args[1]
+        try:
+            start = time.time()
+            retval = f(*args, **kwargs)
+            response_time = int((time.time() - start) * 1000)
+            events.request_success.fire(name, response_time, retval)
+            return retval
+        except HTTPError, e:
+            response_time = int((time.time() - start) * 1000)
+            events.request_failure.fire(name, response_time, e, response=e.locust_http_response)
+        except (URLError, BadStatusLine, socket.error), e:
+            response_time = int((time.time() - start) * 1000)
+            events.request_failure.fire(name, response_time, e, None)
+            
+    return _wrapper
 
 class HTTPClient(object):
     def __init__(self, base_url):
@@ -97,7 +121,6 @@ class HttpBrowser(object):
         self.opener = urllib2.build_opener(*handlers)
         urllib2.install_opener(self.opener)
     
-    @log_request
     def get(self, path, headers={}, name=None):
         """
         Make an HTTP GET request.
@@ -110,17 +133,8 @@ class HttpBrowser(object):
         
         Returns an HttpResponse instance, or None if the request failed.
         """
-        if self.gzip:
-            headers["Accept-Encoding"] = "gzip"
-        
-        url = self.base_url + path
-        request = urllib2.Request(url, None, headers)
-        f = self.opener.open(request)
-        data = f.read()
-        f.close()
-        return HttpResponse(url, name, f.code, data, f.info, self.gzip)
+        return self._request(path, None, headers=headers, name=name)
     
-    @log_request
     def post(self, path, data, headers={}, name=None):
         """
         Make an HTTP POST request.
@@ -139,13 +153,26 @@ class HttpBrowser(object):
             client = HttpBrowser("http://example.com")
             response = client.post("/post", {"user":"joe_hill"})
         """
+        return self._request(path, data, headers=headers, name=name)
+    
+    @log_request
+    def _request(self, path, data=None, headers={}, name=None):
         if self.gzip:
             headers["Accept-Encoding"] = "gzip"
         
+        if data is not None:
+            data = urllib.urlencode(data)
+        
         url = self.base_url + path
-        request = urllib2.Request(url, urllib.urlencode(data), headers)
-        f = self.opener.open(request)
-        data = f.read()
-        f.close()
+        request = urllib2.Request(url, data, headers)
+        try:
+            f = self.opener.open(request)
+            data = f.read()
+            f.close()
+        except HTTPError, e:
+            data = e.read()
+            e.locust_http_response = HttpResponse(url, name, e.code, data, e.info, self.gzip)
+            e.close()
+            raise e
+        
         return HttpResponse(url, name, f.code, data, f.info, self.gzip)
-    
