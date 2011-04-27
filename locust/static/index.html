@@ -65,10 +65,10 @@
             <td><%= this.name %></td>
             <td><%= this.num_reqs %></td>
             <td><%= this.num_failures %></td>
-            <td><%= this.avg_response_time %></td>
+            <td><%= Math.round(this.avg_response_time) %></td>
             <td><%= this.min_response_time %></td>
             <td><%= this.max_response_time %></td>
-            <td><%= this.current_rps %></td>
+            <td><%= Math.round(this.current_rps*100)/100 %></td>
         </tr>
         ]]>
     </script>
