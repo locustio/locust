@@ -151,7 +151,7 @@ class Locust(object):
             except InterruptLocust:
                 break
             except Exception, e:
-                events.on_locust_error.fire(self, e)
+                events.locust_error.fire(self, e)
                 sys.stderr.write("\n" + traceback.format_exc())
     
     def execute_next_task(self):
