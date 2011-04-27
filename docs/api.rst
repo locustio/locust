@@ -1,6 +1,6 @@
-===
+###
 API
-===
+###
 
 
 Locust class
@@ -39,3 +39,20 @@ HttpResponse class
 InterruptLocust Exception
 =========================
 .. autoexception:: locust.exception.InterruptLocust
+
+
+Event hooks
+===========
+
+The event hooks are instances of the **locust.events.EventHook** class:
+
+.. autoclass:: locust.events.EventHook
+
+Available hooks
+---------------
+
+The wollowing event hooks are available under the **locust.events** module:
+
+.. automodule:: locust.events
+	:members: request_success, request_failure, locust_error, report_to_master, slave_report
+

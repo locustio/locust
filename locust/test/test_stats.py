@@ -23,11 +23,11 @@ class TestRequestStats(unittest.TestCase):
 	def test_total_rps(self):
 		self.assertEqual(self.s.total_rps, 7)
 	
-	def test_current_tps(self):
-		self.s.last_request_timestamp = int(time.time()) + 2
+	def test_current_rps(self):
+		self.s.global_last_request_timestamp = int(time.time()) + 2
 		self.assertEqual(self.s.current_rps, 3.5)
 		
-		self.s.last_request_timestamp = int(time.time()) + 25
+		self.s.global_last_request_timestamp = int(time.time()) + 25
 		self.assertEqual(self.s.current_rps, 0)
 	
 	def test_num_reqs_fails(self):

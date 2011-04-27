@@ -45,12 +45,7 @@ def request_stats_csv():
         ])
     ]
     
-    total = RequestStats("Total")
-    if locust_runner.request_stats:
-        for s in locust_runner.request_stats.itervalues():
-            total += s
-    
-    for s in list(locust_runner.request_stats.itervalues()) + [total]:
+    for s in list(locust_runner.request_stats.itervalues()) + [RequestStats.sum_stats("Total")]:
         rows.append('"%s",%i,%i,%i,%i,%i,%i,%.2f' % (
             s.name,
             s.num_reqs,
@@ -69,10 +64,6 @@ def request_stats_csv():
 @app.route("/stats/distribution/csv")
 def distribution_stats_csv():
     from core import locust_runner
-    total = RequestStats("Total")
-    if locust_runner.request_stats:
-        for s in locust_runner.request_stats.itervalues():
-            total += s
     
     rows = [",".join((
         '"Name"',
@@ -87,7 +78,7 @@ def distribution_stats_csv():
         '"99%"',
         '"100%"',
     ))]
-    for s in list(locust_runner.request_stats.itervalues()) + [total]:
+    for s in list(locust_runner.request_stats.itervalues()) + [RequestStats.sum_stats("Total")]:
         rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
     
     response = make_response("\n".join(rows))
@@ -97,17 +88,9 @@ def distribution_stats_csv():
 @app.route('/stats/requests')
 def request_stats():
     from core import locust_runner
+    
     stats = []
-    
-    total_requests = 0
-    total_rps = 0
-    total_fails = 0
-    
-    for s in locust_runner.request_stats.itervalues():
-        total_requests += s.num_reqs
-        total_rps += s.current_rps
-        total_fails += s.num_failures
-        
+    for s in list(locust_runner.request_stats.itervalues()) + [RequestStats.sum_stats("Total")]:
         stats.append({
             "name": s.name,
             "num_reqs": s.num_reqs,
@@ -117,15 +100,6 @@ def request_stats():
             "max_response_time": s.max_response_time,
             "current_rps": s.current_rps,
         })
-    stats.append({
-        "name": "Total",
-        "num_reqs": total_requests,
-        "num_failures": total_fails,
-        "avg_response_time": "",
-        "min_response_time": "",
-        "max_response_time": "",
-        "current_rps": round(total_rps, 2),
-    })
     
     report = {"stats":stats, "errors":list(locust_runner.errors.iteritems())}
     return json.dumps(report)

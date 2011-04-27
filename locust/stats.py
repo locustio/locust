@@ -5,12 +5,9 @@ from copy import copy
 import math
 import functools
 
-from urllib2 import URLError
-from httplib import BadStatusLine
-import socket
-
 from exception import InterruptLocust
 from collections import deque
+import events
 
 class RequestStatsAdditionError(Exception):
     pass
@@ -36,6 +33,7 @@ class RequestStats(object):
         cls.total_num_requests = 0
         for name, stats in cls.requests.iteritems():
             stats.reset()
+        cls.errors = {}
     
     def reset(self):
         self.start_time = time.time()
@@ -43,9 +41,8 @@ class RequestStats(object):
         self.num_failures = 0
         self.total_response_time = 0
         self.response_times = {}
-        self.min_response_time = None
+        self._min_response_time = None
         self.max_response_time = 0
-        self._latest_requests = deque(maxlen=1000)
         self.last_request_timestamp = int(time.time())
         self.num_reqs_per_sec = {}
 
@@ -60,10 +57,10 @@ class RequestStats(object):
         self.last_request_timestamp = t
         RequestStats.global_last_request_timestamp = t
 
-        if self.min_response_time is None:
-            self.min_response_time = response_time
+        if self._min_response_time is None:
+            self._min_response_time = response_time
             
-        self.min_response_time = min(self.min_response_time, response_time)
+        self._min_response_time = min(self._min_response_time, response_time)
         self.max_response_time = max(self.max_response_time, response_time)
         
         # to avoid to much data that has to be transfered to the master node when
@@ -80,15 +77,19 @@ class RequestStats(object):
         # increase request count for the rounded key in response time dict
         self.response_times.setdefault(rounded_response_time, 0)
         self.response_times[rounded_response_time] += 1
-        
-        self._latest_requests.appendleft(response_time)
     
     def log_error(self, error):
         self.num_failures += 1
         key = "%r: %s" % (error, error)
         RequestStats.errors.setdefault(key, 0)
         RequestStats.errors[key] += 1
-
+        
+    @property
+    def min_response_time(self):
+        if self._min_response_time is None:
+            return 0
+        return self._min_response_time
+    
     @property
     def avg_response_time(self):
         try:
@@ -116,9 +117,11 @@ class RequestStats(object):
     
     @property
     def current_rps(self):
-        slice_start_time = max(self.last_request_timestamp - 10, int(self.start_time))
+        if self.global_last_request_timestamp is None:
+            return 0
+        slice_start_time = max(self.global_last_request_timestamp - 10, int(self.global_start_time or 0))
         
-        reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, self.last_request_timestamp)]
+        reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, self.global_last_request_timestamp)]
         return avg(reqs)
 
     @property
@@ -140,7 +143,7 @@ class RequestStats(object):
         new.num_failures = self.num_failures + other.num_failures
         new.total_response_time = self.total_response_time + other.total_response_time
         new.max_response_time = max(self.max_response_time, other.max_response_time)
-        new.min_response_time = min(self.min_response_time, other.min_response_time) or other.min_response_time
+        new._min_response_time = min(self._min_response_time, other._min_response_time) or other._min_response_time
         
         
         def merge_dict_add(d1, d2):
@@ -156,13 +159,6 @@ class RequestStats(object):
     
     def get_stripped_report(self):
         report = copy(self)
-        #report.response_times = {report.median_response_time:report.num_reqs}
-        
-        #report.num_reqs_per_sec = {}
-        #slice_start_time = max(self.last_request_timestamp - 10, int(self.start_time))
-        #for t in range(slice_start_time, self.last_request_timestamp):
-        #    report.num_reqs_per_sec[t] = self.num_reqs_per_sec[t]
-        
         self.reset()
         return report
     
@@ -187,7 +183,7 @@ class RequestStats(object):
             self.num_reqs,
             "%d(%.2f%%)" % (self.num_failures, fail_percent),
             self.avg_response_time,
-            self.min_response_time or 0,
+            self.min_response_time,
             self.max_response_time,
             self.median_response_time or 0,
             self.current_rps or 0
@@ -226,9 +222,9 @@ class RequestStats(object):
         return request
     
     @classmethod
-    def sum_stats(cls, request_stats, name="Total"):
+    def sum_stats(cls, name="Total"):
         stats = RequestStats(name)
-        for s in request_stats:
+        for s in cls.requests.itervalues():
             stats += s
         return stats
 
@@ -257,29 +253,33 @@ def percentile(N, percent, key=lambda x:x):
     d1 = key(N[int(c)]) * (k-f)
     return d0+d1
 
-def log_request(f):
-    # hack to preserve the function spec when generating sphinx documentation
-    # TODO: If sphinx is imported in locustfile, things will not function! Need a better way to check if
-    # sphinx is actually running documentation generation
-    if "sphinx" in sys.modules:
-        import warnings
-        warnings.warn("Sphinx detected, @log_request decorator will have no effect to preserve function spec")
-        return f
+def on_request_success(name, response_time, response):
+    if RequestStats.global_max_requests is not None and RequestStats.total_num_requests >= RequestStats.global_max_requests:
+        raise InterruptLocust("Maximum number of requests reached")
+    RequestStats.get(name).log(response_time)
+def on_request_failure(name, response_time, error, response=None):
+    RequestStats.get(name).log_error(error)
+
+def on_report_to_master(client_id, data):
+    data["stats"] = [RequestStats.requests[name].get_stripped_report() for name in RequestStats.requests if not (RequestStats.requests[name].num_reqs == 0 and RequestStats.requests[name].num_failures == 0)]
+    data["errors"] =  RequestStats.errors
+    RequestStats.errors = {}
+
+def on_slave_report(client_id, data):
+    for stats in data["stats"]:
+        if not stats.name in RequestStats.requests:
+            RequestStats.requests[stats.name] = RequestStats(stats.name)
+        RequestStats.requests[stats.name] += stats
+        RequestStats.global_last_request_timestamp = max(RequestStats.global_last_request_timestamp, stats.last_request_timestamp)
     
-    def _wrapper(*args, **kwargs):
-        name = kwargs.get('name', args[1]) or args[1]
-        try:
-            if RequestStats.global_max_requests is not None and RequestStats.total_num_requests >= RequestStats.global_max_requests:
-                raise InterruptLocust("Maximum number of requests reached")
-            start = time.time()
-            retval = f(*args, **kwargs)
-            response_time = int((time.time() - start) * 1000)
-            RequestStats.get(name).log(response_time)
-            return retval
-        except (URLError, BadStatusLine, socket.error), e:
-            RequestStats.get(name).log_error(e)
-            
-    return _wrapper
+    for err_message, err_count in data["errors"].iteritems():
+        RequestStats.errors[err_message] = RequestStats.errors.setdefault(err_message, 0) + err_count
+
+events.request_success += on_request_success
+events.request_failure += on_request_failure
+events.report_to_master += on_report_to_master
+events.slave_report += on_slave_report
+
 
 def print_stats(stats):
     print " %-40s %7s %12s %7s %7s %7s  | %7s %7s" % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s')
