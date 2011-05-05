@@ -18,7 +18,7 @@ from clients import HTTPClient, HttpBrowser
 from stats import RequestStats, print_stats
 import events
 
-from exception import LocustError, InterruptLocust
+from exception import LocustError, InterruptLocust, RescheduleTaskImmediately
 
 def require_once(required_func):
     """
@@ -146,10 +146,17 @@ class Locust(object):
         
                 if not self._task_queue:
                     self.schedule_task(self.get_next_task())
-                self.execute_next_task()
-                self.wait()
-            except InterruptLocust:
-                break
+                
+                try:
+                    self.execute_next_task()
+                except RescheduleTaskImmediately:
+                    pass
+                else:
+                    self.wait()
+            except InterruptLocust, e:
+                if e.reschedule:
+                    raise RescheduleTaskImmediately()
+                return
             except Exception, e:
                 events.locust_error.fire(self, e)
                 sys.stderr.write("\n" + traceback.format_exc())
@@ -231,11 +238,14 @@ class SubLocust(Locust):
         
         self()
     
-    def interrupt(self):
+    def interrupt(self, reschedule=True):
         """
         Interrupt the SubLocust and hand over execution control back to the parent Locust.
+        
+        If *reschedule* is True (default), the parent Locust will immediately re-schedule,
+        and execute, a new task
         """
-        raise InterruptLocust()
+        raise InterruptLocust(reschedule)
 
 
 locust_runner = None
@@ -292,7 +302,12 @@ class LocustRunner(object):
 
                     locust = bucket.pop(random.randint(0, len(bucket)-1))
                     occurence_count[locust.__name__] += 1
-                    new_locust = self.locusts.spawn(locust())
+                    def start_locust():
+                        try:
+                            locust()()
+                        except RescheduleTaskImmediately:
+                            pass
+                    new_locust = self.locusts.spawn(start_locust)
                 print "%i locusts hatched" % len(self.locusts)
                 gevent.sleep(1)
         
