@@ -45,8 +45,9 @@ class RequestStats(object):
         self.max_response_time = 0
         self.last_request_timestamp = int(time.time())
         self.num_reqs_per_sec = {}
+        self.total_content_length = 0
 
-    def log(self, response_time):
+    def log(self, response_time, content_length):
         RequestStats.total_num_requests += 1
 
         self.num_reqs += 1
@@ -77,10 +78,13 @@ class RequestStats(object):
         # increase request count for the rounded key in response time dict
         self.response_times.setdefault(rounded_response_time, 0)
         self.response_times[rounded_response_time] += 1
+        
+        # increase total content-length
+        self.total_content_length += content_length
     
     def log_error(self, error):
         self.num_failures += 1
-        key = "%r: %s" % (error, error)
+        key = "%r: %s" % (error, repr(str(error)))
         RequestStats.errors.setdefault(key, 0)
         RequestStats.errors[key] += 1
         
@@ -130,6 +134,13 @@ class RequestStats(object):
             return 0.0
         
         return self.num_reqs / max(RequestStats.global_last_request_timestamp - RequestStats.global_start_time, 1)
+    
+    @property
+    def avg_content_length(self):
+        try:
+            return self.total_content_length / self.num_reqs
+        except ZeroDivisionError:
+            return 0
 
     def __add__(self, other):
         #if self.name != other.name:
@@ -144,7 +155,7 @@ class RequestStats(object):
         new.total_response_time = self.total_response_time + other.total_response_time
         new.max_response_time = max(self.max_response_time, other.max_response_time)
         new._min_response_time = min(self._min_response_time, other._min_response_time) or other._min_response_time
-        
+        new.total_content_length = self.total_content_length + other.total_content_length        
         
         def merge_dict_add(d1, d2):
             """Merge two dicts by adding the values from each dict"""
@@ -256,7 +267,10 @@ def percentile(N, percent, key=lambda x:x):
 def on_request_success(name, response_time, response):
     if RequestStats.global_max_requests is not None and RequestStats.total_num_requests >= RequestStats.global_max_requests:
         raise InterruptLocust("Maximum number of requests reached")
-    RequestStats.get(name).log(response_time)
+    
+    content_length = int(response.info.getheader("Content-Length") or 0)
+    RequestStats.get(name).log(response_time, content_length)
+
 def on_request_failure(name, response_time, error, response=None):
     RequestStats.get(name).log_error(error)
 
