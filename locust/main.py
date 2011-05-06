@@ -30,7 +30,7 @@ def parse_options():
         '-H', '--host',
         dest="host",
         default=None,
-        help="Host to load test"
+        help="Host to load test in the following format: http://10.21.32.33"
     )
 
     parser.add_option(
