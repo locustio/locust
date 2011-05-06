@@ -292,24 +292,25 @@ class LocustRunner(object):
         occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
         
         def spawn_locusts():
+            sleep_time = 1.0 / self.hatch_rate
             while True:
-                for i in range(0, self.hatch_rate):
-                    if not bucket:
-                        print "All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in occurence_count.iteritems()])
-                        print "Resetting stats\n"
-                        RequestStats.reset_all()
-                        return
+                if not bucket:
+                    print "All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in occurence_count.iteritems()])
+                    print "Resetting stats\n"
+                    RequestStats.reset_all()
+                    return
 
-                    locust = bucket.pop(random.randint(0, len(bucket)-1))
-                    occurence_count[locust.__name__] += 1
-                    def start_locust():
-                        try:
-                            locust()()
-                        except RescheduleTaskImmediately:
-                            pass
-                    new_locust = self.locusts.spawn(start_locust)
-                print "%i locusts hatched" % len(self.locusts)
-                gevent.sleep(1)
+                locust = bucket.pop(random.randint(0, len(bucket)-1))
+                occurence_count[locust.__name__] += 1
+                def start_locust():
+                    try:
+                        locust()()
+                    except RescheduleTaskImmediately:
+                        pass
+                new_locust = self.locusts.spawn(start_locust)
+                if len(self.locusts) % 10 == 0:
+                    print "%i locusts hatched" % len(self.locusts)
+                gevent.sleep(sleep_time)
         
         spawn_locusts()
         self.locusts.join()
