@@ -319,9 +319,11 @@ class LocustRunner(object):
         print_percentile_stats(self.request_stats) #TODO use an event listener, or such, for this?
 
 class LocalLocustRunner(LocustRunner):
-    def start_hatching(self, locust_count=None):
+    def start_hatching(self, locust_count=None, hatch_rate=None):
         if locust_count:
             self.num_clients = locust_count
+        if hatch_rate:
+            self.hatch_rate = hatch_rate
         
         RequestStats.global_start_time = time()
         self.greenlet = gevent.spawn(self.hatch, self)
@@ -346,9 +348,11 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.greenlet.spawn(self.stats_aggregator).link_exception()
         self._request_stats = {}
     
-    def start_hatching(self, locust_count=None):
+    def start_hatching(self, locust_count=None, hatch_rate=None):
         if locust_count:
             self.num_clients = locust_count / len(self.ready_clients)
+        if hatch_rate:
+            self.hatch_rate = float(hatch_rate) / len(self.ready_clients)
         
         print "Sending hatch jobs to %i ready clients" % len(self.ready_clients)
         while self.ready_clients:
