@@ -144,7 +144,7 @@ def parse_options():
     parser.add_option(
         '-r', '--hatch-rate',
         action='store',
-        type='int',
+        type='float',
         dest='hatch_rate',
         default=1,
         help="The rate per second in which clients are spawned"
