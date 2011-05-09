@@ -288,7 +288,7 @@ class LocustRunner(object):
             num_locusts = int(round(self.num_clients * percent))
             bucket.extend([locust for x in xrange(0, num_locusts)])
 
-        print "\nHatching and swarming %i clients at the rate %i clients/s...\n" % (self.num_clients, self.hatch_rate)
+        print "\nHatching and swarming %i clients at the rate %g clients/s...\n" % (self.num_clients, self.hatch_rate)
         occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
         
         def spawn_locusts():
