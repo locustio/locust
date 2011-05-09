@@ -18,7 +18,8 @@
         <div class="panes">
             <div>
                 <form action="/swarm" method="POST" id="swarm_form">
-                    Number of users to simulate: <input type="text" name="locust_count" />
+                    Number of users to simulate <input type="text" name="locust_count" /><br>
+                    Hatch rate <input type="text" name="hatch_rate" /> (number of Locust users to spawn each second)<br>
                     <input type="submit" value="Start swarming">
                 </form>
             </div>

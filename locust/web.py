@@ -27,7 +27,8 @@ def swarm():
     from core import locust_runner
     
     locust_count = int(request.form["locust_count"])
-    locust_runner.start_hatching(locust_count=locust_count)
+    hatch_rate = float(request.form["hatch_rate"])
+    locust_runner.start_hatching(locust_count, hatch_rate)
     return json.dumps({'message': 'Swarming started'})
 
 @app.route("/stats/requests/csv")
