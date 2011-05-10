@@ -18,13 +18,24 @@
         <div class="panes">
             <div>
                 <form action="/swarm" method="POST" id="swarm_form">
-                    Number of users to simulate <input type="text" name="locust_count" /><br>
-                    Hatch rate <input type="text" name="hatch_rate" /> (number of Locust users to spawn each second)<br>
-                    <input type="submit" value="Start swarming">
+                    <table>
+                        <tr>
+                            <td>Number of users to simulate</td>
+                            <td><input type="text" name="locust_count" style="width:105px;" /></td>
+                        <tr>
+                        <tr>
+                            <td title="Number of Locust users to spawn each second">Hatch rate (users spawned/second)</td>
+                            <td><input type="text" name="hatch_rate" style="width:105px;" /></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><input type="submit" value="Start swarming"></td>
+                        </tr>
+                    </table>
                 </form>
             </div>
             <div style="display:none;">
-                <table id="stats">
+                <table id="stats" class="stats">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -47,7 +58,7 @@
                 </div>
             </div>
             <div style="display:none;">
-                <table id="errors">
+                <table id="errors" class="stats">
                     <thead>
                         <th class="error_count"># fails</th>
                         <th class="error_type">Type</th>
