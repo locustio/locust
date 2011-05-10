@@ -123,9 +123,9 @@ class RequestStats(object):
     def current_rps(self):
         if self.global_last_request_timestamp is None:
             return 0
-        slice_start_time = max(self.global_last_request_timestamp - 10, int(self.global_start_time or 0))
+        slice_start_time = max(self.global_last_request_timestamp - 12, int(self.global_start_time or 0))
         
-        reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, self.global_last_request_timestamp)]
+        reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, self.global_last_request_timestamp-2)]
         return avg(reqs)
 
     @property
