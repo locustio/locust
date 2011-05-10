@@ -24,7 +24,6 @@ a {
 #start { color: black; float: right; }
 
 table {
-    width: 100%;
     border-collapse: collapse;
 }
 
@@ -40,6 +39,10 @@ td, th {
 }
 th.error_count {
     width: 70px;
+}
+
+table.stats {
+    width: 100%;
 }
 
 em {
