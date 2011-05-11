@@ -11,12 +11,12 @@ import socket
 import warnings
 import traceback
 from hashlib import md5
-from hotqueue import HotQueue
 
 from locust.stats import print_percentile_stats
 from clients import HTTPClient, HttpBrowser
 from stats import RequestStats, print_stats
 import events
+import zmqrpc
 
 from exception import LocustError, InterruptLocust, RescheduleTaskImmediately
 
@@ -329,13 +329,9 @@ class LocalLocustRunner(LocustRunner):
         self.greenlet = gevent.spawn(self.hatch, self)
 
 class DistributedLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, hatch_rate, num_clients, num_requests, host=None, redis_host="localhost", redis_port=6379):
+    def __init__(self, locust_classes, hatch_rate, num_clients, num_requests, host=None, master_host="localhost"):
         super(DistributedLocustRunner, self).__init__(locust_classes, hatch_rate, num_clients, num_requests, host)
-        
-        # set up the redis queus that will be used to communicate between master and slaves
-        self.work_queue = HotQueue("locust_work_queue", host=redis_host, port=redis_port, db=0)
-        self.client_report_queue = HotQueue("locust_client_report_queue", host=redis_host, port=redis_port, db=0)
-        self.stats_report_queue = HotQueue("locust_stats_report_queue", host=redis_host, port=redis_port, db=0)
+        self.master_host = master_host
 
 class MasterLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
@@ -343,10 +339,11 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.ready_clients = []
         self.client_stats = {}
         self.client_errors = {}
-        self.greenlet = Group()
-        self.greenlet.spawn(self.client_tracker).link_exception()
-        self.greenlet.spawn(self.stats_aggregator).link_exception()
         self._request_stats = {}
+        
+        self.server = zmqrpc.Server()
+        self.greenlet = Group()
+        self.greenlet.spawn(self.client_listener).link_exception()
     
     def start_hatching(self, locust_count=None, hatch_rate=None):
         if locust_count:
@@ -357,48 +354,55 @@ class MasterLocustRunner(DistributedLocustRunner):
         print "Sending hatch jobs to %i ready clients" % len(self.ready_clients)
         while self.ready_clients:
             client = self.ready_clients.pop()
-            self.work_queue.put({"hatch_rate":self.hatch_rate, "num_clients":self.num_clients, "num_requests": self.num_requests, "host":self.host, "stop_timeout":None})
+            msg = {"hatch_rate":self.hatch_rate, "num_clients":self.num_clients, "num_requests": self.num_requests, "host":self.host, "stop_timeout":None}
+            self.server.send({"type":"start", "data":msg})
         
         RequestStats.global_start_time = time()
     
-    def client_tracker(self):
-        for client in self.client_report_queue.consume():
-            self.ready_clients.append(client)
-            print "Client %r reported as ready. Currently %i clients ready to swarm." % (client, len(self.ready_clients))
-    
-    def stats_aggregator(self):
-        for report in self.stats_report_queue.consume():
-            events.slave_report.fire(report["client_id"], report["data"])
+    def client_listener(self):
+        while True:
+            msg = self.server.recv()
+            if msg["type"] == "client_ready":
+                client = msg["data"]
+                self.ready_clients.append(client)
+                print "Client %r reported as ready. Currently %i clients ready to swarm." % (client, len(self.ready_clients))
+            elif msg["type"] == "stats":
+                report = msg["data"]
+                events.slave_report.fire(report["client_id"], report["data"])
 
 class SlaveLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + md5(str(time() + random.randint(0,10000))).hexdigest()
-        self.client_report_queue.put(self.client_id)
+        
+        self.client = zmqrpc.Client(self.master_host)
         self.greenlet = Group()
         self.greenlet.spawn(self.worker).link_exception()
+        self.client.send({"type":"client_ready", "data":self.client_id})
         self.greenlet.spawn(self.stats_reporter).link_exception()
     
     def start_hatching(self):
         raise LocustError("start_hatching should never be called for a slave process")
     
     def worker(self):
-        for job in self.work_queue.consume():
-            print "job recieved: %r" % job
-            self.hatch_rate = job["hatch_rate"]
-            self.num_clients = job["num_clients"]
-            self.num_requests = job["num_requests"]
-            self.host = job["host"]
-            self.hatch(stop_timeout=job["stop_timeout"])
-            self.client_report_queue.put(self.client_id)
+        while True:
+            msg = self.client.recv()
+            if msg["type"] == "start":
+                job = msg["data"]
+                self.hatch_rate = job["hatch_rate"]
+                self.num_clients = job["num_clients"]
+                self.num_requests = job["num_requests"]
+                self.host = job["host"]
+                self.hatch(stop_timeout=job["stop_timeout"])
+                self.client.send({"type":"client_ready", "data":self.client_id})
     
     def stats_reporter(self):
         while True:
             data = {}
             events.report_to_master.fire(self.client_id, data)
-            
-            self.stats_report_queue.put({
+            report = {
                 "client_id": self.client_id,
                 "data": data,
-            })
+            }
+            self.client.send({"type":"stats", "data":report})
             gevent.sleep(1)
