@@ -1,4 +1,5 @@
 greenlet
 gevent
+pyzmq
+gevent-zeromq
 Flask
-hotqueue
