@@ -150,22 +150,14 @@ def parse_options():
         help="The rate per second in which clients are spawned"
     )
 
-    # redis options
+    # master host options
     parser.add_option(
-        '--redis-host',
+        '--master-host',
         action='store',
         type='str',
-        dest='redis_host',
+        dest='master_host',
         default="127.0.0.1",
-        help="Redis host to use for distributed load testing. Only used when running with --master or --slave. Defaults to 127.0.0.1."
-    )
-    parser.add_option(
-        '--redis-port',
-        action='store',
-        type='int',
-        dest='redis_port',
-        default=6379,
-        help="Redis port to use for distributed load testing. Only used when running with --master or --slave. Defaults to 6379, which is the default Redis port."
+        help="Host or IP adress of locust master for distributed load testing. Only used when running with --slave. Defaults to 127.0.0.1."
     )
 
     # Finalize
@@ -342,9 +334,9 @@ def main():
             core.locust_runner.start_hatching()
             main_greenlet = core.locust_runner.greenlet
     elif options.master:
-        core.locust_runner = MasterLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, redis_host=options.redis_host, redis_port=options.redis_port)
+        core.locust_runner = MasterLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
     elif options.slave:
-        core.locust_runner = SlaveLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, redis_host=options.redis_host, redis_port=options.redis_port)
+        core.locust_runner = SlaveLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
         main_greenlet = core.locust_runner.greenlet
     
     if options.print_stats or (not options.web and not options.slave):
