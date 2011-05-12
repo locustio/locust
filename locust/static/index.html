@@ -114,7 +114,7 @@
                 var report = JSON.parse(data);
                 $('#stats tbody').jqoteapp(stats_tpl, report.stats);
                 $('#errors tbody').jqoteapp(errors_tpl, report.errors);
-                setTimeout(updateStats, 1000);
+                setTimeout(updateStats, 2000);
             });
         }
         updateStats();

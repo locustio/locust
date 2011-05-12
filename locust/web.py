@@ -2,6 +2,7 @@
 
 import json
 import os.path
+from time import time
 from gevent import wsgi
 from locust.stats import RequestStats
 
@@ -14,6 +15,7 @@ _locust = None
 _num_clients = None
 _num_requests = None
 _hatch_rate = None
+_request_stats_context_cache = {}
 
 @app.route('/')
 def index():
@@ -92,23 +94,28 @@ def distribution_stats_csv():
 
 @app.route('/stats/requests')
 def request_stats():
+    global _request_stats_context_cache
     from core import locust_runner
     
-    stats = []
-    for s in list(locust_runner.request_stats.itervalues()) + [RequestStats.sum_stats("Total")]:
-        stats.append({
-            "name": s.name,
-            "num_reqs": s.num_reqs,
-            "num_failures": s.num_failures,
-            "avg_response_time": s.avg_response_time,
-            "min_response_time": s.min_response_time,
-            "max_response_time": s.max_response_time,
-            "current_rps": s.current_rps,
-            "median_response_time": s.median_response_time,
-            "avg_content_length": s.avg_content_length,
-        })
-    
-    report = {"stats":stats, "errors":list(locust_runner.errors.iteritems())}
+    if not _request_stats_context_cache or _request_stats_context_cache["time"] < time() - 2:
+        stats = []
+        for s in list(locust_runner.request_stats.itervalues()) + [RequestStats.sum_stats("Total")]:
+            stats.append({
+                "name": s.name,
+                "num_reqs": s.num_reqs,
+                "num_failures": s.num_failures,
+                "avg_response_time": s.avg_response_time,
+                "min_response_time": s.min_response_time,
+                "max_response_time": s.max_response_time,
+                "current_rps": s.current_rps,
+                "median_response_time": s.median_response_time,
+                "avg_content_length": s.avg_content_length,
+            })
+        
+        report = {"stats":stats, "errors":list(locust_runner.errors.iteritems())}
+        _request_stats_context_cache = {"time": time(), "report": report}
+    else:
+        report = _request_stats_context_cache["report"]
     return json.dumps(report)
 
 def start(locust, hatch_rate, num_clients, num_requests):
