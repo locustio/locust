@@ -258,6 +258,7 @@ class LocustRunner(object):
         self.num_requests = num_requests
         self.host = host
         self.locusts = Group()
+        self.is_running = False
 
     @property
     def request_stats(self):
@@ -326,6 +327,7 @@ class LocalLocustRunner(LocustRunner):
             self.hatch_rate = hatch_rate
         
         RequestStats.global_start_time = time()
+        self.is_running = True
         self.greenlet = gevent.spawn(self.hatch, self)
 
 class DistributedLocustRunner(LocustRunner):
@@ -358,6 +360,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.server.send({"type":"start", "data":msg})
         
         RequestStats.global_start_time = time()
+        self.is_running = True
     
     def client_listener(self):
         while True:
