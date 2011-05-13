@@ -1,48 +1,141 @@
 body {
-    background: #3b2505 url("background.png") repeat-x center top;
+    background: #111717;
     padding: 0;
     margin: 0;
-    font-family: Helvetica, Arial, sans-serif;
-    color: #d1ad78;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    color: #fff;
 }
 
 a {
-    color: #fff;
-    font-weight: bold;
+    color: #308dbf;
     text-decoration: none;
 }
 
-#content {
-    background: url("locust_banner.png") no-repeat center top;
+.top {
+    background: url(img/top_bg.png);
+    width: 100%;
+    height: 93px;
+    color: #000;
+}
+.top_content {
     width: 1000px;
-    margin: 0 auto;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 20px;
+}
+.top .logo {
+    float: left;
+}
+
+
+.top .boxes {
+    float:right;
+}
+
+.top_box {
+    float: left;
+    border-left: 1px solid #d9d9d9;
+    padding-left: 20px;
+    padding-right: 20px;
+    height: 53px;
+}
+.top_box:first-child {
+    border: none;
+}
+.top_box .label {
+    color: #7a7a7a;
+    font-size: 11px;
+    font-weight: bold;
+}
+.top_box .value {
+    color: #000;
+    font-size: 16px;
+    font-weight: bold;
+}
+.boxes .box_rps .value {
+    font-size: 32px;
+}
+
+.boxes .box_rps {
+    display: none;
+}
+.running .boxes .box_rps {
     display: block;
-    height: 200px;
-    padding-top: 115px;
 }
 
-#start { color: black; float: right; }
+.main {
+    width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    padding-top: 20px;
+}
 
-table {
+.start {
+    width: 338px;
+    position: absolute;
+    left: 50%;
+    top: 100px;
+    margin-left: -169px;
+}
+.start h2 {
+    color: #addf82;
+    font-size: 26px;
+    font-weight: bold;
+}
+.start label {
+    display: block;
+    margin-bottom: 10px;
+    margin-top: 20px;
+    font-size: 16px;
+}
+.start input.val {
+    border: none;
+    background: #fff;
+    height: 52px;
+    width: 328px;
+    font-size: 24px;
+    padding-left: 10px;
+}
+.start input.start_button {
+    margin-top: 20px;
+    float: right;
+}
+
+
+.running .start {display: none;}
+.stopped .start {display: block;}
+.running .status {display: block;}
+.stopped .status {display: none;}
+
+.status table {
     border-collapse: collapse;
+    width: 100%;
 }
-
-thead {
-    background-color: #684109;
-    padding: 0; margin: 0;
-}
-
-td, th {
-    padding: 3px;
+.status thead {
+    background-color: #000;
+    padding: 0;
     margin: 0;
+    color: #6d6d6d;
+    border-bottom: 1px solid #292f2f;
+}
+.status td, th {
+    padding: 10px;
+    margin: 0;
+    text-align: right;
+}
+.status td:first-child, th:first-child {
     text-align: left;
 }
-th.error_count {
-    width: 70px;
+.status tr.dark {
+    background:#0d1111;
 }
-
-table.stats {
-    width: 100%;
+.status th {
+    font-weight: normal;
+}
+.status th.error_count {
+    width: 70px;
 }
 
 em {
@@ -58,13 +151,19 @@ ul.tabs {
     margin: 0;
     padding: 0;
     list-style: none;
+    margin-top: 0px;
 }
 ul.tabs li {
     display: block;
     float: left;
     margin-right: 10px;
+    font-size: 16px;
+}
+ul.tabs li a.current {
+    color: #fff;
+    /*font-weight: bold;*/
 }
 
 .panes {
-    margin-top: 15px;
+    margin-top: 20px;
 }

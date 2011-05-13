@@ -6,7 +6,7 @@ from time import time
 from gevent import wsgi
 from locust.stats import RequestStats
 
-from flask import Flask, make_response, request
+from flask import Flask, make_response, request, render_template
 app = Flask("Locust Monitor")
 app.debug = True
 app.root_path = os.path.dirname(__file__)
@@ -17,11 +17,11 @@ _num_requests = None
 _hatch_rate = None
 _request_stats_context_cache = {}
 
+
 @app.route('/')
 def index():
-    response = make_response(open(os.path.join(app.root_path, "static", "index.html")).read())
-    response.headers["Content-type"] = "text/html"
-    return response
+    from core import locust_runner
+    return render_template("index.html", is_running=locust_runner.is_running)
 
 @app.route('/swarm', methods=["POST"])
 def swarm():
@@ -31,7 +31,9 @@ def swarm():
     locust_count = int(request.form["locust_count"])
     hatch_rate = float(request.form["hatch_rate"])
     locust_runner.start_hatching(locust_count, hatch_rate)
-    return json.dumps({'message': 'Swarming started'})
+    response = make_response(json.dumps({'success':True, 'message': 'Swarming started'}))
+    response.headers["Content-type"] = "application/json"
+    return response
 
 @app.route("/stats/requests/csv")
 def request_stats_csv():
@@ -113,6 +115,8 @@ def request_stats():
             })
         
         report = {"stats":stats, "errors":list(locust_runner.errors.iteritems())}
+        if stats:
+            report["total_rps"] = stats[len(stats)-1]["current_rps"]
         _request_stats_context_cache = {"time": time(), "report": report}
     else:
         report = _request_stats_context_cache["report"]

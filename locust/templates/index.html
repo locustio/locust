@@ -1,0 +1,149 @@
+<!DOCTYPE html> 
+<html>
+<head> 
+    <title>Locust</title> 
+    <link rel="stylesheet" type="text/css" href="/static/style.css" media="screen">
+</head> 
+<body class="{% if is_running %}running{% else %}stopped{% endif %}">
+    <div class="top">
+        <div class="top_content">
+            <img src="/static/img/logo.png" class="logo" />
+            <div class="boxes">
+                <div class="top_box box_status">
+                    <div class="label">STATUS</div>
+                    <div class="value" id="status_text">{% if is_running %}TEST RUNNING{% else %}READY{% endif %}</div>
+                </div>
+                <div class="top_box box_rps" id="box_rps">
+                    <div class="label">RPS</div>
+                    <div class="value" id="total_rps">0</div>
+                </div>
+            </div>
+            <div style="clear:both;"></div>
+        </div>
+    </div>
+    <div class="main">
+        
+        <div class="start" id="start">
+            <h2>Start new Locust swarm</h2>
+            <form action="/swarm" method="POST" id="swarm_form">
+                <label for="locust_count">Number of users to simulate</label>
+                <input type="text" name="locust_count" id="locust_count" class="val" /><br>
+                <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
+                <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
+                <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button"></td>
+            </form>
+        </div>
+        
+        <div class="status" id="status">
+            <ul class="tabs">
+                <li><a href="#">Statistics</a></li>
+                <li><a href="#">Failures</a></li>
+            </ul>
+            <div style="clear:left;"></div>
+            <div class="panes">
+                <div style="display:none;">
+                    <table id="stats" class="stats">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th># requests</th>
+                                <th># fails</th>
+                                <th>Median</th>
+                                <th>Average</th>
+                                <th>Min</th>
+                                <th>Max</th>
+                                <th title="Average Content-Length">Content-Length</th>
+                                <th># reqs/sec</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                    <div style="margin-top:20px;">
+                        <a href="/stats/requests/csv">Download request statistics CSV</a><br />
+                        <a href="/stats/distribution/csv">Download response time distribution CSV</a>
+                    </div>
+                </div>
+                <div style="display:none;">
+                    <table id="errors" class="stats">
+                        <thead>
+                            <th class="error_count"># fails</th>
+                            <th class="error_type">Type</th>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="/static/jquery-1.4.min.js"></script> 
+    <script type="text/javascript" src="/static/jquery.jqote2.min.js"></script>
+    <script type="text/javascript" src="/static/jquery.tools.min.js"></script> 
+    <script type="text/x-jqote-template" id="stats-template">
+        <![CDATA[
+        <tr class="<%=(alternate ? "dark" : "")%>">
+            <td><%= this.name %></td>
+            <td><%= this.num_reqs %></td>
+            <td><%= this.num_failures %></td>
+            <td><%= Math.round(this.median_response_time) %></td>
+            <td><%= Math.round(this.avg_response_time) %></td>
+            <td><%= this.min_response_time %></td>
+            <td><%= this.max_response_time %></td>
+            <td><%= Math.round(this.avg_content_length) %></td>
+            <td><%= Math.round(this.current_rps*100)/100 %></td>
+        </tr>
+        <% alternate = !alternate; %>
+        ]]>
+    </script>
+    <script type="text/x-jqote-template" id="errors-template">
+        <![CDATA[
+        <tr class="<%=(alternate ? "dark" : "")%>">
+            <td><%= this[1] %></td>
+            <td><%= this[0] %></td>
+        </tr>
+        <% alternate = !alternate; %>
+        ]]>
+    </script>
+    <script type="text/javascript">
+        var alternate = false;
+        
+        $("ul.tabs").tabs("div.panes > div");
+        
+        var stats_tpl = $('#stats-template');
+        var errors_tpl = $('#errors-template');
+        
+        $('#swarm_form').submit(function(event) {
+            event.preventDefault();
+            $.post($(this).attr("action"), $(this).serialize(),
+                function(response) {
+                    if (response.success) {
+                        $("#start").fadeOut();
+                        $("#status").fadeIn();
+                        $("#box_rps").fadeIn();
+                        $("#status_text").html("TEST RUNNING");
+                    }
+                }
+            );
+        });
+        
+        function updateStats() {
+            $.get('/stats/requests', function (data) {
+                var report = JSON.parse(data);
+                $("#total_rps").html(Math.round(report.total_rps*100)/100);
+                
+                $('#stats tbody').empty();
+                $('#errors tbody').empty();
+                
+                alternate = false;
+                $('#stats tbody').jqoteapp(stats_tpl, report.stats);
+                alternate = false;
+                $('#errors tbody').jqoteapp(errors_tpl, report.errors);
+                setTimeout(updateStats, 2000);
+            });
+        }
+        updateStats();
+    </script>
+</body>
+</html>
