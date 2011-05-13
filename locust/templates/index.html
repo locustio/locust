@@ -11,7 +11,7 @@
             <div class="boxes">
                 <div class="top_box box_status">
                     <div class="label">STATUS</div>
-                    <div class="value" id="status_text">{% if is_running %}TEST RUNNING{% else %}READY{% endif %}</div>
+                    <div class="value" id="status_text">{% if is_running %}RUNNING{% else %}READY{% endif %}</div>
                 </div>
                 <div class="top_box box_rps box_running" id="box_rps">
                     <div class="label">RPS</div>
@@ -126,7 +126,7 @@
                         $("#start").fadeOut();
                         $("#status").fadeIn();
                         $(".box_running").fadeIn();
-                        $("#status_text").html("TEST RUNNING");
+                        $("#status_text").html("RUNNING");
                     }
                 }
             );
