@@ -117,6 +117,10 @@ def request_stats():
         report = {"stats":stats, "errors":list(locust_runner.errors.iteritems())}
         if stats:
             report["total_rps"] = stats[len(stats)-1]["current_rps"]
+            try:
+                report["fail_ratio"] = float(stats[len(stats)-1]["num_failures"]) / stats[len(stats)-1]["num_reqs"]
+            except ZeroDivisionError:
+                report["fail_ratio"] = 0
         _request_stats_context_cache = {"time": time(), "report": report}
     else:
         report = _request_stats_context_cache["report"]

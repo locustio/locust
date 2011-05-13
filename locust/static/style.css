@@ -5,6 +5,7 @@ body {
     font-family: Arial, Helvetica, sans-serif;
     font-size: 14px;
     color: #fff;
+    padding-bottom: 20px;
 }
 
 a {
@@ -56,11 +57,14 @@ a {
 .boxes .box_rps .value {
     font-size: 32px;
 }
+.boxes .box_fail .value {
+    font-size: 22px;
+}
 
-.boxes .box_rps {
+.boxes .box_running {
     display: none;
 }
-.running .boxes .box_rps {
+.running .boxes .box_running {
     display: block;
 }
 
@@ -120,7 +124,7 @@ a {
     color: #6d6d6d;
     border-bottom: 1px solid #292f2f;
 }
-.status td, th {
+.status td, .status th {
     padding: 10px;
     margin: 0;
     text-align: right;
@@ -136,6 +140,10 @@ a {
 }
 .status th.error_count {
     width: 70px;
+}
+
+#errors td, #errors th {
+    text-align: left;
 }
 
 em {
