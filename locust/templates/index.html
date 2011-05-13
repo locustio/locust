@@ -13,9 +13,13 @@
                     <div class="label">STATUS</div>
                     <div class="value" id="status_text">{% if is_running %}TEST RUNNING{% else %}READY{% endif %}</div>
                 </div>
-                <div class="top_box box_rps" id="box_rps">
+                <div class="top_box box_rps box_running" id="box_rps">
                     <div class="label">RPS</div>
                     <div class="value" id="total_rps">0</div>
+                </div>
+                <div class="top_box box_fail box_running" id="box_fail">
+                    <div class="label">Failures</div>
+                    <div class="value"><span id="fail_ratio"></span>%</div>
                 </div>
             </div>
             <div style="clear:both;"></div>
@@ -121,7 +125,7 @@
                     if (response.success) {
                         $("#start").fadeOut();
                         $("#status").fadeIn();
-                        $("#box_rps").fadeIn();
+                        $(".box_running").fadeIn();
                         $("#status_text").html("TEST RUNNING");
                     }
                 }
@@ -132,6 +136,7 @@
             $.get('/stats/requests', function (data) {
                 var report = JSON.parse(data);
                 $("#total_rps").html(Math.round(report.total_rps*100)/100);
+                $("#fail_ratio").html(Math.round(report.fail_ratio*10000)/10000);
                 
                 $('#stats tbody').empty();
                 $('#errors tbody').empty();
