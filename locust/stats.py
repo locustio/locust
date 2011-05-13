@@ -159,8 +159,8 @@ class RequestStats(object):
         
         def merge_dict_add(d1, d2):
             """Merge two dicts by adding the values from each dict"""
-            merged = {}
-            for key in set(d1.keys() + d2.keys()):
+            merged = copy(d1)
+            for key in set(d2.keys()):
                 merged[key] = d1.get(key, 0) + d2.get(key, 0)
             return merged
         
