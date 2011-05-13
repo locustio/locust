@@ -120,7 +120,10 @@ def request_stats():
             try:
                 report["fail_ratio"] = float(stats[len(stats)-1]["num_failures"]) / stats[len(stats)-1]["num_reqs"]
             except ZeroDivisionError:
-                report["fail_ratio"] = 0
+                if stats[len(stats)-1]["num_failures"] > 0:
+                    report["fail_ratio"] = 100
+                else:
+                    report["fail_ratio"] = 0
         _request_stats_context_cache = {"time": time(), "report": report}
     else:
         report = _request_stats_context_cache["report"]
