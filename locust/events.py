@@ -86,3 +86,12 @@ Event is fired with following arguments:
 * *client_id*: Client id of the reporting locust slave
 * *data*: Data dict with the data from the slave node
 """
+
+hatch_complete = EventHook()
+"""
+*hatch_complete* is fired when all locust users has been spawned.
+
+Event is fire with the following arguments:
+
+* *user_count*: Number of users that was hatched
+"""
