@@ -37,6 +37,12 @@ def simple_webserver(env, start_response):
         start_response('200 OK', [('Content-Type', 'text/html')])
         request = Request(env)
         return [str(request.form.get("arg", ""))]
+    elif env['PATH_INFO'] == '/fail':
+        start_response('500 Internal Server Error', [('Content-Type', 'text/html')])
+        return ["This response failed"]
+    elif env['PATH_INFO'] == '/redirect':
+        start_response('302 Found', [('Content-Type', 'text/html'), ('Location', '/ultra_fast')])
+        return ["Redirected, bro"]
     elif env['PATH_INFO'] == '/basic_auth':
         request = Request(env)
         if "Authorization" in request.headers:

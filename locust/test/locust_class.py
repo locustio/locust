@@ -1,4 +1,5 @@
-from locust.core import Locust, require_once, WebLocust, task
+from locust.core import Locust, require_once, WebLocust, task, events
+from locust import ResponseError
 import unittest
 from testcases import WebserverTestCase
 
@@ -208,3 +209,29 @@ class TestWebLocustClass(WebserverTestCase):
         self.assertEqual(1, RequestStats.get("new name!").num_reqs)
         self.assertEqual(0, RequestStats.get("/ultra_fast").num_reqs)
     
+    def test_catch_response(self):
+        class MyLocust(WebLocust):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyLocust()
+
+        num = {'failures': 0, 'success': 0}
+        def on_failure(path, response_time, exception, response): num['failures'] += 1
+        def on_success(a, b, c): num['success'] += 1
+
+        events.request_failure += on_failure
+        events.request_success += on_success
+
+        self.assertEqual(None, locust.client.get("/fail"))
+        self.assertEqual(1, num['failures'])
+        self.assertEqual(0, num['success'])
+
+        with locust.client.get("/ultra_fast", catch_response=True) as response: pass
+        self.assertEqual(1, num['failures'])
+        self.assertEqual(1, num['success'])
+
+        with locust.client.get("/ultra_fast", catch_response=True) as response:
+            raise ResponseError("Not working")
+
+        self.assertEqual(2, num['failures'])
+        self.assertEqual(1, num['success'])
