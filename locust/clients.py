@@ -3,7 +3,7 @@ import urllib
 import time
 import base64
 from urlparse import urlparse, urlunparse
-
+from exception import ResponseError
 from urllib2 import HTTPError, URLError
 from httplib import BadStatusLine
 import socket
@@ -12,15 +12,36 @@ from StringIO import StringIO
 import gzip
 
 import events
+from locust.exception import LocustError
+
+class NoneContext(object):
+    def __enter__(self):
+        return None
+
+    def __exit__(self, exc, value, traceback):
+        return True
+
+
 
 def log_request(f):
     def _wrapper(*args, **kwargs):
         name = kwargs.get('name', args[1]) or args[1]
+        if "delayed" in kwargs:
+            delayed = kwargs["delayed"]
+            del kwargs["delayed"]
+        else:
+            delayed = False
+
         try:
             start = time.time()
             retval = f(*args, **kwargs)
+            retval.delayed = delayed
             response_time = int((time.time() - start) * 1000)
-            events.request_success.fire(name, response_time, retval)
+            if delayed:
+                retval.delay_success = lambda : events.request_success.fire(name, response_time, retval)
+                retval.delay_failure = lambda e : events.request_failure.fire(name, response_time, e, None)
+            else:
+                events.request_success.fire(name, response_time, retval)
             return retval
         except HTTPError, e:
             response_time = int((time.time() - start) * 1000)
@@ -28,6 +49,14 @@ def log_request(f):
         except (URLError, BadStatusLine, socket.error), e:
             response_time = int((time.time() - start) * 1000)
             events.request_failure.fire(name, response_time, e, None)
+
+        if delayed:
+            return NoneContext()
+        return None
+
+
+
+
             
     return _wrapper
 
@@ -63,6 +92,11 @@ class HttpResponse(object):
     
     data = None
     """Response data"""
+
+    delayed = False
+    delay_success = None
+    delay_failure = None
+
     
     def __init__(self, url, name, code, data, info, gzip):
         self.url = url
@@ -88,6 +122,23 @@ class HttpResponse(object):
     
     def _set_data(self, data):
         self._data = data
+
+
+    def __enter__(self):
+        if not self.delayed:
+            raise LocustError("If using response in a with statement you must use delayed=True")
+        return self
+
+    def __exit__(self, exc, value, traceback):
+        if exc:
+            self.delay_failure(value)
+        else:
+            self.delay_success()
+
+        return True
+
+
+
     
     data = property(_get_data, _set_data)
 
@@ -121,7 +172,7 @@ class HttpBrowser(object):
         self.opener = urllib2.build_opener(*handlers)
         urllib2.install_opener(self.opener)
     
-    def get(self, path, headers={}, name=None):
+    def get(self, path, headers={}, name=None, **kwargs):
         """
         Make an HTTP GET request.
         
@@ -133,9 +184,9 @@ class HttpBrowser(object):
         
         Returns an HttpResponse instance, or None if the request failed.
         """
-        return self._request(path, None, headers=headers, name=name)
+        return self._request(path, None, headers=headers, name=name, **kwargs)
     
-    def post(self, path, data, headers={}, name=None):
+    def post(self, path, data, headers={}, name=None, **kwargs):
         """
         Make an HTTP POST request.
         
@@ -153,7 +204,7 @@ class HttpBrowser(object):
             client = HttpBrowser("http://example.com")
             response = client.post("/post", {"user":"joe_hill"})
         """
-        return self._request(path, data, headers=headers, name=name)
+        return self._request(path, data, headers=headers, name=name, **kwargs)
     
     @log_request
     def _request(self, path, data=None, headers={}, name=None):
