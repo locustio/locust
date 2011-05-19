@@ -16,7 +16,10 @@ from locust.stats import print_percentile_stats
 from clients import HTTPClient, HttpBrowser
 from stats import RequestStats, print_stats
 import events
-import zmqrpc
+try:
+    import zmqrpc
+except ImportError:
+    import simplerpc as zmqrpc
 
 from exception import LocustError, InterruptLocust, RescheduleTaskImmediately
 
