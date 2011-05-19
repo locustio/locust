@@ -21,25 +21,23 @@ class NoneContext(object):
     def __exit__(self, exc, value, traceback):
         return True
 
-
-
 def log_request(f):
     def _wrapper(*args, **kwargs):
         name = kwargs.get('name', args[1]) or args[1]
-        if "delayed" in kwargs:
-            delayed = kwargs["delayed"]
-            del kwargs["delayed"]
+        if "catch_response" in kwargs:
+            catch_response = kwargs["catch_response"]
+            del kwargs["catch_response"]
         else:
-            delayed = False
+            catch_response = False
 
         try:
             start = time.time()
             retval = f(*args, **kwargs)
-            retval.delayed = delayed
+            retval.catch_response = catch_response
             response_time = int((time.time() - start) * 1000)
-            if delayed:
-                retval.delay_success = lambda : events.request_success.fire(name, response_time, retval)
-                retval.delay_failure = lambda e : events.request_failure.fire(name, response_time, e, None)
+            if catch_response:
+                retval._trigger_success = lambda : events.request_success.fire(name, response_time, retval)
+                retval._trigger_failure = lambda e : events.request_failure.fire(name, response_time, e, None)
             else:
                 events.request_success.fire(name, response_time, retval)
             return retval
@@ -50,14 +48,10 @@ def log_request(f):
             response_time = int((time.time() - start) * 1000)
             events.request_failure.fire(name, response_time, e, None)
 
-        if delayed:
+        if catch_response:
             return NoneContext()
         return None
 
-
-
-
-            
     return _wrapper
 
 class HTTPClient(object):
@@ -93,9 +87,9 @@ class HttpResponse(object):
     data = None
     """Response data"""
 
-    delayed = False
-    delay_success = None
-    delay_failure = None
+    catch_response = False
+    _trigger_success = None
+    _trigger_failure = None
 
     
     def __init__(self, url, name, code, data, info, gzip):
@@ -125,21 +119,17 @@ class HttpResponse(object):
 
 
     def __enter__(self):
-        if not self.delayed:
-            raise LocustError("If using response in a with statement you must use delayed=True")
+        if not self.catch_response:
+            raise LocustError("If using response in a with() statement you must use catch_response=True")
         return self
 
     def __exit__(self, exc, value, traceback):
         if exc:
-            self.delay_failure(value)
+            self._trigger_failure(value)
         else:
-            self.delay_success()
-
+            self._trigger_success()
         return True
 
-
-
-    
     data = property(_get_data, _set_data)
 
 class HttpBrowser(object):
