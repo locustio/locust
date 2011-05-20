@@ -56,11 +56,24 @@ def require_once(required_func):
         return wrapper
     return decorator_func
 
-def task(weight=1):
+def task(weight_or_func=1):
     def decorator_func(func):
-        func.locust_task_weight = weight
+        func.locust_task_weight = weight_or_func
         return func
-    return decorator_func
+    
+    """
+    Check if task was used without parentheses (not called), like this::
+    
+        @task
+        def my_task()
+            pass
+    """
+    if callable(weight_or_func):
+        func = weight_or_func
+        weight_or_func = 1
+        return decorator_func(func)
+    else:
+        return decorator_func
 
 class LocustMeta(type):
     """
