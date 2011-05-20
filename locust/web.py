@@ -9,7 +9,7 @@ from locust.stats import RequestStats
 from flask import Flask, make_response, request, render_template
 app = Flask("Locust Monitor")
 app.debug = True
-app.root_path = os.path.dirname(__file__)
+app.root_path = os.path.dirname(os.path.abspath(__file__))
 
 _locust = None
 _num_clients = None
