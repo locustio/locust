@@ -136,7 +136,7 @@
             $.get('/stats/requests', function (data) {
                 var report = JSON.parse(data);
                 $("#total_rps").html(Math.round(report.total_rps*100)/100);
-                $("#fail_ratio").html(Math.round(report.fail_ratio*10000)/10000);
+                $("#fail_ratio").html(Math.round(report.fail_ratio*10000)/100);
                 
                 $('#stats tbody').empty();
                 $('#errors tbody').empty();
