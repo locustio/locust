@@ -114,6 +114,28 @@ class TestLocustClass(unittest.TestCase):
         
         l = MySubLocust()
         self.assertEqual(1, len(l.tasks))
+    
+    def test_task_decorator_with_or_without_argument(self):
+        class MyLocust(Locust):
+            @task
+            def t1(self):
+                pass
+        locust = MyLocust()
+        self.assertEqual(len(locust.tasks), 1)
+        
+        class MyLocust2(Locust):
+            @task()
+            def t1(self):
+                pass
+        locust = MyLocust2()
+        self.assertEqual(len(locust.tasks), 1)
+        
+        class MyLocust3(Locust):
+            @task(3)
+            def t1(self):
+                pass
+        locust = MyLocust3()
+        self.assertEqual(len(locust.tasks), 3)
 
 
 class TestWebLocustClass(WebserverTestCase):
