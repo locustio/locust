@@ -19,7 +19,8 @@ import events
 try:
     import zmqrpc
 except ImportError:
-    import simplerpc as zmqrpc
+    print "WARNING: Using pure Python socket RPC implementation instead of zmq."
+    import socketrpc as zmqrpc
 
 from exception import LocustError, InterruptLocust, RescheduleTaskImmediately
 
@@ -373,11 +374,15 @@ class MasterLocustRunner(DistributedLocustRunner):
     
     def start_hatching(self, locust_count=None, hatch_rate=None):
         if locust_count:
-            self.num_clients = locust_count / len(self.ready_clients)
+            self.num_clients = locust_count / (len(self.ready_clients) or 1)
         if hatch_rate:
-            self.hatch_rate = float(hatch_rate) / len(self.ready_clients)
+            self.hatch_rate = float(hatch_rate) / (len(self.ready_clients) or 1)
         
         print "Sending hatch jobs to %i ready clients" % len(self.ready_clients)
+        if not len(self.ready_clients):
+            print "WARNING: You are running in distributed mode but have no slave servers connected."
+            print "Please connect slaves prior to swarming."
+
         while self.ready_clients:
             client = self.ready_clients.pop()
             msg = {"hatch_rate":self.hatch_rate, "num_clients":self.num_clients, "num_requests": self.num_requests, "host":self.host, "stop_timeout":None}
@@ -444,5 +449,10 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 "client_id": self.client_id,
                 "data": data,
             }
-            self.client.send({"type":"stats", "data":report})
+            try:
+                self.client.send({"type":"stats", "data":report})
+            except:
+                print "Connection lost to master server. Aborting..."
+                break
+            
             gevent.sleep(1)
