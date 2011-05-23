@@ -15,7 +15,6 @@ class RequestStatsAdditionError(Exception):
 
 class RequestStats(object):
     requests = {}
-    request_observers = []
     total_num_requests = 0
     global_max_requests = None
     global_last_request_timestamp = None
@@ -27,6 +26,15 @@ class RequestStats(object):
         self.num_reqs_per_sec = {}
         self.last_request_timestamp = 0
         self.reset()
+    
+    @classmethod
+    def clear_all(cls):
+        cls.total_num_requests = 0
+        cls.requests = {}
+        cls.errors = {}
+        cls.global_max_requests = None
+        cls.global_last_request_timestamp = None
+        cls.global_start_time = None
     
     @classmethod
     def reset_all(cls):
