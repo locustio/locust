@@ -71,7 +71,7 @@ Here is an example::
         min_wait = 5000
         max_wait = 15000
         
-        @task()
+        @task
         def my_task(self):
             print "executing task"
 
@@ -79,13 +79,13 @@ Here is an example::
     
     from locust import Locust, task
     
-    def task1(l):
-        pass
-    
     class MyLocust(Locust):
-        tasks = {task1:3}
         min_wait = 5000
         max_wait = 15000
+        
+        @task(3)
+        def task1(self):
+            pass
         
         @task(6)
         def task2(self):
@@ -142,4 +142,11 @@ The difference from just calling the login function in the beginning of the inbo
 (the *min_wait* and *max_wait* attributes). So when inbox is to be executed for a locust user that hasn't yet executed the login task, the login task will be executed first,
 and the inbox task will be scheduled to run as the next task (after the wait time). The next time the same locust user is to execute the inbox task, login will not be run, 
 since it has already been executed for that locust user.
+
+
+Using SubLocusts
+================
+
+Real websites are usually built up in an hierarchical way, with multiple sub sections. To allow the load testing scripts to more realistically simulate real user behaviour, 
+Locust provides the SubLocust class. A sub class of the SubLocust class contains normal locust tasks, just like sub classes of the Locust or WebLocust classes. 
 
