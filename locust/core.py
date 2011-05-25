@@ -268,7 +268,7 @@ class SubLocust(Locust):
 
 
 locust_runner = None
-STATE_INIT, STATE_RUNNING, STATE_STOPPED = ["init", "running", "stopped"]
+STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_STOPPED = ["ready", "hatching", "running", "stopped"]
 
 class LocustRunner(object):
     def __init__(self, locust_classes, hatch_rate, num_clients, num_requests=None, host=None):
@@ -283,6 +283,7 @@ class LocustRunner(object):
         
         # register listener that resets stats when hatching is complete
         def on_hatch_complete(count):
+            self.state = STATE_RUNNING
             print "Resetting stats\n"
             RequestStats.reset_all()
         events.hatch_complete += on_hatch_complete
@@ -354,11 +355,11 @@ class LocustRunner(object):
         if hatch_rate:
             self.hatch_rate = hatch_rate
         
-        if not self.state == STATE_RUNNING:
+        if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             RequestStats.clear_all()
         
         RequestStats.global_start_time = time()
-        self.state = STATE_RUNNING
+        self.state = STATE_HATCHING
         self.hatch()
     
     def stop(self):
@@ -402,7 +403,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             print "WARNING: You are running in distributed mode but have no slave servers connected."
             print "Please connect slaves prior to swarming."
         
-        if not self.start_hatching == STATE_RUNNING:
+        if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             RequestStats.clear_all()
         
         while self.ready_clients:
@@ -411,7 +412,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.server.send({"type":"start", "data":msg})
         
         RequestStats.global_start_time = time()
-        self.state = STATE_RUNNING
+        self.state = STATE_HATCHING
     
     def stop(self):
         for client in self.running_clients:

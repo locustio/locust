@@ -147,6 +147,8 @@ def request_stats():
         if is_distributed:
             report["slave_count"] = len(locust_runner.ready_clients) + len(locust_runner.running_clients)
         
+        report["state"] = locust_runner.state
+        
         _request_stats_context_cache = {"time": time(), "report": report}
     else:
         report = _request_stats_context_cache["report"]

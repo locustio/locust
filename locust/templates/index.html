@@ -12,13 +12,7 @@
                 <div class="top_box box_status">
                     <div class="label">STATUS</div>
                     <div class="value" id="status_text">
-                        {% if state == "init" %}
-                            READY
-                        {% elif state == "running" %}
-                            RUNNING
-                        {% else %}
-                            STOPPED
-                        {% endif %}
+                        {{state}}
                     </div>
                     <a href="#" class="new_test">New test</a>
                 </div>
@@ -139,7 +133,7 @@
             event.preventDefault();
             $.get($(this).attr("href"));
             $("body").attr("class", "stopped");
-            $("#status_text").html("STOPPED");
+            //$("#status_text").html("STOPPED");
             $(".box_stop").hide();
             $("a.new_test").show();
         });
@@ -167,7 +161,7 @@
                         $("#start").fadeOut();
                         $("#status").fadeIn();
                         $(".box_running").fadeIn();
-                        $("#status_text").html("RUNNING");
+                        //$("#status_text").html("HATCHING");
                         $("a.new_test").fadeOut();
                     }
                 }
@@ -179,6 +173,7 @@
                 var report = JSON.parse(data);
                 $("#total_rps").html(Math.round(report.total_rps*100)/100);
                 $("#fail_ratio").html(Math.round(report.fail_ratio*10000)/100);
+                $("#status_text").html(report.state);
                 
                 if (report.slave_count)
                     $("#slaveCount").html(report.slave_count)
