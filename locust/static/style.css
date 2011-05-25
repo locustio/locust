@@ -54,7 +54,7 @@ a {
     font-size: 16px;
     font-weight: bold;
 }
-.boxes .box_rps .value {
+.boxes .box_rps .value, .boxes .box_slaves .value {
     font-size: 32px;
 }
 .boxes .box_fail .value {
@@ -67,6 +67,12 @@ a {
 .running .boxes .box_running {
     display: block;
 }
+.stopped .boxes .box_running {
+    display: block;
+}
+.stopped .boxes .box_stop {
+    display: none;
+}
 
 .main {
     width: 1000px;
@@ -77,11 +83,15 @@ a {
 }
 
 .start {
-    width: 338px;
+    width: 398px;
     position: absolute;
     left: 50%;
     top: 100px;
     margin-left: -169px;
+}
+.start .padder {
+    padding: 30px;
+    padding-top: 0px;
 }
 .start h2 {
     color: #addf82;
@@ -108,10 +118,31 @@ a {
 }
 
 
+.stopped .start {
+    display: none;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radisu: 5px;
+    border: 3px solid #eee;
+    background: #111717;
+}
 .running .start {display: none;}
-.stopped .start {display: block;}
+.init .start {display: block;}
+
 .running .status {display: block;}
-.stopped .status {display: none;}
+.stopped .status {display: blocked;}
+.init .status {display: none;}
+
+.running a.new_test, .init a.new_test {display: none;}
+.stopped a.new_test {display: block;}
+
+.start a.close_link {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+}
+.stopped .start a.close_link {display: inline;}
+.running .start a.close_link, .init .start a.close_link {display: none;}
 
 .status table {
     border-collapse: collapse;

@@ -268,6 +268,7 @@ class SubLocust(Locust):
 
 
 locust_runner = None
+STATE_INIT, STATE_RUNNING, STATE_STOPPED = ["init", "running", "stopped"]
 
 class LocustRunner(object):
     def __init__(self, locust_classes, hatch_rate, num_clients, num_requests=None, host=None):
@@ -277,7 +278,8 @@ class LocustRunner(object):
         self.num_requests = num_requests
         self.host = host
         self.locusts = Group()
-        self.is_running = False
+        self.state = STATE_INIT
+        self.hatching_greenlet = None
         
         # register listener that resets stats when hatching is complete
         def on_hatch_complete(count):
@@ -352,20 +354,23 @@ class LocustRunner(object):
         if hatch_rate:
             self.hatch_rate = hatch_rate
         
-        if not self.is_running:
+        if not self.state == STATE_RUNNING:
             RequestStats.clear_all()
         
         RequestStats.global_start_time = time()
-        self.is_running = True
+        self.state = STATE_RUNNING
         self.hatch()
     
     def stop(self):
+        # if we are currently hatching locusts we need to kill the hatching greenlet first
+        if self.hatching_greenlet and not self.hatching_greenlet.ready():
+            self.hatching_greenlet.kill(block=True)
         self.locusts.kill(block=True)
-        self.is_running = False
+        self.state = STATE_STOPPED
 
 class LocalLocustRunner(LocustRunner):
     def start_hatching(self, locust_count=None, hatch_rate=None):
-        self.greenlet = gevent.spawn(lambda: super(LocalLocustRunner, self).start_hatching(locust_count, hatch_rate))
+        self.hatching_greenlet = gevent.spawn(lambda: super(LocalLocustRunner, self).start_hatching(locust_count, hatch_rate))
 
 class DistributedLocustRunner(LocustRunner):
     def __init__(self, locust_classes, hatch_rate, num_clients, num_requests, host=None, master_host="localhost"):
@@ -397,7 +402,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             print "WARNING: You are running in distributed mode but have no slave servers connected."
             print "Please connect slaves prior to swarming."
         
-        if not self.is_running:
+        if not self.start_hatching == STATE_RUNNING:
             RequestStats.clear_all()
         
         while self.ready_clients:
@@ -406,7 +411,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.server.send({"type":"start", "data":msg})
         
         RequestStats.global_start_time = time()
-        self.is_running = True
+        self.state = STATE_RUNNING
     
     def stop(self):
         for client in self.running_clients:
@@ -422,7 +427,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             elif msg["type"] == "client_stopped":
                 self.running_clients.remove(msg["data"])
                 if len(self.running_clients) == 0:
-                    self.is_running = False
+                    self.state = STATE_STOPPED
                 print "Removing %s client from running clients" % (msg["data"])
             elif msg["type"] == "stats":
                 report = msg["data"]
@@ -462,7 +467,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 self.num_requests = job["num_requests"]
                 self.host = job["host"]
                 #stop_timeout=job["stop_timeout"]
-                self.greenlet.spawn(lambda: self.start_hatching())
+                self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching())
             elif msg["type"] == "stop":
                 self.stop()
                 self.client.send({"type":"client_stopped", "data":self.client_id})

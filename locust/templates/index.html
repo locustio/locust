@@ -4,22 +4,40 @@
     <title>Locust</title> 
     <link rel="stylesheet" type="text/css" href="/static/style.css" media="screen">
 </head> 
-<body class="{% if is_running %}running{% else %}stopped{% endif %}">
+<body class="{{state}}">
     <div class="top">
         <div class="top_content">
             <img src="/static/img/logo.png" class="logo" />
             <div class="boxes">
                 <div class="top_box box_status">
                     <div class="label">STATUS</div>
-                    <div class="value" id="status_text">{% if is_running %}RUNNING{% else %}READY{% endif %}</div>
+                    <div class="value" id="status_text">
+                        {% if state == "init" %}
+                            READY
+                        {% elif state == "running" %}
+                            RUNNING
+                        {% else %}
+                            STOPPED
+                        {% endif %}
+                    </div>
+                    <a href="#" class="new_test">New test</a>
                 </div>
+                {% if is_distributed %}
+                    <div class="top_box box_slaves" id="box_rps">
+                        <div class="label">SLAVES</div>
+                        <div class="value" id="slaveCount">{{slave_count}}</div>
+                    </div>
+                {% endif %}
                 <div class="top_box box_rps box_running" id="box_rps">
                     <div class="label">RPS</div>
                     <div class="value" id="total_rps">0</div>
                 </div>
                 <div class="top_box box_fail box_running" id="box_fail">
-                    <div class="label">Failures</div>
+                    <div class="label">FAILURES</div>
                     <div class="value"><span id="fail_ratio"></span>%</div>
+                </div>
+                <div class="top_box box_stop box_running" id="box_stop">
+                    <a href="/stop"><img src="/static/img/stop.png" style="border:0;"></a>
                 </div>
             </div>
             <div style="clear:both;"></div>
@@ -28,14 +46,20 @@
     <div class="main">
         
         <div class="start" id="start">
-            <h2>Start new Locust swarm</h2>
-            <form action="/swarm" method="POST" id="swarm_form">
-                <label for="locust_count">Number of users to simulate</label>
-                <input type="text" name="locust_count" id="locust_count" class="val" /><br>
-                <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
-                <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button"></td>
-            </form>
+            <div style="position:relative;">
+                <a href="#" class="close_link">Close</a>
+            </div>
+            <div class="padder">
+                <h2>Start new Locust swarm</h2>
+                <form action="/swarm" method="POST" id="swarm_form">
+                    <label for="locust_count">Number of users to simulate</label>
+                    <input type="text" name="locust_count" id="locust_count" class="val" /><br>
+                    <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
+                    <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
+                    <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button"></td>
+                </form>
+                <div style="clear:right;"></div>
+            </div>
         </div>
         
         <div class="status" id="status">
@@ -111,6 +135,23 @@
         ]]>
     </script>
     <script type="text/javascript">
+        $("#box_stop a").click(function(event) {
+            event.preventDefault();
+            $.get($(this).attr("href"));
+            $("body").attr("class", "stopped");
+            $("#status_text").html("STOPPED");
+            $(".box_stop").hide();
+            $("a.new_test").show();
+        });
+        $(".new_test").click(function(event) {
+            event.preventDefault();
+            $("#start").show();
+        });
+        $(".close_link").click(function(event) {
+            event.preventDefault();
+            $("#start").hide();
+        });
+        
         var alternate = false;
         
         $("ul.tabs").tabs("div.panes > div");
@@ -127,6 +168,7 @@
                         $("#status").fadeIn();
                         $(".box_running").fadeIn();
                         $("#status_text").html("RUNNING");
+                        $("a.new_test").fadeOut();
                     }
                 }
             );
@@ -137,6 +179,9 @@
                 var report = JSON.parse(data);
                 $("#total_rps").html(Math.round(report.total_rps*100)/100);
                 $("#fail_ratio").html(Math.round(report.fail_ratio*10000)/100);
+                
+                if (report.slave_count)
+                    $("#slaveCount").html(report.slave_count)
                 
                 $('#stats tbody').empty();
                 $('#errors tbody').empty();

@@ -20,8 +20,18 @@ _request_stats_context_cache = {}
 
 @app.route('/')
 def index():
-    from core import locust_runner
-    return render_template("index.html", is_running=locust_runner.is_running)
+    from core import locust_runner, MasterLocustRunner
+    is_distributed = isinstance(locust_runner, MasterLocustRunner)
+    if is_distributed:
+        slave_count = len(locust_runner.ready_clients) + len(locust_runner.running_clients)
+    else:
+        slave_count = 0
+    
+    return render_template("index.html",
+        state=locust_runner.state,
+        is_distributed=is_distributed,
+        slave_count=slave_count
+    )
 
 @app.route('/swarm', methods=["POST"])
 def swarm():
@@ -56,7 +66,7 @@ def request_stats_csv():
             '"Average response time"',
             '"Min response time"', 
             '"Max response time"',
-            '"Avgerage Content-Length"',
+            '"Average Content-Length"',
             '"Reqests/s"',
         ])
     ]
@@ -105,7 +115,7 @@ def distribution_stats_csv():
 @app.route('/stats/requests')
 def request_stats():
     global _request_stats_context_cache
-    from core import locust_runner
+    from core import locust_runner, MasterLocustRunner
     
     if not _request_stats_context_cache or _request_stats_context_cache["time"] < time() - 2:
         stats = []
@@ -132,6 +142,11 @@ def request_stats():
                     report["fail_ratio"] = 100
                 else:
                     report["fail_ratio"] = 0
+        
+        is_distributed = isinstance(locust_runner, MasterLocustRunner)
+        if is_distributed:
+            report["slave_count"] = len(locust_runner.ready_clients) + len(locust_runner.running_clients)
+        
         _request_stats_context_cache = {"time": time(), "report": report}
     else:
         report = _request_stats_context_cache["report"]
