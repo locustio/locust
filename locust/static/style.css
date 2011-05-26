@@ -6,6 +6,7 @@ body {
     font-size: 14px;
     color: #fff;
     padding-bottom: 20px;
+    padding-top: 93px;
 }
 
 a {
@@ -18,6 +19,10 @@ a {
     width: 100%;
     height: 93px;
     color: #000;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    z-index: 1;
 }
 .top_content {
     width: 1000px;
