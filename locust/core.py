@@ -372,6 +372,7 @@ class LocustRunner(object):
 class LocalLocustRunner(LocustRunner):
     def start_hatching(self, locust_count=None, hatch_rate=None):
         self.hatching_greenlet = gevent.spawn(lambda: super(LocalLocustRunner, self).start_hatching(locust_count, hatch_rate))
+        self.greenlet = self.hatching_greenlet
 
 class DistributedLocustRunner(LocustRunner):
     def __init__(self, locust_classes, hatch_rate, num_clients, num_requests, host=None, master_host="localhost"):
