@@ -5,6 +5,7 @@ import os.path
 from time import time
 from gevent import wsgi
 from locust.stats import RequestStats
+from locust import version
 
 from flask import Flask, make_response, request, render_template
 app = Flask("Locust Monitor")
@@ -30,7 +31,8 @@ def index():
     return render_template("index.html",
         state=locust_runner.state,
         is_distributed=is_distributed,
-        slave_count=slave_count
+        slave_count=slave_count,
+        version=version
     )
 
 @app.route('/swarm', methods=["POST"])

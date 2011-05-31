@@ -7,7 +7,7 @@
 <body class="{{state}}">
     <div class="top">
         <div class="top_content">
-            <img src="/static/img/logo.png" class="logo" />
+            <img src="/static/img/logo.png" class="logo" onclick="$('.about').fadeIn();" />
             <div class="boxes">
                 <div class="top_box box_status">
                     <div class="label">STATUS</div>
@@ -98,6 +98,37 @@
                 </div>
             </div>
         </div>
+        
+        <div class="about" style="display:none;">
+            <div style="position:relative;">
+                <a href="#" class="close_link">Close</a>
+            </div>
+            <div class="padder">
+                <h1>About</h1>
+                <p>
+                    The original idea for Locust was Carl Byström's who made a first proof of concept in June 2010. 
+                    Jonatan Heyman picked up Locust in January 2011, implemented the current concept of SubLocusts
+                    and made the it work distributed across multiple machines.
+                </p>                
+                <p>
+                    Jonatan, Carl and Joakim Hamrén has continued the development of Locust at their job, 
+                    ESN Social Software, who have adopted Locust as an inhouse Open Source project.
+                </p>
+                
+                <h1>Authors and Copyright</h1>
+                <a href="http://cgbystrom.com/">Carl Byström</a> (<a href="http://twitter.com/cgbystrom/">@cgbystrom</a>)<br>
+                <a href="http://heyman.info/">Jonatan Heyman</a> (<a href="http://twitter.com/jonatanheyman/">@jonatanheyman</a>)<br>
+                Joakim Hamrén (<a href="http://twitter.com/Jahaaja/">@jahaaja</a>)<br>
+                <a href="http://esn.me/">ESN Social Software</a> (<a href="http://twitter.com/esnme/">@esnme</a>)
+                
+                <h1>License</h1>
+                Open source licensed under the MIT license.
+                
+                <h1>Version</h1>
+                {{version}}<br>
+                <a href="http://ĺocustload.org/">Website</a>
+            </div>
+        </div>
     </div>
 
     <script type="text/javascript" src="/static/jquery-1.4.min.js"></script> 
@@ -143,7 +174,7 @@
         });
         $(".close_link").click(function(event) {
             event.preventDefault();
-            $("#start").hide();
+            $(this).parent().parent().hide();
         });
         
         var alternate = false;

@@ -32,6 +32,7 @@ a {
 }
 .top .logo {
     float: left;
+    cursor: pointer;
 }
 
 
@@ -209,4 +210,26 @@ ul.tabs li a.current {
 
 .panes {
     margin-top: 20px;
+}
+
+.about {
+    width: 398px;
+    position: absolute;
+    left: 50%;
+    top: 30px;
+    margin-left: -169px;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radisu: 5px;
+    border: 3px solid #eee;
+    background: #111717;
+}
+.about a.close_link {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+}
+.about .padder {
+    padding: 30px;
+    padding-top: 0px;
 }
