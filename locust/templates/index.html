@@ -14,6 +14,9 @@
                     <div class="value" id="status_text">
                         {{state}}
                     </div>
+                    <div class="user_count">
+                        <span id="userCount">{{user_count}}</span> users
+                    </div>
                     <a href="#" class="new_test">New test</a>
                 </div>
                 {% if is_distributed %}
@@ -164,9 +167,9 @@
             event.preventDefault();
             $.get($(this).attr("href"));
             $("body").attr("class", "stopped");
-            //$("#status_text").html("STOPPED");
             $(".box_stop").hide();
             $("a.new_test").show();
+            $(".user_count").hide();
         });
         $(".new_test").click(function(event) {
             event.preventDefault();
@@ -192,8 +195,8 @@
                         $("#start").fadeOut();
                         $("#status").fadeIn();
                         $(".box_running").fadeIn();
-                        //$("#status_text").html("HATCHING");
                         $("a.new_test").fadeOut();
+                        $(".user_count").fadeIn();
                     }
                 }
             );
@@ -205,6 +208,7 @@
                 $("#total_rps").html(Math.round(report.total_rps*100)/100);
                 $("#fail_ratio").html(Math.round(report.fail_ratio*10000)/100);
                 $("#status_text").html(report.state);
+                $("#userCount").html(report.user_count);
                 
                 if (report.slave_count)
                     $("#slaveCount").html(report.slave_count)

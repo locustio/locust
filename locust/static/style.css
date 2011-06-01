@@ -137,6 +137,8 @@ a {
 .stopped .status {display: blocked;}
 .ready .status {display: none;}
 
+.stopped .boxes .user_count, .ready .boxes .user_count {display: none;}
+
 .running a.new_test, .ready a.new_test, .hatching a.new_test {display: none;}
 .running a.new_test {display: none;}
 .stopped a.new_test {display: block;}

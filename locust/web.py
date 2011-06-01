@@ -24,7 +24,7 @@ def index():
     from core import locust_runner, MasterLocustRunner
     is_distributed = isinstance(locust_runner, MasterLocustRunner)
     if is_distributed:
-        slave_count = len(locust_runner.ready_clients) + len(locust_runner.running_clients)
+        slave_count = locust_runner.slave_count
     else:
         slave_count = 0
     
@@ -32,6 +32,7 @@ def index():
         state=locust_runner.state,
         is_distributed=is_distributed,
         slave_count=slave_count,
+        user_count=locust_runner.user_count,
         version=version
     )
 
@@ -147,9 +148,10 @@ def request_stats():
         
         is_distributed = isinstance(locust_runner, MasterLocustRunner)
         if is_distributed:
-            report["slave_count"] = len(locust_runner.ready_clients) + len(locust_runner.running_clients)
+            report["slave_count"] = locust_runner.slave_count
         
         report["state"] = locust_runner.state
+        report["user_count"] = locust_runner.user_count
         
         _request_stats_context_cache = {"time": time(), "report": report}
     else:

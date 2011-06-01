@@ -296,6 +296,10 @@ class LocustRunner(object):
     def errors(self):
         return RequestStats.errors
     
+    @property
+    def user_count(self):
+        return len(self.locusts)
+    
     def hatch(self, stop_timeout=None):
         if self.num_requests is not None:
             RequestStats.global_max_requests = self.num_requests
@@ -379,12 +383,34 @@ class DistributedLocustRunner(LocustRunner):
         super(DistributedLocustRunner, self).__init__(locust_classes, hatch_rate, num_clients, num_requests, host)
         self.master_host = master_host
 
+class SlaveNode(object):
+    def __init__(self, id, state=STATE_INIT):
+        self.id = id
+        self.state = state
+        self.user_count = 0
+
 class MasterLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
         super(MasterLocustRunner, self).__init__(*args, **kwargs)
-        self.ready_clients = []
-        self.running_clients = []
-        self.hatch_complete_clients = []
+        
+        class SlaveNodesDict(dict):
+            def get_by_state(self, state):
+                return [c for c in self.itervalues() if c.state == state]
+            
+            @property
+            def ready(self):
+                return self.get_by_state(STATE_INIT)
+            
+            @property
+            def hatching(self):
+                return self.get_by_state(STATE_HATCHING)
+            
+            @property
+            def running(self):
+                return self.get_by_state(STATE_RUNNING)
+        
+        self.clients = SlaveNodesDict()
+        
         self.client_stats = {}
         self.client_errors = {}
         self._request_stats = {}
@@ -392,23 +418,31 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.server = zmqrpc.Server()
         self.greenlet = Group()
         self.greenlet.spawn(self.client_listener).link_exception()
+        
+        # listener that gathers info on how many locust users the slaves has spawned
+        def on_slave_report(client_id, data):
+            self.clients[client_id].user_count = data["user_count"]
+        events.slave_report += on_slave_report
+    
+    @property
+    def user_count(self):
+        return sum([c.user_count for c in self.clients.itervalues()])
     
     def start_hatching(self, locust_count=None, hatch_rate=None):
         if locust_count:
-            self.num_clients = locust_count / (len(self.ready_clients) or 1)
+            self.num_clients = locust_count / (len(self.clients.ready) or 1)
         if hatch_rate:
-            self.hatch_rate = float(hatch_rate) / (len(self.ready_clients) or 1)
+            self.hatch_rate = float(hatch_rate) / (len(self.clients.ready) or 1)
         
-        print "Sending hatch jobs to %i ready clients" % len(self.ready_clients)
-        if not len(self.ready_clients):
+        print "Sending hatch jobs to %i ready clients" % len(self.clients.ready)
+        if not len(self.clients.ready):
             print "WARNING: You are running in distributed mode but have no slave servers connected."
             print "Please connect slaves prior to swarming."
         
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             RequestStats.clear_all()
         
-        while self.ready_clients:
-            client = self.ready_clients.pop()
+        for client in self.clients.itervalues():
             msg = {"hatch_rate":self.hatch_rate, "num_clients":self.num_clients, "num_requests": self.num_requests, "host":self.host, "stop_timeout":None}
             self.server.send({"type":"start", "data":msg})
         
@@ -416,31 +450,38 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.state = STATE_HATCHING
     
     def stop(self):
-        for client in self.running_clients:
+        for client in self.clients.hatching + self.clients.running:
             self.server.send({"type":"stop", "data":{}})
     
     def client_listener(self):
         while True:
             msg = self.server.recv()
             if msg["type"] == "client_ready":
-                client = msg["data"]
-                self.ready_clients.append(client)
-                print "Client %r reported as ready. Currently %i clients ready to swarm." % (client, len(self.ready_clients))
+                id = msg["data"]
+                self.clients[id] = SlaveNode(id)
+                print "Client %r reported as ready. Currently %i clients ready to swarm." % (id, len(self.clients.ready))
             elif msg["type"] == "client_stopped":
-                self.running_clients.remove(msg["data"])
-                if len(self.running_clients) == 0:
+                del self.clients[msg["data"]]
+                if len(self.clients.hatching + self.clients.running) == 0:
                     self.state = STATE_STOPPED
                 print "Removing %s client from running clients" % (msg["data"])
             elif msg["type"] == "stats":
                 report = msg["data"]
                 events.slave_report.fire(report["client_id"], report["data"])
             elif msg["type"] == "running":
-                self.running_clients.append(msg["data"])
+                id = msg["data"]
+                self.clients[id].state = STATE_HATCHING
             elif msg["type"] == "hatch_complete":
-                self.hatch_complete_clients.append(msg["data"])
-                if len(self.hatch_complete_clients) == len(self.running_clients):
-                    count = sum([d["count"] for d in self.hatch_complete_clients])
+                id = msg["data"]["client_id"]
+                self.clients[id].state = STATE_RUNNING
+                self.clients[id].user_count = msg["data"]["count"]
+                if len(self.clients.hatching) == 0:
+                    count = sum(c.user_count for c in self.clients.itervalues())
                     events.hatch_complete.fire(count)
+    
+    @property
+    def slave_count(self):
+        return len(self.clients.ready) + len(self.clients.hatching) + len(self.clients.running)
 
 class SlaveLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
@@ -457,6 +498,11 @@ class SlaveLocustRunner(DistributedLocustRunner):
         def on_hatch_complete(count):
             self.client.send({"type":"hatch_complete", "data":{"client_id":self.client_id, "count":count}})
         events.hatch_complete += on_hatch_complete
+        
+        # register listener that adds the current number of spawned locusts to the report that is sent to the master node 
+        def on_report_to_master(client_id, data):
+            data["user_count"] = self.user_count
+        events.report_to_master += on_report_to_master
     
     def worker(self):
         while True:
@@ -468,7 +514,6 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 self.num_clients = job["num_clients"]
                 self.num_requests = job["num_requests"]
                 self.host = job["host"]
-                #stop_timeout=job["stop_timeout"]
                 self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching())
             elif msg["type"] == "stop":
                 self.stop()
