@@ -202,7 +202,10 @@ class HttpBrowser(object):
             headers["Accept-Encoding"] = "gzip"
         
         if data is not None:
-            data = urllib.urlencode(data)
+            try:
+                data = urllib.urlencode(data)
+            except TypeError:
+                pass # ignore if someone sends in an already prepared string
         
         url = self.base_url + path
         request = urllib2.Request(url, data, headers)
