@@ -157,7 +157,7 @@
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%>">
             <td><%= this[1] %></td>
-            <td><%= this[0] %></td>
+            <td><%= function(e) { return e.replace("<", "&lt;"); }(this[0]) %></td>
         </tr>
         <% alternate = !alternate; %>
         ]]>
