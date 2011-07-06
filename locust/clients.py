@@ -49,7 +49,7 @@ def log_request(f):
                 e.msg += " (" + name + ")"
                 extra = {"response": e.locust_http_response}
             elif isinstance(e, URLError) or isinstance(e, BadStatusLine):
-                e.args = str(e) + " (" + name + ")"
+                e.args = tuple(list(e.args) + [name])
             elif isinstance(e, socket.error):
                 pass
             else:
