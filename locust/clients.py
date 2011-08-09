@@ -29,12 +29,24 @@ def log_request(f):
             del kwargs["catch_response"]
         else:
             catch_response = False
+        if "catch_http_error" in kwargs:
+            catch_http_error = kwargs["catch_http_error"]
+            del kwargs["catch_http_error"]
+        else:
+            catch_http_error = False
 
-            
         try:
             start = time.time()
-            retval = f(*args, **kwargs)
+            try:
+                retval = f(*args, **kwargs)
+            except HTTPError, ex:
+                if catch_http_error:
+                    retval = ex.locust_http_response
+                    retval.exception = ex
+                else:
+                    raise ex
             retval.catch_response = catch_response
+            retval.catch_http_error = catch_http_error
             response_time = int((time.time() - start) * 1000)
             if catch_response:
                 retval._trigger_success = lambda : events.request_success.fire(name, response_time, retval)
@@ -87,21 +99,22 @@ class HttpResponse(object):
     An instance of HttpResponse is returned by HttpBrowser's get and post functions.
     It contains response data for the request that was made.
     """
-    
+
     url = None
     """URL that was requested"""
-    
+
     code = None
     """HTTP response code"""
-    
+
     data = None
     """Response data"""
 
     catch_response = False
+    catch_http_error = False
     _trigger_success = None
     _trigger_failure = None
 
-    
+
     def __init__(self, url, name, code, data, info, gzip):
         self.url = url
         self._name = name
@@ -110,20 +123,20 @@ class HttpResponse(object):
         self._info = info
         self._gzip = gzip
         self._decoded = False
-    
+
     @property
     def info(self):
         """
         urllib2 info object containing info about the response
         """
         return self._info()
-    
+
     def _get_data(self):
         if self._gzip and not self._decoded and self._info().get("Content-Encoding") == "gzip":
             self._data = gzip.GzipFile(fileobj=StringIO(self._data)).read()
             self._decoded = True
         return self._data
-    
+
     def _set_data(self, data):
         self._data = data
 
@@ -165,13 +178,13 @@ class HttpBrowser(object):
 
             # remove username and password from the base_url
             self.base_url = urlunparse((parsed_url.scheme, netloc, parsed_url.path, parsed_url.params, parsed_url.query, parsed_url.fragment))
-        
+
             auth_handler = HttpBasicAuthHandler(parsed_url.username, parsed_url.password)
             handlers.append(auth_handler)
 
         self.opener = urllib2.build_opener(*handlers)
         urllib2.install_opener(self.opener)
-    
+
     def get(self, path, headers={}, name=None, **kwargs):
         """
         Make an HTTP GET request.
@@ -185,7 +198,7 @@ class HttpBrowser(object):
         Returns an HttpResponse instance, or None if the request failed.
         """
         return self._request(path, None, headers=headers, name=name, **kwargs)
-    
+
     def post(self, path, data, headers={}, name=None, **kwargs):
         """
         Make an HTTP POST request.
@@ -205,18 +218,18 @@ class HttpBrowser(object):
             response = client.post("/post", {"user":"joe_hill"})
         """
         return self._request(path, data, headers=headers, name=name, **kwargs)
-    
+
     @log_request
     def _request(self, path, data=None, headers={}, name=None):
         if self.gzip:
             headers["Accept-Encoding"] = "gzip"
-        
+
         if data is not None:
             try:
                 data = urllib.urlencode(data)
             except TypeError:
                 pass # ignore if someone sends in an already prepared string
-        
+
         url = self.base_url + path
         request = urllib2.Request(url, data, headers)
         try:
@@ -228,5 +241,5 @@ class HttpBrowser(object):
             e.locust_http_response = HttpResponse(url, name, e.code, data, e.info, self.gzip)
             e.close()
             raise e
-        
+
         return HttpResponse(url, name, f.code, data, f.info, self.gzip)
