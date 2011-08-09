@@ -30,6 +30,7 @@ def log_request(f):
         else:
             catch_response = False
 
+            
         try:
             start = time.time()
             retval = f(*args, **kwargs)
