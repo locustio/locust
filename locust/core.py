@@ -140,6 +140,9 @@ class Locust(object):
     
     max_wait = 1000
     """Maximum waiting time between the execution of locust tasks"""
+
+    avg_wait = None
+    """Average waiting time wanted between the execution of locust tasks"""
     
     stop_timeout = None
     """Number of seconds after which the Locust will die. If None it won't timeout."""
@@ -150,6 +153,8 @@ class Locust(object):
     __metaclass__ = LocustMeta
     
     def __init__(self):
+        self._avg_wait = 0
+        self._avg_wait_ctr = 0
         self._task_queue = []
         self._time_start = time()
 
@@ -211,7 +216,32 @@ class Locust(object):
         return random.choice(self.tasks)
     
     def wait(self):
-        gevent.sleep(random.randint(self.min_wait, self.max_wait) / 1000.0)
+        if self.avg_wait:
+            # Handle (strive for) average wait time
+            if self._avg_wait:
+                if self._avg_wait >= self.avg_wait:
+                    # Want shorter wait
+                    millis = random.randint(self.min_wait, self.avg_wait)
+                else:
+                    # Want longer wait
+                    millis = random.randint(self.avg_wait, self.max_wait)
+                self._avg_wait = ((self._avg_wait * self._avg_wait_ctr) + millis) / (self._avg_wait_ctr + 1.0)
+            else:
+                # Average specified but is first run
+                radius = min(self.avg_wait - self.min_wait, self.max_wait - self.avg_wait)
+                millis = random.randint(self.avg_wait - radius, self.avg_wait + radius)
+                self._avg_wait = millis
+            self._avg_wait_ctr += 1
+        else:
+            # Ignore average wait
+            millis = random.randint(self.min_wait, self.max_wait)
+
+        seconds = millis / 1000.0
+        self._sleep(seconds)
+
+    def _sleep(self, seconds):
+        gevent.sleep(seconds)
+
 
 class WebLocust(Locust):
     """
