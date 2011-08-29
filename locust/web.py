@@ -59,6 +59,13 @@ def stop():
     response.headers["Content-type"] = "application/json"
     return response
 
+#Adding locust
+@app.route('/add')
+def add():
+    from core import locust_runner
+    locust_runner.start_hatching(20, 1)
+    return "hejsan!"
+
 @app.route("/stats/requests/csv")
 def request_stats_csv():
     from core import locust_runner
