@@ -353,19 +353,22 @@ class LocustRunner(object):
             bucket.extend([locust for x in xrange(0, num_locusts)])
         return bucket
 
-    def hatch(self, new_locusts=None, stop_timeout=None, wait=False):
-        if new_locusts is None:
-            new_locusts = self.num_clients
+    def hatch(self, spawn_amount=None, stop_timeout=None, wait=False):
+        if spawn_amount is None:
+            spawn_amount = self.num_clients
 
         if self.num_requests is not None:
             RequestStats.global_max_requests = self.num_requests
 
-        bucket = self.weight_locusts(new_locusts, stop_timeout)
-        print "bucket:", bucket, "new_locusts count:", new_locusts
+        bucket = self.weight_locusts(spawn_amount, stop_timeout)
+        spawn_amount = len(bucket)
+        self.num_clients += spawn_amount
+        print "bucket:", bucket, "new_locusts count:", spawn_amount
 
         print "\nHatching and swarming %i clients at the rate %g clients/s...\n" % (self.num_clients, self.hatch_rate)
         occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
         total_locust_count = len(bucket)
+        print "total_locust_count:", total_locust_count
         
         def spawn_locusts():
             sleep_time = 1.0 / self.hatch_rate
@@ -396,14 +399,16 @@ class LocustRunner(object):
             print_stats(self.request_stats)
             print_percentile_stats(self.request_stats) #TODO use an event listener, or such, for this?
 
-    def kill_locusts(self, amount):
+    def kill_locusts(self, kill_amount):
         """
-        Kill an amount of locusts from the Group() object in self.locusts
+        Kill an kill_amount of locusts from the Group() object in self.locusts
         """
-        bucket = self.weight_locusts(amount)
+        bucket = self.weight_locusts(kill_amount)
+        kill_amount = len(bucket)
+        self.num_clients -= kill_amount
         #print "group: %s \n" % self.locusts
         #print "bucket: ", bucket
-        print "killing locusts:", amount
+        print "killing locusts:", kill_amount
         temp_locusts = self.locusts
         while True:
             if not bucket:
@@ -425,21 +430,21 @@ class LocustRunner(object):
             RequestStats.clear_all()
             RequestStats.global_start_time = time()
 
+
         # Dynamically changing the locust count
-        if self.state != STATE_INIT or self.state != STATE_STOPPED:
+        if self.state != STATE_INIT and self.state != STATE_STOPPED:
             if self.num_clients > locust_count:
                 # Kill some locusts
-                kill_amount = self.num_clients - locust_count
-                self.num_clients = locust_count
+                kill_amount = self.num_clients - (self.num_clients - locust_count)
+                #self.num_clients = locust_count
                 self.kill_locusts(kill_amount)
             elif self.num_clients < locust_count:
                 # Spawn some locusts
                 if hatch_rate:
                     self.hatch_rate = hatch_rate
-                new_locusts = locust_count - self.num_clients
-                self.num_clients = locust_count
-                self.hatch(new_locusts=new_locusts)
-            
+                spawn_amount = locust_count - self.num_clients
+                #self.num_clients = locust_count
+                self.hatch(spawn_amount=spawn_amount)
         else:
             if locust_count:
                 self.num_clients = locust_count
