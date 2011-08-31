@@ -363,12 +363,10 @@ class LocustRunner(object):
         bucket = self.weight_locusts(spawn_amount, stop_timeout)
         spawn_amount = len(bucket)
         self.num_clients += spawn_amount
-        print "bucket:", bucket, "new_locusts count:", spawn_amount
 
         print "\nHatching and swarming %i clients at the rate %g clients/s...\n" % (self.num_clients, self.hatch_rate)
         occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
         total_locust_count = len(bucket)
-        print "total_locust_count:", total_locust_count
         
         def spawn_locusts():
             sleep_time = 1.0 / self.hatch_rate
