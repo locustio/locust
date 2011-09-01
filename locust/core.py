@@ -353,28 +353,30 @@ class LocustRunner(object):
             bucket.extend([locust for x in xrange(0, num_locusts)])
         return bucket
 
-    def hatch(self, spawn_amount=None, stop_timeout=None, wait=False):
-        if spawn_amount is None:
-            spawn_amount = self.num_clients
+    def hatch(self, spawn_count=None, stop_timeout=None, wait=False):
+        if spawn_count is None:
+            spawn_count = self.num_clients
 
         if self.num_requests is not None:
             RequestStats.global_max_requests = self.num_requests
 
-        bucket = self.weight_locusts(spawn_amount, stop_timeout)
-        spawn_amount = len(bucket)
-        if self.state != STATE_INIT:
-            self.num_clients += spawn_amount
-        self.state = STATE_HATCHING
-        print "\nHatching and swarming %i clients at the rate %g clients/s...\n" % (spawn_amount, self.hatch_rate)
+        bucket = self.weight_locusts(spawn_count, stop_timeout)
+        spawn_count = len(bucket)
+        if self.state == STATE_INIT or self.state == STATE_STOPPED:
+            self.state = STATE_HATCHING
+            self.num_clients = spawn_count
+        else:
+            self.num_clients += spawn_count
+
+        print "\nHatching and swarming %i clients at the rate %g clients/s...\n" % (spawn_count, self.hatch_rate)
         occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
-        total_locust_count = len(bucket)
         
         def spawn_locusts():
             sleep_time = 1.0 / self.hatch_rate
             while True:
                 if not bucket:
                     print "All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in occurence_count.iteritems()])
-                    events.hatch_complete.fire(total_locust_count)
+                    events.hatch_complete.fire(self.num_clients)
                     return
 
                 locust = bucket.pop(random.randint(0, len(bucket)-1))
@@ -398,14 +400,14 @@ class LocustRunner(object):
             print_stats(self.request_stats)
             print_percentile_stats(self.request_stats) #TODO use an event listener, or such, for this?
 
-    def kill_locusts(self, kill_amount):
+    def kill_locusts(self, kill_count):
         """
-        Kill a kill_amount of weighted locusts from the Group() object in self.locusts
+        Kill a kill_count of weighted locusts from the Group() object in self.locusts
         """
-        bucket = self.weight_locusts(kill_amount)
-        kill_amount = len(bucket)
-        self.num_clients -= kill_amount
-        print "killing locusts:", kill_amount
+        bucket = self.weight_locusts(kill_count)
+        kill_count = len(bucket)
+        self.num_clients -= kill_count
+        print "killing locusts:", kill_count
         dying = []
         for g in self.locusts:
              for l in bucket:
@@ -415,6 +417,7 @@ class LocustRunner(object):
                     break
         for g in dying:
             self.locusts.killone(g)
+        events.hatch_complete.fire(self.num_clients)
 
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
         print "start hatching", locust_count, hatch_rate, self.state
@@ -424,22 +427,23 @@ class LocustRunner(object):
 
         # Dynamically changing the locust count
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
+            self.state = STATE_HATCHING
             if self.num_clients > locust_count:
                 # Kill some locusts
-                kill_amount = self.num_clients - locust_count
-                #self.num_clients = locust_count
-                self.kill_locusts(kill_amount)
+                kill_count = self.num_clients - locust_count
+                self.kill_locusts(kill_count)
             elif self.num_clients < locust_count:
                 # Spawn some locusts
                 if hatch_rate:
                     self.hatch_rate = hatch_rate
-                spawn_amount = locust_count - self.num_clients
-                #self.num_clients = locust_count
-                self.hatch(spawn_amount=spawn_amount)
+                spawn_count = locust_count - self.num_clients
+                self.hatch(spawn_count=spawn_count)
         else:
             if locust_count:
-                self.num_clients = locust_count
-            self.hatch(wait=wait)
+                self.hatch(locust_count, wait=wait)
+            else:
+                self.hatch(wait=wait)
+
     
     def stop(self):
         # if we are currently hatching locusts we need to kill the hatching greenlet first
@@ -505,12 +509,13 @@ class MasterLocustRunner(DistributedLocustRunner):
     
     def start_hatching(self, locust_count=None, hatch_rate=None):
         if locust_count:
-            self.num_clients = locust_count / (len(self.clients.ready) or 1)
+            self.num_clients = locust_count / ((len(self.clients.ready) + len(self.clients.running)) or 1)
         if hatch_rate:
-            self.hatch_rate = float(hatch_rate) / (len(self.clients.ready) or 1)
-        
+            self.hatch_rate = float(hatch_rate) / ((len(self.clients.ready) + len(self.clients.running)) or 1)
+
+        print "slave job:", self.num_clients, "clients.ready:", len(self.clients.ready)+len(self.clients.running)
         print "Sending hatch jobs to %i ready clients" % len(self.clients.ready)
-        if not len(self.clients.ready):
+        if not (len(self.clients.ready)+len(self.clients.running)):
             print "WARNING: You are running in distributed mode but have no slave servers connected."
             print "Please connect slaves prior to swarming."
         
@@ -519,7 +524,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         
         for client in self.clients.itervalues():
             msg = {"hatch_rate":self.hatch_rate, "num_clients":self.num_clients, "num_requests": self.num_requests, "host":self.host, "stop_timeout":None}
-            self.server.send({"type":"start", "data":msg})
+            self.server.send({"type":"hatch", "data":msg})
         
         RequestStats.global_start_time = time()
         self.state = STATE_HATCHING
@@ -543,7 +548,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             elif msg["type"] == "stats":
                 report = msg["data"]
                 events.slave_report.fire(report["client_id"], report["data"])
-            elif msg["type"] == "running":
+            elif msg["type"] == "hatching":
                 id = msg["data"]
                 self.clients[id].state = STATE_HATCHING
             elif msg["type"] == "hatch_complete":
@@ -582,21 +587,18 @@ class SlaveLocustRunner(DistributedLocustRunner):
     def worker(self):
         while True:
             msg = self.client.recv()
-            if msg["type"] == "start":
-                self.client.send({"type":"running", "data":self.client_id})
+            if msg["type"] == "hatch":
+                self.client.send({"type":"hatching", "data":self.client_id})
                 job = msg["data"]
                 self.hatch_rate = job["hatch_rate"]
-                self.num_clients = job["num_clients"]
+                #self.num_clients = job["num_clients"]
                 self.num_requests = job["num_requests"]
                 self.host = job["host"]
-                self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching())
+                self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
             elif msg["type"] == "stop":
                 self.stop()
                 self.client.send({"type":"client_stopped", "data":self.client_id})
                 self.client.send({"type":"client_ready", "data":self.client_id})
-            elif msg["type"] == "hatch":
-                locust_count = msg["data"]
-                self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=locust_count))
 
     
     def stats_reporter(self):
