@@ -215,6 +215,7 @@
             $.post($(this).attr("action"), $(this).serialize(),
                 function(response) {
                     if (response.success) {
+                        $("body").attr("class", "hatching");
                         $("#start").fadeOut();
                         $("#status").fadeIn();
                         $(".box_running").fadeIn();
