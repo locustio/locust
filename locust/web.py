@@ -43,7 +43,7 @@ def index():
 def swarm():
     assert request.method == "POST"
     from core import locust_runner
-    
+
     locust_count = int(request.form["locust_count"])
     hatch_rate = float(request.form["hatch_rate"])
     locust_runner.start_hatching(locust_count, hatch_rate)
@@ -59,6 +59,10 @@ def stop():
     response.headers["Content-type"] = "application/json"
     return response
 
+@app.route("/stats/reset")
+def reset_stats():
+    RequestStats.reset_all()
+    
 @app.route("/stats/requests/csv")
 def request_stats_csv():
     from core import locust_runner
