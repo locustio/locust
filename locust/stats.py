@@ -216,6 +216,9 @@ class RequestStats(object):
 
         return inflated_list
 
+    def one_percentile(self, percent):
+        return percentile(self.create_response_times_list(), percent)
+
     def percentile(self, tpl=" %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
         inflated_list = self.create_response_times_list()
         return tpl % (
