@@ -29,24 +29,24 @@ def log_request(f):
             del kwargs["catch_response"]
         else:
             catch_response = False
-        if "catch_http_error" in kwargs:
-            catch_http_error = kwargs["catch_http_error"]
-            del kwargs["catch_http_error"]
+        if "allow_http_error" in kwargs:
+            allow_http_error = kwargs["allow_http_error"]
+            del kwargs["allow_http_error"]
         else:
-            catch_http_error = False
+            allow_http_error = False
 
         try:
             start = time.time()
             try:
                 retval = f(*args, **kwargs)
             except HTTPError, ex:
-                if catch_http_error:
+                if allow_http_error:
                     retval = ex.locust_http_response
                     retval.exception = ex
                 else:
                     raise ex
             retval.catch_response = catch_response
-            retval.catch_http_error = catch_http_error
+            retval.allow_http_error = allow_http_error
             response_time = int((time.time() - start) * 1000)
             if catch_response:
                 retval._trigger_success = lambda : events.request_success.fire(name, response_time, retval)
@@ -76,14 +76,6 @@ def log_request(f):
 
     return _wrapper
 
-class HTTPClient(object):
-    def __init__(self, base_url):
-        self.base_url = base_url
-
-    @log_request
-    def get(self, url, name=None):
-        return urllib2.urlopen(self.base_url + url).read()
-
 class HttpBasicAuthHandler(urllib2.BaseHandler):
     def __init__(self, username, password):
         self.username = username
@@ -110,7 +102,7 @@ class HttpResponse(object):
     """Response data"""
 
     catch_response = False
-    catch_http_error = False
+    allow_http_error = False
     _trigger_success = None
     _trigger_failure = None
 
@@ -208,7 +200,11 @@ class HttpBrowser(object):
         * *path* is the relative path to request.
         * *data* dict with the data that will be sent in the body of the POST request
         * *headers* is an optional dict with HTTP request headers
-        * *name* Optional is an argument that can be specified to use as label in the statistics instead of the path
+        * *name* is an optional argument that can be specified to use as label in the statistics instead of the path
+        * *catch_response* is an optional boolean argument that, if set, can be used to make a request with a with statement.
+          This will allows the request to be marked as a fail based on the content of the response, even if the
+          response code is ok (2xx).
+        * *allow_http_error* os an optional boolean argument, that, if set, can be used to 
         
         Returns an HttpResponse instance, or None if the request failed.
         
@@ -216,6 +212,14 @@ class HttpBrowser(object):
         
             client = HttpBrowser("http://example.com")
             response = client.post("/post", {"user":"joe_hill"})
+        
+        Example using the with statement::
+        
+            from locust import ResponseError
+            
+            with self.client.post("/inbox", {"user":"ada", content="Hello!"}, catch_response=True) as response:
+                if response.data == "fail":
+                    raise ResponseError("Posting of inbox message failed")
         """
         return self._request(path, data, headers=headers, name=name, **kwargs)
 
