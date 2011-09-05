@@ -155,6 +155,26 @@ class RequestStats(object):
     def __add__(self, other):
         return self.add_stats(other)
     
+    def __iadd__(self, other):
+        self.iadd_stats(other)
+    
+    def iadd_stats(self, other, full_request_history=False):
+        self.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
+        self.start_time = min(self.start_time, other.start_time)
+        
+        self.num_reqs = self.num_reqs + other.num_reqs
+        self.num_failures = self.num_failures + other.num_failures
+        self.total_response_time = self.total_response_time + other.total_response_time
+        self.max_response_time = max(self.max_response_time, other.max_response_time)
+        self._min_response_time = min(self._min_response_time, other._min_response_time) or other._min_response_time
+        self.total_content_length = self.total_content_length + other.total_content_length
+        
+        if full_request_history:
+            for key in other.response_times:
+                self.response_times[key] = self.response_times.get(key, 0) + other.response_times[key]
+            for key in other.num_reqs_per_sec:
+                self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) +  other.num_reqs_per_sec[key]
+    
     def add_stats(self, other, full_request_history=False):
         new = RequestStats(self.name)
         new.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
@@ -300,7 +320,7 @@ def on_slave_report(client_id, data):
     for stats in data["stats"]:
         if not stats.name in RequestStats.requests:
             RequestStats.requests[stats.name] = RequestStats(stats.name)
-        RequestStats.requests[stats.name] = RequestStats.requests[stats.name].add_stats(stats, full_request_history=True)
+        RequestStats.requests[stats.name].iadd_stats(stats, full_request_history=True)
         RequestStats.global_last_request_timestamp = max(RequestStats.global_last_request_timestamp, stats.last_request_timestamp)
     
     for err_message, err_count in data["errors"].iteritems():
