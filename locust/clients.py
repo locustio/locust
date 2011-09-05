@@ -140,7 +140,10 @@ class HttpResponse(object):
 
     def __exit__(self, exc, value, traceback):
         if exc:
-            self._trigger_failure(value)
+            if isinstance(value, ResponseError):
+                self._trigger_failure(value)
+            else:
+                raise value
         else:
             self._trigger_success()
         return True
