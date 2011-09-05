@@ -3,7 +3,7 @@ import time
 
 from testcases import WebserverTestCase
 from locust.stats import RequestStats
-from locust.core import WebLocust
+from locust.core import Locust
 
 class TestRequestStats(unittest.TestCase):
     def setUp(self):
@@ -79,7 +79,7 @@ class TestRequestStats(unittest.TestCase):
 
 class TestRequestStatsWithWebserver(WebserverTestCase):
     def test_request_stats_content_length(self):
-        class MyLocust(WebLocust):
+        class MyLocust(Locust):
             host = "http://127.0.0.1:%i" % self.port
     
         locust = MyLocust()
