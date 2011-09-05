@@ -189,8 +189,27 @@ class HttpBrowser(object):
         * *path* is the relative path to request.
         * *headers* is an optional dict with HTTP request headers
         * *name* is an optional argument that can be specified to use as label in the statistics instead of the path
+        * *catch_response* is an optional boolean argument that, if set, can be used to make a request with a with statement.
+          This will allows the request to be marked as a fail based on the content of the response, even if the
+          response code is ok (2xx).
+        * *allow_http_error* os an optional boolean argument, that, if set, can be used to not mark responses with
+          HTTP errors as failures. If an HTTPError occurs, it will be available in the *exception* attribute of the
+          response.
         
         Returns an HttpResponse instance, or None if the request failed.
+        
+        Example::
+        
+            client = HttpBrowser("http://example.com")
+            response = client.get("/")
+        
+        Example using the with statement::
+        
+            from locust import ResponseError
+            
+            with self.client.get("/inbox", catch_response=True) as response:
+                if response.data == "fail":
+                    raise ResponseError("Request failed")
         """
         return self._request(path, None, headers=headers, name=name, **kwargs)
 
@@ -207,7 +226,9 @@ class HttpBrowser(object):
         * *catch_response* is an optional boolean argument that, if set, can be used to make a request with a with statement.
           This will allows the request to be marked as a fail based on the content of the response, even if the
           response code is ok (2xx).
-        * *allow_http_error* os an optional boolean argument, that, if set, can be used to 
+        * *allow_http_error* os an optional boolean argument, that, if set, can be used to not mark responses with
+          HTTP errors as failures. If an HTTPError occurs, it will be available in the *exception* attribute of the
+          response.
         
         Returns an HttpResponse instance, or None if the request failed.
         

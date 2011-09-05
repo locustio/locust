@@ -10,3 +10,4 @@ Locust Documentation
     quickstart
     writing-a-locustfile
     api
+    changelog
