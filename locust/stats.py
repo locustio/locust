@@ -38,6 +38,7 @@ class RequestStats(object):
     
     @classmethod
     def reset_all(cls):
+        cls.global_start_time = time.time()
         cls.total_num_requests = 0
         for name, stats in cls.requests.iteritems():
             stats.reset()
@@ -149,11 +150,12 @@ class RequestStats(object):
             return self.total_content_length / self.num_reqs
         except ZeroDivisionError:
             return 0
-
+    
+    # TODO: for better performance use __iadd__ instead
     def __add__(self, other):
-        #if self.name != other.name:
-        #    raise RequestStatsAdditionError("Trying to add two RequestStats objects of different names (%s and %s)" % (self.name, other.name))
-        
+        return self.add_stats(other)
+    
+    def add_stats(self, other, full_request_history=False):
         new = RequestStats(self.name)
         new.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
         new.start_time = min(self.start_time, other.start_time)
@@ -168,12 +170,19 @@ class RequestStats(object):
         def merge_dict_add(d1, d2):
             """Merge two dicts by adding the values from each dict"""
             merged = copy(d1)
-            for key in set(d2.keys()):
+            for key in d2.keys():
                 merged[key] = d1.get(key, 0) + d2.get(key, 0)
             return merged
         
-        new.num_reqs_per_sec = merge_dict_add(self.num_reqs_per_sec, other.num_reqs_per_sec)
-        new.response_times = merge_dict_add(self.response_times, other.response_times)
+        if full_request_history:
+            new.response_times = merge_dict_add(self.response_times, other.response_times)
+            new.num_reqs_per_sec = merge_dict_add(self.num_reqs_per_sec, other.num_reqs_per_sec)
+        else:
+            new.response_times = {}
+            new.num_reqs_per_sec = {}
+            for i in xrange(new.last_request_timestamp - 20, new.last_request_timestamp +1):
+                new.num_reqs_per_sec[i] = self.num_reqs_per_sec.get(i, 0) + other.num_reqs_per_sec.get(i, 0)
+        
         return new
     
     def get_stripped_report(self):
@@ -241,10 +250,10 @@ class RequestStats(object):
         return request
     
     @classmethod
-    def sum_stats(cls, name="Total"):
+    def sum_stats(cls, name="Total", full_request_history=False):
         stats = RequestStats(name)
         for s in cls.requests.itervalues():
-            stats += s
+            stats = stats.add_stats(s, full_request_history)
         return stats
 
 def avg(values):
@@ -291,7 +300,7 @@ def on_slave_report(client_id, data):
     for stats in data["stats"]:
         if not stats.name in RequestStats.requests:
             RequestStats.requests[stats.name] = RequestStats(stats.name)
-        RequestStats.requests[stats.name] += stats
+        RequestStats.requests[stats.name] = RequestStats.requests[stats.name].add_stats(stats, full_request_history=True)
         RequestStats.global_last_request_timestamp = max(RequestStats.global_last_request_timestamp, stats.last_request_timestamp)
     
     for err_message, err_count in data["errors"].iteritems():
