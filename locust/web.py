@@ -59,6 +59,12 @@ def stop():
     response.headers["Content-type"] = "application/json"
     return response
 
+@app.route("/ramp")
+def ramp():
+    from core import locust_runner
+    locust_runner.start_ramping(20, 2000, 200)
+    return "ramp"
+
 @app.route("/stats/reset")
 def reset_stats():
     RequestStats.reset_all()
