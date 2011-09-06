@@ -170,6 +170,11 @@ class RequestStats(object):
                 self.response_times[key] = self.response_times.get(key, 0) + other.response_times[key]
             for key in other.num_reqs_per_sec:
                 self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) +  other.num_reqs_per_sec[key]
+        else:
+            # still add the number of reqs per seconds the last 20 seconds
+            for i in xrange(other.last_request_timestamp-20, other.last_request_timestamp+1):
+                if i in other.num_reqs_per_sec:
+                    self.num_reqs_per_sec[i] = self.num_reqs_per_sec.get(i, 0) + other.num_reqs_per_sec[i]
     
     def get_stripped_report(self):
         report = copy(self)
