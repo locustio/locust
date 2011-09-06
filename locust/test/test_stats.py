@@ -70,7 +70,9 @@ class TestRequestStats(unittest.TestCase):
         s2.log(55, 0)
         s2.log(97, 0)
 
-        s = s1.add_stats(s2, full_request_history=True)
+        s = RequestStats("")
+        s.iadd_stats(s1, full_request_history=True)
+        s.iadd_stats(s2, full_request_history=True)
 
         self.assertEqual(s.num_reqs, 10)
         self.assertEqual(s.num_failures, 3)

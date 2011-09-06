@@ -150,11 +150,7 @@ class RequestStats(object):
             return self.total_content_length / self.num_reqs
         except ZeroDivisionError:
             return 0
-    
-    # TODO: for better performance use __iadd__ instead
-    def __add__(self, other):
-        return self.add_stats(other)
-    
+        
     def __iadd__(self, other):
         self.iadd_stats(other)
     
@@ -174,36 +170,6 @@ class RequestStats(object):
                 self.response_times[key] = self.response_times.get(key, 0) + other.response_times[key]
             for key in other.num_reqs_per_sec:
                 self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) +  other.num_reqs_per_sec[key]
-    
-    def add_stats(self, other, full_request_history=False):
-        new = RequestStats(self.name)
-        new.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
-        new.start_time = min(self.start_time, other.start_time)
-        
-        new.num_reqs = self.num_reqs + other.num_reqs
-        new.num_failures = self.num_failures + other.num_failures
-        new.total_response_time = self.total_response_time + other.total_response_time
-        new.max_response_time = max(self.max_response_time, other.max_response_time)
-        new._min_response_time = min(self._min_response_time, other._min_response_time) or other._min_response_time
-        new.total_content_length = self.total_content_length + other.total_content_length        
-        
-        def merge_dict_add(d1, d2):
-            """Merge two dicts by adding the values from each dict"""
-            merged = copy(d1)
-            for key in d2.keys():
-                merged[key] = d1.get(key, 0) + d2.get(key, 0)
-            return merged
-        
-        if full_request_history:
-            new.response_times = merge_dict_add(self.response_times, other.response_times)
-            new.num_reqs_per_sec = merge_dict_add(self.num_reqs_per_sec, other.num_reqs_per_sec)
-        else:
-            new.response_times = {}
-            new.num_reqs_per_sec = {}
-            for i in xrange(new.last_request_timestamp - 20, new.last_request_timestamp +1):
-                new.num_reqs_per_sec[i] = self.num_reqs_per_sec.get(i, 0) + other.num_reqs_per_sec.get(i, 0)
-        
-        return new
     
     def get_stripped_report(self):
         report = copy(self)
@@ -273,7 +239,7 @@ class RequestStats(object):
     def sum_stats(cls, name="Total", full_request_history=False):
         stats = RequestStats(name)
         for s in cls.requests.itervalues():
-            stats = stats.add_stats(s, full_request_history)
+            stats.iadd_stats(s, full_request_history)
         return stats
 
 def avg(values):
