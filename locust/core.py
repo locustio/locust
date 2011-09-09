@@ -568,7 +568,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                     print "ramping stopped due to acceptable_fail ratio (%d1.2%%) exceeded with fail ratio %1.2d%%", (acceptable_fail*100, RequestStats.sum_stats().fail_ratio*100)
                     return
                 p = RequestStats.sum_stats().one_percentile(percent)
-                if p >= low_percentile * 1.6:
+                if p >= low_percentile * 2.0:
                     print "ramping stopped due to response times getting high:", p
                     return
                 self.start_hatching(clients, self.hatch_rate)
