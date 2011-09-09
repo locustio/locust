@@ -3,7 +3,7 @@ import time
 
 from testcases import WebserverTestCase
 from locust.stats import RequestStats
-from locust.core import WebLocust
+from locust.core import Locust
 
 class TestRequestStats(unittest.TestCase):
     def setUp(self):
@@ -70,7 +70,9 @@ class TestRequestStats(unittest.TestCase):
         s2.log(55, 0)
         s2.log(97, 0)
 
-        s = s1 + s2
+        s = RequestStats("")
+        s.iadd_stats(s1, full_request_history=True)
+        s.iadd_stats(s2, full_request_history=True)
 
         self.assertEqual(s.num_reqs, 10)
         self.assertEqual(s.num_failures, 3)
@@ -79,7 +81,7 @@ class TestRequestStats(unittest.TestCase):
 
 class TestRequestStatsWithWebserver(WebserverTestCase):
     def test_request_stats_content_length(self):
-        class MyLocust(WebLocust):
+        class MyLocust(Locust):
             host = "http://127.0.0.1:%i" % self.port
     
         locust = MyLocust()

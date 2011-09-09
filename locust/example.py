@@ -1,4 +1,4 @@
-from locust import WebLocust, require_once
+from locust import Locust, require_once
 import random
 
 def login(l):
@@ -11,8 +11,9 @@ def index(l):
 def profile(l):
     l.client.get("/profile")
 
-class WebsiteUser(WebLocust):
-    host = "http://127.0.0.1:6060"
-    tasks = [(index, 2), (profile, 1)]
+class WebsiteUser(Locust):
+    host = "http://127.0.0.1:8089"
+    #tasks = [(index, 2), (profile, 1)]
+    tasks = [index]
     min_wait=2000
     max_wait=5000

@@ -7,15 +7,7 @@ Locust class
 ============
 
 .. autoclass:: locust.core.Locust
-	:members: tasks, min_wait, max_wait, schedule_task
-
-
-
-WebLocust class
-===============
-
-.. autoclass:: locust.core.WebLocust
-	:members: client
+	:members: tasks, min_wait, max_wait, schedule_task, client
 
 
 HttpBrowser class

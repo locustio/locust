@@ -92,35 +92,62 @@ Here is an example::
             pass
 
 
-Making HTTP requests using the WebLocust class
-==============================================
+Making HTTP requests 
+=====================
 
-So far, we've only covered the task scheduling part of a Locust user. In order to actually load test a system we need to make HTTP requests.
+So far, we've only covered the task scheduling part of a Locust user. In order to actually load test a system 
+we need to make HTTP requests.
 
-In the above example we let our locust class inherit from Locust. How ever, when writing a locust file for loading a website, you probably want to use the WebLocust class.
-The difference between the Locust base class and the WebLocust class is that WebLocust creates an HTTP client, that is stored in the *client* attribute, upon instantiation. 
-
-.. autoclass:: locust.core.WebLocust
+.. autoclass:: locust.core.Locust
     :members: client
     :noindex:
 
-When inheriting from the WebLocust class, we can use it's client attribute to make HTTP requests against the server. Here is an example of a locust file that can be used
-to load test a site with two urls; **/** and **/about/**::
+When inheriting from the Locust class, we can use it's client attribute to make HTTP requests against the server. 
+Here is an example of a locust file that can be used to load test a site with two urls; **/** and **/about/**::
 
     from locust import WebLocust
     
-    def index(l):
-        l.client.get("/")
-    
-    def about(l):
-        l.client.get("/about/")
-    
-    class MyLocust(WebLocust):
-        tasks = {index:2, about:1}
+    class MyLocust(Locust):
         min_wait = 5000
         max_wait = 15000
+        
+        def index(self):
+            self.client.get("/")
+        
+        def about(self):
+            self.client.get("/about/")
 
 Using the above locust class, each user will wait between 5 and 15 seconds between the requests, and **/** will be requested twice the amount of times than **/about/**.
+
+Using the HTTP client
+======================
+
+Each instance of Locust has an instance of HttpBrowser in the *client* attribute. 
+
+.. autoclass:: locust.clients.HttpBrowser
+    :members: __init__, get, post
+    :noindex:
+
+By default, requests are marked as failed requests unless the HTTP response code is ok (2xx). How ever, one can 
+mark requests as failed, even when the response code is okay, by using the *catch_response* argument with a
+with statement::
+
+    from locust import ResponseError
+    
+    client = HttpBrowser("http://example.com")
+    with client.get("/") as response:
+        if response.data != "Success":
+            raise ResponseError("Got wrong response")
+
+Just as one can mark requests with OK response codes as failures, one can also make requests that results in an
+HTTP error code still result in a success in the statistics::
+
+    client = HttpBrowser("http://example.com")
+    response = client.get("/does_not_exist/", allow_http_error=True)
+    if response.exception:
+        print "We got an HTTPError exception, but the request will still be marked as OK"
+    
+Also, *catch_response* and *allow_http_error* can be used together.
 
 
 The @required_once decorator

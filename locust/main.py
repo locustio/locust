@@ -108,7 +108,7 @@ def parse_options():
         action='store_true',
         dest='master',
         default=False,
-        help="Set locust to run in distributed mode with this process as master"
+        help="Set locust to run in distributed mode with this process as master. This option will implicitly activate the --web option."
     )
 
     # if locust should be run in distributed mode as slave
@@ -318,7 +318,11 @@ def main():
         print
         inspectlocust.print_task_ratio_confluence(locust_classes, total=True)
         sys.exit(0)
-
+    
+    # if --master is set, implicitly set --web
+    if options.master:
+        options.web = True
+    
     if options.web and not options.slave:
         # spawn web greenlet
         print "Starting web monitor on port 8089"

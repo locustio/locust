@@ -73,7 +73,7 @@ html_show_sourcelink = False
 html_file_suffix = ".html"
 
 # HTML theme
-html_theme = "haiku"
+#html_theme = "haiku"
 
 #html_theme = "default"
 #html_theme_options = {
@@ -83,4 +83,4 @@ html_theme = "haiku"
 #}
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'trac'
+#pygments_style = 'trac'

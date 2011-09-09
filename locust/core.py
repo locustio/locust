@@ -13,7 +13,7 @@ import traceback
 from hashlib import md5
 
 from locust.stats import print_percentile_stats
-from clients import HTTPClient, HttpBrowser
+from clients import HttpBrowser
 from stats import RequestStats, print_stats
 import events
 try:
@@ -113,7 +113,7 @@ class LocustMeta(type):
         
         return type.__new__(meta, classname, bases, classDict)
 
-class Locust(object):
+class LocustBase(object):
     """
     Locust base class defining a locust user/client.
     """
@@ -243,7 +243,7 @@ class Locust(object):
         gevent.sleep(seconds)
 
 
-class WebLocust(Locust):
+class Locust(LocustBase):
     """
     Locust class that inherits from Locust and creates a *client* attribute on instantiation. 
     
@@ -263,13 +263,18 @@ class WebLocust(Locust):
     """
     
     def __init__(self):
-        super(WebLocust, self).__init__()
+        super(Locust, self).__init__()
         if self.host is None:
             raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
 
         self.client = HttpBrowser(self.host, self.gzip)
 
-class SubLocust(Locust):
+class WebLocust(Locust):
+    def __init__(self, *args, **kwargs):
+        warnings.warn("WebLocust class has been, deprecated. Use Locust class instead.")
+        super(WebLocust, self).__init__(*args, **kwargs)
+
+class SubLocust(LocustBase):
     """
     Class for making a sub Locust that can be included as a task inside of a normal Locust/WebLocus,
     as well as inside another sub locust. 
@@ -282,7 +287,7 @@ class SubLocust(Locust):
         super(SubLocust, self).__init__()
         
         self.parent = parent
-        if isinstance(parent, WebLocust):
+        if isinstance(parent, Locust):
             self.client = parent.client
         
         self()
@@ -298,8 +303,10 @@ class SubLocust(Locust):
 
 
 locust_runner = None
-STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_STOPPED, STATE_RAMPING = ["ready", "hatching", "running", "stopped", "ramping"]
-#STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_STOPPED, STATE_RAMPING = (0b1, 0b10, 0b100, 0b1000, 0b10000)
+
+
+STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_STOPPED = ["ready", "hatching", "running", "stopped"]
+SLAVE_REPORT_INTERVAL = 3.0
 
 
 class LocustRunner(object):
@@ -682,4 +689,4 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 print "Connection lost to master server. Aborting..."
                 break
             
-            gevent.sleep(1)
+            gevent.sleep(SLAVE_REPORT_INTERVAL)
