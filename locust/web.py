@@ -3,11 +3,13 @@
 import json
 import os.path
 from time import time
+from itertools import chain
+
 from gevent import wsgi
+from flask import Flask, make_response, request, render_template
+
 from locust.stats import RequestStats
 from locust import version
-
-from flask import Flask, make_response, request, render_template
 
 DEFAULT_CACHE_TIME = 2.0
 
@@ -77,7 +79,7 @@ def request_stats_csv():
         ])
     ]
     
-    for s in _sort_stats(locust_runner.request_stats) + [RequestStats.sum_stats("Total", full_request_history=True)]:
+    for s in chain(_sort_stats(locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
         rows.append('"%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
             s.name,
             s.num_reqs,
@@ -111,7 +113,7 @@ def distribution_stats_csv():
         '"99%"',
         '"100%"',
     ))]
-    for s in _sort_stats(locust_runner.request_stats) + [RequestStats.sum_stats("Total", full_request_history=True)]:
+    for s in chain(_sort_stats(locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
         rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
     
     response = make_response("\n".join(rows))
@@ -127,7 +129,7 @@ def request_stats():
         cache_time = _request_stats_context_cache.get("cache_time", DEFAULT_CACHE_TIME)
         now = time()
         stats = []
-        for s in _sort_stats(locust_runner.request_stats) + [RequestStats.sum_stats("Total")]:
+        for s in chain(_sort_stats(locust_runner.request_stats), [RequestStats.sum_stats("Total")]):
             stats.append({
                 "name": s.name,
                 "num_reqs": s.num_reqs,
