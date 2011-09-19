@@ -86,29 +86,29 @@ a {
     padding-top: 20px;
 }
 
-.start {
+.start, .edit {
     width: 398px;
     position: absolute;
     left: 50%;
     top: 100px;
     margin-left: -169px;
 }
-.start .padder {
+.start .padder, .edit .padder {
     padding: 30px;
     padding-top: 0px;
 }
-.start h2 {
+.start h2, .edit h2 {
     color: #addf82;
     font-size: 26px;
     font-weight: bold;
 }
-.start label {
+.start label, .edit label {
     display: block;
     margin-bottom: 10px;
     margin-top: 20px;
     font-size: 16px;
 }
-.start input.val {
+.start input.val, .edit input.val {
     border: none;
     background: #fff;
     height: 52px;
@@ -116,7 +116,7 @@ a {
     font-size: 24px;
     padding-left: 10px;
 }
-.start input.start_button {
+.start input.start_button, .edit input.start_button {
     margin-top: 20px;
     float: right;
 }
@@ -130,26 +130,42 @@ a {
     border: 3px solid #eee;
     background: #111717;
 }
+
+.stopped .edit {display: none;}
+.running .edit, .hatching .edit {
+    display: none;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radisu: 5px;
+    border: 3px solid #eee;
+    background: #111717;
+}
 .running .start, .hatching .start {display: none;}
+
+.ready .edit {display: none;}
 .ready .start {display: block;}
 
 .running .status, .hatching .status {display: block;}
-.stopped .status {display: blocked;}
+.stopped .status {display: block;}
 .ready .status {display: none;}
 
+.stopped .boxes .edit_test, .ready .boxes .edit_test {display: none;}
 .stopped .boxes .user_count, .ready .boxes .user_count {display: none;}
 
 .running a.new_test, .ready a.new_test, .hatching a.new_test {display: none;}
 .running a.new_test {display: none;}
 .stopped a.new_test {display: block;}
 
-.start a.close_link {
+.start a.close_link, .edit a.close_link{
     position: absolute;
     right: 10px;
     top: 10px;
 }
 .stopped .start a.close_link {display: inline;}
 .running .start a.close_link, .ready .start a.close_link, .hatching .start a.close_link  {display: none;}
+
+.stopped .edit a.close_link, .ready .edit a.close_link {display: none;}
+.running .edit a.close_link, .hatching .edit a.close_link {display: inline;}
 
 .status table {
     border-collapse: collapse;

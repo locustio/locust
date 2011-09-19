@@ -11,7 +11,6 @@ STATS_NAME_WIDTH = 60
 
 class RequestStatsAdditionError(Exception):
     pass
-        
 
 class RequestStats(object):
     requests = {}
@@ -35,7 +34,7 @@ class RequestStats(object):
         cls.global_max_requests = None
         cls.global_last_request_timestamp = None
         cls.global_start_time = None
-    
+
     @classmethod
     def reset_all(cls):
         cls.global_start_time = time.time()
@@ -43,7 +42,7 @@ class RequestStats(object):
         for name, stats in cls.requests.iteritems():
             stats.reset()
         cls.errors = {}
-    
+
     def reset(self):
         self.start_time = time.time()
         self.num_reqs = 0
@@ -61,7 +60,7 @@ class RequestStats(object):
 
         self.num_reqs += 1
         self.total_response_time += response_time
-        
+
         t = int(time.time())
         self.num_reqs_per_sec[t] = self.num_reqs_per_sec.setdefault(t, 0) + 1
         self.last_request_timestamp = t
@@ -69,10 +68,10 @@ class RequestStats(object):
 
         if self._min_response_time is None:
             self._min_response_time = response_time
-            
+
         self._min_response_time = min(self._min_response_time, response_time)
         self.max_response_time = max(self.max_response_time, response_time)
-        
+
         # to avoid to much data that has to be transfered to the master node when
         # running in distributed mode, we save the response time rounded in a dict
         # so that 147 becomes 150, 3432 becomes 3400 and 58760 becomes 59000
@@ -87,29 +86,39 @@ class RequestStats(object):
         # increase request count for the rounded key in response time dict
         self.response_times.setdefault(rounded_response_time, 0)
         self.response_times[rounded_response_time] += 1
-        
+
         # increase total content-length
         self.total_content_length += content_length
-    
+
     def log_error(self, error):
         self.num_failures += 1
         key = "%r: %s" % (error, repr(str(error)))
         RequestStats.errors.setdefault(key, 0)
         RequestStats.errors[key] += 1
-        
+
+    @property
+    def fail_ratio(self):
+        try:
+            return float(self.num_failures) / self.num_reqs
+        except ZeroDivisionError:
+            if self.num_failures > 0:
+                return 1.0
+            else:
+                return 0.0
+
     @property
     def min_response_time(self):
         if self._min_response_time is None:
             return 0
         return self._min_response_time
-    
+
     @property
     def avg_response_time(self):
         try:
             return float(self.total_response_time) / self.num_reqs
         except ZeroDivisionError:
             return 0
-    
+
     @property
     def median_response_time(self):
         if not self.response_times:
@@ -122,7 +131,7 @@ class RequestStats(object):
         if self.global_last_request_timestamp is None:
             return 0
         slice_start_time = max(self.global_last_request_timestamp - 12, int(self.global_start_time or 0))
-        
+
         reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, self.global_last_request_timestamp-2)]
         return avg(reqs)
 
@@ -130,9 +139,9 @@ class RequestStats(object):
     def total_rps(self):
         if not RequestStats.global_last_request_timestamp:
             return 0.0
-        
+
         return self.num_reqs / max(RequestStats.global_last_request_timestamp - RequestStats.global_start_time, 1)
-    
+
     @property
     def avg_content_length(self):
         try:
@@ -164,12 +173,12 @@ class RequestStats(object):
             for i in xrange(other.last_request_timestamp-20, other.last_request_timestamp+1):
                 if i in other.num_reqs_per_sec:
                     self.num_reqs_per_sec[i] = self.num_reqs_per_sec.get(i, 0) + other.num_reqs_per_sec[i]
-    
+
     def get_stripped_report(self):
         report = copy(self)
         self.reset()
         return report
-    
+
     def to_dict(self):
         return {
             'num_reqs': self.num_reqs,
@@ -185,7 +194,7 @@ class RequestStats(object):
             fail_percent = (self.num_failures/float(self.num_reqs))*100
         except ZeroDivisionError:
             fail_percent = 0
-        
+
         return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d  | %7d %7.2f") % (
             self.name,
             self.num_reqs,
@@ -196,7 +205,7 @@ class RequestStats(object):
             self.median_response_time or 0,
             self.current_rps or 0
         )
-    
+
     def create_response_times_list(self):
         inflated_list = []
         for response_time, count in self.response_times.iteritems():
@@ -228,7 +237,7 @@ class RequestStats(object):
             request = RequestStats(name)
             cls.requests[name] = request
         return request
-    
+
     @classmethod
     def sum_stats(cls, name="Total", full_request_history=False):
         stats = RequestStats(name)
@@ -275,7 +284,7 @@ def percentile(N, percent, key=lambda x:x):
 def on_request_success(name, response_time, response):
     if RequestStats.global_max_requests is not None and RequestStats.total_num_requests >= RequestStats.global_max_requests:
         raise InterruptLocust("Maximum number of requests reached")
-    
+
     content_length = int(response.info.getheader("Content-Length") or 0)
     RequestStats.get(name).log(response_time, content_length)
 
@@ -293,7 +302,7 @@ def on_slave_report(client_id, data):
             RequestStats.requests[stats.name] = RequestStats(stats.name)
         RequestStats.requests[stats.name].iadd_stats(stats, full_request_history=True)
         RequestStats.global_last_request_timestamp = max(RequestStats.global_last_request_timestamp, stats.last_request_timestamp)
-    
+
     for err_message, err_count in data["errors"].iteritems():
         RequestStats.errors[err_message] = RequestStats.errors.setdefault(err_message, 0) + err_count
 
@@ -326,7 +335,7 @@ def print_stats(stats):
     print ""
 
 def print_percentile_stats(stats):
-    print "Percentage of the requests completed within given times" 
+    print "Percentage of the requests completed within given times"
     print (" %-" + str(STATS_NAME_WIDTH) + "s %8s %6s %6s %6s %6s %6s %6s %6s %6s %6s") % ('Name', '# reqs', '50%', '66%', '75%', '80%', '90%', '95%', '98%', '99%', '100%')
     print "-" * (80 + STATS_NAME_WIDTH)
     complete_list = []
