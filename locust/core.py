@@ -514,17 +514,10 @@ class MasterLocustRunner(DistributedLocustRunner):
     def user_count(self):
         return sum([c.user_count for c in self.clients.itervalues()])
     
-    def start_hatching(self, locust_count=None, hatch_rate=None):
-
-        if locust_count:
-            self.num_clients = locust_count
-        else:
-            self.num_clients = 0
-
-        if locust_count:
-            slave_num_clients = locust_count / ((len(self.clients.ready) + len(self.clients.running)) or 1)
-        if hatch_rate:
-            slave_hatch_rate = float(hatch_rate) / ((len(self.clients.ready) + len(self.clients.running)) or 1)
+    def start_hatching(self, locust_count, hatch_rate):
+        self.num_clients = locust_count
+        slave_num_clients = locust_count / ((len(self.clients.ready) + len(self.clients.running)) or 1)
+        slave_hatch_rate = float(hatch_rate) / ((len(self.clients.ready) + len(self.clients.running)) or 1)
 
         print "Sending hatch jobs to %i ready clients" % (len(self.clients.ready) + len(self.clients.running))
         if not (len(self.clients.ready)+len(self.clients.running)):
