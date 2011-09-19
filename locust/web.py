@@ -71,6 +71,7 @@ def ramp():
 @app.route("/stats/reset")
 def reset_stats():
     RequestStats.reset_all()
+    return "ok"
     
 @app.route("/stats/requests/csv")
 def request_stats_csv():
