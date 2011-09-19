@@ -115,18 +115,7 @@ class RequestStats(object):
         if not self.response_times:
             return 0
         
-        def median(total, count):
-            """
-            total is the number of requests made
-            count is a dict {response_time: count}
-            """
-            pos = (total - 1) / 2
-            for k in sorted(count.iterkeys()):
-                if pos < count[k]:
-                    return k
-                pos -= count[k]
-        
-        return median(self.num_reqs, self.response_times)
+        return median_from_dict(self.num_reqs, self.response_times)
     
     @property
     def current_rps(self):
@@ -249,6 +238,17 @@ class RequestStats(object):
 
 def avg(values):
     return sum(values, 0.0) / max(len(values), 1)
+
+def median_from_dict(total, count):
+    """
+    total is the number of requests made
+    count is a dict {response_time: count}
+    """
+    pos = (total - 1) / 2
+    for k in sorted(count.iterkeys()):
+        if pos < count[k]:
+            return k
+        pos -= count[k]
 
 # TODO Use interpolation or not?
 def percentile(N, percent, key=lambda x:x):
