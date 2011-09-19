@@ -3,11 +3,14 @@
 import json
 import os.path
 from time import time
-from gevent import wsgi
-from locust.stats import RequestStats
-from locust import version
+from itertools import chain
+from collections import defaultdict
 
+from gevent import wsgi
 from flask import Flask, make_response, request, render_template
+
+from locust.stats import RequestStats, median_from_dict
+from locust import version
 
 DEFAULT_CACHE_TIME = 2.0
 
@@ -87,7 +90,7 @@ def request_stats_csv():
         ])
     ]
     
-    for s in _sort_stats(locust_runner.request_stats) + [RequestStats.sum_stats("Total", full_request_history=True)]:
+    for s in chain(_sort_stats(locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
         rows.append('"%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
             s.name,
             s.num_reqs,
@@ -121,7 +124,7 @@ def distribution_stats_csv():
         '"99%"',
         '"100%"',
     ))]
-    for s in _sort_stats(locust_runner.request_stats) + [RequestStats.sum_stats("Total", full_request_history=True)]:
+    for s in chain(_sort_stats(locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
         rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
     
     response = make_response("\n".join(rows))
@@ -136,8 +139,9 @@ def request_stats():
     if not _request_stats_context_cache or _request_stats_context_cache["last_time"] < time() - _request_stats_context_cache.get("cache_time", DEFAULT_CACHE_TIME):
         cache_time = _request_stats_context_cache.get("cache_time", DEFAULT_CACHE_TIME)
         now = time()
+        
         stats = []
-        for s in _sort_stats(locust_runner.request_stats) + [RequestStats.sum_stats("Total")]:
+        for s in chain(_sort_stats(locust_runner.request_stats), [RequestStats.sum_stats("Total")]):
             stats.append({
                 "name": s.name,
                 "num_reqs": s.num_reqs,
@@ -160,6 +164,17 @@ def request_stats():
                     report["fail_ratio"] = 100
                 else:
                     report["fail_ratio"] = 0
+            
+            # since generating a total response times dict with all response times from all
+            # urls is slow, we make a new total response time dict which will consist of one
+            # entry per url with the median response time as key and the numbe fo requests as
+            # value
+            response_times = defaultdict(int) # used for calculating total median
+            for i in xrange(len(stats)-1):
+                response_times[stats[i]["median_response_time"]] += stats[i]["num_reqs"]
+            
+            # calculate total median
+            stats[len(stats)-1]["median_response_time"] = median_from_dict(stats[len(stats)-1]["num_reqs"], response_times)
         
         is_distributed = isinstance(locust_runner, MasterLocustRunner)
         if is_distributed:
