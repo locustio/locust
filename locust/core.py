@@ -543,57 +543,84 @@ class MasterLocustRunner(DistributedLocustRunner):
 
         clients = hatch_stride
 
+
         # Record low load percentile
         def calibrate():
             self.start_hatching(clients, self.hatch_rate)
             while True:
                 if self.state != STATE_HATCHING:
                     print "recording low_percentile..."
-                    gevent.sleep(30)
-                    percentile = RequestStats.sum_stats().one_percentile(percent)
+                    gevent.sleep(15)
+                    percentile = RequestStats.sum_stats().current_percentile(percent)
+                    #percentile = RequestStats.sum_stats().one_percentile(percent)
+                    #percentile = RequestStats.sum_stats().median_response_time()
                     print "low_percentile:", percentile
                     self.start_hatching(1, self.hatch_rate)
                     return percentile
                 gevent.sleep(1)
 
-        low_percentile = calibrate()
+        def ramp_up(clients, hatch_stride):
+            while True:
+                if self.state != STATE_HATCHING:
+                    if self.num_clients >= max_locusts:
+                        print "ramping stopped due to max_locusts limit reached:", max_locusts
+                        return ramp_down(clients, hatch_stride)
+                    gevent.sleep(10)
+                    if RequestStats.sum_stats().fail_ratio >= acceptable_fail:
+                        print "ramping stopped due to acceptable_fail ratio (%d1.2%%) exceeded with fail ratio %1.2d%%", (acceptable_fail*100, RequestStats.sum_stats().fail_ratio*100)
+                        return ramp_down(clients, hatch_stride)
+                    p = RequestStats.sum_stats().current_percentile(percent)
+                    print "percentile:", p
+                    if p >= low_percentile * 3.0:
+                        print "ramping stopped due to response times getting high:", p
+                        return ramp_down(clients, hatch_rate)
+                    hatch_stride += hatch_stride
+                    clients += hatch_stride
+                    self.start_hatching(clients, self.hatch_rate)
+                gevent.sleep(1)
 
-        while True:
-            if self.state != STATE_HATCHING:
-                if self.num_clients >= max_locusts:
-                    print "ramping stopped due to max_locusts limit reached:", max_locusts
-                    return
-                gevent.sleep(10)
-                if RequestStats.sum_stats().fail_ratio >= acceptable_fail:
-                    print "ramping stopped due to acceptable_fail ratio (%d1.2%%) exceeded with fail ratio %1.2d%%", (acceptable_fail*100, RequestStats.sum_stats().fail_ratio*100)
-                    return
-                p = RequestStats.sum_stats().one_percentile(percent)
-                if p >= low_percentile * 2.0:
-                    print "ramping stopped due to response times getting high:", p
-                    return
-                self.start_hatching(clients, self.hatch_rate)
-                clients += hatch_stride
-            gevent.sleep(1)
+        def ramp_down(clients, hatch_stride):
+            while True:
+                if self.state != STATE_HATCHING:
+                    print "bab!"
+                    gevent.sleep(10)
+                    fails = RequestStats.sum_stats().fail_ratio
+                    if fails >= acceptable_fail:
+                        p = RequestStats.sum_stats().current_percentile(percent)
+                        print "percentile:", p
+                        if p <= low_percentile * 3.0:
+                            if hatch_stride < 200:
+                                print "sweet spot found, ramping stopped!"
+                                return
+                            hatch_stride -= hatch_stride/2
+                            clients -= hatch_stride
+                            self.start_hatching(clients, self.hatch_rate)
+                        else:
+                            return ramp_up(clients, hatch_stride)
+                    else:
+                        return ramp_up(clients, hatch_stride)
+                gevent.sleep(1)
+
+        low_percentile = calibrate()
+        ramp_up(clients, hatch_stride)
 
 #        while True:
 #            if self.state != STATE_HATCHING:
-#                print "self.num_clients: %i max_locusts: %i" % (self.num_clients, max_locusts)
 #                if self.num_clients >= max_locusts:
 #                    print "ramping stopped due to max_locusts limit reached:", max_locusts
 #                    return
-#                gevent.sleep(5)
-#                if self.state != STATE_INIT:
-#                    print "num_reqs: %i fail_ratio: %1.2d" % (RequestStats.sum_stats().num_reqs, RequestStats.sum_stats().fail_ratio)
-#                    while RequestStats.sum_stats().num_reqs < 100:
-#                        if RequestStats.sum_stats().fail_ratio >= acceptable_fail:
-#                            print "ramping stopped due to acceptable_fail ratio (%d1.2%%) exceeded with fail ratio %1.2d%%", (acceptable_fail*100, RequestStats.sum_stats().fail_ratio*100)
-#                            return
-#                        gevent.sleep(1)
-#                if RequestStats.sum_stats().one_percentile(percent) >= response_time:
-#                    print "ramping stopped due to response times over %ims for %1.2f%%" % (response_time, percent*100)
+#                gevent.sleep(10)
+#                 if RequestStats.sum_stats().fail_ratio >= acceptable_fail:
+#                    print "ramping stopped due to acceptable_fail ratio (%d1.2%%) exceeded with fail ratio %1.2d%%", (acceptable_fail*100, RequestStats.sum_stats().fail_ratio*100)
+#                    return
+#                 p = RequestStats.sum_stats().current_percentile(percent)
+#                print "percentile:", p
+#                if p >= low_percentile * 3.0:
+#                    print "ramping stopped due to response times getting high:", p
 #                    return
 #                self.start_hatching(clients, self.hatch_rate)
-#                clients += 10 * hatchrate
+#                clients += hatch_stride
+#                hatch_stride += hatch_stride
 #            gevent.sleep(1)
 
     def stop(self):

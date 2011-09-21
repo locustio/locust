@@ -2,6 +2,7 @@ import time
 import gevent
 from copy import copy
 import math
+from collections import deque
 
 from exception import InterruptLocust
 import events
@@ -54,6 +55,7 @@ class RequestStats(object):
         self.last_request_timestamp = int(time.time())
         self.num_reqs_per_sec = {}
         self.total_content_length = 0
+        self.current_response_times = deque([])
 
     def log(self, response_time, content_length):
         RequestStats.total_num_requests += 1
@@ -87,6 +89,7 @@ class RequestStats(object):
         self.response_times.setdefault(rounded_response_time, 0)
         self.response_times[rounded_response_time] += 1
 
+        self.current_response_times.append(response_time)
         # increase total content-length
         self.total_content_length += content_length
 
@@ -162,7 +165,15 @@ class RequestStats(object):
         self.max_response_time = max(self.max_response_time, other.max_response_time)
         self._min_response_time = min(self._min_response_time, other._min_response_time) or other._min_response_time
         self.total_content_length = self.total_content_length + other.total_content_length
-        
+
+        #print "current_rps: %d last_timestamp: %d" % (self.current_rps, self.last_request_timestamp)
+        #if self.current_rps and self.current_response_times:
+        self.current_response_times.extend(other.current_response_times)
+        if len(self.current_response_times) > 100:
+            num_pop = len(self.current_response_times)-100
+            for i in range(num_pop):
+                self.current_response_times.popleft()
+
         if full_request_history:
             for key in other.response_times:
                 self.response_times[key] = self.response_times.get(key, 0) + other.response_times[key]
@@ -213,6 +224,9 @@ class RequestStats(object):
         inflated_list.sort()
 
         return inflated_list
+
+    def current_percentile(self, percent):
+        return percentile(sorted(self.current_response_times), percent)
 
     def percentile(self, tpl=" %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
         inflated_list = self.create_response_times_list()
