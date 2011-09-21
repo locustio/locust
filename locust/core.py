@@ -585,20 +585,17 @@ class MasterLocustRunner(DistributedLocustRunner):
                     print "bab!"
                     gevent.sleep(10)
                     fails = RequestStats.sum_stats().fail_ratio
-                    if fails >= acceptable_fail:
+                    if fails <= acceptable_fail:
                         p = RequestStats.sum_stats().current_percentile(percent)
                         print "percentile:", p
                         if p <= low_percentile * 3.0:
                             if hatch_stride < 200:
                                 print "sweet spot found, ramping stopped!"
                                 return
-                            hatch_stride -= hatch_stride/2
-                            clients -= hatch_stride
-                            self.start_hatching(clients, self.hatch_rate)
-                        else:
                             return ramp_up(clients, hatch_stride)
-                    else:
-                        return ramp_up(clients, hatch_stride)
+                    hatch_stride -= hatch_stride/2
+                    clients -= hatch_stride
+                    self.start_hatching(clients, hatch_stride)
                 gevent.sleep(1)
 
         low_percentile = calibrate()
