@@ -91,15 +91,15 @@
                     <table id="stats" class="stats">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th># requests</th>
-                                <th># fails</th>
-                                <th>Median</th>
-                                <th>Average</th>
-                                <th>Min</th>
-                                <th>Max</th>
-                                <th title="Average Content-Length">Content-Length</th>
-                                <th># reqs/sec</th>
+                                <th><a href="#" id="sort_by_name">Name</a></th>
+                                <th><a href="#" id="sort_by_reqs"># requests</a></th>
+                                <th><a href="#" id="sort_by_fails"># fails</a></th>
+                                <th><a href="#" id="sort_by_median">Median</a></th>
+                                <th><a href="#" id="sort_by_avg">Average</a></th>
+                                <th><a href="#" id="sort_by_min">Min</a></th>
+                                <th><a href="#" id="sort_by_max">Max</a></th>
+                                <th title="Average Content-Length"><a href="#" id="sort_by_content_length">Content-Length</a></th>
+                                <th><a href="#" id="sort_by_rps"># reqs/sec</a></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -113,8 +113,8 @@
                 <div style="display:none;">
                     <table id="errors" class="stats">
                         <thead>
-                            <th class="error_count"># fails</th>
-                            <th class="error_type">Type</th>
+                            <th class="error_count"><a href="#" id="sort_by_fail_count"># fails</a></th>
+                            <th class="error_type"><a href="#" id="sort_by_fail_type">Type</a></th>
                         </thead>
                         <tbody>
                         </tbody>
@@ -211,6 +211,61 @@
             event.preventDefault();
             $(this).parent().parent().hide();
         });
+
+        $("#sort_by_name").click(function(event) {
+            event.preventDefault();
+            set_sort_attribute("name")
+        });
+        $("#sort_by_reqs").click(function(event) {
+            event.preventDefault();
+            set_sort_attribute("num_reqs")
+        });
+        $("#sort_by_fails").click(function(event) {
+            event.preventDefault();
+            set_sort_attribute("num_failures")
+        });
+        $("#sort_by_median").click(function(event) {
+            event.preventDefault();
+            set_sort_attribute("median_response_time")
+        });
+        $("#sort_by_avg").click(function(event) {
+            event.preventDefault();
+            set_sort_attribute("avg_response_time")
+        });
+        $("#sort_by_min").click(function(event) {
+            event.preventDefault();
+            event.preventDefault();
+            set_sort_attribute("min_response_time")
+        });
+        $("#sort_by_max").click(function(event) {
+            event.preventDefault();
+            set_sort_attribute("max_response_time")
+        });
+        $("#sort_by_content_length").click(function(event) {
+            event.preventDefault();
+            set_sort_attribute("avg_content_length")
+        });
+        $("#sort_by_rps").click(function(event) {
+            event.preventDefault();
+            set_sort_attribute("current_rps")
+        });
+
+        $("#sort_by_fail_count").click(function(event) {
+            event.preventDefault();
+            set_sort_attribute("1")
+        });
+        $("#sort_by_fail_type").click(function(event) {
+            event.preventDefault();
+            set_sort_attribute("0")
+        });
+
+        function set_sort_attribute(attribute) {
+            sort_attribute = attribute
+            if (desc == true)
+                desc = false;
+            else
+                desc = true;
+        }
         
         var alternate = false;
         
@@ -247,7 +302,25 @@
                 }
             );
         });
-        
+
+        var sort_by = function(field, reverse, primer){
+            reverse = (reverse) ? -1 : 1;
+            return function(a,b){
+                a = a[field];
+                b = b[field];
+               if (typeof(primer) != 'undefined'){
+                   a = primer(a);
+                   b = primer(b);
+               }
+               if (a<b) return reverse * -1;
+               if (a>b) return reverse * 1;
+               return 0;
+            }
+        }
+
+        var sort_attribute = "name";
+        var desc = false;
+
         function updateStats() {
             $.get('/stats/requests', function (data) {
                 var report = JSON.parse(data);
@@ -263,9 +336,10 @@
                 $('#errors tbody').empty();
                 
                 alternate = false;
-                $('#stats tbody').jqoteapp(stats_tpl, report.stats);
+                //$('#stats tbody').jqoteapp(stats_tpl, (report.stats).sort(sort_by(sort_attribute, desc)));
+                $('#stats tbody').jqoteapp(stats_tpl, (report.stats).sort(sort_by(sort_attribute, desc)));
                 alternate = false;
-                $('#errors tbody').jqoteapp(errors_tpl, report.errors);
+                $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sort_by(sort_attribute, desc)));
                 setTimeout(updateStats, 2000);
             });
         }
