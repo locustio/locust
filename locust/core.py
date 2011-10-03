@@ -12,6 +12,7 @@ import warnings
 import traceback
 from hashlib import md5
 
+from autotune import current_percentile
 from locust.stats import print_percentile_stats
 from clients import HttpBrowser
 from stats import RequestStats, print_stats
@@ -536,11 +537,15 @@ class MasterLocustRunner(DistributedLocustRunner):
 
     def start_ramping(self, hatch_rate=None, max_locusts=1000, hatch_stride=100,
                       percent=0.95, response_time_limit=2000, acceptable_fail=0.05,
-                      precision=200, calibrate_rt_limit=False):
+                      precision=200, calibrate_rt_limit=False, reset=False, start_count=0):
         if hatch_rate:
             self.hatch_rate = hatch_rate
 
-        clients = 0
+        if reset:
+            clients = 0
+        else:
+            clients = self.num_clients
+
 
         # Record low load percentile
         def calibrate():
@@ -549,9 +554,9 @@ class MasterLocustRunner(DistributedLocustRunner):
                 if self.state != STATE_HATCHING:
                     print "recording low_percentile..."
                     gevent.sleep(15)
-                    percentile = RequestStats.sum_stats().current_percentile(percent)
+                    percentile = current_percentile(percent)
                     print "low_percentile:", percentile
-                    self.start_hatching(1, self.hatch_rate)
+                    self.start_hatching(0, self.hatch_rate)
                     return percentile*3
                 gevent.sleep(1)
 
@@ -570,7 +575,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                         if not boundery_found:
                             hatch_stride = hatch_stride/2
                         return ramp_down(clients, hatch_stride)
-                    p = RequestStats.sum_stats().current_percentile(percent)
+                    p = current_percentile(percent)
                     if p >= response_time_limit:
                         print "ramp up stopped due to response times getting high:", p
                         if not boundery_found:
@@ -590,7 +595,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                         gevent.sleep(10)
                         fails = RequestStats.sum_stats().fail_ratio
                         if fails <= acceptable_fail:
-                            p = RequestStats.sum_stats().current_percentile(percent)
+                            p = current_percentile(percent)
                             if p <= response_time_limit:
                                 if hatch_stride <= precision:
                                     print "sweet spot found, ramping stopped!"
@@ -599,11 +604,16 @@ class MasterLocustRunner(DistributedLocustRunner):
                                 return ramp_up(clients, hatch_stride, True)
                     hatch_stride = hatch_stride/2
                     clients -= hatch_stride
-                    self.start_hatching(clients, hatch_stride)
+                    self.start_hatching(clients, self.hatch_rate)
                 gevent.sleep(1)
 
+        if reset:
+            self.start_hatching(0,self.hatch_rate)
         if calibrate_rt_limit:
             response_time_limit = calibrate()
+        if start_count:
+            if start_coun > self.num_clients:
+                self.start_hatching(start_count, hatch_stride)
         ramp_up(clients, hatch_stride)
 
     def stop(self):
