@@ -26,7 +26,7 @@ def on_request_success(_, response_time, _2):
         # remove from the queue
         rps = RequestStats.sum_stats().current_rps
         if len(master_response_times) > rps*TIME_WINDOW:
-            for i in xrange(len(master_response_times) - rps*TIME_WINDOW):
+            for i in xrange(len(master_response_times) - rps*PERCENTILE_TIME_WINDOW):
                 master_response_times.popleft()
 
 def on_report_to_master(_, data):
@@ -36,11 +36,13 @@ def on_report_to_master(_, data):
 
 def on_slave_report(_, data):
     from core import locust_runner, SLAVE_REPORT_INTERVAL
-    master_response_times.append(data["current_responses"])
+
+    if "current_responses" in data:
+        master_response_times.append(data["current_responses"])
 
     # remove from the queue
     slaves = locust_runner.slave_count
-    response_times_per_slave_count = TIME_WINDOW/SLAVE_REPORT_INTERVAL
+    response_times_per_slave_count = PERCENTILE_TIME_WINDOW/SLAVE_REPORT_INTERVAL
     if len(master_response_times) > slaves * response_times_per_slave_count:
         master_response_times.popleft()
 
