@@ -288,7 +288,11 @@
                 $('#errors tbody').empty();
                 
                 alternate = false;
-                $('#stats tbody').jqoteapp(stats_tpl, (report.stats).sort(sortBy(sortAttribute, desc)));
+
+                totalRow = report.stats.pop()
+                sortedStats = (report.stats).sort(sortBy(sortAttribute, desc))
+                sortedStats.push(totalRow)
+                $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
                 alternate = false;
                 $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
                 setTimeout(updateStats, 2000);
