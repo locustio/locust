@@ -160,6 +160,15 @@ def parse_options():
         help="Host or IP adress of locust master for distributed load testing. Only used when running with --slave. Defaults to 127.0.0.1."
     )
 
+    # ramp feature enabled option
+    parser.add_option(
+        '--ramp',
+        action='store_true',
+        dest='ramp',
+        default=False,
+        help="Enables the auto tuning ramping feature for finding highest stable client count. NOTE having ramp enabled will add some more overhead for additional stats gathering"
+    )
+
     # Finalize
     # Return three-tuple of parser + the output from parse_args (opt obj, args)
     opts, args = parser.parse_args()
@@ -330,6 +339,9 @@ def main():
     
     # enable/disable gzip in WebLocust's HTTP client
     WebLocust.gzip = options.gzip
+
+    if options.ramp:
+        import autotune
 
     if not options.master and not options.slave:
         core.locust_runner = LocalLocustRunner(locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.host)

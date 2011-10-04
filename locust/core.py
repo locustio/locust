@@ -12,7 +12,6 @@ import warnings
 import traceback
 from hashlib import md5
 
-from autotune import current_percentile
 from locust.stats import print_percentile_stats
 from clients import HttpBrowser
 from stats import RequestStats, print_stats
@@ -538,6 +537,9 @@ class MasterLocustRunner(DistributedLocustRunner):
     def start_ramping(self, hatch_rate=None, max_locusts=1000, hatch_stride=100,
                       percent=0.95, response_time_limit=2000, acceptable_fail=0.05,
                       precision=200, calibrate_rt_limit=False, reset=False, start_count=0):
+
+        from autotune import current_percentile
+
         if hatch_rate:
             self.hatch_rate = hatch_rate
 
