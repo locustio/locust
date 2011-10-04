@@ -6,7 +6,7 @@ master_response_times = deque([])
 slave_response_times = []
 
 # The time window in seconds that current_percentile use data from
-TIME_WINDOW = 15.0
+PERCENTILE_TIME_WINDOW = 15.0
 
 def current_percentile(percent):
     from core import locust_runner, MasterLocustRunner
