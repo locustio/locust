@@ -167,6 +167,10 @@ a {
 .stopped .edit a.close_link, .ready .edit a.close_link {display: none;}
 .running .edit a.close_link, .hatching .edit a.close_link {display: inline;}
 
+.stats_label {
+    cursor: pointer;
+}
+
 .status table {
     border-collapse: collapse;
     width: 100%;
