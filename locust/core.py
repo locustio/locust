@@ -459,6 +459,92 @@ class LocustRunner(object):
         self.locusts.kill(block=True)
         self.state = STATE_STOPPED
 
+    def start_ramping(self, hatch_rate=None, max_locusts=1000, hatch_stride=100,
+                      percent=0.95, response_time_limit=2000, acceptable_fail=0.05,
+                      precision=200, calibrate_rt_limit=False, reset=False, start_count=0):
+
+        from autotune import current_percentile
+
+        if hatch_rate:
+            self.hatch_rate = hatch_rate
+
+        if reset:
+            clients = 0
+        else:
+            clients = self.num_clients
+
+        # Record low load percentile
+        def calibrate():
+            self.start_hatching(clients, self.hatch_rate)
+            while True:
+                if self.state != STATE_HATCHING:
+                    print "recording low_percentile..."
+                    gevent.sleep(15)
+                    percentile = current_percentile(percent)
+                    print "low_percentile:", percentile
+                    self.start_hatching(0, self.hatch_rate)
+                    return percentile*3
+                gevent.sleep(1)
+
+        def ramp_up(clients, hatch_stride, boundery_found=False):
+            while True:
+                if self.state != STATE_HATCHING:
+                    if self.num_clients >= max_locusts:
+                        print "ramp up stopped due to max_locusts limit reached:", max_locusts
+                        if not boundery_found:
+                            hatch_stride = hatch_stride/2
+                        return ramp_down(clients, hatch_stride)
+                    gevent.sleep(10)
+                    if RequestStats.sum_stats().fail_ratio >= acceptable_fail:
+                        print "ramp up stopped due to acceptable_fail ratio (%d1.2%%) exceeded with fail ratio %1.2d%%", (acceptable_fail*100, RequestStats.sum_stats().fail_ratio*100)
+                        if not boundery_found:
+                            hatch_stride = hatch_stride/2
+                        return ramp_down(clients, hatch_stride)
+                    p = current_percentile(percent)
+                    if p >= response_time_limit:
+                        print "ramp up stopped due to response times getting high:", p
+                        if not boundery_found:
+                            hatch_stride = hatch_stride/2
+                        return ramp_down(clients, hatch_stride)
+                    print "ramping up..."
+                    clients += hatch_stride
+                    if not boundery_found:
+                        hatch_stride += hatch_stride
+                    self.start_hatching(clients, self.hatch_rate)
+                gevent.sleep(1)
+
+        def ramp_down(clients, hatch_stride):
+            while True:
+                if self.state != STATE_HATCHING:
+                    if self.num_clients < max_locusts:
+                        gevent.sleep(10)
+                        fails = RequestStats.sum_stats().fail_ratio
+                        if fails <= acceptable_fail:
+                            p = current_percentile(percent)
+                            if p <= response_time_limit:
+                                if hatch_stride <= precision:
+                                    print "sweet spot found, ramping stopped!"
+                                    return
+                                hatch_stride = hatch_stride/2
+                                return ramp_up(clients, hatch_stride, True)
+                    print "ramping down..."
+                    if hatch_stride > precision:
+                        hatch_stride = hatch_stride/2
+                    else:
+                        hatch_stride = precision
+                    clients -= hatch_stride
+                    self.start_hatching(clients, self.hatch_rate)
+                gevent.sleep(1)
+
+        if reset:
+            self.start_hatching(0,self.hatch_rate)
+        if calibrate_rt_limit:
+            response_time_limit = calibrate()
+        if start_count:
+            if start_coun > self.num_clients:
+                self.start_hatching(start_count, hatch_stride)
+        ramp_up(clients, hatch_stride)
+
 class LocalLocustRunner(LocustRunner):
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
         self.hatching_greenlet = gevent.spawn(lambda: super(LocalLocustRunner, self).start_hatching(locust_count, hatch_rate, wait=wait))
@@ -533,90 +619,6 @@ class MasterLocustRunner(DistributedLocustRunner):
         
         RequestStats.global_start_time = time()
         self.state = STATE_HATCHING
-
-    def start_ramping(self, hatch_rate=None, max_locusts=1000, hatch_stride=100,
-                      percent=0.95, response_time_limit=2000, acceptable_fail=0.05,
-                      precision=200, calibrate_rt_limit=False, reset=False, start_count=0):
-
-        from autotune import current_percentile
-
-        if hatch_rate:
-            self.hatch_rate = hatch_rate
-
-        if reset:
-            clients = 0
-        else:
-            clients = self.num_clients
-
-
-        # Record low load percentile
-        def calibrate():
-            self.start_hatching(clients, self.hatch_rate)
-            while True:
-                if self.state != STATE_HATCHING:
-                    print "recording low_percentile..."
-                    gevent.sleep(15)
-                    percentile = current_percentile(percent)
-                    print "low_percentile:", percentile
-                    self.start_hatching(0, self.hatch_rate)
-                    return percentile*3
-                gevent.sleep(1)
-
-        def ramp_up(clients, hatch_stride, boundery_found=False):
-            while True:
-                if self.state != STATE_HATCHING:
-                    print "ramping up..."
-                    if self.num_clients >= max_locusts:
-                        print "ramp up stopped due to max_locusts limit reached:", max_locusts
-                        if not boundery_found:
-                            hatch_stride = hatch_stride/2
-                        return ramp_down(clients, hatch_stride)
-                    gevent.sleep(10)
-                    if RequestStats.sum_stats().fail_ratio >= acceptable_fail:
-                        print "ramp up stopped due to acceptable_fail ratio (%d1.2%%) exceeded with fail ratio %1.2d%%", (acceptable_fail*100, RequestStats.sum_stats().fail_ratio*100)
-                        if not boundery_found:
-                            hatch_stride = hatch_stride/2
-                        return ramp_down(clients, hatch_stride)
-                    p = current_percentile(percent)
-                    if p >= response_time_limit:
-                        print "ramp up stopped due to response times getting high:", p
-                        if not boundery_found:
-                            hatch_stride = hatch_stride/2
-                        return ramp_down(clients, hatch_stride)
-                    clients += hatch_stride
-                    if not boundery_found:
-                        hatch_stride += hatch_stride
-                    self.start_hatching(clients, self.hatch_rate)
-                gevent.sleep(1)
-
-        def ramp_down(clients, hatch_stride):
-            while True:
-                if self.state != STATE_HATCHING:
-                    print "ramping down..."
-                    if self.num_clients < max_locusts:
-                        gevent.sleep(10)
-                        fails = RequestStats.sum_stats().fail_ratio
-                        if fails <= acceptable_fail:
-                            p = current_percentile(percent)
-                            if p <= response_time_limit:
-                                if hatch_stride <= precision:
-                                    print "sweet spot found, ramping stopped!"
-                                    return
-                                hatch_stride = hatch_stride/2
-                                return ramp_up(clients, hatch_stride, True)
-                    hatch_stride = hatch_stride/2
-                    clients -= hatch_stride
-                    self.start_hatching(clients, self.hatch_rate)
-                gevent.sleep(1)
-
-        if reset:
-            self.start_hatching(0,self.hatch_rate)
-        if calibrate_rt_limit:
-            response_time_limit = calibrate()
-        if start_count:
-            if start_coun > self.num_clients:
-                self.start_hatching(start_count, hatch_stride)
-        ramp_up(clients, hatch_stride)
 
     def stop(self):
         for client in self.clients.hatching + self.clients.running:
