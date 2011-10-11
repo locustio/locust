@@ -1,6 +1,7 @@
 from stats import percentile, RequestStats
 from collections import deque
 import events
+import math
 
 master_response_times = deque([])
 slave_response_times = []
@@ -25,8 +26,8 @@ def on_request_success(_, response_time, _2):
 
         # remove from the queue
         rps = RequestStats.sum_stats().current_rps
-        if len(master_response_times) > rps*TIME_WINDOW:
-            for i in xrange(len(master_response_times) - rps*PERCENTILE_TIME_WINDOW):
+        if len(master_response_times) > rps*PERCENTILE_TIME_WINDOW:
+            for i in xrange(len(master_response_times) - int(math.ceil(rps*PERCENTILE_TIME_WINDOW))):
                 master_response_times.popleft()
 
 def on_report_to_master(_, data):
