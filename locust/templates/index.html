@@ -263,19 +263,29 @@
             }
         }
 
+        // Sorting by column
         var sortAttribute = "name";
         var desc = false;
-
+        var report;
         $(".stats_label").click(function(event) {
             event.preventDefault();
             sortAttribute = $(this).attr("data-sortkey");
             desc = !desc;
-            console.log("sortAttribute:", sortAttribute)
+
+            $('#stats tbody').empty();
+            $('#errors tbody').empty();
+            alternate = false;
+            totalRow = report.stats.pop()
+            sortedStats = (report.stats).sort(sortBy(sortAttribute, desc))
+            sortedStats.push(totalRow)
+            $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
+            alternate = false;
+            $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
         });
 
         function updateStats() {
             $.get('/stats/requests', function (data) {
-                var report = JSON.parse(data);
+                report = JSON.parse(data);
                 $("#total_rps").html(Math.round(report.total_rps*100)/100);
                 $("#fail_ratio").html(Math.round(report.fail_ratio*10000)/100);
                 $("#status_text").html(report.state);
@@ -286,7 +296,7 @@
                 
                 $('#stats tbody').empty();
                 $('#errors tbody').empty();
-                
+
                 alternate = false;
 
                 totalRow = report.stats.pop()
