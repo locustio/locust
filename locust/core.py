@@ -362,7 +362,7 @@ class LocustRunner(object):
             bucket.extend([locust for x in xrange(0, num_locusts)])
         return bucket
 
-    def hatch(self, spawn_count=None, stop_timeout=None, wait=False):
+    def spawn_locusts(self, spawn_count=None, stop_timeout=None, wait=False):
         if spawn_count is None:
             spawn_count = self.num_clients
 
@@ -380,7 +380,7 @@ class LocustRunner(object):
         print "\nHatching and swarming %i clients at the rate %g clients/s...\n" % (spawn_count, self.hatch_rate)
         occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
         
-        def spawn_locusts():
+        def hatch():
             sleep_time = 1.0 / self.hatch_rate
             while True:
                 if not bucket:
@@ -402,7 +402,7 @@ class LocustRunner(object):
                     print "%i locusts hatched" % len(self.locusts)
                 gevent.sleep(sleep_time)
         
-        spawn_locusts()
+        hatch()
         if wait:
             self.locusts.join()
             print "All locusts dead\n"
@@ -445,12 +445,12 @@ class LocustRunner(object):
                 if hatch_rate:
                     self.hatch_rate = hatch_rate
                 spawn_count = locust_count - self.num_clients
-                self.hatch(spawn_count=spawn_count)
+                self.spawn_locusts(spawn_count=spawn_count)
         else:
             if locust_count:
-                self.hatch(locust_count, wait=wait)
+                self.spawn_locusts(locust_count, wait=wait)
             else:
-                self.hatch(wait=wait)
+                self.spawn_locusts(wait=wait)
 
     def stop(self):
         # if we are currently hatching locusts we need to kill the hatching greenlet first
