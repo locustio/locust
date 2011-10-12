@@ -331,17 +331,17 @@ def main():
     # if --master is set, implicitly set --web
     if options.master:
         options.web = True
-    
-    if options.web and not options.slave:
-        # spawn web greenlet
-        print "Starting web monitor on port 8089"
-        main_greenlet = gevent.spawn(web.start, locust_classes, options.hatch_rate, options.num_clients, options.num_requests)
-    
-    # enable/disable gzip in WebLocust's HTTP client
-    WebLocust.gzip = options.gzip
 
     if options.ramp:
         import autotune
+
+    if options.web and not options.slave:
+        # spawn web greenlet
+        print "Starting web monitor on port 8089"
+        main_greenlet = gevent.spawn(web.start, locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.ramp)
+    
+    # enable/disable gzip in WebLocust's HTTP client
+    WebLocust.gzip = options.gzip
 
     if not options.master and not options.slave:
         core.locust_runner = LocalLocustRunner(locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.host)
