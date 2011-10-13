@@ -20,7 +20,7 @@ import events
 try:
     import zmqrpc
 except ImportError:
-    warnings.warn("WARNING: Using pure Python socket RPC implementation instead of zmq.")
+    warnings.warn("WARNING: Using pure Python socket RPC implementation instead of zmq. This will not affect you if your not running locust in distributed mode, but if you are, we recommend you to install the python packages: pyzmq and gevent-zeromq")
     import socketrpc as zmqrpc
 
 from exception import LocustError, InterruptLocust, RescheduleTaskImmediately
