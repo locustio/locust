@@ -537,7 +537,7 @@ class LocustRunner(object):
         if calibrate_rt_limit:
             response_time_limit = calibrate()
         if start_count > self.num_clients:
-            self.start_hatching(start_count, hatch_stride)
+            self.start_hatching(start_count, hatch_rate)
         ramp_up(start_count, hatch_stride)
 
 class LocalLocustRunner(LocustRunner):
