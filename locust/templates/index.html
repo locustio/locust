@@ -64,10 +64,13 @@
                 </form>
                 <div style="clear:right;"></div>
             </div>
-            {% if ramp and state == "ready" %}
-                <br />
+            <br>
+            <div class="ramp_text">
+            {% if ramp %}
+
                 ...or let locust <a href="#" class="ramp_test">ramp</a> find the highest stable locust count for you
             {% endif %}
+            </div>
         </div>
 
         <div class="edit" id="edit">

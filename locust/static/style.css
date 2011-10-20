@@ -175,6 +175,9 @@ a {
 
 .ready .ramp {display: none;}
 
+.ready .ramp_text {display: inline;}
+.hatching .ramp_text, .running .ramp_text, .stopped .ramp_text {display: none;}
+
 .stats_label {
     cursor: pointer;
 }
