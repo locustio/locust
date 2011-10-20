@@ -104,18 +104,22 @@
                         <input type="text" name="hatch_stride" id="hatch_stride" class="val" /><br>
                         <label for="precision">Precision (min value of hatch stride)</label>
                         <input type="text" name="precision" id="precision" class="val" /><br>
+                        <label for="wait_time">Calibration time (seconds)</label>
+                        <input type="text" name="wait_time" id="wait_time" class="val" value="20" /><br>
                         </div>
                         <div style="float:right;">
                         <label for="max_count">Max number of clients</label>
                         <input type="text" name="max_count" id="max_count" class="val" /><br>
-                        <label for="response_time">Max response time (ms)</label>
-                        <input type="text" name="response_time" id="response_time" class="val" /><br>
                         <label for="percentile">Percentile (%)</label>
                         <input type="text" name="percentile" id="percentile" class="val" value="95" /><br>
+                        <label for="response_time">Max percentile response time (ms)</label>
+                        <input type="text" name="response_time" id="response_time" class="val" value="2000" /><br>
                         <label for="fail_rate">Accepted fail rate (%)</label>
                         <input type="text" name="fail_rate" id="fail_rate" class="val" value="5" /><br>
-                        </div>
+                        <br><br>
                         <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button">
+                        </div>
+
                     </form>
                     <div style="clear:right;"></div>
                 </div>
