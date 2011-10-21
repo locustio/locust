@@ -15,7 +15,7 @@ import gevent
 
 DEFAULT_CACHE_TIME = 2.0
 
-app = Flask("Locust Monitor")
+app = Flask(__name__)
 app.debug = True
 app.root_path = os.path.dirname(os.path.abspath(__file__))
 

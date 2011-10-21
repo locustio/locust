@@ -1,5 +1,3 @@
 greenlet
-gevent
-pyzmq
-gevent-zeromq
-Flask
+gevent>=0.13
+Flask>=0.8
