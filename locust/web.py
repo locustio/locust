@@ -172,13 +172,7 @@ def request_stats():
         report = {"stats":stats, "errors":list(locust_runner.errors.iteritems())}
         if stats:
             report["total_rps"] = stats[len(stats)-1]["current_rps"]
-            try:
-                report["fail_ratio"] = float(stats[len(stats)-1]["num_failures"]) / stats[len(stats)-1]["num_reqs"]
-            except ZeroDivisionError:
-                if stats[len(stats)-1]["num_failures"] > 0:
-                    report["fail_ratio"] = 100
-                else:
-                    report["fail_ratio"] = 0
+            report["fail_ratio"] = RequestStats.sum_stats("Total").fail_ratio
             
             # since generating a total response times dict with all response times from all
             # urls is slow, we make a new total response time dict which will consist of one
