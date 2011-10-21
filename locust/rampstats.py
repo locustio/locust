@@ -46,7 +46,3 @@ def on_slave_report(_, data):
     response_times_per_slave_count = PERCENTILE_TIME_WINDOW/SLAVE_REPORT_INTERVAL
     if len(master_response_times) > slaves * response_times_per_slave_count:
         master_response_times.popleft()
-
-events.request_success += on_request_success
-events.report_to_master += on_report_to_master
-events.slave_report += on_slave_report
