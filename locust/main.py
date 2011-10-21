@@ -333,7 +333,7 @@ def main():
         options.web = True
 
     if options.ramp:
-        import autotune
+        import rampstats
 
     if options.web and not options.slave:
         # spawn web greenlet
