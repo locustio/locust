@@ -480,7 +480,7 @@ class LocustRunner(object):
                         return ramp_down(clients, hatch_stride)
                     gevent.sleep(calibration_time)
                     fail_ratio = RequestStats.sum_stats().fail_ratio
-                    if fail_ratio >= acceptable_fail:
+                    if fail_ratio > acceptable_fail:
                         print "ramp up stopped due to acceptable fail ratio %d%% exceeded with fail ratio %d%%" % (acceptable_fail*100, fail_ratio*100)
                         if not boundery_found:
                             hatch_stride = hatch_stride/2
@@ -503,8 +503,8 @@ class LocustRunner(object):
                 if self.state != STATE_HATCHING:
                     if self.num_clients < max_locusts:
                         gevent.sleep(calibration_time)
-                        fails = RequestStats.sum_stats().fail_ratio
-                        if fails <= acceptable_fail:
+                        fail_ratio = RequestStats.sum_stats().fail_ratio
+                        if fail_ratio <= acceptable_fail:
                             p = current_percentile(percent)
                             if p <= response_time_limit:
                                 if hatch_stride <= precision:
