@@ -1,4 +1,5 @@
 from stats import percentile, RequestStats
+from core import locust_runner, MasterLocustRunner
 from collections import deque
 import events
 import math
@@ -6,24 +7,21 @@ import math
 master_response_times = deque([])
 slave_response_times = []
 
+# Are we running in distributed mode or not?
+is_distributed = isinstance(locust_runner, MasterLocustRunner)
+
 # The time window in seconds that current_percentile use data from
 PERCENTILE_TIME_WINDOW = 15.0
 
 def current_percentile(percent):
-    from core import locust_runner, MasterLocustRunner
-    
-    # Are we running in distributed mode or not?
-    if isinstance(locust_runner, MasterLocustRunner):
+    if is_distributed:
         # Flatten out the deque of lists and calculate the percentile to be returned
         return percentile(sorted([item for sublist in master_response_times for item in sublist]), percent)
     else:
         return percentile(sorted(master_response_times), percent)
 
 def on_request_success(_, response_time, _2):
-    from core import locust_runner, MasterLocustRunner
-    
-    # Are we running in distributed mode or not?
-    if isinstance(locust_runner, MasterLocustRunner):
+    if is_distributed:
         slave_response_times.append(response_time)
     else:
         master_response_times.append(response_time)
