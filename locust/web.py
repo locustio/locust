@@ -11,6 +11,7 @@ from flask import Flask, make_response, request, render_template
 
 from locust.stats import RequestStats, median_from_dict
 from locust import version
+import gevent
 
 DEFAULT_CACHE_TIME = 2.0
 
@@ -23,6 +24,7 @@ _num_clients = None
 _num_requests = None
 _hatch_rate = None
 _request_stats_context_cache = {}
+_ramp = False
 
 
 @app.route('/')
@@ -39,6 +41,7 @@ def index():
         is_distributed=is_distributed,
         slave_count=slave_count,
         user_count=locust_runner.user_count,
+        ramp = _ramp,
         version=version
     )
 
@@ -62,11 +65,22 @@ def stop():
     response.headers["Content-type"] = "application/json"
     return response
 
-@app.route("/ramp")
+@app.route("/ramp", methods=["POST"])
 def ramp():
     from core import locust_runner
-    locust_runner.start_ramping(20, 2000, 200)
-    return "ramp"
+    init_clients = int(request.form["init_count"])
+    hatch_rate = int(request.form["hatch_rate"])
+    hatch_stride = int(request.form["hatch_stride"])
+    precision = int(request.form["precision"])
+    max_clients = int(request.form["max_count"])
+    response_time = int(request.form["response_time"])
+    percentile = float(int(request.form["percentile"]) / 100.0)
+    fail_rate = float(int(request.form["fail_rate"]) / 100.0)
+    calibration_time = int(request.form["wait_time"])
+    gevent.spawn(locust_runner.start_ramping, hatch_rate, max_clients, hatch_stride, percentile, response_time, fail_rate, precision, init_clients, calibration_time)
+    response = make_response(json.dumps({'success':True, 'message': 'Ramping started'}))
+    response.headers["Content-type"] = "application/json"
+    return response
 
 @app.route("/stats/reset")
 def reset_stats():
@@ -158,13 +172,7 @@ def request_stats():
         report = {"stats":stats, "errors":list(locust_runner.errors.iteritems())}
         if stats:
             report["total_rps"] = stats[len(stats)-1]["current_rps"]
-            try:
-                report["fail_ratio"] = float(stats[len(stats)-1]["num_failures"]) / stats[len(stats)-1]["num_reqs"]
-            except ZeroDivisionError:
-                if stats[len(stats)-1]["num_failures"] > 0:
-                    report["fail_ratio"] = 100
-                else:
-                    report["fail_ratio"] = 0
+            report["fail_ratio"] = RequestStats.sum_stats("Total").fail_ratio
             
             # since generating a total response times dict with all response times from all
             # urls is slow, we make a new total response time dict which will consist of one
@@ -191,12 +199,13 @@ def request_stats():
         report = _request_stats_context_cache["report"]
     return json.dumps(report)
 
-def start(locust, hatch_rate, num_clients, num_requests):
-    global _locust, _hatch_rate, _num_clients, _num_requests
+def start(locust, hatch_rate, num_clients, num_requests, ramp):
+    global _locust, _hatch_rate, _num_clients, _num_requests, _ramp
     _locust = locust
     _hatch_rate = hatch_rate
     _num_clients = num_clients
     _num_requests = num_requests
+    _ramp = ramp
     wsgi.WSGIServer(('', 8089), app, log=None).serve_forever()
 
 def _sort_stats(stats):

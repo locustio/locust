@@ -17,8 +17,11 @@
                     <div class="user_count">
                         <span id="userCount">{{user_count}}</span> users
                     </div>
-                    <a href="#" class="new_test">New test</a>
+                    <a href="#" class="new_test" id="new_test">New test</a>
                     <a href="#" class="edit_test">Edit</a>
+                    {% if ramp %}
+                        <a href="#" class="new_test ramp_test">Ramp</a>
+                    {% endif %}
                 </div>
                 {% if is_distributed %}
                     <div class="top_box box_slaves" id="box_rps">
@@ -57,9 +60,16 @@
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
-                    <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button"></td>
+                    <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button">
                 </form>
                 <div style="clear:right;"></div>
+            </div>
+            <br>
+            <div class="ramp_text">
+            {% if ramp %}
+
+                ...or let locust <a href="#" class="ramp_test">ramp</a> find the highest stable locust count for you
+            {% endif %}
             </div>
         </div>
 
@@ -74,11 +84,50 @@
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
-                    <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button"></td>
+                    <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button">
                 </form>
                 <div style="clear:right;"></div>
             </div>
         </div>
+
+        {% if ramp %}
+            <div class="start ramp" id="ramp">
+                <div style="position:relative;">
+                    <a href="#" class="close_link">Close</a>
+                </div>
+                <div class="padder">
+                    <h2>Ramping</h2>
+                    <form action="/ramp" method="POST" id="ramp_form">
+                        <div style="float:left;">
+                        <label for="init_count">Initial number of clients</label>
+                        <input type="text" name="init_count" id="init_count" class="val" /><br>
+                        <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
+                        <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
+                        <label for="hatch_stride">Hatch stride</label>
+                        <input type="text" name="hatch_stride" id="hatch_stride" class="val" /><br>
+                        <label for="precision">Precision (min value of hatch stride)</label>
+                        <input type="text" name="precision" id="precision" class="val" /><br>
+                        <label for="wait_time">Calibration time (seconds)</label>
+                        <input type="text" name="wait_time" id="wait_time" class="val" value="20" /><br>
+                        </div>
+                        <div style="float:right;">
+                        <label for="max_count">Max number of clients</label>
+                        <input type="text" name="max_count" id="max_count" class="val" /><br>
+                        <label for="percentile">Percentile (%)</label>
+                        <input type="text" name="percentile" id="percentile" class="val" value="95" /><br>
+                        <label for="response_time">Max percentile response time (ms)</label>
+                        <input type="text" name="response_time" id="response_time" class="val" value="2000" /><br>
+                        <label for="fail_rate">Accepted fail rate (%)</label>
+                        <input type="text" name="fail_rate" id="fail_rate" class="val" value="5" /><br>
+                        <br><br>
+                        <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button">
+                        </div>
+
+                    </form>
+                    <div style="clear:right;"></div>
+                </div>
+            </div>
+        {% endif %}
         
         <div class="status" id="status">
             <ul class="tabs">
@@ -91,15 +140,15 @@
                     <table id="stats" class="stats">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th># requests</th>
-                                <th># fails</th>
-                                <th>Median</th>
-                                <th>Average</th>
-                                <th>Min</th>
-                                <th>Max</th>
-                                <th title="Average Content-Length">Content-Length</th>
-                                <th># reqs/sec</th>
+                                <th class="stats_label" href="#" data-sortkey="name">Name</th>
+                                <th class="stats_label" href="#" data-sortkey="num_reqs"># requests</th>
+                                <th class="stats_label" href="#" data-sortkey="num_failures"># fails</th>
+                                <th class="stats_label" href="#" data-sortkey="median_response_time">Median</th>
+                                <th class="stats_label" href="#" data-sortkey="avg_response_time">Average</th>
+                                <th class="stats_label" href="#" data-sortkey="min_response_time">Min</th>
+                                <th class="stats_label" href="#" data-sortkey="max_response_time">Max</th>
+                                <th class="stats_label" href="#" data-sortkey="avg_content_length">Content-Length</th>
+                                <th class="stats_label" href="#" data-sortkey="current_rps"># reqs/sec</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -113,8 +162,8 @@
                 <div style="display:none;">
                     <table id="errors" class="stats">
                         <thead>
-                            <th class="error_count"># fails</th>
-                            <th class="error_type">Type</th>
+                            <th class="error_count stats_label" data-sortkey="1"># fails</th>
+                            <th class="error_type stats_label" data-sortkey="0">Type</th>
                         </thead>
                         <tbody>
                         </tbody>
@@ -198,9 +247,14 @@
             event.preventDefault();
             $.get($(this).attr("href"));
         });
-
-        $(".new_test").click(function(event) {
+        $(".ramp_test").click(function(event) {
             event.preventDefault();
+            $("#start").hide();
+            $("#ramp").show();
+        });
+        $("#new_test").click(function(event) {
+            event.preventDefault();
+            $("#ramp").hide();
             $("#start").show();
         });
         $(".edit_test").click(function(event) {
@@ -236,6 +290,23 @@
             );
         });
 
+        $('#ramp_form').submit(function(event) {
+            event.preventDefault();
+            $.post($(this).attr("action"), $(this).serialize(),
+                function(response) {
+                    if (response.success) {
+                        $("body").attr("class", "hatching");
+                        $("#ramp").fadeOut();
+                        $("#status").fadeIn();
+                        $(".box_running").fadeIn();
+                        $("a.new_test").fadeOut();
+                        $("a.edit_test").fadeIn();
+                        $(".user_count").fadeIn();
+                    }
+                }
+            );
+        });
+
         $('#edit_form').submit(function(event) {
             event.preventDefault();
             $.post($(this).attr("action"), $(this).serialize(),
@@ -247,12 +318,48 @@
                 }
             );
         });
-        
+
+        var sortBy = function(field, reverse, primer){
+            reverse = (reverse) ? -1 : 1;
+            return function(a,b){
+                a = a[field];
+                b = b[field];
+               if (typeof(primer) != 'undefined'){
+                   a = primer(a);
+                   b = primer(b);
+               }
+               if (a<b) return reverse * -1;
+               if (a>b) return reverse * 1;
+               return 0;
+            }
+        }
+
+        // Sorting by column
+        var sortAttribute = "name";
+        var desc = false;
+        var report;
+        $(".stats_label").click(function(event) {
+            event.preventDefault();
+            sortAttribute = $(this).attr("data-sortkey");
+            desc = !desc;
+
+            $('#stats tbody').empty();
+            $('#errors tbody').empty();
+            alternate = false;
+            totalRow = report.stats.pop()
+            sortedStats = (report.stats).sort(sortBy(sortAttribute, desc))
+            sortedStats.push(totalRow)
+            $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
+            alternate = false;
+            $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
+        });
+
         function updateStats() {
             $.get('/stats/requests', function (data) {
-                var report = JSON.parse(data);
+                report = JSON.parse(data);
                 $("#total_rps").html(Math.round(report.total_rps*100)/100);
-                $("#fail_ratio").html(Math.round(report.fail_ratio*10000)/100);
+                //$("#fail_ratio").html(Math.round(report.fail_ratio*10000)/100);
+                $("#fail_ratio").html(Math.round(report.fail_ratio*100));
                 $("#status_text").html(report.state);
                 $("#userCount").html(report.user_count);
                 
@@ -261,11 +368,15 @@
                 
                 $('#stats tbody').empty();
                 $('#errors tbody').empty();
-                
+
                 alternate = false;
-                $('#stats tbody').jqoteapp(stats_tpl, report.stats);
+
+                totalRow = report.stats.pop()
+                sortedStats = (report.stats).sort(sortBy(sortAttribute, desc))
+                sortedStats.push(totalRow)
+                $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
                 alternate = false;
-                $('#errors tbody').jqoteapp(errors_tpl, report.errors);
+                $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
                 setTimeout(updateStats, 2000);
             });
         }
