@@ -99,7 +99,7 @@ class RequestStats(object):
     @property
     def fail_ratio(self):
         try:
-            return float(self.num_failures) / self.num_reqs
+            return float(self.num_failures) / (self.num_reqs + self.num_failures)
         except ZeroDivisionError:
             if self.num_failures > 0:
                 return 1.0
@@ -162,7 +162,7 @@ class RequestStats(object):
         self.max_response_time = max(self.max_response_time, other.max_response_time)
         self._min_response_time = min(self._min_response_time, other._min_response_time) or other._min_response_time
         self.total_content_length = self.total_content_length + other.total_content_length
-        
+
         if full_request_history:
             for key in other.response_times:
                 self.response_times[key] = self.response_times.get(key, 0) + other.response_times[key]
