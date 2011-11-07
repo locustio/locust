@@ -20,7 +20,7 @@ setup(
         "Intended Audience :: System Administrators",
     ],
     keywords='',
-    author='Jonatan Heyman, Carl Bystrom, Joakim Hamrén',
+    author='Jonatan Heyman, Carl Bystrom, Joakim Hamrén, Hugo Heyman',
     author_email='',
     url='',
     license='MIT',
