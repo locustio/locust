@@ -12,9 +12,10 @@ Changelog
 API changes
 -----------
 
-* WebLocust class has been deprecated and is now called just Locust. The class that was previously called Locust 
-  is now called LocustBase.
-* The *catch_http_error* argument to HttpClient.get() and HttpClient.post() has been renamed to *allow_http_error*.
+* WebLocust class has been deprecated and is now called just Locust. The class that was previously 
+  called Locust is now called LocustBase.
+* The *catch_http_error* argument to HttpClient.get() and HttpClient.post() has been renamed to 
+  *allow_http_error*.
 
 Improvements and bug fixes
 --------------------------
