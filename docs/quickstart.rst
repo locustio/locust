@@ -21,8 +21,8 @@ Below is a quick little example of a simple locustfile.py::
         min_wait=5000
         max_wait=9000
 
-Here we define a number of locust tasks, which are normal Python callables that take one 
-argument (a Locust class instance). These tasks are gathered under a Locust class in the *task* attribute. 
+Here we define a number of locust tasks, which are normal Python callables that take one argument 
+(a Locust class instance). These tasks are gathered under a Locust class in the *task* attribute. 
 
 The Locust class also allows one to specify minimum and maximum wait time between the execution of 
 tasks (per user/client) as well as other user behaviours.
