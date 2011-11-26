@@ -457,7 +457,6 @@ class LocustRunner(object):
                 self.spawn_locusts(wait=wait)
 
     def stop(self):
-        raise Exception("KUKEN")
         # if we are currently hatching locusts we need to kill the hatching greenlet first
         if self.hatching_greenlet and not self.hatching_greenlet.ready():
             self.hatching_greenlet.kill(block=True)
