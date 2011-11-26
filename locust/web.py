@@ -13,6 +13,9 @@ from locust.stats import RequestStats, median_from_dict
 from locust import version
 import gevent
 
+import logging
+logger = logging.getLogger(__name__)
+
 DEFAULT_CACHE_TIME = 2.0
 
 app = Flask(__name__)
@@ -206,6 +209,7 @@ def start(locust, hatch_rate, num_clients, num_requests, ramp):
     _num_clients = num_clients
     _num_requests = num_requests
     _ramp = ramp
+    
     wsgi.WSGIServer(('', 8089), app, log=None).serve_forever()
 
 def _sort_stats(stats):
