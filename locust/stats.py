@@ -6,8 +6,18 @@ import math
 from exception import InterruptLocust
 import events
 
-STATS_NAME_WIDTH = 60
+# set up logger for the statistics tables
+import logging
+stats_logger = logging.getLogger("stats_logger")
+# create console handler
+sh = logging.StreamHandler()
+sh.setLevel(logging.INFO)
+# formatter that doesn't include anything but the message
+sh.setFormatter(logging.Formatter('%(message)s'))
+stats_logger.addHandler(sh)
+stats_logger.propagate = False
 
+STATS_NAME_WIDTH = 60
 
 class RequestStatsAdditionError(Exception):
     pass
@@ -313,8 +323,8 @@ events.slave_report += on_slave_report
 
 
 def print_stats(stats):
-    print (" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s')
-    print "-" * (80 + STATS_NAME_WIDTH)
+    stats_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s'))
+    stats_logger.info("-" * (80 + STATS_NAME_WIDTH))
     total_rps = 0
     total_reqs = 0
     total_failures = 0
@@ -323,31 +333,31 @@ def print_stats(stats):
         total_rps += r.current_rps
         total_reqs += r.num_reqs
         total_failures += r.num_failures
-        print r
-    print "-" * (80 + STATS_NAME_WIDTH)
+        stats_logger.info(r)
+    stats_logger.info("-" * (80 + STATS_NAME_WIDTH))
 
     try:
         fail_percent = (total_failures/float(total_reqs))*100
     except ZeroDivisionError:
         fail_percent = 0
 
-    print (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %42.2f") % ('Total', total_reqs, "%d(%.2f%%)" % (total_failures, fail_percent), total_rps)
-    print ""
+    stats_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %42.2f") % ('Total', total_reqs, "%d(%.2f%%)" % (total_failures, fail_percent), total_rps))
+    stats_logger.info("")
 
 def print_percentile_stats(stats):
-    print "Percentage of the requests completed within given times"
-    print (" %-" + str(STATS_NAME_WIDTH) + "s %8s %6s %6s %6s %6s %6s %6s %6s %6s %6s") % ('Name', '# reqs', '50%', '66%', '75%', '80%', '90%', '95%', '98%', '99%', '100%')
-    print "-" * (80 + STATS_NAME_WIDTH)
+    stats_logger.info("Percentage of the requests completed within given times")
+    stats_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %8s %6s %6s %6s %6s %6s %6s %6s %6s %6s") % ('Name', '# reqs', '50%', '66%', '75%', '80%', '90%', '95%', '98%', '99%', '100%'))
+    stats_logger.info("-" * (80 + STATS_NAME_WIDTH))
     complete_list = []
     for key in sorted(stats.iterkeys()):
         r = stats[key]
         if r.response_times:
-            print r.percentile()
+            stats_logger.info(r.percentile())
             complete_list.extend(r.create_response_times_list())
-    print "-" * (80 + STATS_NAME_WIDTH)
+    stats_logger.info("-" * (80 + STATS_NAME_WIDTH))
     complete_list.sort()
     if complete_list:
-        print (" %-" + str(STATS_NAME_WIDTH) + "s %8s %6d %6d %6d %6d %6d %6d %6d %6d %6d") % (
+        stats_logger.info( (" %-" + str(STATS_NAME_WIDTH) + "s %8s %6d %6d %6d %6d %6d %6d %6d %6d %6d") % (
             'Total',
             str(len(complete_list)),
             percentile(complete_list, 0.5),
@@ -359,17 +369,17 @@ def print_percentile_stats(stats):
             percentile(complete_list, 0.98),
             percentile(complete_list, 0.99),
             complete_list[-1]
-        )
-    print ""
+        ))
+    stats_logger.info("")
 
 def print_error_report():
-    print "Error report"
-    print " %-18s %-100s" % ("# occurences", "Error")
-    print "-" * (80 + STATS_NAME_WIDTH)
+    stats_logger.info("Error report")
+    stats_logger.info(" %-18s %-100s" % ("# occurences", "Error"))
+    stats_logger.info("-" * (80 + STATS_NAME_WIDTH))
     for error, count in RequestStats.errors.iteritems():
-        print " %-18i %-100s" % (count, error)
-    print "-" * (80 + STATS_NAME_WIDTH)
-    print
+        stats_logger.info(" %-18i %-100s" % (count, error))
+    stats_logger.info("-" * (80 + STATS_NAME_WIDTH))
+    stats_logger.info("")
 
 def stats_printer():
     from core import locust_runner
