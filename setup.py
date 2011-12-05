@@ -8,7 +8,7 @@ version = '0.4'
 setup(
     name='locustio',
     version=version,
-    description="Python web site load testing",
+    description="Website load testing framework",
     long_description="""Locust is a python utility for doing easy, distributed load testing of a web site""",
     classifiers=[
         "Topic :: Software Development :: Testing :: Traffic Generation",
