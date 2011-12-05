@@ -3,10 +3,10 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.3'
+version = '0.4'
  
 setup(
-    name='locust',
+    name='locustio',
     version=version,
     description="Python web site load testing",
     long_description="""Locust is a python utility for doing easy, distributed load testing of a web site""",
@@ -22,7 +22,7 @@ setup(
     keywords='',
     author='Jonatan Heyman, Carl Bystrom, Joakim Hamrén, Hugo Heyman',
     author_email='',
-    url='',
+    url='http://locust.io',
     license='MIT',
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
