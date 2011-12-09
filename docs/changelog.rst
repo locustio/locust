@@ -2,12 +2,15 @@
 Changelog
 ==========
 
-0.4
+0.5
 ===
 
 .. note::
 
     Work in progress. Version not released.
+
+0.4
+===
 
 API changes
 -----------
@@ -20,6 +23,12 @@ API changes
 Improvements and bug fixes
 --------------------------
 
+* Locust now uses python's logging module for all logging
+* Added the ability to change the number of spawned users when a test is running, without having
+  to restart the test.
+* Experimental support for automatically ramping up and down the number of locust to find a maximum
+  number of concurrent users (based on some parameters like response times and acceptable failure
+  rate).
 * Added support for failing requests based on the response data, even if the HTTP response was OK.
 * Improved master node performance in order to not get bottlenecked when using enough slaves (>100)
 * Minor improvements in web interface.
