@@ -2,9 +2,9 @@
 Quick start
 =============
 
-Below is a quick little example of a simple locustfile.py::
+Below is a quick little example of a simple **locustfile.py**::
 
-    from locust import WebLocust, require_once
+    from locust import Locust
     
     def login(l):
         l.client.post("/login", {"username":"ellen_key", "password":"education"})
@@ -12,33 +12,67 @@ Below is a quick little example of a simple locustfile.py::
     def index(l):
         l.client.get("/")
     
-    @require_once(login)
     def profile(l):
         l.client.get("/profile")
     
-    class WebsiteUser(WebLocust):
+    class WebsiteUser(Locust):
         tasks = {index:2, profile:1}
         min_wait=5000
         max_wait=9000
+        
+        def on_start(self):
+            login(self)
 
 Here we define a number of locust tasks, which are normal Python callables that take one argument 
 (a Locust class instance). These tasks are gathered under a Locust class in the *task* attribute. 
 
-The Locust class also allows one to specify minimum and maximum wait time between the execution of 
-tasks (per user/client) as well as other user behaviours.
+Another way we could declare a Locust class, that might be more convinient, is to use the 
+@task decorator. The following code is equivalent to the above:
 
-To run Locust with the above locustfile we could run something like this::
+    from locust import Locust
+    
+    class WebsiteUser(Locust):
+        min_wait=5000
+        max_wait=9000
+        
+        def on_start(self):
+            """ on_start is called when a Locust start before any task is scheduled """
+            self.login()
+        
+        def login(self):
+            self.client.post("/login", {"username":"ellen_key", "password":"education"})
+        
+        @task(2)
+        def index(self):
+            self.client.get("/")
+        
+        @task(1)
+        def profile(self):
+            self.client.get("/profile")
 
-    locust -c 100 -r 100 WebsiteUser
+The Locust class also allows one to specify minimum and maximum wait time - per simulated user -
+between the execution of tasks (*min_wait* and *max_wait*) as well as other user behaviours.
 
-or if the locustfile is located elsewhere we could run::
+To run Locust with the above locust file, if it was named *locustfile.py*, we could run 
+(in the same directory as locustfile.py)::
 
-    locust -c 100 -r 100 -f ../locust_files/my_locust_file.py WebsiteUser
+    locust 
 
-The locust command must always get a Locust class argument. To list available Locust classes run::
+or if the locust file is located elsewhere we could run::
 
-    locust -l
+    locust -f ../locust_files/my_locust_file.py
 
-or if the locustfile is located elsewhere run::
+To run Locust distributed across multiple processes we would start a master process by specifying --master::
 
-    locust -f ../locust_files/my_locust_file.py -l
+    locust -f ../locust_files/my_locust_file.py --master
+
+and then we would start an arbitrary number of slave processes::
+
+    locust -f ../locust_files/my_locust_file.py --slave
+
+If we want to run locust distributed on multiple machines we would also have to specify the master host when
+starting the slaves (this is not needed when running locust distributed on a single machine, since the master 
+host defaults to 127.0.0.1)::
+
+    locust -f ../locust_files/my_locust_file.py --slave --master-host=192.168.0.100
+
