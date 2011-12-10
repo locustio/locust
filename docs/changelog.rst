@@ -9,6 +9,11 @@ Changelog
 
     Work in progress. Version not released.
 
+API changes
+-----------
+
+* Web inteface is now turned on by default. The **--web** command line option has been replaced by --no-web.
+
 0.4
 ===
 
