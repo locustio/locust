@@ -190,6 +190,7 @@ Using SubLocusts
 
 Real websites are usually built up in an hierarchical way, with multiple sub sections. To allow the 
 load testing scripts to more realistically simulate real user behaviour, Locust provides the 
-SubLocust class. A sub class of the SubLocust class contains normal locust tasks, just like sub 
-classes of the Locust class. 
-
+SubLocust class. A SubLocust class contains normal locust tasks, just like normal Locust classes. 
+However, a SubLocust class can be used as a **task** under any Locust - or SubLocust - class. This
+allows us to build tests that simulates users that browses the website in a more hierarchical, and 
+thus more realistic, way.
