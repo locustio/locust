@@ -160,29 +160,11 @@ results in an HTTP error code still result in a success in the statistics::
 Also, *catch_response* and *allow_http_error* can be used together.
 
 
-The @required_once decorator
+The on_start function
 ============================
 
-The @required_once decorator is used to make sure that a task is run once, and only once, for each 
-user, before another task is executed. 
-
-.. autofunction:: locust.core.require_once
-    :noindex:
-
-For example, this can be useful when you have a locust task that shouldn't be executed before a user 
-has logged in, let's call it inbox. If you have a task called login that makes the appropriate login 
-HTTP request(s), then you can decorate the inbox task with::
-
-    @required_once(login)
-    def inbox(l):
-        ...
-
-The difference from just calling the login function in the beginning of the inbox task is that the 
-@required_once decorator respects the Locust class's scheduling mechanism (the *min_wait* and 
-*max_wait* attributes). So when inbox is to be executed for a locust user that hasn't yet executed 
-the login task, the login task will be executed first, and the inbox task will be scheduled to run 
-as the next task (after the wait time). The next time the same locust user is to execute the inbox 
-task, login will not be run, since it has already been executed for that locust user.
+A locust class can optionally have an **on_start** function declared. If so, that function is 
+called when a simulated user starts executing that locust class.
 
 
 Using SubLocusts
