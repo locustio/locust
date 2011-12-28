@@ -145,7 +145,7 @@ However, one can mark requests as failed, even when the response code is okay, b
     from locust import ResponseError
     
     client = HttpBrowser("http://example.com")
-    with client.get("/") as response:
+    with client.get("/", catch_response=True) as response:
         if response.data != "Success":
             raise ResponseError("Got wrong response")
 

@@ -248,14 +248,14 @@ class LocustBase(object):
 
 class Locust(LocustBase):
     """
-    Locust class that inherits from Locust and creates a *client* attribute on instantiation. 
+    Locust class that inherits from LocustBase and creates a *client* attribute on instantiation. 
     
     The *client* attribute is a simple HTTP client with support for keeping a user session between requests.
     """
     
     client = None
     """
-    Instance of HttpBrowser that is created upon instantiation of WebLocust. 
+    Instance of HttpBrowser that is created upon instantiation of Locust. 
     The client support cookies, and therefore keeps the session between HTTP requests.
     """
     
