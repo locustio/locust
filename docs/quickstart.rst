@@ -27,7 +27,7 @@ Here we define a number of locust tasks, which are normal Python callables that 
 (a Locust class instance). These tasks are gathered under a Locust class in the *task* attribute. 
 
 Another way we could declare a Locust class, that might be more convinient, is to use the 
-@task decorator. The following code is equivalent to the above:
+@task decorator. The following code is equivalent to the above::
 
     from locust import Locust
     
