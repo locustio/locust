@@ -26,7 +26,7 @@ Below is a quick little example of a simple **locustfile.py**::
 Here we define a number of locust tasks, which are normal Python callables that take one argument 
 (a Locust class instance). These tasks are gathered under a Locust class in the *task* attribute. 
 
-Another way we could declare a Locust class, that might be more convinient, is to use the 
+Another way we could declare a Locust class, that might be more convenient, is to use the 
 @task decorator. The following code is equivalent to the above::
 
     from locust import Locust
