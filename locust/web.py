@@ -9,6 +9,8 @@ from collections import defaultdict
 from gevent import wsgi
 from flask import Flask, make_response, request, render_template
 
+import runners
+from runners import MasterLocustRunner
 from locust.stats import RequestStats, median_from_dict
 from locust import version
 import gevent
@@ -32,18 +34,17 @@ _ramp = False
 
 @app.route('/')
 def index():
-    from core import locust_runner, MasterLocustRunner
-    is_distributed = isinstance(locust_runner, MasterLocustRunner)
+    is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
     if is_distributed:
-        slave_count = locust_runner.slave_count
+        slave_count = runners.locust_runner.slave_count
     else:
         slave_count = 0
     
     return render_template("index.html",
-        state=locust_runner.state,
+        state=runners.locust_runner.state,
         is_distributed=is_distributed,
         slave_count=slave_count,
-        user_count=locust_runner.user_count,
+        user_count=runners.locust_runner.user_count,
         ramp = _ramp,
         version=version
     )
@@ -51,26 +52,23 @@ def index():
 @app.route('/swarm', methods=["POST"])
 def swarm():
     assert request.method == "POST"
-    from core import locust_runner
 
     locust_count = int(request.form["locust_count"])
     hatch_rate = float(request.form["hatch_rate"])
-    locust_runner.start_hatching(locust_count, hatch_rate)
+    runners.locust_runner.start_hatching(locust_count, hatch_rate)
     response = make_response(json.dumps({'success':True, 'message': 'Swarming started'}))
     response.headers["Content-type"] = "application/json"
     return response
 
 @app.route('/stop')
 def stop():
-    from core import locust_runner
-    locust_runner.stop()
+    runners.locust_runner.stop()
     response = make_response(json.dumps({'success':True, 'message': 'Test stopped'}))
     response.headers["Content-type"] = "application/json"
     return response
 
 @app.route("/ramp", methods=["POST"])
 def ramp():
-    from core import locust_runner
     init_clients = int(request.form["init_count"])
     hatch_rate = int(request.form["hatch_rate"])
     hatch_stride = int(request.form["hatch_stride"])
@@ -80,7 +78,7 @@ def ramp():
     percentile = float(int(request.form["percentile"]) / 100.0)
     fail_rate = float(int(request.form["fail_rate"]) / 100.0)
     calibration_time = int(request.form["wait_time"])
-    gevent.spawn(locust_runner.start_ramping, hatch_rate, max_clients, hatch_stride, percentile, response_time, fail_rate, precision, init_clients, calibration_time)
+    gevent.spawn(runners.locust_runner.start_ramping, hatch_rate, max_clients, hatch_stride, percentile, response_time, fail_rate, precision, init_clients, calibration_time)
     response = make_response(json.dumps({'success':True, 'message': 'Ramping started'}))
     response.headers["Content-type"] = "application/json"
     return response
@@ -92,8 +90,6 @@ def reset_stats():
     
 @app.route("/stats/requests/csv")
 def request_stats_csv():
-    from core import locust_runner
-    
     rows = [
         ",".join([
             '"Name"',
@@ -108,7 +104,7 @@ def request_stats_csv():
         ])
     ]
     
-    for s in chain(_sort_stats(locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
+    for s in chain(_sort_stats(runners.locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
         rows.append('"%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
             s.name,
             s.num_reqs,
@@ -127,8 +123,6 @@ def request_stats_csv():
 
 @app.route("/stats/distribution/csv")
 def distribution_stats_csv():
-    from core import locust_runner
-    
     rows = [",".join((
         '"Name"',
         '"# requests"',
@@ -142,7 +136,7 @@ def distribution_stats_csv():
         '"99%"',
         '"100%"',
     ))]
-    for s in chain(_sort_stats(locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
+    for s in chain(_sort_stats(runners.locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
         rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
     
     response = make_response("\n".join(rows))
@@ -152,14 +146,13 @@ def distribution_stats_csv():
 @app.route('/stats/requests')
 def request_stats():
     global _request_stats_context_cache
-    from core import locust_runner, MasterLocustRunner
     
     if not _request_stats_context_cache or _request_stats_context_cache["last_time"] < time() - _request_stats_context_cache.get("cache_time", DEFAULT_CACHE_TIME):
         cache_time = _request_stats_context_cache.get("cache_time", DEFAULT_CACHE_TIME)
         now = time()
         
         stats = []
-        for s in chain(_sort_stats(locust_runner.request_stats), [RequestStats.sum_stats("Total")]):
+        for s in chain(_sort_stats(runners.locust_runner.request_stats), [RequestStats.sum_stats("Total")]):
             stats.append({
                 "name": s.name,
                 "num_reqs": s.num_reqs,
@@ -172,7 +165,7 @@ def request_stats():
                 "avg_content_length": s.avg_content_length,
             })
         
-        report = {"stats":stats, "errors":list(locust_runner.errors.iteritems())}
+        report = {"stats":stats, "errors":list(runners.locust_runner.errors.iteritems())}
         if stats:
             report["total_rps"] = stats[len(stats)-1]["current_rps"]
             report["fail_ratio"] = RequestStats.sum_stats("Total").fail_ratio
@@ -188,12 +181,12 @@ def request_stats():
             # calculate total median
             stats[len(stats)-1]["median_response_time"] = median_from_dict(stats[len(stats)-1]["num_reqs"], response_times)
         
-        is_distributed = isinstance(locust_runner, MasterLocustRunner)
+        is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
         if is_distributed:
-            report["slave_count"] = locust_runner.slave_count
+            report["slave_count"] = runners.locust_runner.slave_count
         
-        report["state"] = locust_runner.state
-        report["user_count"] = locust_runner.user_count
+        report["state"] = runners.locust_runner.state
+        report["user_count"] = runners.locust_runner.user_count
 
         elapsed = time() - now
         cache_time = max(cache_time, elapsed * 2.0) # Increase cache_time when report generating starts to take longer time

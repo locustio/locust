@@ -1,5 +1,6 @@
 import locust
 import core
+import runners
 
 import gevent
 import sys
@@ -13,7 +14,8 @@ import web
 import inspectlocust
 from log import setup_logging
 from locust.stats import stats_printer, RequestStats, print_percentile_stats, print_error_report, print_stats
-from core import Locust, WebLocust, MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
+from core import Locust, WebLocust
+from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
 
 _internals = [Locust, WebLocust]
 version = locust.version
@@ -368,16 +370,16 @@ def main():
     WebLocust.gzip = options.gzip
 
     if not options.master and not options.slave:
-        core.locust_runner = LocalLocustRunner(locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.host)
+        runners.locust_runner = LocalLocustRunner(locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.host)
         # spawn client spawning/hatching greenlet
         if options.no_web:
-            core.locust_runner.start_hatching(wait=True)
-            main_greenlet = core.locust_runner.greenlet
+            runners.locust_runner.start_hatching(wait=True)
+            main_greenlet = runners.locust_runner.greenlet
     elif options.master:
-        core.locust_runner = MasterLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
+        runners.locust_runner = MasterLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
     elif options.slave:
-        core.locust_runner = SlaveLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
-        main_greenlet = core.locust_runner.greenlet
+        runners.locust_runner = SlaveLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
+        main_greenlet = runners.locust_runner.greenlet
     
     if options.ramp:
         import rampstats
@@ -399,8 +401,8 @@ def main():
         main_greenlet.join()
     except KeyboardInterrupt, e:
         time.sleep(0.2)
-        print_stats(core.locust_runner.request_stats)
-        print_percentile_stats(core.locust_runner.request_stats)
+        print_stats(runners.locust_runner.request_stats)
+        print_percentile_stats(runners.locust_runner.request_stats)
         print_error_report()
         logger.info("Got KeyboardInterrupt. Exiting, bye..")
 
