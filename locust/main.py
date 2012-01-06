@@ -8,6 +8,8 @@ import os
 import inspect
 import time
 import logging
+import multiprocessing
+import random
 from optparse import OptionParser
 
 import web
@@ -19,6 +21,8 @@ from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
 
 _internals = [Locust, WebLocust]
 version = locust.version
+
+logger = logging.getLogger(__name__)
 
 def parse_options():
     """
@@ -60,6 +64,15 @@ def parse_options():
         dest='slave',
         default=False,
         help="Set locust to run in distributed mode with this process as slave"
+    )
+    # if locust should be run in distributed mode as slave
+    parser.add_option(
+        '--slave-process-count',
+        action='store',
+        type='int',
+        dest='slave_process_count',
+        default=multiprocessing.cpu_count(),
+        help="Set how many processes should be spawned when starting in --slave mode. Defaults to the number of CPU cores in the machine."
     )
     
     # master host options
@@ -294,16 +307,15 @@ def load_locustfile(path):
     locusts = dict(filter(is_locust, vars(imported).items()))
     return imported.__doc__, locusts
 
-def main():
-    parser, options, arguments = parse_options()
-    #print "Options:", options, dir(options)
-    #print "Arguments:", arguments
-    #print "largs:", parser.largs
-    #print "rargs:", parser.rargs
+def run():
+    """
+    Called when locust starts after any possible forking action in main()
+    has taken place.
     
-    # setup logging
-    setup_logging(options.loglevel, options.logfile)
-    logger = logging.getLogger(__name__)
+    Parses options and acts accordingly. I.e. start correct locust runner, 
+    list available locusts and exit, etc.
+    """
+    parser, options, arguments = parse_options()
     
     if options.show_version:
         print "Locust %s" % (version)
@@ -407,6 +419,39 @@ def main():
         logger.info("Got KeyboardInterrupt. Exiting, bye..")
 
     sys.exit(0)
+
+def main():
+    """
+    Checks if locust was started in slave mode and if so forks the process
+    in the correct number of child processes and calls run().
+    
+    If locust wasn't started in slave mode run() will be called.
+    """
+    parser, options, arguments = parse_options()
+    
+    # setup logging
+    setup_logging(options.loglevel, options.logfile)
+    
+    if options.slave and options.slave_process_count > 1:
+        children = []
+        logger.info("Forking %i slave processes", options.slave_process_count)
+        for i in xrange(options.slave_process_count):
+            child = os.fork()
+            if child:
+                children.append(child)
+            else:
+                # make child processes get unique random numbers
+                random.seed(os.urandom(10))
+                # run child process
+                run()
+        
+        # wait for child processes
+        for child in children:
+            os.waitpid(child, 0)
+        
+        logger.info("All child processes dead")
+    else:
+        run()
 
 if __name__ == '__main__':
     main()
