@@ -7,8 +7,7 @@ def setup_logging(loglevel, logfile):
     if numeric_level is None:
         raise ValueError("Invalid log level: %s" % loglevel)
     
-    pid_log = "(%i)" % os.getpid()
-    log_format = "[%(asctime)s] " + pid_log + " %(levelname)s/%(name)s: %(message)s"
+    log_format = "[%(asctime)s] " + str(os.getpid()) + ":%(levelname)s/%(name)s: %(message)s"
     logging.basicConfig(level=numeric_level, filename=logfile, format=log_format)
     
     sys.stderr = StdErrWrapper()
