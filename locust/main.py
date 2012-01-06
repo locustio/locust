@@ -317,6 +317,9 @@ def run():
     """
     parser, options, arguments = parse_options()
     
+    # setup logging
+    setup_logging(options.loglevel, options.logfile)
+    
     if options.show_version:
         print "Locust %s" % (version)
         sys.exit(0)
@@ -429,12 +432,8 @@ def main():
     """
     parser, options, arguments = parse_options()
     
-    # setup logging
-    setup_logging(options.loglevel, options.logfile)
-    
     if options.slave and options.slave_process_count > 1:
         children = []
-        logger.info("Forking %i slave processes", options.slave_process_count)
         for i in xrange(options.slave_process_count):
             child = os.fork()
             if child:
@@ -444,6 +443,13 @@ def main():
                 random.seed(os.urandom(10))
                 # run child process
                 run()
+        
+        # setup logging (to get the correct PID in the log messages
+        # we must do this after we've forked)
+        setup_logging(options.loglevel, options.logfile)
+        
+        assert len(children) == options.slave_process_count
+        logger.info("Forked %i slave processes", options.slave_process_count)
         
         # wait for child processes
         for child in children:
