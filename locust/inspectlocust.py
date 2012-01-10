@@ -24,3 +24,28 @@ def print_task_ratio(locusts, total=False, level=0, parent_ratio=1.0):
 			else:
 				print_task_ratio(locust.tasks, total, level+1)
 
+
+def get_task_ratio_dict(tasks, total=False, parent_ratio=1.0):
+	"""
+	Return a dict containing task execution ratio info
+	"""
+	ratio = {}
+	for task in tasks:
+		ratio.setdefault(task, 0)
+		ratio[task] += 1
+	
+	# get percentage
+	ratio_percent = dict(map(lambda x: (x[0], float(x[1])/len(tasks) * parent_ratio), ratio.iteritems()))
+	
+	task_dict = {}
+	for locust, ratio in ratio_percent.iteritems():
+		d = {"ratio":ratio}
+		if inspect.isclass(locust) and issubclass(locust, LocustBase):
+			if total:
+				d["tasks"] = get_task_ratio_dict(locust.tasks, total, ratio)
+			else:
+				d["tasks"] = get_task_ratio_dict(locust.tasks, total)
+		
+		task_dict[locust.__name__] = d
+	
+	return task_dict

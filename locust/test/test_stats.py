@@ -3,7 +3,8 @@ import time
 
 from testcases import WebserverTestCase
 from locust.stats import RequestStats
-from locust.core import Locust
+from locust.core import Locust, SubLocust, task
+from locust.inspectlocust import get_task_ratio_dict
 
 class TestRequestStats(unittest.TestCase):
     def setUp(self):
@@ -89,3 +90,36 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         self.assertEqual(RequestStats.get("/ultra_fast").avg_content_length, len("This is an ultra fast response"))
         locust.client.get("/ultra_fast")
         self.assertEqual(RequestStats.get("/ultra_fast").avg_content_length, len("This is an ultra fast response"))
+
+
+class MyLocust(Locust):
+    @task(75)
+    def root_task(self):
+        pass
+    
+    @task(25)
+    class MySubLocust(SubLocust):
+        @task
+        def task1(self):
+            pass
+        @task
+        def task2(self):
+            pass
+    
+class TestInspectLocust(unittest.TestCase):
+    def test_get_task_ratio_dict_relative(self):
+        ratio = get_task_ratio_dict([MyLocust])
+        self.assertEqual(1.0, ratio["MyLocust"]["ratio"])
+        self.assertEqual(0.75, ratio["MyLocust"]["tasks"]["root_task"]["ratio"])
+        self.assertEqual(0.25, ratio["MyLocust"]["tasks"]["MySubLocust"]["ratio"])
+        self.assertEqual(0.5, ratio["MyLocust"]["tasks"]["MySubLocust"]["tasks"]["task1"]["ratio"])
+        self.assertEqual(0.5, ratio["MyLocust"]["tasks"]["MySubLocust"]["tasks"]["task2"]["ratio"])
+    
+    def test_get_task_ratio_dict_total(self):
+        ratio = get_task_ratio_dict([MyLocust], total=True)
+        self.assertEqual(1.0, ratio["MyLocust"]["ratio"])
+        self.assertEqual(0.75, ratio["MyLocust"]["tasks"]["root_task"]["ratio"])
+        self.assertEqual(0.25, ratio["MyLocust"]["tasks"]["MySubLocust"]["ratio"])
+        self.assertEqual(0.125, ratio["MyLocust"]["tasks"]["MySubLocust"]["tasks"]["task1"]["ratio"])
+        self.assertEqual(0.125, ratio["MyLocust"]["tasks"]["MySubLocust"]["tasks"]["task2"]["ratio"])
+    
