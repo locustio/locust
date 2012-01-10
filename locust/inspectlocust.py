@@ -16,7 +16,6 @@ def print_task_ratio(locusts, total=False, level=0, parent_ratio=1.0):
 	ratio_percent = dict(map(lambda x: (x[0], float(x[1])/len(locusts) * parent_ratio), ratio.iteritems()))
 	
 	for locust, ratio in ratio_percent.iteritems():
-		#print " %-10.2f %-50s" % (ratio*100, "  "*level + locust.__name__)
 		console_logger.info(" %-10s %-50s" % ("  "*level + "%-6.1f" % (ratio*100), "  "*level + locust.__name__))
 		if inspect.isclass(locust) and issubclass(locust, LocustBase):
 			if total:
