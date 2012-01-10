@@ -11,7 +11,6 @@ import logging
 from optparse import OptionParser
 
 import web
-import inspectlocust
 from log import setup_logging
 from locust.stats import stats_printer, RequestStats, print_percentile_stats, print_error_report, print_stats
 from core import Locust, WebLocust
@@ -175,13 +174,6 @@ def parse_options():
         default=False,
         help="print table of the locust classes' task execution ratio"
     )
-    parser.add_option(
-        '--show-task-ratio-confluence',
-        action='store_true',
-        dest='show_task_ratio_confluence',
-        default=False,
-        help="print the locust classes' task execution ratio in confluence list markup"
-    )
     
     # Version number (optparse gives you --version but we have to do it
     # ourselves to get -V too. sigh)
@@ -339,21 +331,30 @@ def main():
         locust_classes = locusts.values()
     
     if options.show_task_ratio:
+        def print_task_ratio(locusts, total=False, level=0, parent_ratio=1.0):
+            ratio = {}
+            for locust in locusts:
+                ratio.setdefault(locust, 0)
+                ratio[locust] += 1
+            
+            # get percentage
+            ratio_percent = dict(map(lambda x: (x[0], float(x[1])/len(locusts) * parent_ratio), ratio.iteritems()))
+            
+            for locust, ratio in ratio_percent.iteritems():
+                #print " %-10.2f %-50s" % (ratio*100, "  "*level + locust.__name__)
+                print " %-10s %-50s" % ("  "*level + "%-6.1f" % (ratio*100), "  "*level + locust.__name__)
+                if inspect.isclass(locust) and issubclass(locust, Locust):
+                    if total:
+                        print_task_ratio(locust.tasks, total, level+1, ratio)
+                    else:
+                        print_task_ratio(locust.tasks, total, level+1)
+
         print "\n Task ratio per locust class"
         print "-" * 80
-        inspectlocust.print_task_ratio(locust_classes)
+        print_task_ratio(locust_classes)
         print "\n Total task ratio"
         print "-" * 80
-        inspectlocust.print_task_ratio(locust_classes, total=True)
-        sys.exit(0)
-    
-    if options.show_task_ratio_confluence:
-        print "\nh1. Task ratio per locust class"
-        print
-        inspectlocust.print_task_ratio_confluence(locust_classes)
-        print "\nh1. Total task ratio"
-        print
-        inspectlocust.print_task_ratio_confluence(locust_classes, total=True)
+        print_task_ratio(locust_classes, total=True)
         sys.exit(0)
     
     # if --master is set, make sure --no-web isn't set
