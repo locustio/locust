@@ -28,3 +28,13 @@ class StdErrWrapper(object):
     """
     def write(self, s):
         stderr_logger.error(s.strip())
+
+# set up logger for the statistics tables
+console_logger = logging.getLogger("console_logger")
+# create console handler
+sh = logging.StreamHandler()
+sh.setLevel(logging.INFO)
+# formatter that doesn't include anything but the message
+sh.setFormatter(logging.Formatter('%(message)s'))
+console_logger.addHandler(sh)
+console_logger.propagate = False
