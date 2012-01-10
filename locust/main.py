@@ -11,8 +11,9 @@ import logging
 from optparse import OptionParser
 
 import web
-from log import setup_logging
-from locust.stats import stats_printer, RequestStats, print_percentile_stats, print_error_report, print_stats
+from log import setup_logging, console_logger
+from stats import stats_printer, RequestStats, print_percentile_stats, print_error_report, print_stats
+from inspectlocust import print_task_ratio
 from core import Locust, WebLocust
 from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
 
@@ -331,29 +332,11 @@ def main():
         locust_classes = locusts.values()
     
     if options.show_task_ratio:
-        def print_task_ratio(locusts, total=False, level=0, parent_ratio=1.0):
-            ratio = {}
-            for locust in locusts:
-                ratio.setdefault(locust, 0)
-                ratio[locust] += 1
-            
-            # get percentage
-            ratio_percent = dict(map(lambda x: (x[0], float(x[1])/len(locusts) * parent_ratio), ratio.iteritems()))
-            
-            for locust, ratio in ratio_percent.iteritems():
-                #print " %-10.2f %-50s" % (ratio*100, "  "*level + locust.__name__)
-                print " %-10s %-50s" % ("  "*level + "%-6.1f" % (ratio*100), "  "*level + locust.__name__)
-                if inspect.isclass(locust) and issubclass(locust, Locust):
-                    if total:
-                        print_task_ratio(locust.tasks, total, level+1, ratio)
-                    else:
-                        print_task_ratio(locust.tasks, total, level+1)
-
-        print "\n Task ratio per locust class"
-        print "-" * 80
+        console_logger.info("\n Task ratio per locust class")
+        console_logger.info( "-" * 80)
         print_task_ratio(locust_classes)
-        print "\n Total task ratio"
-        print "-" * 80
+        console_logger.info("\n Total task ratio")
+        console_logger.info("-" * 80)
         print_task_ratio(locust_classes, total=True)
         sys.exit(0)
     
