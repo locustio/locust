@@ -8,7 +8,7 @@ from locust.core import Locust
 class TestRequestStats(unittest.TestCase):
     def setUp(self):
         RequestStats.global_start_time = time.time()
-        self.s = RequestStats("test_entry")
+        self.s = RequestStats("GET", "test_entry")
         self.s.log(45, 0)
         self.s.log(135, 0)
         self.s.log(44, 0)
@@ -53,13 +53,13 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(self.s.median_response_time, 85)
 
     def test_aggregation(self):
-        s1 = RequestStats("aggregate me!")
+        s1 = RequestStats("GET", "aggregate me!")
         s1.log(12, 0)
         s1.log(12, 0)
         s1.log(38, 0)
         s1.log_error("Dummy exzeption")
 
-        s2 = RequestStats("aggregate me!")
+        s2 = RequestStats("GET", "aggregate me!")
         s2.log_error("Dummy exzeption")
         s2.log_error("Dummy exzeption")
         s2.log(12, 0)
@@ -70,7 +70,7 @@ class TestRequestStats(unittest.TestCase):
         s2.log(55, 0)
         s2.log(97, 0)
 
-        s = RequestStats("")
+        s = RequestStats("GET", "")
         s.iadd_stats(s1, full_request_history=True)
         s.iadd_stats(s2, full_request_history=True)
 
@@ -86,6 +86,6 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
     
         locust = MyLocust()
         locust.client.get("/ultra_fast")
-        self.assertEqual(RequestStats.get("/ultra_fast").avg_content_length, len("This is an ultra fast response"))
+        self.assertEqual(RequestStats.get("GET", "/ultra_fast").avg_content_length, len("This is an ultra fast response"))
         locust.client.get("/ultra_fast")
-        self.assertEqual(RequestStats.get("/ultra_fast").avg_content_length, len("This is an ultra fast response"))
+        self.assertEqual(RequestStats.get("GET", "/ultra_fast").avg_content_length, len("This is an ultra fast response"))

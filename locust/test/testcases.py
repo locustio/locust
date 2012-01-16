@@ -1,5 +1,4 @@
 import gevent
-import gevent.wsgi
 import unittest
 import random
 from werkzeug.wrappers import Request
@@ -9,62 +8,71 @@ import base64
 
 from locust.stats import RequestStats
 
-def simple_webserver(env, start_response):
-    if env['PATH_INFO'] == '/ultra_fast':
-        start_response('200 OK', [('Content-Type', 'text/html')])
-        return ["This is an ultra fast response"]
-    elif env['PATH_INFO'] == '/fast':
-        start_response('200 OK', [('Content-Type', 'text/html')])
-        gevent.sleep(random.choice([0.1, 0.2, 0.3]))
-        return ["This is a fast response"]
-    elif env['PATH_INFO'] == '/slow':
-        start_response('200 OK', [('Content-Type', 'text/html')])
-        gevent.sleep(random.choice([0.5, 1, 1.5]))
-        return ["This is a slow response"]
-    elif env['PATH_INFO'] == '/consistent':
-        start_response('200 OK', [('Content-Type', 'text/html')])
-        gevent.sleep(0.2)
-        return ["This is a consistent response"]
-    elif env['PATH_INFO'] == '/request_header_test':
-        start_response('200 OK', [('Content-Type', 'text/html')])
-        request = Request(env)
-        return [request.headers.get("X-Header-Test")]
-    elif env['PATH_INFO'] == '/request_method':
-        start_response('200 OK', [('Content-Type', 'text/html')])
-        request = Request(env)
-        return [request.method]
-    elif env['PATH_INFO'] == '/post':
-        start_response('200 OK', [('Content-Type', 'text/html')])
-        request = Request(env)
-        return [str(request.form.get("arg", ""))]
-    elif env['PATH_INFO'] == '/fail':
-        start_response('500 Internal Server Error', [('Content-Type', 'text/html')])
-        return ["This response failed"]
-    elif env['PATH_INFO'] == '/redirect':
-        start_response('302 Found', [('Content-Type', 'text/html'), ('Location', '/ultra_fast')])
-        return ["Redirected, bro"]
-    elif env['PATH_INFO'] == '/basic_auth':
-        request = Request(env)
-        if "Authorization" in request.headers:
-            auth = base64.b64decode(request.headers.get("Authorization").replace("Basic ", ""))
-            if auth == "locust:menace":
-                start_response('200 OK', [('Content-Type', 'text/html')])
-                return ["Authorized"]
+from flask import Flask, request, redirect, make_response
 
-        start_response('401 Authorization Required', [('Content-Type', 'text/html'), ('WWW-Authenticate', 'Basic realm="Locust"')])
-        return ['401 Authorization Required']
-    else:
-        start_response('404 Not Found', [('Content-Type', 'text/html')])
-        return ['Not Found']
+app = Flask(__name__)
+
+@app.route("/ultra_fast")
+def ultra_fast():
+    return "This is an ultra fast response"
+
+@app.route("/fast")
+def fast():
+    gevent.sleep(random.choice([0.1, 0.2, 0.3]))
+    return "This is a fast response"
+
+@app.route("/slow")
+def slow():
+    gevent.sleep(random.choice([0.5, 1, 1.5]))
+    return "This is a slow response"
+
+@app.route("/consistent")
+def consistent():
+    gevent.sleep(0.2)
+    return "This is a consistent response"
+
+@app.route("/request_method", methods=["POST", "GET", "HEAD", "PUT", "DELETE"])
+def request_method():
+    print "METHOD", request.method
+    return request.method
+
+@app.route("/request_header_test")
+def request_header_test():
+    return request.headers["X-Header-Test"]
+
+@app.route("/post", methods=["POST"])
+@app.route("/put", methods=["PUT"])
+def manipulate():
+    return str(request.form.get("arg", ""))
+
+@app.route("/fail")
+def failed_request():
+    return "This response failed", 500
+
+@app.route("/redirect")
+def redirect():
+    return redirect("/ultra_fast")
+
+@app.route("/basic_auth")
+def basic_auth():
+    auth = base64.b64decode(request.headers.get("Authorization").replace("Basic ", ""))
+    if auth == "locust:menace":
+        return "Authorized"
+    resp = make_response("401 Authorization Required", 401)
+    resp.headers["WWW-Authenticate"] = 'Basic realm="Locust"'
+    return resp
+
+@app.errorhandler(404)
+def not_found(error):
+    return "Not Found", 404
 
 class WebserverTestCase(unittest.TestCase):
     def setUp(self):
-        self._web_server = gevent.wsgi.WSGIServer(("127.0.0.1", 0), simple_webserver, log=None)
-        gevent.spawn(lambda: self._web_server.serve_forever())
+        gevent.spawn(lambda: app.run(port=8080))
         gevent.sleep(0)
-        self.port = self._web_server.server_port
+        self.port = 8080
         RequestStats.requests = {}
 
     def tearDown(self):
-        self._web_server.kill()
+        pass
 

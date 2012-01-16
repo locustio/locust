@@ -140,6 +140,7 @@
                     <table id="stats" class="stats">
                         <thead>
                             <tr>
+                                <th class="stats_label" href="#" data-sortkey="method">Method</th>
                                 <th class="stats_label" href="#" data-sortkey="name">Name</th>
                                 <th class="stats_label" href="#" data-sortkey="num_reqs"># requests</th>
                                 <th class="stats_label" href="#" data-sortkey="num_failures"># fails</th>
@@ -212,6 +213,7 @@
     <script type="text/x-jqote-template" id="stats-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%>">
+            <td><%= (this.method ? this.method : "") %></td>
             <td><%= this.name %></td>
             <td><%= this.num_reqs %></td>
             <td><%= this.num_failures %></td>

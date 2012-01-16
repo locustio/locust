@@ -23,7 +23,8 @@ class NoneContext(object):
 
 def log_request(f):
     def _wrapper(*args, **kwargs):
-        name = kwargs.get('name', args[1]) or args[1]
+        request_method = args[1]
+        name = kwargs.get('name', args[2]) or args[2]
         if "catch_response" in kwargs:
             catch_response = kwargs["catch_response"]
             del kwargs["catch_response"]
@@ -49,26 +50,26 @@ def log_request(f):
             retval.allow_http_error = allow_http_error
             response_time = int((time.time() - start) * 1000)
             if catch_response:
-                retval._trigger_success = lambda : events.request_success.fire(name, response_time, retval)
-                retval._trigger_failure = lambda e : events.request_failure.fire(name, response_time, e, None)
+                retval._trigger_success = lambda : events.request_success.fire(request_method, name, response_time, retval)
+                retval._trigger_failure = lambda e : events.request_failure.fire(request_method, name, response_time, e, None)
             else:
-                events.request_success.fire(name, response_time, retval)
+                events.request_success.fire(request_method, name, response_time, retval)
             return retval
         except Exception, e:
             response_time = int((time.time() - start) * 1000)
-            extra = {}
+            response = None
 
             if isinstance(e, HTTPError):
-                e.msg += " (" + name + ")"
-                extra = {"response": e.locust_http_response}
+                e.msg += " (" + request_method + " " + name + ")"
+                response = e.locust_http_response
             elif isinstance(e, URLError) or isinstance(e, BadStatusLine):
-                e.args = tuple(list(e.args) + [name])
+                e.args = tuple(list(e.args) + [request_method, name])
             elif isinstance(e, socket.error):
                 pass
             else:
                 raise
 
-            events.request_failure.fire(name, response_time, e, **extra)
+            events.request_failure.fire(request_method, name, response_time, e, response)
 
         if catch_response:
             return NoneContext()
@@ -106,8 +107,8 @@ class HttpResponse(object):
     _trigger_success = None
     _trigger_failure = None
 
-
-    def __init__(self, url, name, code, data, info, gzip):
+    def __init__(self, method, url, name, code, data, info, gzip):
+        self.method = method
         self.url = url
         self._name = name
         self.code = code
@@ -131,7 +132,6 @@ class HttpResponse(object):
 
     def _set_data(self, data):
         self._data = data
-
 
     def __enter__(self):
         if not self.catch_response:
@@ -211,7 +211,7 @@ class HttpBrowser(object):
                 if response.data == "fail":
                     raise ResponseError("Request failed")
         """
-        return self._request(path, None, headers=headers, name=name, **kwargs)
+        return self._request('GET', path, None, headers=headers, name=name, **kwargs)
 
     def post(self, path, data, headers={}, name=None, **kwargs):
         """
@@ -245,10 +245,19 @@ class HttpBrowser(object):
                 if response.data == "fail":
                     raise ResponseError("Posting of inbox message failed")
         """
-        return self._request(path, data, headers=headers, name=name, **kwargs)
+        return self._request('POST', path, data, headers=headers, name=name, **kwargs)
+
+    def put(self, path, data, headers={}, name=None, **kwargs):
+        return self._request('PUT', path, data, headers=headers, name=name, **kwargs)
+
+    def delete(self, path, headers={}, name=None, **kwargs):
+        return self._request('DELETE', path, None, headers=headers, name=name, **kwargs)
+
+    def head(self, path, headers={}, name=None, **kwargs):
+        return self._request('HEAD', path, None, headers=headers, name=name, **kwargs)
 
     @log_request
-    def _request(self, path, data=None, headers={}, name=None):
+    def _request(self, method, path, data=None, headers={}, name=None):
         if self.gzip:
             headers["Accept-Encoding"] = "gzip"
 
@@ -260,14 +269,15 @@ class HttpBrowser(object):
 
         url = self.base_url + path
         request = urllib2.Request(url, data, headers)
+        request.get_method = lambda: method
         try:
             f = self.opener.open(request)
             data = f.read()
             f.close()
         except HTTPError, e:
             data = e.read()
-            e.locust_http_response = HttpResponse(url, name, e.code, data, e.info, self.gzip)
+            e.locust_http_response = HttpResponse(method, url, name, e.code, data, e.info, self.gzip)
             e.close()
             raise e
 
-        return HttpResponse(url, name, f.code, data, f.info, self.gzip)
+        return HttpResponse(method, url, name, f.code, data, f.info, self.gzip)

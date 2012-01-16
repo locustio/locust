@@ -20,7 +20,8 @@ class RequestStats(object):
     global_start_time = None
     errors = {}
 
-    def __init__(self, name):
+    def __init__(self, method, name):
+        self.method = method
         self.name = name
         self.num_reqs_per_sec = {}
         self.last_request_timestamp = 0
@@ -231,16 +232,16 @@ class RequestStats(object):
         )
 
     @classmethod
-    def get(cls, name):
-        request = cls.requests.get(name, None)
+    def get(cls, method, name):
+        request = cls.requests.get((method, name), None)
         if not request:
-            request = RequestStats(name)
-            cls.requests[name] = request
+            request = RequestStats(method, name)
+            cls.requests[(method, name)] = request
         return request
 
     @classmethod
     def sum_stats(cls, name="Total", full_request_history=False):
-        stats = RequestStats(name)
+        stats = RequestStats(None, name)
         for s in cls.requests.itervalues():
             stats.iadd_stats(s, full_request_history)
         return stats
@@ -281,15 +282,15 @@ def percentile(N, percent, key=lambda x:x):
     d1 = key(N[int(c)]) * (k-f)
     return d0+d1
 
-def on_request_success(name, response_time, response):
+def on_request_success(method, name, response_time, response):
     if RequestStats.global_max_requests is not None and RequestStats.total_num_requests >= RequestStats.global_max_requests:
         raise InterruptLocust("Maximum number of requests reached")
 
     content_length = int(response.info.getheader("Content-Length") or 0)
-    RequestStats.get(name).log(response_time, content_length)
+    RequestStats.get(method, name).log(response_time, content_length)
 
-def on_request_failure(name, response_time, error, response=None):
-    RequestStats.get(name).log_error(error)
+def on_request_failure(method, name, response_time, error, response=None):
+    RequestStats.get(method, name).log_error(error)
 
 def on_report_to_master(client_id, data):
     data["stats"] = [RequestStats.requests[name].get_stripped_report() for name in RequestStats.requests if not (RequestStats.requests[name].num_reqs == 0 and RequestStats.requests[name].num_failures == 0)]
