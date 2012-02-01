@@ -1,5 +1,5 @@
 import gevent
-import gevent.wsgi
+import gevent.pywsgi
 import unittest
 from werkzeug.wrappers import Request
 import base64
@@ -63,7 +63,7 @@ def not_found(error):
 
 class WebserverTestCase(unittest.TestCase):
     def setUp(self):
-        self._web_server = gevent.wsgi.WSGIServer(("127.0.0.1", 0), app, log=None)
+        self._web_server = gevent.pywsgi.WSGIServer(("127.0.0.1", 0), app, log=None)
         gevent.spawn(lambda: self._web_server.serve_forever())
         gevent.sleep(0)
         self.port = self._web_server.server_port
