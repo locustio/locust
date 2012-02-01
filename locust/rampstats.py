@@ -1,5 +1,5 @@
 from stats import percentile, RequestStats
-from core import locust_runner, DistributedLocustRunner
+from runners import locust_runner, DistributedLocustRunner, SLAVE_REPORT_INTERVAL
 from collections import deque
 import events
 import math
@@ -38,7 +38,6 @@ def on_report_to_master(_, data):
     slave_response_times = []
 
 def on_slave_report(_, data):
-    from core import locust_runner, SLAVE_REPORT_INTERVAL
     if "current_responses" in data:
         master_response_times.append(data["current_responses"])
 

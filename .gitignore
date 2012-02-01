@@ -1,7 +1,9 @@
 *.pyc
 locust.wpr
 locust.egg-info/**
+locustio.egg-info/**
 docs/_build/**
+dist/**
 .idea/**
 *.iml
 *.ipr

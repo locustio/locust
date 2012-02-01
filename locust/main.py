@@ -1,17 +1,21 @@
 import locust
 import core
-from core import Locust, WebLocust, MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
-from stats import print_stats
-import web
-import inspectlocust
+import runners
 
 import gevent
 import sys
 import os
 import inspect
 import time
+import logging
 from optparse import OptionParser
-from locust.stats import stats_printer, RequestStats, print_percentile_stats, print_error_report
+
+import web
+from log import setup_logging, console_logger
+from stats import stats_printer, RequestStats, print_percentile_stats, print_error_report, print_stats
+from inspectlocust import print_task_ratio, get_task_ratio_dict
+from core import Locust, WebLocust
+from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
 
 _internals = [Locust, WebLocust]
 version = locust.version
@@ -24,7 +28,7 @@ def parse_options():
     """
 
     # Initialize
-    parser = OptionParser(usage="locust [options] [LocustClass [LocustClassN]] ...")
+    parser = OptionParser(usage="locust [options] [LocustClass [LocustClass2 ... ]]")
 
     parser.add_option(
         '-H', '--host',
@@ -40,75 +44,13 @@ def parse_options():
         help="Python module file to import, e.g. '../other.py'. Default: locustfile"
     )
 
-    # Version number (optparse gives you --version but we have to do it
-    # ourselves to get -V too. sigh)
-    parser.add_option(
-        '-V', '--version',
-        action='store_true',
-        dest='show_version',
-        default=False,
-        help="show program's version number and exit"
-    )
-
-    # List locust commands found in loaded locust files/source files
-    parser.add_option(
-        '-l', '--list',
-        action='store_true',
-        dest='list_commands',
-        default=False,
-        help="print list of possible commands and exit"
-    )
-    
-    # Display ratio table of all tasks
-    parser.add_option(
-        '--show-task-ratio',
-        action='store_true',
-        dest='show_task_ratio',
-        default=False,
-        help="print table of the locust classes' task execution ratio"
-    )
-    parser.add_option(
-        '--show-task-ratio-confluence',
-        action='store_true',
-        dest='show_task_ratio_confluence',
-        default=False,
-        help="print the locust classes' task execution ratio in confluence list markup"
-    )
-
-    # if we shgould print stats in the console
-    parser.add_option(
-        '--print-stats',
-        action='store_true',
-        dest='print_stats',
-        default=False,
-        help="Print stats in the console"
-    )
-
-    # if we should print stats in the console
-    parser.add_option(
-        '--web',
-        action='store_true',
-        dest='web',
-        default=False,
-        help="Enable the web monitor (port 8089)"
-    )
-    
-    # if the HTTP client should set gzip headers and try to use gzip decoding
-    parser.add_option(
-        '--gzip',
-        action='store_true',
-        dest='gzip',
-        default=False,
-        help="If present, the HTTP client will set request header Accept-Encoding: gzip, and try to gzip decode the response data."
-    )
-
     # if locust should be run in distributed mode as master
     parser.add_option(
         '--master',
         action='store_true',
         dest='master',
         default=False,
-        help="Set locust to run in distributed mode with this process as master. This option will implicitly activate the --web option."
+        help="Set locust to run in distributed mode with this process as master"
     )
 
     # if locust should be run in distributed mode as slave
@@ -119,37 +61,7 @@ def parse_options():
         default=False,
         help="Set locust to run in distributed mode with this process as slave"
     )
-
-    # Number of requests
-    parser.add_option(
-        '-n', '--num-request',
-        action='store',
-        type='int',
-        dest='num_requests',
-        default=None,
-        help="Number of requests to perform"
-    )
-
-    # Number of clients
-    parser.add_option(
-        '-c', '--clients',
-        action='store',
-        type='int',
-        dest='num_clients',
-        default=1,
-        help="Number of concurrent clients"
-    )
-
-    # Client hatch rate
-    parser.add_option(
-        '-r', '--hatch-rate',
-        action='store',
-        type='float',
-        dest='hatch_rate',
-        default=1,
-        help="The rate per second in which clients are spawned"
-    )
-
+    
     # master host options
     parser.add_option(
         '--master-host',
@@ -160,6 +72,65 @@ def parse_options():
         help="Host or IP adress of locust master for distributed load testing. Only used when running with --slave. Defaults to 127.0.0.1."
     )
 
+    # if we should print stats in the console
+    parser.add_option(
+        '--no-web',
+        action='store_true',
+        dest='no_web',
+        default=False,
+        help="Disable the web interface, and instead start running the test immediately. Requires -c and -r to be specified."
+    )
+
+    # Number of clients
+    parser.add_option(
+        '-c', '--clients',
+        action='store',
+        type='int',
+        dest='num_clients',
+        default=1,
+        help="Number of concurrent clients. Only used together with --no-web"
+    )
+
+    # Client hatch rate
+    parser.add_option(
+        '-r', '--hatch-rate',
+        action='store',
+        type='float',
+        dest='hatch_rate',
+        default=1,
+        help="The rate per second in which clients are spawned. Only used together with --no-web"
+    )
+    
+    # Number of requests
+    parser.add_option(
+        '-n', '--num-request',
+        action='store',
+        type='int',
+        dest='num_requests',
+        default=None,
+        help="Number of requests to perform. Only used together with --no-web"
+    )
+    
+    # log level
+    parser.add_option(
+        '--loglevel', '-L',
+        action='store',
+        type='str',
+        dest='loglevel',
+        default='INFO',
+        help="Choose between DEBUG/INFO/WARNING/ERROR/CRITICAL. Default is INFO.",
+    )
+    
+    # log file
+    parser.add_option(
+        '--logfile',
+        action='store',
+        type='str',
+        dest='logfile',
+        default=None,
+        help="Path to log file. If not set, log will go to stdout/stderr",
+    )
+
     # ramp feature enabled option
     parser.add_option(
         '--ramp',
@@ -167,6 +138,60 @@ def parse_options():
         dest='ramp',
         default=False,
         help="Enables the auto tuning ramping feature for finding highest stable client count. NOTE having ramp enabled will add some more overhead for additional stats gathering"
+    )
+    
+    # if the HTTP client should set gzip headers and try to use gzip decoding
+    parser.add_option(
+        '--gzip',
+        action='store_true',
+        dest='gzip',
+        default=False,
+        help="If present, the HTTP client will set request header Accept-Encoding: gzip, and try to gzip decode the response data."
+    )
+    
+    # if we shgould print stats in the console
+    parser.add_option(
+        '--print-stats',
+        action='store_true',
+        dest='print_stats',
+        default=False,
+        help="Print stats in the console"
+    )
+    
+    # List locust commands found in loaded locust files/source files
+    parser.add_option(
+        '-l', '--list',
+        action='store_true',
+        dest='list_commands',
+        default=False,
+        help="Show list of possible locust classes and exit"
+    )
+    
+    # Display ratio table of all tasks
+    parser.add_option(
+        '--show-task-ratio',
+        action='store_true',
+        dest='show_task_ratio',
+        default=False,
+        help="print table of the locust classes' task execution ratio"
+    )
+    # Display ratio table of all tasks in JSON format
+    parser.add_option(
+        '--show-task-ratio-json',
+        action='store_true',
+        dest='show_task_ratio_json',
+        default=False,
+        help="print json data of the locust classes' task execution ratio"
+    )
+    
+    # Version number (optparse gives you --version but we have to do it
+    # ourselves to get -V too. sigh)
+    parser.add_option(
+        '-V', '--version',
+        action='store_true',
+        dest='show_version',
+        default=False,
+        help="show program's version number and exit"
     )
 
     # Finalize
@@ -276,14 +301,18 @@ def main():
     #print "Arguments:", arguments
     #print "largs:", parser.largs
     #print "rargs:", parser.rargs
-
+    
+    # setup logging
+    setup_logging(options.loglevel, options.logfile)
+    logger = logging.getLogger(__name__)
+    
     if options.show_version:
-        print("Locust %s" % (version))
+        print "Locust %s" % (version)
         sys.exit(0)
 
     locustfile = find_locustfile(options.locustfile)
     if not locustfile:
-        print "Could not find any locustfile!"
+        logger.error("Could not find any locustfile! See --help for available options.")
         sys.exit(1)
 
     docstring, locusts = load_locustfile(locustfile)
@@ -295,14 +324,14 @@ def main():
         sys.exit(0)
 
     if not locusts:
-        sys.stderr.write("No Locust class found!\n")
+        logger.error("No Locust class found!")
         sys.exit(1)
 
     # make sure specified Locust exists
     if arguments:
         missing = set(arguments) - set(locusts.keys())
         if missing:
-            sys.stderr.write("Unknown Locust(s): %s\n" % (", ".join(missing)))
+            logger.error("Unknown Locust(s): %s\n" % (", ".join(missing)))
             sys.exit(1)
         else:
             names = set(arguments) & set(locusts.keys())
@@ -311,46 +340,46 @@ def main():
         locust_classes = locusts.values()
     
     if options.show_task_ratio:
-        print "\n Task ratio per locust class"
-        print "-" * 80
-        inspectlocust.print_task_ratio(locust_classes)
-        print "\n Total task ratio"
-        print "-" * 80
-        inspectlocust.print_task_ratio(locust_classes, total=True)
+        console_logger.info("\n Task ratio per locust class")
+        console_logger.info( "-" * 80)
+        print_task_ratio(locust_classes)
+        console_logger.info("\n Total task ratio")
+        console_logger.info("-" * 80)
+        print_task_ratio(locust_classes, total=True)
+        sys.exit(0)
+    if options.show_task_ratio_json:
+        from json import dumps
+        task_data = {
+            "per_class": get_task_ratio_dict(locust_classes), 
+            "total": get_task_ratio_dict(locust_classes, total=True)
+        }
+        console_logger.info(dumps(task_data))
         sys.exit(0)
     
-    if options.show_task_ratio_confluence:
-        print "\nh1. Task ratio per locust class"
-        print
-        inspectlocust.print_task_ratio_confluence(locust_classes)
-        print "\nh1. Total task ratio"
-        print
-        inspectlocust.print_task_ratio_confluence(locust_classes, total=True)
+    # if --master is set, make sure --no-web isn't set
+    if options.master and options.no_web:
+        logger.error("Locust can not run distributed with the web interface disabled (do not use --no-web and --master together)")
         sys.exit(0)
-    
-    # if --master is set, implicitly set --web
-    if options.master:
-        options.web = True
 
-    if options.web and not options.slave:
+    if not options.no_web and not options.slave:
         # spawn web greenlet
-        print "Starting web monitor on port 8089"
+        logger.info("Starting web monitor on port 8089")
         main_greenlet = gevent.spawn(web.start, locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.ramp)
     
     # enable/disable gzip in WebLocust's HTTP client
     WebLocust.gzip = options.gzip
 
     if not options.master and not options.slave:
-        core.locust_runner = LocalLocustRunner(locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.host)
+        runners.locust_runner = LocalLocustRunner(locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.host)
         # spawn client spawning/hatching greenlet
-        if not options.web:
-            core.locust_runner.start_hatching(wait=True)
-            main_greenlet = core.locust_runner.greenlet
+        if options.no_web:
+            runners.locust_runner.start_hatching(wait=True)
+            main_greenlet = runners.locust_runner.greenlet
     elif options.master:
-        core.locust_runner = MasterLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
+        runners.locust_runner = MasterLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
     elif options.slave:
-        core.locust_runner = SlaveLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
-        main_greenlet = core.locust_runner.greenlet
+        runners.locust_runner = SlaveLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
+        main_greenlet = runners.locust_runner.greenlet
     
     if options.ramp:
         import rampstats
@@ -363,24 +392,19 @@ def main():
         else:
             events.request_success += on_request_success
     
-    if options.print_stats or (not options.web and not options.slave):
+    if options.print_stats or (options.no_web and not options.slave):
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
     
     try:
-        print
-        print "Starting Locust %s" % version
-        print
+        logger.info("Starting Locust %s" % version)
         main_greenlet.join()
     except KeyboardInterrupt, e:
         time.sleep(0.2)
-        print "\n"
-        print_stats(core.locust_runner.request_stats)
-        print_percentile_stats(core.locust_runner.request_stats)
+        print_stats(runners.locust_runner.request_stats)
+        print_percentile_stats(runners.locust_runner.request_stats)
         print_error_report()
-        print
-        print "Exiting, bye.."
-        print
+        logger.info("Got KeyboardInterrupt. Exiting, bye..")
 
     sys.exit(0)
 

@@ -3,11 +3,11 @@ import gevent
 from copy import copy
 import math
 
-from exception import InterruptLocust
 import events
+from exception import InterruptLocust
+from log import console_logger
 
 STATS_NAME_WIDTH = 60
-
 
 class RequestStatsAdditionError(Exception):
     pass
@@ -314,8 +314,8 @@ events.slave_report += on_slave_report
 
 
 def print_stats(stats):
-    print (" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s')
-    print "-" * (80 + STATS_NAME_WIDTH)
+    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s'))
+    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     total_rps = 0
     total_reqs = 0
     total_failures = 0
@@ -324,31 +324,31 @@ def print_stats(stats):
         total_rps += r.current_rps
         total_reqs += r.num_reqs
         total_failures += r.num_failures
-        print r
-    print "-" * (80 + STATS_NAME_WIDTH)
+        console_logger.info(r)
+    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
 
     try:
         fail_percent = (total_failures/float(total_reqs))*100
     except ZeroDivisionError:
         fail_percent = 0
 
-    print (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %42.2f") % ('Total', total_reqs, "%d(%.2f%%)" % (total_failures, fail_percent), total_rps)
-    print ""
+    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %42.2f") % ('Total', total_reqs, "%d(%.2f%%)" % (total_failures, fail_percent), total_rps))
+    console_logger.info("")
 
 def print_percentile_stats(stats):
-    print "Percentage of the requests completed within given times"
-    print (" %-" + str(STATS_NAME_WIDTH) + "s %8s %6s %6s %6s %6s %6s %6s %6s %6s %6s") % ('Name', '# reqs', '50%', '66%', '75%', '80%', '90%', '95%', '98%', '99%', '100%')
-    print "-" * (80 + STATS_NAME_WIDTH)
+    console_logger.info("Percentage of the requests completed within given times")
+    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %8s %6s %6s %6s %6s %6s %6s %6s %6s %6s") % ('Name', '# reqs', '50%', '66%', '75%', '80%', '90%', '95%', '98%', '99%', '100%'))
+    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     complete_list = []
     for key in sorted(stats.iterkeys()):
         r = stats[key]
         if r.response_times:
-            print r.percentile()
+            console_logger.info(r.percentile())
             complete_list.extend(r.create_response_times_list())
-    print "-" * (80 + STATS_NAME_WIDTH)
+    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     complete_list.sort()
     if complete_list:
-        print (" %-" + str(STATS_NAME_WIDTH) + "s %8s %6d %6d %6d %6d %6d %6d %6d %6d %6d") % (
+        console_logger.info( (" %-" + str(STATS_NAME_WIDTH) + "s %8s %6d %6d %6d %6d %6d %6d %6d %6d %6d") % (
             'Total',
             str(len(complete_list)),
             percentile(complete_list, 0.5),
@@ -360,20 +360,20 @@ def print_percentile_stats(stats):
             percentile(complete_list, 0.98),
             percentile(complete_list, 0.99),
             complete_list[-1]
-        )
-    print ""
+        ))
+    console_logger.info("")
 
 def print_error_report():
-    print "Error report"
-    print " %-18s %-100s" % ("# occurences", "Error")
-    print "-" * (80 + STATS_NAME_WIDTH)
+    console_logger.info("Error report")
+    console_logger.info(" %-18s %-100s" % ("# occurences", "Error"))
+    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     for error, count in RequestStats.errors.iteritems():
-        print " %-18i %-100s" % (count, error)
-    print "-" * (80 + STATS_NAME_WIDTH)
-    print
+        console_logger.info(" %-18i %-100s" % (count, error))
+    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
+    console_logger.info("")
 
 def stats_printer():
-    from core import locust_runner
+    from runners import locust_runner
     while True:
         print_stats(locust_runner.request_stats)
         gevent.sleep(2)

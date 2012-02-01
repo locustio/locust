@@ -145,7 +145,7 @@ However, one can mark requests as failed, even when the response code is okay, b
     from locust import ResponseError
     
     client = HttpBrowser("http://example.com")
-    with client.get("/") as response:
+    with client.get("/", catch_response=True) as response:
         if response.data != "Success":
             raise ResponseError("Got wrong response")
 
@@ -160,29 +160,11 @@ results in an HTTP error code still result in a success in the statistics::
 Also, *catch_response* and *allow_http_error* can be used together.
 
 
-The @required_once decorator
+The on_start function
 ============================
 
-The @required_once decorator is used to make sure that a task is run once, and only once, for each 
-user, before another task is executed. 
-
-.. autofunction:: locust.core.require_once
-    :noindex:
-
-For example, this can be useful when you have a locust task that shouldn't be executed before a user 
-has logged in, let's call it inbox. If you have a task called login that makes the appropriate login 
-HTTP request(s), then you can decorate the inbox task with::
-
-    @required_once(login)
-    def inbox(l):
-        ...
-
-The difference from just calling the login function in the beginning of the inbox task is that the 
-@required_once decorator respects the Locust class's scheduling mechanism (the *min_wait* and 
-*max_wait* attributes). So when inbox is to be executed for a locust user that hasn't yet executed 
-the login task, the login task will be executed first, and the inbox task will be scheduled to run 
-as the next task (after the wait time). The next time the same locust user is to execute the inbox 
-task, login will not be run, since it has already been executed for that locust user.
+A locust class can optionally have an **on_start** function declared. If so, that function is 
+called when a simulated user starts executing that locust class.
 
 
 Using SubLocusts
@@ -190,6 +172,7 @@ Using SubLocusts
 
 Real websites are usually built up in an hierarchical way, with multiple sub sections. To allow the 
 load testing scripts to more realistically simulate real user behaviour, Locust provides the 
-SubLocust class. A sub class of the SubLocust class contains normal locust tasks, just like sub 
-classes of the Locust class. 
-
+SubLocust class. A SubLocust class contains normal locust tasks, just like normal Locust classes. 
+However, a SubLocust class can be used as a **task** under any Locust - or SubLocust - class. This
+allows us to build tests that simulates users that browses the website in a more hierarchical, and 
+thus more realistic, way.
