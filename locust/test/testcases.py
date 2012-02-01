@@ -1,13 +1,9 @@
 import gevent
+import gevent.wsgi
 import unittest
-import random
 from werkzeug.wrappers import Request
-
-# Simple WSGI server simulating fast and slow responses.
 import base64
-
 from locust.stats import RequestStats
-
 from flask import Flask, request, redirect, make_response
 
 app = Flask(__name__)
@@ -33,7 +29,6 @@ def consistent():
 
 @app.route("/request_method", methods=["POST", "GET", "HEAD", "PUT", "DELETE"])
 def request_method():
-    print "METHOD", request.method
     return request.method
 
 @app.route("/request_header_test")
@@ -68,11 +63,11 @@ def not_found(error):
 
 class WebserverTestCase(unittest.TestCase):
     def setUp(self):
-        gevent.spawn(lambda: app.run(port=8080))
+        self._web_server = gevent.wsgi.WSGIServer(("127.0.0.1", 0), app, log=None)
+        gevent.spawn(lambda: self._web_server.serve_forever())
         gevent.sleep(0)
-        self.port = 8080
+        self.port = self._web_server.server_port
         RequestStats.requests = {}
 
     def tearDown(self):
-        pass
-
+        self._web_server.kill()
