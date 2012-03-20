@@ -92,6 +92,7 @@ def reset_stats():
 def request_stats_csv():
     rows = [
         ",".join([
+            '"Method"',
             '"Name"',
             '"# requests"',
             '"# failures"',
@@ -104,8 +105,9 @@ def request_stats_csv():
         ])
     ]
     
-    for s in chain(_sort_stats(runners.locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
-        rows.append('"%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
+    for s in chain(_sort_stats(locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
+        rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
+            s.method,
             s.name,
             s.num_reqs,
             s.num_failures,
@@ -154,6 +156,7 @@ def request_stats():
         stats = []
         for s in chain(_sort_stats(runners.locust_runner.request_stats), [RequestStats.sum_stats("Total")]):
             stats.append({
+                "method": s.method,
                 "name": s.name,
                 "num_reqs": s.num_reqs,
                 "num_failures": s.num_failures,

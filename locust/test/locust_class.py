@@ -185,6 +185,30 @@ class TestWebLocustClass(WebserverTestCase):
         self.assertEqual("POST", locust.client.post("/request_method", {"arg":"hello world"}).data)
         self.assertEqual("hello world", locust.client.post("/post", {"arg":"hello world"}).data)
 
+    def test_client_put(self):
+        class MyLocust(Locust):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyLocust()
+        self.assertEqual("PUT", locust.client.put("/request_method", {"arg":"hello world"}).data)
+        self.assertEqual("hello world", locust.client.put("/put", {"arg":"hello world"}).data)
+
+    def test_client_delete(self):
+        class MyLocust(Locust):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyLocust()
+        self.assertEqual("DELETE", locust.client.delete("/request_method").method)
+        self.assertEqual(200, locust.client.delete("/request_method").code)
+
+    def test_client_head(self):
+        class MyLocust(Locust):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyLocust()
+        self.assertEqual("HEAD", locust.client.head("/request_method").method)
+        self.assertEqual(200, locust.client.head("/request_method").code)
+
     def test_client_basic_auth(self):
         class MyLocust(Locust):
             host = "http://127.0.0.1:%i" % self.port
@@ -217,8 +241,8 @@ class TestWebLocustClass(WebserverTestCase):
         my_locust = MyLocust()
         my_locust.t1()
         
-        self.assertEqual(1, RequestStats.get("new name!").num_reqs)
-        self.assertEqual(0, RequestStats.get("/ultra_fast").num_reqs)
+        self.assertEqual(1, RequestStats.get("GET", "new name!").num_reqs)
+        self.assertEqual(0, RequestStats.get("GET", "/ultra_fast").num_reqs)
     
     def test_catch_response(self):
         class MyLocust(Locust):
@@ -227,8 +251,8 @@ class TestWebLocustClass(WebserverTestCase):
         locust = MyLocust()
 
         num = {'failures': 0, 'success': 0}
-        def on_failure(path, response_time, exception, response): num['failures'] += 1
-        def on_success(a, b, c): num['success'] += 1
+        def on_failure(method, path, response_time, exception, response): num['failures'] += 1
+        def on_success(a, b, c, d): num['success'] += 1
 
         events.request_failure += on_failure
         events.request_success += on_success
@@ -253,8 +277,8 @@ class TestWebLocustClass(WebserverTestCase):
         l = MyLocust()
         
         num = {'failures': 0, 'success': 0}
-        def on_failure(path, response_time, exception, response): num['failures'] += 1
-        def on_success(a, b, c): num['success'] += 1
+        def on_failure(method, path, response_time, exception, response): num['failures'] += 1
+        def on_success(a, b, c, d): num['success'] += 1
         events.request_failure += on_failure
         events.request_success += on_success
         
@@ -274,8 +298,8 @@ class TestWebLocustClass(WebserverTestCase):
                     raise InterruptLocust()
         
         num = {'failures': 0, 'success': 0}
-        def on_failure(path, response_time, exception, response): num['failures'] += 1
-        def on_success(a, b, c): num['success'] += 1
+        def on_failure(method, path, response_time, exception, response): num['failures'] += 1
+        def on_success(a, b, c, d): num['success'] += 1
         events.request_failure += on_failure
         events.request_success += on_success
         
