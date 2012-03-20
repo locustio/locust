@@ -44,6 +44,7 @@ request_failure = EventHook()
 
 Event is fired with the following arguments:
 
+* *method*: HTTP Request method used
 * *path*: Path to the URL that was called (or override name if it was used in the call to the client)
 * *response_time*: Time in milliseconds until exception was thrown
 * *exception*: Exception instance that was thrown
