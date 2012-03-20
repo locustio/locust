@@ -9,5 +9,6 @@ Locust Documentation
     installation
     quickstart
     writing-a-locustfile
+    extending-locust
     api
     changelog

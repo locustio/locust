@@ -33,6 +33,8 @@ InterruptLocust Exception
 .. autoexception:: locust.exception.InterruptLocust
 
 
+.. _events:
+
 Event hooks
 ===========
 
