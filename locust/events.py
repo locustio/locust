@@ -32,6 +32,7 @@ request_success = EventHook()
 
 Listeners should take the following arguments:
 
+* *method*: HTTP Request method used
 * *path*: Path to the URL that was called (or override name if it was used in the call to the client)
 * *response_time*: Reponse time in milliseconds
 * *response*: Instance of locust.clients.HttpResponse
