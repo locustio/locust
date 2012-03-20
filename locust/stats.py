@@ -299,9 +299,10 @@ def on_report_to_master(client_id, data):
 
 def on_slave_report(client_id, data):
     for stats in data["stats"]:
+        request_key = (stats.method, stats.name)
         if not stats.name in RequestStats.requests:
-            RequestStats.requests[stats.name] = RequestStats(stats.name)
-        RequestStats.requests[stats.name].iadd_stats(stats, full_request_history=True)
+            RequestStats.requests[request_key] = RequestStats(stats.method, stats.name)
+        RequestStats.requests[request_key].iadd_stats(stats, full_request_history=True)
         RequestStats.global_last_request_timestamp = max(RequestStats.global_last_request_timestamp, stats.last_request_timestamp)
 
     for err_message, err_count in data["errors"].iteritems():
