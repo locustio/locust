@@ -105,7 +105,7 @@ def request_stats_csv():
         ])
     ]
     
-    for s in chain(_sort_stats(locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
+    for s in chain(_sort_stats(runners.locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
         rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
             s.method,
             s.name,
@@ -114,8 +114,8 @@ def request_stats_csv():
             s.median_response_time,
             s.avg_response_time,
             s.min_response_time or 0,
-            s.avg_content_length,
             s.max_response_time,
+            s.avg_content_length,
             s.total_rps,
         ))
     
@@ -175,7 +175,7 @@ def request_stats():
             
             # since generating a total response times dict with all response times from all
             # urls is slow, we make a new total response time dict which will consist of one
-            # entry per url with the median response time as key and the numbe fo requests as
+            # entry per url with the median response time as key and the number of requests as
             # value
             response_times = defaultdict(int) # used for calculating total median
             for i in xrange(len(stats)-1):
