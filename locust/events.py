@@ -97,3 +97,8 @@ Event is fire with the following arguments:
 
 * *user_count*: Number of users that was hatched
 """
+
+quitting = EventHook()
+"""
+*quitting* is fired when the locust process in exiting
+"""

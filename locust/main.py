@@ -16,6 +16,7 @@ from stats import stats_printer, RequestStats, print_percentile_stats, print_err
 from inspectlocust import print_task_ratio, get_task_ratio_dict
 from core import Locust, WebLocust
 from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
+import events
 
 _internals = [Locust, WebLocust]
 version = locust.version
@@ -384,7 +385,6 @@ def main():
     if options.ramp:
         import rampstats
         from rampstats import on_request_success, on_report_to_master, on_slave_report
-        import events
         if options.slave:
             events.report_to_master += on_report_to_master
         if options.master:
@@ -400,6 +400,7 @@ def main():
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
     except KeyboardInterrupt, e:
+        events.quitting.fire()
         time.sleep(0.2)
         print_stats(runners.locust_runner.request_stats)
         print_percentile_stats(runners.locust_runner.request_stats)

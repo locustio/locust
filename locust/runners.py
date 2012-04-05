@@ -359,6 +359,10 @@ class MasterLocustRunner(DistributedLocustRunner):
                 if len(self.clients.hatching) == 0:
                     count = sum(c.user_count for c in self.clients.itervalues())
                     events.hatch_complete.fire(count)
+            elif msg["type"] == "quit":
+                if msg["data"] in self.clients:
+                    del self.clients[msg["data"]]
+                    logger.info("Client %r quit. Currently %i clients connected." % (id, len(self.clients.ready)))
 
     @property
     def slave_count(self):
@@ -384,6 +388,11 @@ class SlaveLocustRunner(DistributedLocustRunner):
         def on_report_to_master(client_id, data):
             data["user_count"] = self.user_count
         events.report_to_master += on_report_to_master
+        
+        # register listener that sends quit message to master
+        def on_quitting():
+            self.client.send({"type":"quit", "data":self.client_id})
+        events.quitting += on_quitting
     
     def worker(self):
         while True:
