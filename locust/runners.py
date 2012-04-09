@@ -14,11 +14,7 @@ from locust.stats import print_percentile_stats
 from stats import RequestStats, print_stats
 from exception import RescheduleTaskImmediately
 
-try:
-    import zmqrpc
-except ImportError:
-    warnings.warn("WARNING: Using pure Python socket RPC implementation instead of zmq. This will not affect you if your not running locust in distributed mode, but if you are, we recommend you to install the python packages: pyzmq and gevent-zeromq")
-    import socketrpc as zmqrpc
+from rpc import rpc
 
 logger = logging.getLogger(__name__)
 
@@ -297,7 +293,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.client_errors = {}
         self._request_stats = {}
         
-        self.server = zmqrpc.Server()
+        self.server = rpc.Server()
         self.greenlet = Group()
         self.greenlet.spawn(self.client_listener).link_exception()
         
@@ -373,7 +369,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + md5(str(time() + random.randint(0,10000))).hexdigest()
         
-        self.client = zmqrpc.Client(self.master_host)
+        self.client = rpc.Client(self.master_host)
         self.greenlet = Group()
         self.greenlet.spawn(self.worker).link_exception()
         self.client.send({"type":"client_ready", "data":self.client_id})
