@@ -118,9 +118,12 @@ def request_stats_csv():
             s.max_response_time,
             s.total_rps,
         ))
-    
+
     response = make_response("\n".join(rows))
+    file_name = "requests_{0}.csv".format(time())
+    disposition = "attachment;filename={0}".format(file_name)
     response.headers["Content-type"] = "text/csv"
+    response.headers["Content-disposition"] = disposition
     return response
 
 @app.route("/stats/distribution/csv")
@@ -140,9 +143,12 @@ def distribution_stats_csv():
     ))]
     for s in chain(_sort_stats(runners.locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
         rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
-    
+
     response = make_response("\n".join(rows))
+    file_name = "distribution_{0}.csv".format(time())
+    disposition = "attachment;filename={0}".format(file_name)
     response.headers["Content-type"] = "text/csv"
+    response.headers["Content-disposition"] = disposition
     return response
 
 @app.route('/stats/requests')

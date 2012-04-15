@@ -1,4 +1,5 @@
 from collections import namedtuple
+import warnings
 
 try:
     import zmqrpc as rpc
