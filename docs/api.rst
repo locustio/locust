@@ -33,6 +33,8 @@ InterruptLocust Exception
 .. autoexception:: locust.exception.InterruptLocust
 
 
+.. _events:
+
 Event hooks
 ===========
 
@@ -46,5 +48,5 @@ Available hooks
 The wollowing event hooks are available under the **locust.events** module:
 
 .. automodule:: locust.events
-	:members: request_success, request_failure, locust_error, report_to_master, slave_report, hatch_complete
+	:members: request_success, request_failure, locust_error, report_to_master, slave_report, hatch_complete, quitting
 

@@ -14,11 +14,7 @@ from locust.stats import print_percentile_stats
 from stats import RequestStats, print_stats
 from exception import RescheduleTaskImmediately
 
-try:
-    import zmqrpc
-except ImportError:
-    warnings.warn("WARNING: Using pure Python socket RPC implementation instead of zmq. This will not affect you if your not running locust in distributed mode, but if you are, we recommend you to install the python packages: pyzmq and gevent-zeromq")
-    import socketrpc as zmqrpc
+from rpc import rpc, Message
 
 logger = logging.getLogger(__name__)
 
@@ -297,7 +293,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.client_errors = {}
         self._request_stats = {}
         
-        self.server = zmqrpc.Server()
+        self.server = rpc.Server()
         self.greenlet = Group()
         self.greenlet.spawn(self.client_listener).link_exception()
         
@@ -324,41 +320,42 @@ class MasterLocustRunner(DistributedLocustRunner):
             RequestStats.clear_all()
         
         for client in self.clients.itervalues():
-            msg = {"hatch_rate":slave_hatch_rate, "num_clients":slave_num_clients, "num_requests": self.num_requests, "host":self.host, "stop_timeout":None}
-            self.server.send({"type":"hatch", "data":msg})
+            data = {"hatch_rate":slave_hatch_rate, "num_clients":slave_num_clients, "num_requests": self.num_requests, "host":self.host, "stop_timeout":None}
+            self.server.send(Message("hatch", data, None))
         
         RequestStats.global_start_time = time()
         self.state = STATE_HATCHING
 
     def stop(self):
         for client in self.clients.hatching + self.clients.running:
-            self.server.send({"type":"stop", "data":{}})
+            self.server.send(Message("stop", None, None))
     
     def client_listener(self):
         while True:
             msg = self.server.recv()
-            if msg["type"] == "client_ready":
-                id = msg["data"]
+            if msg.type == "client_ready":
+                id = msg.node_id
                 self.clients[id] = SlaveNode(id)
                 logger.info("Client %r reported as ready. Currently %i clients ready to swarm." % (id, len(self.clients.ready)))
-            elif msg["type"] == "client_stopped":
-                del self.clients[msg["data"]]
+            elif msg.type == "client_stopped":
+                del self.clients[msg.node_id]
                 if len(self.clients.hatching + self.clients.running) == 0:
                     self.state = STATE_STOPPED
-                logger.info("Removing %s client from running clients" % (msg["data"]))
-            elif msg["type"] == "stats":
-                report = msg["data"]
-                events.slave_report.fire(report["client_id"], report["data"])
-            elif msg["type"] == "hatching":
-                id = msg["data"]
-                self.clients[id].state = STATE_HATCHING
-            elif msg["type"] == "hatch_complete":
-                id = msg["data"]["client_id"]
-                self.clients[id].state = STATE_RUNNING
-                self.clients[id].user_count = msg["data"]["count"]
+                logger.info("Removing %s client from running clients" % (msg.node_id))
+            elif msg.type == "stats":
+                events.slave_report.fire(msg.node_id, msg.data)
+            elif msg.type == "hatching":
+                self.clients[msg.node_id].state = STATE_HATCHING
+            elif msg.type == "hatch_complete":
+                self.clients[msg.node_id].state = STATE_RUNNING
+                self.clients[msg.node_id].user_count = msg.data["count"]
                 if len(self.clients.hatching) == 0:
                     count = sum(c.user_count for c in self.clients.itervalues())
                     events.hatch_complete.fire(count)
+            elif msg.type == "quit":
+                if msg.node_id in self.clients:
+                    del self.clients[msg.node_id]
+                    logger.info("Client %r quit. Currently %i clients connected." % (msg.node_id, len(self.clients.ready)))
 
     @property
     def slave_count(self):
@@ -369,49 +366,50 @@ class SlaveLocustRunner(DistributedLocustRunner):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + md5(str(time() + random.randint(0,10000))).hexdigest()
         
-        self.client = zmqrpc.Client(self.master_host)
+        self.client = rpc.Client(self.master_host)
         self.greenlet = Group()
         self.greenlet.spawn(self.worker).link_exception()
-        self.client.send({"type":"client_ready", "data":self.client_id})
+        self.client.send(Message("client_ready", None, self.client_id))
         self.greenlet.spawn(self.stats_reporter).link_exception()
         
         # register listener for when all locust users have hatched, and report it to the master node
         def on_hatch_complete(count):
-            self.client.send({"type":"hatch_complete", "data":{"client_id":self.client_id, "count":count}})
+            self.client.send(Message("hatch_complete", {"count":count}, self.client_id))
         events.hatch_complete += on_hatch_complete
         
         # register listener that adds the current number of spawned locusts to the report that is sent to the master node 
         def on_report_to_master(client_id, data):
             data["user_count"] = self.user_count
         events.report_to_master += on_report_to_master
+        
+        # register listener that sends quit message to master
+        def on_quitting():
+            self.client.send(Message("quit", None, self.client_id))
+        events.quitting += on_quitting
     
     def worker(self):
         while True:
             msg = self.client.recv()
-            if msg["type"] == "hatch":
-                self.client.send({"type":"hatching", "data":self.client_id})
-                job = msg["data"]
+            if msg.type == "hatch":
+                self.client.send(Message("hatching", None, self.client_id))
+                job = msg.data
                 self.hatch_rate = job["hatch_rate"]
                 #self.num_clients = job["num_clients"]
                 self.num_requests = job["num_requests"]
                 self.host = job["host"]
                 self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
-            elif msg["type"] == "stop":
+            elif msg.type == "stop":
                 self.stop()
-                self.client.send({"type":"client_stopped", "data":self.client_id})
-                self.client.send({"type":"client_ready", "data":self.client_id})
+                self.client.send(Message("client_stopped", None, self.client_id))
+                self.client.send(Message("client_ready", None, self.client_id))
 
 
     def stats_reporter(self):
         while True:
             data = {}
             events.report_to_master.fire(self.client_id, data)
-            report = {
-                "client_id": self.client_id,
-                "data": data,
-            }
             try:
-                self.client.send({"type":"stats", "data":report})
+                self.client.send(Message("stats", data, self.client_id))
             except:
                 logger.error("Connection lost to master server. Aborting...")
                 break
