@@ -22,6 +22,10 @@ Improvements and bug fixes
   **--show-task-ratio-json** will output JSON data containing the task execution ratio for the locust
   "brain".
 * The HTTP method used when a client requests a URL is now displayed in the web UI
+* Some fixes and improvements in the stats exporting:
+ * A file name is now set (using content-disposition header) when downloading stats.
+ * The order of the column headers for request stats was wrong.
+ * Thanks Benjamin W. Smith, Jussi Kuosa and Samuele Pedroni!
 
 0.4
 ===
