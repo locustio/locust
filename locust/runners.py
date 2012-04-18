@@ -299,7 +299,12 @@ class MasterLocustRunner(DistributedLocustRunner):
         
         # listener that gathers info on how many locust users the slaves has spawned
         def on_slave_report(client_id, data):
-            self.clients[client_id].user_count = data["user_count"]
+            client = self.clients.get(client_id)
+            if client:
+                client.user_count = data["user_count"]
+            else:
+                #do we want to kill the zombie?
+                logger.warn('Zombie client: %s' %client_id)
         events.slave_report += on_slave_report
     
     @property
