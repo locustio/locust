@@ -87,6 +87,9 @@ class HttpBasicAuthHandler(urllib2.BaseHandler):
         request.add_header("Authorization", "Basic %s" % base64string)
         return request
 
+    #Do the same thing for https requests
+    https_request = http_request
+
 class HttpResponse(object):
     """
     An instance of HttpResponse is returned by HttpBrowser's get and post functions.
