@@ -11,6 +11,7 @@ from flask import Flask, make_response, request, render_template
 
 import runners
 from runners import MasterLocustRunner
+from rampstats import start_ramping
 from locust.stats import RequestStats, median_from_dict
 from locust import version
 import gevent
@@ -78,7 +79,7 @@ def ramp():
     percentile = float(int(request.form["percentile"]) / 100.0)
     fail_rate = float(int(request.form["fail_rate"]) / 100.0)
     calibration_time = int(request.form["wait_time"])
-    gevent.spawn(runners.locust_runner.start_ramping, hatch_rate, max_clients, hatch_stride, percentile, response_time, fail_rate, precision, init_clients, calibration_time)
+    gevent.spawn(start_ramping, hatch_rate, max_clients, hatch_stride, percentile, response_time, fail_rate, precision, init_clients, calibration_time)
     response = make_response(json.dumps({'success':True, 'message': 'Ramping started'}))
     response.headers["Content-type"] = "application/json"
     return response
