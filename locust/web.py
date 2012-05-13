@@ -11,7 +11,7 @@ from flask import Flask, make_response, request, render_template
 
 import runners
 from runners import MasterLocustRunner
-from rampstats import start_ramping
+from ramping import start_ramping
 from locust.stats import RequestStats, median_from_dict
 from locust import version
 import gevent
