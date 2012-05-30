@@ -11,7 +11,6 @@ from flask import Flask, make_response, request, render_template
 
 import runners
 from runners import MasterLocustRunner
-from ramping import start_ramping
 from locust.stats import RequestStats, median_from_dict
 from locust import version
 import gevent
@@ -70,6 +69,8 @@ def stop():
 
 @app.route("/ramp", methods=["POST"])
 def ramp():
+    from ramping import start_ramping
+    
     init_clients = int(request.form["init_count"])
     hatch_rate = int(request.form["hatch_rate"])
     hatch_stride = int(request.form["hatch_stride"])
