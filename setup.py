@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.5'
+version = '0.5.1'
  
 setup(
     name='locustio',
