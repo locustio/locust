@@ -2,6 +2,12 @@
 Changelog
 ==========
 
+0.5.1
+=====
+
+* Fixed bug which caused --logfile and --loglevel command line parameters to not be respected when running 
+  locust without zeromq.
+
 0.5
 ===
 

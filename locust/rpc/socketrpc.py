@@ -5,7 +5,7 @@ from gevent import queue
 import logging
 from locust.exception import LocustError
 
-logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 def _recv_bytes(sock, bytes):
     data = ""
@@ -97,7 +97,7 @@ class Server(object):
                 while True:
                     self.event_queue.put_nowait(_recv_obj(sock))
             except Exception, e:
-                logging.info("Slave disconnected")
+                logger.info("Slave disconnected")
                 slaves.remove(sock)
                 if self.slave_index == len(slaves) and len(slaves) > 0:
                     self.slave_index -= 1
@@ -110,7 +110,7 @@ class Server(object):
         def listener():
             while True:
                 _socket, _addr = sock.accept()
-                logging.info("Slave connected")
+                logger.info("Slave connected")
                 slaves.append(_socket)
                 gevent.spawn(lambda: handle_slave(_socket))
 
