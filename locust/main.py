@@ -382,16 +382,6 @@ def main():
         runners.locust_runner = SlaveLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
         main_greenlet = runners.locust_runner.greenlet
     
-    if options.ramp:
-        import rampstats
-        from rampstats import on_request_success, on_report_to_master, on_slave_report
-        if options.slave:
-            events.report_to_master += on_report_to_master
-        if options.master:
-            events.slave_report += on_slave_report
-        else:
-            events.request_success += on_request_success
-    
     if options.print_stats or (options.no_web and not options.slave):
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)

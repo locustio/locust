@@ -69,6 +69,8 @@ def stop():
 
 @app.route("/ramp", methods=["POST"])
 def ramp():
+    from ramping import start_ramping
+    
     init_clients = int(request.form["init_count"])
     hatch_rate = int(request.form["hatch_rate"])
     hatch_stride = int(request.form["hatch_stride"])
@@ -78,7 +80,7 @@ def ramp():
     percentile = float(int(request.form["percentile"]) / 100.0)
     fail_rate = float(int(request.form["fail_rate"]) / 100.0)
     calibration_time = int(request.form["wait_time"])
-    gevent.spawn(runners.locust_runner.start_ramping, hatch_rate, max_clients, hatch_stride, percentile, response_time, fail_rate, precision, init_clients, calibration_time)
+    gevent.spawn(start_ramping, hatch_rate, max_clients, hatch_stride, percentile, response_time, fail_rate, precision, init_clients, calibration_time)
     response = make_response(json.dumps({'success':True, 'message': 'Ramping started'}))
     response.headers["Content-type"] = "application/json"
     return response
