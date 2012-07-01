@@ -5,10 +5,6 @@ Changelog
 0.5
 ===
 
-.. note::
-
-    Work in progress. Version not released.
-
 API changes
 -----------
 
