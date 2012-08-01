@@ -2,8 +2,8 @@
 
 ![](https://secure.travis-ci.org/esnme/locust.png)
 
-Website: [`locust.io`](http://locust.io)
-Documentation: [`docs.locust.io`](http://docs.locust.io)
+* Website: [`locust.io`](http://locust.io)
+* Documentation: [`docs.locust.io`](http://docs.locust.io)
 
 Locust is an easy-to-use, distributed, user load testing tool. Intended for load testing web sites (or other systems) and figuring
 out how many concurrent users a system can handle.
