@@ -196,10 +196,9 @@ a {
 .status td, .status th {
     padding: 10px;
     margin: 0;
-    text-align: right;
 }
-.status td:first-child, th:first-child {
-    text-align: left;
+.status td.numeric {
+    text-align: right;
 }
 .status tr.dark {
     background:#0d1111;

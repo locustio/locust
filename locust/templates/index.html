@@ -215,14 +215,14 @@
         <tr class="<%=(alternate ? "dark" : "")%>">
             <td><%= (this.method ? this.method : "") %></td>
             <td><%= this.name %></td>
-            <td><%= this.num_reqs %></td>
-            <td><%= this.num_failures %></td>
-            <td><%= Math.round(this.median_response_time) %></td>
-            <td><%= Math.round(this.avg_response_time) %></td>
-            <td><%= this.min_response_time %></td>
-            <td><%= this.max_response_time %></td>
-            <td><%= Math.round(this.avg_content_length) %></td>
-            <td><%= Math.round(this.current_rps*100)/100 %></td>
+            <td class="numeric"><%= this.num_reqs %></td>
+            <td class="numeric"><%= this.num_failures %></td>
+            <td class="numeric"><%= Math.round(this.median_response_time) %></td>
+            <td class="numeric"><%= Math.round(this.avg_response_time) %></td>
+            <td class="numeric"><%= this.min_response_time %></td>
+            <td class="numeric"><%= this.max_response_time %></td>
+            <td class="numeric"><%= Math.round(this.avg_content_length) %></td>
+            <td class="numeric"><%= Math.round(this.current_rps*100)/100 %></td>
         </tr>
         <% alternate = !alternate; %>
         ]]>
