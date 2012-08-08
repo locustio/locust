@@ -206,6 +206,12 @@ def request_stats():
         report = _request_stats_context_cache["report"]
     return json.dumps(report)
 
+@app.route("/exceptions")
+def exceptions():
+    response = make_response(json.dumps({'exceptions': [{"count": row["count"], "traceback": row["traceback"], "nodes" : ", ".join(row["nodes"])} for row in runners.locust_runner.exceptions.itervalues()]}))
+    response.headers["Content-type"] = "application/json"
+    return response
+
 def start(locust, hatch_rate, num_clients, num_requests, ramp):
     global _locust, _hatch_rate, _num_clients, _num_requests, _ramp
     _locust = locust

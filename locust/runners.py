@@ -1,4 +1,6 @@
+# coding=UTF-8
 import socket
+import traceback
 import warnings
 import random
 import logging
@@ -34,6 +36,7 @@ class LocustRunner(object):
         self.locusts = Group()
         self.state = STATE_INIT
         self.hatching_greenlet = None
+        self.exceptions = {}
         
         # register listener that resets stats when hatching is complete
         def on_hatch_complete(count):
@@ -175,7 +178,23 @@ class LocustRunner(object):
         self.locusts.kill(block=True)
         self.state = STATE_STOPPED
 
+    def log_exception(self, node_id, formatted_tb):
+        key = hash(formatted_tb)
+        row = self.exceptions.setdefault(key, {"count": 0, "traceback": formatted_tb, "nodes": set()})
+        row["count"] += 1
+        row["nodes"].add(node_id)
+        self.exceptions[key] = row
+
 class LocalLocustRunner(LocustRunner):
+    def __init__(self, locust_classes, hatch_rate, num_clients, num_requests, host=None):
+        super(LocalLocustRunner, self).__init__(locust_classes, hatch_rate, num_clients, num_requests, host)
+
+        # register listener thats logs the exception for the local runner
+        def on_locust_error(locust, e, tb):
+            formatted_tb = "".join(traceback.format_tb(tb))
+            self.log_exception("local", formatted_tb)
+        events.locust_error += on_locust_error
+
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
         self.hatching_greenlet = gevent.spawn(lambda: super(LocalLocustRunner, self).start_hatching(locust_count, hatch_rate, wait=wait))
         self.greenlet = self.hatching_greenlet
@@ -216,7 +235,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.client_stats = {}
         self.client_errors = {}
         self._request_stats = {}
-        
+
         self.server = rpc.Server()
         self.greenlet = Group()
         self.greenlet.spawn(self.client_listener).link_exception()
@@ -280,6 +299,8 @@ class MasterLocustRunner(DistributedLocustRunner):
                 if msg.node_id in self.clients:
                     del self.clients[msg.node_id]
                     logger.info("Client %r quit. Currently %i clients connected." % (msg.node_id, len(self.clients.ready)))
+            elif msg.type == "exception":
+                self.log_exception(msg.node_id, msg.data["traceback"])
 
     @property
     def slave_count(self):
@@ -310,7 +331,13 @@ class SlaveLocustRunner(DistributedLocustRunner):
         def on_quitting():
             self.client.send(Message("quit", None, self.client_id))
         events.quitting += on_quitting
-    
+
+        # register listener thats sends locust exceptions to master
+        def on_locust_error(locust, e, tb):
+            formatted_tb = "".join(traceback.format_tb(tb))
+            self.client.send(Message("exception", {"traceback" : formatted_tb}, self.client_id))
+        events.locust_error += on_locust_error
+
     def worker(self):
         while True:
             msg = self.client.recv()
@@ -326,7 +353,6 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))
                 self.client.send(Message("client_ready", None, self.client_id))
-
 
     def stats_reporter(self):
         while True:

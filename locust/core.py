@@ -175,7 +175,7 @@ class LocustBase(object):
             except GreenletExit:
                 raise
             except Exception, e:
-                events.locust_error.fire(self, e)
+                events.locust_error.fire(self, e, sys.exc_info()[2])
                 sys.stderr.write("\n" + traceback.format_exc())
     
     def execute_next_task(self):

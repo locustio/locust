@@ -214,6 +214,24 @@ a {
     text-align: left;
 }
 
+#exceptions th.exception_occurences {
+    width: 110px;
+    text-align: center;
+}
+#exceptions th.exception_traceback {
+    text-align: left;
+}
+
+#exceptions td.occurences {
+    text-align: center;
+}
+#exceptions td.traceback {
+    font-size: 12px;
+    line-height: 18px;
+    font-family: monospace;
+    white-space: pre;
+}
+
 em {
     width: 100%;
     color: white;

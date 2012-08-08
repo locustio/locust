@@ -133,6 +133,7 @@
             <ul class="tabs">
                 <li><a href="#">Statistics</a></li>
                 <li><a href="#">Failures</a></li>
+                <li><a href="#">Exceptions</a></li>
             </ul>
             <div style="clear:left;"></div>
             <div class="panes">
@@ -165,6 +166,16 @@
                         <thead>
                             <th class="error_count stats_label" data-sortkey="1"># fails</th>
                             <th class="error_type stats_label" data-sortkey="0">Type</th>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="display:none;">
+                    <table id="exceptions" class="stats">
+                        <thead>
+                            <th class="exception_occurences stats_label" data-sortkey="1"># occurences</th>
+                            <th class="exception_traceback stats_label" data-sortkey="0">Traceback</th>
                         </thead>
                         <tbody>
                         </tbody>
@@ -236,6 +247,15 @@
         <% alternate = !alternate; %>
         ]]>
     </script>
+    <script type="text/x-jqote-template" id="exceptions-template">
+        <![CDATA[
+        <tr class="<%=(alternate ? "dark" : "")%>">
+            <td class="occurences"><%= this.count %></td>
+            <td class="traceback" title="Occured on: <%= this.nodes %>"><%= function(e) { return e.replace("<", "&lt;"); }(this.traceback) %></td>
+        </tr>
+        <% alternate = !alternate; %>
+        ]]>
+    </script>
     <script type="text/javascript">
         $("#box_stop a").click(function(event) {
             event.preventDefault();
@@ -276,6 +296,7 @@
         
         var stats_tpl = $('#stats-template');
         var errors_tpl = $('#errors-template');
+        var exceptions_tpl = $('#exceptions-template');
         
         $('#swarm_form').submit(function(event) {
             event.preventDefault();
@@ -385,6 +406,15 @@
             });
         }
         updateStats();
+
+        function updateExceptions() {
+            $.get('/exceptions', function (data) {
+                $('#exceptions tbody').empty();
+                $('#exceptions tbody').jqoteapp(exceptions_tpl, data.exceptions);
+                setTimeout(updateExceptions, 5000);
+            });
+        }
+        updateExceptions();
     </script>
 </body>
 </html>

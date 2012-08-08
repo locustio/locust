@@ -145,8 +145,7 @@ class HttpResponse(object):
         if exc:
             if isinstance(value, ResponseError):
                 self._trigger_failure(value)
-            else:
-                raise value
+            return
         else:
             self._trigger_success()
         return True
