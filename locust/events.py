@@ -60,6 +60,7 @@ Event is fired with the following arguments:
 
 * *locust_instance*: Locust class instance where the exception occured
 * *exception*: Exception that was thrown
+* *traceback*: Traceback object (from sys.exc_info()[2])
 """
 
 report_to_master = EventHook()
