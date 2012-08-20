@@ -180,27 +180,28 @@ class LocustBase(object):
     
     def execute_next_task(self):
         task = self._task_queue.pop(0)
-        self.execute_task(task["callable"], *task["args"])
+        self.execute_task(task["callable"], *task["args"], **task["kwargs"])
     
-    def execute_task(self, task, *args):
+    def execute_task(self, task, *args, **kwargs):
         # check if the function is a method bound to the current locust, and if so, don't pass self as first argument
         if hasattr(task, "im_self") and task.im_self == self:
-            task(*args)
+            task(*args, **kwargs)
         else:
-            task(self, *args)
+            task(self, *args, **kwargs)
     
-    def schedule_task(self, task_callable, *args, **kwargs):
+    def schedule_task(self, task_callable, args=[], kwargs={}, first=False):
         """
         Add a task to the Locust's task execution queue.
         
         *Arguments*:
         
         * task_callable: Locust task to schedule
+        * args: Arguments that will be passed to the task callable
+        * kwargs: Dict of keyword arguments that will be passed to the task callable.
         * first: Optional keyword argument. If True, the task will be put first in the queue.
-        * All other non keyword arguments will be passed to the task callable.
         """
-        task = {"callable":task_callable, "args":args}
-        if "first" in kwargs:
+        task = {"callable":task_callable, "args":args, "kwargs":kwargs}
+        if first:
             self._task_queue.insert(0, task)
         else:
             self._task_queue.append(task)

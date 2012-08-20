@@ -1,4 +1,4 @@
-from locust.core import Locust, require_once, task, events
+from locust.core import Locust, SubLocust, require_once, task, events, RescheduleTaskImmediately
 from locust.clients import HttpBrowser
 from locust import ResponseError, InterruptLocust
 import unittest
@@ -89,9 +89,30 @@ class TestLocustClass(unittest.TestCase):
         locust.execute_next_task()
         self.assertTrue(self.t1_executed)
 
-        locust.schedule_task(t2, "argument to t2")
+        locust.schedule_task(t2, args=["argument to t2"])
         locust.execute_next_task()
         self.assertEqual("argument to t2", self.t2_arg)
+    
+    def test_schedule_task_with_kwargs(self):
+        class MyLocust(Locust):
+            host = ""
+            @task
+            def t1(self):
+                self.t1_executed = True
+            @task
+            def t2(self, *args, **kwargs):
+                self.t2_args = args
+                self.t2_kwargs = kwargs
+        loc = MyLocust()
+        loc.schedule_task(loc.t2, [42], {"test_kw":"hello"})
+        loc.execute_next_task()
+        self.assertEqual((42, ), loc.t2_args)
+        self.assertEqual({"test_kw":"hello"}, loc.t2_kwargs)
+        
+        loc.schedule_task(loc.t2, args=[10, 4], kwargs={"arg1":1, "arg2":2})
+        loc.execute_next_task()
+        self.assertEqual((10, 4), loc.t2_args)
+        self.assertEqual({"arg1":1, "arg2":2}, loc.t2_kwargs)
     
     def test_schedule_task_bound_method(self):
         class MyLocust(Locust):

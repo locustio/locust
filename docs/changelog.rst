@@ -2,6 +2,24 @@
 Changelog
 ==========
 
+0.6
+===
+
+Improvements and bug fixes
+--------------------------
+
+* Scheduled task callabled can now take keyword arguments.
+
+
+API Changes
+-----------
+
+* Changed signature of :func:`locust.core.Locust.schedule_task`. Previously all extra arguments that
+  was given to the method was passed on to the the task when it was called. It no longer accepts extra arguments. 
+  Instead, it takes an *args* argument (list) and a *kwargs* argument (dict) which are be passed to the task when 
+  it's called.
+
+
 0.5.1
 =====
 
@@ -25,6 +43,7 @@ Improvements and bug fixes
   "brain".
 * The HTTP method used when a client requests a URL is now displayed in the web UI
 * Some fixes and improvements in the stats exporting:
+ 
  * A file name is now set (using content-disposition header) when downloading stats.
  * The order of the column headers for request stats was wrong.
  * Thanks Benjamin W. Smith, Jussi Kuosa and Samuele Pedroni!
