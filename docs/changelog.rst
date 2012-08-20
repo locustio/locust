@@ -9,6 +9,8 @@ Improvements and bug fixes
 --------------------------
 
 * Scheduled task callabled can now take keyword arguments.
+* SubLocust classes that are scheduled using :func:`locust.core.Locust.schedule_task` can now take 
+  arguments and keyword arguments (available in *self.args* and *self.kwargs*).
 
 
 API Changes

@@ -277,12 +277,15 @@ class SubLocust(LocustBase):
     continue executing it's tasks until a task in the sub locust has called the interrupt() function.
     """
     
-    def __init__(self, parent):
+    def __init__(self, parent, *args, **kwargs):
         super(SubLocust, self).__init__()
         
         self.parent = parent
         if isinstance(parent, Locust):
             self.client = parent.client
+        
+        self.args = args
+        self.kwargs = kwargs
         
         self()
     

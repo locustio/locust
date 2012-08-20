@@ -170,6 +170,46 @@ class TestLocustClass(unittest.TestCase):
         locust = MyLocust3()
         self.assertEqual(len(locust.tasks), 3)
 
+class TestSubLocust(unittest.TestCase):
+    def test_sub_locust(self):
+        class MySubLocust(SubLocust):
+            min_wait=1
+            max_wait=1
+            @task()
+            def a_task(self):
+                self.parent.sub_locust_task_executed = True
+                self.interrupt()
+        class MyLocust(Locust):
+            host = ""
+            sub_locust_task_executed = False
+            tasks = [MySubLocust]
+        
+        loc = MyLocust()
+        loc.schedule_task(loc.get_next_task())
+        self.assertRaises(RescheduleTaskImmediately, lambda: loc.execute_next_task())
+        self.assertTrue(loc.sub_locust_task_executed)
+    
+    def test_sub_locust_arguments(self):
+        class MySubLocust(SubLocust):
+            min_wait=1
+            max_wait=1
+            @task()
+            def a_task(self):
+                self.parent.sub_locust_args = self.args
+                self.parent.sub_locust_kwargs = self.kwargs
+                self.interrupt()
+        class MyLocust(Locust):
+            host = ""
+            sub_locust_args = None
+            sub_locust_kwargs = None
+            tasks = [MySubLocust]
+        
+        loc = MyLocust()
+        loc.schedule_task(MySubLocust, args=[1,2,3], kwargs={"hello":"world"})
+        self.assertRaises(RescheduleTaskImmediately, lambda: loc.execute_next_task())
+        self.assertEqual((1,2,3), loc.sub_locust_args)
+        self.assertEqual({"hello":"world"}, loc.sub_locust_kwargs)
+    
 
 class TestWebLocustClass(WebserverTestCase):
     def test_get_request(self):
