@@ -164,6 +164,12 @@ class HttpBrowser(object):
     def __init__(self, base_url, gzip=False):
         self.base_url = base_url
         self.gzip = gzip
+        self.new_session()
+    
+    def new_session(self):
+        """
+        Get a new HTTP session for this HttpBrowser instance
+        """
         handlers = [urllib2.HTTPCookieProcessor()]
 
         # Check for basic authentication
