@@ -251,7 +251,8 @@
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%>">
             <td class="occurences"><%= this.count %></td>
-            <td class="traceback" title="Occured on: <%= this.nodes %>"><%= function(e) { return e.replace("<", "&lt;"); }(this.traceback) %></td>
+            <td class="traceback" title="Occured on: <%= this.nodes %>"><%= function(e) { return e.replace("<", "&lt;"); }(this.traceback) %>
+<%= function(e) { return e.replace("<", "&lt;"); }(this.msg) %></td>
         </tr>
         <% alternate = !alternate; %>
         ]]>

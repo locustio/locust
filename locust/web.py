@@ -208,7 +208,7 @@ def request_stats():
 
 @app.route("/exceptions")
 def exceptions():
-    response = make_response(json.dumps({'exceptions': [{"count": row["count"], "traceback": row["traceback"], "nodes" : ", ".join(row["nodes"])} for row in runners.locust_runner.exceptions.itervalues()]}))
+    response = make_response(json.dumps({'exceptions': [{"count": row["count"], "msg": row["msg"], "traceback": row["traceback"], "nodes" : ", ".join(row["nodes"])} for row in runners.locust_runner.exceptions.itervalues()]}))
     response.headers["Content-type"] = "application/json"
     return response
 
