@@ -150,6 +150,8 @@ class LocustRunner(object):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             RequestStats.clear_all()
             RequestStats.global_start_time = time()
+            self.exceptions = {}
+
         # Dynamically changing the locust count
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
             self.state = STATE_HATCHING
@@ -261,6 +263,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             RequestStats.clear_all()
+            self.exceptions = {}
         
         for client in self.clients.itervalues():
             data = {"hatch_rate":slave_hatch_rate, "num_clients":slave_num_clients, "num_requests": self.num_requests, "host":self.host, "stop_timeout":None}
