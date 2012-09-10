@@ -8,7 +8,7 @@ meaning we account for the response times recorded in a moving time window.
 
 """
 
-from stats import percentile, RequestStats
+from stats import RequestStats
 from runners import locust_runner, DistributedLocustRunner, SLAVE_REPORT_INTERVAL, STATE_HATCHING
 from collections import deque
 import events
@@ -25,6 +25,27 @@ is_distributed = isinstance(locust_runner, DistributedLocustRunner)
 
 # The time window in seconds that current_percentile use data from
 PERCENTILE_TIME_WINDOW = 15.0
+
+def percentile(N, percent, key=lambda x:x):
+    """
+    Find the percentile of a list of values.
+
+    @parameter N - is a list of values. Note N MUST BE already sorted.
+    @parameter percent - a float value from 0.0 to 1.0.
+    @parameter key - optional key function to compute value from each element of N.
+
+    @return - the percentile of the values
+    """
+    if not N:
+        return 0
+    k = (len(N)-1) * percent
+    f = math.floor(k)
+    c = math.ceil(k)
+    if f == c:
+        return key(N[int(k)])
+    d0 = key(N[int(f)]) * (c-k)
+    d1 = key(N[int(c)]) * (k-f)
+    return d0+d1
 
 def current_percentile(percent):
     if is_distributed:

@@ -21,6 +21,15 @@ class TestRequestStats(unittest.TestCase):
         self.s.log(79, 0)
         self.s.log_error(Exception("dummy fail"))
 
+    def test_percentile(self):
+        s = RequestStats("GET", "percentile_test")
+        for x in xrange(100):
+            s.log(x, 0)
+
+        self.assertEqual(s.get_response_time_percentile(0.5), 50)
+        self.assertEqual(s.get_response_time_percentile(0.6), 60)
+        self.assertEqual(s.get_response_time_percentile(0.95), 95)
+
     def test_median(self):
         self.assertEqual(self.s.median_response_time, 79)
 

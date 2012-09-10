@@ -50,7 +50,7 @@ class RequestStats(object):
         self.num_failures = 0
         self.total_response_time = 0
         self.response_times = {}
-        self._min_response_time = None
+        self.min_response_time = 0
         self.max_response_time = 0
         self.last_request_timestamp = int(time.time())
         self.num_reqs_per_sec = {}
@@ -58,19 +58,27 @@ class RequestStats(object):
 
     def log(self, response_time, content_length):
         RequestStats.total_num_requests += 1
-
         self.num_reqs += 1
-        self.total_response_time += response_time
 
+        self.log_request_time()
+        self.log_response_time(response_time)
+
+        # increase total content-length
+        self.total_content_length += content_length
+
+    def log_request_time(self):
         t = int(time.time())
         self.num_reqs_per_sec[t] = self.num_reqs_per_sec.setdefault(t, 0) + 1
         self.last_request_timestamp = t
         RequestStats.global_last_request_timestamp = t
 
-        if self._min_response_time is None:
-            self._min_response_time = response_time
+    def log_response_time(self, response_time):
+        self.total_response_time += response_time
 
-        self._min_response_time = min(self._min_response_time, response_time)
+        if self.min_response_time is None:
+            self.min_response_time = response_time
+
+        self.min_response_time = min(self.min_response_time, response_time)
         self.max_response_time = max(self.max_response_time, response_time)
 
         # to avoid to much data that has to be transfered to the master node when
@@ -84,12 +92,10 @@ class RequestStats(object):
             rounded_response_time = int(round(response_time, -2))
         else:
             rounded_response_time = int(round(response_time, -3))
+
         # increase request count for the rounded key in response time dict
         self.response_times.setdefault(rounded_response_time, 0)
         self.response_times[rounded_response_time] += 1
-
-        # increase total content-length
-        self.total_content_length += content_length
 
     def log_error(self, error):
         self.num_failures += 1
@@ -106,12 +112,6 @@ class RequestStats(object):
                 return 1.0
             else:
                 return 0.0
-
-    @property
-    def min_response_time(self):
-        if self._min_response_time is None:
-            return 0
-        return self._min_response_time
 
     @property
     def avg_response_time(self):
@@ -161,7 +161,7 @@ class RequestStats(object):
         self.num_failures = self.num_failures + other.num_failures
         self.total_response_time = self.total_response_time + other.total_response_time
         self.max_response_time = max(self.max_response_time, other.max_response_time)
-        self._min_response_time = min(self._min_response_time, other._min_response_time) or other._min_response_time
+        self.min_response_time = min(self.min_response_time, other.min_response_time) or other.min_response_time
         self.total_content_length = self.total_content_length + other.total_content_length
 
         if full_request_history:
@@ -207,28 +207,31 @@ class RequestStats(object):
             self.current_rps or 0
         )
 
-    def create_response_times_list(self):
-        inflated_list = []
-        for response_time, count in self.response_times.iteritems():
-            inflated_list.extend([response_time for x in xrange(0, count)])
-        inflated_list.sort()
+    def get_response_time_percentile(self, percent):
+        """
+        Percent specified in range: 0.0 - 1.0
+        """
+        num_of_request = int((self.num_reqs * percent))
 
-        return inflated_list
+        processed_count = 0
+        for response_time in sorted(self.response_times.iterkeys(), reverse=True):
+            processed_count += self.response_times[response_time]
+            if((self.num_reqs - processed_count) <= num_of_request):
+                return response_time
 
     def percentile(self, tpl=" %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
-        inflated_list = self.create_response_times_list()
         return tpl % (
             self.name,
             self.num_reqs,
-            percentile(inflated_list, 0.5),
-            percentile(inflated_list, 0.66),
-            percentile(inflated_list, 0.75),
-            percentile(inflated_list, 0.80),
-            percentile(inflated_list, 0.90),
-            percentile(inflated_list, 0.95),
-            percentile(inflated_list, 0.98),
-            percentile(inflated_list, 0.99),
-            percentile(inflated_list, 1.0)
+            self.get_response_time_percentile(0.5),
+            self.get_response_time_percentile(0.66),
+            self.get_response_time_percentile(0.75),
+            self.get_response_time_percentile(0.80),
+            self.get_response_time_percentile(0.90),
+            self.get_response_time_percentile(0.95),
+            self.get_response_time_percentile(0.98),
+            self.get_response_time_percentile(0.99),
+            self.max_response_time,
         )
 
     @classmethod
@@ -259,28 +262,6 @@ def median_from_dict(total, count):
         if pos < count[k]:
             return k
         pos -= count[k]
-
-# TODO Use interpolation or not?
-def percentile(N, percent, key=lambda x:x):
-    """
-    Find the percentile of a list of values.
-
-    @parameter N - is a list of values. Note N MUST BE already sorted.
-    @parameter percent - a float value from 0.0 to 1.0.
-    @parameter key - optional key function to compute value from each element of N.
-
-    @return - the percentile of the values
-    """
-    if not N:
-        return 0
-    k = (len(N)-1) * percent
-    f = math.floor(k)
-    c = math.ceil(k)
-    if f == c:
-        return key(N[int(k)])
-    d0 = key(N[int(f)]) * (c-k)
-    d1 = key(N[int(c)]) * (k-f)
-    return d0+d1
 
 def on_request_success(method, name, response_time, response):
     if RequestStats.global_max_requests is not None and RequestStats.total_num_requests >= RequestStats.global_max_requests:
@@ -340,28 +321,14 @@ def print_percentile_stats(stats):
     console_logger.info("Percentage of the requests completed within given times")
     console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %8s %6s %6s %6s %6s %6s %6s %6s %6s %6s") % ('Name', '# reqs', '50%', '66%', '75%', '80%', '90%', '95%', '98%', '99%', '100%'))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
-    complete_list = []
+    total_stats = RequestStats("", "Total")
     for key in sorted(stats.iterkeys()):
         r = stats[key]
         if r.response_times:
             console_logger.info(r.percentile())
-            complete_list.extend(r.create_response_times_list())
+            total_stats += r
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
-    complete_list.sort()
-    if complete_list:
-        console_logger.info( (" %-" + str(STATS_NAME_WIDTH) + "s %8s %6d %6d %6d %6d %6d %6d %6d %6d %6d") % (
-            'Total',
-            str(len(complete_list)),
-            percentile(complete_list, 0.5),
-            percentile(complete_list, 0.66),
-            percentile(complete_list, 0.75),
-            percentile(complete_list, 0.8),
-            percentile(complete_list, 0.9),
-            percentile(complete_list, 0.95),
-            percentile(complete_list, 0.98),
-            percentile(complete_list, 0.99),
-            complete_list[-1]
-        ))
+    console_logger.info(total_stats.percentile())
     console_logger.info("")
 
 def print_error_report():
