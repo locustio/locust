@@ -144,7 +144,11 @@ def distribution_stats_csv():
         '"100%"',
     ))]
     for s in chain(_sort_stats(runners.locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
-        rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
+        try:
+            rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
+        except Exception, e:
+            logger.error("Failed to calculate percentile for url stats {0}".format(s.name))
+            logger.exception(e)
 
     response = make_response("\n".join(rows))
     file_name = "distribution_{0}.csv".format(time())
