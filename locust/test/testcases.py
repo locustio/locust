@@ -1,10 +1,13 @@
+from flask import Flask
+from flask import make_response
+from flask import redirect
+from flask import request
+from locust.stats import RequestStats
+import base64
 import gevent
 import gevent.pywsgi
+import random
 import unittest
-from werkzeug.wrappers import Request
-import base64
-from locust.stats import RequestStats
-from flask import Flask, request, redirect, make_response
 
 app = Flask(__name__)
 
@@ -32,7 +35,7 @@ def request_method():
     return request.method
 
 @app.route("/request_header_test")
-def request_header_test():
+def request_header_viewtest():
     return request.headers["X-Header-Test"]
 
 @app.route("/post", methods=["POST"])
@@ -45,7 +48,7 @@ def failed_request():
     return "This response failed", 500
 
 @app.route("/redirect")
-def redirect():
+def redirect2():
     return redirect("/ultra_fast")
 
 @app.route("/basic_auth")
@@ -70,4 +73,5 @@ class WebserverTestCase(unittest.TestCase):
         RequestStats.requests = {}
 
     def tearDown(self):
-        self._web_server.kill()
+        self._web_server.stop_accepting()
+        self._web_server.stop()
