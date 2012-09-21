@@ -151,6 +151,7 @@ class RequestStats(object):
 
     def __iadd__(self, other):
         self.iadd_stats(other)
+        return self
 
     def iadd_stats(self, other, full_request_history=False):
         self.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
