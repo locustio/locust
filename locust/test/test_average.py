@@ -1,7 +1,9 @@
 import unittest
-from core import Locust
+from ..core import Locust
+
 
 class MyLocust(Locust):
+    host = 'localhost'
     def _sleep(self, seconds):
         """ Bypass actual sleeping
         """
@@ -50,6 +52,7 @@ class MovingAverageTest(unittest.TestCase):
         self._assertion(locust, deviation, max_deviation, percentage)
 
     def test_moving_average_100(self):
+        #@@ test setup error
         # This test is actually expected to fail sometimes
         locust = self._setupLocust(3000, 140000, 20 * 60 * 1000) # 3 seconds, 140 seconds, 20 minutes
         print "Small"

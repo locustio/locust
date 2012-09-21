@@ -1,4 +1,7 @@
-from gevent_zeromq import zmq
+try:
+    from zmq import green as zmq
+except ImportError:
+    from gevent_zeromq import zmq
 
 try:
     import cPickle as pickle
