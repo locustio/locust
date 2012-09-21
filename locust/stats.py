@@ -1,7 +1,6 @@
 import time
 import gevent
 from copy import copy
-import math
 
 import events
 from exception import InterruptLocust
@@ -124,9 +123,9 @@ class RequestStats(object):
     def median_response_time(self):
         if not self.response_times:
             return 0
-        
+
         return median_from_dict(self.num_reqs, self.response_times)
-    
+
     @property
     def current_rps(self):
         if self.global_last_request_timestamp is None:
@@ -149,14 +148,14 @@ class RequestStats(object):
             return self.total_content_length / self.num_reqs
         except ZeroDivisionError:
             return 0
-        
+
     def __iadd__(self, other):
         self.iadd_stats(other)
-    
+
     def iadd_stats(self, other, full_request_history=False):
         self.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
         self.start_time = min(self.start_time, other.start_time)
-        
+
         self.num_reqs = self.num_reqs + other.num_reqs
         self.num_failures = self.num_failures + other.num_failures
         self.total_response_time = self.total_response_time + other.total_response_time
