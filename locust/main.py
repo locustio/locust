@@ -42,6 +42,13 @@ def parse_options():
     )
 
     parser.add_option(
+        '-P', '--port',
+        dest="port",
+        default=8089,
+        help="Port to run webapp on"
+    )
+
+    parser.add_option(
         '-f', '--locustfile',
         dest='locustfile',
         default='locustfile',
@@ -367,8 +374,11 @@ def main():
 
     if not options.no_web and not options.slave:
         # spawn web greenlet
-        logger.info("Starting web monitor on port 8089")
-        main_greenlet = gevent.spawn(web.start, locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.ramp)
+        port = int(options.port)
+        logger.info("Starting web monitor on port {0}".format(port))
+        main_greenlet = gevent.spawn(web.start, locust_classes,
+                                     options.hatch_rate, options.num_clients,
+                                     options.num_requests, options.ramp, port=port)
     
     # enable/disable gzip in WebLocust's HTTP client
     WebLocust.gzip = options.gzip
@@ -380,9 +390,19 @@ def main():
             runners.locust_runner.start_hatching(wait=True)
             main_greenlet = runners.locust_runner.greenlet
     elif options.master:
-        runners.locust_runner = MasterLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
+        runners.locust_runner = MasterLocustRunner(locust_classes,
+                                                   options.hatch_rate,
+                                                   options.num_clients,
+                                                   num_requests=options.num_requests,
+                                                   host=options.host,
+                                                   master_host=options.master_host)
     elif options.slave:
-        runners.locust_runner = SlaveLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
+        runners.locust_runner = SlaveLocustRunner(locust_classes,
+                                                  options.hatch_rate,
+                                                  options.num_clients,
+                                                  num_requests=options.num_requests,
+                                                  host=options.host,
+                                                  master_host=options.master_host)
         main_greenlet = runners.locust_runner.greenlet
     
     if options.print_stats or (options.no_web and not options.slave):
@@ -392,7 +412,7 @@ def main():
     try:
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
-    except KeyboardInterrupt, e:
+    except KeyboardInterrupt:
         events.quitting.fire()
         time.sleep(0.2)
         print_stats(runners.locust_runner.request_stats)
