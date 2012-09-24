@@ -1,22 +1,25 @@
-import locust
-import core
-import runners
-
-import gevent
-import sys
-import os
-import inspect
-import time
-import logging
-from optparse import OptionParser
-
-import web
-from log import setup_logging, console_logger
-from stats import stats_printer, RequestStats, print_percentile_stats, print_error_report, print_stats
-from inspectlocust import print_task_ratio, get_task_ratio_dict
 from core import Locust, WebLocust
+from inspectlocust import print_task_ratio
+from inspectlocust import get_task_ratio_dict
+from log import setup_logging, console_logger
+from optparse import OptionParser
 from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
+from stats import RequestStats
+from stats import print_error_report
+from stats import print_percentile_stats
+from stats import print_stats
+from stats import stats_printer
+import core
 import events
+import gevent
+import inspect
+import locust
+import logging
+import os
+import runners
+import sys
+import time
+import web
 
 _internals = [Locust, WebLocust]
 version = locust.version

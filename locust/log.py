@@ -9,8 +9,8 @@ def setup_logging(loglevel, logfile):
     log_format = "[%(asctime)s] %(levelname)s/%(name)s: %(message)s"
     logging.basicConfig(level=numeric_level, filename=logfile, format=log_format)
     
-    sys.stderr = StdErrWrapper()
-    sys.stdout = StdOutWrapper()
+    #sys.stderr = StdErrWrapper()
+    #sys.stdout = StdOutWrapper()
 
 stdout_logger = logging.getLogger("stdout")
 stderr_logger = logging.getLogger("stderr")
