@@ -1,7 +1,6 @@
 import time
 import gevent
 from copy import copy
-import math
 
 import events
 from exception import InterruptLocust
@@ -124,9 +123,9 @@ class RequestStats(object):
     def median_response_time(self):
         if not self.response_times:
             return 0
-        
+
         return median_from_dict(self.num_reqs, self.response_times)
-    
+
     @property
     def current_rps(self):
         if self.global_last_request_timestamp is None:
@@ -149,14 +148,15 @@ class RequestStats(object):
             return self.total_content_length / self.num_reqs
         except ZeroDivisionError:
             return 0
-        
+
     def __iadd__(self, other):
         self.iadd_stats(other)
-    
+        return self
+
     def iadd_stats(self, other, full_request_history=False):
         self.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
         self.start_time = min(self.start_time, other.start_time)
-        
+
         self.num_reqs = self.num_reqs + other.num_reqs
         self.num_failures = self.num_failures + other.num_failures
         self.total_response_time = self.total_response_time + other.total_response_time
@@ -220,6 +220,8 @@ class RequestStats(object):
                 return response_time
 
     def percentile(self, tpl=" %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
+        if not self.response_times or not self.max_response_time:
+            return ""
         return tpl % (
             self.name,
             self.num_reqs,
@@ -231,7 +233,7 @@ class RequestStats(object):
             self.get_response_time_percentile(0.95),
             self.get_response_time_percentile(0.98),
             self.get_response_time_percentile(0.99),
-            self.max_response_time,
+            self.max_response_time
         )
 
     @classmethod
@@ -328,7 +330,8 @@ def print_percentile_stats(stats):
             console_logger.info(r.percentile())
             total_stats += r
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
-    console_logger.info(total_stats.percentile())
+    if total_stats.response_times:
+        console_logger.info(total_stats.percentile())
     console_logger.info("")
 
 def print_error_report():
