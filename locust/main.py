@@ -1,22 +1,25 @@
-import locust
-import core
-import runners
-
-import gevent
-import sys
-import os
-import inspect
-import time
-import logging
-from optparse import OptionParser
-
-import web
-from log import setup_logging, console_logger
-from stats import stats_printer, RequestStats, print_percentile_stats, print_error_report, print_stats
-from inspectlocust import print_task_ratio, get_task_ratio_dict
 from core import Locust, WebLocust
+from inspectlocust import print_task_ratio
+from inspectlocust import get_task_ratio_dict
+from log import setup_logging, console_logger
+from optparse import OptionParser
 from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
+from stats import RequestStats
+from stats import print_error_report
+from stats import print_percentile_stats
+from stats import print_stats
+from stats import stats_printer
+import core
 import events
+import gevent
+import inspect
+import locust
+import logging
+import os
+import runners
+import sys
+import time
+import web
 
 _internals = [Locust, WebLocust]
 version = locust.version
@@ -36,6 +39,13 @@ def parse_options():
         dest="host",
         default=None,
         help="Host to load test in the following format: http://10.21.32.33"
+    )
+
+    parser.add_option(
+        '-P', '--port',
+        dest="port",
+        default=8089,
+        help="Port to run webapp on"
     )
 
     parser.add_option(
@@ -364,8 +374,11 @@ def main():
 
     if not options.no_web and not options.slave:
         # spawn web greenlet
-        logger.info("Starting web monitor on port 8089")
-        main_greenlet = gevent.spawn(web.start, locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.ramp)
+        port = int(options.port)
+        logger.info("Starting web monitor on port {0}".format(port))
+        main_greenlet = gevent.spawn(web.start, locust_classes,
+                                     options.hatch_rate, options.num_clients,
+                                     options.num_requests, options.ramp, port=port)
     
     # enable/disable gzip in WebLocust's HTTP client
     WebLocust.gzip = options.gzip
@@ -377,9 +390,19 @@ def main():
             runners.locust_runner.start_hatching(wait=True)
             main_greenlet = runners.locust_runner.greenlet
     elif options.master:
-        runners.locust_runner = MasterLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
+        runners.locust_runner = MasterLocustRunner(locust_classes,
+                                                   options.hatch_rate,
+                                                   options.num_clients,
+                                                   num_requests=options.num_requests,
+                                                   host=options.host,
+                                                   master_host=options.master_host)
     elif options.slave:
-        runners.locust_runner = SlaveLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
+        runners.locust_runner = SlaveLocustRunner(locust_classes,
+                                                  options.hatch_rate,
+                                                  options.num_clients,
+                                                  num_requests=options.num_requests,
+                                                  host=options.host,
+                                                  master_host=options.master_host)
         main_greenlet = runners.locust_runner.greenlet
     
     if options.print_stats or (options.no_web and not options.slave):
@@ -389,7 +412,7 @@ def main():
     try:
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
-    except KeyboardInterrupt, e:
+    except KeyboardInterrupt:
         events.quitting.fire()
         time.sleep(0.2)
         print_stats(runners.locust_runner.request_stats)
