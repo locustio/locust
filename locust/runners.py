@@ -323,15 +323,18 @@ class MasterLocustRunner(DistributedLocustRunner):
         return len(self.clients.ready) + len(self.clients.hatching) + len(self.clients.running)
 
 class SlaveLocustRunner(DistributedLocustRunner):
+    def noop(self, *args, **kw):
+        pass
+    
     def __init__(self, *args, **kwargs):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + md5(str(time() + random.randint(0,10000))).hexdigest()
         
         self.client = rpc.Client(self.master_host)
         self.greenlet = Group()
-        self.greenlet.spawn(self.worker).link_exception()
+        self.greenlet.spawn(self.worker).link_exception(receiver=self.noop)
         self.client.send(Message("client_ready", None, self.client_id))
-        self.greenlet.spawn(self.stats_reporter).link_exception()
+        self.greenlet.spawn(self.stats_reporter).link_exception(receiver=self.noop)
         
         # register listener for when all locust users have hatched, and report it to the master node
         def on_hatch_complete(count):
