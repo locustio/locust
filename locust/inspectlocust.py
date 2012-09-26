@@ -1,6 +1,6 @@
 import inspect
 
-from core import LocustBase, SubLocust
+from core import LocustBase
 from log import console_logger
 
 def print_task_ratio(locusts, total=False, level=0, parent_ratio=1.0):

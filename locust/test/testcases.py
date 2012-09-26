@@ -1,7 +1,7 @@
+import random
 import gevent
 import gevent.pywsgi
 import unittest
-from werkzeug.wrappers import Request
 import base64
 from locust.stats import RequestStats
 from flask import Flask, request, redirect, make_response

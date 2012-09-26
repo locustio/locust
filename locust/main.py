@@ -1,5 +1,4 @@
 import locust
-import core
 import runners
 
 import gevent
@@ -12,7 +11,7 @@ from optparse import OptionParser
 
 import web
 from log import setup_logging, console_logger
-from stats import stats_printer, RequestStats, print_percentile_stats, print_error_report, print_stats
+from stats import stats_printer, print_percentile_stats, print_error_report, print_stats
 from inspectlocust import print_task_ratio, get_task_ratio_dict
 from core import Locust, WebLocust
 from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
@@ -298,11 +297,7 @@ def load_locustfile(path):
 
 def main():
     parser, options, arguments = parse_options()
-    #print "Options:", options, dir(options)
-    #print "Arguments:", arguments
-    #print "largs:", parser.largs
-    #print "rargs:", parser.rargs
-    
+
     # setup logging
     setup_logging(options.loglevel, options.logfile)
     logger = logging.getLogger(__name__)
