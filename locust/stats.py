@@ -220,8 +220,8 @@ class RequestStats(object):
                 return response_time
 
     def percentile(self, tpl=" %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
-        if not self.response_times or not self.max_response_time:
-            return ""
+        if not self.num_reqs:
+            raise ValueError("Can't calculate percentile on url with no successful requests")
         return tpl % (
             self.name,
             self.num_reqs,
