@@ -7,3 +7,4 @@ dist/**
 .idea/**
 *.iml
 *.ipr
+.vagrant
