@@ -140,15 +140,6 @@ def parse_options():
         help="Enables the auto tuning ramping feature for finding highest stable client count. NOTE having ramp enabled will add some more overhead for additional stats gathering"
     )
     
-    # if the HTTP client should set gzip headers and try to use gzip decoding
-    parser.add_option(
-        '--gzip',
-        action='store_true',
-        dest='gzip',
-        default=False,
-        help="If present, the HTTP client will set request header Accept-Encoding: gzip, and try to gzip decode the response data."
-    )
-    
     # if we shgould print stats in the console
     parser.add_option(
         '--print-stats',
@@ -362,9 +353,6 @@ def main():
         logger.info("Starting web monitor on port 8089")
         main_greenlet = gevent.spawn(web.start, locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.ramp)
     
-    # enable/disable gzip in WebLocust's HTTP client
-    WebLocust.gzip = options.gzip
-
     if not options.master and not options.slave:
         runners.locust_runner = LocalLocustRunner(locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.host)
         # spawn client spawning/hatching greenlet

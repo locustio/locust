@@ -1,4 +1,4 @@
-from locust import Locust, require_once
+from locust import Locust, require_once, task
 import random
 
 def login(l):
@@ -20,3 +20,7 @@ class WebsiteUser(Locust):
     tasks = [index, stats]
     min_wait=2000
     max_wait=5000
+    
+    @task
+    def page404(self):
+        self.client.get("/does_not_exist")

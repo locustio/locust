@@ -269,7 +269,7 @@ def on_request_success(method, name, response_time, response):
     if RequestStats.global_max_requests is not None and RequestStats.total_num_requests >= RequestStats.global_max_requests:
         raise InterruptLocust("Maximum number of requests reached")
 
-    content_length = int(response.info.getheader("Content-Length") or 0)
+    content_length = int(response.headers.get("content-length") or 0)
     RequestStats.get(method, name).log(response_time, content_length)
 
 def on_request_failure(method, name, response_time, error, response=None):

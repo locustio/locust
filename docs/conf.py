@@ -14,7 +14,7 @@
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ["sphinx.ext.autodoc"]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.intersphinx"]
 
 # autoclass options
 #autoclass_content = "both"
@@ -31,6 +31,11 @@ master_doc = 'index'
 # General substitutions.
 project = 'Locust'
 #copyright = ''
+
+# Intersphinx config
+intersphinx_mapping = {
+    'requests': ('http://requests.readthedocs.org/en/latest/', None),
+}
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.

@@ -8,13 +8,17 @@ Locust class
 
 .. autoclass:: locust.core.Locust
 	:members: tasks, min_wait, max_wait, schedule_task, client
+	
+	.. autoattribute:: locust.core.LocustBase.min_wait
+	.. autoattribute:: locust.core.LocustBase.max_wait
+	.. autoattribute:: locust.core.LocustBase.tasks
 
 
-HttpBrowser class
+HttpSession class
 =================
 
-.. autoclass:: locust.clients.HttpBrowser
-	:members: __init__, get, post
+.. autoclass:: locust.clients.HttpSession
+	:members: __init__, request, get, post, delete, put, head, options, patch
 
 HttpResponse class
 ==================

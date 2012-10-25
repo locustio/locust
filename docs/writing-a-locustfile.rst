@@ -132,32 +132,27 @@ and **/** will be requested twice the amount of times than **/about/**.
 Using the HTTP client
 ======================
 
-Each instance of Locust has an instance of HttpBrowser in the *client* attribute. 
+Each instance of Locust has an instance of HttpSession in the *client* attribute. 
 
-.. autoclass:: locust.clients.HttpBrowser
-    :members: __init__, get, post
+.. autoclass:: locust.clients.HttpSession
+    :members: __init__, get, post, request
     :noindex:
 
 By default, requests are marked as failed requests unless the HTTP response code is ok (2xx). 
 However, one can mark requests as failed, even when the response code is okay, by using the 
 *catch_response* argument with a with statement::
 
-    from locust import ResponseError
-    
-    client = HttpBrowser("http://example.com")
-    with client.get("/", catch_response=True) as response:
-        if response.data != "Success":
-            raise ResponseError("Got wrong response")
+    with client.get("/", catch_response=True) as catched:
+        if catched.response.content != "Success":
+            catched.failure("Got wrong response")
 
-Just as one can mark requests with OK response codes as failures, one can also make requests that 
-results in an HTTP error code still result in a success in the statistics::
+Just as one can mark requests with OK response codes as failures, one can also use **catch_response** 
+argument together with a *with* statement to make requests that resulted in an HTTP error code still 
+be reported as a success in the statistics::
 
-    client = HttpBrowser("http://example.com")
-    response = client.get("/does_not_exist/", allow_http_error=True)
-    if response.exception:
-        print "We got an HTTPError exception, but the request will still be marked as OK"
-    
-Also, *catch_response* and *allow_http_error* can be used together.
+    with client.get("/does_not_exist/", catch_response=True) as catched:
+        if catched.response.status_code == 404:
+            catched.success()
 
 
 The on_start function
