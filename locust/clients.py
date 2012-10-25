@@ -35,8 +35,8 @@ class HttpSession(requests.Session):
                            response, even if the response code is ok (2xx). The opposite also works, one can use catch_response to catch a request
                            and then mark it as successful even if the response code was not (i.e 500 or 404).
     """
-    def __init__(self, *args, **kwargs):
-        self.base_url = kwargs.pop("base_url")
+    def __init__(self, base_url, *args, **kwargs):
+        self.base_url = base_url
         
         # Check for basic authentication
         parsed_url = urlparse(self.base_url)
@@ -50,7 +50,7 @@ class HttpSession(requests.Session):
             # configure requests to use basic auth
             kwargs["auth"] = HTTPBasicAuth(parsed_url.username, parsed_url.password)
         
-        super(HttpSession, self).__init__(self, *args, **kwargs)
+        super(HttpSession, self).__init__(*args, **kwargs)
     
     def _build_url(self, path):
         """ prepend url with hostname unless it's already an absolute URL """
@@ -88,11 +88,6 @@ class HttpSession(requests.Session):
         :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
         """
         
-        """
-        Send the actual request using requests.Session's request() method but first
-        we install event hooks that will report the request as a success or a failure, 
-        to locust's statistics
-        """
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(url)
         

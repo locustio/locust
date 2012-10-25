@@ -1,4 +1,4 @@
 greenlet
 gevent>=0.13
 Flask>=0.8
-requests==0.14
+requests==0.14.1
