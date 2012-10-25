@@ -358,7 +358,10 @@ class TestCatchResponse(WebserverTestCase):
             catched.failure("Haha!")
         self.assertEqual(1, self.num_failures)
         self.assertEqual(0, self.num_success)
-        self.assertIsInstance(self.last_failure_exception, CatchResponseError)
+        self.assertTrue(
+            isinstance(self.last_failure_exception, CatchResponseError),
+            "Failure event handler should have been passed a CatchResponseError instance"
+        )
     
     def test_catch_response_http_manual_success(self):
         with self.locust.client.get("/fail", catch_response=True) as catched:
