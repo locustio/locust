@@ -105,40 +105,38 @@ class HttpSession(requests.Session):
         def on_response(response):
             request = response.request
             request.locust_response_time = int((time.time() - request.locust_start_time) * 1000)
+            request.locust_name = name or request.path_url
             
             if not catch_response:
                 try:
                     response.raise_for_status()
                 except requests.exceptions.RequestException, e:
-                    events.request_failure.fire(request.method, name or request.path_url, request.locust_response_time, e, response)
+                    events.request_failure.fire(request.method, request.locust_name, request.locust_response_time, e, response)
                 else:
-                    events.request_success.fire(request.method, name or request.path_url, request.locust_response_time, response)
+                    events.request_success.fire(request.method, request.locust_name, request.locust_response_time, response)
         
         kwargs["hooks"] = {"pre_request":on_pre_request, "response":on_response}
         response = super(HttpSession, self).request(method, url, **kwargs)
         if catch_response:
-            return CatchedResponse(response, name=name)
+            return ResponseContextManager(response)
         else:
             return response
 
-
-class CatchedResponse(object):
+class ResponseContextManager(requests.Response):
     """
-    Context manager that allows for manually controlling if an HTTP request should be marked
-    as successful or a failure. 
+    A Response class that also acts as a context manager that provides the ability to manually 
+    control if an HTTP request should be marked as successful or a failure in Locust's statistics
+    
+    This class is a subclass of :py:class:`Response <requests.Response>` with two additional 
+    methods: :py:meth:`success <locust.clients.ResponseContextManager.success>` and 
+    :py:meth:`failure <locust.clients.ResponseContextManager.failure>`.
     """
     
-    response = None
-    """ The :py:class:`Response <requests.Response>` object that was returned"""
+    _is_reported = False
     
-    request = None
-    """ The original :py:class:`Request <requests.Request>` object that was constructed for making the HTTP request"""
-    
-    def __init__(self, response, name=None):
-        self.response = response
-        self.request = response.request
-        self.name = name
-        self._is_reported = False
+    def __init__(self, response):
+        # copy data from response to this object
+        self.__dict__ = response.__dict__
     
     def __enter__(self):
         return self
@@ -156,7 +154,7 @@ class CatchedResponse(object):
                 return False
         else:
             try:
-                self.response.raise_for_status()
+                self.raise_for_status()
             except requests.exceptions.RequestException, e:
                 self.failure(e)
             else:
@@ -165,37 +163,43 @@ class CatchedResponse(object):
     
     def success(self):
         """
-        Report the current response as successful
+        Report the response as successful
+        
+        Example::
+        
+            with self.client.get("/does/not/exist", catch_response=True) as response:
+                if response.status_code == 404:
+                    response.success()
         """
         events.request_success.fire(
             self.request.method,
-            self.name or self.request.path_url,
+            self.request.locust_name,
             self.request.locust_response_time,
-            self.response,
+            self,
         )
         self._is_reported = True
     
     def failure(self, exc):
         """
-        Report the current response as a failure.
+        Report the response as a failure.
         
         exc can be either a python exception, or a string in which case it will
         be wrapped inside a CatchResponseError. 
         
         Example::
         
-            with self.client.get("/", catch_response=True) as catched:
-                if catched.response.content == "":
-                    catched.failure("No data")
+            with self.client.get("/", catch_response=True) as response:
+                if response.content == "":
+                    response.failure("No data")
         """
         if isinstance(exc, basestring):
             exc = CatchResponseError(exc)
         
         events.request_failure.fire(
             self.request.method,
-            self.name or self.request.path_url,
+            self.request.locust_name,
             self.request.locust_response_time,
             exc,
-            self.response,
+            self,
         )
         self._is_reported = True

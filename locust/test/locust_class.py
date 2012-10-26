@@ -349,13 +349,13 @@ class TestCatchResponse(WebserverTestCase):
         self.assertEqual(1, self.num_success)
     
     def test_catch_response_http_fail(self):
-        with self.locust.client.get("/fail", catch_response=True) as catched: pass
+        with self.locust.client.get("/fail", catch_response=True) as response: pass
         self.assertEqual(1, self.num_failures)
         self.assertEqual(0, self.num_success)
     
     def test_catch_response_http_manual_fail(self):
-        with self.locust.client.get("/ultra_fast", catch_response=True) as catched:
-            catched.failure("Haha!")
+        with self.locust.client.get("/ultra_fast", catch_response=True) as response:
+            response.failure("Haha!")
         self.assertEqual(1, self.num_failures)
         self.assertEqual(0, self.num_success)
         self.assertTrue(
@@ -364,8 +364,16 @@ class TestCatchResponse(WebserverTestCase):
         )
     
     def test_catch_response_http_manual_success(self):
-        with self.locust.client.get("/fail", catch_response=True) as catched:
-            catched.success()
+        with self.locust.client.get("/fail", catch_response=True) as response:
+            response.success()
+        self.assertEqual(0, self.num_failures)
+        self.assertEqual(1, self.num_success)
+    
+    def test_catch_response_allow_404(self):
+        with self.locust.client.get("/does/not/exist", catch_response=True) as response:
+            self.assertEqual(404, response.status_code)
+            if response.status_code == 404:
+                response.success()
         self.assertEqual(0, self.num_failures)
         self.assertEqual(1, self.num_success)
     
