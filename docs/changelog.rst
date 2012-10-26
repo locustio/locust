@@ -66,12 +66,13 @@ gotten a few changes.
 
 HttpSession methods' catch_response argument improved and allow_http_error argument removed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-* When doing HTTP requests using the **catch_response** argument, the method now returns a CatchedResponse 
-  object which is a context manager that can be used to manually deciding if the request should be reported
-  as successful or as a failure, in the Locust statistics.
+* When doing HTTP requests using the **catch_response** argument, the context manager that is returned now
+  provides two functions, :py:meth:`success <locust.clients.ResponseContextManager.success>` and 
+  :py:meth:`failure <locust.clients.ResponseContextManager.failure>` that can be used to manually control 
+  what the request should be reported as in Locust's statistics.
   
-  .. autoclass:: locust.clients.CatchedResponse
-    :members: response, request, success, failure
+  .. autoclass:: locust.clients.ResponseContextManager
+    :members: success, failure
     :noindex:
 
 * The **allow_http_error** argument of the HTTP client's methods has been removed. Instead one can use the 
@@ -81,16 +82,16 @@ HttpSession methods' catch_response argument improved and allow_http_error argum
   
       client.get("/does/not/exist", allow_http_error=True)
   
-  Can instead now be written like:
+  Can instead now be written like::
   
-      with client.get("does/not/exist", catch_response=True) as catched:
-          catched.success()
+      with client.get("/does/not/exist", catch_response=True) as response:
+          response.success()
 
 
 Other improvements and bug fixes
 --------------------------------
 
-* Scheduled task callables can now take keyword arguments.
+* Scheduled task callables can now take keyword arguments and not only normal function arguments.
 * SubLocust classes that are scheduled using :func:`locust.core.Locust.schedule_task` can now take 
   arguments and keyword arguments (available in *self.args* and *self.kwargs*).
 
@@ -99,7 +100,6 @@ Other improvements and bug fixes
 API Changes
 -----------
 
-* HttpBrowser has been removed in favor of python requests library. 
 * Changed signature of :func:`locust.core.Locust.schedule_task`. Previously all extra arguments that
   was given to the method was passed on to the the task when it was called. It no longer accepts extra arguments. 
   Instead, it takes an *args* argument (list) and a *kwargs* argument (dict) which are be passed to the task when 

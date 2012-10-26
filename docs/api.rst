@@ -20,11 +20,24 @@ HttpSession class
 .. autoclass:: locust.clients.HttpSession
 	:members: __init__, request, get, post, delete, put, head, options, patch
 
-HttpResponse class
-==================
+Response class
+==============
 
-.. autoclass:: locust.clients.HttpResponse
-	:members: code, data, url, info
+This class actually resides in the `python-requests <http://python-requests.org>`_ library, 
+since that's what Locust is using to make HTTP requests, but it's included in the API docs 
+for locust since it's so central when writing locust load tests. You can also look at the 
+:py:class:`Response <requests.Response>` class at the 
+`requests documentation <http://python-requests.org>`_.
+
+.. autoclass:: requests.Response
+	:inherited-members:
+	:noindex:
+
+ResponseContextManager class
+============================
+
+.. autoclass:: locust.clients.ResponseContextManager
+	:members: success, failure
 
 
 @require_once decorator

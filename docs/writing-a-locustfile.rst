@@ -140,19 +140,19 @@ Each instance of Locust has an instance of HttpSession in the *client* attribute
 
 By default, requests are marked as failed requests unless the HTTP response code is ok (2xx). 
 However, one can mark requests as failed, even when the response code is okay, by using the 
-*catch_response* argument with a with statement::
+*catch_response* argument and a with statement::
 
-    with client.get("/", catch_response=True) as catched:
-        if catched.response.content != "Success":
-            catched.failure("Got wrong response")
+    with client.get("/", catch_response=True) as response:
+        if response.content != "Success":
+            response.failure("Got wrong response")
 
 Just as one can mark requests with OK response codes as failures, one can also use **catch_response** 
 argument together with a *with* statement to make requests that resulted in an HTTP error code still 
 be reported as a success in the statistics::
 
-    with client.get("/does_not_exist/", catch_response=True) as catched:
-        if catched.response.status_code == 404:
-            catched.success()
+    with client.get("/does_not_exist/", catch_response=True) as response:
+        if response.status_code == 404:
+            response.success()
 
 
 The on_start function
