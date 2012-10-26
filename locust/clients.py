@@ -50,6 +50,13 @@ class HttpSession(requests.Session):
             # configure requests to use basic auth
             kwargs["auth"] = HTTPBasicAuth(parsed_url.username, parsed_url.password)
         
+        # requests config
+        config = {
+            "max_retries": 0,
+            "keep_alive": False,
+        }.update(kwargs.get("config", {}))
+        kwargs["config"] = config
+        
         super(HttpSession, self).__init__(*args, **kwargs)
     
     def _build_url(self, path):
