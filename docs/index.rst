@@ -12,3 +12,4 @@ Locust Documentation
     extending-locust
     api
     changelog
+
