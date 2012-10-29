@@ -10,7 +10,7 @@ import warnings
 import traceback
 import logging
 
-from clients import HttpBrowser
+from clients import HttpSession
 import events
 
 from exception import LocustError, InterruptLocust, RescheduleTaskImmediately
@@ -117,9 +117,10 @@ class LocustBase(object):
 
     If tasks is a list, the task to be performed will be picked randomly.
 
-    If tasks is a *(callable,int)* list of two-tuples, the task to be performed will be picked randomly, but each task will be
-    weighted according to it's corresponding int value. So in the following case *task1* will be three times more
-    likely to be picked than *task2*::
+    If tasks is a *(callable,int)* list of two-tuples, or a  {callable:int} dict, 
+    the task to be performed will be picked randomly, but each task will be weighted 
+    according to it's corresponding int value. So in the following case *task1* will 
+    be three times more likely to be picked than *task2*::
 
         class User(Locust):
             tasks = [(task1, 3), (task2, 1)]
@@ -129,7 +130,7 @@ class LocustBase(object):
     """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
 
     min_wait = 1000
-    """Minimum waiting time between two execution of locust tasks"""
+    """Minimum waiting time between the execution of locust tasks"""
     
     max_wait = 1000
     """Maximum waiting time between the execution of locust tasks"""
@@ -246,22 +247,16 @@ class Locust(LocustBase):
     
     client = None
     """
-    Instance of HttpBrowser that is created upon instantiation of Locust. 
+    Instance of HttpSession that is created upon instantiation of Locust. 
     The client support cookies, and therefore keeps the session between HTTP requests.
-    """
-    
-    gzip = False
-    """
-    If set to True the HTTP client will set headers for accepting gzip, and decode gzip data
-    that is sent back from the server. This attribute is set from the command line.
     """
     
     def __init__(self):
         super(Locust, self).__init__()
         if self.host is None:
             raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
-
-        self.client = HttpBrowser(self.host, self.gzip)
+        
+        self.client = HttpSession(base_url=self.host)
 
 class WebLocust(Locust):
     def __init__(self, *args, **kwargs):

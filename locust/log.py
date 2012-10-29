@@ -38,3 +38,7 @@ sh.setLevel(logging.INFO)
 sh.setFormatter(logging.Formatter('%(message)s'))
 console_logger.addHandler(sh)
 console_logger.propagate = False
+
+# configure python-requests log level
+requests_log = logging.getLogger("requests")
+requests_log.setLevel(logging.WARNING)
