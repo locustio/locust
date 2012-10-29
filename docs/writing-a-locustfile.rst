@@ -132,14 +132,37 @@ and **/** will be requested twice the amount of times than **/about/**.
 Using the HTTP client
 ======================
 
-Each instance of Locust has an instance of HttpSession in the *client* attribute. 
+Each instance of Locust has an instance of :py:class:`HttpSession <locust.clients.HttpSession>` 
+in the *client* attribute. The HttpSession class is actually a subclass of 
+:py:class:`requests.Session` and can be used to  make HTTP requests, that will be reported to Locust's
+statistics, using the :py:meth:`get <locust.clients.HttpSession.get>`, 
+:py:meth:`post <locust.clients.HttpSession.post>`, :py:meth:`put <locust.clients.HttpSession.put>`, 
+:py:meth:`delete <locust.clients.HttpSession.delete>`, :py:meth:`head <locust.clients.HttpSession.head>`, 
+:py:meth:`patch <locust.clients.HttpSession.patch>` and :py:meth:`options <locust.clients.HttpSession.options>` 
+methods. The HttpInstance will preserve cookies between requests so that it can be used to log in to websites 
+and keep a session between requests.
 
-.. autoclass:: locust.clients.HttpSession
-    :members: __init__, get, post, request
-    :noindex:
+Here's a simple example that makes a GET request to the */about* path (in this case we assume *self* 
+is an instance of a :py:class:`Locust <locust.core.Locust>` class::
+
+    response = self.client.get("/about")
+    print "Response status code:", response.status_code
+    print "Response content:", response.content
+
+And here's an example making a POST request::
+
+    response = self.client.post("/login", {"username":"testuser", "password":"secret"})
+
+Manually controlling if a request should be considered successful or a failure
+------------------------------------------------------------------------------
 
 By default, requests are marked as failed requests unless the HTTP response code is ok (2xx). 
-However, one can mark requests as failed, even when the response code is okay, by using the 
+Most of the time, this default is what you want. Sometimes however - for example when testing 
+a URL endpoint that you expect to return 404, or testing a badly designed system that might 
+return *200 OK* even though an error occurred - there's a need for manually controlling if 
+locust should consider a request as a success or a failure.
+
+One can mark requests as failed, even when the response code is okay, by using the 
 *catch_response* argument and a with statement::
 
     with client.get("/", catch_response=True) as response:
