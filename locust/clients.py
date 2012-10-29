@@ -113,7 +113,7 @@ class HttpSession(requests.Session):
                 except requests.exceptions.RequestException, e:
                     events.request_failure.fire(request.method, request.locust_name, request.locust_response_time, e, response)
                 else:
-                    events.request_success.fire(request.method, request.locust_name, request.locust_response_time, response)
+                    events.request_success.fire(request.method, request.locust_name, request.locust_response_time, int(response.headers.get("content-length") or 0))
         
         kwargs["hooks"] = {"pre_request":on_pre_request, "response":on_response}
         response = super(HttpSession, self).request(method, url, **kwargs)
@@ -175,7 +175,7 @@ class ResponseContextManager(requests.Response):
             self.request.method,
             self.request.locust_name,
             self.request.locust_response_time,
-            self,
+            int(self.headers.get("content-length") or 0),
         )
         self._is_reported = True
     

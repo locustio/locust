@@ -104,6 +104,9 @@ API Changes
   was given to the method was passed on to the the task when it was called. It no longer accepts extra arguments. 
   Instead, it takes an *args* argument (list) and a *kwargs* argument (dict) which are be passed to the task when 
   it's called.
+* Arguments for :py:class:`request_success <locust.events.request_success>` event hook has been changed. 
+  Previously it took an HTTP Response instance as argument, but this has been changed to take the 
+  content-length of the response instead. This makes it easier to write custom clients for Locust.
 
 
 0.5.1
