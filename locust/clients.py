@@ -1,292 +1,205 @@
-import urllib2
-import urllib
+import re
 import time
-import base64
+from collections import namedtuple
 from urlparse import urlparse, urlunparse
-from exception import ResponseError
-from urllib2 import HTTPError, URLError
-from httplib import BadStatusLine
-import socket
 
-from StringIO import StringIO
-import gzip
+import requests
+from requests.auth import HTTPBasicAuth
 
 import events
-from locust.exception import LocustError
+from exception import CatchResponseError, ResponseError
 
-class NoneContext(object):
-    def __enter__(self):
-        return None
+absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
-    def __exit__(self, exc, value, traceback):
-        return True
 
-def log_request(f):
-    def _wrapper(*args, **kwargs):
-        request_method = args[1]
-        name = kwargs.get('name', args[2]) or args[2]
-        if "catch_response" in kwargs:
-            catch_response = kwargs["catch_response"]
-            del kwargs["catch_response"]
-        else:
-            catch_response = False
-        if "allow_http_error" in kwargs:
-            allow_http_error = kwargs["allow_http_error"]
-            del kwargs["allow_http_error"]
-        else:
-            allow_http_error = False
-
-        try:
-            start = time.time()
-            try:
-                retval = f(*args, **kwargs)
-            except HTTPError, ex:
-                if allow_http_error:
-                    retval = ex.locust_http_response
-                    retval.exception = ex
-                else:
-                    raise ex
-            retval.catch_response = catch_response
-            retval.allow_http_error = allow_http_error
-            response_time = int((time.time() - start) * 1000)
-            if catch_response:
-                retval._trigger_success = lambda : events.request_success.fire(request_method, name, response_time, retval)
-                retval._trigger_failure = lambda e : events.request_failure.fire(request_method, name, response_time, e, None)
-            else:
-                events.request_success.fire(request_method, name, response_time, retval)
-            return retval
-        except Exception, e:
-            response_time = int((time.time() - start) * 1000)
-            response = None
-
-            if isinstance(e, HTTPError):
-                e.msg += " (" + request_method + " " + name + ")"
-                response = e.locust_http_response
-            elif isinstance(e, URLError) or isinstance(e, BadStatusLine):
-                e.args = tuple(list(e.args) + [request_method, name])
-            elif isinstance(e, socket.error):
-                pass
-            else:
-                raise
-
-            events.request_failure.fire(request_method, name, response_time, e, response)
-
-        if catch_response:
-            return NoneContext()
-        return None
-
-    return _wrapper
-
-class HttpBasicAuthHandler(urllib2.BaseHandler):
-    def __init__(self, username, password):
-        self.username = username
-        self.password = password
-
-    def http_request(self, request):
-        base64string = base64.encodestring('%s:%s' % (self.username, self.password)).replace('\n', '')
-        request.add_header("Authorization", "Basic %s" % base64string)
-        return request
-
-    #Do the same thing for https requests
-    https_request = http_request
-
-class HttpResponse(object):
+class HttpSession(requests.Session):
     """
-    An instance of HttpResponse is returned by HttpBrowser's get and post functions.
-    It contains response data for the request that was made.
-    """
-
-    url = None
-    """URL that was requested"""
-
-    code = None
-    """HTTP response code"""
-
-    data = None
-    """Response data"""
-
-    catch_response = False
-    allow_http_error = False
-    _trigger_success = None
-    _trigger_failure = None
-
-    def __init__(self, method, url, name, code, data, info, gzip):
-        self.method = method
-        self.url = url
-        self._name = name
-        self.code = code
-        self.data = data
-        self._info = info
-        self._gzip = gzip
-        self._decoded = False
-
-    @property
-    def info(self):
-        """
-        urllib2 info object containing info about the response
-        """
-        return self._info()
-
-    def _get_data(self):
-        if self._gzip and not self._decoded and self._info().get("Content-Encoding") == "gzip":
-            self._data = gzip.GzipFile(fileobj=StringIO(self._data)).read()
-            self._decoded = True
-        return self._data
-
-    def _set_data(self, data):
-        self._data = data
-
-    def __enter__(self):
-        if not self.catch_response:
-            raise LocustError("If using response in a with() statement you must use catch_response=True")
-        return self
-
-    def __exit__(self, exc, value, traceback):
-        if exc:
-            if isinstance(value, ResponseError):
-                self._trigger_failure(value)
-            else:
-                return
-        else:
-            self._trigger_success()
-        return True
-
-    data = property(_get_data, _set_data)
-
-class HttpBrowser(object):
-    """
-    Class for performing web requests and holding session cookie between requests (in order
-    to be able to log in to websites). 
+    Class for performing web requests and holding (session-) cookies between requests (in order
+    to be able to log in and out of websites). Each request is logged so that locust can display 
+    statistics.
     
-    Logs each request so that locust can display statistics.
+    This is a slightly extended version of `python-request <http://python-requests.org>`_'s
+    :py:class:`requests.Session` class and mostly this class works exactly the same. However 
+    the methods for making requests (get, post, delete, put, head, options, patch, request) 
+    can now take a *url* argument that's only the path part of the URL, in which case the host 
+    part of the URL will be prepended with the HttpSession.base_url which is normally inherited
+    from a Locust class' host property.
+    
+    Each of the methods for making requests also takes two additional optional arguments which 
+    are Locust specific and doesn't exist in python-requests. These are:
+    
+    :param name: (optional) An argument that can be specified to use as label in Locust's statistics instead of the URL path. 
+                 This can be used to group different URL's that are requested into a single entry in Locust's statistics.
+    :param catch_response: (optional) Boolean argument that, if set, can be used to make a request return a context manager 
+                           to work as argument to a with statement. This will allow the request to be marked as a fail based on the content of the 
+                           response, even if the response code is ok (2xx). The opposite also works, one can use catch_response to catch a request
+                           and then mark it as successful even if the response code was not (i.e 500 or 404).
     """
-
-    def __init__(self, base_url, gzip=False):
+    def __init__(self, base_url, *args, **kwargs):
         self.base_url = base_url
-        self.gzip = gzip
-        self.new_session()
-    
-    def new_session(self):
-        """
-        Get a new HTTP session for this HttpBrowser instance
-        """
-        handlers = [urllib2.HTTPCookieProcessor()]
-
+        
         # Check for basic authentication
         parsed_url = urlparse(self.base_url)
         if parsed_url.username and parsed_url.password:
-
             netloc = parsed_url.hostname
             if parsed_url.port:
                 netloc += ":%d" % parsed_url.port
-
+            
             # remove username and password from the base_url
             self.base_url = urlunparse((parsed_url.scheme, netloc, parsed_url.path, parsed_url.params, parsed_url.query, parsed_url.fragment))
-
-            auth_handler = HttpBasicAuthHandler(parsed_url.username, parsed_url.password)
-            handlers.append(auth_handler)
-
-        self.opener = urllib2.build_opener(*handlers)
-        urllib2.install_opener(self.opener)
-
-    def get(self, path, headers={}, name=None, **kwargs):
+            # configure requests to use basic auth
+            kwargs["auth"] = HTTPBasicAuth(parsed_url.username, parsed_url.password)
+        
+        # requests config
+        config = {
+            "max_retries": 0,
+            "keep_alive": False,
+        }.update(kwargs.get("config", {}))
+        kwargs["config"] = config
+        
+        super(HttpSession, self).__init__(*args, **kwargs)
+    
+    def _build_url(self, path):
+        """ prepend url with hostname unless it's already an absolute URL """
+        if absolute_http_url_regexp.match(path):
+            return path
+        else:
+            return "%s%s" % (self.base_url, path)
+    
+    def request(self, method, url, name=None, catch_response=False, **kwargs):
         """
-        Make an HTTP GET request.
+        Constructs and sends a :py:class:`requests.Request`.
+        Returns :py:class:`requests.Response` object.
+
+        :param method: method for the new :class:`Request` object.
+        :param url: URL for the new :class:`Request` object.
+        :param name: (optional) An argument that can be specified to use as label in Locust's statistics instead of the URL path. 
+          This can be used to group different URL's that are requested into a single entry in Locust's statistics.
+        :param catch_response: (optional) Boolean argument that, if set, can be used to make a request return a context manager 
+          to work as argument to a with statement. This will allow the request to be marked as a fail based on the content of the 
+          response, even if the response code is ok (2xx). The opposite also works, one can use catch_response to catch a request
+          and then mark it as successful even if the response code was not (i.e 500 or 404).
+        :param params: (optional) Dictionary or bytes to be sent in the query string for the :class:`Request`.
+        :param data: (optional) Dictionary or bytes to send in the body of the :class:`Request`.
+        :param headers: (optional) Dictionary of HTTP Headers to send with the :class:`Request`.
+        :param cookies: (optional) Dict or CookieJar object to send with the :class:`Request`.
+        :param files: (optional) Dictionary of 'filename': file-like-objects for multipart encoding upload.
+        :param auth: (optional) Auth tuple or callable to enable Basic/Digest/Custom HTTP Auth.
+        :param timeout: (optional) Float describing the timeout of the request.
+        :param allow_redirects: (optional) Boolean. Set to True by default.
+        :param proxies: (optional) Dictionary mapping protocol to the URL of the proxy.
+        :param return_response: (optional) If False, an un-sent Request object will returned.
+        :param config: (optional) A configuration dictionary. See ``request.defaults`` for allowed keys and their default values.
+        :param prefetch: (optional) whether to immediately download the response content. Defaults to ``True``.
+        :param verify: (optional) if ``True``, the SSL cert will be verified. A CA_BUNDLE path can also be provided.
+        :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
+        """
         
-        Arguments:
+        # prepend url with hostname unless it's already an absolute URL
+        url = self._build_url(url)
         
-        * *path* is the relative path to request.
-        * *headers* is an optional dict with HTTP request headers
-        * *name* is an optional argument that can be specified to use as label in the statistics instead of the path
-        * *catch_response* is an optional boolean argument that, if set, can be used to make a request with a with statement.
-          This will allows the request to be marked as a fail based on the content of the response, even if the
-          response code is ok (2xx).
-        * *allow_http_error* os an optional boolean argument, that, if set, can be used to not mark responses with
-          HTTP errors as failures. If an HTTPError occurs, it will be available in the *exception* attribute of the
-          response.
+        # set up pre and post request hooks for recording the requests in the statistics
+        def on_pre_request(request):
+            request.locust_start_time = time.time()
         
-        Returns an HttpResponse instance, or None if the request failed.
-        
-        Example::
-        
-            client = HttpBrowser("http://example.com")
-            response = client.get("/")
-        
-        Example using the with statement::
-        
-            from locust import ResponseError
+        def on_response(response):
+            request = response.request
+            request.locust_response_time = int((time.time() - request.locust_start_time) * 1000)
+            request.locust_name = name or request.path_url
             
-            with self.client.get("/inbox", catch_response=True) as response:
-                if response.data == "fail":
-                    raise ResponseError("Request failed")
-        """
-        return self._request('GET', path, None, headers=headers, name=name, **kwargs)
+            if not catch_response:
+                try:
+                    response.raise_for_status()
+                except requests.exceptions.RequestException, e:
+                    events.request_failure.fire(request.method, request.locust_name, request.locust_response_time, e, response)
+                else:
+                    events.request_success.fire(request.method, request.locust_name, request.locust_response_time, int(response.headers.get("content-length") or 0))
+        
+        kwargs["hooks"] = {"pre_request":on_pre_request, "response":on_response}
+        response = super(HttpSession, self).request(method, url, **kwargs)
+        if catch_response:
+            return ResponseContextManager(response)
+        else:
+            return response
 
-    def post(self, path, data, headers={}, name=None, **kwargs):
-        """
-        Make an HTTP POST request.
+class ResponseContextManager(requests.Response):
+    """
+    A Response class that also acts as a context manager that provides the ability to manually 
+    control if an HTTP request should be marked as successful or a failure in Locust's statistics
+    
+    This class is a subclass of :py:class:`Response <requests.Response>` with two additional 
+    methods: :py:meth:`success <locust.clients.ResponseContextManager.success>` and 
+    :py:meth:`failure <locust.clients.ResponseContextManager.failure>`.
+    """
+    
+    _is_reported = False
+    
+    def __init__(self, response):
+        # copy data from response to this object
+        self.__dict__ = response.__dict__
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc, value, traceback):
+        if self._is_reported:
+            # if the user has already manually marked this response as failure or success
+            # we can ignore the default haviour of letting the response code determine the outcome
+            return exc is None
         
-        Arguments:
-        
-        * *path* is the relative path to request.
-        * *data* dict with the data that will be sent in the body of the POST request
-        * *headers* is an optional dict with HTTP request headers
-        * *name* is an optional argument that can be specified to use as label in the statistics instead of the path
-        * *catch_response* is an optional boolean argument that, if set, can be used to make a request with a with statement.
-          This will allows the request to be marked as a fail based on the content of the response, even if the
-          response code is ok (2xx).
-        * *allow_http_error* os an optional boolean argument, that, if set, can be used to not mark responses with
-          HTTP errors as failures. If an HTTPError occurs, it will be available in the *exception* attribute of the
-          response.
-        
-        Returns an HttpResponse instance, or None if the request failed.
-        
-        Example::
-        
-            client = HttpBrowser("http://example.com")
-            response = client.post("/post", {"user":"joe_hill"})
-        
-        Example using the with statement::
-        
-            from locust import ResponseError
-            
-            with self.client.post("/inbox", {"user":"ada", content="Hello!"}, catch_response=True) as response:
-                if response.data == "fail":
-                    raise ResponseError("Posting of inbox message failed")
-        """
-        return self._request('POST', path, data, headers=headers, name=name, **kwargs)
-
-    def put(self, path, data, headers={}, name=None, **kwargs):
-        return self._request('PUT', path, data, headers=headers, name=name, **kwargs)
-
-    def delete(self, path, headers={}, name=None, **kwargs):
-        return self._request('DELETE', path, None, headers=headers, name=name, **kwargs)
-
-    def head(self, path, headers={}, name=None, **kwargs):
-        return self._request('HEAD', path, None, headers=headers, name=name, **kwargs)
-
-    @log_request
-    def _request(self, method, path, data=None, headers={}, name=None):
-        if self.gzip:
-            headers["Accept-Encoding"] = "gzip"
-
-        if data is not None:
+        if exc:
+            if isinstance(value, ResponseError):
+                self.failure(value)
+            else:
+                return False
+        else:
             try:
-                data = urllib.urlencode(data)
-            except TypeError:
-                pass # ignore if someone sends in an already prepared string
-
-        url = self.base_url + path
-        request = urllib2.Request(url, data, headers)
-        request.get_method = lambda: method
-        try:
-            f = self.opener.open(request)
-            data = f.read()
-            f.close()
-        except HTTPError, e:
-            data = e.read()
-            e.locust_http_response = HttpResponse(method, url, name, e.code, data, e.info, self.gzip)
-            e.close()
-            raise e
-
-        return HttpResponse(method, url, name, f.code, data, f.info, self.gzip)
+                self.raise_for_status()
+            except requests.exceptions.RequestException, e:
+                self.failure(e)
+            else:
+                self.success()
+        return True
+    
+    def success(self):
+        """
+        Report the response as successful
+        
+        Example::
+        
+            with self.client.get("/does/not/exist", catch_response=True) as response:
+                if response.status_code == 404:
+                    response.success()
+        """
+        events.request_success.fire(
+            self.request.method,
+            self.request.locust_name,
+            self.request.locust_response_time,
+            int(self.headers.get("content-length") or 0),
+        )
+        self._is_reported = True
+    
+    def failure(self, exc):
+        """
+        Report the response as a failure.
+        
+        exc can be either a python exception, or a string in which case it will
+        be wrapped inside a CatchResponseError. 
+        
+        Example::
+        
+            with self.client.get("/", catch_response=True) as response:
+                if response.content == "":
+                    response.failure("No data")
+        """
+        if isinstance(exc, basestring):
+            exc = CatchResponseError(exc)
+        
+        events.request_failure.fire(
+            self.request.method,
+            self.request.locust_name,
+            self.request.locust_response_time,
+            exc,
+            self,
+        )
+        self._is_reported = True

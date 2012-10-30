@@ -35,7 +35,7 @@ Listeners should take the following arguments:
 * *method*: HTTP Request method used
 * *path*: Path to the URL that was called (or override name if it was used in the call to the client)
 * *response_time*: Reponse time in milliseconds
-* *response*: Instance of locust.clients.HttpResponse
+* *response_length*: Content-length of the response
 """
 
 request_failure = EventHook()

@@ -4,5 +4,5 @@ test:
 release:
 	python setup.py sdist upload
 
-docs:
+build_docs:
 	sphinx-build -b html docs/ docs/_build/
