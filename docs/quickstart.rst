@@ -4,7 +4,7 @@ Quick start
 
 Below is a quick little example of a simple **locustfile.py**::
 
-    from locust import Locust, task
+    from locust import Locust
     
     def login(l):
         l.client.post("/login", {"username":"ellen_key", "password":"education"})
