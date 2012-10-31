@@ -3,6 +3,9 @@ import gevent
 import gevent.pywsgi
 import unittest
 import base64
+from copy import copy
+
+from locust import events
 from locust.stats import RequestStats
 from flask import Flask, request, redirect, make_response
 
@@ -61,8 +64,30 @@ def basic_auth():
 def not_found(error):
     return "Not Found", 404
 
-class WebserverTestCase(unittest.TestCase):
+
+class LocustTestCase(unittest.TestCase):
+    """
+    Test case class that restores locust.events.EventHook listeners on tearDown, so that it is
+    safe to register any custom event handlers within the test.
+    """
     def setUp(self):
+        self._event_handlers = {}
+        for name in dir(events):
+            event = getattr(events, name)
+            if isinstance(event, events.EventHook):
+                self._event_handlers[event] = copy(event._handlers)
+                      
+    def tearDown(self):
+        for event, handlers in self._event_handlers.iteritems():
+            event._handlers = handlers
+
+            
+class WebserverTestCase(LocustTestCase):
+    """
+    Test case class that sets up an HTTP server which can be used within the tests
+    """
+    def setUp(self):
+        super(WebserverTestCase, self).setUp()
         self._web_server = gevent.pywsgi.WSGIServer(("127.0.0.1", 0), app, log=None)
         gevent.spawn(lambda: self._web_server.serve_forever())
         gevent.sleep(0)
@@ -70,4 +95,5 @@ class WebserverTestCase(unittest.TestCase):
         RequestStats.requests = {}
 
     def tearDown(self):
+        super(WebserverTestCase, self).tearDown()
         self._web_server.kill()
