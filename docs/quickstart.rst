@@ -29,7 +29,7 @@ Here we define a number of locust tasks, which are normal Python callables that 
 Another way we could declare a Locust class, that might be more convenient, is to use the 
 @task decorator. The following code is equivalent to the above::
 
-    from locust import Locust
+    from locust import Locust, task
     
     class WebsiteUser(Locust):
         min_wait=5000
