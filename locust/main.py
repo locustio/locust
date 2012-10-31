@@ -4,6 +4,7 @@ import runners
 import gevent
 import sys
 import os
+import signal
 import inspect
 import time
 import logging
@@ -369,18 +370,28 @@ def main():
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
     
+    def shutdown(code=0):
+        """
+        Shut down locust by firing quitting event, printing stats and exiting
+        """
+        logger.info("Shutting down, bye..")
+        events.quitting.fire()
+        print_stats(runners.locust_runner.request_stats)
+        print_percentile_stats(runners.locust_runner.request_stats)
+        print_error_report()
+        sys.exit(code)
+    
+    # install SIGTERM handler
+    def sig_term_handler():
+        logger.info("Got SIGTERM signal")
+        shutdown(0)
+    gevent.signal(signal.SIGTERM, sig_term_handler)
+    
     try:
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
     except KeyboardInterrupt, e:
-        events.quitting.fire()
-        time.sleep(0.2)
-        print_stats(runners.locust_runner.request_stats)
-        print_percentile_stats(runners.locust_runner.request_stats)
-        print_error_report()
-        logger.info("Got KeyboardInterrupt. Exiting, bye..")
-
-    sys.exit(0)
+        shutdown(0)
 
 if __name__ == '__main__':
     main()
