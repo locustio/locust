@@ -4,7 +4,7 @@ Quick start
 
 Below is a quick little example of a simple **locustfile.py**::
 
-    from locust import Locust
+    from locust import Locust, task
     
     def login(l):
         l.client.post("/login", {"username":"ellen_key", "password":"education"})
@@ -29,7 +29,7 @@ Here we define a number of locust tasks, which are normal Python callables that 
 Another way we could declare a Locust class, that might be more convenient, is to use the 
 @task decorator. The following code is equivalent to the above::
 
-    from locust import Locust
+    from locust import Locust, task
     
     class WebsiteUser(Locust):
         min_wait=5000
