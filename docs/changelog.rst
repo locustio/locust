@@ -100,6 +100,9 @@ Other improvements and bug fixes
 API Changes
 -----------
 
+* The *require_once* decorator has been removed. It was an old legacy function that no longer fit into 
+  the current way of writing Locust tests, where tasks are either methods under a Locust class or SubLocust 
+  classes containing task methods.
 * Changed signature of :func:`locust.core.Locust.schedule_task`. Previously all extra arguments that
   was given to the method was passed on to the the task when it was called. It no longer accepts extra arguments. 
   Instead, it takes an *args* argument (list) and a *kwargs* argument (dict) which are be passed to the task when 

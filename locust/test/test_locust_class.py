@@ -1,6 +1,6 @@
 import unittest
 
-from locust.core import Locust, SubLocust, require_once, task, events, RescheduleTaskImmediately
+from locust.core import Locust, SubLocust, task, events, RescheduleTaskImmediately
 from locust import ResponseError, InterruptLocust
 from locust.exception import CatchResponseError
 
@@ -50,27 +50,28 @@ class TestLocustClass(unittest.TestCase):
         self.assertEqual(t3_count, 3)
         self.assertEqual(t4_count, 13)
 
-    def test_require_once(self):
-        self.t1_executed = False
-        self.t2_executed = False
-        def t1(l):
-            self.t1_executed = True
-
-        @require_once(t1)
-        def t2(l):
-            self.t2_executed = True
-
+    def test_on_start(self):
         class MyLocust(Locust):
-            tasks = [t2]
             host = ""
+            
+            t1_executed = False
+            t2_executed = False
+            
+            def on_start(self):
+                self.t1()
+            
+            def t1(self):
+                self.t1_executed = True
+            
+            @task
+            def t2(self):
+                self.t2_executed = True
+                raise InterruptLocust(reschedule=False)
 
         l = MyLocust()
-        l.schedule_task(l.get_next_task())
-        l.execute_next_task()
-        self.assertTrue(self.t1_executed)
-        self.assertFalse(self.t2_executed)
-        l.execute_next_task()
-        self.assertTrue(self.t2_executed)
+        l()
+        self.assertTrue(l.t1_executed)
+        self.assertTrue(l.t2_executed)
 
     def test_schedule_task(self):
         self.t1_executed = False

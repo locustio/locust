@@ -1,4 +1,4 @@
-from locust import Locust, require_once, task
+from locust import Locust, task
 import random
 
 def login(l):
@@ -10,7 +10,6 @@ def index(l):
 def stats(l):
     l.client.get("/stats/requests")
 
-@require_once(login)
 def profile(l):
     l.client.get("/profile")
 

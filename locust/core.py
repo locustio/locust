@@ -17,41 +17,6 @@ from exception import LocustError, InterruptLocust, RescheduleTaskImmediately
 
 logger = logging.getLogger(__name__)
 
-def require_once(required_func):
-    """
-    @require_once decorator is used on a locust task in order to make sure another locust 
-    task (the argument to require_once) is run once (per client) before the decorated 
-    task.
-    
-    The require_once decorator respects the wait time of the Locust class, by inserting the
-    locust tasks at the beginning of the task execution queue.
-    
-    Example::
-    
-        def login(l):
-            l.client.post("/login", {"username":"joe_hill", "password":"organize"})
-        
-        @require_once(login)
-        def inbox(l):
-            l.client.get("/inbox")
-    """
-    def decorator_func(func):
-        def wrapper(l):
-            if not "_required_once" in l.__dict__:
-                l.__dict__["_required_once"] = {}
-            
-            if not str(required_func) in l._required_once:
-                # when the required task has not been run in the current client, we schedule it to
-                # be the next task in queue, and we also reschedule the original task to be run 
-                # immediately after the required task
-                l._required_once[str(required_func)] = True
-                l.schedule_task(func, first=True)
-                required_func(l)
-                return
-                
-            return func(l)
-        return wrapper
-    return decorator_func
 
 def task(weight_or_func=1):
     def decorator_func(func):

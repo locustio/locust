@@ -40,11 +40,6 @@ ResponseContextManager class
 	:members: success, failure
 
 
-@require_once decorator
-=======================
-
-.. autofunction:: locust.core.require_once
-
 InterruptLocust Exception
 =========================
 .. autoexception:: locust.exception.InterruptLocust
