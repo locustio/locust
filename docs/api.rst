@@ -13,6 +13,14 @@ Locust class
 	.. autoattribute:: locust.core.LocustBase.max_wait
 	.. autoattribute:: locust.core.LocustBase.tasks
 
+TaskSet class
+=============
+
+.. autoclass:: locust.core.TaskSet
+	:members: tasks, client, interrupt
+	
+	.. autoattribute:: locust.core.LocustBase.tasks
+
 
 HttpSession class
 =================

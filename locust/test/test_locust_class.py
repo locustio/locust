@@ -1,20 +1,26 @@
 import unittest
 
-from locust.core import Locust, SubLocust, task, events, RescheduleTaskImmediately
-from locust import ResponseError, InterruptLocust
+from locust.core import Locust, TaskSet, task, events, RescheduleTaskImmediately
+from locust import ResponseError, InterruptTaskSet
 from locust.exception import CatchResponseError
 
 from testcases import WebserverTestCase
 
-class TestLocustClass(unittest.TestCase):
+class TestTaskSet(unittest.TestCase):
+    def setUp(self):
+        super(TestTaskSet, self).setUp()
+        
+        class User(Locust):
+            host = "127.0.0.1"
+        self.locust = User()
+    
     def test_task_ratio(self):
         t1 = lambda l: None
         t2 = lambda l: None
-        class MyLocust(Locust):
+        class MyTasks(TaskSet):
             tasks = {t1:5, t2:2}
-            host = ""
         
-        l = MyLocust()
+        l = MyTasks(self.locust)
 
         t1_count = len([t for t in l.tasks if t == t1])
         t2_count = len([t for t in l.tasks if t == t2])
@@ -25,7 +31,7 @@ class TestLocustClass(unittest.TestCase):
     def test_task_decorator_ratio(self):
         t1 = lambda l: None
         t2 = lambda l: None
-        class MyLocust(Locust):
+        class MyTasks(TaskSet):
             tasks = {t1:5, t2:2}
             host = ""
             
@@ -38,12 +44,12 @@ class TestLocustClass(unittest.TestCase):
                 pass
             
 
-        l = MyLocust()
+        l = MyTasks(self.locust)
 
         t1_count = len([t for t in l.tasks if t == t1])
         t2_count = len([t for t in l.tasks if t == t2])
-        t3_count = len([t for t in l.tasks if t.__name__ == MyLocust.t3.__name__])
-        t4_count = len([t for t in l.tasks if t.__name__ == MyLocust.t4.__name__])
+        t3_count = len([t for t in l.tasks if t.__name__ == MyTasks.t3.__name__])
+        t4_count = len([t for t in l.tasks if t.__name__ == MyTasks.t4.__name__])
 
         self.assertEqual(t1_count, 5)
         self.assertEqual(t2_count, 2)
@@ -51,9 +57,7 @@ class TestLocustClass(unittest.TestCase):
         self.assertEqual(t4_count, 13)
 
     def test_on_start(self):
-        class MyLocust(Locust):
-            host = ""
-            
+        class MyTasks(TaskSet):
             t1_executed = False
             t2_executed = False
             
@@ -66,10 +70,10 @@ class TestLocustClass(unittest.TestCase):
             @task
             def t2(self):
                 self.t2_executed = True
-                raise InterruptLocust(reschedule=False)
+                raise InterruptTaskSet(reschedule=False)
 
-        l = MyLocust()
-        l()
+        l = MyTasks(self.locust)
+        l.run()
         self.assertTrue(l.t1_executed)
         self.assertTrue(l.t2_executed)
 
@@ -83,22 +87,20 @@ class TestLocustClass(unittest.TestCase):
         def t2(l, arg):
             self.t2_arg = arg
 
-        class MyLocust(Locust):
+        class MyTasks(TaskSet):
             tasks = [t1, t2]
-            host = ""
 
-        locust = MyLocust()
-        locust.schedule_task(t1)
-        locust.execute_next_task()
+        taskset = MyTasks(self.locust)
+        taskset.schedule_task(t1)
+        taskset.execute_next_task()
         self.assertTrue(self.t1_executed)
 
-        locust.schedule_task(t2, args=["argument to t2"])
-        locust.execute_next_task()
+        taskset.schedule_task(t2, args=["argument to t2"])
+        taskset.execute_next_task()
         self.assertEqual("argument to t2", self.t2_arg)
     
     def test_schedule_task_with_kwargs(self):
-        class MyLocust(Locust):
-            host = ""
+        class MyTasks(TaskSet):
             @task
             def t1(self):
                 self.t1_executed = True
@@ -106,7 +108,7 @@ class TestLocustClass(unittest.TestCase):
             def t2(self, *args, **kwargs):
                 self.t2_args = args
                 self.t2_kwargs = kwargs
-        loc = MyLocust()
+        loc = MyTasks(self.locust)
         loc.schedule_task(loc.t2, [42], {"test_kw":"hello"})
         loc.execute_next_task()
         self.assertEqual((42, ), loc.t2_args)
@@ -118,7 +120,7 @@ class TestLocustClass(unittest.TestCase):
         self.assertEqual({"arg1":1, "arg2":2}, loc.t2_kwargs)
     
     def test_schedule_task_bound_method(self):
-        class MyLocust(Locust):
+        class MyTasks(TaskSet):
             host = ""
             
             @task()
@@ -128,90 +130,91 @@ class TestLocustClass(unittest.TestCase):
             def t2(self):
                 self.t2_executed = True
         
-        locust = MyLocust()
-        locust.schedule_task(locust.get_next_task())
-        locust.execute_next_task()
-        self.assertTrue(locust.t1_executed)
-        locust.execute_next_task()
-        self.assertTrue(locust.t2_executed)
+        taskset = MyTasks(self.locust)
+        taskset.schedule_task(taskset.get_next_task())
+        taskset.execute_next_task()
+        self.assertTrue(taskset.t1_executed)
+        taskset.execute_next_task()
+        self.assertTrue(taskset.t2_executed)
         
     
-    def test_locust_inheritance(self):
+    def test_taskset_inheritance(self):
         def t1(l):
             pass
-        class MyBaseLocust(Locust):
+        class MyBaseTaskSet(TaskSet):
             tasks = [t1]
             host = ""
-        class MySubLocust(MyBaseLocust):
-            pass
+        class MySubTaskSet(MyBaseTaskSet):
+            @task
+            def t2(self):
+                pass
         
-        l = MySubLocust()
-        self.assertEqual(1, len(l.tasks))
+        l = MySubTaskSet(self.locust)
+        self.assertEqual(2, len(l.tasks))
+        self.assertEqual([t1, MySubTaskSet.t2.im_func], l.tasks)
     
     def test_task_decorator_with_or_without_argument(self):
-        class MyLocust(Locust):
-            host = ""
+        class MyTaskSet(TaskSet):
             @task
             def t1(self):
                 pass
-        locust = MyLocust()
-        self.assertEqual(len(locust.tasks), 1)
+        taskset = MyTaskSet(self.locust)
+        self.assertEqual(len(taskset.tasks), 1)
         
-        class MyLocust2(Locust):
-            host = ""
+        class MyTaskSet2(TaskSet):
             @task()
             def t1(self):
                 pass
-        locust = MyLocust2()
-        self.assertEqual(len(locust.tasks), 1)
+        taskset = MyTaskSet2(self.locust)
+        self.assertEqual(len(taskset.tasks), 1)
         
-        class MyLocust3(Locust):
-            host = ""
+        class MyTaskSet3(TaskSet):
             @task(3)
             def t1(self):
                 pass
-        locust = MyLocust3()
-        self.assertEqual(len(locust.tasks), 3)
-
-class TestSubLocust(unittest.TestCase):
-    def test_sub_locust(self):
-        class MySubLocust(SubLocust):
+        taskset = MyTaskSet3(self.locust)
+        self.assertEqual(len(taskset.tasks), 3)
+    
+    def test_sub_taskset(self):
+        class MySubTaskSet(TaskSet):
             min_wait=1
             max_wait=1
             @task()
             def a_task(self):
-                self.parent.sub_locust_task_executed = True
+                self.locust.sub_locust_task_executed = True
                 self.interrupt()
-        class MyLocust(Locust):
-            host = ""
-            sub_locust_task_executed = False
-            tasks = [MySubLocust]
+            
+        class MyTaskSet(TaskSet):
+            tasks = [MySubTaskSet]
         
-        loc = MyLocust()
+        self.sub_locust_task_executed = False
+        loc = MyTaskSet(self.locust)
         loc.schedule_task(loc.get_next_task())
         self.assertRaises(RescheduleTaskImmediately, lambda: loc.execute_next_task())
-        self.assertTrue(loc.sub_locust_task_executed)
+        self.assertTrue(self.locust.sub_locust_task_executed)
     
-    def test_sub_locust_arguments(self):
-        class MySubLocust(SubLocust):
+    def test_sub_taskset_arguments(self):
+        class MySubTaskSet(TaskSet):
             min_wait=1
             max_wait=1
             @task()
             def a_task(self):
-                self.parent.sub_locust_args = self.args
-                self.parent.sub_locust_kwargs = self.kwargs
+                self.locust.sub_taskset_args = self.args
+                self.locust.sub_taskset_kwargs = self.kwargs
                 self.interrupt()
-        class MyLocust(Locust):
-            host = ""
+        class MyTaskSet(TaskSet):
             sub_locust_args = None
             sub_locust_kwargs = None
-            tasks = [MySubLocust]
+            tasks = [MySubTaskSet]
         
-        loc = MyLocust()
-        loc.schedule_task(MySubLocust, args=[1,2,3], kwargs={"hello":"world"})
+        self.locust.sub_taskset_args = None
+        self.locust.sub_taskset_kwargs = None
+        
+        loc = MyTaskSet(self.locust)
+        loc.schedule_task(MySubTaskSet, args=[1,2,3], kwargs={"hello":"world"})
         self.assertRaises(RescheduleTaskImmediately, lambda: loc.execute_next_task())
-        self.assertEqual((1,2,3), loc.sub_locust_args)
-        self.assertEqual({"hello":"world"}, loc.sub_locust_kwargs)
+        self.assertEqual((1,2,3), self.locust.sub_taskset_args)
+        self.assertEqual({"hello":"world"}, self.locust.sub_taskset_kwargs)
     
 
 class TestWebLocustClass(WebserverTestCase):
@@ -384,9 +387,9 @@ class TestCatchResponse(WebserverTestCase):
             @task
             def interrupted_task(self):
                 with self.client.get("/ultra_fast", catch_response=True) as r:
-                    raise InterruptLocust()
+                    raise InterruptTaskSet()
         
         l = MyLocust()
-        self.assertRaises(InterruptLocust, lambda: l.interrupted_task())
+        self.assertRaises(InterruptTaskSet, lambda: l.interrupted_task())
         self.assertEqual(0, self.num_failures)
         self.assertEqual(0, self.num_success)
