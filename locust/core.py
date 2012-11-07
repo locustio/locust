@@ -40,9 +40,13 @@ def task(weight_or_func=1):
 
 class Locust(object):
     """
-    Locust class that inherits from LocustBase and creates a *client* attribute on instantiation. 
+    Represents a "user" which are to be hatched and attack the system that is to be load tested.
     
-    The *client* attribute is a simple HTTP client with support for keeping a user session between requests.
+    The behaviour of this user is defined by the task_set attribute, which should point to a 
+    :py:class:`TaskSet <locust.core.TaskSet>` class.
+    
+    This class creates a *client* attribute on instantiation which is an HTTP client with support 
+    for keeping a user session between requests.
     """
     
     host = None
@@ -153,14 +157,31 @@ class TaskSet(object):
             tasks = {ThreadPage:15, write_post:1}
     """
     
-    min_wait = 1000
-    """Minimum waiting time between the execution of locust tasks"""
+    min_wait = None
+    """
+    Minimum waiting time between the execution of locust tasks. Can be used to override 
+    the min_wait defined in the root Locust class, which will be used if not set on the 
+    TaskSet.
+    """
     
-    max_wait = 1000
-    """Maximum waiting time between the execution of locust tasks"""
+    max_wait = None
+    """
+    Maximum waiting time between the execution of locust tasks. Can be used to override 
+    the max_wait defined in the root Locust class, which will be used if not set on the 
+    TaskSet.
+    """
     
     avg_wait = None
     """Average waiting time wanted between the execution of locust tasks"""
+    
+    client = None
+    """
+    Reference to the :py:attr:`client <locust.core.Locust.client>` attribute of the root 
+    Locust instance.
+    """
+    
+    locust = None
+    """Will refer to the root Locust class when the TaskSet has been instantiated"""
     
     __metaclass__ = TaskSetMeta    
     
