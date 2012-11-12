@@ -20,7 +20,7 @@ class Server(object):
     
     def send(self, data):
         self.sender.send(pickle.dumps(data))
-    
+     
     def recv(self):
         data = self.receiver.recv()
         return pickle.loads(data)
