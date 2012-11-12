@@ -1,7 +1,8 @@
 import unittest
-from core import Locust
+from ..core import Locust
 
 class MyLocust(Locust):
+    host = 'localhost'
     def _sleep(self, seconds):
         """ Bypass actual sleeping
         """

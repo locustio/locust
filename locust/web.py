@@ -215,7 +215,7 @@ def exceptions():
     response.headers["Content-type"] = "application/json"
     return response
 
-def start(locust, hatch_rate, num_clients, num_requests, ramp):
+def start(locust, hatch_rate, num_clients, num_requests, ramp, port=8089):
     global _locust, _hatch_rate, _num_clients, _num_requests, _ramp
     _locust = locust
     _hatch_rate = hatch_rate
@@ -223,7 +223,7 @@ def start(locust, hatch_rate, num_clients, num_requests, ramp):
     _num_requests = num_requests
     _ramp = ramp
     
-    wsgi.WSGIServer(('', 8089), app, log=None).serve_forever()
+    wsgi.WSGIServer(('', port), app, log=None).serve_forever()
 
 def _sort_stats(stats):
     return [stats[key] for key in sorted(stats.iterkeys())]

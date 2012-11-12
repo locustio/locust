@@ -1,4 +1,7 @@
-from gevent_zeromq import zmq
+try:
+    from zmq import green as zmq
+except ImportError:
+    from gevent_zeromq import zmq
 
 try:
     import cPickle as pickle
@@ -17,7 +20,7 @@ class Server(object):
     
     def send(self, data):
         self.sender.send(pickle.dumps(data))
-    
+     
     def recv(self):
         data = self.receiver.recv()
         return pickle.loads(data)
