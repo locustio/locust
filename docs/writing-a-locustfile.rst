@@ -82,7 +82,7 @@ Here is an example::
     class MyLocust(TaskSet):
         @task
         def my_task(self):
-            print "executing task"
+            print "Locust instance (%r) executing my_task" % (self.locust)
     
     class MyLocust(Locust):
         task_set = MyTaskSet
@@ -117,9 +117,8 @@ it. However, it's also possible to define the tasks of a TaskSet by setting the
 just populate the *tasks* attribute).
 
 The *tasks* attribute which is either a list of python callables, or a *<callable : int>* dict. 
-The tasks are python callables, that recieves one argument - the locust class instance representing 
-the user that is performing the task. Here is an extremely simple example of a locustfile (this 
-locsutfile won't actually load test anything)::
+The tasks are python callables, that recieves one argument - the TaskSet class instance that is executing 
+the task. Here is an extremely simple example of a locustfile (this locsutfile won't actually load test anything)::
 
     from locust import Locust, TaskSet
     
@@ -148,7 +147,7 @@ TaskSets can be nested
 
 A very important property of TaskSets are that they can be nested, because real websites are usually 
 built up in an hierarchical way, with multiple sub sections. Nesting TaskSets will therefore allow 
-us to define a behaviour that simulates users browsing a site which is more hierarchic. For example 
+us to define a behaviour that simulates users in a more realistic way. For example 
 we could define TaskSets with the following structure:
 
 * Main user behaviour
@@ -205,6 +204,17 @@ somewhere in ForumPage, the Locust would never stop running the ForumPage task o
 But by having the interrupt function, we can - together with task weighting - define how likely it 
 is that a simulated user leaves the forum.
 
+It's also possible to declare a nested TaskSet, inline in a class, using the 
+:py:meth:`@task <locust.core.task>` decorator, just like when declaring normal tasks::
+
+    class MyTaskSet(TaskSet):
+        @task
+        class SubTaskSet(TaskSet):
+            @task
+            def my_task(self):
+                pass
+
+
 The on_start function
 ---------------------
 
@@ -215,7 +225,9 @@ Making HTTP requests
 =====================
 
 So far, we've only covered the task scheduling part of a Locust user. In order to actually load test 
-a system we need to make HTTP requests.
+a system we need to make HTTP requests. To help us do this, each Locust instance gets a 
+:py:attr:`client <locust.core.Locust.client>` attribute which will be an instance of 
+:py:attr:`HttpSession <locust.core.client.HttpSession>` which can be used to make HTTP requests.
 
 .. autoclass:: locust.core.Locust
     :members: client
@@ -225,20 +237,24 @@ When inheriting from the Locust class, we can use it's client attribute to make 
 against the server. Here is an example of a locust file that can be used to load test a site 
 with two urls; **/** and **/about/**::
 
-    from locust import Locust
+    from locust import Locust, TaskSet, task
     
-    class MyLocust(Locust):
-        min_wait = 5000
-        max_wait = 15000
-        
+    class MyTaskSet(TaskSet):
+        @task(2)
         def index(self):
             self.client.get("/")
         
+        @task(1)
         def about(self):
             self.client.get("/about/")
+    
+    class MyLocust(Locust):
+        task_set = MyTaskSet
+        min_wait = 5000
+        max_wait = 15000
 
-Using the above locust class, each user will wait between 5 and 15 seconds between the requests,
-and **/** will be requested twice the amount of times than **/about/**.
+Using the above Locust class, each simulated user will wait between 5 and 15 seconds 
+between the requests, and **/** will be requested twice as much as **/about/**.
 
 Using the HTTP client
 ======================
@@ -250,11 +266,12 @@ statistics, using the :py:meth:`get <locust.clients.HttpSession.get>`,
 :py:meth:`post <locust.clients.HttpSession.post>`, :py:meth:`put <locust.clients.HttpSession.put>`, 
 :py:meth:`delete <locust.clients.HttpSession.delete>`, :py:meth:`head <locust.clients.HttpSession.head>`, 
 :py:meth:`patch <locust.clients.HttpSession.patch>` and :py:meth:`options <locust.clients.HttpSession.options>` 
-methods. The HttpInstance will preserve cookies between requests so that it can be used to log in to websites 
-and keep a session between requests.
+methods. The HttpSession instance will preserve cookies between requests so that it can be used to log in 
+to websites and keep a session between requests. The client attribute is also copied to the Locust isntance's
+TaskSet instances so that it's easy to retrieve the client and make HTTP requests from within your tasks.
 
 Here's a simple example that makes a GET request to the */about* path (in this case we assume *self* 
-is an instance of a :py:class:`Locust <locust.core.Locust>` class::
+is an instance of a :py:class:`TaskSet <locust.core.TaskSet>` or :py:class:`Locust <locust.core.Locust>` class::
 
     response = self.client.get("/about")
     print "Response status code:", response.status_code
