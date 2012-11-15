@@ -7,7 +7,7 @@ Locust class
 ============
 
 .. autoclass:: locust.core.Locust
-	:members: tasks, min_wait, max_wait, schedule_task, client, task_set
+	:members: min_wait, max_wait, task_set, client
 	
 	.. autoattribute:: locust.core.Locust.min_wait
 	.. autoattribute:: locust.core.Locust.max_wait
@@ -17,7 +17,7 @@ TaskSet class
 =============
 
 .. autoclass:: locust.core.TaskSet
-	:members: locust, min_wait, max_wait, client, tasks, interrupt
+	:members: locust, min_wait, max_wait, client, tasks, interrupt, schedule_task
 
 task decorator
 ==============
@@ -51,9 +51,9 @@ ResponseContextManager class
 	:members: success, failure
 
 
-InterruptLocust Exception
-=========================
-.. autoexception:: locust.exception.InterruptLocust
+InterruptTaskSet Exception
+==========================
+.. autoexception:: locust.exception.InterruptTaskSet
 
 
 .. _events:
