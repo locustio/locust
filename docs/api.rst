@@ -19,6 +19,11 @@ TaskSet class
 .. autoclass:: locust.core.TaskSet
 	:members: locust, min_wait, max_wait, client, tasks, interrupt
 
+task decorator
+==============
+
+.. autofunction:: locust.core.task
+
 
 HttpSession class
 =================

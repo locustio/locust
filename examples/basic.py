@@ -1,4 +1,3 @@
-import random
 from locust import Locust, TaskSet, task
 
 def index(l):
@@ -17,6 +16,9 @@ class UserTasks(TaskSet):
         self.client.get("/does_not_exist")
     
 class WebsiteUser(Locust):
+    """
+    Locust user class that does requests to the locust web server running on localhost
+    """
     host = "http://127.0.0.1:8089"
     min_wait = 2000
     max_wait = 5000

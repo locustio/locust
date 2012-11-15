@@ -18,9 +18,23 @@ from exception import LocustError, InterruptTaskSet, RescheduleTaskImmediately, 
 logger = logging.getLogger(__name__)
 
 
-def task(weight_or_func=1):
+def task(weight=1):
+    """
+    Used as a convenience decorator to be able to declare tasks for a TaskSet 
+    inline in the class. Example::
+    
+        class ForumPage(TaskSet):
+            @task(100)
+            def read_thread(self):
+                pass
+            
+            @task(7)
+            def create_thread(self):
+                pass
+    """
+    
     def decorator_func(func):
-        func.locust_task_weight = weight_or_func
+        func.locust_task_weight = weight
         return func
     
     """
@@ -30,9 +44,9 @@ def task(weight_or_func=1):
         def my_task()
             pass
     """
-    if callable(weight_or_func):
-        func = weight_or_func
-        weight_or_func = 1
+    if callable(weight):
+        func = weight
+        weight = 1
         return decorator_func(func)
     else:
         return decorator_func
@@ -40,7 +54,7 @@ def task(weight_or_func=1):
 
 class Locust(object):
     """
-    Represents a "user" which are to be hatched and attack the system that is to be load tested.
+    Represents a "user" which is to be hatched and attack the system that is to be load tested.
     
     The behaviour of this user is defined by the task_set attribute, which should point to a 
     :py:class:`TaskSet <locust.core.TaskSet>` class.
