@@ -193,6 +193,23 @@ class TestTaskSet(unittest.TestCase):
         self.assertRaises(RescheduleTaskImmediately, lambda: loc.execute_next_task())
         self.assertTrue(self.locust.sub_locust_task_executed)
     
+    def test_sub_taskset_tasks_decorator(self):
+        class MyTaskSet(TaskSet):
+            @task
+            class MySubTaskSet(TaskSet):
+                min_wait=1
+                max_wait=1
+                @task()
+                def a_task(self):
+                    self.locust.sub_locust_task_executed = True
+                    self.interrupt()
+        
+        self.sub_locust_task_executed = False
+        loc = MyTaskSet(self.locust)
+        loc.schedule_task(loc.get_next_task())
+        self.assertRaises(RescheduleTaskImmediately, lambda: loc.execute_next_task())
+        self.assertTrue(self.locust.sub_locust_task_executed)
+    
     def test_sub_taskset_arguments(self):
         class MySubTaskSet(TaskSet):
             min_wait=1
