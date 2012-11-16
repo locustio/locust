@@ -3,7 +3,7 @@ import gevent
 from copy import copy
 
 import events
-from exception import InterruptLocust
+from exception import StopLocust
 from log import console_logger
 
 STATS_NAME_WIDTH = 60
@@ -267,7 +267,7 @@ def median_from_dict(total, count):
 
 def on_request_success(method, name, response_time, response_length):
     if RequestStats.global_max_requests is not None and RequestStats.total_num_requests >= RequestStats.global_max_requests:
-        raise InterruptLocust("Maximum number of requests reached")
+        raise StopLocust("Maximum number of requests reached")
     
     RequestStats.get(method, name).log(response_time, response_length)
 

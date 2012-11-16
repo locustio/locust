@@ -1,4 +1,4 @@
-from core import Locust, WebLocust, SubLocust, task
-from exception import InterruptLocust, ResponseError, RescheduleTaskImmediately
+from core import Locust, TaskSet, WebLocust, SubLocust, task
+from exception import InterruptTaskSet, ResponseError, RescheduleTaskImmediately
 
 version = "0.5.1"

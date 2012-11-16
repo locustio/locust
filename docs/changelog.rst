@@ -9,9 +9,79 @@ Changelog
 
     This version comes with non backward compatible changes to the API. 
     Anyone who is currently using existing locust scripts and want to upgrade to 0.6
-    is adviced to read through these changes. It's nothing major, and the upgrade 
-    should be possible without too much pain.
+    should read through these changes. 
 
+:py:class:`SubLocust <locust.core.SubLocust>` replaced by :py:class:`TaskSet <locust.core.TaskSet>` and :py:class:`Locust <locust.core.Locust>` class behaviour changed
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+:py:class:`Locust <locust.core.Locust>` classes does no longer control task scheduling and execution. 
+Therefore, you no longer define tasks within Locust classes, instead the Locust class has a 
+:py:attr:`task_set <locust.core.Locust.task_set>` attribute which should point to a 
+:py:class:`TaskSet <locust.core.TaskSet>` class. Tasks should now be defined in TaskSet 
+classes, in the same way that was previously done in Locust and SubLocust classes. TaskSets can be 
+nested just like SubLocust classes could.
+
+So the following code for 0.5.1::
+
+    class User(Locust):
+        min_wait = 10000
+        max_wait = 120000
+        
+        @task(10)
+        def index(self):
+            self.client.get("/")
+        
+        @task(2)
+        class AboutPage(SubLocust):
+            min_wait = 10000
+            max_wait = 120000
+            
+            def on_init(self):
+                self.client.get("/about/")
+            
+            @task
+            def team_page(self):
+                self.client.get("/about/team/")
+            
+            @task
+            def press_page(self):
+                self.client.get("/about/press/")
+            
+            @task
+            def stop(self):
+                self.interrupt()
+
+Should now be written like::
+
+    class BrowsePage(TaskSet):
+        @task(10)
+        def index(self):
+            self.client.get("/")
+        
+        @task(2)
+        class AboutPage(TaskSet):
+            def on_init(self):
+                self.client.get("/about/")
+            
+            @task
+            def team_page(self):
+                self.client.get("/about/team/")
+            
+            @task
+            def press_page(self):
+                self.client.get("/about/press/")
+            
+            @task
+            def stop(self):
+                self.interrupt()
+    
+    class User(Locust):
+        min_wait = 10000
+        max_wait = 120000
+        task_set = BrowsePage
+
+Each TaskSet instance gets a :py:attr:`locust <locust.core.TaskSet.locust>` attribute, which refers to the  
+Locust class.
   
 Locust now uses Requests
 ------------------------
