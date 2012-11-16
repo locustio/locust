@@ -7,11 +7,22 @@ Locust class
 ============
 
 .. autoclass:: locust.core.Locust
-	:members: tasks, min_wait, max_wait, schedule_task, client
+	:members: min_wait, max_wait, task_set, client
 	
-	.. autoattribute:: locust.core.LocustBase.min_wait
-	.. autoattribute:: locust.core.LocustBase.max_wait
-	.. autoattribute:: locust.core.LocustBase.tasks
+	.. autoattribute:: locust.core.Locust.min_wait
+	.. autoattribute:: locust.core.Locust.max_wait
+	.. autoattribute:: locust.core.Locust.task_set
+
+TaskSet class
+=============
+
+.. autoclass:: locust.core.TaskSet
+	:members: locust, min_wait, max_wait, client, tasks, interrupt, schedule_task
+
+task decorator
+==============
+
+.. autofunction:: locust.core.task
 
 
 HttpSession class
@@ -40,9 +51,9 @@ ResponseContextManager class
 	:members: success, failure
 
 
-InterruptLocust Exception
-=========================
-.. autoexception:: locust.exception.InterruptLocust
+InterruptTaskSet Exception
+==========================
+.. autoexception:: locust.exception.InterruptTaskSet
 
 
 .. _events:

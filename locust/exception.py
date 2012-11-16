@@ -7,17 +7,20 @@ class ResponseError(LocustError):
 class CatchResponseError(LocustError):
     pass
 
-class InterruptLocust(Exception):
+class InterruptTaskSet(Exception):
     """
     Exception that will interrupt a Locust when thrown inside a task
     """
     
     def __init__(self, reschedule=True):
         """
-        If *reschedule* is True and the InterruptLocust is raised inside a SubLocust,
-        the parent Locust whould immediately reschedule another task.
+        If *reschedule* is True and the InterruptTaskSet is raised inside a nested TaskSet,
+        the parent TaskSet whould immediately reschedule another task.
         """
         self.reschedule = reschedule
+
+class StopLocust(Exception):
+    pass
 
 class RescheduleTaskImmediately(Exception):
     """

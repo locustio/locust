@@ -2,6 +2,9 @@
 Locust Documentation
 =====================
 
+.. rubric:: Everything you need to know about Locust
+
+
 .. toctree ::
     :maxdepth: 2
     
@@ -9,7 +12,7 @@ Locust Documentation
     installation
     quickstart
     writing-a-locustfile
-    extending-locust
     api
+    extending-locust
     changelog
 

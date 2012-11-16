@@ -63,10 +63,10 @@ class LocustRunner(object):
         returns a list "bucket" with the weighted locusts
         """
         bucket = []
-        weight_sum = sum((locust.weight for locust in self.locust_classes if locust.tasks))
+        weight_sum = sum((locust.weight for locust in self.locust_classes if locust.task_set))
         for locust in self.locust_classes:
-            if not locust.tasks:
-                warnings.warn("Notice: Found locust (%s) got no tasks. Skipping..." % locust.__name__)
+            if not locust.task_set:
+                warnings.warn("Notice: Found Locust class (%s) got no task_set. Skipping..." % locust.__name__)
                 continue
 
             if self.host is not None:
@@ -110,7 +110,7 @@ class LocustRunner(object):
                 occurence_count[locust.__name__] += 1
                 def start_locust(_):
                     try:
-                        locust()()
+                        locust().run()
                     except RescheduleTaskImmediately:
                         pass
                     except GreenletExit:

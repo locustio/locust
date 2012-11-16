@@ -3,7 +3,7 @@ import time
 
 from testcases import WebserverTestCase
 from locust.stats import RequestStats
-from locust.core import Locust, SubLocust, task
+from locust.core import Locust, TaskSet, task
 from locust.inspectlocust import get_task_ratio_dict
 
 class TestRequestStats(unittest.TestCase):
@@ -117,13 +117,13 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         self.assertEqual(1, RequestStats.get("GET", "/ultra_fast?query=1").num_reqs)
 
 
-class MyLocust(Locust):
+class MyTaskSet(TaskSet):
     @task(75)
     def root_task(self):
         pass
     
     @task(25)
-    class MySubLocust(SubLocust):
+    class MySubTaskSet(TaskSet):
         @task
         def task1(self):
             pass
@@ -133,18 +133,18 @@ class MyLocust(Locust):
     
 class TestInspectLocust(unittest.TestCase):
     def test_get_task_ratio_dict_relative(self):
-        ratio = get_task_ratio_dict([MyLocust])
-        self.assertEqual(1.0, ratio["MyLocust"]["ratio"])
-        self.assertEqual(0.75, ratio["MyLocust"]["tasks"]["root_task"]["ratio"])
-        self.assertEqual(0.25, ratio["MyLocust"]["tasks"]["MySubLocust"]["ratio"])
-        self.assertEqual(0.5, ratio["MyLocust"]["tasks"]["MySubLocust"]["tasks"]["task1"]["ratio"])
-        self.assertEqual(0.5, ratio["MyLocust"]["tasks"]["MySubLocust"]["tasks"]["task2"]["ratio"])
+        ratio = get_task_ratio_dict([MyTaskSet])
+        self.assertEqual(1.0, ratio["MyTaskSet"]["ratio"])
+        self.assertEqual(0.75, ratio["MyTaskSet"]["tasks"]["root_task"]["ratio"])
+        self.assertEqual(0.25, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["ratio"])
+        self.assertEqual(0.5, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["tasks"]["task1"]["ratio"])
+        self.assertEqual(0.5, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["tasks"]["task2"]["ratio"])
     
     def test_get_task_ratio_dict_total(self):
-        ratio = get_task_ratio_dict([MyLocust], total=True)
-        self.assertEqual(1.0, ratio["MyLocust"]["ratio"])
-        self.assertEqual(0.75, ratio["MyLocust"]["tasks"]["root_task"]["ratio"])
-        self.assertEqual(0.25, ratio["MyLocust"]["tasks"]["MySubLocust"]["ratio"])
-        self.assertEqual(0.125, ratio["MyLocust"]["tasks"]["MySubLocust"]["tasks"]["task1"]["ratio"])
-        self.assertEqual(0.125, ratio["MyLocust"]["tasks"]["MySubLocust"]["tasks"]["task2"]["ratio"])
+        ratio = get_task_ratio_dict([MyTaskSet], total=True)
+        self.assertEqual(1.0, ratio["MyTaskSet"]["ratio"])
+        self.assertEqual(0.75, ratio["MyTaskSet"]["tasks"]["root_task"]["ratio"])
+        self.assertEqual(0.25, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["ratio"])
+        self.assertEqual(0.125, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["tasks"]["task1"]["ratio"])
+        self.assertEqual(0.125, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["tasks"]["task2"]["ratio"])
         

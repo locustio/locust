@@ -1,8 +1,4 @@
-from locust import Locust, task
-import random
-
-def login(l):
-    l.client.post("/login", {"userid":random.randint(0,10000)})
+from locust import Locust, TaskSet, task
 
 def index(l):
     l.client.get("/")
@@ -10,16 +6,20 @@ def index(l):
 def stats(l):
     l.client.get("/stats/requests")
 
-def profile(l):
-    l.client.get("/profile")
-
-class WebsiteUser(Locust):
-    host = "http://127.0.0.1:8089"
-    #tasks = [(index, 2), (profile, 1)]
+class UserTasks(TaskSet):
+    # one can specify tasks like this
     tasks = [index, stats]
-    min_wait=2000
-    max_wait=5000
     
+    # but it might be convenient to use the @task decorator
     @task
     def page404(self):
         self.client.get("/does_not_exist")
+    
+class WebsiteUser(Locust):
+    """
+    Locust user class that does requests to the locust web server running on localhost
+    """
+    host = "http://127.0.0.1:8089"
+    min_wait = 2000
+    max_wait = 5000
+    task_set = UserTasks
