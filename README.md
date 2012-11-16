@@ -1,6 +1,6 @@
 # Locust
 
-![](https://secure.travis-ci.org/esnme/locust.png)
+[![Build Status](https://secure.travis-ci.org/locustio/locust.png)](http://travis-ci.org/locustio/locust)
 
 * Website: <a href="http://locust.io">locust.io</a>
 * Documentation: <a href="http://docs.locust.io">docs.locust.io</a>
