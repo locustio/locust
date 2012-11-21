@@ -1,8 +1,8 @@
 import unittest
 
-from locust.core import Locust, TaskSet, task, events, RescheduleTaskImmediately
+from locust.core import Locust, TaskSet, task, events
 from locust import ResponseError, InterruptTaskSet
-from locust.exception import CatchResponseError
+from locust.exception import CatchResponseError, RescheduleTask, RescheduleTaskImmediately, LocustError
 
 from testcases import WebserverTestCase
 
@@ -73,7 +73,7 @@ class TestTaskSet(unittest.TestCase):
                 raise InterruptTaskSet(reschedule=False)
 
         l = MyTasks(self.locust)
-        l.run()
+        self.assertRaises(RescheduleTask, lambda: l.run())
         self.assertTrue(l.t1_executed)
         self.assertTrue(l.t2_executed)
 
@@ -398,15 +398,56 @@ class TestCatchResponse(WebserverTestCase):
         self.assertEqual(0, self.num_failures)
         self.assertEqual(1, self.num_success)
     
-    def test_interrupt_locust_with_catch_response(self):
-        class MyLocust(Locust):
-            host = "http://127.0.0.1:%i" % self.port
+    def test_interrupt_taskset_with_catch_response(self):
+        class MyTaskSet(TaskSet):
             @task
             def interrupted_task(self):
                 with self.client.get("/ultra_fast", catch_response=True) as r:
                     raise InterruptTaskSet()
+        class MyLocust(Locust):
+            host = "http://127.0.0.1:%i" % self.port
+            task_set = MyTaskSet
         
         l = MyLocust()
-        self.assertRaises(InterruptTaskSet, lambda: l.interrupted_task())
+        ts = MyTaskSet(l)
+        self.assertRaises(InterruptTaskSet, lambda: ts.interrupted_task())
         self.assertEqual(0, self.num_failures)
         self.assertEqual(0, self.num_success)
+    
+    def test_interrupt_taskset_in_main_taskset(self):
+        class MyTaskSet(TaskSet):
+            @task
+            def interrupted_task(self):
+                raise InterruptTaskSet(reschedule=False)
+        class MyLocust(Locust):
+            host = "http://127.0.0.1:%i" % self.port
+            task_set = MyTaskSet
+        
+        class MyTaskSet2(TaskSet):
+            @task
+            def interrupted_task(self):
+                self.interrupt()
+        class MyLocust2(Locust):
+            host = "http://127.0.0.1:%i" % self.port
+            task_set = MyTaskSet2
+        
+        l = MyLocust()
+        l2 = MyLocust2()
+        self.assertRaises(LocustError, lambda: l.run())
+        self.assertRaises(LocustError, lambda: l2.run())
+        
+        try:
+            l.run()
+        except LocustError, e:
+            self.assertTrue("MyLocust" in e.args[0], "MyLocust should have been referred to in the exception message")
+            self.assertTrue("MyTaskSet" in e.args[0], "MyTaskSet should have been referred to in the exception message")
+        except:
+            raise
+        
+        try:
+            l2.run()
+        except LocustError, e:
+            self.assertTrue("MyLocust2" in e.args[0], "MyLocust2 should have been referred to in the exception message")
+            self.assertTrue("MyTaskSet2" in e.args[0], "MyTaskSet2 should have been referred to in the exception message")
+        except:
+            raise

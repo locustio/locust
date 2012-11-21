@@ -1,10 +1,10 @@
 class LocustError(Exception):
     pass
 
-class ResponseError(LocustError):
+class ResponseError(Exception):
     pass
 
-class CatchResponseError(LocustError):
+class CatchResponseError(Exception):
     pass
 
 class InterruptTaskSet(Exception):
@@ -22,8 +22,15 @@ class InterruptTaskSet(Exception):
 class StopLocust(Exception):
     pass
 
+class RescheduleTask(Exception):
+    """
+    When raised in a task it's equivalent of a return statement.
+    
+    Used internally by TaskSet. When raised within the task control flow of a TaskSet, 
+    but not inside a task, the execution should be handed over to the parent TaskSet.
+    """
+
 class RescheduleTaskImmediately(Exception):
     """
     When raised in a Locust task, another locust task will be rescheduled immediately
     """
-    

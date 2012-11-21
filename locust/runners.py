@@ -111,8 +111,6 @@ class LocustRunner(object):
                 def start_locust(_):
                     try:
                         locust().run()
-                    except RescheduleTaskImmediately:
-                        pass
                     except GreenletExit:
                         pass
                 new_locust = self.locusts.spawn(start_locust, locust)

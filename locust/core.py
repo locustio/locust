@@ -13,7 +13,7 @@ import logging
 from clients import HttpSession
 import events
 
-from exception import LocustError, InterruptTaskSet, RescheduleTaskImmediately, StopLocust
+from exception import LocustError, InterruptTaskSet, RescheduleTask, RescheduleTaskImmediately, StopLocust
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +102,8 @@ class Locust(object):
             self.task_set(self).run()
         except StopLocust:
             pass
+        except (RescheduleTask, RescheduleTaskImmediately), e:
+            raise LocustError, LocustError("A task inside a Locust class' main TaskSet (`%s.task_set` of type `%s`) seems to have called interrupt() or raised an InterruptTaskSet exception. The interrupt() function is used to hand over execution to a parent TaskSet, and should never be called in the main TaskSet which a Locust class' task_set attribute points to." % (type(self).__name__, self.task_set.__name__)), sys.exc_info()[2]
 
 
 class TaskSetMeta(type):
@@ -240,12 +242,15 @@ class TaskSet(object):
                     self.execute_next_task()
                 except RescheduleTaskImmediately:
                     pass
+                except RescheduleTask:
+                    self.wait()
                 else:
                     self.wait()
             except InterruptTaskSet, e:
                 if e.reschedule:
-                    raise RescheduleTaskImmediately()
-                return
+                    raise RescheduleTaskImmediately, e, sys.exc_info()[2]
+                else:
+                    raise RescheduleTask, e, sys.exc_info()[2]
             except GreenletExit:
                 raise
             except Exception, e:
