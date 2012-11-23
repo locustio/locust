@@ -1,6 +1,8 @@
 import unittest
 import time
 
+from requests.exceptions import RequestException
+
 from testcases import WebserverTestCase
 from locust.stats import RequestStats
 from locust.core import Locust, TaskSet, task
@@ -115,6 +117,15 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         locust = MyLocust()
         locust.client.get("/ultra_fast?query=1")
         self.assertEqual(1, RequestStats.get("GET", "/ultra_fast?query=1").num_reqs)
+    
+    def test_request_connection_error(self):
+        class MyLocust(Locust):
+            host = "http://1.2.3.4"
+        
+        locust = MyLocust()
+        self.assertRaises(RequestException, lambda: locust.client.get("/", timeout=0.1))
+        self.assertEqual(1, RequestStats.get("GET", "/").num_failures)
+        self.assertEqual(0, RequestStats.get("GET", "/").num_reqs)
 
 
 class MyTaskSet(TaskSet):

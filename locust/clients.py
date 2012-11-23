@@ -5,6 +5,7 @@ from urlparse import urlparse, urlunparse
 
 import requests
 from requests.auth import HTTPBasicAuth
+from requests.exceptions import RequestException
 
 import events
 from exception import CatchResponseError, ResponseError
@@ -98,25 +99,40 @@ class HttpSession(requests.Session):
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(url)
         
+        request_meta = {}
+        
         # set up pre and post request hooks for recording the requests in the statistics
         def on_pre_request(request):
-            request.locust_start_time = time.time()
+            request.locust_request_meta = request_meta
+            request_meta["method"] = request.method
+            request_meta["name"] = name or request.path_url
+            request_meta["start_time"] = time.time()
         
         def on_response(response):
             request = response.request
-            request.locust_response_time = int((time.time() - request.locust_start_time) * 1000)
-            request.locust_name = name or request.path_url
+            request_meta["response_time"] = int((time.time() - request_meta["start_time"]) * 1000)
             
             if not catch_response:
+                # if catch_response is set, the reporting of the request as fail or success, is to
+                # be done in ResponseContextManager
                 try:
                     response.raise_for_status()
                 except requests.exceptions.RequestException, e:
-                    events.request_failure.fire(request.method, request.locust_name, request.locust_response_time, e, response)
+                    events.request_failure.fire(request_meta["method"], request_meta["name"], request_meta["response_time"], e, response)
                 else:
-                    events.request_success.fire(request.method, request.locust_name, request.locust_response_time, int(response.headers.get("content-length") or 0))
+                    events.request_success.fire(request_meta["method"], request_meta["name"], request_meta["response_time"], int(response.headers.get("content-length") or 0))
         
         kwargs["hooks"] = {"pre_request":on_pre_request, "response":on_response}
-        response = super(HttpSession, self).request(method, url, **kwargs)
+        try:
+            response = super(HttpSession, self).request(method, url, **kwargs)
+        except RequestException, e:
+            # If a RequestException (DNS error, could not connect, timeouts etc.) is raised, 
+            # we want to report the request as a failure, but we still want the exception to 
+            # be raised, so that we keep the behaviour of the python-requests lib
+            request_meta["response_time"] = int((time.time() - request_meta["start_time"]) * 1000)
+            events.request_failure.fire(request_meta["method"], request_meta["name"], request_meta["response_time"], e, None)
+            raise
+        
         if catch_response:
             return ResponseContextManager(response)
         else:
@@ -172,9 +188,9 @@ class ResponseContextManager(requests.Response):
                     response.success()
         """
         events.request_success.fire(
-            self.request.method,
-            self.request.locust_name,
-            self.request.locust_response_time,
+            self.request.locust_request_meta["method"],
+            self.request.locust_request_meta["name"],
+            self.request.locust_request_meta["response_time"],
             int(self.headers.get("content-length") or 0),
         )
         self._is_reported = True
@@ -196,9 +212,9 @@ class ResponseContextManager(requests.Response):
             exc = CatchResponseError(exc)
         
         events.request_failure.fire(
-            self.request.method,
-            self.request.locust_name,
-            self.request.locust_response_time,
+            self.request.locust_request_meta["method"],
+            self.request.locust_request_meta["name"],
+            self.request.locust_request_meta["response_time"],
             exc,
             self,
         )
