@@ -281,6 +281,14 @@ And here's an example making a POST request::
 
     response = self.client.post("/login", {"username":"testuser", "password":"secret"})
 
+Safe mode
+---------
+The HTTP client is configured to run in safe_mode. What this does is that any request that fails due to 
+a connection error, timeout, or similar will not raise an exception, but rather return an empty dummy 
+Response object. The request will be reported as a failure in Locust's statistics. The returned dummy 
+Response's content will be set to None, and it's status_code will be 0.
+
+
 Manually controlling if a request should be considered successful or a failure
 ------------------------------------------------------------------------------
 
