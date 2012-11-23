@@ -256,6 +256,7 @@ class TaskSet(object):
             except Exception, e:
                 events.locust_error.fire(self, e, sys.exc_info()[2])
                 sys.stderr.write("\n" + traceback.format_exc())
+                self.wait()
     
     def execute_next_task(self):
         task = self._task_queue.pop(0)
