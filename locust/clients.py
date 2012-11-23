@@ -55,7 +55,9 @@ class HttpSession(requests.Session):
         config = {
             "max_retries": 0,
             "keep_alive": False,
-        }.update(kwargs.get("config", {}))
+        }
+        if "config" in kwargs:
+            config.update(kwargs["config"])
         kwargs["config"] = config
         
         super(HttpSession, self).__init__(*args, **kwargs)
