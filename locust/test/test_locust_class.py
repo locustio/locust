@@ -451,3 +451,25 @@ class TestCatchResponse(WebserverTestCase):
         self.assertRaises(InterruptTaskSet, lambda: ts.interrupted_task())
         self.assertEqual(0, self.num_failures)
         self.assertEqual(0, self.num_success)
+    
+    def test_catch_response_connection_error_success(self):
+        class MyLocust(Locust):
+            host = "http://127.0.0.1:1"
+        l = MyLocust()
+        with l.client.get("/", catch_response=True) as r:
+            self.assertFalse(r)
+            self.assertEqual(None, r.content)
+            r.success()
+        self.assertEqual(1, self.num_success)
+        self.assertEqual(0, self.num_failures)
+    
+    def test_catch_response_connection_error_fail(self):
+        class MyLocust(Locust):
+            host = "http://127.0.0.1:1"
+        l = MyLocust()
+        with l.client.get("/", catch_response=True) as r:
+            self.assertFalse(r)
+            self.assertEqual(None, r.content)
+            r.success()
+        self.assertEqual(1, self.num_success)
+        self.assertEqual(0, self.num_failures)

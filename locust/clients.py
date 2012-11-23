@@ -1,11 +1,14 @@
 import re
 import time
+import socket
 from collections import namedtuple
 from urlparse import urlparse, urlunparse
 
 import requests
+from requests import Response
+from requests.packages.urllib3.response import HTTPResponse
 from requests.auth import HTTPBasicAuth
-from requests.exceptions import RequestException
+from requests.exceptions import RequestException, ConnectionError, HTTPError
 
 import events
 from exception import CatchResponseError, ResponseError
@@ -55,6 +58,7 @@ class HttpSession(requests.Session):
         config = {
             "max_retries": 0,
             "keep_alive": False,
+            "safe_mode": True,
         }
         if "config" in kwargs:
             config.update(kwargs["config"])
@@ -101,44 +105,58 @@ class HttpSession(requests.Session):
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(url)
         
+        # store meta data that is used when reporting the request to locust's statistics
         request_meta = {}
         
-        # set up pre and post request hooks for recording the requests in the statistics
+        # set up pre_request hook for attaching meta data to the request object
         def on_pre_request(request):
-            request.locust_request_meta = request_meta
             request_meta["method"] = request.method
             request_meta["name"] = name or request.path_url
             request_meta["start_time"] = time.time()
         
-        def on_response(response):
-            request = response.request
-            request_meta["response_time"] = int((time.time() - request_meta["start_time"]) * 1000)
-            
-            if not catch_response:
-                # if catch_response is set, the reporting of the request as fail or success, is to
-                # be done in ResponseContextManager
-                try:
-                    response.raise_for_status()
-                except requests.exceptions.RequestException, e:
-                    events.request_failure.fire(request_meta["method"], request_meta["name"], request_meta["response_time"], e, response)
-                else:
-                    events.request_success.fire(request_meta["method"], request_meta["name"], request_meta["response_time"], int(response.headers.get("content-length") or 0))
+        kwargs["hooks"] = {"pre_request":on_pre_request}
         
-        kwargs["hooks"] = {"pre_request":on_pre_request, "response":on_response}
-        try:
-            response = super(HttpSession, self).request(method, url, **kwargs)
-        except RequestException, e:
-            # If a RequestException (DNS error, could not connect, timeouts etc.) is raised, 
-            # we want to report the request as a failure, but we still want the exception to 
-            # be raised, so that we keep the behaviour of the python-requests lib
-            request_meta["response_time"] = int((time.time() - request_meta["start_time"]) * 1000)
-            events.request_failure.fire(request_meta["method"], request_meta["name"], request_meta["response_time"], e, None)
-            raise
+        # make the request using a wrapper that works around a bug in python-requests causing 
+        # safe_mode to not work when making requests through Session instances
+        response = self._send_request_safe_mode(method, url, **kwargs)
+        
+        # record the consumed time
+        request_meta["response_time"] = int((time.time() - request_meta["start_time"]) * 1000)
         
         if catch_response:
+            response.locust_request_meta = request_meta
             return ResponseContextManager(response)
         else:
+            try:
+                response.raise_for_status()
+            except RequestException, e:
+                events.request_failure.fire(request_meta["method"], request_meta["name"], request_meta["response_time"], e, None)
+            else:
+                events.request_success.fire(
+                    request_meta["method"],
+                    request_meta["name"],
+                    request_meta["response_time"],
+                    int(response.headers.get("content-length") or 0)
+                )
             return response
+    
+    def _send_request_safe_mode(self, method, url, **kwargs):
+        """
+        Send an HTTP request, and catch any exception that might occur due to connection problems.
+        
+        This is equivalent of python-requests' safe_mode, which due to a bug, does currently *not*
+        work together with Sessions. Once the issue is fixed in python-requests, this method should 
+        be removed. See: https://github.com/kennethreitz/requests/issues/888
+        """
+        try:
+            return super(HttpSession, self).request(method, url, **kwargs)
+        except (RequestException, ConnectionError, HTTPError,
+                socket.timeout, socket.gaierror) as e:
+            r = Response()
+            r.error = e
+            r.raw = HTTPResponse()  # otherwise, tests fail
+            r.status_code = 0  # with this status_code, content returns None
+            return r
 
 class ResponseContextManager(requests.Response):
     """
@@ -190,9 +208,9 @@ class ResponseContextManager(requests.Response):
                     response.success()
         """
         events.request_success.fire(
-            self.request.locust_request_meta["method"],
-            self.request.locust_request_meta["name"],
-            self.request.locust_request_meta["response_time"],
+            self.locust_request_meta["method"],
+            self.locust_request_meta["name"],
+            self.locust_request_meta["response_time"],
             int(self.headers.get("content-length") or 0),
         )
         self._is_reported = True
@@ -214,9 +232,9 @@ class ResponseContextManager(requests.Response):
             exc = CatchResponseError(exc)
         
         events.request_failure.fire(
-            self.request.locust_request_meta["method"],
-            self.request.locust_request_meta["name"],
-            self.request.locust_request_meta["response_time"],
+            self.locust_request_meta["method"],
+            self.locust_request_meta["name"],
+            self.locust_request_meta["response_time"],
             exc,
             self,
         )

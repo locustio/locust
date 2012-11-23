@@ -120,10 +120,11 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
     
     def test_request_connection_error(self):
         class MyLocust(Locust):
-            host = "http://1.2.3.4"
+            host = "http://localhost:1"
         
         locust = MyLocust()
-        self.assertRaises(RequestException, lambda: locust.client.get("/", timeout=0.1))
+        response = locust.client.get("/", timeout=0.1)
+        self.assertFalse(response)
         self.assertEqual(1, RequestStats.get("GET", "/").num_failures)
         self.assertEqual(0, RequestStats.get("GET", "/").num_reqs)
 
