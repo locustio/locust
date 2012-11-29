@@ -21,4 +21,3 @@ class TestHttpSession(WebserverTestCase):
         self.assertFalse(r)
         self.assertEqual(None, r.content)
         self.assertRaises(RequestException, r.raise_for_status)
-        

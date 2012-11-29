@@ -4,10 +4,11 @@ import gevent.pywsgi
 import unittest
 import base64
 from copy import copy
+from StringIO import StringIO
 
 from locust import events
 from locust.stats import RequestStats
-from flask import Flask, request, redirect, make_response
+from flask import Flask, request, redirect, make_response, send_file
 
 app = Flask(__name__)
 
@@ -59,6 +60,11 @@ def basic_auth():
     resp = make_response("401 Authorization Required", 401)
     resp.headers["WWW-Authenticate"] = 'Basic realm="Locust"'
     return resp
+
+@app.route("/no_content_length")
+def no_content_length():
+    r = send_file(StringIO("This response does not have content-length in the header"))
+    return r
 
 @app.errorhandler(404)
 def not_found(error):

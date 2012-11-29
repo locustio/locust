@@ -102,6 +102,22 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         locust.client.get("/ultra_fast")
         self.assertEqual(RequestStats.get("GET", "/ultra_fast").avg_content_length, len("This is an ultra fast response"))
     
+    def test_request_stats_no_content_length(self):
+        class MyLocust(Locust):
+            host = "http://127.0.0.1:%i" % self.port
+        l = MyLocust()
+        path = "/no_content_length"
+        r = l.client.get(path)
+        self.assertEqual(RequestStats.get("GET", path).avg_content_length, len("This response does not have content-length in the header"))
+    
+    def test_request_stats_no_content_length_no_prefetch(self):
+        class MyLocust(Locust):
+            host = "http://127.0.0.1:%i" % self.port
+        l = MyLocust()
+        path = "/no_content_length"
+        r = l.client.get(path, prefetch=False)
+        self.assertEqual(0, RequestStats.get("GET", path).avg_content_length)
+    
     def test_request_stats_named_endpoint(self):
         class MyLocust(Locust):
             host = "http://127.0.0.1:%i" % self.port

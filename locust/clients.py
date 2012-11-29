@@ -123,6 +123,13 @@ class HttpSession(requests.Session):
         # record the consumed time
         request_meta["response_time"] = int((time.time() - request_meta["start_time"]) * 1000)
         
+        # get the length of the content, but if the argument prefetch is set to False, we take
+        # the size from the content-length header, in order to not trigger fetching of the body
+        if kwargs.get("prefetch", True):
+            request_meta["content_size"] = len(response.content or "")
+        else:
+            request_meta["content_size"] = int(response.headers.get("content-length") or 0)
+        
         if catch_response:
             response.locust_request_meta = request_meta
             return ResponseContextManager(response)
@@ -136,7 +143,7 @@ class HttpSession(requests.Session):
                     request_meta["method"],
                     request_meta["name"],
                     request_meta["response_time"],
-                    int(response.headers.get("content-length") or 0)
+                    request_meta["content_size"],
                 )
             return response
     
@@ -211,7 +218,7 @@ class ResponseContextManager(requests.Response):
             self.locust_request_meta["method"],
             self.locust_request_meta["name"],
             self.locust_request_meta["response_time"],
-            int(self.headers.get("content-length") or 0),
+            self.locust_request_meta["content_size"],
         )
         self._is_reported = True
     

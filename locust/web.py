@@ -102,7 +102,7 @@ def request_stats_csv():
             '"Average response time"',
             '"Min response time"', 
             '"Max response time"',
-            '"Average Content-Length"',
+            '"Average Content Size"',
             '"Reqests/s"',
         ])
     ]
