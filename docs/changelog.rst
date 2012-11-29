@@ -164,11 +164,13 @@ Other improvements and bug fixes
 * Scheduled task callables can now take keyword arguments and not only normal function arguments.
 * SubLocust classes that are scheduled using :func:`locust.core.Locust.schedule_task` can now take 
   arguments and keyword arguments (available in *self.args* and *self.kwargs*).
+* Fixed bug where the average content size would be zero when doing requests against a server that
+  didn't set the content-length header (i.e. server that uses *Transfer-Encoding: chunked*)
 
 
 
-API Changes
------------
+Smaller API Changes
+-------------------
 
 * The *require_once* decorator has been removed. It was an old legacy function that no longer fit into 
   the current way of writing Locust tests, where tasks are either methods under a Locust class or SubLocust 
