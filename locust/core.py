@@ -251,6 +251,8 @@ class TaskSet(object):
                     raise RescheduleTaskImmediately, e, sys.exc_info()[2]
                 else:
                     raise RescheduleTask, e, sys.exc_info()[2]
+            except StopLocust:
+                raise
             except GreenletExit:
                 raise
             except Exception, e:
