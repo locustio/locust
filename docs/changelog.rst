@@ -2,6 +2,13 @@
 Changelog
 ##########
 
+0.6.1
+=====
+
+* Fixed bug that was causing problems when setting a maximum number of requests using the
+  **-n** or **--num-request** command line parameter.
+
+
 0.6
 ===
 
