@@ -5,6 +5,7 @@ import warnings
 import random
 import logging
 from time import time
+from itertools import chain
 from hashlib import md5
 
 import gevent
@@ -184,6 +185,59 @@ class LocustRunner(object):
         row["count"] += 1
         row["nodes"].add(node_id)
         self.exceptions[key] = row
+        
+    def distribution_stats_csv(self):
+        rows = [",".join((
+            '"Name"',
+            '"# requests"',
+            '"50%"',
+            '"66%"',
+            '"75%"',
+            '"80%"',
+            '"90%"',
+            '"95%"',
+            '"98%"',
+            '"99%"',
+            '"100%"',
+        ))]
+        for s in chain(_sort_stats(self.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
+            if s.num_reqs:
+                rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
+            else:
+                rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)        
+        return "\n".join(rows)
+        
+    def stats_csv(self):
+        rows = [
+            ",".join([
+                '"Method"',
+                '"Name"',
+                '"# requests"',
+                '"# failures"',
+                '"Median response time"',
+                '"Average response time"',
+                '"Min response time"', 
+                '"Max response time"',
+                '"Average Content Size"',
+                '"Reqests/s"',
+            ])
+        ]
+    
+        for s in chain(_sort_stats(self.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
+            rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
+                s.method,
+                s.name,
+                s.num_reqs,
+                s.num_failures,
+                s.median_response_time,
+                s.avg_response_time,
+                s.min_response_time or 0,
+                s.max_response_time,
+                s.avg_content_length,
+                s.total_rps,
+            ))
+    
+        return "\n".join(rows)
 
 class LocalLocustRunner(LocustRunner):
     def __init__(self, locust_classes, hatch_rate, num_clients, num_requests, host=None):
@@ -383,3 +437,6 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 break
             
             gevent.sleep(SLAVE_REPORT_INTERVAL)
+            
+def _sort_stats(stats):
+    return [stats[key] for key in sorted(stats.iterkeys())]

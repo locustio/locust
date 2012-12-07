@@ -17,6 +17,7 @@ from inspectlocust import print_task_ratio, get_task_ratio_dict
 from core import Locust, WebLocust
 from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
 import events
+from time import time
 
 _internals = [Locust, WebLocust]
 version = locust.version
@@ -186,6 +187,15 @@ def parse_options():
         help="show program's version number and exit"
     )
 
+    # Writes output statistics as csv
+    parser.add_option(
+        '--write-stats',
+        action='store_true',
+        dest='write_stats',
+        default=False,
+        help="writes output statistics as csv files"
+    )
+
     # Finalize
     # Return three-tuple of parser + the output from parse_args (opt obj, args)
     opts, args = parser.parse_args()
@@ -239,13 +249,29 @@ def is_locust(tup):
     Takes (name, object) tuple, returns True if it's a public Locust subclass.
     """
     name, item = tup
-    return (
-        inspect.isclass(item)
-        and issubclass(item, Locust)
-        and (item not in _internals)
-        and not name.startswith('_')
-    )
+    
+    isItem = inspect.isclass(item)
+    isSubclass = isItem and issubclass(item, Locust)
+    notinInternals = isSubclass and (item not in _internals)
+    
+    returnvalue = inspect.isclass(item) and issubclass(item, Locust) and (item not in _internals) and not name.startswith('_')
+    
+    print "%s - %s - %s - %s" % (name, isItem, isSubclass, notinInternals)
+    
+    return (returnvalue)
 
+def write_distribution_stats_csv():
+    stamp = time()
+    file_name = "distribution_{0}.csv".format(stamp)
+    file = open(file_name, 'w')
+    file.write(runners.locust_runner.distribution_stats_csv())
+    file.close()
+
+def write_stats_csv():
+    file_name = "stats_{0}.csv".format(time())
+    file = open(file_name, 'w')
+    file.write(runners.locust_runner.stats_csv())
+    file.close()
 
 def load_locustfile(path):
     """
@@ -392,6 +418,10 @@ def main():
         main_greenlet.join()
     except KeyboardInterrupt, e:
         shutdown(0)
+        
+    if options.write_stats:
+        write_distribution_stats_csv()
+        write_stats_csv()
 
 if __name__ == '__main__':
     main()

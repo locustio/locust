@@ -92,44 +92,12 @@ def reset_stats():
     
 @app.route("/stats/requests/csv")
 def request_stats_csv():
-    response = make_response(stats_csv())
+    response = make_response(runners.locust_runner.stats_csv())
     file_name = "requests_{0}.csv".format(time())
     disposition = "attachment;filename={0}".format(file_name)
     response.headers["Content-type"] = "text/csv"
     response.headers["Content-disposition"] = disposition
     return response
-
-def stats_csv():
-    rows = [
-        ",".join([
-            '"Method"',
-            '"Name"',
-            '"# requests"',
-            '"# failures"',
-            '"Median response time"',
-            '"Average response time"',
-            '"Min response time"', 
-            '"Max response time"',
-            '"Average Content Size"',
-            '"Reqests/s"',
-        ])
-    ]
-    
-    for s in chain(_sort_stats(runners.locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
-        rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
-            s.method,
-            s.name,
-            s.num_reqs,
-            s.num_failures,
-            s.median_response_time,
-            s.avg_response_time,
-            s.min_response_time or 0,
-            s.max_response_time,
-            s.avg_content_length,
-            s.total_rps,
-        ))
-    
-    return "\n".join(rows)
 
 @app.route("/stats/distribution/csv")
 def request_distribution_stats_csv():
