@@ -92,6 +92,14 @@ def reset_stats():
     
 @app.route("/stats/requests/csv")
 def request_stats_csv():
+    response = make_response(stats_csv())
+    file_name = "requests_{0}.csv".format(time())
+    disposition = "attachment;filename={0}".format(file_name)
+    response.headers["Content-type"] = "text/csv"
+    response.headers["Content-disposition"] = disposition
+    return response
+
+def stats_csv():
     rows = [
         ",".join([
             '"Method"',
@@ -120,36 +128,12 @@ def request_stats_csv():
             s.avg_content_length,
             s.total_rps,
         ))
-
-    response = make_response("\n".join(rows))
-    file_name = "requests_{0}.csv".format(time())
-    disposition = "attachment;filename={0}".format(file_name)
-    response.headers["Content-type"] = "text/csv"
-    response.headers["Content-disposition"] = disposition
-    return response
+    
+    return "\n".join(rows)
 
 @app.route("/stats/distribution/csv")
-def distribution_stats_csv():
-    rows = [",".join((
-        '"Name"',
-        '"# requests"',
-        '"50%"',
-        '"66%"',
-        '"75%"',
-        '"80%"',
-        '"90%"',
-        '"95%"',
-        '"98%"',
-        '"99%"',
-        '"100%"',
-    ))]
-    for s in chain(_sort_stats(runners.locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
-        if s.num_reqs:
-            rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
-        else:
-            rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
-
-    response = make_response("\n".join(rows))
+def request_distribution_stats_csv():
+    response = make_response(runners.locust_runner.distribution_stats_csv())
     file_name = "distribution_{0}.csv".format(time())
     disposition = "attachment;filename={0}".format(file_name)
     response.headers["Content-type"] = "text/csv"
