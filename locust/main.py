@@ -250,16 +250,11 @@ def is_locust(tup):
     """
     name, item = tup
     
-    isItem = inspect.isclass(item)
-    isSubclass = isItem and issubclass(item, Locust)
-    notinInternals = isSubclass and (item not in _internals)
+    return (inspect.isclass(item) 
+        and issubclass(item, Locust) 
+        and (item not in _internals) 
+        and not name.startswith('_'))
     
-    returnvalue = inspect.isclass(item) and issubclass(item, Locust) and (item not in _internals) and not name.startswith('_')
-    
-    print "%s - %s - %s - %s" % (name, isItem, isSubclass, notinInternals)
-    
-    return (returnvalue)
-
 def write_distribution_stats_csv():
     stamp = time()
     file_name = "distribution_{0}.csv".format(stamp)
