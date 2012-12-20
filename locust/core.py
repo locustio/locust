@@ -197,11 +197,12 @@ class TaskSet(object):
     """
     
     locust = None
-    """Will refer to the root Locust class when the TaskSet has been instantiated"""
+    """Will refer to the root Locust class instance when the TaskSet has been instantiated"""
 
     parent = None
-    """Will refer to the parent class when the TaskSet has been instantiated
-    Useful for nested TaskSet classes
+    """
+    Will refer to the parent TaskSet, or Locust, class instance when the TaskSet has been 
+    instantiated. Useful for nested TaskSet classes.
     """
 
     __metaclass__ = TaskSetMeta    
