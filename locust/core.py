@@ -88,7 +88,7 @@ class Locust(object):
     """Number of seconds after which the Locust will die. If None it won't timeout."""
 
     weight = 10
-    """Probability of locust beeing choosen. The higher the weight, the greater is the chance of it beeing chosen."""
+    """Probability of locust being chosen. The higher the weight, the greater is the chance of it being chosen."""
     
     def __init__(self):
         super(Locust, self).__init__()
@@ -112,7 +112,7 @@ class TaskSetMeta(type):
     ratio using an {task:int} dict, or a [(task0,int), ..., (taskN,int)] list.
     """
     
-    def __new__(meta, classname, bases, classDict):
+    def __new__(mcs, classname, bases, classDict):
         new_tasks = []
         for base in bases:
             if hasattr(base, "tasks") and base.tasks:
@@ -138,20 +138,20 @@ class TaskSetMeta(type):
         
         classDict["tasks"] = new_tasks
         
-        return type.__new__(meta, classname, bases, classDict)
+        return type.__new__(mcs, classname, bases, classDict)
 
 class TaskSet(object):
     """
     Class defining a set of tasks that a Locust user will execute. 
     
     When a TaskSet starts running, it will pick a task from the *tasks* attribute, 
-    execute it, call it's wait function which will sleep a randomm number between 
+    execute it, call it's wait function which will sleep a random number between
     *min_wait* and *max_wait* milliseconds. It will then schedule another task for 
     execution and so on.
     
     TaskTests can be nested, which means that a TaskSet's *tasks* attribute can contain 
     another TaskSet. If the nested TaskSet it scheduled to be executed, it will be 
-    instanciated and called from the current executing TaskSet. Execution in the the 
+    instantiated and called from the current executing TaskSet. Execution in the the
     currently running TaskSet will then be handed over to the nested TaskSet which will 
     continue to run until it throws an InterruptTaskSet exception, which is done when 
     :py:meth:`TaskSet.interrupt() <locust.core.TaskSet.interrupt>` is called. (execution 
@@ -198,7 +198,12 @@ class TaskSet(object):
     
     locust = None
     """Will refer to the root Locust class when the TaskSet has been instantiated"""
-    
+
+    parent = None
+    """Will refer to the parent class when the TaskSet has been instantiated
+    Useful for nested TaskSet classes
+    """
+
     __metaclass__ = TaskSetMeta    
     
     def __init__(self, parent):
@@ -213,7 +218,8 @@ class TaskSet(object):
             self.locust = parent
         else:
             raise LocustError("TaskSet should be called with Locust instance or TaskSet instance as first argument")
-        
+
+        self.parent = parent
         self.client = self.locust.client
         
         # if this class doesn't have a min_wait, max_wait or avg_wait defined, copy it from Locust
@@ -232,7 +238,7 @@ class TaskSet(object):
             self.on_start()
         while (True):
             try:
-                if self.locust.stop_timeout is not None and time() - self._time_start > self.stop_timeout:
+                if self.locust.stop_timeout is not None and time() - self._time_start > self.locust.stop_timeout:
                     return
         
                 if not self._task_queue:
@@ -276,7 +282,7 @@ class TaskSet(object):
             # task is a function
             task(self, *args, **kwargs)
     
-    def schedule_task(self, task_callable, args=[], kwargs={}, first=False):
+    def schedule_task(self, task_callable, args=None, kwargs=None, first=False):
         """
         Add a task to the Locust's task execution queue.
         
@@ -287,7 +293,7 @@ class TaskSet(object):
         * kwargs: Dict of keyword arguments that will be passed to the task callable.
         * first: Optional keyword argument. If True, the task will be put first in the queue.
         """
-        task = {"callable":task_callable, "args":args, "kwargs":kwargs}
+        task = {"callable":task_callable, "args":args or [], "kwargs":kwargs or {}}
         if first:
             self._task_queue.insert(0, task)
         else:
@@ -339,18 +345,16 @@ class TaskSet(object):
 class WebLocust(Locust):
     def __init__(self, *args, **kwargs):
         warnings.warn("WebLocust class has been, deprecated. Use Locust class instead.")
-        super(WebLocust, self).__init__(*args, **kwargs)
+        super(WebLocust, self).__init__()
 
 
 class SubLocust(object):
-    def __init__(self, *args, **kwargs):
-        raise DeprecationWarning("The SubLocust class has been deprecated. Use TaskSet classes instead.")
-
-#class TaskSetNope(TaskSetBase):
     """
     Class for making a sub Locust that can be included as a task inside of a normal Locust/WebLocus,
-    as well as inside another sub locust. 
-    
+    as well as inside another sub locust.
+
     When the parent locust enters the sub locust, it will not
     continue executing it's tasks until a task in the sub locust has called the interrupt() function.
     """
+    def __init__(self, *args, **kwargs):
+        raise DeprecationWarning("The SubLocust class has been deprecated. Use TaskSet classes instead.")

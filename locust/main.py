@@ -6,7 +6,6 @@ import sys
 import os
 import signal
 import inspect
-import time
 import logging
 from optparse import OptionParser
 
@@ -70,7 +69,7 @@ def parse_options():
         type='str',
         dest='master_host',
         default="127.0.0.1",
-        help="Host or IP adress of locust master for distributed load testing. Only used when running with --slave. Defaults to 127.0.0.1."
+        help="Host or IP address of locust master for distributed load testing. Only used when running with --slave. Defaults to 127.0.0.1."
     )
 
     # if we should print stats in the console
@@ -141,7 +140,7 @@ def parse_options():
         help="Enables the auto tuning ramping feature for finding highest stable client count. NOTE having ramp enabled will add some more overhead for additional stats gathering"
     )
     
-    # if we shgould print stats in the console
+    # if we should print stats in the console
     parser.add_option(
         '--print-stats',
         action='store_true',
@@ -295,7 +294,7 @@ def main():
     logger = logging.getLogger(__name__)
     
     if options.show_version:
-        print "Locust %s" % (version)
+        print "Locust %s" % (version,)
         sys.exit(0)
 
     locustfile = find_locustfile(options.locustfile)

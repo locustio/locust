@@ -8,3 +8,4 @@ dist/**
 *.iml
 *.ipr
 .vagrant
+build/

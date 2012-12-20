@@ -34,7 +34,7 @@ Listeners should take the following arguments:
 
 * *method*: HTTP Request method used
 * *path*: Path to the URL that was called (or override name if it was used in the call to the client)
-* *response_time*: Reponse time in milliseconds
+* *response_time*: Response time in milliseconds
 * *response_length*: Content-length of the response
 """
 
@@ -58,7 +58,7 @@ locust_error = EventHook()
 
 Event is fired with the following arguments:
 
-* *locust_instance*: Locust class instance where the exception occured
+* *locust_instance*: Locust class instance where the exception occurred
 * *exception*: Exception that was thrown
 * *traceback*: Traceback object (from sys.exc_info()[2])
 """
@@ -80,7 +80,7 @@ Event is fired with the following arguments:
 slave_report = EventHook()
 """
 *slave_report* is used when Locust is running in --master mode and is fired when the master 
-server recieves a report from a Locust slave server.
+server receives a report from a Locust slave server.
 
 This event can be used to aggregate data from the locust slave servers.
 
