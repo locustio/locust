@@ -17,7 +17,7 @@ TaskSet class
 =============
 
 .. autoclass:: locust.core.TaskSet
-	:members: locust, min_wait, max_wait, client, tasks, interrupt, schedule_task
+	:members: locust, parent, min_wait, max_wait, client, tasks, interrupt, schedule_task
 
 task decorator
 ==============

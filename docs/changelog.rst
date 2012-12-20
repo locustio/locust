@@ -2,6 +2,13 @@
 Changelog
 ##########
 
+In master but not yet released
+==============================
+
+* Added :py:attr:`parent <locust.core.TaskSet.parent>` attribute to TaskSet class that 
+  refers to the parent TaskSet, or Locust, instance. Contributed by Aaron Daubman.
+
+
 0.6.1
 =====
 
