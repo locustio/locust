@@ -271,6 +271,33 @@ class TestTaskSet(unittest.TestCase):
         except:
             raise
     
+    def test_parent_attribute(self):
+        from locust.exception import StopLocust
+        parents = {}
+        
+        class SubTaskSet(TaskSet):
+            def on_start(self):
+                parents["sub"] = self.parent
+            
+            @task
+            class SubSubTaskSet(TaskSet):
+                def on_start(self):
+                    parents["subsub"] = self.parent
+                @task
+                def stop(self):
+                    raise StopLocust()
+        class RootTaskSet(TaskSet):
+            tasks = [SubTaskSet]
+        
+        class MyLocust(Locust):
+            host = ""
+            task_set = RootTaskSet
+        
+        l = MyLocust()
+        l.run()
+        self.assertTrue(isinstance(parents["sub"], RootTaskSet))
+        self.assertTrue(isinstance(parents["subsub"], SubTaskSet))
+    
 
 class TestWebLocustClass(WebserverTestCase):
     def test_get_request(self):
