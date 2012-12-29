@@ -35,4 +35,16 @@ Installing Locust on Windows
 ----------------------------
 
 The easiest way to get Locust running on Windows is to first install pre built binary packages for
-gevent (0.13) and greenlet and then follow the above instructions.  
+gevent (0.13) and greenlet and then follow the above instructions. 
+
+Installing Locust on OS X
+----------------------------
+
+The following is currently the shortest path to installing gevent on OS X using Homebrew.
+
+#. Install [Homebrew](http://mxcl.github.com/homebrew/).
+#. Install gevent.::
+
+    brew install gevent
+
+#. Then follow the above instructions.
