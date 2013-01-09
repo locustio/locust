@@ -96,10 +96,10 @@ class WebserverTestCase(LocustTestCase):
         super(WebserverTestCase, self).setUp()
         self._web_server = gevent.pywsgi.WSGIServer(("127.0.0.1", 0), app, log=None)
         gevent.spawn(lambda: self._web_server.serve_forever())
-        gevent.sleep(0)
+        gevent.sleep(0.01)
         self.port = self._web_server.server_port
         RequestStats.requests = {}
 
     def tearDown(self):
         super(WebserverTestCase, self).tearDown()
-        self._web_server.kill()
+        self._web_server.stop()
