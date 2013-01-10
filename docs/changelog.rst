@@ -2,9 +2,12 @@
 Changelog
 ##########
 
-In master but not yet released
-==============================
+0.6.2
+=====
 
+* Made Locust compatible with gevent 1.0rc2. This allows user to step around a problem 
+  with running Locust under some versions of CentOS, that can be fixed by upgrading 
+  gevent to 1.0.
 * Added :py:attr:`parent <locust.core.TaskSet.parent>` attribute to TaskSet class that 
   refers to the parent TaskSet, or Locust, instance. Contributed by Aaron Daubman.
 
