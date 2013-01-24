@@ -30,7 +30,7 @@ _num_requests = None
 _hatch_rate = None
 _request_stats_context_cache = {}
 _ramp = False
-
+_port = 8089
 
 @app.route('/')
 def index():
@@ -215,15 +215,16 @@ def exceptions():
     response.headers["Content-type"] = "application/json"
     return response
 
-def start(locust, hatch_rate, num_clients, num_requests, ramp):
-    global _locust, _hatch_rate, _num_clients, _num_requests, _ramp
+def start(locust, hatch_rate, num_clients, num_requests, ramp, port):
+    global _locust, _hatch_rate, _num_clients, _num_requests, _ramp, _port
     _locust = locust
     _hatch_rate = hatch_rate
     _num_clients = num_clients
     _num_requests = num_requests
     _ramp = ramp
+    _port = port
     
-    wsgi.WSGIServer(('', 8089), app, log=None).serve_forever()
+    wsgi.WSGIServer(('', int(port)), app, log=None).serve_forever()
 
 def _sort_stats(stats):
     return [stats[key] for key in sorted(stats.iterkeys())]
