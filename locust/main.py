@@ -38,6 +38,7 @@ def parse_options():
     )
     parser.add_option(
         '-P', '--port',
+        type="int",
         dest="port",
         default=8089,
         help="Port on which to run web host"

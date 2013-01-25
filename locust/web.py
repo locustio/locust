@@ -224,7 +224,7 @@ def start(locust, hatch_rate, num_clients, num_requests, ramp, port):
     _ramp = ramp
     _port = port
     
-    wsgi.WSGIServer(('', int(port)), app, log=None).serve_forever()
+    wsgi.WSGIServer(('', port), app, log=None).serve_forever()
 
 def _sort_stats(stats):
     return [stats[key] for key in sorted(stats.iterkeys())]
