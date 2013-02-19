@@ -2,6 +2,27 @@
 Changelog
 ##########
 
+0.7 (In GIT repo, Not yet released)
+===================================
+
+msgpack for serializing master/slave data
+-----------------------------------------
+
+Locust now uses `msgpack <http://msgpack.org/>`_ for serializing data that is sent between 
+a master node and it's slaves. This adresses a possible attack that can be used to execute 
+code remote, if one has access to the internal locust ports that are used for master-slave 
+communication. The reason for this exploit was due to the fact that pickle was used. 
+
+.. warning::
+
+    Anyone who uses an older version should make sure that their Locust machines are not publicly 
+    accessible on port 5557 and 5558. Also, one should never run Locust as root.
+
+Anyone who uses the :py:class:`report_to_master <locust.events.report_to_master>` and 
+:py:class:`slave_report <locust.events.slave_report>` events, needs to make sure that 
+any data that is attached to the slave reports is serializable by msgpack.
+
+
 0.6.2
 =====
 

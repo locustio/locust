@@ -27,7 +27,7 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
-    install_requires=["gevent>=0.13", "flask>=0.8", "requests==0.14.1"],
+    install_requires=["gevent>=0.13", "flask>=0.8", "requests==0.14.1", "msgpack-python==0.3.0"],
     entry_points={
         'console_scripts': [
             'locust = locust.main:main',

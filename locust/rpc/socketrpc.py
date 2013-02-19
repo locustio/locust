@@ -1,9 +1,12 @@
-import struct, pickle
+import struct
+import logging
+
 import gevent
 from gevent import socket
 from gevent import queue
-import logging
+
 from locust.exception import LocustError
+from .protocol import Message
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +20,8 @@ def _recv_bytes(sock, bytes):
         data += temp
     return data
 
-def _send_obj(sock, obj):
-    data = pickle.dumps(obj)
+def _send_obj(sock, msg):
+    data = msg.serialize()
     packed = struct.pack('!i', len(data)) + data
     try:
         sock.sendall(packed)
@@ -34,7 +37,7 @@ def _recv_obj(sock):
     d = _recv_bytes(sock, 4)
     bytes, = struct.unpack('!i', d)
     data = _recv_bytes(sock, bytes)
-    return pickle.loads(data)
+    return Message.unserialize(data)
 
 class Client(object):
     def __init__(self, host):

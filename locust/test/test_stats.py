@@ -7,6 +7,7 @@ from testcases import WebserverTestCase
 from locust.stats import RequestStats
 from locust.core import Locust, TaskSet, task
 from locust.inspectlocust import get_task_ratio_dict
+from locust.rpc.protocol import Message
 
 class TestRequestStats(unittest.TestCase):
     def setUp(self):
@@ -90,6 +91,24 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(s.num_failures, 3)
         self.assertEqual(s.median_response_time, 38)
         self.assertEqual(s.avg_response_time, 43.2)
+    
+    def test_serialize_through_message(self):
+        """
+        Serialize a RequestStats instance, then serialize it through a Message, 
+        and unserialize the whole thing again. This is done "IRL" when stats are sent 
+        from slaves to master.
+        """
+        s1 = RequestStats("GET", "test")
+        s1.log(10, 0)
+        s1.log(20, 0)
+        s1.log(40, 0)
+        u1 = RequestStats.unserialize(s1.serialize())
+        
+        data = Message.unserialize(Message("dummy", s1.serialize(), "none").serialize()).data
+        u1 = RequestStats.unserialize(data)
+        
+        self.assertEqual(20, u1.median_response_time)
+
 
 class TestRequestStatsWithWebserver(WebserverTestCase):
     def test_request_stats_content_length(self):

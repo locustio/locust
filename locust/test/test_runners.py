@@ -6,6 +6,8 @@ from gevent import sleep
 from locust.runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner
 from locust.core import Locust, task
 from locust.rpc import Message
+from locust.stats import RequestStats
+from locust import events
 
 
 def mocked_rpc_server():
@@ -15,19 +17,25 @@ def mocked_rpc_server():
         
         @classmethod
         def mocked_send(cls, message):
-            cls.queue.put(message)
+            cls.queue.put(message.serialize())
         
         def recv(self):
             results = self.queue.get()
-            return results
+            return Message.unserialize(results)
         
         def send(self, message):
-            self.outbox.append(message)
+            self.outbox.append(message.serialize())
     
     return MockedRpcServer
 
 
 class TestMasterRunner(unittest.TestCase):
+    def setUp(self):
+        self._slave_report_event_handlers = [h for h in events.slave_report._handlers]
+        
+    def tearDown(self):
+        events.slave_report._handlers = self._slave_report_event_handlers
+    
     def test_slave_connect(self):
         import mock
         
@@ -49,4 +57,37 @@ class TestMasterRunner(unittest.TestCase):
             server.mocked_send(Message("quit", None, "zeh_fake_client3"))
             sleep(0)
             self.assertEqual(3, len(master.clients))
+    
+    def test_slave_stats_report_median(self):
+        import mock
+        
+        class MyTestLocust(Locust):
+            pass
+        
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
+            master = MasterLocustRunner(MyTestLocust, 10, 10, None)
+            server.mocked_send(Message("client_ready", None, "fake_client"))
+            sleep(0)
+            
+            RequestStats.get("GET", "/").log(100, 23455)
+            RequestStats.get("GET", "/").log(800, 23455)
+            RequestStats.get("GET", "/").log(700, 23455)
+            
+            data = {"user_count":1}
+            events.report_to_master.fire("fake_client", data)
+            RequestStats.reset_all()
+            
+            server.mocked_send(Message("stats", data, "fake_client"))
+            sleep(0)
+            s = RequestStats.get("GET", "/")
+            self.assertEqual(700, s.median_response_time)
+
+
+class TestMessageSerializing(unittest.TestCase):
+    def test_message_serialize(self):
+        msg = Message("client_ready", None, "my_id")
+        rebuilt = Message.unserialize(msg.serialize())
+        self.assertEqual(msg.type, rebuilt.type)
+        self.assertEqual(msg.data, rebuilt.data)
+        self.assertEqual(msg.node_id, rebuilt.node_id)
         
