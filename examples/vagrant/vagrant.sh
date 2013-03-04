@@ -9,7 +9,7 @@ apt-get -y update
 apt-get -y install build-essential python-pip python-dev libevent-dev libzmq-dev
 cd /vagrant
 
-pip install -r requirements.txt --use-mirrors pyzmq gevent-zeromq supervisor
+pip install -r requirements.txt --use-mirrors pyzmq supervisor
 
 # Checkout and install latest Locust from Github
 python setup.py develop

@@ -23,13 +23,13 @@ Installing ZeroMQ
 -----------------
 
 If you intend to run Locust distributed across multiple processes/machines, we recommend you to also 
-install **pyzmq** and gevent-zeromq::
+install **pyzmq**::
 
-    pip install pyzmq gevent-zeromq
+    pip install pyzmq
 
 or::
 
-    easy_install pyzmq gevent-zeromq
+    easy_install pyzmq
 
 Installing Locust on Windows
 ----------------------------
