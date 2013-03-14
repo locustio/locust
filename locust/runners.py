@@ -123,8 +123,6 @@ class LocustRunner(object):
         if wait:
             self.locusts.join()
             logger.info("All locusts dead\n")
-            print_stats(self.request_stats)
-            print_percentile_stats(self.request_stats) #TODO use an event listener, or such, for this?
 
     def kill_locusts(self, kill_count):
         """
