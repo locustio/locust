@@ -395,6 +395,7 @@ def main():
     try:
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
+        shutdown(0)
     except KeyboardInterrupt, e:
         shutdown(0)
 
