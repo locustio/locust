@@ -231,7 +231,7 @@ class RequestStats(object):
             fail_percent = 0
         
         return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d  | %7d %7.2f") % (
-            self.name,
+            self.method + " " + self.name,
             self.num_reqs,
             "%d(%.2f%%)" % (self.num_failures, fail_percent),
             self.avg_response_time,
