@@ -1,5 +1,6 @@
 import unittest
-from requests.exceptions import RequestException
+from requests.exceptions import (RequestException, MissingSchema,
+        InvalidSchema, InvalidURL)
 
 from locust.clients import HttpSession
 from testcases import WebserverTestCase
@@ -21,3 +22,15 @@ class TestHttpSession(WebserverTestCase):
         self.assertFalse(r)
         self.assertEqual(None, r.content)
         self.assertRaises(RequestException, r.raise_for_status)
+
+    def test_wrong_url(self):
+        for url, exception in (
+                (u"http://\x94", InvalidURL),
+                ("telnet:127.0.0.1", InvalidSchema),
+                ("127.0.0.1", MissingSchema), 
+            ):
+            s = HttpSession(url)
+            try:
+                self.assertRaises(exception, s.get, "/")
+            except KeyError:
+                self.fail("Invalid URL %s was not propagated" % url)
