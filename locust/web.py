@@ -24,13 +24,8 @@ app = Flask(__name__)
 app.debug = True
 app.root_path = os.path.dirname(os.path.abspath(__file__))
 
-_locust = None
-_num_clients = None
-_num_requests = None
-_hatch_rate = None
 _request_stats_context_cache = {}
 _ramp = False
-_port = 8089
 
 @app.route('/')
 def index():
@@ -216,13 +211,8 @@ def exceptions():
     return response
 
 def start(locust, hatch_rate, num_clients, num_requests, ramp, port):
-    global _locust, _hatch_rate, _num_clients, _num_requests, _ramp, _port
-    _locust = locust
-    _hatch_rate = hatch_rate
-    _num_clients = num_clients
-    _num_requests = num_requests
+    global _ramp
     _ramp = ramp
-    _port = port
     
     wsgi.WSGIServer(('', port), app, log=None).serve_forever()
 
