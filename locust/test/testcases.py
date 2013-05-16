@@ -7,7 +7,7 @@ from copy import copy
 from StringIO import StringIO
 
 from locust import events
-from locust.stats import RequestStats
+from locust.stats import RequestStats, global_stats
 from flask import Flask, request, redirect, make_response, send_file
 
 app = Flask(__name__)
@@ -98,7 +98,7 @@ class WebserverTestCase(LocustTestCase):
         gevent.spawn(lambda: self._web_server.serve_forever())
         gevent.sleep(0.01)
         self.port = self._web_server.server_port
-        RequestStats.requests = {}
+        global_stats.clear_all()
 
     def tearDown(self):
         super(WebserverTestCase, self).tearDown()

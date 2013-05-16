@@ -13,7 +13,7 @@ from gevent.pool import Group
 
 import events
 from locust.stats import print_percentile_stats
-from stats import RequestStats, print_stats
+from stats import RequestStats, print_stats, global_stats
 from exception import RescheduleTaskImmediately
 
 from rpc import rpc, Message
@@ -38,21 +38,22 @@ class LocustRunner(object):
         self.state = STATE_INIT
         self.hatching_greenlet = None
         self.exceptions = {}
+        self.stats = global_stats
         
         # register listener that resets stats when hatching is complete
         def on_hatch_complete(count):
             self.state = STATE_RUNNING
             logger.info("Resetting stats\n")
-            RequestStats.reset_all()
+            self.stats.reset_all()
         events.hatch_complete += on_hatch_complete
 
     @property
     def request_stats(self):
-        return RequestStats.requests
+        return self.stats.entries
     
     @property
     def errors(self):
-        return RequestStats.errors
+        return self.stats.errors
     
     @property
     def user_count(self):
@@ -86,7 +87,7 @@ class LocustRunner(object):
             spawn_count = self.num_clients
 
         if self.num_requests is not None:
-            RequestStats.global_max_requests = self.num_requests
+            self.stats.max_requests = self.num_requests
 
         bucket = self.weight_locusts(spawn_count, stop_timeout)
         spawn_count = len(bucket)
@@ -145,8 +146,8 @@ class LocustRunner(object):
 
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
-            RequestStats.clear_all()
-            RequestStats.global_start_time = time()
+            self.stats.clear_all()
+            self.stats.start_time = time()
             self.exceptions = {}
 
         # Dynamically changing the locust count
@@ -268,14 +269,14 @@ class MasterLocustRunner(DistributedLocustRunner):
             return
         
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
-            RequestStats.clear_all()
+            self.stats.clear_all()
             self.exceptions = {}
         
         for client in self.clients.itervalues():
             data = {"hatch_rate":slave_hatch_rate, "num_clients":slave_num_clients, "num_requests": self.num_requests, "host":self.host, "stop_timeout":None}
             self.server.send(Message("hatch", data, None))
         
-        RequestStats.global_start_time = time()
+        self.stats.start_time = time()
         self.state = STATE_HATCHING
 
     def stop(self):

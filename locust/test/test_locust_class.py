@@ -382,7 +382,7 @@ class TestWebLocustClass(WebserverTestCase):
         self.assertFalse(unauthorized.client.get("/basic_auth"))
     
     def test_log_request_name_argument(self):
-        from locust.stats import RequestStats
+        from locust.stats import RequestStats, global_stats
         self.response = ""
         
         class MyLocust(Locust):
@@ -396,8 +396,8 @@ class TestWebLocustClass(WebserverTestCase):
         my_locust = MyLocust()
         my_locust.t1()
         
-        self.assertEqual(1, RequestStats.get("GET", "new name!").num_reqs)
-        self.assertEqual(0, RequestStats.get("GET", "/ultra_fast").num_reqs)
+        self.assertEqual(1, global_stats.get("new name!", "GET").num_requests)
+        self.assertEqual(0, global_stats.get("/ultra_fast", "GET").num_requests)
 
 
 class TestCatchResponse(WebserverTestCase):
