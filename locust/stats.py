@@ -226,7 +226,7 @@ class RequestStats(object):
 
     def __str__(self):
         try:
-            fail_percent = (self.num_failures/float(self.num_reqs))*100
+            fail_percent = (self.num_failures/float(self.num_reqs + self.num_failures))*100
         except ZeroDivisionError:
             fail_percent = 0
         
