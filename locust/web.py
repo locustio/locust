@@ -11,7 +11,7 @@ from flask import Flask, make_response, request, render_template
 
 import runners
 from runners import MasterLocustRunner
-from locust.stats import RequestStats, median_from_dict
+from locust.stats import median_from_dict
 from locust import version
 import gevent
 
@@ -24,13 +24,8 @@ app = Flask(__name__)
 app.debug = True
 app.root_path = os.path.dirname(os.path.abspath(__file__))
 
-_locust = None
-_num_clients = None
-_num_requests = None
-_hatch_rate = None
 _request_stats_context_cache = {}
 _ramp = False
-_port = 8089
 
 @app.route('/')
 def index():
@@ -87,7 +82,7 @@ def ramp():
 
 @app.route("/stats/reset")
 def reset_stats():
-    RequestStats.reset_all()
+    runners.locust_runner.stats.reset_all()
     return "ok"
     
 @app.route("/stats/requests/csv")
@@ -107,11 +102,11 @@ def request_stats_csv():
         ])
     ]
     
-    for s in chain(_sort_stats(runners.locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
+    for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
         rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
             s.method,
             s.name,
-            s.num_reqs,
+            s.num_requests,
             s.num_failures,
             s.median_response_time,
             s.avg_response_time,
@@ -143,8 +138,8 @@ def distribution_stats_csv():
         '"99%"',
         '"100%"',
     ))]
-    for s in chain(_sort_stats(runners.locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
-        if s.num_reqs:
+    for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
+        if s.num_requests:
             rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
         else:
             rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
@@ -165,11 +160,11 @@ def request_stats():
         now = time()
         
         stats = []
-        for s in chain(_sort_stats(runners.locust_runner.request_stats), [RequestStats.sum_stats("Total")]):
+        for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total")]):
             stats.append({
                 "method": s.method,
                 "name": s.name,
-                "num_reqs": s.num_reqs,
+                "num_requests": s.num_requests,
                 "num_failures": s.num_failures,
                 "avg_response_time": s.avg_response_time,
                 "min_response_time": s.min_response_time,
@@ -182,7 +177,7 @@ def request_stats():
         report = {"stats":stats, "errors":list(runners.locust_runner.errors.iteritems())}
         if stats:
             report["total_rps"] = stats[len(stats)-1]["current_rps"]
-            report["fail_ratio"] = RequestStats.sum_stats("Total").fail_ratio
+            report["fail_ratio"] = runners.locust_runner.stats.aggregated_stats("Total").fail_ratio
             
             # since generating a total response times dict with all response times from all
             # urls is slow, we make a new total response time dict which will consist of one
@@ -190,10 +185,10 @@ def request_stats():
             # value
             response_times = defaultdict(int) # used for calculating total median
             for i in xrange(len(stats)-1):
-                response_times[stats[i]["median_response_time"]] += stats[i]["num_reqs"]
+                response_times[stats[i]["median_response_time"]] += stats[i]["num_requests"]
             
             # calculate total median
-            stats[len(stats)-1]["median_response_time"] = median_from_dict(stats[len(stats)-1]["num_reqs"], response_times)
+            stats[len(stats)-1]["median_response_time"] = median_from_dict(stats[len(stats)-1]["num_requests"], response_times)
         
         is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
         if is_distributed:
@@ -216,13 +211,8 @@ def exceptions():
     return response
 
 def start(locust, hatch_rate, num_clients, num_requests, ramp, port):
-    global _locust, _hatch_rate, _num_clients, _num_requests, _ramp, _port
-    _locust = locust
-    _hatch_rate = hatch_rate
-    _num_clients = num_clients
-    _num_requests = num_requests
+    global _ramp
     _ramp = ramp
-    _port = port
     
     wsgi.WSGIServer(('', port), app, log=None).serve_forever()
 
