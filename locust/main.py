@@ -154,6 +154,15 @@ def parse_options():
         default=False,
         help="Print stats in the console"
     )
+
+    # only print summary stats
+    parser.add_option(
+       '--only-summary',
+       action='store_true',
+       dest='only_summary',
+       default=False,
+       help='Only print the summary stats'
+    )
     
     # List locust commands found in loaded locust files/source files
     parser.add_option(
@@ -371,7 +380,7 @@ def main():
         runners.locust_runner = SlaveLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
         main_greenlet = runners.locust_runner.greenlet
     
-    if options.print_stats or (options.no_web and not options.slave):
+    if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
     
@@ -380,9 +389,11 @@ def main():
         Shut down locust by firing quitting event, printing stats and exiting
         """
         logger.info("Shutting down, bye..")
+
         events.quitting.fire()
         print_stats(runners.locust_runner.request_stats)
         print_percentile_stats(runners.locust_runner.request_stats)
+
         print_error_report()
         sys.exit(code)
     
