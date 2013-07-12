@@ -165,6 +165,8 @@
                     <table id="errors" class="stats">
                         <thead>
                             <th class="error_count stats_label" data-sortkey="1"># fails</th>
+                            <th class="stats_label" href="#" data-sortkey="method">Method</th>
+                            <th class="stats_label" href="#" data-sortkey="name">Name</th>
                             <th class="error_type stats_label" data-sortkey="0">Type</th>
                         </thead>
                         <tbody>
@@ -241,8 +243,10 @@
     <script type="text/x-jqote-template" id="errors-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%>">
-            <td><%= this[1] %></td>
-            <td><%= function(e) { return e.replace("<", "&lt;"); }(this[0]) %></td>
+            <td><%= this.occurences %></td>
+            <td><%= this.method %></td>
+            <td><%= this.name %></td>
+            <td><%= function(e) { return e.replace("<", "&lt;"); }(this.error) %></td>
         </tr>
         <% alternate = !alternate; %>
         ]]>
