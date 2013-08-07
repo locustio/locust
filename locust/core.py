@@ -53,6 +53,7 @@ def task(weight=1):
 
 
 class Locust(object):
+
     """
     Represents a "user" which is to be hatched and attack the system that is to be load tested.
 
@@ -107,6 +108,7 @@ class Locust(object):
 
 
 class TaskSetMeta(type):
+
     """
     Meta class for the main Locust class. It's used to allow Locust classes to specify task execution
     ratio using an {task:int} dict, or a [(task0,int), ..., (taskN,int)] list.
@@ -140,7 +142,9 @@ class TaskSetMeta(type):
 
         return type.__new__(mcs, classname, bases, classDict)
 
+
 class TaskSet(object):
+
     """
     Class defining a set of tasks that a Locust user will execute.
 
@@ -294,7 +298,7 @@ class TaskSet(object):
         * kwargs: Dict of keyword arguments that will be passed to the task callable.
         * first: Optional keyword argument. If True, the task will be put first in the queue.
         """
-        task = {"callable":task_callable, "args":args or [], "kwargs":kwargs or {}}
+        task = {"callable": task_callable, "args": args or [], "kwargs": kwargs or {}}
         if first:
             self._task_queue.insert(0, task)
         else:
@@ -343,13 +347,16 @@ class TaskSet(object):
         """
         raise InterruptTaskSet(reschedule)
 
+
 class WebLocust(Locust):
+
     def __init__(self, *args, **kwargs):
         warnings.warn("WebLocust class has been, deprecated. Use Locust class instead.")
         super(WebLocust, self).__init__()
 
 
 class SubLocust(object):
+
     """
     Class for making a sub Locust that can be included as a task inside of a normal Locust/WebLocus,
     as well as inside another sub locust.
@@ -357,5 +364,6 @@ class SubLocust(object):
     When the parent locust enters the sub locust, it will not
     continue executing it's tasks until a task in the sub locust has called the interrupt() function.
     """
+
     def __init__(self, *args, **kwargs):
         raise DeprecationWarning("The SubLocust class has been deprecated. Use TaskSet classes instead.")

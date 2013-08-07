@@ -1,13 +1,17 @@
 import unittest
 from core import Locust
 
+
 class MyLocust(Locust):
+
     def _sleep(self, seconds):
         """ Bypass actual sleeping
         """
         pass
 
+
 class MovingAverageTest(unittest.TestCase):
+
     """ This is not a unit test per se because it may fail ocassionally, which is perfectly ok since it deals with randomness.
         It is more for testing the expected behavior if using self.avg_wait in a Locust class and for feedback on the algorithm used.
     """
@@ -43,7 +47,7 @@ class MovingAverageTest(unittest.TestCase):
         self.assertTrue(deviation < max_deviation, msg="Deviation not within %s%% of wanted average" % percentage)
 
     def test_moving_average_100000(self):
-        locust = self._setupLocust(3000, 140000, 20 * 60 * 1000) # 3 seconds, 140 seconds, 20 minutes
+        locust = self._setupLocust(3000, 140000, 20 * 60 * 1000)  # 3 seconds, 140 seconds, 20 minutes
         print "Large"
         self._wait(locust, 100000)
         (deviation, max_deviation, percentage) = self._deviation(locust, 1.0)
@@ -51,14 +55,14 @@ class MovingAverageTest(unittest.TestCase):
 
     def test_moving_average_100(self):
         # This test is actually expected to fail sometimes
-        locust = self._setupLocust(3000, 140000, 20 * 60 * 1000) # 3 seconds, 140 seconds, 20 minutes
+        locust = self._setupLocust(3000, 140000, 20 * 60 * 1000)  # 3 seconds, 140 seconds, 20 minutes
         print "Small"
         self._wait(locust, 100)
         (deviation, max_deviation, percentage) = self._deviation(locust, 5.0)
         self._assertion(locust, deviation, max_deviation, percentage)
 
     def test_omit_average(self):
-        locust = self._setupLocust(3000, None, 20 * 60 * 1000) # 3 seconds, None, 20 minutes
+        locust = self._setupLocust(3000, None, 20 * 60 * 1000)  # 3 seconds, None, 20 minutes
         print "Omitted"
         self.assertEquals(None, locust.avg_wait)
         self.assertEquals(0, locust._avg_wait)

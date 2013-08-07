@@ -9,7 +9,9 @@ from locust.core import Locust, TaskSet, task
 from locust.inspectlocust import get_task_ratio_dict
 from locust.rpc.protocol import Message
 
+
 class TestRequestStats(unittest.TestCase):
+
     def setUp(self):
         self.stats = RequestStats()
         self.stats.start_time = time.time()
@@ -112,6 +114,7 @@ class TestRequestStats(unittest.TestCase):
 
 
 class TestRequestStatsWithWebserver(WebserverTestCase):
+
     def test_request_stats_content_length(self):
         class MyLocust(Locust):
             host = "http://127.0.0.1:%i" % self.port
@@ -166,9 +169,11 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
 
     def test_max_requests(self):
         class MyTaskSet(TaskSet):
+
             @task
             def my_task(self):
                 self.client.get("/ultra_fast")
+
         class MyLocust(Locust):
             host = "http://127.0.0.1:%i" % self.port
             task_set = MyTaskSet
@@ -196,20 +201,25 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
 
 
 class MyTaskSet(TaskSet):
+
     @task(75)
     def root_task(self):
         pass
 
     @task(25)
     class MySubTaskSet(TaskSet):
+
         @task
         def task1(self):
             pass
+
         @task
         def task2(self):
             pass
 
+
 class TestInspectLocust(unittest.TestCase):
+
     def test_get_task_ratio_dict_relative(self):
         ratio = get_task_ratio_dict([MyTaskSet])
         self.assertEqual(1.0, ratio["MyTaskSet"]["ratio"])

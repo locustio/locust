@@ -4,6 +4,7 @@ from .protocol import Message
 
 
 class Server(object):
+
     def __init__(self):
         context = zmq.Context()
 
@@ -20,7 +21,9 @@ class Server(object):
         data = self.receiver.recv()
         return Message.unserialize(data)
 
+
 class Client(object):
+
     def __init__(self, host):
         context = zmq.Context()
 

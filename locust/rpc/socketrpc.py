@@ -10,6 +10,7 @@ from .protocol import Message
 
 logger = logging.getLogger(__name__)
 
+
 def _recv_bytes(sock, bytes):
     data = ""
     while bytes:
@@ -19,6 +20,7 @@ def _recv_bytes(sock, bytes):
         bytes -= len(temp)
         data += temp
     return data
+
 
 def _send_obj(sock, msg):
     data = msg.serialize()
@@ -33,13 +35,16 @@ def _send_obj(sock, msg):
         finally:
             raise LocustError("Slave has disconnected")
 
+
 def _recv_obj(sock):
     d = _recv_bytes(sock, 4)
     bytes, = struct.unpack('!i', d)
     data = _recv_bytes(sock, bytes)
     return Message.unserialize(data)
 
+
 class Client(object):
+
     def __init__(self, host):
         self.host = host
         self.port = 5558
@@ -48,6 +53,7 @@ class Client(object):
 
     def _connect(self):
         sock = socket.create_connection((self.host, self.port))
+
         def handle():
             try:
                 while True:
@@ -67,7 +73,9 @@ class Client(object):
     def recv(self):
         return self.command_queue.get()
 
+
 class Server(object):
+
     def __init__(self):
         self.host = "0.0.0.0"
         self.port = 5558

@@ -18,6 +18,7 @@ absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
 
 class HttpSession(requests.Session):
+
     """
     Class for performing web requests and holding (session-) cookies between requests (in order
     to be able to log in and out of websites). Each request is logged so that locust can display
@@ -40,6 +41,7 @@ class HttpSession(requests.Session):
                            response, even if the response code is ok (2xx). The opposite also works, one can use catch_response to catch a request
                            and then mark it as successful even if the response code was not (i.e 500 or 404).
     """
+
     def __init__(self, base_url, *args, **kwargs):
         self.base_url = base_url
 
@@ -115,7 +117,7 @@ class HttpSession(requests.Session):
             request_meta["name"] = name or request.path_url
             request_meta["start_time"] = time.time()
 
-        kwargs["hooks"] = {"pre_request":on_pre_request}
+        kwargs["hooks"] = {"pre_request": on_pre_request}
 
         # make the request using a wrapper that works around a bug in python-requests causing
         # safe_mode to not work when making requests through Session instances
@@ -168,7 +170,9 @@ class HttpSession(requests.Session):
             r.status_code = 0  # with this status_code, content returns None
             return r
 
+
 class ResponseContextManager(requests.Response):
+
     """
     A Response class that also acts as a context manager that provides the ability to manually
     control if an HTTP request should be marked as successful or a failure in Locust's statistics
