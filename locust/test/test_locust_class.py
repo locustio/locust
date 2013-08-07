@@ -516,7 +516,7 @@ class TestCatchResponse(WebserverTestCase):
             host = "http://127.0.0.1:1"
         l = MyLocust()
         with l.client.get("/", catch_response=True) as r:
-            self.assertFalse(r)
+            self.assertEqual(r.status_code, 0)
             self.assertEqual(None, r.content)
             r.success()
         self.assertEqual(1, self.num_success)
@@ -527,7 +527,7 @@ class TestCatchResponse(WebserverTestCase):
             host = "http://127.0.0.1:1"
         l = MyLocust()
         with l.client.get("/", catch_response=True) as r:
-            self.assertFalse(r)
+            self.assertEqual(r.status_code, 0)
             self.assertEqual(None, r.content)
             r.success()
         self.assertEqual(1, self.num_success)
