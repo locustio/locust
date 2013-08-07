@@ -1,13 +1,4 @@
-try:
-    from zmq import green as zmq
-except ImportError:
-    from gevent_zeromq import zmq
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
+import zmq.green as zmq
 from .protocol import Message
 
 
