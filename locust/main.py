@@ -67,7 +67,7 @@ def parse_options():
         default=False,
         help="Set locust to run in distributed mode with this process as slave"
     )
-    
+
     # master host options
     parser.add_option(
         '--master-host',
@@ -106,7 +106,7 @@ def parse_options():
         default=1,
         help="The rate per second in which clients are spawned. Only used together with --no-web"
     )
-    
+
     # Number of requests
     parser.add_option(
         '-n', '--num-request',
@@ -116,7 +116,7 @@ def parse_options():
         default=None,
         help="Number of requests to perform. Only used together with --no-web"
     )
-    
+
     # log level
     parser.add_option(
         '--loglevel', '-L',
@@ -126,7 +126,7 @@ def parse_options():
         default='INFO',
         help="Choose between DEBUG/INFO/WARNING/ERROR/CRITICAL. Default is INFO.",
     )
-    
+
     # log file
     parser.add_option(
         '--logfile',
@@ -145,7 +145,7 @@ def parse_options():
         default=False,
         help="Enables the auto tuning ramping feature for finding highest stable client count. NOTE having ramp enabled will add some more overhead for additional stats gathering"
     )
-    
+
     # if we should print stats in the console
     parser.add_option(
         '--print-stats',
@@ -154,7 +154,7 @@ def parse_options():
         default=False,
         help="Print stats in the console"
     )
-    
+
     # List locust commands found in loaded locust files/source files
     parser.add_option(
         '-l', '--list',
@@ -163,7 +163,7 @@ def parse_options():
         default=False,
         help="Show list of possible locust classes and exit"
     )
-    
+
     # Display ratio table of all tasks
     parser.add_option(
         '--show-task-ratio',
@@ -180,7 +180,7 @@ def parse_options():
         default=False,
         help="print json data of the locust classes' task execution ratio"
     )
-    
+
     # Version number (optparse gives you --version but we have to do it
     # ourselves to get -V too. sigh)
     parser.add_option(
@@ -298,7 +298,7 @@ def main():
     # setup logging
     setup_logging(options.loglevel, options.logfile)
     logger = logging.getLogger(__name__)
-    
+
     if options.show_version:
         print "Locust %s" % (version,)
         sys.exit(0)
@@ -331,7 +331,7 @@ def main():
             locust_classes = [locusts[n] for n in names]
     else:
         locust_classes = locusts.values()
-    
+
     if options.show_task_ratio:
         console_logger.info("\n Task ratio per locust class")
         console_logger.info( "-" * 80)
@@ -343,12 +343,12 @@ def main():
     if options.show_task_ratio_json:
         from json import dumps
         task_data = {
-            "per_class": get_task_ratio_dict(locust_classes), 
+            "per_class": get_task_ratio_dict(locust_classes),
             "total": get_task_ratio_dict(locust_classes, total=True)
         }
         console_logger.info(dumps(task_data))
         sys.exit(0)
-    
+
     # if --master is set, make sure --no-web isn't set
     if options.master and options.no_web:
         logger.error("Locust can not run distributed with the web interface disabled (do not use --no-web and --master together)")
@@ -358,7 +358,7 @@ def main():
         # spawn web greenlet
         logger.info("Starting web monitor on port %s" % options.port)
         main_greenlet = gevent.spawn(web.start, locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.ramp, options.port)
-    
+
     if not options.master and not options.slave:
         runners.locust_runner = LocalLocustRunner(locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.host)
         # spawn client spawning/hatching greenlet
@@ -370,11 +370,11 @@ def main():
     elif options.slave:
         runners.locust_runner = SlaveLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
         main_greenlet = runners.locust_runner.greenlet
-    
+
     if options.print_stats or (options.no_web and not options.slave):
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
-    
+
     def shutdown(code=0):
         """
         Shut down locust by firing quitting event, printing stats and exiting
@@ -385,13 +385,13 @@ def main():
         print_percentile_stats(runners.locust_runner.request_stats)
         print_error_report()
         sys.exit(code)
-    
+
     # install SIGTERM handler
     def sig_term_handler():
         logger.info("Got SIGTERM signal")
         shutdown(0)
     gevent.signal(signal.SIGTERM, sig_term_handler)
-    
+
     try:
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()

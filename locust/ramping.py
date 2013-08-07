@@ -85,7 +85,7 @@ def register_listeners():
     events.report_to_master += on_report_to_master_ramping
     events.slave_report += on_slave_report_ramping
     events.request_success += on_request_success_ramping
-    
+
 def remove_listeners():
     events.report_to_master.__idec__(on_report_to_master_ramping)
     events.slave_report.__idec__(on_slave_report_ramping)
@@ -94,9 +94,9 @@ def remove_listeners():
 def start_ramping(hatch_rate=None, max_locusts=1000, hatch_stride=100,
           percent=0.95, response_time_limit=2000, acceptable_fail=0.05,
           precision=200, start_count=0, calibration_time=15):
-    
+
     register_listeners()
-    
+
     def ramp_up(clients, hatch_stride, boundery_found=False):
         while True:
             if locust_runner.state != STATE_HATCHING:
