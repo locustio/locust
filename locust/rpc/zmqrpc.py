@@ -1,4 +1,12 @@
-import zmq.green as zmq
+try:
+    from zmq import green as zmq
+except ImportError:
+    from gevent_zeromq import zmq
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 from .protocol import Message
 
@@ -20,7 +28,7 @@ class Server(object):
     def recv(self):
         data = self.receiver.recv()
         return Message.unserialize(data)
-
+    
 
 class Client(object):
 
