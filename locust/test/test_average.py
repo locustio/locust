@@ -30,7 +30,7 @@ class MovingAverageTest(WebserverTestCase):
             taskset.wait()
 
     def _get_deviation(self, taskset):
-        return abs(taskset._avg_wait_ctr - taskset.avg_wait)
+        return abs(taskset._avg_wait - taskset.avg_wait)
 
     def _get_max_deviation(self, taskset, percent):
         return taskset.avg_wait * (percent / 100.0)
