@@ -137,7 +137,7 @@ class HttpSession(requests.Session):
         else:
             try:
                 response.raise_for_status()
-            except RequestException, e:
+            except RequestException as e:
                 events.request_failure.fire(request_meta["method"], request_meta["name"], request_meta["response_time"], e, None)
             else:
                 events.request_success.fire(
@@ -201,7 +201,7 @@ class ResponseContextManager(requests.Response):
         else:
             try:
                 self.raise_for_status()
-            except requests.exceptions.RequestException, e:
+            except requests.exceptions.RequestException as e:
                 self.failure(e)
             else:
                 self.success()
