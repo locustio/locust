@@ -66,9 +66,9 @@ add_module_names = False
 # output. They are ignored by default.
 show_authors = False
 
-# Sphinx will recurse into subversion configuration folders and try to read
-# any document file within. These should be ignored.
-# Note: exclude_dirnames is new in Sphinx 0.5
+# Sphinx will recurse into subversion configuration folders and try to read  
+# any document file within. These should be ignored. 
+# Note: exclude_dirnames is new in Sphinx 0.5 
 exclude_dirnames = []
 
 # Options for HTML output

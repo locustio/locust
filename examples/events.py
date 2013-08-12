@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 """
-This is an example of a locustfile that uses Locust's built in event hooks to
+This is an example of a locustfile that uses Locust's built in event hooks to 
 track the sum of the content-length header in all successful HTTP responses
 """
 
@@ -11,11 +11,11 @@ class WebsiteUser(Locust):
     host = "http://127.0.0.1:8089"
     min_wait=2000
     max_wait=5000
-
+    
     @task(2)
     def index(l):
         l.client.get("/")
-
+    
     @task(1)
     def stats(l):
         l.client.get("/stats/requests")
@@ -26,7 +26,7 @@ class WebsiteUser(Locust):
 We need somewhere to store the stats.
 
 On  the master node stats will contain the aggregated sum of all content-lengths,
-while one the slave nodes this will be the sum of the content-lengths since the
+while one the slave nodes this will be the sum of the content-lengths since the 
 last stats report was sent to the master
 """
 stats = {"content-length":0}

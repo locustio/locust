@@ -9,12 +9,12 @@ def stats(l):
 class UserTasks(TaskSet):
     # one can specify tasks like this
     tasks = [index, stats]
-
+    
     # but it might be convenient to use the @task decorator
     @task
     def page404(self):
         self.client.get("/does_not_exist")
-
+    
 class WebsiteUser(Locust):
     """
     Locust user class that does requests to the locust web server running on localhost

@@ -10,7 +10,7 @@ class TestHttpSession(WebserverTestCase):
         s = HttpSession("http://127.0.0.1:%i" % self.port)
         r = s.get("/ultra_fast")
         self.assertEqual(200, r.status_code)
-
+ 
     def test_connection_error(self):
         s = HttpSession("http://localhost:1")
         r = s.get("/", timeout=0.1)
@@ -22,7 +22,7 @@ class TestHttpSession(WebserverTestCase):
         for url, exception in (
                 (u"http://\x94", InvalidURL),
                 ("telnet://127.0.0.1", InvalidSchema),
-                ("127.0.0.1", MissingSchema),
+                ("127.0.0.1", MissingSchema), 
             ):
             s = HttpSession(url)
             try:

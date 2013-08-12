@@ -82,12 +82,12 @@ class LocustTestCase(unittest.TestCase):
             event = getattr(events, name)
             if isinstance(event, events.EventHook):
                 self._event_handlers[event] = copy(event._handlers)
-
+                      
     def tearDown(self):
         for event, handlers in self._event_handlers.iteritems():
             event._handlers = handlers
 
-
+            
 class WebserverTestCase(LocustTestCase):
     """
     Test case class that sets up an HTTP server which can be used within the tests
