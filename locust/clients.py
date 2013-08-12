@@ -21,6 +21,7 @@ def timedelta_to_ms(td):
     "python 2.7 has a total_seconds method for timedelta objects. This is here for py<2.7 compat."
     return int((td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**3) 
 
+
 class LocustResponse(Response):
 
     def raise_for_status(self):
@@ -30,7 +31,6 @@ class LocustResponse(Response):
 
 
 class HttpSession(requests.Session):
-
     """
     Class for performing web requests and holding (session-) cookies between requests (in order
     to be able to log in and out of websites). Each request is logged so that locust can display
@@ -53,7 +53,6 @@ class HttpSession(requests.Session):
                            response, even if the response code is ok (2xx). The opposite also works, one can use catch_response to catch a request
                            and then mark it as successful even if the response code was not (i.e 500 or 404).
     """
-
     def __init__(self, base_url, *args, **kwargs):
         requests.Session.__init__(self, *args, **kwargs)
 
@@ -168,7 +167,6 @@ class HttpSession(requests.Session):
 
 
 class ResponseContextManager(LocustResponse):
-
     """
     A Response class that also acts as a context manager that provides the ability to manually
     control if an HTTP request should be marked as successful or a failure in Locust's statistics

@@ -20,7 +20,6 @@ import events
 _internals = [Locust, WebLocust]
 version = locust.version
 
-
 def parse_options():
     """
     Handle command-line options with optparse.OptionParser.
@@ -293,7 +292,6 @@ def load_locustfile(path):
     locusts = dict(filter(is_locust, vars(imported).items()))
     return imported.__doc__, locusts
 
-
 def main():
     parser, options, arguments = parse_options()
 
@@ -336,7 +334,7 @@ def main():
 
     if options.show_task_ratio:
         console_logger.info("\n Task ratio per locust class")
-        console_logger.info("-" * 80)
+        console_logger.info( "-" * 80)
         print_task_ratio(locust_classes)
         console_logger.info("\n Total task ratio")
         console_logger.info("-" * 80)

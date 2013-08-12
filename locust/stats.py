@@ -9,13 +9,11 @@ from log import console_logger
 
 STATS_NAME_WIDTH = 60
 
-
 class RequestStatsAdditionError(Exception):
     pass
 
 
 class RequestStats(object):
-
     def __init__(self):
         self.entries = {}
         self.errors = {}
@@ -66,7 +64,6 @@ class RequestStats(object):
 
 
 class StatsEntry(object):
-
     """
     Represents a single stats entry (name and method)
     """
@@ -214,7 +211,7 @@ class StatsEntry(object):
             return 0
         slice_start_time = max(self.stats.last_request_timestamp - 12, int(self.stats.start_time or 0))
 
-        reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, self.stats.last_request_timestamp - 2)]
+        reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, self.stats.last_request_timestamp-2)]
         return avg(reqs)
 
     @property
@@ -256,10 +253,10 @@ class StatsEntry(object):
             for key in other.response_times:
                 self.response_times[key] = self.response_times.get(key, 0) + other.response_times[key]
             for key in other.num_reqs_per_sec:
-                self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) + other.num_reqs_per_sec[key]
+                self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) +  other.num_reqs_per_sec[key]
         else:
             # still add the number of reqs per seconds the last 20 seconds
-            for i in xrange(other.last_request_timestamp - 20, other.last_request_timestamp + 1):
+            for i in xrange(other.last_request_timestamp-20, other.last_request_timestamp+1):
                 if i in other.num_reqs_per_sec:
                     self.num_reqs_per_sec[i] = self.num_reqs_per_sec.get(i, 0) + other.num_reqs_per_sec[i]
 
@@ -307,7 +304,7 @@ class StatsEntry(object):
 
     def __str__(self):
         try:
-            fail_percent = (self.num_failures / float(self.num_requests + self.num_failures)) * 100
+            fail_percent = (self.num_failures/float(self.num_requests + self.num_failures))*100
         except ZeroDivisionError:
             fail_percent = 0
 
@@ -355,9 +352,7 @@ class StatsEntry(object):
             self.max_response_time
         )
 
-
 class StatsError(object):
-
     def __init__(self, method, name, error, occurences=0):
         self.method = method
         self.name = name
@@ -397,7 +392,6 @@ class StatsError(object):
 def avg(values):
     return sum(values, 0.0) / max(len(values), 1)
 
-
 def median_from_dict(total, count):
     """
     total is the number of requests made
@@ -415,23 +409,19 @@ global_stats = RequestStats()
 A global instance for holding the statistics. Should be removed eventually.
 """
 
-
 def on_request_success(method, name, response_time, response_length):
     if global_stats.max_requests is not None and global_stats.num_requests >= global_stats.max_requests:
         raise StopLocust("Maximum number of requests reached")
 
     global_stats.get(name, method).log(response_time, response_length)
 
-
 def on_request_failure(method, name, response_time, error, response=None):
     global_stats.get(name, method).log_error(error)
 
-
 def on_report_to_master(client_id, data):
     data["stats"] = [global_stats.entries[key].get_stripped_report() for key in global_stats.entries.iterkeys() if not (global_stats.entries[key].num_requests == 0 and global_stats.entries[key].num_failures == 0)]
-    data["errors"] = dict([(k, e.to_dict()) for k, e in global_stats.errors.iteritems()])
+    data["errors"] =  dict([(k, e.to_dict()) for k, e in global_stats.errors.iteritems()])
     global_stats.errors = {}
-
 
 def on_slave_report(client_id, data):
     for stats_data in data["stats"]:
@@ -469,13 +459,12 @@ def print_stats(stats):
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
 
     try:
-        fail_percent = (total_failures / float(total_reqs)) * 100
+        fail_percent = (total_failures/float(total_reqs))*100
     except ZeroDivisionError:
         fail_percent = 0
 
     console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %42.2f") % ('Total', total_reqs, "%d(%.2f%%)" % (total_failures, fail_percent), total_rps))
     console_logger.info("")
-
 
 def print_percentile_stats(stats):
     console_logger.info("Percentage of the requests completed within given times")
@@ -492,7 +481,6 @@ def print_percentile_stats(stats):
         console_logger.info(total_stats.percentile())
     console_logger.info("")
 
-
 def print_error_report():
     console_logger.info("Error report")
     console_logger.info(" %-18s %-100s" % ("# occurences", "Error"))
@@ -501,7 +489,6 @@ def print_error_report():
         console_logger.info(" %-18i %-100s" % (error.occurences, error.to_name()))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     console_logger.info("")
-
 
 def stats_printer():
     from runners import locust_runner

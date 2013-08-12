@@ -1,5 +1,4 @@
 class EventHook(object):
-
     """
     Simple event class used to provide hooks for different types of events in Locust.
 

@@ -3,9 +3,7 @@ from locust.core import Locust, TaskSet
 from testcases import WebserverTestCase
 
 
-
 class MovingAverageTest(WebserverTestCase):
-
     """ This is not a unit test per se because it may fail ocassionally, which is perfectly ok since it deals with randomness.
         It is more for testing the expected behavior if using self.avg_wait in a taskset class and for feedback on the algorithm used.
     """
@@ -15,8 +13,6 @@ class MovingAverageTest(WebserverTestCase):
             host = 'http://127.0.0.1:%s' % self.port
             min_wait = 1
             max_wait = 1
-
-
 
         taskset = TaskSet(MyLocust())
         taskset._sleep = lambda seconds: None

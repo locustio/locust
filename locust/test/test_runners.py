@@ -30,7 +30,6 @@ def mocked_rpc_server():
 
 
 class TestMasterRunner(unittest.TestCase):
-
     def setUp(self):
         global_stats.reset_all()
         self._slave_report_event_handlers = [h for h in events.slave_report._handlers]
@@ -75,7 +74,7 @@ class TestMasterRunner(unittest.TestCase):
             master.stats.get("/", "GET").log(800, 23455)
             master.stats.get("/", "GET").log(700, 23455)
 
-            data = {"user_count": 1}
+            data = {"user_count":1}
             events.report_to_master.fire("fake_client", data)
             master.stats.clear_all()
 
@@ -85,8 +84,8 @@ class TestMasterRunner(unittest.TestCase):
             self.assertEqual(700, s.median_response_time)
 
 
-class TestMessageSerializing(unittest.TestCase):
 
+class TestMessageSerializing(unittest.TestCase):
     def test_message_serialize(self):
         msg = Message("client_ready", None, "my_id")
         rebuilt = Message.unserialize(msg.serialize())

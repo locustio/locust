@@ -11,7 +11,6 @@ from .testcases import LocustTestCase
 
 
 class TestWebUI(LocustTestCase):
-
     def setUp(self):
         super(TestWebUI, self).setUp()
 
@@ -39,7 +38,7 @@ class TestWebUI(LocustTestCase):
         self.assertEqual(200, response.status_code)
 
         data = json.loads(response.content)
-        self.assertEqual(2, len(data["stats"]))  # one entry plus Total
+        self.assertEqual(2, len(data["stats"])) # one entry plus Total
         self.assertEqual("/test", data["stats"][0]["name"])
         self.assertEqual("GET", data["stats"][0]["method"])
         self.assertEqual(120, data["stats"][0]["avg_response_time"])

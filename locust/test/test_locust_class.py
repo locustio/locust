@@ -6,9 +6,7 @@ from locust.exception import CatchResponseError, RescheduleTask, RescheduleTaskI
 
 from testcases import WebserverTestCase
 
-
 class TestTaskSet(unittest.TestCase):
-
     def setUp(self):
         super(TestTaskSet, self).setUp()
 
@@ -19,9 +17,8 @@ class TestTaskSet(unittest.TestCase):
     def test_task_ratio(self):
         t1 = lambda l: None
         t2 = lambda l: None
-
         class MyTasks(TaskSet):
-            tasks = {t1: 5, t2: 2}
+            tasks = {t1:5, t2:2}
 
         l = MyTasks(self.locust)
 
@@ -34,9 +31,8 @@ class TestTaskSet(unittest.TestCase):
     def test_task_decorator_ratio(self):
         t1 = lambda l: None
         t2 = lambda l: None
-
         class MyTasks(TaskSet):
-            tasks = {t1: 5, t2: 2}
+            tasks = {t1:5, t2:2}
             host = ""
 
             @task(3)
@@ -46,6 +42,7 @@ class TestTaskSet(unittest.TestCase):
             @task(13)
             def t4(self):
                 pass
+
 
         l = MyTasks(self.locust)
 
@@ -104,25 +101,23 @@ class TestTaskSet(unittest.TestCase):
 
     def test_schedule_task_with_kwargs(self):
         class MyTasks(TaskSet):
-
             @task
             def t1(self):
                 self.t1_executed = True
-
             @task
             def t2(self, *args, **kwargs):
                 self.t2_args = args
                 self.t2_kwargs = kwargs
         loc = MyTasks(self.locust)
-        loc.schedule_task(loc.t2, [42], {"test_kw": "hello"})
+        loc.schedule_task(loc.t2, [42], {"test_kw":"hello"})
         loc.execute_next_task()
         self.assertEqual((42, ), loc.t2_args)
-        self.assertEqual({"test_kw": "hello"}, loc.t2_kwargs)
+        self.assertEqual({"test_kw":"hello"}, loc.t2_kwargs)
 
-        loc.schedule_task(loc.t2, args=[10, 4], kwargs={"arg1": 1, "arg2": 2})
+        loc.schedule_task(loc.t2, args=[10, 4], kwargs={"arg1":1, "arg2":2})
         loc.execute_next_task()
         self.assertEqual((10, 4), loc.t2_args)
-        self.assertEqual({"arg1": 1, "arg2": 2}, loc.t2_kwargs)
+        self.assertEqual({"arg1":1, "arg2":2}, loc.t2_kwargs)
 
     def test_schedule_task_bound_method(self):
         class MyTasks(TaskSet):
@@ -132,7 +127,6 @@ class TestTaskSet(unittest.TestCase):
             def t1(self):
                 self.t1_executed = True
                 self.schedule_task(self.t2)
-
             def t2(self):
                 self.t2_executed = True
 
@@ -143,16 +137,14 @@ class TestTaskSet(unittest.TestCase):
         taskset.execute_next_task()
         self.assertTrue(taskset.t2_executed)
 
+
     def test_taskset_inheritance(self):
         def t1(l):
             pass
-
         class MyBaseTaskSet(TaskSet):
             tasks = [t1]
             host = ""
-
         class MySubTaskSet(MyBaseTaskSet):
-
             @task
             def t2(self):
                 pass
@@ -163,7 +155,6 @@ class TestTaskSet(unittest.TestCase):
 
     def test_task_decorator_with_or_without_argument(self):
         class MyTaskSet(TaskSet):
-
             @task
             def t1(self):
                 pass
@@ -171,7 +162,6 @@ class TestTaskSet(unittest.TestCase):
         self.assertEqual(len(taskset.tasks), 1)
 
         class MyTaskSet2(TaskSet):
-
             @task()
             def t1(self):
                 pass
@@ -179,7 +169,6 @@ class TestTaskSet(unittest.TestCase):
         self.assertEqual(len(taskset.tasks), 1)
 
         class MyTaskSet3(TaskSet):
-
             @task(3)
             def t1(self):
                 pass
@@ -188,9 +177,8 @@ class TestTaskSet(unittest.TestCase):
 
     def test_sub_taskset(self):
         class MySubTaskSet(TaskSet):
-            min_wait = 1
-            max_wait = 1
-
+            min_wait=1
+            max_wait=1
             @task()
             def a_task(self):
                 self.locust.sub_locust_task_executed = True
@@ -207,12 +195,10 @@ class TestTaskSet(unittest.TestCase):
 
     def test_sub_taskset_tasks_decorator(self):
         class MyTaskSet(TaskSet):
-
             @task
             class MySubTaskSet(TaskSet):
-                min_wait = 1
-                max_wait = 1
-
+                min_wait=1
+                max_wait=1
                 @task()
                 def a_task(self):
                     self.locust.sub_locust_task_executed = True
@@ -226,15 +212,13 @@ class TestTaskSet(unittest.TestCase):
 
     def test_sub_taskset_arguments(self):
         class MySubTaskSet(TaskSet):
-            min_wait = 1
-            max_wait = 1
-
+            min_wait=1
+            max_wait=1
             @task()
             def a_task(self):
                 self.locust.sub_taskset_args = self.args
                 self.locust.sub_taskset_kwargs = self.kwargs
                 self.interrupt()
-
         class MyTaskSet(TaskSet):
             sub_locust_args = None
             sub_locust_kwargs = None
@@ -244,28 +228,24 @@ class TestTaskSet(unittest.TestCase):
         self.locust.sub_taskset_kwargs = None
 
         loc = MyTaskSet(self.locust)
-        loc.schedule_task(MySubTaskSet, args=[1, 2, 3], kwargs={"hello": "world"})
+        loc.schedule_task(MySubTaskSet, args=[1,2,3], kwargs={"hello":"world"})
         self.assertRaises(RescheduleTaskImmediately, lambda: loc.execute_next_task())
-        self.assertEqual((1, 2, 3), self.locust.sub_taskset_args)
-        self.assertEqual({"hello": "world"}, self.locust.sub_taskset_kwargs)
+        self.assertEqual((1,2,3), self.locust.sub_taskset_args)
+        self.assertEqual({"hello":"world"}, self.locust.sub_taskset_kwargs)
 
     def test_interrupt_taskset_in_main_taskset(self):
         class MyTaskSet(TaskSet):
-
             @task
             def interrupted_task(self):
                 raise InterruptTaskSet(reschedule=False)
-
         class MyLocust(Locust):
             host = "http://127.0.0.1"
             task_set = MyTaskSet
 
         class MyTaskSet2(TaskSet):
-
             @task
             def interrupted_task(self):
                 self.interrupt()
-
         class MyLocust2(Locust):
             host = "http://127.0.0.1"
             task_set = MyTaskSet2
@@ -296,20 +276,16 @@ class TestTaskSet(unittest.TestCase):
         parents = {}
 
         class SubTaskSet(TaskSet):
-
             def on_start(self):
                 parents["sub"] = self.parent
 
             @task
             class SubSubTaskSet(TaskSet):
-
                 def on_start(self):
                     parents["subsub"] = self.parent
-
                 @task
                 def stop(self):
                     raise StopLocust()
-
         class RootTaskSet(TaskSet):
             tasks = [SubTaskSet]
 
@@ -324,13 +300,10 @@ class TestTaskSet(unittest.TestCase):
 
 
 class TestWebLocustClass(WebserverTestCase):
-
     def test_get_request(self):
         self.response = ""
-
         def t1(l):
             self.response = l.client.get("/ultra_fast")
-
         class MyLocust(Locust):
             tasks = [t1]
             host = "http://127.0.0.1:%i" % self.port
@@ -344,7 +317,7 @@ class TestWebLocustClass(WebserverTestCase):
             host = "http://127.0.0.1:%i" % self.port
 
         locust = MyLocust()
-        self.assertEqual("hello", locust.client.get("/request_header_test", headers={"X-Header-Test": "hello"}).content)
+        self.assertEqual("hello", locust.client.get("/request_header_test", headers={"X-Header-Test":"hello"}).content)
 
     def test_client_get(self):
         class MyLocust(Locust):
@@ -365,16 +338,16 @@ class TestWebLocustClass(WebserverTestCase):
             host = "http://127.0.0.1:%i" % self.port
 
         locust = MyLocust()
-        self.assertEqual("POST", locust.client.post("/request_method", {"arg": "hello world"}).content)
-        self.assertEqual("hello world", locust.client.post("/post", {"arg": "hello world"}).content)
+        self.assertEqual("POST", locust.client.post("/request_method", {"arg":"hello world"}).content)
+        self.assertEqual("hello world", locust.client.post("/post", {"arg":"hello world"}).content)
 
     def test_client_put(self):
         class MyLocust(Locust):
             host = "http://127.0.0.1:%i" % self.port
 
         locust = MyLocust()
-        self.assertEqual("PUT", locust.client.put("/request_method", {"arg": "hello world"}).content)
-        self.assertEqual("hello world", locust.client.put("/put", {"arg": "hello world"}).content)
+        self.assertEqual("PUT", locust.client.put("/request_method", {"arg":"hello world"}).content)
+        self.assertEqual("hello world", locust.client.put("/put", {"arg":"hello world"}).content)
 
     def test_client_delete(self):
         class MyLocust(Locust):
@@ -428,7 +401,6 @@ class TestWebLocustClass(WebserverTestCase):
 
 
 class TestCatchResponse(WebserverTestCase):
-
     def setUp(self):
         super(TestCatchResponse, self).setUp()
 
@@ -439,11 +411,9 @@ class TestCatchResponse(WebserverTestCase):
 
         self.num_failures = 0
         self.num_success = 0
-
         def on_failure(method, path, response_time, exception, response):
             self.num_failures += 1
             self.last_failure_exception = exception
-
         def on_success(a, b, c, d):
             self.num_success += 1
         events.request_failure += on_failure
@@ -495,12 +465,10 @@ class TestCatchResponse(WebserverTestCase):
 
     def test_interrupt_taskset_with_catch_response(self):
         class MyTaskSet(TaskSet):
-
             @task
             def interrupted_task(self):
                 with self.client.get("/ultra_fast", catch_response=True) as r:
                     raise InterruptTaskSet()
-
         class MyLocust(Locust):
             host = "http://127.0.0.1:%i" % self.port
             task_set = MyTaskSet
