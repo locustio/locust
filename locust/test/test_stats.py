@@ -92,11 +92,11 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(s.num_failures, 3)
         self.assertEqual(s.median_response_time, 38)
         self.assertEqual(s.avg_response_time, 43.2)
-    
+
     def test_serialize_through_message(self):
         """
-        Serialize a RequestStats instance, then serialize it through a Message, 
-        and unserialize the whole thing again. This is done "IRL" when stats are sent 
+        Serialize a RequestStats instance, then serialize it through a Message,
+        and unserialize the whole thing again. This is done "IRL" when stats are sent
         from slaves to master.
         """
         s1 = StatsEntry(self.stats, "test", "GET")
@@ -104,10 +104,10 @@ class TestRequestStats(unittest.TestCase):
         s1.log(20, 0)
         s1.log(40, 0)
         u1 = StatsEntry.unserialize(s1.serialize())
-        
+
         data = Message.unserialize(Message("dummy", s1.serialize(), "none").serialize()).data
         u1 = StatsEntry.unserialize(data)
-        
+
         self.assertEqual(20, u1.median_response_time)
 
 
@@ -115,13 +115,13 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
     def test_request_stats_content_length(self):
         class MyLocust(Locust):
             host = "http://127.0.0.1:%i" % self.port
-    
+
         locust = MyLocust()
         locust.client.get("/ultra_fast")
         self.assertEqual(global_stats.get("/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response"))
         locust.client.get("/ultra_fast")
         self.assertEqual(global_stats.get("/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response"))
-    
+
     def test_request_stats_no_content_length(self):
         class MyLocust(Locust):
             host = "http://127.0.0.1:%i" % self.port
@@ -129,41 +129,41 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         path = "/no_content_length"
         r = l.client.get(path)
         self.assertEqual(global_stats.get(path, "GET").avg_content_length, len("This response does not have content-length in the header"))
-    
-    def test_request_stats_no_content_length_no_prefetch(self):
+
+    def test_request_stats_no_content_length_streaming(self):
         class MyLocust(Locust):
             host = "http://127.0.0.1:%i" % self.port
         l = MyLocust()
         path = "/no_content_length"
-        r = l.client.get(path, prefetch=False)
+        r = l.client.get(path, stream=True)
         self.assertEqual(0, global_stats.get(path, "GET").avg_content_length)
-    
+
     def test_request_stats_named_endpoint(self):
         class MyLocust(Locust):
             host = "http://127.0.0.1:%i" % self.port
-    
+
         locust = MyLocust()
         locust.client.get("/ultra_fast", name="my_custom_name")
         self.assertEqual(1, global_stats.get("my_custom_name", "GET").num_requests)
-    
+
     def test_request_stats_query_variables(self):
         class MyLocust(Locust):
             host = "http://127.0.0.1:%i" % self.port
-    
+
         locust = MyLocust()
         locust.client.get("/ultra_fast?query=1")
         self.assertEqual(1, global_stats.get("/ultra_fast?query=1", "GET").num_requests)
-    
+
     def test_request_connection_error(self):
         class MyLocust(Locust):
             host = "http://localhost:1"
-        
+
         locust = MyLocust()
         response = locust.client.get("/", timeout=0.1)
-        self.assertFalse(response)
+        self.assertEqual(response.status_code, 0)
         self.assertEqual(1, global_stats.get("/", "GET").num_failures)
         self.assertEqual(0, global_stats.get("/", "GET").num_requests)
-    
+
     def test_max_requests(self):
         class MyTaskSet(TaskSet):
             @task
@@ -174,20 +174,20 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
             task_set = MyTaskSet
             min_wait = 1
             max_wait = 1
-            
+
         try:
             from locust.exception import StopLocust
             global_stats.clear_all()
             global_stats.max_requests = 2
-            
+
             l = MyLocust()
             self.assertRaises(StopLocust, lambda: l.task_set(l).run())
             self.assertEqual(2, global_stats.num_requests)
-            
+
             global_stats.clear_all()
             global_stats.max_requests = 2
             self.assertEqual(0, global_stats.num_requests)
-            
+
             l.run()
             self.assertEqual(2, global_stats.num_requests)
         finally:
@@ -199,7 +199,7 @@ class MyTaskSet(TaskSet):
     @task(75)
     def root_task(self):
         pass
-    
+
     @task(25)
     class MySubTaskSet(TaskSet):
         @task
@@ -208,7 +208,7 @@ class MyTaskSet(TaskSet):
         @task
         def task2(self):
             pass
-    
+
 class TestInspectLocust(unittest.TestCase):
     def test_get_task_ratio_dict_relative(self):
         ratio = get_task_ratio_dict([MyTaskSet])
@@ -217,7 +217,7 @@ class TestInspectLocust(unittest.TestCase):
         self.assertEqual(0.25, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["ratio"])
         self.assertEqual(0.5, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["tasks"]["task1"]["ratio"])
         self.assertEqual(0.5, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["tasks"]["task2"]["ratio"])
-    
+
     def test_get_task_ratio_dict_total(self):
         ratio = get_task_ratio_dict([MyTaskSet], total=True)
         self.assertEqual(1.0, ratio["MyTaskSet"]["ratio"])
@@ -225,4 +225,3 @@ class TestInspectLocust(unittest.TestCase):
         self.assertEqual(0.25, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["ratio"])
         self.assertEqual(0.125, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["tasks"]["task1"]["ratio"])
         self.assertEqual(0.125, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["tasks"]["task2"]["ratio"])
-        

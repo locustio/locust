@@ -102,7 +102,7 @@ class Locust(object):
             self.task_set(self).run()
         except StopLocust:
             pass
-        except (RescheduleTask, RescheduleTaskImmediately), e:
+        except (RescheduleTask, RescheduleTaskImmediately) as e:
             raise LocustError, LocustError("A task inside a Locust class' main TaskSet (`%s.task_set` of type `%s`) seems to have called interrupt() or raised an InterruptTaskSet exception. The interrupt() function is used to hand over execution to a parent TaskSet, and should never be called in the main TaskSet which a Locust class' task_set attribute points to." % (type(self).__name__, self.task_set.__name__)), sys.exc_info()[2]
 
 
@@ -253,7 +253,7 @@ class TaskSet(object):
                     self.wait()
                 else:
                     self.wait()
-            except InterruptTaskSet, e:
+            except InterruptTaskSet as e:
                 if e.reschedule:
                     raise RescheduleTaskImmediately, e, sys.exc_info()[2]
                 else:
@@ -262,7 +262,7 @@ class TaskSet(object):
                 raise
             except GreenletExit:
                 raise
-            except Exception, e:
+            except Exception as e:
                 events.locust_error.fire(self, e, sys.exc_info()[2])
                 sys.stderr.write("\n" + traceback.format_exc())
                 self.wait()
@@ -273,7 +273,7 @@ class TaskSet(object):
     
     def execute_task(self, task, *args, **kwargs):
         # check if the function is a method bound to the current locust, and if so, don't pass self as first argument
-        if hasattr(task, "im_self") and task.im_self == self:
+        if hasattr(task, "im_self") and task.__self__ == self:
             # task is a bound method on self
             task(*args, **kwargs)
         elif hasattr(task, "tasks") and issubclass(task, TaskSet):
