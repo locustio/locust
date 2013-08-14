@@ -5,7 +5,7 @@ from collections import namedtuple
 from urlparse import urlparse, urlunparse
 
 import requests
-from requests import Response
+from requests import Response, Request
 from requests.packages.urllib3.response import HTTPResponse
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import (RequestException, ConnectionError, HTTPError,
@@ -15,6 +15,19 @@ import events
 from exception import CatchResponseError, ResponseError
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
+
+
+def timedelta_to_ms(td):
+    "python 2.7 has a total_seconds method for timedelta objects. This is here for py<2.7 compat."
+    return int((td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**3) 
+
+
+class LocustResponse(Response):
+
+    def raise_for_status(self):
+        if hasattr(self, 'error') and self.error:
+            raise self.error
+        Response.raise_for_status(self)
 
 
 class HttpSession(requests.Session):
@@ -41,6 +54,8 @@ class HttpSession(requests.Session):
                            and then mark it as successful even if the response code was not (i.e 500 or 404).
     """
     def __init__(self, base_url, *args, **kwargs):
+        requests.Session.__init__(self, *args, **kwargs)
+
         self.base_url = base_url
         
         # Check for basic authentication
@@ -53,19 +68,7 @@ class HttpSession(requests.Session):
             # remove username and password from the base_url
             self.base_url = urlunparse((parsed_url.scheme, netloc, parsed_url.path, parsed_url.params, parsed_url.query, parsed_url.fragment))
             # configure requests to use basic auth
-            kwargs["auth"] = HTTPBasicAuth(parsed_url.username, parsed_url.password)
-        
-        # requests config
-        config = {
-            "max_retries": 0,
-            "keep_alive": False,
-            "safe_mode": True,
-        }
-        if "config" in kwargs:
-            config.update(kwargs["config"])
-        kwargs["config"] = config
-        
-        super(HttpSession, self).__init__(*args, **kwargs)
+            self.auth = HTTPBasicAuth(parsed_url.username, parsed_url.password)
     
     def _build_url(self, path):
         """ prepend url with hostname unless it's already an absolute URL """
@@ -98,7 +101,7 @@ class HttpSession(requests.Session):
         :param proxies: (optional) Dictionary mapping protocol to the URL of the proxy.
         :param return_response: (optional) If False, an un-sent Request object will returned.
         :param config: (optional) A configuration dictionary. See ``request.defaults`` for allowed keys and their default values.
-        :param prefetch: (optional) whether to immediately download the response content. Defaults to ``True``.
+        :param stream: (optional) whether to immediately download the response content. Defaults to ``False``.
         :param verify: (optional) if ``True``, the SSL cert will be verified. A CA_BUNDLE path can also be provided.
         :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
         """
@@ -110,26 +113,22 @@ class HttpSession(requests.Session):
         request_meta = {}
         
         # set up pre_request hook for attaching meta data to the request object
-        def on_pre_request(request):
-            request_meta["method"] = request.method
-            request_meta["name"] = name or request.path_url
-            request_meta["start_time"] = time.time()
+        request_meta["start_time"] = time.time()
         
-        kwargs["hooks"] = {"pre_request":on_pre_request}
-        
-        # make the request using a wrapper that works around a bug in python-requests causing 
-        # safe_mode to not work when making requests through Session instances
         response = self._send_request_safe_mode(method, url, **kwargs)
         
+        request_meta["method"] = response.request.method
+        request_meta["name"] = name or response.request.path_url 
+
         # record the consumed time
-        request_meta["response_time"] = int((time.time() - request_meta["start_time"]) * 1000)
+        request_meta["response_time"] = timedelta_to_ms(response.elapsed) 
         
-        # get the length of the content, but if the argument prefetch is set to False, we take
+        # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body
-        if kwargs.get("prefetch", True):
-            request_meta["content_size"] = len(response.content or "")
-        else:
+        if kwargs.get("stream", False):
             request_meta["content_size"] = int(response.headers.get("content-length") or 0)
+        else:
+            request_meta["content_size"] = len(response.content or "")
         
         if catch_response:
             response.locust_request_meta = request_meta
@@ -137,7 +136,7 @@ class HttpSession(requests.Session):
         else:
             try:
                 response.raise_for_status()
-            except RequestException, e:
+            except RequestException as e:
                 events.request_failure.fire(request_meta["method"], request_meta["name"], request_meta["response_time"], e, None)
             else:
                 events.request_success.fire(
@@ -152,23 +151,22 @@ class HttpSession(requests.Session):
         """
         Send an HTTP request, and catch any exception that might occur due to connection problems.
         
-        This is equivalent of python-requests' safe_mode, which due to a bug, does currently *not*
-        work together with Sessions. Once the issue is fixed in python-requests, this method should 
-        be removed. See: https://github.com/kennethreitz/requests/issues/888
+        Safe mode has been removed from requests 1.x.
         """
         try:
-            return super(HttpSession, self).request(method, url, **kwargs)
+            return requests.Session.request(self, method, url, **kwargs)
         except (MissingSchema, InvalidSchema, InvalidURL):
             raise
-        except (RequestException, ConnectionError, HTTPError,
-                socket.timeout, socket.gaierror) as e:
-            r = Response()
+        except RequestException as e:
+            r = LocustResponse()
             r.error = e
             r.raw = HTTPResponse()  # otherwise, tests fail
             r.status_code = 0  # with this status_code, content returns None
+            r.request = Request(method, url).prepare() 
             return r
 
-class ResponseContextManager(requests.Response):
+
+class ResponseContextManager(LocustResponse):
     """
     A Response class that also acts as a context manager that provides the ability to manually 
     control if an HTTP request should be marked as successful or a failure in Locust's statistics
@@ -201,7 +199,7 @@ class ResponseContextManager(requests.Response):
         else:
             try:
                 self.raise_for_status()
-            except requests.exceptions.RequestException, e:
+            except requests.exceptions.RequestException as e:
                 self.failure(e)
             else:
                 self.success()

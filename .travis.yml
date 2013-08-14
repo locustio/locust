@@ -5,7 +5,5 @@ python:
 # command to install dependencies
 install:
   - sudo apt-get install -y libevent-dev
-  - pip install -r requirements.txt --use-mirrors
-  - pip install -r locust/test/requirements.txt
 # command to run tests
 script: python setup.py test
