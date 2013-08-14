@@ -1,8 +1,8 @@
-import random
+import base64
 import gevent
 import gevent.pywsgi
+import random
 import unittest
-import base64
 from copy import copy
 from StringIO import StringIO
 
@@ -49,7 +49,7 @@ def failed_request():
     return "This response failed", 500
 
 @app.route("/redirect")
-def redirect():
+def do_redirect():
     return redirect("/ultra_fast")
 
 @app.route("/basic_auth")
@@ -102,4 +102,5 @@ class WebserverTestCase(LocustTestCase):
 
     def tearDown(self):
         super(WebserverTestCase, self).tearDown()
+        self._web_server.stop_accepting()
         self._web_server.stop()

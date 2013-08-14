@@ -151,7 +151,7 @@ class TestTaskSet(unittest.TestCase):
         
         l = MySubTaskSet(self.locust)
         self.assertEqual(2, len(l.tasks))
-        self.assertEqual([t1, MySubTaskSet.t2.im_func], l.tasks)
+        self.assertEqual([t1, MySubTaskSet.t2.__func__], l.tasks)
     
     def test_task_decorator_with_or_without_argument(self):
         class MyTaskSet(TaskSet):
@@ -257,7 +257,7 @@ class TestTaskSet(unittest.TestCase):
         
         try:
             l.run()
-        except LocustError, e:
+        except LocustError as e:
             self.assertTrue("MyLocust" in e.args[0], "MyLocust should have been referred to in the exception message")
             self.assertTrue("MyTaskSet" in e.args[0], "MyTaskSet should have been referred to in the exception message")
         except:
@@ -265,7 +265,7 @@ class TestTaskSet(unittest.TestCase):
         
         try:
             l2.run()
-        except LocustError, e:
+        except LocustError as e:
             self.assertTrue("MyLocust2" in e.args[0], "MyLocust2 should have been referred to in the exception message")
             self.assertTrue("MyTaskSet2" in e.args[0], "MyTaskSet2 should have been referred to in the exception message")
         except:
@@ -484,7 +484,7 @@ class TestCatchResponse(WebserverTestCase):
             host = "http://127.0.0.1:1"
         l = MyLocust()
         with l.client.get("/", catch_response=True) as r:
-            self.assertFalse(r)
+            self.assertEqual(r.status_code, 0)
             self.assertEqual(None, r.content)
             r.success()
         self.assertEqual(1, self.num_success)
@@ -495,7 +495,7 @@ class TestCatchResponse(WebserverTestCase):
             host = "http://127.0.0.1:1"
         l = MyLocust()
         with l.client.get("/", catch_response=True) as r:
-            self.assertFalse(r)
+            self.assertEqual(r.status_code, 0)
             self.assertEqual(None, r.content)
             r.success()
         self.assertEqual(1, self.num_success)
