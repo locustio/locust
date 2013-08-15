@@ -9,3 +9,4 @@ dist/**
 *.ipr
 .vagrant
 build/
+.coverage
