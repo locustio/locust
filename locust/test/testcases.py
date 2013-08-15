@@ -7,7 +7,7 @@ from copy import copy
 from StringIO import StringIO
 
 from locust import events
-from locust.stats import RequestStats, global_stats
+from locust.stats import global_stats
 from flask import Flask, request, redirect, make_response, send_file
 
 app = Flask(__name__)

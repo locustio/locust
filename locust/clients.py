@@ -1,15 +1,13 @@
 import re
 import time
-import socket
-from collections import namedtuple
 from urlparse import urlparse, urlunparse
 
 import requests
 from requests import Response, Request
 from requests.packages.urllib3.response import HTTPResponse
 from requests.auth import HTTPBasicAuth
-from requests.exceptions import (RequestException, ConnectionError, HTTPError,
-        MissingSchema, InvalidSchema, InvalidURL)
+from requests.exceptions import (RequestException, MissingSchema,
+    InvalidSchema, InvalidURL)
 
 import events
 from exception import CatchResponseError, ResponseError

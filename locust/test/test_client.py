@@ -1,4 +1,3 @@
-import unittest
 from requests.exceptions import (RequestException, MissingSchema,
         InvalidSchema, InvalidURL)
 
