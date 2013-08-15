@@ -12,9 +12,7 @@ from gevent import GreenletExit
 from gevent.pool import Group
 
 import events
-from locust.stats import print_percentile_stats
-from stats import RequestStats, print_stats, global_stats
-from exception import RescheduleTaskImmediately
+from stats import global_stats
 
 from rpc import rpc, Message
 
