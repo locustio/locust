@@ -1,7 +1,6 @@
 import time
 import gevent
 import hashlib
-from copy import copy
 
 import events
 from exception import StopLocust
