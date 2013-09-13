@@ -271,6 +271,24 @@ class TestTaskSet(unittest.TestCase):
         except:
             raise
     
+    def test_on_start_interrupt(self):
+        class SubTaskSet(TaskSet):
+            def on_start(self):
+                if self.kwargs["reschedule"]:
+                    self.interrupt(reschedule=True)
+                else:
+                    self.interrupt(reschedule=False)
+        
+        class MyLocust(Locust):
+            host = ""
+            task_set = SubTaskSet
+        
+        l = MyLocust()
+        task_set = SubTaskSet(l)
+        self.assertRaises(RescheduleTaskImmediately, lambda: task_set.run(reschedule=True))
+        self.assertRaises(RescheduleTask, lambda: task_set.run(reschedule=False))
+
+    
     def test_parent_attribute(self):
         from locust.exception import StopLocust
         parents = {}
