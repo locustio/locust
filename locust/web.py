@@ -104,16 +104,16 @@ def request_stats_csv():
     
     for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
         rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
-            s.method,
-            s.name,
-            s.num_requests,
+            s.key[0],
+            s.key[1],
+            s.num_items,
             s.num_failures,
-            s.median_response_time,
-            s.avg_response_time,
-            s.min_response_time or 0,
-            s.max_response_time,
+            s.median_time,
+            s.avg_time,
+            s.min_time or 0,
+            s.max_time,
             s.avg_content_length,
-            s.total_rps,
+            s.total_per_sec,
         ))
 
     response = make_response("\n".join(rows))
@@ -139,7 +139,7 @@ def distribution_stats_csv():
         '"100%"',
     ))]
     for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
-        if s.num_requests:
+        if s.num_items:
             rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
         else:
             rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
@@ -162,21 +162,20 @@ def request_stats():
         stats = []
         for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total")]):
             stats.append({
-                "method": s.method,
-                "name": s.name,
-                "num_requests": s.num_requests,
+                "key": s.key,
+                "num_items": s.num_items,
                 "num_failures": s.num_failures,
-                "avg_response_time": s.avg_response_time,
-                "min_response_time": s.min_response_time,
-                "max_response_time": s.max_response_time,
-                "current_rps": s.current_rps,
-                "median_response_time": s.median_response_time,
+                "avg_time": s.avg_time,
+                "min_time": s.min_time,
+                "max_time": s.max_time,
+                "current_per_sec": s.current_per_sec,
+                "median_time": s.median_time,
                 "avg_content_length": s.avg_content_length,
             })
         
         report = {"stats":stats, "errors":[e.to_dict() for e in runners.locust_runner.errors.itervalues()]}
         if stats:
-            report["total_rps"] = stats[len(stats)-1]["current_rps"]
+            report["total_per_sec"] = stats[len(stats)-1]["current_per_sec"]
             report["fail_ratio"] = runners.locust_runner.stats.aggregated_stats("Total").fail_ratio
             
             # since generating a total response times dict with all response times from all
@@ -185,10 +184,10 @@ def request_stats():
             # value
             response_times = defaultdict(int) # used for calculating total median
             for i in xrange(len(stats)-1):
-                response_times[stats[i]["median_response_time"]] += stats[i]["num_requests"]
+                response_times[stats[i]["median_time"]] += stats[i]["num_items"]
             
             # calculate total median
-            stats[len(stats)-1]["median_response_time"] = median_from_dict(stats[len(stats)-1]["num_requests"], response_times)
+            stats[len(stats)-1]["median_time"] = median_from_dict(stats[len(stats)-1]["num_items"], response_times)
         
         is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
         if is_distributed:

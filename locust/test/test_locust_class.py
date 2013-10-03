@@ -414,8 +414,8 @@ class TestWebLocustClass(WebserverTestCase):
         my_locust = MyLocust()
         my_locust.t1()
         
-        self.assertEqual(1, global_stats.get("new name!", "GET").num_requests)
-        self.assertEqual(0, global_stats.get("/ultra_fast", "GET").num_requests)
+        self.assertEqual(1, global_stats.get(("GET", "new name!")).num_items)
+        self.assertEqual(0, global_stats.get(("GET", "/ultra_fast")).num_items)
 
 
 class TestCatchResponse(WebserverTestCase):
