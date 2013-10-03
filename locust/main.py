@@ -381,7 +381,7 @@ def main():
         """
         logger.info("Shutting down, bye..")
         events.quitting.fire()
-        print_stats(runners.locust_runner.request_stats)
+        print_stats(runners.locust_runner.request_stats, "Requests")
         print_percentile_stats(runners.locust_runner.request_stats)
         print_error_report()
         sys.exit(code)

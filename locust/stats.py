@@ -443,8 +443,9 @@ events.report_to_master += on_report_to_master
 events.slave_report += on_slave_report
 
 
-def print_stats(stats):
-    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s'))
+def print_stats(stats, name):
+    console_logger.info("%s:" % name)
+    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s") % ('Name', '#', '# fails', 'Avg', 'Min', 'Max', 'Median', '#/s'))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     total_rps = 0
     total_reqs = 0
@@ -492,5 +493,5 @@ def print_error_report():
 def stats_printer():
     from runners import locust_runner
     while True:
-        print_stats(locust_runner.request_stats)
+        print_stats(locust_runner.request_stats, "Requests")
         gevent.sleep(2)
