@@ -7,6 +7,7 @@ import os
 import signal
 import inspect
 import logging
+import socket
 from optparse import OptionParser
 
 import web
@@ -357,19 +358,30 @@ def main():
     if not options.no_web and not options.slave:
         # spawn web greenlet
         logger.info("Starting web monitor on port %s" % options.port)
-        main_greenlet = gevent.spawn(web.start, locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.ramp, options.port)
+        main_greenlet = gevent.spawn(web.start, locust_classes, options.hatch_rate, 
+                                     options.num_clients, options.num_requests, 
+                                     options.ramp, options.port)
     
     if not options.master and not options.slave:
-        runners.locust_runner = LocalLocustRunner(locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.host)
+        runners.locust_runner = LocalLocustRunner(locust_classes, options.hatch_rate, options.num_clients,
+                                                  options.num_requests, options.host)
         # spawn client spawning/hatching greenlet
         if options.no_web:
             runners.locust_runner.start_hatching(wait=True)
             main_greenlet = runners.locust_runner.greenlet
     elif options.master:
-        runners.locust_runner = MasterLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
+        runners.locust_runner = MasterLocustRunner(locust_classes, options.hatch_rate, options.num_clients, 
+                                                   num_requests=options.num_requests, host=options.host, 
+                                                   master_host=options.master_host)
     elif options.slave:
-        runners.locust_runner = SlaveLocustRunner(locust_classes, options.hatch_rate, options.num_clients, num_requests=options.num_requests, host=options.host, master_host=options.master_host)
-        main_greenlet = runners.locust_runner.greenlet
+        try:
+            runners.locust_runner = SlaveLocustRunner(locust_classes, options.hatch_rate, options.num_clients, 
+                                                      num_requests=options.num_requests, host=options.host, 
+                                                      master_host=options.master_host)
+            main_greenlet = runners.locust_runner.greenlet
+        except socket.error, e:
+            logger.error("Failed to connect to the Locust master: %s", e)
+            sys.exit(-1)
     
     if options.print_stats or (options.no_web and not options.slave):
         # spawn stats printing greenlet
