@@ -276,8 +276,21 @@ class TaskSet(object):
     
     def execute_next_task(self):
         task = self._task_queue.pop(0)
-        self.execute_task(task["callable"], *task["args"], **task["kwargs"])
-    
+        try:
+            start_time = time()
+
+            self.execute_task(task["callable"], *task["args"], **task["kwargs"])
+
+            task_time = int((time() - start_time) * 1000)
+            events.task_success.fire(task['callable'].__name__, task_time)
+        except (InterruptTaskSet, StopLocust, GreenletExit):
+            # Allow these pass without calling a task
+            raise
+        except Exception as exc:
+            task_time = int((time() - start_time) * 1000)
+            events.task_failure.fire(task['callable'].__name__, task_time, exc)
+            raise
+
     def execute_task(self, task, *args, **kwargs):
         # check if the function is a method bound to the current locust, and if so, don't pass self as first argument
         if hasattr(task, "im_self") and task.__self__ == self:

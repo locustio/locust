@@ -11,56 +11,70 @@ STATS_NAME_WIDTH = 60
 class RequestStatsAdditionError(Exception):
     pass
 
+class StatsError(object):
+    def __init__(self, key, error, occurences=0):
+        self.key = key
+        self.error = error
+        self.occurences = occurences
 
-class Stats(object):
-    def __init__(self):
-        self.entries = {}
-        self.errors = {}
-        self.num_items = 0
-        self.max_items = None
-        self.last_timestamp = None
-        self.start_time = None
-    
-    def get(self, key):
-        """
-        Retrieve a StatsEntry instance by name and method
-        """
-        entry = self.entries.get(key)
-        if not entry:
-            entry = RequestStatsEntry(self, key)
-            self.entries[key] = entry
-        return entry
-    
-    def aggregated_stats(self, name="Total", full_request_history=False):
-        """
-        Returns a StatsEntry which is an aggregate of all stats entries 
-        within entries.
-        """
-        total = StatsEntry(self, name)
-        for r in self.entries.itervalues():
-            total.extend(r, full_request_history=full_request_history)
-        return total
-    
-    def reset_all(self):
-        """
-        Go through all stats entries and reset them to zero
-        """
-        self.start_time = time.time()
-        self.num_items = 0
-        for r in self.entries.itervalues():
-            r.reset()
-    
-    def clear_all(self):
-        """
-        Remove all stats entries and errors
-        """
-        self.num_items = 0
-        self.entries = {}
-        self.errors = {}
-        self.max_items = None
-        self.last_timestamp = None
-        self.start_time = None
-        
+    @classmethod
+    def create_key(cls, key, error):
+        key = "%s.%r" % (key, error)
+        return hashlib.md5(key).hexdigest()
+
+    def key_string(self):
+        return str(self.key)
+
+    def occured(self):
+        self.occurences += 1
+
+    def to_name(self):
+        return "%s: %r" % (self.key, repr(self.error))
+
+    def to_dict(self):
+        return {
+            "key": self.key,
+            "error": repr(self.error),
+            "occurences": self.occurences
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            data["key"],
+            data["error"],
+            data["occurences"]
+        )
+
+class RequestStatsError(StatsError):
+    def __init__(self, key, error, occurences=0):
+        self.method, self.name = key
+        super(RequestStatsError, self).__init__(key, error, occurences)
+
+    def key_string(self):
+        return "%s %s" % self.key
+
+    def to_dict(self):
+        return {
+            "method": self.method,
+            "name": self.name,
+            "error": repr(self.error),
+            "occurences": self.occurences
+        }
+
+    def to_name(self):
+        return "%s: %r" % (self.key_string, repr(self.error))
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            ( data["method"], data["name"] ),
+            data["error"],
+            data["occurences"]
+        )
+
+class TaskStatsError(StatsError):
+    pass
 
 class StatsEntry(object):
     key = None
@@ -100,7 +114,10 @@ class StatsEntry(object):
     
     last_timestamp = None
     """ Time of the last request for this entry """
-    
+
+    error_class = StatsError
+    """ Class to use for logging errors. """
+
     def __init__(self, stats, key):
         self.key = key
         self.stats = stats
@@ -159,10 +176,10 @@ class StatsEntry(object):
 
     def log_error(self, error):
         self.num_failures += 1
-        key = StatsError.create_key(self.method, self.name, error)
+        key = self.error_class.create_key(self.key, error)
         entry = self.stats.errors.get(key)
         if not entry:
-            entry = StatsError(self.method, self.name, error)
+            entry = self.error_class(self.key, error)
             self.stats.errors[key] = entry
 
         entry.occured()
@@ -295,7 +312,7 @@ class StatsEntry(object):
             fail_percent = 0
         
         return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d  | %7d %7.2f") % (
-            self.method + " " + self.name,
+            self.key_string(),
             self.num_items,
             "%d(%.2f%%)" % (self.num_failures, fail_percent),
             self.avg_time,
@@ -304,6 +321,12 @@ class StatsEntry(object):
             self.median_time or 0,
             self.current_per_sec or 0
         )
+
+
+    def key_string(self):
+        """Return a string representation of this key"""
+        return str(self.key)
+
     
     def get_time_percentile(self, percent):
         """
@@ -342,9 +365,58 @@ class StatsEntry(object):
         """Return a string representation of this key"""
         return str(self.key)
 
-class RequestStats(Stats):
-    pass
+class Stats(object):
+    stats_entry_class = StatsEntry
+    """Override in subclasses"""
 
+    def __init__(self):
+        self.entries = {}
+        self.errors = {}
+        self.num_items = 0
+        self.max_items = None
+        self.last_timestamp = None
+        self.start_time = None
+    
+    def get(self, key):
+        """
+        Retrieve a StatsEntry instance by name and method
+        """
+        entry = self.entries.get(key)
+        if not entry:
+            entry = self.stats_entry_class(self, key)
+            self.entries[key] = entry
+        return entry
+    
+    def aggregated_stats(self, name="Total", full_request_history=False):
+        """
+        Returns a StatsEntry which is an aggregate of all stats entries 
+        within entries.
+        """
+        total = StatsEntry(self, name)
+        for r in self.entries.itervalues():
+            total.extend(r, full_request_history=full_request_history)
+        return total
+    
+    def reset_all(self):
+        """
+        Go through all stats entries and reset them to zero
+        """
+        self.start_time = time.time()
+        self.num_items = 0
+        for r in self.entries.itervalues():
+            r.reset()
+    
+    def clear_all(self):
+        """
+        Remove all stats entries and errors
+        """
+        self.num_items = 0
+        self.entries = {}
+        self.errors = {}
+        self.max_items = None
+        self.last_timestamp = None
+        self.start_time = None
+        
 class RequestStatsEntry(StatsEntry):
     """
     Represents a single stats entry (name and method)
@@ -358,7 +430,8 @@ class RequestStatsEntry(StatsEntry):
 
     total_content_length = None
     """ The sum of the content length of all the requests for this entry """
-    
+
+    error_class = RequestStatsError
 
     # key is (method, name)
 
@@ -386,42 +459,16 @@ class RequestStatsEntry(StatsEntry):
         # increase total content-length
         self.total_content_length += content_length
 
+class RequestStats(Stats):
+    stats_entry_class = RequestStatsEntry
 
-class StatsError(object):
-    def __init__(self, method, name, error, occurences=0):
-        self.method = method
-        self.name = name
-        self.error = error
-        self.occurences = occurences
+class TaskStatsEntry(StatsEntry):
+    error_class = TaskStatsError
 
-    @classmethod
-    def create_key(cls, method, name, error):
-        key = "%s.%s.%r" % (method, name, error)
-        return hashlib.md5(key).hexdigest()
+class TaskStats(Stats):
+    stats_entry_class = TaskStatsEntry
 
-    def occured(self):
-        self.occurences += 1
 
-    def to_name(self):
-        return "%s %s: %r" % (self.method, 
-            self.name, repr(self.error))
-
-    def to_dict(self):
-        return {
-            "method": self.method,
-            "name": self.name,
-            "error": repr(self.error),
-            "occurences": self.occurences
-        }
-
-    @classmethod
-    def from_dict(cls, data):
-        return cls(
-            data["method"], 
-            data["name"], 
-            data["error"], 
-            data["occurences"]
-        )
 
 
 def avg(values):
@@ -444,6 +491,11 @@ global_stats = RequestStats()
 A global instance for holding the statistics. Should be removed eventually.
 """
 
+global_task_stats = TaskStats()
+"""
+A global instance for holding the task statistics. Should be removed eventually.
+"""
+
 def on_request_success(method, name, response_time, response_length):
     if global_stats.max_items is not None and global_stats.num_items >= global_stats.max_items:
         raise StopLocust("Maximum number of requests reached")
@@ -455,6 +507,18 @@ def on_request_failure(method, name, response_time, error, response=None):
 
 events.request_success += on_request_success
 events.request_failure += on_request_failure
+
+def on_task_success(name, response_time, response=None):
+    if global_task_stats.max_items is not None and global_task_stats.num_items >= global_stats.max_items:
+        raise StopLocust("Maximum number of tasks reached")
+    
+    global_task_stats.get(name).log(response_time)
+
+def on_task_failure(name, response_time, error, response=None):
+    global_task_stats.get(name).log_error(error)
+
+events.task_success += on_task_success
+events.task_failure += on_task_failure
 
 def on_report_to_master(client_id, data):
     data["stats"] = [global_stats.entries[key].get_stripped_report() for key in global_stats.entries.iterkeys() if not (global_stats.entries[key].num_items == 0 and global_stats.entries[key].num_failures == 0)]
@@ -531,4 +595,5 @@ def stats_printer():
     from runners import locust_runner
     while True:
         print_stats(locust_runner.request_stats, "Requests")
+        print_stats(locust_runner.task_stats.entries, "Tasks")
         gevent.sleep(2)
