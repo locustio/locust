@@ -417,6 +417,9 @@ def on_request_success(method, name, response_time, response_length):
 def on_request_failure(method, name, response_time, error, response=None):
     global_stats.get(name, method).log_error(error)
 
+events.request_success += on_request_success
+events.request_failure += on_request_failure
+
 def on_report_to_master(client_id, data):
     data["stats"] = [global_stats.entries[key].get_stripped_report() for key in global_stats.entries.iterkeys() if not (global_stats.entries[key].num_requests == 0 and global_stats.entries[key].num_failures == 0)]
     data["errors"] =  dict([(k, e.to_dict()) for k, e in global_stats.errors.iteritems()])
@@ -437,8 +440,6 @@ def on_slave_report(client_id, data):
         else:
             global_stats.errors[error_key].occurences += error["occurences"]
 
-events.request_success += on_request_success
-events.request_failure += on_request_failure
 events.report_to_master += on_report_to_master
 events.slave_report += on_slave_report
 
