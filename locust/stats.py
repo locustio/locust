@@ -509,7 +509,7 @@ events.request_success += on_request_success
 events.request_failure += on_request_failure
 
 def on_task_success(name, response_time, response=None):
-    if global_task_stats.max_items is not None and global_task_stats.num_items >= global_stats.max_items:
+    if global_task_stats.max_items is not None and global_task_stats.num_items >= global_task_stats.max_items:
         raise StopLocust("Maximum number of tasks reached")
     
     global_task_stats.get(name).log(response_time)
