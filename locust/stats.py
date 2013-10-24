@@ -63,7 +63,7 @@ class RequestStatsError(StatsError):
         }
 
     def to_name(self):
-        return "%s: %r" % (self.key_string, repr(self.error))
+        return "%s: %r" % (self.key_string(), repr(self.error))
 
     @classmethod
     def from_dict(cls, data):
