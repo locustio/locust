@@ -79,7 +79,7 @@ Here is an example::
 
     from locust import Locust, TaskSet, task
     
-    class MyLocust(TaskSet):
+    class MyTaskSet(TaskSet):
         @task
         def my_task(self):
             print "Locust instance (%r) executing my_task" % (self.locust)
@@ -92,7 +92,7 @@ the following example *task2* will be executed twice as much as *task1*::
     
     from locust import Locust, TaskSet, task
     
-    class MyLocust(TaskSet):
+    class MyTaskSet(TaskSet):
         min_wait = 5000
         max_wait = 15000
         
