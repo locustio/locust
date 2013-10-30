@@ -8,10 +8,6 @@ Locust class
 
 .. autoclass:: locust.core.Locust
 	:members: min_wait, max_wait, task_set, client
-	
-	.. autoattribute:: locust.core.Locust.min_wait
-	.. autoattribute:: locust.core.Locust.max_wait
-	.. autoattribute:: locust.core.Locust.task_set
 
 TaskSet class
 =============
