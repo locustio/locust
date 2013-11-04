@@ -54,6 +54,12 @@ class TestRequestStats(unittest.TestCase):
     def test_avg(self):
         self.assertEqual(self.s.avg_time, 187.71428571428571428571428571429)
 
+    def test_min(self):
+        self.assertEqual(self.s.min_time, 35)
+
+    def test_max(self):
+        self.assertEqual(self.s.max_time, 601)
+
     def test_reset(self):
         self.s.reset()
         self.s.log(756, 0)

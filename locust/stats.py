@@ -129,7 +129,7 @@ class StatsEntry(object):
         self.num_failures = 0
         self.total_time = 0
         self.times = {}
-        self.min_time = 0
+        self.min_time = None
         self.max_time = 0
         self.last_timestamp = int(time.time())
         self.num_items_per_sec = {}
