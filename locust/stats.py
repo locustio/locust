@@ -316,7 +316,7 @@ class StatsEntry(object):
             self.num_items,
             "%d(%.2f%%)" % (self.num_failures, fail_percent),
             self.avg_time,
-            self.min_time,
+            self.min_time or 0,
             self.max_time,
             self.median_time or 0,
             self.current_per_sec or 0
