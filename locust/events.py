@@ -101,5 +101,10 @@ Event is fire with the following arguments:
 
 quitting = EventHook()
 """
-*quitting* is fired when the locust process in exiting
+*quitting* is fired when the locust process is exiting. A compliment to starting.
+"""
+
+starting = EventHook()
+"""
+*starting* is fired when the locust process is starting. A compliment to quitting.
 """

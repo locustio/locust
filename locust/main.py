@@ -354,6 +354,9 @@ def main():
         logger.error("Locust can not run distributed with the web interface disabled (do not use --no-web and --master together)")
         sys.exit(0)
 
+    # Fire starting event
+    events.starting.fire()
+
     if not options.no_web and not options.slave:
         # spawn web greenlet
         logger.info("Starting web monitor on port %s" % options.port)
