@@ -145,10 +145,10 @@
                                 <th class="stats_label" href="#" data-sortkey="name">Name</th>
                                 <th class="stats_label" href="#" data-sortkey="num_reqs"># requests</th>
                                 <th class="stats_label" href="#" data-sortkey="num_failures"># fails</th>
-                                <th class="stats_label" href="#" data-sortkey="median_response_time">Median</th>
-                                <th class="stats_label" href="#" data-sortkey="avg_response_time">Average</th>
-                                <th class="stats_label" href="#" data-sortkey="min_response_time">Min</th>
-                                <th class="stats_label" href="#" data-sortkey="max_response_time">Max</th>
+                                <th class="stats_label" href="#" data-sortkey="median_time">Median</th>
+                                <th class="stats_label" href="#" data-sortkey="avg_time">Average</th>
+                                <th class="stats_label" href="#" data-sortkey="min_time">Min</th>
+                                <th class="stats_label" href="#" data-sortkey="max_time">Max</th>
                                 <th class="stats_label" href="#" data-sortkey="avg_content_length">Content Size</th>
                                 <th class="stats_label" href="#" data-sortkey="current_rps"># reqs/sec</th>
                             </tr>
@@ -230,12 +230,12 @@
             <td><%= this.name %></td>
             <td class="numeric"><%= this.num_requests %></td>
             <td class="numeric"><%= this.num_failures %></td>
-            <td class="numeric"><%= Math.round(this.median_response_time) %></td>
-            <td class="numeric"><%= Math.round(this.avg_response_time) %></td>
-            <td class="numeric"><%= this.min_response_time %></td>
-            <td class="numeric"><%= this.max_response_time %></td>
+            <td class="numeric"><%= Math.round(this.median_time) %></td>
+            <td class="numeric"><%= Math.round(this.avg_time) %></td>
+            <td class="numeric"><%= this.min_time %></td>
+            <td class="numeric"><%= this.max_time %></td>
             <td class="numeric"><%= Math.round(this.avg_content_length) %></td>
-            <td class="numeric"><%= Math.round(this.current_rps*100)/100 %></td>
+            <td class="numeric"><%= Math.round(this.current_per_sec*100)/100 %></td>
         </tr>
         <% alternate = !alternate; %>
         ]]>

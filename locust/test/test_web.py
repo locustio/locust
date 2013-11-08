@@ -33,22 +33,22 @@ class TestWebUI(LocustTestCase):
         self.assertEqual(200, requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).status_code)
     
     def test_stats(self):
-        stats.global_stats.get("/test", "GET").log(120, 5612)
+        stats.global_stats.get(("GET", "/test")).log(120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         
         data = json.loads(response.content)
         self.assertEqual(2, len(data["stats"])) # one entry plus Total
-        self.assertEqual("/test", data["stats"][0]["name"])
-        self.assertEqual("GET", data["stats"][0]["method"])
-        self.assertEqual(120, data["stats"][0]["avg_response_time"])
+        self.assertEqual("/test", data["stats"][0]["key"][1])
+        self.assertEqual("GET", data["stats"][0]["key"][0])
+        self.assertEqual(120, data["stats"][0]["avg_time"])
     
     def test_request_stats_csv(self):
-        stats.global_stats.get("/test", "GET").log(120, 5612)
+        stats.global_stats.get(("GET", "/test")).log(120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/requests/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
     
     def test_distribution_stats_csv(self):
-        stats.global_stats.get("/test", "GET").log(120, 5612)
+        stats.global_stats.get(("GET", "/test")).log(120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/distribution/csv" % self.web_port)
         self.assertEqual(200, response.status_code)

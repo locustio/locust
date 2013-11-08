@@ -116,6 +116,15 @@ def parse_options():
         default=None,
         help="Number of requests to perform. Only used together with --no-web"
     )
+    # Number of tasks
+    parser.add_option(
+        '-t', '--num-tasks',
+        action='store',
+        type='int',
+        dest='num_tasks',
+        default=None,
+        help="Number of tasks to perform. Only used together with --no-web"
+    )
     
     # log level
     parser.add_option(
@@ -357,10 +366,10 @@ def main():
     if not options.no_web and not options.slave:
         # spawn web greenlet
         logger.info("Starting web monitor on port %s" % options.port)
-        main_greenlet = gevent.spawn(web.start, locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.ramp, options.port)
+        main_greenlet = gevent.spawn(web.start, locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.num_tasks, options.ramp, options.port)
     
     if not options.master and not options.slave:
-        runners.locust_runner = LocalLocustRunner(locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.host)
+        runners.locust_runner = LocalLocustRunner(locust_classes, options.hatch_rate, options.num_clients, options.num_requests, options.num_tasks, options.host)
         # spawn client spawning/hatching greenlet
         if options.no_web:
             runners.locust_runner.start_hatching(wait=True)
@@ -381,8 +390,10 @@ def main():
         """
         logger.info("Shutting down, bye..")
         events.quitting.fire()
-        print_stats(runners.locust_runner.request_stats)
-        print_percentile_stats(runners.locust_runner.request_stats)
+        print_stats(runners.locust_runner.request_stats, "Requests")
+        print_stats(runners.locust_runner.task_stats.entries, "Tasks")
+        print_percentile_stats(runners.locust_runner.request_stats, "Requests")
+        print_percentile_stats(runners.locust_runner.task_stats.entries, "Tasks")
         print_error_report()
         sys.exit(code)
     

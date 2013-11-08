@@ -70,9 +70,9 @@ class TestMasterRunner(unittest.TestCase):
             server.mocked_send(Message("client_ready", None, "fake_client"))
             sleep(0)
             
-            master.stats.get("/", "GET").log(100, 23455)
-            master.stats.get("/", "GET").log(800, 23455)
-            master.stats.get("/", "GET").log(700, 23455)
+            master.stats.get(("GET", "/")).log(100, 23455)
+            master.stats.get(("GET", "/")).log(800, 23455)
+            master.stats.get(("GET", "/")).log(700, 23455)
             
             data = {"user_count":1}
             events.report_to_master.fire("fake_client", data)
@@ -80,8 +80,8 @@ class TestMasterRunner(unittest.TestCase):
             
             server.mocked_send(Message("stats", data, "fake_client"))
             sleep(0)
-            s = master.stats.get("/", "GET")
-            self.assertEqual(700, s.median_response_time)
+            s = master.stats.get(("GET", "/"))
+            self.assertEqual(700, s.median_time)
     
 
 

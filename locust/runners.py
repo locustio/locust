@@ -12,7 +12,7 @@ from gevent import GreenletExit
 from gevent.pool import Group
 
 import events
-from stats import global_stats
+from stats import global_stats, global_task_stats
 
 from rpc import rpc, Message
 
@@ -26,23 +26,26 @@ SLAVE_REPORT_INTERVAL = 3.0
 
 
 class LocustRunner(object):
-    def __init__(self, locust_classes, hatch_rate, num_clients, num_requests=None, host=None):
+    def __init__(self, locust_classes, hatch_rate, num_clients, num_requests=None, num_tasks=None, host=None):
         self.locust_classes = locust_classes
         self.hatch_rate = hatch_rate
         self.num_clients = num_clients
         self.num_requests = num_requests
+        self.num_tasks = num_tasks
         self.host = host
         self.locusts = Group()
         self.state = STATE_INIT
         self.hatching_greenlet = None
         self.exceptions = {}
         self.stats = global_stats
+        self.task_stats = global_task_stats
         
         # register listener that resets stats when hatching is complete
         def on_hatch_complete(count):
             self.state = STATE_RUNNING
             logger.info("Resetting stats\n")
             self.stats.reset_all()
+            self.task_stats.reset_all()
         events.hatch_complete += on_hatch_complete
 
     @property
@@ -85,7 +88,10 @@ class LocustRunner(object):
             spawn_count = self.num_clients
 
         if self.num_requests is not None:
-            self.stats.max_requests = self.num_requests
+            self.stats.max_items = self.num_requests
+
+        if self.num_tasks is not None:
+            self.task_stats.max_items = self.num_tasks
 
         bucket = self.weight_locusts(spawn_count, stop_timeout)
         spawn_count = len(bucket)
@@ -146,6 +152,8 @@ class LocustRunner(object):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
             self.stats.start_time = time()
+            self.task_stats.clear_all()
+            self.task_stats.start_time = time()
             self.exceptions = {}
 
         # Dynamically changing the locust count
@@ -184,8 +192,8 @@ class LocustRunner(object):
         self.exceptions[key] = row
 
 class LocalLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, hatch_rate, num_clients, num_requests, host=None):
-        super(LocalLocustRunner, self).__init__(locust_classes, hatch_rate, num_clients, num_requests, host)
+    def __init__(self, locust_classes, hatch_rate, num_clients, num_requests, num_tasks, host=None):
+        super(LocalLocustRunner, self).__init__(locust_classes, hatch_rate, num_clients, num_requests, num_tasks, host)
 
         # register listener thats logs the exception for the local runner
         def on_locust_error(locust, e, tb):
@@ -198,8 +206,8 @@ class LocalLocustRunner(LocustRunner):
         self.greenlet = self.hatching_greenlet
 
 class DistributedLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, hatch_rate, num_clients, num_requests, host=None, master_host="localhost"):
-        super(DistributedLocustRunner, self).__init__(locust_classes, hatch_rate, num_clients, num_requests, host)
+    def __init__(self, locust_classes, hatch_rate, num_clients, num_requests, num_tasks=None, host=None, master_host="localhost"):
+        super(DistributedLocustRunner, self).__init__(locust_classes, hatch_rate, num_clients, num_requests, num_tasks, host)
         self.master_host = master_host
     
     def noop(self, *args, **kwargs):
@@ -271,13 +279,15 @@ class MasterLocustRunner(DistributedLocustRunner):
         
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
+            self.task_stats.clear_all()
             self.exceptions = {}
         
         for client in self.clients.itervalues():
-            data = {"hatch_rate":slave_hatch_rate, "num_clients":slave_num_clients, "num_requests": self.num_requests, "host":self.host, "stop_timeout":None}
+            data = {"hatch_rate":slave_hatch_rate, "num_clients":slave_num_clients, "num_requests": self.num_requests, "num_tasks": self.num_tasks, "host":self.host, "stop_timeout":None}
             self.server.send(Message("hatch", data, None))
         
         self.stats.start_time = time()
+        self.task_stats.start_time = time()
         self.state = STATE_HATCHING
 
     def stop(self):
@@ -371,6 +381,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 self.hatch_rate = job["hatch_rate"]
                 #self.num_clients = job["num_clients"]
                 self.num_requests = job["num_requests"]
+                self.num_tasks = job["num_tasks"]
                 self.host = job["host"]
                 self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
             elif msg.type == "stop":

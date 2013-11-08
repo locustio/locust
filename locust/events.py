@@ -52,6 +52,27 @@ Event is fired with the following arguments:
   then response will be an instance of locus.clients.HttpResponse. Otherwise response will be None.
 """
 
+task_success = EventHook()
+"""
+*task_success* is fired when task is completed successfully.
+
+Listeners should take the following arguments:
+
+* *name*: Name of the task
+* *response_time*: Response time in milliseconds
+"""
+
+task_failure = EventHook()
+"""
+*task_failure* is fired when task fails
+
+Event is fired with the following arguments:
+
+* *name*: Name of the task
+* *response_time*: Time in milliseconds until exception was thrown
+* *exception*: Exception instance that was thrown
+"""
+
 locust_error = EventHook()
 """
 *locust_error* is fired when an exception occurs inside the execution of a Locust class.
