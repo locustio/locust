@@ -501,24 +501,28 @@ A global instance for holding the task statistics. Should be removed eventually.
 """
 
 def on_request_success(method, name, response_time, response_length):
-    if global_stats.max_items is not None and global_stats.num_items >= global_stats.max_items:
+    if global_stats.max_items is not None and (global_stats.num_items + global_stats.num_failures) >= global_stats.max_items:
         raise StopLocust("Maximum number of requests reached")
     
     global_stats.get((method, name)).log(response_time, response_length)
 
 def on_request_failure(method, name, response_time, error, response=None):
+    if global_stats.max_items is not None and (global_stats.num_items + global_stats.num_failures) >= global_stats.max_items:
+        raise StopLocust("Maximum number of requests reached")
     global_stats.get((method, name)).log_error(error)
 
 events.request_success += on_request_success
 events.request_failure += on_request_failure
 
 def on_task_success(name, response_time, response=None):
-    if global_task_stats.max_items is not None and global_task_stats.num_items >= global_task_stats.max_items:
+    if global_task_stats.max_items is not None and (global_task_stats.num_items + global_task_stats.num_failures) >= global_task_stats.max_items:
         raise StopLocust("Maximum number of tasks reached")
-    
+
     global_task_stats.get(name).log(response_time)
 
 def on_task_failure(name, response_time, error, response=None):
+    if global_task_stats.max_items is not None and (global_task_stats.num_items + global_task_stats.num_failures) >= global_task_stats.max_items:
+        raise StopLocust("Maximum number of tasks reached")
     global_task_stats.get(name).log_error(error)
 
 events.task_success += on_task_success
