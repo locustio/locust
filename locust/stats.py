@@ -176,6 +176,7 @@ class StatsEntry(object):
 
     def log_error(self, error):
         self.num_failures += 1
+        self.stats.num_items += 1
         key = self.error_class.create_key(self.key, error)
         entry = self.stats.errors.get(key)
         if not entry:
@@ -373,6 +374,7 @@ class Stats(object):
         self.entries = {}
         self.errors = {}
         self.num_items = 0
+        self.num_failures = 0
         self.max_items = None
         self.last_timestamp = None
         self.start_time = None
@@ -403,6 +405,7 @@ class Stats(object):
         """
         self.start_time = time.time()
         self.num_items = 0
+        self.num_failures = 0
         for r in self.entries.itervalues():
             r.reset()
     
@@ -411,6 +414,7 @@ class Stats(object):
         Remove all stats entries and errors
         """
         self.num_items = 0
+        self.num_failures = 0
         self.entries = {}
         self.errors = {}
         self.max_items = None
