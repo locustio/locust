@@ -161,6 +161,8 @@ class LocustRunner(object):
                     self.hatch_rate = hatch_rate
                 spawn_count = locust_count - self.num_clients
                 self.spawn_locusts(spawn_count=spawn_count)
+            else:
+                events.hatch_complete.fire(self.num_clients)
         else:
             if hatch_rate:
                 self.hatch_rate = hatch_rate
@@ -260,21 +262,36 @@ class MasterLocustRunner(DistributedLocustRunner):
         return sum([c.user_count for c in self.clients.itervalues()])
     
     def start_hatching(self, locust_count, hatch_rate):
-        self.num_clients = locust_count
-        slave_num_clients = locust_count / ((len(self.clients.ready) + len(self.clients.running)) or 1)
-        slave_hatch_rate = float(hatch_rate) / ((len(self.clients.ready) + len(self.clients.running)) or 1)
-
-        logger.info("Sending hatch jobs to %i ready clients" % (len(self.clients.ready) + len(self.clients.running)))
-        if not (len(self.clients.ready)+len(self.clients.running)):
-            logger.warning("You are running in distributed mode but have no slave servers connected. Please connect slaves prior to swarming.")
+        num_slaves = len(self.clients.ready) + len(self.clients.running)
+        if not num_slaves:
+            logger.warning("You are running in distributed mode but have no slave servers connected. "
+                           "Please connect slaves prior to swarming.")
             return
-        
+
+        self.num_clients = locust_count
+        slave_num_clients = locust_count / (num_slaves or 1)
+        slave_hatch_rate = float(hatch_rate) / (num_slaves or 1)
+        remaining = locust_count % num_slaves
+
+        logger.info("Sending hatch jobs to %d ready clients", num_slaves)
+
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
             self.exceptions = {}
         
         for client in self.clients.itervalues():
-            data = {"hatch_rate":slave_hatch_rate, "num_clients":slave_num_clients, "num_requests": self.num_requests, "host":self.host, "stop_timeout":None}
+            data = {
+                "hatch_rate":slave_hatch_rate,
+                "num_clients":slave_num_clients,
+                "num_requests": self.num_requests,
+                "host":self.host,
+                "stop_timeout":None
+            }
+
+            if remaining > 0:
+                data["num_clients"] += 1
+                remaining -= 1
+
             self.server.send(Message("hatch", data, None))
         
         self.stats.start_time = time()
