@@ -76,6 +76,7 @@ Other changes
 * Fixed the broken events example (events.py).
 * Fixed issue where the request column was not sortable in the web-ui.
 * Minor styling of the statistics table in the web-ui.
+* Added options to specify host and port in distributed mode using --master-host, --master-port for the slaves, --master-bind-host, --master-bind-port for the master.
 
 
 0.6.2
