@@ -72,9 +72,6 @@ class Locust(object):
     max_wait = 1000
     """Maximum waiting time between the execution of locust tasks"""
     
-    avg_wait = None
-    """Average waiting time wanted between the execution of locust tasks"""
-    
     client = None
     """
     Instance of HttpSession that is created upon instantiation of Locust. 
@@ -187,9 +184,6 @@ class TaskSet(object):
     TaskSet.
     """
     
-    avg_wait = None
-    """Average waiting time wanted between the execution of locust tasks"""
-    
     client = None
     """
     Reference to the :py:attr:`client <locust.core.Locust.client>` attribute of the root 
@@ -208,8 +202,6 @@ class TaskSet(object):
     __metaclass__ = TaskSetMeta    
     
     def __init__(self, parent):
-        self._avg_wait = 0
-        self._avg_wait_ctr = 0
         self._task_queue = []
         self._time_start = time()
         
@@ -223,13 +215,11 @@ class TaskSet(object):
         self.parent = parent
         self.client = self.locust.client
         
-        # if this class doesn't have a min_wait, max_wait or avg_wait defined, copy it from Locust
+        # if this class doesn't have a min_wait or max_wait defined, copy it from Locust
         if not self.min_wait:
             self.min_wait = self.locust.min_wait
         if not self.max_wait:
             self.max_wait = self.locust.max_wait
-        if not self.avg_wait:
-            self.avg_wait = self.locust.avg_wait
 
     def run(self, *args, **kwargs):
         self.args = args
@@ -311,26 +301,7 @@ class TaskSet(object):
         return random.choice(self.tasks)
     
     def wait(self):
-        if self.avg_wait:
-            # Handle (strive for) average wait time
-            if self._avg_wait:
-                if self._avg_wait >= self.avg_wait:
-                    # Want shorter wait
-                    millis = random.randint(self.min_wait, self.avg_wait)
-                else:
-                    # Want longer wait
-                    millis = random.randint(self.avg_wait, self.max_wait)
-                self._avg_wait = ((self._avg_wait * self._avg_wait_ctr) + millis) / (self._avg_wait_ctr + 1.0)
-            else:
-                # Average specified but is first run
-                radius = min(self.avg_wait - self.min_wait, self.max_wait - self.avg_wait)
-                millis = random.randint(self.avg_wait - radius, self.avg_wait + radius)
-                self._avg_wait = millis
-            self._avg_wait_ctr += 1
-        else:
-            # Ignore average wait
-            millis = random.randint(self.min_wait, self.max_wait)
-
+        millis = random.randint(self.min_wait, self.max_wait)
         seconds = millis / 1000.0
         self._sleep(seconds)
 
