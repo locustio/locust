@@ -35,6 +35,7 @@ Locust updated `requests <http://python-requests.org/>`_ to the latest major rel
 
 gevent updated to version 1.0
 -------------------------------
+
 gevent 1.0 has now been released and Locust has been updated accordingly.
 
 Big refactoring of request statistics code
@@ -51,6 +52,11 @@ Previously the :py:class:`RequestStats` was actually doing two different things:
 
 Now RequestStats should be instantiated and holds the global stats, as well as a dict of StatsEntry instances which holds the stats for single stats entries (URLs)
 
+Removed support for avg_wait
+----------------------------
+
+Previously one could specify avg_wait to :py:class:`TaskSet` and :py:class:`Locust` that Locust would try to strive to. However this can be sufficiently accomplished by using min_wait and max_wait for most use-cases. Therefore we've decided to remove the avg_wait as it's use-case is not clear or just too narrow to be in the Locust core.
+
 
 Other changes
 -------------
@@ -59,8 +65,9 @@ Other changes
 * Various code cleanups
 * Updated gevent/zmq libraries
 * Switched to unittest2 discovery
-* Now requiring gevent 1.0
-
+* Added option --only-summary to only output the summary to the console, thus disabling the periodic stats output.
+* Locust will now make sure to spawn all the specified locusts in distributed mode, not just a multiple of the number of slaves.
+* Fixed the broken Vagrant example.
 
 
 0.6.2
