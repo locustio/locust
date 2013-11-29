@@ -94,11 +94,6 @@ a {
     margin-left: -169px;
 }
 
-.ramp {
-    width:800px;
-    margin-left: -370px;
-}
-
 .start .padder, .edit .padder {
     padding: 30px;
     padding-top: 0px;
@@ -172,11 +167,6 @@ a {
 
 .stopped .edit a.close_link, .ready .edit a.close_link {display: none;}
 .running .edit a.close_link, .hatching .edit a.close_link {display: inline;}
-
-.ready .ramp {display: none;}
-
-.ready .ramp_text {display: inline;}
-.hatching .ramp_text, .running .ramp_text, .stopped .ramp_text {display: none;}
 
 .stats_label {
     cursor: pointer;

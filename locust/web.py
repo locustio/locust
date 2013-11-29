@@ -25,7 +25,6 @@ app.debug = True
 app.root_path = os.path.dirname(os.path.abspath(__file__))
 
 _request_stats_context_cache = {}
-_ramp = False
 
 @app.route('/')
 def index():
@@ -40,7 +39,6 @@ def index():
         is_distributed=is_distributed,
         slave_count=slave_count,
         user_count=runners.locust_runner.user_count,
-        ramp = _ramp,
         version=version
     )
 
@@ -59,24 +57,6 @@ def swarm():
 def stop():
     runners.locust_runner.stop()
     response = make_response(json.dumps({'success':True, 'message': 'Test stopped'}))
-    response.headers["Content-type"] = "application/json"
-    return response
-
-@app.route("/ramp", methods=["POST"])
-def ramp():
-    from ramping import start_ramping
-    
-    init_clients = int(request.form["init_count"])
-    hatch_rate = int(request.form["hatch_rate"])
-    hatch_stride = int(request.form["hatch_stride"])
-    precision = int(request.form["precision"])
-    max_clients = int(request.form["max_count"])
-    response_time = int(request.form["response_time"])
-    percentile = float(int(request.form["percentile"]) / 100.0)
-    fail_rate = float(int(request.form["fail_rate"]) / 100.0)
-    calibration_time = int(request.form["wait_time"])
-    gevent.spawn(start_ramping, hatch_rate, max_clients, hatch_stride, percentile, response_time, fail_rate, precision, init_clients, calibration_time)
-    response = make_response(json.dumps({'success':True, 'message': 'Ramping started'}))
     response.headers["Content-type"] = "application/json"
     return response
 
@@ -210,10 +190,7 @@ def exceptions():
     response.headers["Content-type"] = "application/json"
     return response
 
-def start(locust, hatch_rate, num_clients, num_requests, ramp, port):
-    global _ramp
-    _ramp = ramp
-    
+def start(locust, hatch_rate, num_clients, num_requests, port):
     wsgi.WSGIServer(('', port), app, log=None).serve_forever()
 
 def _sort_stats(stats):

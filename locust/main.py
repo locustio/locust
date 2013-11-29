@@ -137,15 +137,6 @@ def parse_options():
         default=None,
         help="Path to log file. If not set, log will go to stdout/stderr",
     )
-
-    # ramp feature enabled option
-    parser.add_option(
-        '--ramp',
-        action='store_true',
-        dest='ramp',
-        default=False,
-        help="Enables the auto tuning ramping feature for finding highest stable client count. NOTE having ramp enabled will add some more overhead for additional stats gathering"
-    )
     
     # if we should print stats in the console
     parser.add_option(
@@ -368,8 +359,7 @@ def main():
         # spawn web greenlet
         logger.info("Starting web monitor on port %s" % options.port)
         main_greenlet = gevent.spawn(web.start, locust_classes, options.hatch_rate, 
-                                     options.num_clients, options.num_requests, 
-                                     options.ramp, options.port)
+                                     options.num_clients, options.num_requests, options.port)
     
     if not options.master and not options.slave:
         runners.locust_runner = LocalLocustRunner(locust_classes, options.hatch_rate, options.num_clients,

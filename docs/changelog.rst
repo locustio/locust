@@ -57,6 +57,11 @@ Removed support for avg_wait
 
 Previously one could specify avg_wait to :py:class:`TaskSet` and :py:class:`Locust` that Locust would try to strive to. However this can be sufficiently accomplished by using min_wait and max_wait for most use-cases. Therefore we've decided to remove the avg_wait as it's use-case is not clear or just too narrow to be in the Locust core.
 
+Removed support for ramping
+----------------------------
+
+Previously one could tell Locust, using the --ramp option, to try to find a stable client count that the target host could handle, but it's been broken and undocumented for quite a while so we've decided to remove it from the locust core and perhaps have it reappear as a plugin in the future.
+
 
 Other changes
 -------------

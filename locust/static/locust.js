@@ -19,15 +19,8 @@ $("#box_reset a").click(function(event) {
     $.get($(this).attr("href"));
 });
 
-$(".ramp_test").click(function(event) {
-    event.preventDefault();
-    $("#start").hide();
-    $("#ramp").show();
-});
-
 $("#new_test").click(function(event) {
     event.preventDefault();
-    $("#ramp").hide();
     $("#start").show();
     $("#locust_count").focus().select();
 });
@@ -58,23 +51,6 @@ $('#swarm_form').submit(function(event) {
             if (response.success) {
                 $("body").attr("class", "hatching");
                 $("#start").fadeOut();
-                $("#status").fadeIn();
-                $(".box_running").fadeIn();
-                $("a.new_test").fadeOut();
-                $("a.edit_test").fadeIn();
-                $(".user_count").fadeIn();
-            }
-        }
-    );
-});
-
-$('#ramp_form').submit(function(event) {
-    event.preventDefault();
-    $.post($(this).attr("action"), $(this).serialize(),
-        function(response) {
-            if (response.success) {
-                $("body").attr("class", "hatching");
-                $("#ramp").fadeOut();
                 $("#status").fadeIn();
                 $(".box_running").fadeIn();
                 $("a.new_test").fadeOut();

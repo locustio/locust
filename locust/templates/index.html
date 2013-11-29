@@ -19,9 +19,6 @@
                     </div>
                     <a href="#" class="new_test" id="new_test">New test</a>
                     <a href="#" class="edit_test">Edit</a>
-                    {% if ramp %}
-                        <a href="#" class="new_test ramp_test">Ramp</a>
-                    {% endif %}
                 </div>
                 {% if is_distributed %}
                     <div class="top_box box_slaves" id="box_rps">
@@ -64,13 +61,6 @@
                 </form>
                 <div style="clear:right;"></div>
             </div>
-            <br>
-            <div class="ramp_text">
-            {% if ramp %}
-
-                ...or let locust <a href="#" class="ramp_test">ramp</a> find the highest stable locust count for you
-            {% endif %}
-            </div>
         </div>
 
         <div class="edit" id="edit">
@@ -89,45 +79,6 @@
                 <div style="clear:right;"></div>
             </div>
         </div>
-
-        {% if ramp %}
-            <div class="start ramp" id="ramp">
-                <div style="position:relative;">
-                    <a href="#" class="close_link">Close</a>
-                </div>
-                <div class="padder">
-                    <h2>Ramping</h2>
-                    <form action="/ramp" method="POST" id="ramp_form">
-                        <div style="float:left;">
-                        <label for="init_count" title="This is the number of initial number of locusts that will be spawned. Pick a number you know can be handled.">Initial number of clients</label>
-                        <input type="text" name="init_count" id="init_count" class="val" /><br>
-                        <label for="hatch_rate" title="This is the rate locusts/second at which all slaves together will spawn additional locusts">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                        <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
-                        <label for="hatch_stride" title="This is the amount of locusts that will be spawned in between each sleep (calibration)">Hatch stride</label>
-                        <input type="text" name="hatch_stride" id="hatch_stride" class="val" /><br>
-                        <label for="precision" title="Hatchstride will lower when a threshold has been reached and when hachstride <= precision; the sweet spot has been found">Precision (min value of hatch stride)</label>
-                        <input type="text" name="precision" id="precision" class="val" /><br>
-                        <label for="wait_time" title="The amount of time to sleep to gather enough statistics before checking for thresholds">Calibration time (seconds)</label>
-                        <input type="text" name="wait_time" id="wait_time" class="val" value="20" /><br>
-                        </div>
-                        <div style="float:right;">
-                        <label for="max_count" title="This is a threshold, if exceeded we start ramping down">Max number of clients</label>
-                        <input type="text" name="max_count" id="max_count" class="val" /><br>
-                        <label for="percentile" title="Threshold - The percentage of all responses that has to be have response times lower than a set limit.">Percentile (%)</label>
-                        <input type="text" name="percentile" id="percentile" class="val" value="95" /><br>
-                        <label for="response_time" title="Threshold - The highest response time that a percentage of all responses must not exceed.">Max percentile response time (ms)</label>
-                        <input type="text" name="response_time" id="response_time" class="val" value="2000" /><br>
-                        <label for="fail_rate" title="This threshold is the highest ratio in percent of all requests that are allowed to fail.">Accepted fail ratio (%)</label>
-                        <input type="text" name="fail_rate" id="fail_rate" class="val" value="5" /><br>
-                        <br><br>
-                        <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button">
-                        </div>
-
-                    </form>
-                    <div style="clear:right;"></div>
-                </div>
-            </div>
-        {% endif %}
         
         <div class="status" id="status">
             <ul class="tabs">
