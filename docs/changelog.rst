@@ -73,6 +73,7 @@ Other changes
 * Added option --only-summary to only output the summary to the console, thus disabling the periodic stats output.
 * Locust will now make sure to spawn all the specified locusts in distributed mode, not just a multiple of the number of slaves.
 * Fixed the broken Vagrant example.
+* Fixed the broken events example (events.py).
 
 
 0.6.2
