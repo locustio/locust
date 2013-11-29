@@ -5,13 +5,9 @@ This is an example of a locustfile that uses Locust's built in event hooks to
 track the sum of the content-length header in all successful HTTP responses
 """
 
-from locust import Locust, task, events, web
+from locust import Locust, TaskSet, task, events, web
 
-class WebsiteUser(Locust):
-    host = "http://127.0.0.1:8089"
-    min_wait=2000
-    max_wait=5000
-    
+class MyTaskSet(TaskSet):
     @task(2)
     def index(l):
         l.client.get("/")
@@ -20,7 +16,12 @@ class WebsiteUser(Locust):
     def stats(l):
         l.client.get("/stats/requests")
 
-
+class WebsiteUser(Locust):
+    host = "http://127.0.0.1:8089"
+    min_wait = 2000
+    max_wait = 5000
+    task_set = MyTaskSet
+    
 
 """
 We need somewhere to store the stats.
@@ -31,11 +32,11 @@ last stats report was sent to the master
 """
 stats = {"content-length":0}
 
-def on_request_success(method, path, response_time, response):
+def on_request_success(method, path, response_time, response_length):
     """
     Event handler that get triggered on every successful request
     """
-    stats["content-length"] += int(response.info.getheader("content-length"))
+    stats["content-length"] += response_length
 
 def on_report_to_master(client_id, data):
     """
