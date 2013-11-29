@@ -33,6 +33,9 @@ Locust updated `requests <http://python-requests.org/>`_ to the latest major rel
    are using any internal features and check the documentation:
    `Migrating to 1.x <http://docs.python-requests.org/en/latest/api/#migrating-to-1-x>`_
 
+gevent updated to version 1.0
+-------------------------------
+gevent 1.0 has now been released and Locust has been updated accordingly.
 
 Big refactoring of request statistics code
 ------------------------------------------
@@ -56,6 +59,7 @@ Other changes
 * Various code cleanups
 * Updated gevent/zmq libraries
 * Switched to unittest2 discovery
+* Now requiring gevent 1.0
 
 
 
