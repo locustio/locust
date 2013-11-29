@@ -183,7 +183,11 @@ a {
     color: #6d6d6d;
     border-bottom: 1px solid #292f2f;
 }
+.status tr.total td {
+    border-top: 1px solid #292f2f;
+}
 .status td, .status th {
+    text-align: right;
     padding: 10px;
     margin: 0;
 }

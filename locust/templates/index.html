@@ -94,7 +94,7 @@
                             <tr>
                                 <th class="stats_label" href="#" data-sortkey="method">Method</th>
                                 <th class="stats_label" href="#" data-sortkey="name">Name</th>
-                                <th class="stats_label" href="#" data-sortkey="num_reqs"># requests</th>
+                                <th class="stats_label" href="#" data-sortkey="num_requests"># requests</th>
                                 <th class="stats_label" href="#" data-sortkey="num_failures"># fails</th>
                                 <th class="stats_label" href="#" data-sortkey="median_response_time">Median</th>
                                 <th class="stats_label" href="#" data-sortkey="avg_response_time">Average</th>
@@ -176,7 +176,7 @@
     <script type="text/javascript" src="/static/jquery.tools.min.js"></script> 
     <script type="text/x-jqote-template" id="stats-template">
         <![CDATA[
-        <tr class="<%=(alternate ? "dark" : "")%>">
+        <tr class="<%=(alternate ? "dark" : "")%> <%=(this.name == "Total" ? "total" : "")%>">
             <td><%= (this.method ? this.method : "") %></td>
             <td><%= this.name %></td>
             <td class="numeric"><%= this.num_requests %></td>

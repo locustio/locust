@@ -74,6 +74,8 @@ Other changes
 * Locust will now make sure to spawn all the specified locusts in distributed mode, not just a multiple of the number of slaves.
 * Fixed the broken Vagrant example.
 * Fixed the broken events example (events.py).
+* Fixed issue where the request column was not sortable in the web-ui.
+* Minor styling of the statistics table in the web-ui.
 
 
 0.6.2
