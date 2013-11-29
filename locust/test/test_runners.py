@@ -7,6 +7,7 @@ from locust.runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRun
 from locust.core import Locust, task
 from locust.rpc import Message
 from locust.stats import RequestStats, global_stats
+from locust.main import parse_options
 from locust import events
 
 
@@ -14,6 +15,9 @@ def mocked_rpc_server():
     class MockedRpcServer(object):
         queue = Queue()
         outbox = []
+
+        def __init__(self, host, port):
+            pass
         
         @classmethod
         def mocked_send(cls, message):
@@ -33,6 +37,14 @@ class TestMasterRunner(unittest.TestCase):
     def setUp(self):
         global_stats.reset_all()
         self._slave_report_event_handlers = [h for h in events.slave_report._handlers]
+
+        parser, _, _ = parse_options()
+        args = [
+            "--clients", "10",
+            "--hatch-rate", "10"
+        ]
+        opts, _ = parser.parse_args(args)
+        self.options = opts
         
     def tearDown(self):
         events.slave_report._handlers = self._slave_report_event_handlers
@@ -44,7 +56,7 @@ class TestMasterRunner(unittest.TestCase):
             pass
         
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
-            master = MasterLocustRunner(MyTestLocust, 10, 10, None)
+            master = MasterLocustRunner(MyTestLocust, self.options)
             server.mocked_send(Message("client_ready", None, "zeh_fake_client1"))
             sleep(0)
             self.assertEqual(1, len(master.clients))
@@ -66,7 +78,7 @@ class TestMasterRunner(unittest.TestCase):
             pass
         
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
-            master = MasterLocustRunner(MyTestLocust, 10, 10, None)
+            master = MasterLocustRunner(MyTestLocust, self.options)
             server.mocked_send(Message("client_ready", None, "fake_client"))
             sleep(0)
             

@@ -26,12 +26,12 @@ SLAVE_REPORT_INTERVAL = 3.0
 
 
 class LocustRunner(object):
-    def __init__(self, locust_classes, hatch_rate, num_clients, num_requests=None, host=None):
+    def __init__(self, locust_classes, options):
         self.locust_classes = locust_classes
-        self.hatch_rate = hatch_rate
-        self.num_clients = num_clients
-        self.num_requests = num_requests
-        self.host = host
+        self.hatch_rate = options.hatch_rate
+        self.num_clients = options.num_clients
+        self.num_requests = options.num_requests
+        self.host = options.host
         self.locusts = Group()
         self.state = STATE_INIT
         self.hatching_greenlet = None
@@ -186,8 +186,8 @@ class LocustRunner(object):
         self.exceptions[key] = row
 
 class LocalLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, hatch_rate, num_clients, num_requests, host=None):
-        super(LocalLocustRunner, self).__init__(locust_classes, hatch_rate, num_clients, num_requests, host)
+    def __init__(self, locust_classes, options):
+        super(LocalLocustRunner, self).__init__(locust_classes, options)
 
         # register listener thats logs the exception for the local runner
         def on_locust_error(locust, e, tb):
@@ -200,9 +200,12 @@ class LocalLocustRunner(LocustRunner):
         self.greenlet = self.hatching_greenlet
 
 class DistributedLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, hatch_rate, num_clients, num_requests, host=None, master_host="localhost"):
-        super(DistributedLocustRunner, self).__init__(locust_classes, hatch_rate, num_clients, num_requests, host)
-        self.master_host = master_host
+    def __init__(self, locust_classes, options):
+        super(DistributedLocustRunner, self).__init__(locust_classes, options)
+        self.master_host = options.master_host
+        self.master_port = options.master_port
+        self.master_bind_host = options.master_bind_host
+        self.master_bind_port = options.master_bind_port
     
     def noop(self, *args, **kwargs):
         """ Used to link() greenlets to in order to be compatible with gevent 1.0 """
@@ -240,7 +243,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.client_errors = {}
         self._request_stats = {}
 
-        self.server = rpc.Server()
+        self.server = rpc.Server(self.master_bind_host, self.master_bind_port)
         self.greenlet = Group()
         self.greenlet.spawn(self.client_listener).link_exception(callback=self.noop)
         
@@ -254,7 +257,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.quit()
         events.quitting += on_quitting
     
-    def noop(self, *args, **kw):
+    def noop(self, *args, **kwargs):
         pass
     
     @property
@@ -343,15 +346,11 @@ class MasterLocustRunner(DistributedLocustRunner):
         return len(self.clients.ready) + len(self.clients.hatching) + len(self.clients.running)
 
 class SlaveLocustRunner(DistributedLocustRunner):
-
-    def noop(self, *args, **kw):
-        pass
-    
     def __init__(self, *args, **kwargs):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + md5(str(time() + random.randint(0,10000))).hexdigest()
         
-        self.client = rpc.Client(self.master_host)
+        self.client = rpc.Client(self.master_host, self.master_port)
         self.greenlet = Group()
 
         self.greenlet.spawn(self.worker).link_exception(callback=self.noop)
@@ -378,6 +377,9 @@ class SlaveLocustRunner(DistributedLocustRunner):
             formatted_tb = "".join(traceback.format_tb(tb))
             self.client.send(Message("exception", {"msg" : str(e), "traceback" : formatted_tb}, self.client_id))
         events.locust_error += on_locust_error
+
+    def noop(self, *args, **kwargs):
+        pass
 
     def worker(self):
         while True:

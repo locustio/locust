@@ -78,6 +78,33 @@ def parse_options():
         default="127.0.0.1",
         help="Host or IP address of locust master for distributed load testing. Only used when running with --slave. Defaults to 127.0.0.1."
     )
+    
+    parser.add_option(
+        '--master-port',
+        action='store',
+        type='int',
+        dest='master_port',
+        default=5558,
+        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --slave. Defaults to 5558."
+    )
+
+    parser.add_option(
+        '--master-bind-host',
+        action='store',
+        type='str',
+        dest='master_bind_host',
+        default="*",
+        help="Interfaces (hostname, ip) that locust master should bind to. Only used when running with --master. Defaults to * (all available interfaces)."
+    )
+    
+    parser.add_option(
+        '--master-bind-port',
+        action='store',
+        type='int',
+        dest='master_bind_port',
+        default=5558,
+        help="Port that locust master should bind to. Only used when running with --master. Defaults to 5558."
+    )
 
     # if we should print stats in the console
     parser.add_option(
@@ -358,25 +385,19 @@ def main():
     if not options.no_web and not options.slave:
         # spawn web greenlet
         logger.info("Starting web monitor on port %s" % options.port)
-        main_greenlet = gevent.spawn(web.start, locust_classes, options.hatch_rate, 
-                                     options.num_clients, options.num_requests, options.port)
+        main_greenlet = gevent.spawn(web.start, locust_classes, options)
     
     if not options.master and not options.slave:
-        runners.locust_runner = LocalLocustRunner(locust_classes, options.hatch_rate, options.num_clients,
-                                                  options.num_requests, options.host)
+        runners.locust_runner = LocalLocustRunner(locust_classes, options)
         # spawn client spawning/hatching greenlet
         if options.no_web:
             runners.locust_runner.start_hatching(wait=True)
             main_greenlet = runners.locust_runner.greenlet
     elif options.master:
-        runners.locust_runner = MasterLocustRunner(locust_classes, options.hatch_rate, options.num_clients, 
-                                                   num_requests=options.num_requests, host=options.host, 
-                                                   master_host=options.master_host)
+        runners.locust_runner = MasterLocustRunner(locust_classes, options)
     elif options.slave:
         try:
-            runners.locust_runner = SlaveLocustRunner(locust_classes, options.hatch_rate, options.num_clients, 
-                                                      num_requests=options.num_requests, host=options.host, 
-                                                      master_host=options.master_host)
+            runners.locust_runner = SlaveLocustRunner(locust_classes, options)
             main_greenlet = runners.locust_runner.greenlet
         except socket.error, e:
             logger.error("Failed to connect to the Locust master: %s", e)

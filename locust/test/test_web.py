@@ -3,19 +3,19 @@ import requests
 import gevent
 from gevent import wsgi
 
-from locust import web
-from locust import runners
+from locust import web, runners, stats
 from locust.runners import LocustRunner
-from locust import stats
+from locust.main import parse_options
 from .testcases import LocustTestCase
-
 
 class TestWebUI(LocustTestCase):
     def setUp(self):
         super(TestWebUI, self).setUp()
         
         stats.global_stats.clear_all()
-        runners.locust_runner = LocustRunner([], None, None, None, None)
+        parser = parse_options()[0]
+        options = parser.parse_args([])[0]
+        runners.locust_runner = LocustRunner([], options)
         
         self._web_ui_server = wsgi.WSGIServer(('127.0.0.1', 0), web.app, log=None)
         gevent.spawn(lambda: self._web_ui_server.serve_forever())

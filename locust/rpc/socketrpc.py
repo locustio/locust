@@ -40,9 +40,9 @@ def _recv_obj(sock):
     return Message.unserialize(data)
 
 class Client(object):
-    def __init__(self, host):
+    def __init__(self, host, port):
         self.host = host
-        self.port = 5558
+        self.port = port
         self.command_queue = gevent.queue.Queue()
         self.socket = self._connect()
 
@@ -68,9 +68,9 @@ class Client(object):
         return self.command_queue.get()
 
 class Server(object):
-    def __init__(self):
-        self.host = "0.0.0.0"
-        self.port = 5558
+    def __init__(self, host, port):
+        self.host = "0.0.0.0" if host == "*" else host
+        self.port = port
         self.event_queue = gevent.queue.Queue()
         self.command_dispatcher = self._listen()
 
