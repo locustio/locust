@@ -37,13 +37,22 @@ def parse_options():
         default=None,
         help="Host to load test in the following format: http://10.21.32.33"
     )
+
     parser.add_option(
-        '-P', '--port',
+        '--web-host',
+        dest="web_host",
+        default="",
+        help="Host to bind the web interface to. Defaults to '' (all interfaces)"
+    )
+    
+    parser.add_option(
+        '-P', '--port', '--web-port',
         type="int",
         dest="port",
         default=8089,
         help="Port on which to run web host"
     )
+    
     parser.add_option(
         '-f', '--locustfile',
         dest='locustfile',
@@ -384,7 +393,7 @@ def main():
 
     if not options.no_web and not options.slave:
         # spawn web greenlet
-        logger.info("Starting web monitor on port %s" % options.port)
+        logger.info("Starting web monitor at %s:%s" % (options.web_host or "*", options.port))
         main_greenlet = gevent.spawn(web.start, locust_classes, options)
     
     if not options.master and not options.slave:

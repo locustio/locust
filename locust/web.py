@@ -191,7 +191,7 @@ def exceptions():
     return response
 
 def start(locust, options):
-    wsgi.WSGIServer(('', options.port), app, log=None).serve_forever()
+    wsgi.WSGIServer((options.web_host, options.port), app, log=None).serve_forever()
 
 def _sort_stats(stats):
     return [stats[key] for key in sorted(stats.iterkeys())]
