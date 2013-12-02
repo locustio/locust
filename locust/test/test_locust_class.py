@@ -445,10 +445,10 @@ class TestCatchResponse(WebserverTestCase):
         
         self.num_failures = 0
         self.num_success = 0
-        def on_failure(method, path, response_time, exception, response):
+        def on_failure(request_type, name, response_time, exception, response):
             self.num_failures += 1
             self.last_failure_exception = exception
-        def on_success(a, b, c, d):
+        def on_success(**kwargs):
             self.num_success += 1
         events.request_failure += on_failure
         events.request_success += on_success

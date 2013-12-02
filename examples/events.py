@@ -32,7 +32,7 @@ last stats report was sent to the master
 """
 stats = {"content-length":0}
 
-def on_request_success(method, path, response_time, response_length):
+def on_request_success(request_type, name, response_time, response_length):
     """
     Event handler that get triggered on every successful request
     """

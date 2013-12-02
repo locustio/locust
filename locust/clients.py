@@ -135,13 +135,19 @@ class HttpSession(requests.Session):
             try:
                 response.raise_for_status()
             except RequestException as e:
-                events.request_failure.fire(request_meta["method"], request_meta["name"], request_meta["response_time"], e, None)
+                events.request_failure.fire(
+                    request_type=request_meta["method"], 
+                    name=request_meta["name"], 
+                    response_time=request_meta["response_time"], 
+                    exception=e, 
+                    response=None,
+                )
             else:
                 events.request_success.fire(
-                    request_meta["method"],
-                    request_meta["name"],
-                    request_meta["response_time"],
-                    request_meta["content_size"],
+                    request_type=request_meta["method"],
+                    name=request_meta["name"],
+                    response_time=request_meta["response_time"],
+                    response_length=request_meta["content_size"],
                 )
             return response
     
@@ -214,10 +220,10 @@ class ResponseContextManager(LocustResponse):
                     response.success()
         """
         events.request_success.fire(
-            self.locust_request_meta["method"],
-            self.locust_request_meta["name"],
-            self.locust_request_meta["response_time"],
-            self.locust_request_meta["content_size"],
+            request_type=self.locust_request_meta["method"],
+            name=self.locust_request_meta["name"],
+            response_time=self.locust_request_meta["response_time"],
+            response_length=self.locust_request_meta["content_size"],
         )
         self._is_reported = True
     
@@ -238,10 +244,10 @@ class ResponseContextManager(LocustResponse):
             exc = CatchResponseError(exc)
         
         events.request_failure.fire(
-            self.locust_request_meta["method"],
-            self.locust_request_meta["name"],
-            self.locust_request_meta["response_time"],
-            exc,
-            self,
+            request_type=self.locust_request_meta["method"],
+            name=self.locust_request_meta["name"],
+            response_time=self.locust_request_meta["response_time"],
+            exception=exc,
+            response=self,
         )
         self._is_reported = True

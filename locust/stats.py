@@ -408,14 +408,14 @@ global_stats = RequestStats()
 A global instance for holding the statistics. Should be removed eventually.
 """
 
-def on_request_success(method, name, response_time, response_length):
+def on_request_success(request_type, name, response_time, response_length):
     if global_stats.max_requests is not None and global_stats.num_requests >= global_stats.max_requests:
         raise StopLocust("Maximum number of requests reached")
     
-    global_stats.get(name, method).log(response_time, response_length)
+    global_stats.get(name, request_type).log(response_time, response_length)
 
-def on_request_failure(method, name, response_time, error, response=None):
-    global_stats.get(name, method).log_error(error)
+def on_request_failure(request_type, name, response_time, exception, response=None):
+    global_stats.get(name, request_type).log_error(exception)
 
 def on_report_to_master(client_id, data):
     data["stats"] = [global_stats.entries[key].get_stripped_report() for key in global_stats.entries.iterkeys() if not (global_stats.entries[key].num_requests == 0 and global_stats.entries[key].num_failures == 0)]

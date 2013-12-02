@@ -88,7 +88,7 @@ class TestMasterRunner(unittest.TestCase):
             master.stats.get("/", "GET").log(700, 23455)
             
             data = {"user_count":1}
-            events.report_to_master.fire("fake_client", data)
+            events.report_to_master.fire(client_id="fake_client", data=data)
             master.stats.clear_all()
             
             server.mocked_send(Message("stats", data, "fake_client"))

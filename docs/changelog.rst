@@ -75,6 +75,26 @@ Removed support for ramping
 Previously one could tell Locust, using the --ramp option, to try to find a stable client count that the target host could handle, but it's been broken and undocumented for quite a while so we've decided to remove it from the locust core and perhaps have it reappear as a plugin in the future.
 
 
+Locust Event hooks now takes keyword argument
+---------------------------------------------
+
+When :doc:`extending-locust` by listening to :ref:`events`, the listener functions should now expect
+the arguments to be passed in as keyword arguments. It's also highly recommended to add an extra 
+wildcard keyword arguments to listener functions, since they're then less likely to break if extra  
+arguments are added to that event in some future version. For example::
+
+    from locust import events
+    
+    def on_request(request_type, name, response_time, response_length, **kw):
+        print "Got request!"
+    
+    locust.events.request_success += on_request
+
+The *method* and *path* arguments to :py:obj:`request_success <locust.events.request_success>` and 
+:py:obj:`request_failure <locust.events.request_failure>` are now called *request_type* and *name*, 
+since it's less HTTP specific.
+
+
 Other changes
 -------------
 

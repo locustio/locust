@@ -8,10 +8,16 @@ Event listeners can be registered at the module level in a locust file. Here's a
 
     from locust import events
     
-    def my_success_handler(method, path, response_time, response):
+    def my_success_handler(method, path, response_time, response, **kw):
         print "Successfully fetched: %s" % (path)
     
     events.request_success += my_success_handler
+
+.. note::
+
+    It's highly recommended that you add a wildcard keyword argument in your listeners 
+    (the \**kw in the code above), to prevent your code from breaking if new arguments are 
+    added in a future version.
 
 .. seealso::
 
