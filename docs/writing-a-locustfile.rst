@@ -221,6 +221,15 @@ The on_start function
 A TaskSet class can optionally declare an :py:meth:`on_start <locust.core.TaskSet.on_start>` function. 
 If so, that function is called when a simulated user starts executing that TaskSet class.
 
+
+Referencing the Locust instance, or the parent TaskSet instance
+---------------------------------------------------------------
+
+A TaskSet instance will have the attribute :py:attr:`locust <locust.core.TaskSet.locust>` point to 
+it's Locust instance, and the attribute :py:attr:`parent <locust.core.TaskSet.parent>` point to it's 
+parent TaskSet (it will point to the Locust instance, in the base TaskSet).
+
+
 Making HTTP requests 
 =====================
 
