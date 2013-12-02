@@ -225,19 +225,20 @@ Making HTTP requests
 =====================
 
 So far, we've only covered the task scheduling part of a Locust user. In order to actually load test 
-a system we need to make HTTP requests. To help us do this, each Locust instance gets a 
+a system we need to make HTTP requests. To help us do this, the :py:class:`HttpLocust <locust.core.HttpLocust>`
+class exists. When using this class, each instance gets a 
 :py:attr:`client <locust.core.Locust.client>` attribute which will be an instance of 
 :py:attr:`HttpSession <locust.core.client.HttpSession>` which can be used to make HTTP requests.
 
-.. autoclass:: locust.core.Locust
+.. autoclass:: locust.core.HttpLocust
     :members: client
     :noindex:
 
-When inheriting from the Locust class, we can use it's client attribute to make HTTP requests 
+When inheriting from the HttpLocust class, we can use it's client attribute to make HTTP requests 
 against the server. Here is an example of a locust file that can be used to load test a site 
 with two urls; **/** and **/about/**::
 
-    from locust import Locust, TaskSet, task
+    from locust import HttpLocust, TaskSet, task
     
     class MyTaskSet(TaskSet):
         @task(2)
@@ -248,7 +249,7 @@ with two urls; **/** and **/about/**::
         def about(self):
             self.client.get("/about/")
     
-    class MyLocust(Locust):
+    class MyLocust(HttpLocust):
         task_set = MyTaskSet
         min_wait = 5000
         max_wait = 15000
@@ -256,10 +257,16 @@ with two urls; **/** and **/about/**::
 Using the above Locust class, each simulated user will wait between 5 and 15 seconds 
 between the requests, and **/** will be requested twice as much as **/about/**.
 
+The attentive reader will find it odd that we can reference the HttpSession instance 
+using *self.client* inside the TaskSet, and not *self.locust.client*. We can do this 
+because the :py:class:`TaskSet <locust.core.TaskSet>` class has a convenience property 
+called client that simply returns self.locust.client.
+
+
 Using the HTTP client
 ======================
 
-Each instance of Locust has an instance of :py:class:`HttpSession <locust.clients.HttpSession>` 
+Each instance of HttpLocust has an instance of :py:class:`HttpSession <locust.clients.HttpSession>` 
 in the *client* attribute. The HttpSession class is actually a subclass of 
 :py:class:`requests.Session` and can be used to  make HTTP requests, that will be reported to Locust's
 statistics, using the :py:meth:`get <locust.clients.HttpSession.get>`, 
@@ -267,11 +274,13 @@ statistics, using the :py:meth:`get <locust.clients.HttpSession.get>`,
 :py:meth:`delete <locust.clients.HttpSession.delete>`, :py:meth:`head <locust.clients.HttpSession.head>`, 
 :py:meth:`patch <locust.clients.HttpSession.patch>` and :py:meth:`options <locust.clients.HttpSession.options>` 
 methods. The HttpSession instance will preserve cookies between requests so that it can be used to log in 
-to websites and keep a session between requests. The client attribute is also copied to the Locust isntance's
-TaskSet instances so that it's easy to retrieve the client and make HTTP requests from within your tasks.
+to websites and keep a session between requests. The client attribute can also be reference from the Locust 
+instance's TaskSet instances so that it's easy to retrieve the client and make HTTP requests from within your 
+tasks.
 
 Here's a simple example that makes a GET request to the */about* path (in this case we assume *self* 
-is an instance of a :py:class:`TaskSet <locust.core.TaskSet>` or :py:class:`Locust <locust.core.Locust>` class::
+is an instance of a :py:class:`TaskSet <locust.core.TaskSet>` or :py:class:`HttpLocust <locust.core.Locust>` 
+class::
 
     response = self.client.get("/about")
     print "Response status code:", response.status_code

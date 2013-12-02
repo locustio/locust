@@ -5,7 +5,7 @@ from requests.exceptions import RequestException
 
 from testcases import WebserverTestCase
 from locust.stats import RequestStats, StatsEntry, global_stats
-from locust.core import Locust, TaskSet, task
+from locust.core import HttpLocust, Locust, TaskSet, task
 from locust.inspectlocust import get_task_ratio_dict
 from locust.rpc.protocol import Message
 
@@ -113,7 +113,7 @@ class TestRequestStats(unittest.TestCase):
 
 class TestRequestStatsWithWebserver(WebserverTestCase):
     def test_request_stats_content_length(self):
-        class MyLocust(Locust):
+        class MyLocust(HttpLocust):
             host = "http://127.0.0.1:%i" % self.port
     
         locust = MyLocust()
@@ -123,7 +123,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         self.assertEqual(global_stats.get("/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response"))
     
     def test_request_stats_no_content_length(self):
-        class MyLocust(Locust):
+        class MyLocust(HttpLocust):
             host = "http://127.0.0.1:%i" % self.port
         l = MyLocust()
         path = "/no_content_length"
@@ -131,7 +131,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         self.assertEqual(global_stats.get(path, "GET").avg_content_length, len("This response does not have content-length in the header"))
     
     def test_request_stats_no_content_length_streaming(self):
-        class MyLocust(Locust):
+        class MyLocust(HttpLocust):
             host = "http://127.0.0.1:%i" % self.port
         l = MyLocust()
         path = "/no_content_length"
@@ -139,7 +139,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         self.assertEqual(0, global_stats.get(path, "GET").avg_content_length)
     
     def test_request_stats_named_endpoint(self):
-        class MyLocust(Locust):
+        class MyLocust(HttpLocust):
             host = "http://127.0.0.1:%i" % self.port
     
         locust = MyLocust()
@@ -147,7 +147,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         self.assertEqual(1, global_stats.get("my_custom_name", "GET").num_requests)
     
     def test_request_stats_query_variables(self):
-        class MyLocust(Locust):
+        class MyLocust(HttpLocust):
             host = "http://127.0.0.1:%i" % self.port
     
         locust = MyLocust()
@@ -155,7 +155,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         self.assertEqual(1, global_stats.get("/ultra_fast?query=1", "GET").num_requests)
     
     def test_request_connection_error(self):
-        class MyLocust(Locust):
+        class MyLocust(HttpLocust):
             host = "http://localhost:1"
         
         locust = MyLocust()
@@ -169,7 +169,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
             @task
             def my_task(self):
                 self.client.get("/ultra_fast")
-        class MyLocust(Locust):
+        class MyLocust(HttpLocust):
             host = "http://127.0.0.1:%i" % self.port
             task_set = MyTaskSet
             min_wait = 1

@@ -4,7 +4,7 @@ Quick start
 
 Below is a quick little example of a simple **locustfile.py**::
 
-    from locust import Locust, TaskSet
+    from locust import HttpLocust, TaskSet
     
     def login(l):
         l.client.post("/login", {"username":"ellen_key", "password":"education"})
@@ -21,7 +21,7 @@ Below is a quick little example of a simple **locustfile.py**::
         def on_start(self):
             login(self)
     
-    class WebsiteUser(Locust):
+    class WebsiteUser(HttpLocust):
         task_set = UserBehavior
         min_wait=5000
         max_wait=9000
@@ -29,14 +29,18 @@ Below is a quick little example of a simple **locustfile.py**::
 
 Here we define a number of locust tasks, which are normal Python callables that take one argument 
 (a Locust class instance). These tasks are gathered under a :py:class:`TaskSet <locust.core.TaskSet>` 
-class in the *task* attribute. Then we have a :py:class:`Locust <locust.core.Locust>` class which 
+class in the *task* attribute. Then we have a :py:class:`HttpLocust <locust.core.HttpLocust>` class which 
 represents a User, where we define how long a simulated user should wait between executing tasks, as 
 well as what TaskSet class should define the user's "behaviour". TaskSets can be nested.
+
+The :py:class:`HttpLocust <locust.core.HttpLocust>` class inherits from the
+:py:class:`Locust <locust.core.Locust>` class, and it adds a client attribute which is an instance of 
+:py:class:`HttpSession <locust.clients.HttpSession>, that can be used to make HTTP requests.
 
 Another way we could declare tasks, which is usually more convenient, is to use the 
 @task decorator. The following code is equivalent to the above::
 
-    from locust import Locust, TaskSet, task
+    from locust import HttpLocust, TaskSet, task
     
     class UserBehavior(TaskSet):
         def on_start(self):
@@ -54,13 +58,14 @@ Another way we could declare tasks, which is usually more convenient, is to use 
         def profile(self):
             self.client.get("/profile")
     
-    class WebsiteUser(Locust):
+    class WebsiteUser(HttpLocust):
         task_set = UserBehavior
         min_wait=5000
         max_wait=9000
 
-The Locust class also allows one to specify minimum and maximum wait time - per simulated user -
-between the execution of tasks (*min_wait* and *max_wait*) as well as other user behaviours.
+The Locust class (as well as HttpLocust, since it's a subclass) also allows one to specify minimum 
+and maximum wait time - per simulated user - between the execution of tasks (*min_wait* and *max_wait*) 
+as well as other user behaviours.
 
 To run Locust with the above locust file, if it was named *locustfile.py*, we could run 
 (in the same directory as locustfile.py)::

@@ -59,8 +59,9 @@ class Locust(object):
     The behaviour of this user is defined by the task_set attribute, which should point to a 
     :py:class:`TaskSet <locust.core.TaskSet>` class.
     
-    This class creates a *client* attribute on instantiation which is an HTTP client with support 
-    for keeping a user session between requests.
+    This class should usually be subclassed by a class that defines some kind of client. For 
+    example when load testing an HTTP system, you probably want to use the 
+    :py:class:`HttpLocust <locust.core.HttpLocust>` class.
     """
     
     host = None
@@ -71,12 +72,6 @@ class Locust(object):
     
     max_wait = 1000
     """Maximum waiting time between the execution of locust tasks"""
-    
-    client = None
-    """
-    Instance of HttpSession that is created upon instantiation of Locust. 
-    The client support cookies, and therefore keeps the session between HTTP requests.
-    """
     
     task_set = None
     """TaskSet class that defines the execution behaviour of this locust"""
@@ -89,10 +84,6 @@ class Locust(object):
     
     def __init__(self):
         super(Locust, self).__init__()
-        if self.host is None:
-            raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
-        
-        self.client = HttpSession(base_url=self.host)
     
     def run(self):
         try:
@@ -101,6 +92,35 @@ class Locust(object):
             pass
         except (RescheduleTask, RescheduleTaskImmediately) as e:
             raise LocustError, LocustError("A task inside a Locust class' main TaskSet (`%s.task_set` of type `%s`) seems to have called interrupt() or raised an InterruptTaskSet exception. The interrupt() function is used to hand over execution to a parent TaskSet, and should never be called in the main TaskSet which a Locust class' task_set attribute points to." % (type(self).__name__, self.task_set.__name__)), sys.exc_info()[2]
+    
+    @property
+    def client(self):
+        raise LocustError("No client instantiated. Did you intend to inherit from HttpLocust?")
+
+
+class HttpLocust(Locust):
+    """
+    Represents an HTTP "user" which is to be hatched and attack the system that is to be load tested.
+    
+    The behaviour of this user is defined by the task_set attribute, which should point to a 
+    :py:class:`TaskSet <locust.core.TaskSet>` class.
+    
+    This class creates a *client* attribute on instantiation which is an HTTP client with support 
+    for keeping a user session between requests.
+    """
+    
+    client = None
+    """
+    Instance of HttpSession that is created upon instantiation of Locust. 
+    The client support cookies, and therefore keeps the session between HTTP requests.
+    """
+    
+    def __init__(self):
+        super(HttpLocust, self).__init__()
+        if self.host is None:
+            raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
+        
+        self.client = HttpSession(base_url=self.host)
 
 
 class TaskSetMeta(type):
@@ -184,12 +204,6 @@ class TaskSet(object):
     TaskSet.
     """
     
-    client = None
-    """
-    Reference to the :py:attr:`client <locust.core.Locust.client>` attribute of the root 
-    Locust instance.
-    """
-    
     locust = None
     """Will refer to the root Locust class instance when the TaskSet has been instantiated"""
 
@@ -213,7 +227,6 @@ class TaskSet(object):
             raise LocustError("TaskSet should be called with Locust instance or TaskSet instance as first argument")
 
         self.parent = parent
-        self.client = self.locust.client
         
         # if this class doesn't have a min_wait or max_wait defined, copy it from Locust
         if not self.min_wait:
@@ -320,6 +333,14 @@ class TaskSet(object):
         classes further down the hierarchy.
         """
         raise InterruptTaskSet(reschedule)
+    
+    @property
+    def client(self):
+        """
+        Reference to the :py:attr:`client <locust.core.Locust.client>` attribute of the root 
+        Locust instance.
+        """
+        return self.locust.client
 
 class WebLocust(Locust):
     def __init__(self, *args, **kwargs):

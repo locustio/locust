@@ -5,6 +5,18 @@ Changelog
 0.7 (In GIT repo, Not yet released)
 ===================================
 
+HTTP client functionality moved to HttpLocust
+---------------------------------------------
+
+Previously, the Locust class instantiated a :py:class:`HttpSession <locust.clients.HttpSession>` 
+under the client attribute that was used to make HTTP requests. This funcionality has 
+now been moved into the :py:class:`HttpLocust <locust.core.HttpLocust>` class, in an 
+effort to make it more obvious how one can use Locust to loadtest non-HTTP systems.
+
+To make existing locust scripts compatible with the new version you should make your 
+locust classes inherit from HttpLocust instead of the base Locust class.
+
+
 msgpack for serializing master/slave data
 -----------------------------------------
 
