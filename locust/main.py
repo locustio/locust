@@ -93,8 +93,8 @@ def parse_options():
         action='store',
         type='int',
         dest='master_port',
-        default=5558,
-        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --slave. Defaults to 5558."
+        default=5557,
+        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --slave. Defaults to 5557. Note that slaves will also connect to the master node on this port + 1."
     )
 
     parser.add_option(
@@ -111,8 +111,8 @@ def parse_options():
         action='store',
         type='int',
         dest='master_bind_port',
-        default=5558,
-        help="Port that locust master should bind to. Only used when running with --master. Defaults to 5558."
+        default=5557,
+        help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557. Note that Locust will also use this port + 1, so by default the master node will bind to 5557 and 5558."
     )
 
     # if we should print stats in the console
