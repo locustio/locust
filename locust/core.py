@@ -342,19 +342,3 @@ class TaskSet(object):
         """
         return self.locust.client
 
-class WebLocust(Locust):
-    def __init__(self, *args, **kwargs):
-        warnings.warn("WebLocust class has been, deprecated. Use Locust class instead.")
-        super(WebLocust, self).__init__()
-
-
-class SubLocust(object):
-    """
-    Class for making a sub Locust that can be included as a task inside of a normal Locust/WebLocus,
-    as well as inside another sub locust.
-
-    When the parent locust enters the sub locust, it will not
-    continue executing it's tasks until a task in the sub locust has called the interrupt() function.
-    """
-    def __init__(self, *args, **kwargs):
-        raise DeprecationWarning("The SubLocust class has been deprecated. Use TaskSet classes instead.")
