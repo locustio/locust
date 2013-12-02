@@ -166,7 +166,7 @@ class LocustRunner(object):
         else:
             if hatch_rate:
                 self.hatch_rate = hatch_rate
-            if locust_count:
+            if locust_count is not None:
                 self.spawn_locusts(locust_count, wait=wait)
             else:
                 self.spawn_locusts(wait=wait)

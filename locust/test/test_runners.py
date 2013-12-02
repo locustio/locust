@@ -1,10 +1,11 @@
 import unittest
 
+import gevent
 from gevent.queue import Queue
 from gevent import sleep
 
 from locust.runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner
-from locust.core import Locust, task
+from locust.core import Locust, task, TaskSet
 from locust.rpc import Message
 from locust.stats import RequestStats, global_stats
 from locust.main import parse_options
@@ -94,6 +95,76 @@ class TestMasterRunner(unittest.TestCase):
             sleep(0)
             s = master.stats.get("/", "GET")
             self.assertEqual(700, s.median_response_time)
+    
+    def test_spawn_zero_locusts(self):
+        class MyTaskSet(TaskSet):
+            @task
+            def my_task(self):
+                pass
+            
+        class MyTestLocust(Locust):
+            task_set = MyTaskSet
+            min_wait = 100
+            max_wait = 100
+        
+        runner = LocalLocustRunner([MyTestLocust], self.options)
+        
+        timeout = gevent.Timeout(2.0)
+        timeout.start()
+        
+        try:
+            runner.start_hatching(0, 1, wait=True)
+            runner.greenlet.join()
+        except gevent.Timeout:
+            self.fail("Got Timeout exception. A locust seems to have been spawned, even though 0 was specified.")
+        finally:
+            timeout.cancel()
+    
+    def test_spawn_uneven_locusts(self):
+        """
+        Tests that we can accurately spawn a certain number of locusts, even if it's not an 
+        even number of the connected slaves
+        """
+        import mock
+        
+        class MyTestLocust(Locust):
+            pass
+        
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
+            master = MasterLocustRunner(MyTestLocust, self.options)
+            for i in range(5):
+                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+                sleep(0)
+            
+            master.start_hatching(7, 7)
+            self.assertEqual(5, len(server.outbox))
+            
+            num_clients = 0
+            for msg in server.outbox:
+                num_clients += Message.unserialize(msg).data["num_clients"]
+            
+            self.assertEqual(7, num_clients, "Total number of locusts that would have been spawned is not 7")
+    
+    def test_spawn_fewer_locusts_than_slaves(self):
+        import mock
+        
+        class MyTestLocust(Locust):
+            pass
+        
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
+            master = MasterLocustRunner(MyTestLocust, self.options)
+            for i in range(5):
+                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+                sleep(0)
+            
+            master.start_hatching(2, 2)
+            self.assertEqual(5, len(server.outbox))
+            
+            num_clients = 0
+            for msg in server.outbox:
+                num_clients += Message.unserialize(msg).data["num_clients"]
+            
+            self.assertEqual(2, num_clients, "Total number of locusts that would have been spawned is not 2")
     
 
 
