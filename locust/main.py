@@ -14,11 +14,11 @@ import web
 from log import setup_logging, console_logger
 from stats import stats_printer, print_percentile_stats, print_error_report, print_stats
 from inspectlocust import print_task_ratio, get_task_ratio_dict
-from core import Locust
+from core import Locust, HttpLocust
 from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
 import events
 
-_internals = [Locust]
+_internals = [Locust, HttpLocust]
 version = locust.version
 
 def parse_options():
