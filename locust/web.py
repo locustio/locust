@@ -13,7 +13,6 @@ import runners
 from runners import MasterLocustRunner
 from locust.stats import median_from_dict
 from locust import version
-import gevent
 
 import logging
 logger = logging.getLogger(__name__)

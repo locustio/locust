@@ -1,6 +1,5 @@
 # coding=UTF-8
 import socket
-import traceback
 import warnings
 import random
 import logging
