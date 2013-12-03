@@ -65,8 +65,8 @@ Event is fired with the following arguments:
 
 report_to_master = EventHook()
 """
-*report_to_master* is used when Locust is running in --slave mode. It can be used to attach 
-data to the dicts that are regularly sent to the master. It's fired regularly when a report 
+*report_to_master* is used when Locust is running in --slave mode. It can be used to attach
+data to the dicts that are regularly sent to the master. It's fired regularly when a report
 is to be sent to the master server.
 
 Note that the keys "stats" and "errors" are used by Locust and shouldn't be overridden.
@@ -79,7 +79,7 @@ Event is fired with the following arguments:
 
 slave_report = EventHook()
 """
-*slave_report* is used when Locust is running in --master mode and is fired when the master 
+*slave_report* is used when Locust is running in --master mode and is fired when the master
 server receives a report from a Locust slave server.
 
 This event can be used to aggregate data from the locust slave servers.

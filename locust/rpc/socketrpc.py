@@ -3,7 +3,6 @@ import logging
 
 import gevent
 from gevent import socket
-from gevent import queue
 
 from locust.exception import LocustError
 from .protocol import Message
