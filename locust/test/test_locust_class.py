@@ -4,9 +4,9 @@ from locust.core import HttpLocust, Locust, TaskSet, task, events
 from locust import ResponseError, InterruptTaskSet
 from locust.exception import CatchResponseError, RescheduleTask, RescheduleTaskImmediately, LocustError
 
-from testcases import WebserverTestCase
+from testcases import LocustTestCase, WebserverTestCase
 
-class TestTaskSet(unittest.TestCase):
+class TestTaskSet(LocustTestCase):
     def setUp(self):
         super(TestTaskSet, self).setUp()
         
