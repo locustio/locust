@@ -9,6 +9,7 @@ from locust.core import Locust, task, TaskSet
 from locust.rpc import Message
 from locust.stats import RequestStats, global_stats
 from locust.main import parse_options
+from locust.test.testcases import LocustTestCase
 from locust import events
 
 
@@ -34,7 +35,7 @@ def mocked_rpc_server():
     return MockedRpcServer
 
 
-class TestMasterRunner(unittest.TestCase):
+class TestMasterRunner(LocustTestCase):
     def setUp(self):
         global_stats.reset_all()
         self._slave_report_event_handlers = [h for h in events.slave_report._handlers]
@@ -166,6 +167,29 @@ class TestMasterRunner(unittest.TestCase):
             
             self.assertEqual(2, num_clients, "Total number of locusts that would have been spawned is not 2")
     
+    def test_exception_in_task(self):
+        class HeyAnException(Exception):
+            pass
+        
+        class MyLocust(Locust):
+            class task_set(TaskSet):
+                @task
+                def will_error(self):
+                    raise HeyAnException(":(")
+        
+        runner = LocalLocustRunner([MyLocust], self.options)
+        
+        l = MyLocust()
+        l._catch_exceptions = False
+        
+        self.assertRaises(HeyAnException, l.run)
+        self.assertRaises(HeyAnException, l.run)
+        self.assertEqual(1, len(runner.exceptions))
+        
+        hash_key, exception = runner.exceptions.popitem()
+        self.assertIn("traceback", exception)
+        self.assertIn("HeyAnException" , exception["traceback"])
+        self.assertEqual(2, exception["count"])
 
 
 class TestMessageSerializing(unittest.TestCase):
