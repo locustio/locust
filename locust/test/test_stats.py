@@ -110,6 +110,27 @@ class TestRequestStats(unittest.TestCase):
         
         self.assertEqual(20, u1.median_response_time)
 
+class TestRequestStatsCSV(unittest.TestCase):
+    def setUp(self):
+        self.stats = RequestStats()
+        self.stats.start_time = time.time()
+
+    def test_request_stats_csv(self):
+        """
+        """
+        file_name, csv = self.stats.get_request_stats_csv()
+        self.assertIn("request", file_name)
+        expected = '"Method","Name","# requests","# failures","Median response time","Average response time","Min response time","Max response time","Average Content Size","Requests/s"\n"None","Total",0,0,0,0,0,0,0,0.00'
+        self.assertEqual(expected, csv)
+
+    def test_distribution_stats_csv(self):
+        """
+        """
+        file_name, csv = self.stats.get_distribution_stats_csv()
+        self.assertIn("distribution", file_name)
+        expected = '"Name","# requests","50%","66%","75%","80%","90%","95%","98%","99%","100%"\n"Total",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"'
+        self.assertEqual(expected, csv)
+
 
 class TestRequestStatsWithWebserver(WebserverTestCase):
     def test_request_stats_content_length(self):

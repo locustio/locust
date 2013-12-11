@@ -1,6 +1,7 @@
 import time
 import gevent
 import hashlib
+from itertools import chain
 
 import events
 from exception import StopLocust
@@ -60,7 +61,68 @@ class RequestStats(object):
         self.max_requests = None
         self.last_request_timestamp = None
         self.start_time = None
-        
+
+    def get_request_stats_csv(self):
+        """
+        Return the request stats in CSV format.
+        """
+        rows = [
+            ",".join([
+                '"Method"',
+                '"Name"',
+                '"# requests"',
+                '"# failures"',
+                '"Median response time"',
+                '"Average response time"',
+                '"Min response time"',
+                '"Max response time"',
+                '"Average Content Size"',
+                '"Requests/s"',
+            ])
+        ]
+
+        for s in chain(_sort_stats(self.entries), [self.aggregated_stats("Total", full_request_history=True)]):
+            rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
+                s.method,
+                s.name,
+                s.num_requests,
+                s.num_failures,
+                s.median_response_time,
+                s.avg_response_time,
+                s.min_response_time or 0,
+                s.max_response_time,
+                s.avg_content_length,
+                s.total_rps,
+            ))
+        file_name = "requests_{0}.csv".format(time.time())
+        return file_name, "\n".join(rows)
+
+    def get_distribution_stats_csv(self):
+        """
+        Return the time distribution in CSV format.
+        """
+        rows = [",".join((
+            '"Name"',
+            '"# requests"',
+            '"50%"',
+            '"66%"',
+            '"75%"',
+            '"80%"',
+            '"90%"',
+            '"95%"',
+            '"98%"',
+            '"99%"',
+            '"100%"',
+        ))]
+        for s in chain(_sort_stats(self.entries), [self.aggregated_stats("Total", full_request_history=True)]):
+            if s.num_requests:
+                rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
+            else:
+                rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
+
+        file_name = "distribution_{0}.csv".format(time.time())
+        return file_name, "\n".join(rows)
+
 
 class StatsEntry(object):
     """
@@ -494,3 +556,6 @@ def stats_printer():
     while True:
         print_stats(locust_runner.request_stats)
         gevent.sleep(2)
+
+def _sort_stats(stats):
+    return [stats[key] for key in sorted(stats.iterkeys())]
