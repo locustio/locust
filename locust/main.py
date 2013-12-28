@@ -18,7 +18,6 @@ from core import Locust, HttpLocust
 from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
 import events
 
-_internals = [Locust, HttpLocust]
 version = locust.version
 
 def parse_options():
@@ -284,7 +283,7 @@ def is_locust(tup):
     return (
         inspect.isclass(item)
         and issubclass(item, Locust)
-        and (item not in _internals)
+        and ('client' not in item.__dict__)
         and not name.startswith('_')
     )
 
