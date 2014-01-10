@@ -348,9 +348,9 @@ def main():
     docstring, locusts = load_locustfile(locustfile)
 
     if options.list_commands:
-        print "Available Locusts:"
+        console_logger.info("Available Locusts:")
         for name in locusts:
-            print "    " + name
+            console_logger.info("    " + name)
         sys.exit(0)
 
     if not locusts:
