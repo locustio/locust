@@ -36,3 +36,30 @@ class TestTaskRatio(unittest.TestCase):
             'root_task1': {'ratio': 0.5}
         }, ratio_dict)
     
+    def test_task_ratio_command_with_locust_weight(self):
+        class Tasks(TaskSet):
+            @task(1)
+            def task1(self):
+                pass
+
+            @task(3)
+            def task3(self):
+                pass
+
+        class UnlikelyLocust(Locust):
+            weight = 1
+            task_set = Tasks
+
+	class MoreLikelyLocust(Locust):
+            weight = 3
+            task_set = Tasks
+
+        ratio_dict = get_task_ratio_dict([UnlikelyLocust, MoreLikelyLocust], total=True)
+
+        self.assertEquals({
+               'UnlikelyLocust':   {'tasks': {'task1': {'ratio': 0.25*0.25}, 'task3': {'ratio': 0.25*0.75}}, 'ratio': 0.25},
+               'MoreLikelyLocust': {'tasks': {'task1': {'ratio': 0.75*0.25}, 'task3': {'ratio': 0.75*0.75}}, 'ratio': 0.75}
+               }, ratio_dict)
+        unlikely = ratio_dict['UnlikelyLocust']['tasks']
+        likely = ratio_dict['MoreLikelyLocust']['tasks']
+        assert unlikely['task1']['ratio'] + unlikely['task3']['ratio'] + likely['task1']['ratio'] + likely['task3']['ratio'] == 1

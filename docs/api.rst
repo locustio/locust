@@ -7,7 +7,7 @@ Locust class
 ============
 
 .. autoclass:: locust.core.Locust
-	:members: min_wait, max_wait, task_set
+	:members: min_wait, max_wait, task_set, weight
 
 HttpLocust class
 ================
