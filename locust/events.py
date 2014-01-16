@@ -28,7 +28,7 @@ class EventHook(object):
 
 request_success = EventHook()
 """
-*request_success* is fired when an HTTP request is completed successfully.
+*request_success* is fired when a request is completed successfully.
 
 Listeners should take the following arguments:
 
@@ -40,7 +40,7 @@ Listeners should take the following arguments:
 
 request_failure = EventHook()
 """
-*request_failure* is fired when an HTTP request fails
+*request_failure* is fired when a request fails
 
 Event is fired with the following arguments:
 
@@ -48,8 +48,6 @@ Event is fired with the following arguments:
 * *name*: Path to the URL that was called (or override name if it was used in the call to the client)
 * *response_time*: Time in milliseconds until exception was thrown
 * *exception*: Exception instance that was thrown
-* *response*: If the failure was due to an HTTP error code (exception is an instance of urllib2.HTTPError),
-  then response will be an instance of locus.clients.HttpResponse. Otherwise response will be None.
 """
 
 locust_error = EventHook()

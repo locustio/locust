@@ -414,7 +414,7 @@ def on_request_success(request_type, name, response_time, response_length):
     
     global_stats.get(name, request_type).log(response_time, response_length)
 
-def on_request_failure(request_type, name, response_time, exception, response=None):
+def on_request_failure(request_type, name, response_time, exception):
     global_stats.get(name, request_type).log_error(exception)
 
 def on_report_to_master(client_id, data):
