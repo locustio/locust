@@ -284,7 +284,7 @@ def is_locust(tup):
     return (
         inspect.isclass(item)
         and issubclass(item, Locust)
-        and (item not in _internals)
+        and "abstract" not in item.__dict__
         and not name.startswith('_')
     )
 
