@@ -33,8 +33,6 @@ class XmlRpcLocust(Locust):
     This is the abstract Locust class which should be subclassed. It provides an XML-RPC client
     that can be used to make XML-RPC requests that will be tracked in Locust's statistics.
     """
-    client = None
-    
     def __init__(self, *args, **kwargs):
         super(XmlRpcLocust, self).__init__(*args, **kwargs)
         self.client = XmlRpcClient(self.host)

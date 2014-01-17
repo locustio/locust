@@ -52,6 +52,15 @@ def task(weight=1):
         return decorator_func
 
 
+class NoClientWarningRaiser(object):
+    """
+    The purpose of this class is to emit a sensible error message for old test scripts that 
+    inherits from Locust, and expects there to be an HTTP client under the client attribute.
+    """
+    def __getattr__(self, _):
+        raise LocustError("No client instantiated. Did you intend to inherit from HttpLocust?")
+
+
 class Locust(object):
     """
     Represents a "user" which is to be hatched and attack the system that is to be load tested.
@@ -81,7 +90,8 @@ class Locust(object):
 
     weight = 10
     """Probability of locust being chosen. The higher the weight, the greater is the chance of it being chosen."""
-    
+        
+    client = NoClientWarningRaiser()
     _catch_exceptions = False
     
     def __init__(self):
@@ -94,10 +104,6 @@ class Locust(object):
             pass
         except (RescheduleTask, RescheduleTaskImmediately) as e:
             raise LocustError, LocustError("A task inside a Locust class' main TaskSet (`%s.task_set` of type `%s`) seems to have called interrupt() or raised an InterruptTaskSet exception. The interrupt() function is used to hand over execution to a parent TaskSet, and should never be called in the main TaskSet which a Locust class' task_set attribute points to." % (type(self).__name__, self.task_set.__name__)), sys.exc_info()[2]
-    
-    @property
-    def client(self):
-        raise LocustError("No client instantiated. Did you intend to inherit from HttpLocust?")
 
 
 class HttpLocust(Locust):
