@@ -20,6 +20,7 @@ Locust Documentation
     installation
     quickstart
     writing-a-locustfile
+    testing-other-systems
     api
     extending-locust
     changelog
