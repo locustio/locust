@@ -1,6 +1,6 @@
 import unittest
 
-from locust.core import HttpLocust, Locust
+from locust.core import HttpLocust, Locust, TaskSet
 from locust import main
 from .testcases import LocustTestCase, WebserverTestCase
 
@@ -11,16 +11,19 @@ class TestTaskSet(LocustTestCase):
         self.assertFalse(main.is_locust(("random_dict", {})))
         self.assertFalse(main.is_locust(("random_list", [])))
         
-        class MyHttpLocust(HttpLocust):
+        class MyTaskSet(TaskSet):
             pass
         
+        class MyHttpLocust(HttpLocust):
+            task_set = MyTaskSet
+        
         class MyLocust(Locust):
-            pass
+            task_set = MyTaskSet
         
         self.assertTrue(main.is_locust(("MyHttpLocust", MyHttpLocust)))
         self.assertTrue(main.is_locust(("MyLocust", MyLocust)))
         
         class ThriftLocust(Locust):
-            abstract = True
+            pass
         
         self.assertFalse(main.is_locust(("ThriftLocust", ThriftLocust)))

@@ -82,12 +82,6 @@ class Locust(object):
     weight = 10
     """Probability of locust being chosen. The higher the weight, the greater is the chance of it being chosen."""
     
-    abstract = True
-    """
-    If set to True, this Locust class should be a base class, that other Locust classes 
-    inherits from, and can not be run by itself
-    """
-    
     _catch_exceptions = False
     
     def __init__(self):
@@ -121,12 +115,6 @@ class HttpLocust(Locust):
     """
     Instance of HttpSession that is created upon instantiation of Locust. 
     The client support cookies, and therefore keeps the session between HTTP requests.
-    """
-    
-    abstract = True
-    """
-    If set to True, this Locust class should be a base class, that other Locust classes 
-    inherits from, and can not be run by itself
     """
     
     def __init__(self):

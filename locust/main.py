@@ -281,10 +281,11 @@ def is_locust(tup):
     Takes (name, object) tuple, returns True if it's a public Locust subclass.
     """
     name, item = tup
-    return (
+    return bool(
         inspect.isclass(item)
         and issubclass(item, Locust)
-        and "abstract" not in item.__dict__
+        and hasattr(item, "task_set")
+        and getattr(item, "task_set")
         and not name.startswith('_')
     )
 
