@@ -35,16 +35,17 @@ Anyone who uses the :py:class:`report_to_master <locust.events.report_to_master>
 :py:class:`slave_report <locust.events.slave_report>` events, needs to make sure that 
 any data that is attached to the slave reports is serializable by msgpack.
 
-requests updated to version 1.2
+requests updated to version 2.2
 -------------------------------
 
 Locust updated `requests <http://python-requests.org/>`_ to the latest major release.
 
 .. note::
 
-   Requests 1.0 introduced some major API changes. Please check if you
+   Requests 1.0 introduced some major API changes (and 2.0 just a few). Please check if you
    are using any internal features and check the documentation:
-   `Migrating to 1.x <http://docs.python-requests.org/en/latest/api/#migrating-to-1-x>`_
+   `Migrating to 1.x <http://docs.python-requests.org/en/latest/api/#migrating-to-1-x>`_ and
+   `Migrationg to 2.x <http://docs.python-requests.org/en/latest/api/#migrating-to-2-x>`_
 
 gevent updated to version 1.0
 -------------------------------
