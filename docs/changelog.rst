@@ -11,7 +11,8 @@ HTTP client functionality moved to HttpLocust
 Previously, the Locust class instantiated a :py:class:`HttpSession <locust.clients.HttpSession>` 
 under the client attribute that was used to make HTTP requests. This funcionality has 
 now been moved into the :py:class:`HttpLocust <locust.core.HttpLocust>` class, in an 
-effort to make it more obvious how one can use Locust to loadtest non-HTTP systems.
+effort to make it more obvious how one can use Locust to 
+:doc:`load test non-HTTP systems <testing-other-systems>`.
 
 To make existing locust scripts compatible with the new version you should make your 
 locust classes inherit from HttpLocust instead of the base Locust class.
@@ -110,6 +111,7 @@ Other changes
 * Minor styling of the statistics table in the web-ui.
 * Added options to specify host and ports in distributed mode using --master-host, --master-port for the slaves, --master-bind-host, --master-bind-port for the master.
 * Removed previously deprecated and obsolete classes WebLocust and SubLocust.
+* Fixed so that also failed requests count, when specifying a maximum number of requests on the command line
 
 
 0.6.2
