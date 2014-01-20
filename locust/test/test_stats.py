@@ -193,6 +193,41 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         finally:
             global_stats.clear_all()
             global_stats.max_requests = None
+    
+    def test_max_requests_failed_requests(self):
+        class MyTaskSet(TaskSet):
+            @task
+            def my_task(self):
+                self.client.get("/ultra_fast")
+                self.client.get("/fail")
+                self.client.get("/fail")
+            
+        class MyLocust(HttpLocust):
+            host = "http://127.0.0.1:%i" % self.port
+            task_set = MyTaskSet
+            min_wait = 1
+            max_wait = 1
+            
+        try:
+            from locust.exception import StopLocust
+            global_stats.clear_all()
+            global_stats.max_requests = 3
+            
+            l = MyLocust()
+            self.assertRaises(StopLocust, lambda: l.task_set(l).run())
+            self.assertEqual(1, global_stats.num_requests)
+            self.assertEqual(2, global_stats.num_failures)
+            
+            global_stats.clear_all()
+            global_stats.max_requests = 2
+            self.assertEqual(0, global_stats.num_requests)
+            self.assertEqual(0, global_stats.num_failures)
+            l.run()
+            self.assertEqual(1, global_stats.num_requests)
+            self.assertEqual(1, global_stats.num_failures)
+        finally:
+            global_stats.clear_all()
+            global_stats.max_requests = None
 
 
 class MyTaskSet(TaskSet):
