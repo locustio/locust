@@ -3,7 +3,6 @@ import gevent
 import gevent.pywsgi
 import random
 import unittest
-from unittest.util import safe_repr
 from copy import copy
 from StringIO import StringIO
 
@@ -93,6 +92,17 @@ class LocustTestCase(unittest.TestCase):
         Just like self.assertTrue(a in b), but with a nicer default message.
         Implemented here to work with Python 2.6
         """
+        
+        _MAX_LENGTH = 80
+        def safe_repr(obj, short=False):
+            try:
+                result = repr(obj)
+            except Exception:
+                result = object.__repr__(obj)
+            if not short or len(result) < _MAX_LENGTH:
+                return result
+            return result[:_MAX_LENGTH] + ' [truncated]...'
+        
         if member not in container:
             standardMsg = '%s not found in %s' % (safe_repr(member),
                                                   safe_repr(container))
