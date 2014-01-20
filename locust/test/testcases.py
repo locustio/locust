@@ -3,6 +3,7 @@ import gevent
 import gevent.pywsgi
 import random
 import unittest
+from unittest.util import safe_repr
 from copy import copy
 from StringIO import StringIO
 
@@ -86,6 +87,16 @@ class LocustTestCase(unittest.TestCase):
     def tearDown(self):
         for event, handlers in self._event_handlers.iteritems():
             event._handlers = handlers
+    
+    def assertIn(self, member, container, msg=None):
+        """
+        Just like self.assertTrue(a in b), but with a nicer default message.
+        Implemented here to work with Python 2.6
+        """
+        if member not in container:
+            standardMsg = '%s not found in %s' % (safe_repr(member),
+                                                  safe_repr(container))
+            self.fail(self._formatMessage(msg, standardMsg))
 
             
 class WebserverTestCase(LocustTestCase):
