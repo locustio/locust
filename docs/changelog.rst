@@ -2,8 +2,8 @@
 Changelog
 ##########
 
-0.7 (In GIT repo, Not yet released)
-===================================
+0.7
+===
 
 HTTP client functionality moved to HttpLocust
 ---------------------------------------------
