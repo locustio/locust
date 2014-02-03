@@ -43,6 +43,25 @@ With the following locustfile, each user would wait between 5 and 15 seconds bet
 
 The *min_wait* and *max_wait* attributes can also be overrided in a TaskSet class.
 
+The *weight* attribute
+----------------------
+
+You can run two locusts from the same file like so::
+
+    locust -f locust_file.py WebUserLocust MobileUserLocust
+
+If you wish to make one of these locusts execute more often you can set a weight attribute on those
+classes. Say for example, web users are three times more likely than mobile users::
+
+    class WebUserLocust(Locust):
+        weight = 3
+        ....
+
+    class MobileUserLocust(Locust):
+        weight = 1
+        ....
+
+
 The *host* attribute
 --------------------
 
