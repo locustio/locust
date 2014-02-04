@@ -349,3 +349,18 @@ be reported as a success in the statistics::
     with client.get("/does_not_exist/", catch_response=True) as response:
         if response.status_code == 404:
             response.success()
+
+
+Grouping requests to URLs with dynamic parameters
+-------------------------------------------------
+
+It's very common for websites to have pages whose URLs contain some kind of dynamic parameter(s). 
+Often it makes sense to group these URL's together in Locust's statistics. This can be done 
+by passing a *name* argument to the :py:class:`HttpSession's <locust.clients.HttpSession>` 
+different reqeust methods. 
+
+Example::
+
+    # Statistics for these requests will be grouped under: /blog/?id=[id]
+    for i in range(10):
+        client.get("/blog?id=%i" % i, name="/blog?id=[id]")
