@@ -2,6 +2,9 @@
 Quick start
 =============
 
+Example locustfile.py
+=====================
+
 Below is a quick little example of a simple **locustfile.py**::
 
     from locust import HttpLocust, TaskSet
@@ -67,6 +70,10 @@ The Locust class (as well as HttpLocust, since it's a subclass) also allows one 
 and maximum wait time - per simulated user - between the execution of tasks (*min_wait* and *max_wait*) 
 as well as other user behaviours.
 
+
+Start Locust
+============
+
 To run Locust with the above locust file, if it was named *locustfile.py*, we could run 
 (in the same directory as locustfile.py)::
 
@@ -96,3 +103,12 @@ host defaults to 127.0.0.1)::
     
         locust --help
     
+
+Open up Locust's web interface
+==============================
+
+Once you've started Locust using one of the above command lines, you should open up a browser 
+and point it to http://127.0.0.1:8089 (if your're running Locust locally). Then you should be 
+greeted with somehting like this:
+
+.. image:: images/webui-splash-screenshot.png
