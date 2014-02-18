@@ -40,6 +40,13 @@ gevent (0.13) and greenlet and then follow the above instructions.
 You can find an unofficial collection of pre built python packages for windows here: 
 `http://www.lfd.uci.edu/~gohlke/pythonlibs/ <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_
 
+.. note::
+
+    Running Locust on Windows should work fine for developing and testing your load testing 
+    scripts. However, when running large scale tests, it's recommended that you do that on 
+    Linux machines, since gevent's performance under Windows is poor.
+
+
 Installing Locust on OS X
 ----------------------------
 
