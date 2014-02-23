@@ -109,6 +109,6 @@ Open up Locust's web interface
 
 Once you've started Locust using one of the above command lines, you should open up a browser 
 and point it to http://127.0.0.1:8089 (if your're running Locust locally). Then you should be 
-greeted with somehting like this:
+greeted with something like this:
 
 .. image:: images/webui-splash-screenshot.png
