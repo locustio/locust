@@ -249,6 +249,10 @@ class MasterLocustRunner(DistributedLocustRunner):
         
         # listener that gathers info on how many locust users the slaves has spawned
         def on_slave_report(client_id, data):
+            if client_id not in self.clients:
+                logger.info("Discarded report from unrecognized slave %s", client_id)
+                return
+
             self.clients[client_id].user_count = data["user_count"]
         events.slave_report += on_slave_report
         
