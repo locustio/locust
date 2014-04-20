@@ -1,11 +1,14 @@
 import unittest
 
 import gevent
+import mock
+
 from gevent.queue import Queue
 from gevent import sleep
 
 from locust.runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner
 from locust.core import Locust, task, TaskSet
+from locust.exception import LocustError
 from locust.rpc import Message
 from locust.stats import RequestStats, global_stats
 from locust.main import parse_options
@@ -186,6 +189,50 @@ class TestMasterRunner(LocustTestCase):
         self.assertRaises(HeyAnException, l.run)
         self.assertEqual(1, len(runner.exceptions))
         
+        hash_key, exception = runner.exceptions.popitem()
+        self.assertTrue("traceback" in exception)
+        self.assertTrue("HeyAnException" in exception["traceback"])
+        self.assertEqual(2, exception["count"])
+    
+    def test_exception_is_catched(self):
+        """ Test that exceptions are stored, and execution continues """
+        class HeyAnException(Exception):
+            pass
+        
+        class MyTaskSet(TaskSet):
+            def __init__(self, *a, **kw):
+                super(MyTaskSet, self).__init__(*a, **kw)
+                self._task_queue = [
+                    {"callable":self.will_error, "args":[], "kwargs":{}}, 
+                    {"callable":self.will_stop, "args":[], "kwargs":{}},
+                ]
+            
+            @task(1)
+            def will_error(self):
+                raise HeyAnException(":(")
+            
+            @task(1)
+            def will_stop(self):
+                self.interrupt()
+        
+        class MyLocust(Locust):
+            min_wait = 10
+            max_wait = 10
+            task_set = MyTaskSet
+        
+        runner = LocalLocustRunner([MyLocust], self.options)
+        l = MyLocust()
+        
+        # supress stderr
+        with mock.patch("sys.stderr") as mocked:
+            l.task_set._task_queue = [l.task_set.will_error, l.task_set.will_stop]
+            self.assertRaises(LocustError, l.run) # make sure HeyAnException isn't raised
+            l.task_set._task_queue = [l.task_set.will_error, l.task_set.will_stop]
+            self.assertRaises(LocustError, l.run) # make sure HeyAnException isn't raised
+        self.assertEqual(2, len(mocked.method_calls))
+        
+        # make sure exception was stored
+        self.assertEqual(1, len(runner.exceptions))
         hash_key, exception = runner.exceptions.popitem()
         self.assertTrue("traceback" in exception)
         self.assertTrue("HeyAnException" in exception["traceback"])

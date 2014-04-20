@@ -92,7 +92,7 @@ class Locust(object):
     """Probability of locust being chosen. The higher the weight, the greater is the chance of it being chosen."""
         
     client = NoClientWarningRaiser()
-    _catch_exceptions = False
+    _catch_exceptions = True
     
     def __init__(self):
         super(Locust, self).__init__()
