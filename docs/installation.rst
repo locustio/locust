@@ -52,7 +52,7 @@ Installing Locust on OS X
 
 The following is currently the shortest path to installing gevent on OS X using Homebrew.
 
-#. Install [Homebrew](http://mxcl.github.com/homebrew/).
+#. Install `Homebrew <http://mxcl.github.com/homebrew/>`_.
 #. Install libevent (dependency for gevent)::
 
     brew install libevent
