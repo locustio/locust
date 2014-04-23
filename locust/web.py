@@ -9,8 +9,9 @@ from collections import defaultdict
 from gevent import wsgi
 from flask import Flask, make_response, request, render_template
 
-import runners
-from runners import MasterLocustRunner
+from . import runners
+from .cache import memoize
+from .runners import MasterLocustRunner
 from locust.stats import median_from_dict
 from locust import version
 import gevent
@@ -24,7 +25,6 @@ app = Flask(__name__)
 app.debug = True
 app.root_path = os.path.dirname(os.path.abspath(__file__))
 
-_request_stats_context_cache = {}
 
 @app.route('/')
 def index():
@@ -132,56 +132,45 @@ def distribution_stats_csv():
     return response
 
 @app.route('/stats/requests')
+@memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
 def request_stats():
-    global _request_stats_context_cache
+    stats = []
+    for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total")]):
+        stats.append({
+            "method": s.method,
+            "name": s.name,
+            "num_requests": s.num_requests,
+            "num_failures": s.num_failures,
+            "avg_response_time": s.avg_response_time,
+            "min_response_time": s.min_response_time,
+            "max_response_time": s.max_response_time,
+            "current_rps": s.current_rps,
+            "median_response_time": s.median_response_time,
+            "avg_content_length": s.avg_content_length,
+        })
     
-    if not _request_stats_context_cache or _request_stats_context_cache["last_time"] < time() - _request_stats_context_cache.get("cache_time", DEFAULT_CACHE_TIME):
-        cache_time = _request_stats_context_cache.get("cache_time", DEFAULT_CACHE_TIME)
-        now = time()
+    report = {"stats":stats, "errors":[e.to_dict() for e in runners.locust_runner.errors.itervalues()]}
+    if stats:
+        report["total_rps"] = stats[len(stats)-1]["current_rps"]
+        report["fail_ratio"] = runners.locust_runner.stats.aggregated_stats("Total").fail_ratio
         
-        stats = []
-        for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total")]):
-            stats.append({
-                "method": s.method,
-                "name": s.name,
-                "num_requests": s.num_requests,
-                "num_failures": s.num_failures,
-                "avg_response_time": s.avg_response_time,
-                "min_response_time": s.min_response_time,
-                "max_response_time": s.max_response_time,
-                "current_rps": s.current_rps,
-                "median_response_time": s.median_response_time,
-                "avg_content_length": s.avg_content_length,
-            })
+        # since generating a total response times dict with all response times from all
+        # urls is slow, we make a new total response time dict which will consist of one
+        # entry per url with the median response time as key and the number of requests as
+        # value
+        response_times = defaultdict(int) # used for calculating total median
+        for i in xrange(len(stats)-1):
+            response_times[stats[i]["median_response_time"]] += stats[i]["num_requests"]
         
-        report = {"stats":stats, "errors":[e.to_dict() for e in runners.locust_runner.errors.itervalues()]}
-        if stats:
-            report["total_rps"] = stats[len(stats)-1]["current_rps"]
-            report["fail_ratio"] = runners.locust_runner.stats.aggregated_stats("Total").fail_ratio
-            
-            # since generating a total response times dict with all response times from all
-            # urls is slow, we make a new total response time dict which will consist of one
-            # entry per url with the median response time as key and the number of requests as
-            # value
-            response_times = defaultdict(int) # used for calculating total median
-            for i in xrange(len(stats)-1):
-                response_times[stats[i]["median_response_time"]] += stats[i]["num_requests"]
-            
-            # calculate total median
-            stats[len(stats)-1]["median_response_time"] = median_from_dict(stats[len(stats)-1]["num_requests"], response_times)
-        
-        is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
-        if is_distributed:
-            report["slave_count"] = runners.locust_runner.slave_count
-        
-        report["state"] = runners.locust_runner.state
-        report["user_count"] = runners.locust_runner.user_count
-
-        elapsed = time() - now
-        cache_time = max(cache_time, elapsed * 2.0) # Increase cache_time when report generating starts to take longer time
-        _request_stats_context_cache = {"last_time": elapsed - now, "report": report, "cache_time": cache_time}
-    else:
-        report = _request_stats_context_cache["report"]
+        # calculate total median
+        stats[len(stats)-1]["median_response_time"] = median_from_dict(stats[len(stats)-1]["num_requests"], response_times)
+    
+    is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
+    if is_distributed:
+        report["slave_count"] = runners.locust_runner.slave_count
+    
+    report["state"] = runners.locust_runner.state
+    report["user_count"] = runners.locust_runner.user_count
     return json.dumps(report)
 
 @app.route("/exceptions")
