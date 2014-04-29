@@ -187,11 +187,12 @@ a {
     border-top: 1px solid #292f2f;
 }
 .status td, .status th {
-    text-align: right;
     padding: 10px;
     margin: 0;
+    text-align: left;
 }
-.status td.numeric {
+.status td.numeric,
+.status th.numeric {
     text-align: right;
 }
 .status tr.dark {
