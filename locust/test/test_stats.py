@@ -65,6 +65,11 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(self.s.num_failures, 1)
         self.assertEqual(self.s.avg_response_time, 420.5)
         self.assertEqual(self.s.median_response_time, 85)
+    
+    def test_reset_min_response_time(self):
+        self.s.reset()
+        self.s.log(756, 0)
+        self.assertEqual(756, self.s.min_response_time)
 
     def test_aggregation(self):
         s1 = StatsEntry(self.stats, "aggregate me!", "GET")

@@ -126,7 +126,7 @@ class StatsEntry(object):
         self.num_failures = 0
         self.total_response_time = 0
         self.response_times = {}
-        self.min_response_time = 0
+        self.min_response_time = None
         self.max_response_time = 0
         self.last_request_timestamp = int(time.time())
         self.num_reqs_per_sec = {}
