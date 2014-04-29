@@ -2,6 +2,15 @@
 Changelog
 ##########
 
+0.7.1
+=====
+
+* Exceptions that occurs within TaskSets are now catched by default.
+* Fixed bug which caused Min response time to always be 0 after all locusts had been hatched
+  and the statistics had been reset.
+* Minor UI improvements in the web interface.
+
+
 0.7
 ===
 
