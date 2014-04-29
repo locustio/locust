@@ -316,7 +316,7 @@ class StatsEntry(object):
             self.num_requests,
             "%d(%.2f%%)" % (self.num_failures, fail_percent),
             self.avg_response_time,
-            self.min_response_time,
+            self.min_response_time or 0,
             self.max_response_time,
             self.median_response_time or 0,
             self.current_rps or 0
