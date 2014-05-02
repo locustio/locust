@@ -13,13 +13,22 @@ Locust Documentation
     * **Twitter**: `@locustio <http://twitter.com/locustio>`_
 
 
+
 .. toctree ::
-    :maxdepth: 2
+    :maxdepth: 1
     
     what-is-locust
     installation
     quickstart
+
+.. toctree ::
+    :maxdepth: 2
+    
     writing-a-locustfile
+
+.. toctree ::
+    :maxdepth: 1
+    
     testing-other-systems
     api
     extending-locust
