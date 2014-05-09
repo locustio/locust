@@ -4,7 +4,6 @@ from urlparse import urlparse, urlunparse
 
 import requests
 from requests import Response, Request
-from requests.packages.urllib3.response import HTTPResponse
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import (RequestException, MissingSchema,
     InvalidSchema, InvalidURL)
@@ -163,7 +162,6 @@ class HttpSession(requests.Session):
         except RequestException as e:
             r = LocustResponse()
             r.error = e
-            r.raw = HTTPResponse()  # otherwise, tests fail
             r.status_code = 0  # with this status_code, content returns None
             r.request = Request(method, url).prepare() 
             return r
