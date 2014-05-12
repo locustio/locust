@@ -486,6 +486,8 @@ def print_percentile_stats(stats):
     console_logger.info("")
 
 def print_error_report():
+    if not len(global_stats.errors):
+        return
     console_logger.info("Error report")
     console_logger.info(" %-18s %-100s" % ("# occurences", "Error"))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
