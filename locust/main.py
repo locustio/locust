@@ -421,7 +421,7 @@ def main():
         """
         Shut down locust by firing quitting event, printing stats and exiting
         """
-        logger.info("Shutting down, bye..")
+        logger.info("Shutting down (exit code %s), bye." % code)
 
         events.quitting.fire()
         print_stats(runners.locust_runner.request_stats)
@@ -439,7 +439,10 @@ def main():
     try:
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
-        shutdown(0)
+        code = 0
+        if len(runners.locust_runner.errors):
+            code = 1
+        shutdown(code=code)
     except KeyboardInterrupt as e:
         shutdown(0)
 
