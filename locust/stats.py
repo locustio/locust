@@ -562,11 +562,20 @@ def requests_csv():
             '"Max response time"',
             '"Average Content Size"',
             '"Requests/s"',
+            '"50%"',
+            '"66%"',
+            '"75%"',
+            '"80%"',
+            '"90%"',
+            '"95%"',
+            '"98%"',
+            '"99%"',
+            '"100%"',
         ])
     ]
 
     for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
-        rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
+        basic_stats = '"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
             s.method,
             s.name,
             s.num_requests,
@@ -577,7 +586,22 @@ def requests_csv():
             s.max_response_time,
             s.avg_content_length,
             s.total_rps,
-        ))
+        )
+        if s.num_requests:
+            percentile_stats = '%i,%i,%i,%i,%i,%i,%i,%i,%i' % (
+                s.get_response_time_percentile(0.5),
+                s.get_response_time_percentile(0.66),
+                s.get_response_time_percentile(0.75),
+                s.get_response_time_percentile(0.80),
+                s.get_response_time_percentile(0.90),
+                s.get_response_time_percentile(0.95),
+                s.get_response_time_percentile(0.98),
+                s.get_response_time_percentile(0.99),
+                s.max_response_time,
+            )
+        else:
+            percentile_stats = '"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"'
+        rows.append(basic_stats + ',' + percentile_stats)
     return "\n".join(rows)
 
 def distribution_csv():
