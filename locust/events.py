@@ -101,6 +101,7 @@ hatch_starting = EventHook()
 """
 *hatch_starting* is fired before any locust users have spawned
 
+* *client_types*: Dictionary of Locust class that will be created once hatching starts
 """
 
 quitting = EventHook()
