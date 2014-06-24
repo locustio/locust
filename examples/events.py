@@ -49,11 +49,11 @@ def on_report_to_master(client_id, data):
 
 def on_slave_report(client_id, data):
     """
-    This event is triggered on the master isntance when a new stats report arrives
+    This event is triggered on the master instance when a new stats report arrives
     from a slave. Here we just add the content-length to the master's aggregated
     stats dict.
     """
-    stats["content-length"] += stats["content-length"]
+    stats["content-length"] += data["content-length"]
 
 # Hook up the event listeners
 events.request_success += on_request_success

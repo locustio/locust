@@ -29,6 +29,7 @@ Locust Documentation
 .. toctree ::
     :maxdepth: 1
     
+    running-locust-distributed
     testing-other-systems
     api
     extending-locust

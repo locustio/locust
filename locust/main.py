@@ -343,7 +343,7 @@ def main():
 
     locustfile = find_locustfile(options.locustfile)
     if not locustfile:
-        logger.error("Could not find any locustfile! See --help for available options.")
+        logger.error("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.")
         sys.exit(1)
 
     docstring, locusts = load_locustfile(locustfile)
