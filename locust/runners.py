@@ -38,12 +38,16 @@ class LocustRunner(object):
         self.exceptions = {}
         self.stats = global_stats
         
-        # register listener that resets stats when hatching is complete
         def on_hatch_complete(user_count):
             self.state = STATE_RUNNING
-            logger.info("Resetting stats\n")
-            self.stats.reset_all()
+            
+        #def on_hatch_start(user_count):
+            # reset stats when hatching starts since early hatched users could be making
+            # requests before hatching is complete
+        #    logger.info("Resetting stats\n")
+        #    self.stats.reset_all()
         events.hatch_complete += on_hatch_complete
+        #events.hatch_start += on_hatch_start
 
     @property
     def request_stats(self):
@@ -96,6 +100,7 @@ class LocustRunner(object):
             self.num_clients += spawn_count
 
         logger.info("Hatching and swarming %i clients at the rate %g clients/s..." % (spawn_count, self.hatch_rate))
+        #events.hatch_start.fire(user_count=self.num_clients)
         occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
         
         def hatch():
