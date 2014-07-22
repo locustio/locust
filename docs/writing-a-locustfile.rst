@@ -84,7 +84,7 @@ and - if we were loadtesting an auction website - could do stuff like "loading t
 
 When a load test is started, each instance of the spawned Locust classes will start executing their 
 TaskSet. What happens then is that each TaskSet will pick one of it's tasks and call it. It will then 
-wait a number of milliseconds, choosed at random between the Locust class' *min_wait* and *max_wait* attributes 
+wait a number of milliseconds, chosen at random between the Locust class' *min_wait* and *max_wait* attributes 
 (unless min_wait/max_wait has been defined directly under the TaskSet, in which case it will use 
 it's own values instead). Then it will again pick a new task which will be called, then wait again, 
 and so on.
