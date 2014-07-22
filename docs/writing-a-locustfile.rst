@@ -132,11 +132,11 @@ task attribute
 
 Using the @task decorator to declare tasks is a convenience, and usually that's the best way to do 
 it. However, it's also possible to define the tasks of a TaskSet by setting the 
-:py:attr:`tasks <locust.core.TaskSet.tasks>` attribute (actually using the @task decorator will actually 
+:py:attr:`tasks <locust.core.TaskSet.tasks>` attribute (using the @task decorator will actually 
 just populate the *tasks* attribute).
 
 The *tasks* attribute which is either a list of python callables, or a *<callable : int>* dict. 
-The tasks are python callables, that recieves one argument - the TaskSet class instance that is executing 
+The tasks are python callables that recieve one argument - the TaskSet class instance that is executing 
 the task. Here is an extremely simple example of a locustfile (this locsutfile won't actually load test anything)::
 
     from locust import Locust, TaskSet
