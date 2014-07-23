@@ -84,7 +84,7 @@ and - if we were loadtesting an auction website - could do stuff like "loading t
 
 When a load test is started, each instance of the spawned Locust classes will start executing their 
 TaskSet. What happens then is that each TaskSet will pick one of it's tasks and call it. It will then 
-wait a number of milliseconds, choosed at random between the Locust class' *min_wait* and *max_wait* attributes 
+wait a number of milliseconds, chosen at random between the Locust class' *min_wait* and *max_wait* attributes 
 (unless min_wait/max_wait has been defined directly under the TaskSet, in which case it will use 
 it's own values instead). Then it will again pick a new task which will be called, then wait again, 
 and so on.
@@ -132,11 +132,11 @@ task attribute
 
 Using the @task decorator to declare tasks is a convenience, and usually that's the best way to do 
 it. However, it's also possible to define the tasks of a TaskSet by setting the 
-:py:attr:`tasks <locust.core.TaskSet.tasks>` attribute (actually using the @task decorator will actually 
+:py:attr:`tasks <locust.core.TaskSet.tasks>` attribute (using the @task decorator will actually 
 just populate the *tasks* attribute).
 
 The *tasks* attribute which is either a list of python callables, or a *<callable : int>* dict. 
-The tasks are python callables, that recieves one argument - the TaskSet class instance that is executing 
+The tasks are python callables that recieve one argument - the TaskSet class instance that is executing 
 the task. Here is an extremely simple example of a locustfile (this locsutfile won't actually load test anything)::
 
     from locust import Locust, TaskSet

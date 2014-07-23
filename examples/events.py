@@ -26,8 +26,8 @@ class WebsiteUser(HttpLocust):
 """
 We need somewhere to store the stats.
 
-On  the master node stats will contain the aggregated sum of all content-lengths,
-while one the slave nodes this will be the sum of the content-lengths since the 
+On the master node stats will contain the aggregated sum of all content-lengths,
+while on the slave nodes this will be the sum of the content-lengths since the 
 last stats report was sent to the master
 """
 stats = {"content-length":0}
