@@ -39,7 +39,8 @@ def index():
         is_distributed=is_distributed,
         slave_count=slave_count,
         user_count=runners.locust_runner.user_count,
-        version=version
+        version=version,
+        host=runners.locust_runner.locust_classes[0].host
     )
 
 @app.route('/swarm', methods=["POST"])

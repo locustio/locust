@@ -278,3 +278,14 @@ ul.tabs li a.current {
     padding: 30px;
     padding-top: 0px;
 }
+
+.hostname {
+    margin: 5px 10px 15px 5px;
+    float: right
+}
+
+div.hostname > span {
+    font-weight: bold;
+    font-size: 1.2em;
+    color: #77c798;
+}
