@@ -147,6 +147,7 @@ class LocustRunner(object):
             self.stats.clear_all()
             self.stats.start_time = time()
             self.exceptions = {}
+            events.start_hatching.fire()
 
         # Dynamically changing the locust count
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
@@ -177,6 +178,7 @@ class LocustRunner(object):
             self.hatching_greenlet.kill(block=True)
         self.locusts.kill(block=True)
         self.state = STATE_STOPPED
+        events.stop_hatching.fire()
 
     def log_exception(self, node_id, msg, formatted_tb):
         key = hash(formatted_tb)
@@ -198,6 +200,7 @@ class LocalLocustRunner(LocustRunner):
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
         self.hatching_greenlet = gevent.spawn(lambda: super(LocalLocustRunner, self).start_hatching(locust_count, hatch_rate, wait=wait))
         self.greenlet = self.hatching_greenlet
+        events.stop_hatching.fire()
 
 class DistributedLocustRunner(LocustRunner):
     def __init__(self, locust_classes, options):
@@ -285,6 +288,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
             self.exceptions = {}
+            events.start_hatching.fire()
         
         for client in self.clients.itervalues():
             data = {
@@ -307,6 +311,7 @@ class MasterLocustRunner(DistributedLocustRunner):
     def stop(self):
         for client in self.clients.hatching + self.clients.running:
             self.server.send(Message("stop", None, None))
+        events.stop_hatching.fire()
     
     def quit(self):
         for client in self.clients.itervalues():

@@ -101,3 +101,17 @@ quitting = EventHook()
 """
 *quitting* is fired when the locust process in exiting
 """
+
+start_hatching = EventHook()
+"""
+*start_hatching* is fired when we initiate the hatching process.
+
+This event is especially usefull to detect when the 'start' button is clicked on the web ui.
+"""
+
+stop_hatching = EventHook()
+"""
+*stop_hatching* is fired when terminate the hatching process.
+
+This event is especially usefull to detect when the 'stop' button is clicked on the web ui.
+"""
