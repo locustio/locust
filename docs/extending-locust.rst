@@ -28,7 +28,7 @@ Event listeners can be registered at the module level in a locust file. Here's a
 Adding Web Routes
 ==================
 
-Locust uses Flask to serve the web UI and therefor it is easy to add web end-points to the web UI. 
+Locust uses Flask to serve the web UI and therefore it is easy to add web end-points to the web UI. 
 Just import the Flask app in your locustfile and set up a new route::
 
     from locust import web
