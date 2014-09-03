@@ -176,7 +176,7 @@ class TaskSet(object):
     
     TaskTests can be nested, which means that a TaskSet's *tasks* attribute can contain 
     another TaskSet. If the nested TaskSet it scheduled to be executed, it will be 
-    instantiated and called from the current executing TaskSet. Execution in the the
+    instantiated and called from the current executing TaskSet. Execution in the
     currently running TaskSet will then be handed over to the nested TaskSet which will 
     continue to run until it throws an InterruptTaskSet exception, which is done when 
     :py:meth:`TaskSet.interrupt() <locust.core.TaskSet.interrupt>` is called. (execution 

@@ -315,7 +315,7 @@ Smaller API Changes
   the current way of writing Locust tests, where tasks are either methods under a Locust class or SubLocust 
   classes containing task methods.
 * Changed signature of :func:`locust.core.Locust.schedule_task`. Previously all extra arguments that
-  was given to the method was passed on to the the task when it was called. It no longer accepts extra arguments. 
+  was given to the method was passed on to the task when it was called. It no longer accepts extra arguments.
   Instead, it takes an *args* argument (list) and a *kwargs* argument (dict) which are be passed to the task when 
   it's called.
 * Arguments for :py:class:`request_success <locust.events.request_success>` event hook has been changed. 
