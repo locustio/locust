@@ -405,6 +405,10 @@ def main():
             main_greenlet = runners.locust_runner.greenlet
     elif options.master:
         runners.locust_runner = MasterLocustRunner(locust_classes, options)
+        #DEBUG(pepe)
+        from monitor import start
+        start(runners.locust_runner)
+        
     elif options.slave:
         try:
             runners.locust_runner = SlaveLocustRunner(locust_classes, options)
