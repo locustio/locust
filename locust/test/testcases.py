@@ -8,7 +8,7 @@ from StringIO import StringIO
 
 from locust import events
 from locust.stats import global_stats
-from flask import Flask, request, redirect, make_response, send_file
+from flask import Flask, request, redirect, make_response, send_file, Response, stream_with_context
 
 app = Flask(__name__)
 
@@ -69,6 +69,17 @@ def no_content_length():
 @app.errorhandler(404)
 def not_found(error):
     return "Not Found", 404
+
+@app.route("/streaming/<int:iterations>")
+def streaming_response(iterations):
+    import time
+    def generate():
+        yield "<html><body><h1>streaming response</h1>"
+        for i in range(iterations):
+            yield "<span>%s</span>\n" % i
+            time.sleep(0.01)
+        yield "</body></html>"
+    return Response(stream_with_context(generate()), mimetype="text/html")
 
 
 class LocustTestCase(unittest.TestCase):
