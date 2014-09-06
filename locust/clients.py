@@ -115,7 +115,7 @@ class HttpSession(requests.Session):
         response = self._send_request_safe_mode(method, url, **kwargs)
         
         request_meta["method"] = response.request.method
-        request_meta["name"] = name or response.request.path_url 
+        request_meta["name"] = name or (response.history and response.history[0] or response).request.path_url
 
         # record the consumed time
         request_meta["response_time"] = timedelta_to_ms(response.elapsed) 

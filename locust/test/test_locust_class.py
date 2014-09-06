@@ -432,6 +432,18 @@ class TestWebLocustClass(WebserverTestCase):
         self.assertRaises(LocustError, lambda: my_locust.client.get("/"))
         my_taskset = MyTaskSet(my_locust)
         self.assertRaises(LocustError, lambda: my_taskset.client.get("/"))
+    
+    def test_redirect_url_original_path_as_name(self):
+        class MyLocust(HttpLocust):
+            host = "http://127.0.0.1:%i" % self.port
+
+        l = MyLocust()
+        l.client.get("/redirect")
+        
+        from locust.stats import global_stats
+        self.assertEqual(1, len(global_stats.entries))
+        self.assertEqual(1, global_stats.get("/redirect", "GET").num_requests)
+        self.assertEqual(0, global_stats.get("/ultra_fast", "GET").num_requests)
 
 
 class TestCatchResponse(WebserverTestCase):
