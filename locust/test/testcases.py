@@ -10,6 +10,23 @@ from locust import events
 from locust.stats import global_stats
 from flask import Flask, request, redirect, make_response, send_file, Response, stream_with_context
 
+
+def safe_repr(obj, short=False):
+    """
+    Function from python 2.7's unittest.util. Used in methods that is copied 
+    from 2.7's unittest.TestCase to work in python 2.6.
+    """
+    _MAX_LENGTH = 80
+    try:
+        result = repr(obj)
+    except Exception:
+        result = object.__repr__(obj)
+    if not short or len(result) < _MAX_LENGTH:
+        return result
+    return result[:_MAX_LENGTH] + ' [truncated]...'
+
+
+
 app = Flask(__name__)
 
 @app.route("/ultra_fast")
@@ -103,20 +120,33 @@ class LocustTestCase(unittest.TestCase):
         Just like self.assertTrue(a in b), but with a nicer default message.
         Implemented here to work with Python 2.6
         """
-        
-        _MAX_LENGTH = 80
-        def safe_repr(obj, short=False):
-            try:
-                result = repr(obj)
-            except Exception:
-                result = object.__repr__(obj)
-            if not short or len(result) < _MAX_LENGTH:
-                return result
-            return result[:_MAX_LENGTH] + ' [truncated]...'
-        
         if member not in container:
             standardMsg = '%s not found in %s' % (safe_repr(member),
                                                   safe_repr(container))
+            self.fail(self._formatMessage(msg, standardMsg))
+    
+    def assertLess(self, a, b, msg=None):
+        """Just like self.assertTrue(a < b), but with a nicer default message."""
+        if not a < b:
+            standardMsg = '%s not less than %s' % (safe_repr(a), safe_repr(b))
+            self.fail(self._formatMessage(msg, standardMsg))
+
+    def assertLessEqual(self, a, b, msg=None):
+        """Just like self.assertTrue(a <= b), but with a nicer default message."""
+        if not a <= b:
+            standardMsg = '%s not less than or equal to %s' % (safe_repr(a), safe_repr(b))
+            self.fail(self._formatMessage(msg, standardMsg))
+
+    def assertGreater(self, a, b, msg=None):
+        """Just like self.assertTrue(a > b), but with a nicer default message."""
+        if not a > b:
+            standardMsg = '%s not greater than %s' % (safe_repr(a), safe_repr(b))
+            self.fail(self._formatMessage(msg, standardMsg))
+
+    def assertGreaterEqual(self, a, b, msg=None):
+        """Just like self.assertTrue(a >= b), but with a nicer default message."""
+        if not a >= b:
+            standardMsg = '%s not greater than or equal to %s' % (safe_repr(a), safe_repr(b))
             self.fail(self._formatMessage(msg, standardMsg))
 
             
