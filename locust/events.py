@@ -102,16 +102,26 @@ quitting = EventHook()
 *quitting* is fired when the locust process in exiting
 """
 
-start_hatching = EventHook()
+master_start_hatching = EventHook()
 """
-*start_hatching* is fired when we initiate the hatching process.
+*master_start_hatching* is fired when we initiate the hatching process on the master.
 
 This event is especially usefull to detect when the 'start' button is clicked on the web ui.
 """
 
-stop_hatching = EventHook()
+master_stop_hatching = EventHook()
 """
-*stop_hatching* is fired when terminate the hatching process.
+*master_stop_hatching* is fired when terminate the hatching process on the master.
 
 This event is especially usefull to detect when the 'stop' button is clicked on the web ui.
+"""
+
+locust_start_hatching = EventHook()
+"""
+*locust_start_hatching* is fired when we initiate the hatching process on any locust worker.
+"""
+
+master_stop_hatching = EventHook()
+"""
+*locust_stop_hatching* is fired when terminate the hatching process on any locust worker.
 """
