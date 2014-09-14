@@ -49,3 +49,12 @@ class TestHttpSession(WebserverTestCase):
         
         # download the content of the streaming response (so we don't get an ugly exception in the log)
         _ = r.content
+    
+    def test_slow_redirect(self):
+        s = HttpSession("http://127.0.0.1:%i" % self.port)
+        url = "/redirect?url=/redirect?delay=0.5"
+        r = s.get(url)
+        stats = global_stats.get(url, method="GET")
+        self.assertEqual(1, stats.num_requests)
+        self.assertGreater(stats.avg_response_time, 500)
+    

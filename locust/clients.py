@@ -123,7 +123,11 @@ class HttpSession(requests.Session):
         request_meta["name"] = name or (response.history and response.history[0] or response).request.path_url
 
         # record the consumed time
-        request_meta["response_time"] = timedelta_to_ms(response.elapsed) 
+        elapsed = timedelta_to_ms(response.elapsed)
+        if response.history:
+            # sum up response time for each request if there were redirects
+            elapsed += sum([timedelta_to_ms(r.elapsed) for r in response.history])
+        request_meta["response_time"] = elapsed
         
         # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body

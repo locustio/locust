@@ -40,7 +40,11 @@ def fast():
 
 @app.route("/slow")
 def slow():
-    gevent.sleep(random.choice([0.5, 1, 1.5]))
+    delay = request.args.get("delay")
+    if delay:
+        gevent.sleep(float(delay))
+    else:
+        gevent.sleep(random.choice([0.5, 1, 1.5]))
     return "This is a slow response"
 
 @app.route("/consistent")
@@ -67,7 +71,11 @@ def failed_request():
 
 @app.route("/redirect")
 def do_redirect():
-    return redirect("/ultra_fast")
+    delay = request.args.get("delay")
+    if delay:
+        gevent.sleep(float(delay))
+    url = request.args.get("url", "/ultra_fast")
+    return redirect(url)
 
 @app.route("/basic_auth")
 def basic_auth():
