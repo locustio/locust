@@ -1,5 +1,6 @@
 import re
 import time
+from datetime import timedelta
 from urlparse import urlparse, urlunparse
 
 import requests
@@ -14,9 +15,13 @@ from exception import CatchResponseError, ResponseError
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
 
-def timedelta_to_ms(td):
-    "python 2.7 has a total_seconds method for timedelta objects. This is here for py<2.7 compat."
-    return int((td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**3) 
+if hasattr(timedelta, "total_seconds"):
+    def timedelta_to_ms(td):
+        return int(td.total_seconds() * 1000)
+else:
+    def timedelta_to_ms(td):
+        "python 2.7 has a total_seconds method for timedelta objects. This is here for py<2.7 compat."
+        return int((td.microseconds + (td.seconds + td.days * 24 * 3600) * 1000000) / 1000) 
 
 
 class LocustResponse(Response):
