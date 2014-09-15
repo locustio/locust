@@ -44,7 +44,7 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
-    install_requires=["gevent==1.0", "flask>=0.8", "requests>=2.2", "msgpack-python==0.3.0"],
+    install_requires=["gevent>=1.0.1", "flask>=0.10.1", "requests>=2.4.1", "msgpack-python>=0.4.2"],
     tests_require=['unittest2', 'mock', 'pyzmq'],
     entry_points={
         'console_scripts': [
