@@ -9,7 +9,10 @@ In development
   URL that was requested is now used as the name for that entry in the statistics (unless 
   an explicit override is specified through the *name* argument). Previously, the last 
   URL in the redirect chain was used to label the request(s) in the statistics.
-
+* Fixed bug which caused only the time of the last request in a redirect chain to be 
+  included in the reported time.
+* Fixed bug which caused the download time of the request body not to be included in the 
+  reported response time. 
 
 
 0.7.1

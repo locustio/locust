@@ -15,15 +15,6 @@ from exception import CatchResponseError, ResponseError
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
 
-if hasattr(timedelta, "total_seconds"):
-    def timedelta_to_ms(td):
-        return int(td.total_seconds() * 1000)
-else:
-    def timedelta_to_ms(td):
-        "python 2.7 has a total_seconds method for timedelta objects. This is here for py<2.7 compat."
-        return int((td.microseconds + (td.seconds + td.days * 24 * 3600) * 1000000) / 1000) 
-
-
 class LocustResponse(Response):
 
     def raise_for_status(self):
@@ -119,15 +110,11 @@ class HttpSession(requests.Session):
         
         response = self._send_request_safe_mode(method, url, **kwargs)
         
+        # record the consumed time
+        request_meta["response_time"] = int((time.time() - request_meta["start_time"]) * 1000)
+        
         request_meta["method"] = response.request.method
         request_meta["name"] = name or (response.history and response.history[0] or response).request.path_url
-
-        # record the consumed time
-        elapsed = timedelta_to_ms(response.elapsed)
-        if response.history:
-            # sum up response time for each request if there were redirects
-            elapsed += sum([timedelta_to_ms(r.elapsed) for r in response.history])
-        request_meta["response_time"] = elapsed
         
         # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body
