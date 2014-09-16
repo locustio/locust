@@ -46,7 +46,7 @@ class Monitor(object):
                     crt = float(s['total_response_time'] / nr)
                 crps = master_locust.stats.aggregated_stats().current_rps  # current requests per/sec
 
-                logger.info("%s,%s,%s,%s,%s,%s", time.strftime("%H:%M:%S"), nl, nr, nf, crt, crps)
+                self.logger.info("%s,%s,%s,%s,%s,%s", time.strftime("%H:%M:%S"), nl, nr, nf, crt, crps)
         
             gevent.sleep(self.sleep)
 
