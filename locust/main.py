@@ -344,6 +344,19 @@ def load_locustfile(path):
 def main():
     parser, options, arguments = parse_options()
 
+    def shutdown(code=0):
+        """
+        Shut down locust by firing quitting event, printing stats and exiting
+        """
+        logger.info("Shutting down (exit code %s), bye." % code)
+
+        events.quitting.fire()
+        print_stats(runners.locust_runner.request_stats)
+        print_percentile_stats(runners.locust_runner.request_stats)
+
+        print_error_report()
+        sys.exit(code)
+
     # setup logging
     setup_logging(options.loglevel, options.logfile)
     logger = logging.getLogger(__name__)
@@ -397,7 +410,12 @@ def main():
         }
         console_logger.info(dumps(task_data))
         sys.exit(0)
-    
+
+    # if test duration is set, make sure --no-web is also set
+    if not options.no_web and options.duration:
+        logger.error("Locust can not run a specific test duration with the web interface disabled (do not use --no-web and --duration together)")
+        sys.exit(0)
+
     # if --master is set, make sure --no-web isn't set
     if options.master and options.no_web:
         logger.error("Locust can not run distributed with the web interface disabled (do not use --no-web and --master together)")
@@ -412,6 +430,8 @@ def main():
         runners.locust_runner = LocalLocustRunner(locust_classes, options)
         # spawn client spawning/hatching greenlet
         if options.no_web:
+            if options.duration:
+                Timer(options.duration, shutdown).start()
             runners.locust_runner.start_hatching(wait=True)
             main_greenlet = runners.locust_runner.greenlet
     elif options.master:
@@ -427,24 +447,6 @@ def main():
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
-
-    # if test duration is set, make sure --no-web is also set
-    if not options.no_web and options.duration:
-        logger.error("Locust can not run a specific test duration with the web interface disabled (do not use --no-web and --duration together)")
-        sys.exit(0)
-    
-    def shutdown(code=0):
-        """
-        Shut down locust by firing quitting event, printing stats and exiting
-        """
-        logger.info("Shutting down (exit code %s), bye." % code)
-
-        events.quitting.fire()
-        print_stats(runners.locust_runner.request_stats)
-        print_percentile_stats(runners.locust_runner.request_stats)
-
-        print_error_report()
-        sys.exit(code)
     
     # install SIGTERM handler
     def sig_term_handler():
@@ -454,8 +456,6 @@ def main():
     
     try:
         logger.info("Starting Locust %s" % version)
-        if options.duration:
-            Timer(options.duration, self.shutdown).start()
         main_greenlet.join()
         code = 0
         if len(runners.locust_runner.errors):
