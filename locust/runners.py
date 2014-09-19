@@ -192,10 +192,16 @@ class LocalLocustRunner(LocustRunner):
             formatted_tb = "".join(traceback.format_tb(tb))
             self.log_exception("local", str(exception), formatted_tb)
         events.locust_error += on_locust_error
+        def on_quitting():
+            self.quit()
+        events.quitting += on_quitting
 
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
         self.hatching_greenlet = gevent.spawn(lambda: super(LocalLocustRunner, self).start_hatching(locust_count, hatch_rate, wait=wait))
         self.greenlet = self.hatching_greenlet
+
+    def quit(self):
+        self.greenlet.kill(block=True)
 
 class DistributedLocustRunner(LocustRunner):
     def __init__(self, locust_classes, options):
