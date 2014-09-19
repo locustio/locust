@@ -96,7 +96,6 @@ class LocustRunner(object):
             self.num_clients += spawn_count
 
         logger.info("Hatching and swarming %i clients at the rate %g clients/s..." % (spawn_count, self.hatch_rate))
-        #events.hatch_start.fire(user_count=self.num_clients)
         occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
         
         def hatch():
