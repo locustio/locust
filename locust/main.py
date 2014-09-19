@@ -154,6 +154,16 @@ def parse_options():
         default=None,
         help="Number of requests to perform. Only used together with --no-web"
     )
+
+    # Test duration
+    parser.add_option(
+        '-t', '--duration',
+        action='store',
+        type='int',
+        dest='duration',
+        default=None,
+        help="Time in seconds to run the test. Only used together with --no-web"
+    )
     
     # log level
     parser.add_option(
@@ -417,6 +427,11 @@ def main():
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
+
+    # if test duration is set, make sure --no-web is also set
+    if not options.no_web and options.duration:
+        logger.error("Locust can not run a specific test duration with the web interface disabled (do not use --no-web and --duration together)")
+        sys.exit(0)
     
     def shutdown(code=0):
         """
@@ -439,7 +454,8 @@ def main():
     
     try:
         logger.info("Starting Locust %s" % version)
-        Timer(10000, shutdown).start()
+        if options.duration:
+            Timer(options.duration, self.shutdown).start()
         main_greenlet.join()
         code = 0
         if len(runners.locust_runner.errors):
