@@ -17,6 +17,7 @@ from inspectlocust import print_task_ratio, get_task_ratio_dict
 from core import Locust, HttpLocust
 from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
 import events
+from threading import Timer
 
 _internals = [Locust, HttpLocust]
 version = locust.version
@@ -438,6 +439,7 @@ def main():
     
     try:
         logger.info("Starting Locust %s" % version)
+        Timer(10000, shutdown).start()
         main_greenlet.join()
         code = 0
         if len(runners.locust_runner.errors):
