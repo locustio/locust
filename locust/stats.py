@@ -96,7 +96,7 @@ class StatsEntry(object):
     
     response_times = None
     """
-    A {response_time => count} dict that holds the the response time distribution of all 
+    A {response_time => count} dict that holds the response time distribution of all
     the requests.
     
     The keys (the response time in ms) are rounded to store 1, 2, ... 9, 10, 20. .. 90, 

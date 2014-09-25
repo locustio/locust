@@ -3,6 +3,8 @@ locust.wpr
 locust.egg-info/**
 locustio.egg-info/**
 docs/_build/**
+mock.*.egg
+unittest2-*.egg/
 dist/**
 .idea/**
 *.iml
