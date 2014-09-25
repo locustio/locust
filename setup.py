@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages, Command
 import sys, os
 
-version = '0.7.1'
+version = '0.7.2'
 
 
 class Unit2Discover(Command):
