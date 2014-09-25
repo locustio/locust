@@ -2,9 +2,10 @@
 Changelog
 ##########
 
-In development
-==============
+0.7.2
+=====
 
+* Locust now returns an exit code of 1 when any failed requests were reported.
 * When making an HTTP request to an endpoint that responds with a redirect, the original 
   URL that was requested is now used as the name for that entry in the statistics (unless 
   an explicit override is specified through the *name* argument). Previously, the last 
@@ -13,6 +14,10 @@ In development
   included in the reported time.
 * Fixed bug which caused the download time of the request body not to be included in the 
   reported response time. 
+* Fixed bug that occurred on some linux dists that were tampering with the python-requests 
+  system package (removing dependencies which requests is bundling). This bug only occured 
+  when installing Locust in the python system packages, and not when using virtualenv.
+* Various minor fixes and improvements.
 
 
 0.7.1
@@ -22,6 +27,9 @@ In development
 * Fixed bug which caused Min response time to always be 0 after all locusts had been hatched
   and the statistics had been reset.
 * Minor UI improvements in the web interface.
+* Handle messages from "zombie" slaves by ignoring the message and making a log entry 
+  in the master process.
+
 
 
 0.7
