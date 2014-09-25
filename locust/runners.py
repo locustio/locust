@@ -240,11 +240,6 @@ class MasterLocustRunner(DistributedLocustRunner):
                 return self.get_by_state(STATE_RUNNING)
         
         self.clients = SlaveNodesDict()
-        
-        self.client_stats = {}
-        self.client_errors = {}
-        self._request_stats = {}
-
         self.server = rpc.Server(self.master_bind_host, self.master_bind_port)
         self.greenlet = Group()
         self.greenlet.spawn(self.client_listener).link_exception(callback=self.noop)
@@ -262,9 +257,6 @@ class MasterLocustRunner(DistributedLocustRunner):
         def on_quitting():
             self.quit()
         events.quitting += on_quitting
-    
-    def noop(self, *args, **kwargs):
-        pass
     
     @property
     def user_count(self):
@@ -385,9 +377,6 @@ class SlaveLocustRunner(DistributedLocustRunner):
             formatted_tb = "".join(traceback.format_tb(tb))
             self.client.send(Message("exception", {"msg" : str(exception), "traceback" : formatted_tb}, self.client_id))
         events.locust_error += on_locust_error
-
-    def noop(self, *args, **kwargs):
-        pass
 
     def worker(self):
         while True:
