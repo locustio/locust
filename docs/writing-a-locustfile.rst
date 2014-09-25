@@ -136,8 +136,8 @@ it. However, it's also possible to define the tasks of a TaskSet by setting the
 just populate the *tasks* attribute).
 
 The *tasks* attribute which is either a list of python callables, or a *<callable : int>* dict. 
-The tasks are python callables that recieve one argument - the TaskSet class instance that is executing 
-the task. Here is an extremely simple example of a locustfile (this locsutfile won't actually load test anything)::
+The tasks are python callables that receive one argument - the TaskSet class instance that is executing 
+the task. Here is an extremely simple example of a locustfile (this locustfile won't actually load test anything)::
 
     from locust import Locust, TaskSet
     
