@@ -191,6 +191,13 @@ def parse_options():
        default=False,
        help='Only print the summary stats'
     )
+
+    parser.add_option(
+        '--no-reset-stats',
+        action='store_true',
+        dest='no_reset_stats',
+        default=False,
+        help="Never reset statistics after hatching")
     
     # List locust commands found in loaded locust files/source files
     parser.add_option(
@@ -391,6 +398,11 @@ def main():
     if options.master and options.no_web:
         logger.error("Locust can not run distributed with the web interface disabled (do not use --no-web and --master together)")
         sys.exit(0)
+
+    if options.no_reset_stats:
+        runners.RESET_STATS_AFTER_HATCHING = False
+    if not runners.RESET_STATS_AFTER_HATCHING:
+        logger.info("NOT resetting stats after hatching")
 
     if not options.no_web and not options.slave:
         # spawn web greenlet
