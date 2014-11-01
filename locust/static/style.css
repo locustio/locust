@@ -245,7 +245,7 @@ ul.tabs {
 ul.tabs li {
     display: block;
     float: left;
-    margin-right: 10px;
+    margin-right: 16px;
     font-size: 16px;
 }
 ul.tabs li a.current {
