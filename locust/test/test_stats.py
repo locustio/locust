@@ -159,6 +159,14 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         locust.client.get("/ultra_fast?query=1")
         self.assertEqual(1, global_stats.get("/ultra_fast?query=1", "GET").num_requests)
     
+    def test_request_stats_put(self):
+        class MyLocust(HttpLocust):
+            host = "http://127.0.0.1:%i" % self.port
+    
+        locust = MyLocust()
+        locust.client.put("/put")
+        self.assertEqual(1, global_stats.get("/put", "PUT").num_requests)
+    
     def test_request_connection_error(self):
         class MyLocust(HttpLocust):
             host = "http://localhost:1"
