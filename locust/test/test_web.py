@@ -1,4 +1,8 @@
+import csv
 import json
+import sys
+import traceback
+from StringIO import StringIO
 
 import requests
 import mock
@@ -71,3 +75,24 @@ class TestWebUI(LocustTestCase):
         stats.global_stats.get("/test", "GET").log(120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/distribution/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
+    
+    def test_exceptions_csv(self):
+        try:
+            raise Exception("Test exception")
+        except Exception as e:
+            tb = sys.exc_info()[2]
+            runners.locust_runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
+            runners.locust_runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
+        
+        response = requests.get("http://127.0.0.1:%i/exceptions/csv" % self.web_port)
+        self.assertEqual(200, response.status_code)
+        
+        reader = csv.reader(StringIO(response.content))
+        rows = []
+        for row in reader:
+            rows.append(row)
+        
+        self.assertEqual(2, len(rows))
+        self.assertEqual("Test exception", rows[1][1])
+        self.assertEqual(2, int(rows[1][0]), "Exception count should be 2")
+        

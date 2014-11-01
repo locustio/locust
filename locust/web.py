@@ -1,10 +1,12 @@
 # encoding: utf-8
 
+import csv
 import json
 import os.path
 from time import time
 from itertools import chain
 from collections import defaultdict
+from StringIO import StringIO
 
 from gevent import wsgi
 from flask import Flask, make_response, request, render_template
@@ -176,6 +178,23 @@ def request_stats():
 def exceptions():
     response = make_response(json.dumps({'exceptions': [{"count": row["count"], "msg": row["msg"], "traceback": row["traceback"], "nodes" : ", ".join(row["nodes"])} for row in runners.locust_runner.exceptions.itervalues()]}))
     response.headers["Content-type"] = "application/json"
+    return response
+
+@app.route("/exceptions/csv")
+def exceptions_csv():
+    data = StringIO()
+    writer = csv.writer(data)
+    writer.writerow(["Count", "Message", "Traceback", "Nodes"])
+    for exc in runners.locust_runner.exceptions.itervalues():
+        nodes = ", ".join(exc["nodes"])
+        writer.writerow([exc["count"], exc["msg"], exc["traceback"], nodes])
+    
+    data.seek(0)
+    response = make_response(data.read())
+    file_name = "exceptions_{0}.csv".format(time())
+    disposition = "attachment;filename={0}".format(file_name)
+    response.headers["Content-type"] = "text/csv"
+    response.headers["Content-disposition"] = disposition
     return response
 
 def start(locust, options):
