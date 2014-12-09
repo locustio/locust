@@ -127,7 +127,7 @@ the following example *task2* will be executed twice as much as *task1*::
         task_set = MyTaskSet
 
 
-task attribute
+tasks attribute
 --------------
 
 Using the @task decorator to declare tasks is a convenience, and usually that's the best way to do 

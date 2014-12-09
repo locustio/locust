@@ -63,7 +63,7 @@ will use both port 5557 and 5558.
 ------------------------------
 
 Optionally used together with ``--master``. Determines what network interface that the master node 
-will bind to. Defaults to * (all available inrefaces).
+will bind to. Defaults to * (all available interfaces).
 
 ``--master-bind-port=5557``
 ------------------------------
