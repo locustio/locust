@@ -474,10 +474,11 @@ def print_json(stats):
     }, sort_keys=True, indent=4, separators=(',', ': '))
 
     console_logger.info(stats)
-    file = open("results.json", "w")
-    file.write(stats)
-    file.close()
-
+    try:
+        with open("results.json", "w") as outfile:
+            outfile.write(stats)
+    except IOError as e:
+        console_logger.info('Failed to create results file - ' + str(e))
 
 def print_stats(stats):
     console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s'))
