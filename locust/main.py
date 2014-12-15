@@ -12,7 +12,7 @@ from optparse import OptionParser
 
 import web
 from log import setup_logging, console_logger
-from stats import stats_printer, print_percentile_stats, print_error_report, print_stats
+from stats import stats_printer, print_percentile_stats, print_error_report, print_stats, print_json
 from inspectlocust import print_task_ratio, get_task_ratio_dict
 from core import Locust, HttpLocust
 from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
@@ -229,6 +229,15 @@ def parse_options():
         help="print json data of the locust classes' task execution ratio"
     )
     
+    # if we should print stats in the console
+    parser.add_option(
+        '--print-json',
+        action='store_true',
+        dest='print_json',
+        default=False,
+        help="Print stats as JSON"
+    )
+
     # Version number (optparse gives you --version but we have to do it
     # ourselves to get -V too. sigh)
     parser.add_option(
@@ -354,6 +363,9 @@ def main():
         print_stats(runners.locust_runner.request_stats)
         print_percentile_stats(runners.locust_runner.request_stats)
 
+        if options.print_json:
+            print_json(runners.locust_runner.request_stats)
+        
         print_error_report()
         sys.exit(code)
 
