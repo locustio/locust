@@ -16,6 +16,8 @@ from stats import global_stats
 
 from rpc import rpc, Message
 
+import sys
+
 logger = logging.getLogger(__name__)
 
 # global locust runner singleton
@@ -41,8 +43,8 @@ class LocustRunner(object):
         # register listener that resets stats when hatching is complete
         def on_hatch_complete(user_count):
             self.state = STATE_RUNNING
-            logger.info("Resetting stats\n")
-            self.stats.reset_all()
+            # logger.info("Resetting stats\n")
+            # self.stats.reset_all()
         events.hatch_complete += on_hatch_complete
 
     @property
@@ -195,7 +197,11 @@ class LocalLocustRunner(LocustRunner):
             self.log_exception("local", str(exception), formatted_tb)
         events.locust_error += on_locust_error
         def on_quitting():
-            self.quit()
+            try:
+                self.quit()
+            except:
+                logger.info('Duration expired, exiting thread')
+                sys.exit(0)
         events.quitting += on_quitting
 
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):

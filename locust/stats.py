@@ -1,6 +1,7 @@
 import time
 import gevent
 import hashlib
+import json
 
 import events
 from exception import StopLocust
@@ -197,7 +198,8 @@ class StatsEntry(object):
     @property
     def avg_response_time(self):
         try:
-            return float(self.total_response_time) / self.num_requests
+            # total_response_time as float or int?
+            return self.total_response_time / self.num_requests
         except ZeroDivisionError:
             return 0
 
@@ -274,9 +276,12 @@ class StatsEntry(object):
             "total_response_time": self.total_response_time,
             "max_response_time": self.max_response_time,
             "min_response_time": self.min_response_time,
+            "avg_response_time": self.avg_response_time,
+            "median_response_time": self.median_response_time,
             "total_content_length": self.total_content_length,
-            "response_times": self.response_times,
-            "num_reqs_per_sec": self.num_reqs_per_sec,
+            "avg_rps": self.current_rps
+            # "response_times": self.response_times,
+            # "num_reqs_per_sec": self.num_reqs_per_sec,
         }
     
     @classmethod
@@ -447,6 +452,33 @@ events.request_failure += on_request_failure
 events.report_to_master += on_report_to_master
 events.slave_report += on_slave_report
 
+# Output results to console and results.json file in JSON format
+def print_json(stats):
+    total_rps = 0
+    total_reqs = 0
+    total_failures = 0
+    requests = []
+
+    for key in sorted(stats.iterkeys()):
+        r = stats[key]
+        total_rps += r.current_rps
+        total_reqs += r.num_requests
+        total_failures += r.num_failures
+        requests.append(r.serialize())
+
+    stats = json.dumps({
+        "total_rps": total_rps,
+        "total_reqs": total_reqs,
+        "total_failures": total_failures,
+        "requests": requests
+    }, sort_keys=True, indent=4, separators=(',', ': '))
+
+    console_logger.info(stats)
+    try:
+        with open("results.json", "w") as outfile:
+            outfile.write(stats)
+    except IOError as e:
+        console_logger.info('Failed to create results file - ' + str(e))
 
 def print_stats(stats):
     console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s'))
