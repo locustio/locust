@@ -38,7 +38,7 @@ well as what TaskSet class should define the user's "behaviour". TaskSets can be
 
 The :py:class:`HttpLocust <locust.core.HttpLocust>` class inherits from the
 :py:class:`Locust <locust.core.Locust>` class, and it adds a client attribute which is an instance of 
-:py:class:`HttpSession <locust.clients.HttpSession>, that can be used to make HTTP requests.
+:py:class:`HttpSession <locust.clients.HttpSession>`, that can be used to make HTTP requests.
 
 Another way we could declare tasks, which is usually more convenient, is to use the 
 @task decorator. The following code is equivalent to the above::
