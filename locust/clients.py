@@ -87,13 +87,14 @@ class HttpSession(requests.Session):
         :param data: (optional) Dictionary or bytes to send in the body of the :class:`Request`.
         :param headers: (optional) Dictionary of HTTP Headers to send with the :class:`Request`.
         :param cookies: (optional) Dict or CookieJar object to send with the :class:`Request`.
-        :param files: (optional) Dictionary of 'filename': file-like-objects for multipart encoding upload.
+        :param files: (optional) Dictionary of ``'filename': file-like-objects`` for multipart encoding upload.
         :param auth: (optional) Auth tuple or callable to enable Basic/Digest/Custom HTTP Auth.
-        :param timeout: (optional) Float describing the timeout of the request.
-        :param allow_redirects: (optional) Boolean. Set to True by default.
+        :param timeout: (optional) How long to wait for the server to send data before giving up, as a float, 
+            or a (`connect timeout, read timeout <user/advanced.html#timeouts>`_) tuple.
+        :type timeout: float or tuple
+        :param allow_redirects: (optional) Set to True by default.
+        :type allow_redirects: bool
         :param proxies: (optional) Dictionary mapping protocol to the URL of the proxy.
-        :param return_response: (optional) If False, an un-sent Request object will returned.
-        :param config: (optional) A configuration dictionary. See ``request.defaults`` for allowed keys and their default values.
         :param stream: (optional) whether to immediately download the response content. Defaults to ``False``.
         :param verify: (optional) if ``True``, the SSL cert will be verified. A CA_BUNDLE path can also be provided.
         :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
