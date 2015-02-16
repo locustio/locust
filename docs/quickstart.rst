@@ -32,7 +32,7 @@ Below is a quick little example of a simple **locustfile.py**::
 
 Here we define a number of locust tasks, which are normal Python callables that take one argument 
 (a Locust class instance). These tasks are gathered under a :py:class:`TaskSet <locust.core.TaskSet>` 
-class in the *task* attribute. Then we have a :py:class:`HttpLocust <locust.core.HttpLocust>` class which 
+class in the *tasks* attribute. Then we have a :py:class:`HttpLocust <locust.core.HttpLocust>` class which 
 represents a User, where we define how long a simulated user should wait between executing tasks, as 
 well as what TaskSet class should define the user's "behaviour". TaskSets can be nested.
 
