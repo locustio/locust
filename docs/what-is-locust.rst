@@ -56,7 +56,7 @@ Background
 Locust was created because we were fed up with existing solutions. None of them are solving the 
 right problem and to me, they are missing the point. We've tried both Apache JMeter and Tsung. 
 Both tools are quite ok to use, we've used the former many times benchmarking stuff at work. 
-JMeter comes with UI which you might think for second is a good thing. But you soon realize it's 
+JMeter comes with UI which you might think for a second is a good thing. But you soon realize it's 
 a PITA to "code" your testing scenarios through some point-and-click interface. Secondly, JMeter 
 is thread-bound. This means for every user you want to simulate, you need a separate thread. 
 Needless to say, benchmarking thousands of users on a single machine just isn't feasible.
