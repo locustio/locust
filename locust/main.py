@@ -8,6 +8,7 @@ import signal
 import inspect
 import logging
 import socket
+import time
 from optparse import OptionParser
 
 from . import web
@@ -228,6 +229,23 @@ def parse_options():
         help="show program's version number and exit"
     )
 
+    # Writes output statistics as csv
+    parser.add_option(
+        '--write-stats',
+        action='store_true',
+        dest='write_stats',
+        default=None,
+        help="writes output statistics as csv files"
+    )
+
+    parser.add_option(
+        '--stats-prefix',
+        action='store',
+        dest='stats_prefix',
+        default=None,
+        help="path prefix to use when writing stats files"
+    )
+
     # Finalize
     # Return three-tuple of parser + the output from parse_args (opt obj, args)
     opts, args = parser.parse_args()
@@ -288,6 +306,28 @@ def is_locust(tup):
         and getattr(item, "task_set")
         and not name.startswith('_')
     )
+
+
+def write_distribution_stats_csv(file_prefix, timestamp=None):
+    if timestamp is None:
+        timestamp = time.time()
+
+    file_name = "{0}distribution_{1}.csv".format(file_prefix, timestamp)
+    console_logger.info("Writing distribution stats to %s", file_name)
+    with open(file_name, 'wb') as file:
+        data = runners.locust_runner.stats.get_percentile_dataset(include_empty=True)
+        file.write(data.csv)
+
+
+def write_stats_csv(file_prefix, timestamp=None):
+    if timestamp is None:
+        timestamp = time.time()
+
+    file_name = "{0}stats_{1}.csv".format(file_prefix, timestamp)
+    console_logger.info("Writing request stats to %s", file_name)
+    with open(file_name, 'wb') as file:
+        data = runners.locust_runner.stats.get_request_stats_dataset()
+        file.write(data.csv)
 
 
 def load_locustfile(path):
@@ -442,6 +482,16 @@ def main():
         code = 0
         if len(runners.locust_runner.errors):
             code = 1
+
+        if options.write_stats:
+            if options.stats_prefix is not None:
+                file_prefix = os.path.expanduser(options.stats_prefix) + '_'
+            else:
+                file_prefix = ''
+            timestamp = time.time()
+            write_distribution_stats_csv(file_prefix, timestamp)
+            write_stats_csv(file_prefix, timestamp)
+
         shutdown(code=code)
     except KeyboardInterrupt as e:
         shutdown(0)
