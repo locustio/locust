@@ -77,25 +77,25 @@ Start Locust
 To run Locust with the above locust file, if it was named *locustfile.py*, we could run 
 (in the same directory as locustfile.py)::
 
-    locust 
+    locust --host=http://example.com
 
 or if the locust file is located elsewhere we could run::
 
-    locust -f ../locust_files/my_locust_file.py
+    locust -f ../locust_files/my_locust_file.py --host=http://example.com
 
 To run Locust distributed across multiple processes we would start a master process by specifying --master::
 
-    locust -f ../locust_files/my_locust_file.py --master
+    locust -f ../locust_files/my_locust_file.py --master --host=http://example.com
 
 and then we would start an arbitrary number of slave processes::
 
-    locust -f ../locust_files/my_locust_file.py --slave
+    locust -f ../locust_files/my_locust_file.py --slave --host=http://example.com
 
 If we want to run locust distributed on multiple machines we would also have to specify the master host when
 starting the slaves (this is not needed when running locust distributed on a single machine, since the master 
 host defaults to 127.0.0.1)::
 
-    locust -f ../locust_files/my_locust_file.py --slave --master-host=192.168.0.100
+    locust -f ../locust_files/my_locust_file.py --slave --master-host=192.168.0.100 --host=http://example.com
 
 .. note::
 
