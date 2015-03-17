@@ -31,9 +31,10 @@ class TestRequestStats(unittest.TestCase):
         for x in xrange(100):
             s.log(x, 0)
 
-        self.assertEqual(s.get_response_time_percentile(0.5), 50)
-        self.assertEqual(s.get_response_time_percentile(0.6), 60)
-        self.assertEqual(s.get_response_time_percentile(0.95), 95)
+        self.assertEqual(
+            s.get_response_time_percentiles([0.5, 0.6, 0.95]),
+            {0.5: 50, 0.6:60, 0.95: 95}
+        )
 
     def test_median(self):
         self.assertEqual(self.s.median_response_time, 79)

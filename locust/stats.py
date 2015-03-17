@@ -5,6 +5,21 @@ import six
 from six.moves import xrange
 import tablib
 from tabulate import tabulate
+from collections import namedtuple
+from functools import partial
+
+try:
+    import numpy
+except ImportError:
+    numpy = None
+
+try:
+    from scikits.bootstrap import bootstrap
+except ImportError:
+    bootstrap = None
+
+CONFIDENCE_INTERVALS = numpy is not None and bootstrap is not None
+
 
 from . import events
 from .exception import StopLocust
@@ -15,6 +30,9 @@ PERCENTILES = (0.5, 0.66, 0.75, 0.80, 0.9, 0.95, 0.98, 0.99)
 
 class RequestStatsAdditionError(Exception):
     pass
+
+
+ErrorBar = namedtuple('ErrorBar', ['lower', 'upper'])
 
 
 class RequestStats(object):
@@ -75,12 +93,25 @@ class RequestStats(object):
         """
         return "{0:.0%}".format(percentile)
 
+    def confidence_interval_column_name(self, percentile):
+        """
+        Return a ErrorBar of column names for the (lower, upper) error bar
+        values for the `percentile` value.
+        """
+        return ErrorBar(
+            "{0:.0%} low error bound".format(percentile),
+            "{0:.0%} high error bound".format(percentile),
+        )
+
     def get_percentile_dataset(self, include_empty=False):
         data = tablib.Dataset()
         data.headers = ['Method', 'Name', '# reqs']
 
         for percentile in PERCENTILES:
             data.headers.append(self.percentile_column_name(percentile))
+
+            if CONFIDENCE_INTERVALS:
+                data.headers.extend(self.confidence_interval_column_name(percentile))
 
         data.headers.append("100%")
 
@@ -399,21 +430,70 @@ class StatsEntry(object):
             self.median_response_time or 0,
             self.current_rps or 0
         )
-    
-    def get_response_time_percentile(self, percent):
+
+    def expand_response_times(self):
+        """
+        Return an list containing all of the response_times, unbucketed.
+
+        N.B. the response times will still be rounded to the same values as the buckets.
+        """
+        return sum(([time]*count for time, count in self.response_times.iteritems()), [])
+
+    def get_response_time_percentiles(self, percentiles=PERCENTILES):
         """
         Get the response time that a certain number of percent of the requests
-        finished within.
-        
+        finished within, for each percent in percentiles.
+
+        Returns a dictionary that maps the percentile inputs to their corresponding
+        response times.
+
         Percent specified in range: 0.0 - 1.0
         """
-        num_of_request = int((self.num_requests * percent))
+        if numpy is not None:
+            times = numpy.percentile(
+                self.expand_response_times(),
+                q=[percent*100 for percent in percentiles],
+                interpolation='higher',  # This mimics the behavior of the non-numpy version
+            )
+            return dict(zip(
+                percentiles,
+                [int(time) for time in times],
+            ))
+        else:
+            response_times = {}
 
-        processed_count = 0
-        for response_time in sorted(six.iterkeys(self.response_times), reverse=True):
-            processed_count += self.response_times[response_time]
-            if((self.num_requests - processed_count) <= num_of_request):
-                return response_time
+            processed_count = 0
+            target_percentiles = sorted(percentiles, reverse=True)
+            for response_time, count in sorted(six.iteritems(self.response_times), reverse=True):
+                processed_count += count
+                while target_percentiles and float(self.num_requests - processed_count) / self.num_requests <= target_percentiles[0]:
+                    response_times[target_percentiles.pop(0)] = response_time
+
+            return response_times
+
+    if CONFIDENCE_INTERVALS:
+        def get_percentile_confidence_intervals(self, percentiles=PERCENTILES):
+            """
+            Return a dictionary mapping each supplied percentile value to
+            ErrorBar objects representing the lower and upper percentile bounds (at 95% confidence).
+            """
+            console_logger.info("Computing confidence intervals on {0} requests. This may take a while...".format(self.num_requests))
+
+            # This prevents the bootstrap process from falling over in the jacknife step
+            # if all of the jacknifed stats are equal. (This has been reported to the
+            # maintainer of scikits.bootstrap in https://github.com/cgevans/scikits-bootstrap/issues/6).
+            all_response_times = self.expand_response_times()
+            jittered_response_times = numpy.array(all_response_times) + numpy.random.randn(len(all_response_times)) * 0.001
+
+            intervals = bootstrap.ci(
+                jittered_response_times,
+                partial(numpy.percentile, q=[percent*100 for percent in percentiles]),
+                output="errorbar",
+                method="bca" if self.num_requests > 1 else "pi",  # bca relies on the jacknife procedure, which needs more that one value
+            )
+
+            console_logger.info("Configence intervals computed.")
+            return dict(zip(percentiles, [ErrorBar(float(interval[0]), float(interval[1])) for interval in intervals]))
 
     def percentile(self, include_empty=False):
         if not self.num_requests and not include_empty:
@@ -422,12 +502,24 @@ class StatsEntry(object):
         results = [self.method, self.name, self.num_requests]
 
         if self.num_requests > 0:
+
+            percentiles = self.get_response_time_percentiles()
+
+            if CONFIDENCE_INTERVALS:
+                intervals = self.get_percentile_confidence_intervals()
+
             for percentile in PERCENTILES:
-                results.append(self.get_response_time_percentile(percentile))
+                results.append(percentiles[percentile])
+
+                if CONFIDENCE_INTERVALS:
+                    results.extend(intervals[percentile])
 
             results.append(self.max_response_time)
         else:
-            entry_count = len(PERCENTILES) + 1
+            if CONFIDENCE_INTERVALS:
+                entry_count = 3*len(PERCENTILES) + 1
+            else:
+                entry_count = len(PERCENTILES) + 1
 
             result.extend(["N/A"] * entry_count)
 
@@ -534,6 +626,32 @@ def print_stats(stats):
 
 def print_percentile_stats(stats):
     data = stats.get_percentile_dataset()
+
+    if CONFIDENCE_INTERVALS:
+        for percentile in PERCENTILES:
+            new_col_name = "{0} (+/-)".format(
+                stats.percentile_column_name(percentile)
+            )
+            data.append_col([
+                "{0} (+{1:.2%}/-{2:.2%})".format(
+                    value, float(upper)/value, float(lower)/value
+                )
+                for (value, upper, lower)
+                in zip(
+                    data[stats.percentile_column_name(percentile)],
+                    data[stats.confidence_interval_column_name(percentile)[1]],
+                    data[stats.confidence_interval_column_name(percentile)[0]],
+                )
+            ], header=new_col_name)
+
+            del data[stats.percentile_column_name(percentile)]
+            del data[stats.confidence_interval_column_name(percentile)[0]]
+            del data[stats.confidence_interval_column_name(percentile)[1]]
+
+    # Move the 100% to the end
+    values = data['100%']
+    del data['100%']
+    data.append_col(values, header='100%')
 
     console_logger.info("Percentage of the requests completed within given times")
     console_logger.info(tabulate(data.dict, headers="keys"))
