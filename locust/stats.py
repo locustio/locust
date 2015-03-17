@@ -159,21 +159,24 @@ class StatsEntry(object):
         self.min_response_time = min(self.min_response_time, response_time)
         self.max_response_time = max(self.max_response_time, response_time)
 
-        # to avoid to much data that has to be transfered to the master node when
-        # running in distributed mode, we save the response time rounded in a dict
-        # so that 147 becomes 150, 3432 becomes 3400 and 58760 becomes 59000
-        if response_time < 100:
-            rounded_response_time = response_time
-        elif response_time < 1000:
-            rounded_response_time = int(round(response_time, -1))
-        elif response_time < 10000:
-            rounded_response_time = int(round(response_time, -2))
-        else:
-            rounded_response_time = int(round(response_time, -3))
+        rounded_response_time = self._round_response_time(response_time)
 
         # increase request count for the rounded key in response time dict
         self.response_times.setdefault(rounded_response_time, 0)
         self.response_times[rounded_response_time] += 1
+
+    def _round_response_time(self, response_time):
+        # to avoid to much data that has to be transfered to the master node when
+        # running in distributed mode, we save the response time rounded in a dict
+        # so that 147 becomes 150, 3432 becomes 3400 and 58760 becomes 59000
+        if response_time < 100:
+            return response_time
+        elif response_time < 1000:
+            return int(round(response_time, -1))
+        elif response_time < 10000:
+            return int(round(response_time, -2))
+        else:
+            return int(round(response_time, -3))
 
     def log_error(self, error):
         self.num_failures += 1
