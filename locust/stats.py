@@ -1,6 +1,7 @@
 import time
 import gevent
 import hashlib
+import math
 import six
 from six.moves import xrange
 
@@ -169,14 +170,14 @@ class StatsEntry(object):
         # to avoid to much data that has to be transfered to the master node when
         # running in distributed mode, we save the response time rounded in a dict
         # so that 147 becomes 150, 3432 becomes 3400 and 58760 becomes 59000
-        if response_time < 100:
+        if response_time == 0:
+            return 0
+
+        num_digits = int(math.log10(response_time)) + 1
+        if num_digits <= 2:
             return response_time
-        elif response_time < 1000:
-            return int(round(response_time, -1))
-        elif response_time < 10000:
-            return int(round(response_time, -2))
         else:
-            return int(round(response_time, -3))
+            return int(round(response_time, 2 - num_digits))
 
     def log_error(self, error):
         self.num_failures += 1
