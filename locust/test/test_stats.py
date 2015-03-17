@@ -116,7 +116,7 @@ class TestRequestStats(unittest.TestCase):
 
         self.assertEqual(20, u1.median_response_time)
 
-    def test_response_time_rounding(self):
+    def test_default_response_time_rounding(self):
         self.assertEquals(self.s._round_response_time(0), 0)
         self.assertEquals(self.s._round_response_time(4), 4)
         self.assertEquals(self.s._round_response_time(22), 22)
@@ -125,6 +125,16 @@ class TestRequestStats(unittest.TestCase):
         self.assertEquals(self.s._round_response_time(1123), 1100)
         self.assertEquals(self.s._round_response_time(1455), 1500)
         self.assertEquals(self.s._round_response_time(12345), 12000)
+
+    def test_configurable_response_time_rounding(self):
+        self.assertEquals(StatsEntry(self.stats, "test_entry", "GET", 3)._round_response_time(0), round(0, 2))
+        self.assertEquals(StatsEntry(self.stats, "test_entry", "GET", 3)._round_response_time(4), round(4, 2))
+        self.assertEquals(StatsEntry(self.stats, "test_entry", "GET", 1)._round_response_time(22), round(22, -1))
+        self.assertEquals(StatsEntry(self.stats, "test_entry", "GET", 3)._round_response_time(123), round(123, 0))
+        self.assertEquals(StatsEntry(self.stats, "test_entry", "GET", 1)._round_response_time(455), round(455, -2))
+        self.assertEquals(StatsEntry(self.stats, "test_entry", "GET", 5)._round_response_time(1123), round(1123, 1))
+        self.assertEquals(StatsEntry(self.stats, "test_entry", "GET", 3)._round_response_time(1455), round(1455, -1))
+        self.assertEquals(StatsEntry(self.stats, "test_entry", "GET", 4)._round_response_time(12345), round(12345, -1))
 
 
 class TestRequestStatsWithWebserver(WebserverTestCase):

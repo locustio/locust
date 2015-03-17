@@ -16,7 +16,7 @@ class RequestStatsAdditionError(Exception):
 
 
 class RequestStats(object):
-    def __init__(self):
+    def __init__(self, precision=2):
         self.entries = {}
         self.errors = {}
         self.num_requests = 0
@@ -24,14 +24,15 @@ class RequestStats(object):
         self.max_requests = None
         self.last_request_timestamp = None
         self.start_time = None
-    
+        self.precision = precision
+
     def get(self, name, method):
         """
         Retrieve a StatsEntry instance by name and method
         """
         entry = self.entries.get((name, method))
         if not entry:
-            entry = StatsEntry(self, name, method)
+            entry = StatsEntry(self, name, method, self.precision)
             self.entries[(name, method)] = entry
         return entry
     
@@ -40,7 +41,7 @@ class RequestStats(object):
         Returns a StatsEntry which is an aggregate of all stats entries 
         within entries.
         """
-        total = StatsEntry(self, name, method=None)
+        total = StatsEntry(self, name, method=None, precision=self.precision)
         for r in six.itervalues(self.entries):
             total.extend(r, full_request_history=full_request_history)
         return total
@@ -104,7 +105,9 @@ class StatsEntry(object):
     
     The keys (the response time in ms) are rounded to store 1, 2, ... 9, 10, 20. .. 90, 
     100, 200 .. 900, 1000, 2000 ... 9000, in order to save memory.
-    
+
+    The amount of rounding is controlled by the precision argument.
+
     This dict is used to calculate the median and percentile response times.
     """
     
@@ -116,11 +119,19 @@ class StatsEntry(object):
     
     last_request_timestamp = None
     """ Time of the last request for this entry """
-    
-    def __init__(self, stats, name, method):
+
+    def __init__(self, stats, name, method, precision=2):
+        """
+        Arguments:
+            stats (RequestStats): The containing RequestStats object.
+            name (str): The name of the request being measured.
+            method (str): The HTTP method being called in the request.
+            precision (int): The number of significant digits to round response times to.
+        """
         self.stats = stats
         self.name = name
         self.method = method
+        self.precision = precision
         self.reset()
     
     def reset(self):
@@ -174,10 +185,10 @@ class StatsEntry(object):
             return 0
 
         num_digits = int(math.log10(response_time)) + 1
-        if num_digits <= 2:
+        if num_digits <= self.precision:
             return response_time
         else:
-            return int(round(response_time, 2 - num_digits))
+            return int(round(response_time, self.precision - num_digits))
 
     def log_error(self, error):
         self.num_failures += 1
@@ -283,11 +294,12 @@ class StatsEntry(object):
             "total_content_length": self.total_content_length,
             "response_times": self.response_times,
             "num_reqs_per_sec": self.num_reqs_per_sec,
+            "precision": self.precision,
         }
     
     @classmethod
     def unserialize(cls, data):
-        obj = cls(None, data["name"], data["method"])
+        obj = cls(None, data["name"], data["method"], data["precision"])
         for key in [
             "last_request_timestamp",
             "start_time",
@@ -438,7 +450,7 @@ def on_slave_report(client_id, data):
         entry = StatsEntry.unserialize(stats_data)
         request_key = (entry.name, entry.method)
         if not request_key in global_stats.entries:
-            global_stats.entries[request_key] = StatsEntry(global_stats, entry.name, entry.method)
+            global_stats.entries[request_key] = StatsEntry(global_stats, entry.name, entry.method, entry.precision)
         global_stats.entries[request_key].extend(entry, full_request_history=True)
         global_stats.last_request_timestamp = max(global_stats.last_request_timestamp or 0, entry.last_request_timestamp)
 

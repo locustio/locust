@@ -12,7 +12,7 @@ from optparse import OptionParser
 
 from . import web
 from .log import setup_logging, console_logger
-from .stats import stats_printer, print_percentile_stats, print_error_report, print_stats
+from .stats import stats_printer, print_percentile_stats, print_error_report, print_stats, global_stats
 from .inspectlocust import print_task_ratio, get_task_ratio_dict
 from .core import Locust, HttpLocust
 from .runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
@@ -228,6 +228,15 @@ def parse_options():
         help="show program's version number and exit"
     )
 
+    # Customize the precision with which request values are saved
+    parser.add_option(
+        '--precision',
+        action='store',
+        dest='precision',
+        default=2,
+        help="how many digits of precision to store for the response time aggregations"
+    )
+
     # Finalize
     # Return three-tuple of parser + the output from parse_args (opt obj, args)
     opts, args = parser.parse_args()
@@ -340,6 +349,9 @@ def main():
     if options.show_version:
         print("Locust %s" % (version,))
         sys.exit(0)
+
+    if options.precision:
+        global_stats.precision = options.precision
 
     locustfile = find_locustfile(options.locustfile)
     if not locustfile:
