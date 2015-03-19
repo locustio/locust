@@ -58,3 +58,8 @@ More info and documentation can be found at: <a href="http://docs.locust.io/">ht
 
 Open source licensed under the MIT license (see _LICENSE_ file for details).
 
+
+## Supported Python Versions
+
+Locust requires **Python 2.6+**.  It is not currently compatible with Python 3.x.
+
