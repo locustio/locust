@@ -33,7 +33,7 @@ With the following locustfile, each user would wait between 5 and 15 seconds bet
     
     class MyTaskSet(TaskSet):
         @task
-        def my_task(l):
+        def my_task(self):
             print "executing my_task"
     
     class MyLocust(Locust):
