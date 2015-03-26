@@ -102,13 +102,14 @@ class LocustRunner(object):
             hatch_count = 0
             sleep_time = 1.0 / self.hatch_rate
             while True:
+                if bucket:
+                    locust = bucket.pop(random.randint(0, len(bucket)-1))
+                    occurence_count[locust.__name__] += 1
+
                 if not bucket:
                     logger.info("All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in occurence_count.iteritems()]))
                     events.hatch_complete.fire(user_count=self.num_clients)
-                    return
 
-                locust = bucket.pop(random.randint(0, len(bucket)-1))
-                occurence_count[locust.__name__] += 1
                 def start_locust(_):
                     try:
                         if locust.__init__.__func__.func_code.co_argcount > 1:
@@ -121,6 +122,10 @@ class LocustRunner(object):
                 hatch_count = hatch_count + 1
                 if len(self.locusts) % 10 == 0:
                     logger.debug("%i locusts hatched" % len(self.locusts))
+
+                if not bucket:
+                    return
+
                 gevent.sleep(sleep_time)
 
         hatch()
