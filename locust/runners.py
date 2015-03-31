@@ -99,7 +99,6 @@ class LocustRunner(object):
         occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
 
         def hatch():
-            hatch_count = 0
             sleep_time = 1.0 / self.hatch_rate
             while True:
                 if bucket:
@@ -113,13 +112,12 @@ class LocustRunner(object):
                 def start_locust(_):
                     try:
                         if locust.__init__.__func__.func_code.co_argcount > 1:
-                            locust(id_range_start + hatch_count).run()
+                            locust(id_range_start + occurence_count[locust.__name__] - 1).run()
                         else:
                             locust().run()
                     except GreenletExit:
                         pass
                 new_locust = self.locusts.spawn(start_locust, locust)
-                hatch_count = hatch_count + 1
                 if len(self.locusts) % 10 == 0:
                     logger.debug("%i locusts hatched" % len(self.locusts))
 
