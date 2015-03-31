@@ -18,6 +18,8 @@ from locust.stats import median_from_dict
 from locust import version
 from functools import wraps
 from flask import request, Response
+import ssl
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -33,7 +35,8 @@ def check_auth(username, password):
     """This function is called to check if a username /
     password combination is valid.
     """
-    return username == 'admin' and password == 'password'
+    return username == 'qnx' and password == 'password'
+    return True
 
 def authenticate():
     """Sends a 401 response that enables basic auth"""
@@ -51,9 +54,7 @@ def requires_auth(f):
         return f(*args, **kwargs)
     return decorated
 
-
 @app.route('/')
-@requires_auth
 def index():
     is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
     if is_distributed:
@@ -70,7 +71,6 @@ def index():
     )
 
 @app.route('/swarm', methods=["POST"])
-@requires_auth
 def swarm():
     assert request.method == "POST"
 
@@ -82,7 +82,6 @@ def swarm():
     return response
 
 @app.route('/stop')
-@requires_auth
 def stop():
     runners.locust_runner.stop()
     response = make_response(json.dumps({'success':True, 'message': 'Test stopped'}))
@@ -90,13 +89,11 @@ def stop():
     return response
 
 @app.route("/stats/reset")
-@requires_auth
 def reset_stats():
     runners.locust_runner.stats.reset_all()
     return "ok"
     
 @app.route("/stats/requests/csv")
-@requires_auth
 def request_stats_csv():
     rows = [
         ",".join([
@@ -135,7 +132,6 @@ def request_stats_csv():
     return response
 
 @app.route("/stats/distribution/csv")
-@requires_auth
 def distribution_stats_csv():
     rows = [",".join((
         '"Name"',
@@ -164,7 +160,6 @@ def distribution_stats_csv():
     return response
 
 @app.route('/stats/requests')
-@requires_auth
 @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
 def request_stats():
     stats = []
@@ -207,14 +202,12 @@ def request_stats():
     return json.dumps(report)
 
 @app.route("/exceptions")
-@requires_auth
 def exceptions():
     response = make_response(json.dumps({'exceptions': [{"count": row["count"], "msg": row["msg"], "traceback": row["traceback"], "nodes" : ", ".join(row["nodes"])} for row in runners.locust_runner.exceptions.itervalues()]}))
     response.headers["Content-type"] = "application/json"
     return response
 
 @app.route("/exceptions/csv")
-@requires_auth
 def exceptions_csv():
     data = StringIO()
     writer = csv.writer(data)
@@ -232,7 +225,8 @@ def exceptions_csv():
     return response
 
 def start(locust, options):
-    wsgi.WSGIServer((options.web_host, options.port), app, log=None).serve_forever()
+
+    wsgi.WSGIServer((options.web_host, options.port), app, log=None, keyfile=os.environ['SSL_KEY'], certfile=os.environ['SSL_CERT'], ssl_version=ssl.PROTOCOL_TLSv1).serve_forever()
 
 def _sort_stats(stats):
     return [stats[key] for key in sorted(stats.iterkeys())]
