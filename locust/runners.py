@@ -4,6 +4,7 @@ import traceback
 import warnings
 import random
 import logging
+import collections
 from time import time
 from hashlib import md5
 
@@ -25,6 +26,88 @@ STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_STOPPED = ["ready", "hatching",
 SLAVE_REPORT_INTERVAL = 3.0
 
 
+class LocustIdTracker(object):
+
+    class LocustIdAssigner(object):
+
+        def __init__(self):
+            self.free_ids = []
+            self.assigned_ids = []
+            self.total_ids = 0
+
+        def request_ids(self, count):
+            if count > len(self.free_ids):
+                # If we don't have enough free ids, create more.
+                num_ids_to_add = count - len(self.free_ids)
+                self.free_ids.extend(range(self.total_ids, self.total_ids + num_ids_to_add))
+                self.total_ids = self.total_ids + num_ids_to_add
+            assigning_ids = self.free_ids[:count]
+            self.free_ids = self.free_ids[count:]
+            self.assigned_ids.extend(assigning_ids)
+            self.assigned_ids.sort()
+            return assigning_ids
+
+        def release_ids(self, ids):
+            for id in ids:
+                self.assigned_ids.remove(id)
+                self.free_ids.append(id)
+            self.free_ids.sort()
+
+        def release_id(self, id):
+            self.assigned_ids.remove(id)
+            self.free_ids.append(id)
+            self.free_ids.sort()
+
+    class LocustSlaveIdTracker(object):
+
+        def __init__(self, locust_classes):
+            self.ids = {locust_class: [] for locust_class in locust_classes}
+
+        def count_for_class(self, locust_class):
+            return len(self.ids[locust_class])
+
+        def allocate_ids(self, locust_class, ids):
+            self.ids[locust_class].extend(ids)
+            self.ids[locust_class].sort()
+
+        def free_ids(self, locust_class, ids):
+            for id in ids[locust_class]:
+                self.ids[locust_class].remove(id)
+
+        def release_ids(self, locust_class, count):
+            released_ids = self.ids[locust_class][count:]
+            self.ids[locust_class] = self.ids[locust_class][:count]
+            return released_ids
+
+    def __init__(self, slave_count, locust_classes):
+        self.locust_id_assigners = {locust_class: LocustIdTracker.LocustIdAssigner() for locust_class in locust_classes}
+        self.slave_trackers = [LocustIdTracker.LocustSlaveIdTracker(locust_classes) for _ in range(slave_count)]
+        self.locust_classes = locust_classes
+
+    def set_user_count(self, count):
+        users_per_slave = count / len(self.slave_trackers)
+        total_weight = sum(locust_class.weight for locust_class in self.locust_classes)
+        locusts_per_slave = {locust_class: int(round(locust_class.weight / float(total_weight) * users_per_slave)) for locust_class in self.locust_classes}
+        slave_changes = []
+        for slave_tracker in self.slave_trackers:
+            locust_changes = {}
+            for locust_class, count in locusts_per_slave.iteritems():
+                locust_count_difference = count - slave_tracker.count_for_class(locust_class)
+                if locust_count_difference > 0:
+                    # allocate more ids
+                    allocated_ids = self.locust_id_assigners[locust_class].request_ids(locust_count_difference)
+                    slave_tracker.allocate_ids(locust_class, allocated_ids)
+                    locust_changes[locust_class] = {'type': 'increase', 'ids': allocated_ids}
+                elif locust_count_difference < 0:
+                    # release ids
+                    released_ids = slave_tracker.release_ids(locust_class, locust_count_difference)
+                    self.locust_id_assigners[locust_class].release_ids(released_ids)
+                    locust_changes[locust_class] = {'type': 'decrease', 'ids': released_ids}
+                #else: pass # No change!
+            slave_changes.append(locust_changes)
+        return slave_changes
+
+
 class LocustRunner(object):
     def __init__(self, locust_classes, options):
         self.locust_classes = locust_classes
@@ -37,6 +120,7 @@ class LocustRunner(object):
         self.hatching_greenlet = None
         self.exceptions = {}
         self.stats = global_stats
+        self.id_tracker = None
 
         # register listener that resets stats when hatching is complete
         def on_hatch_complete(user_count):
@@ -80,7 +164,7 @@ class LocustRunner(object):
             bucket.extend([locust for x in xrange(0, num_locusts)])
         return bucket
 
-    def spawn_locusts(self, spawn_count=None, stop_timeout=None, wait=False, id_range_start=0):
+    def spawn_locusts(self, spawn_count=None, stop_timeout=None, wait=False, id_changes={}):
         if spawn_count is None:
             spawn_count = self.num_clients
 
@@ -104,20 +188,21 @@ class LocustRunner(object):
                 if bucket:
                     locust = bucket.pop(random.randint(0, len(bucket)-1))
                     occurence_count[locust.__name__] += 1
+                    id_change = id_changes[locust]
 
                 if not bucket:
                     logger.info("All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in occurence_count.iteritems()]))
                     events.hatch_complete.fire(user_count=self.num_clients)
 
-                def start_locust(_):
+                def start_locust(_, id):
                     try:
                         if locust.__init__.__func__.func_code.co_argcount > 1:
-                            locust(id_range_start + occurence_count[locust.__name__] - 1).run()
+                            locust(id).run()
                         else:
                             locust().run()
                     except GreenletExit:
                         pass
-                new_locust = self.locusts.spawn(start_locust, locust)
+                new_locust = self.locusts.spawn(start_locust, locust, id_change['ids'].pop())
                 if len(self.locusts) % 10 == 0:
                     logger.debug("%i locusts hatched" % len(self.locusts))
 
@@ -150,7 +235,7 @@ class LocustRunner(object):
             self.locusts.killone(g)
         events.hatch_complete.fire(user_count=self.num_clients)
 
-    def start_hatching(self, locust_count=None, hatch_rate=None, wait=False, id_range_start=0):
+    def start_hatching(self, locust_count=None, hatch_rate=None, wait=False, id_changes={}):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
             self.stats.start_time = time()
@@ -169,16 +254,16 @@ class LocustRunner(object):
                 if hatch_rate:
                     self.hatch_rate = hatch_rate
                 spawn_count = locust_count - self.num_clients
-                self.spawn_locusts(spawn_count=spawn_count, id_range_start=id_range_start)
+                self.spawn_locusts(spawn_count=spawn_count, id_changes=id_changes)
             else:
                 events.hatch_complete.fire(user_count=self.num_clients)
         else:
             if hatch_rate:
                 self.hatch_rate = hatch_rate
             if locust_count is not None:
-                self.spawn_locusts(locust_count, wait=wait, id_range_start=id_range_start)
+                self.spawn_locusts(locust_count, wait=wait, id_changes=id_changes)
             else:
-                self.spawn_locusts(wait=wait, id_range_start=id_range_start)
+                self.spawn_locusts(wait=wait, id_changes=id_changes)
 
     def stop(self):
         # if we are currently hatching locusts we need to kill the hatching greenlet first
@@ -206,7 +291,10 @@ class LocalLocustRunner(LocustRunner):
         events.locust_error += on_locust_error
 
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
-        self.hatching_greenlet = gevent.spawn(lambda: super(LocalLocustRunner, self).start_hatching(locust_count, hatch_rate, wait=wait))
+        if self.id_tracker == None:
+            self.id_tracker = LocustIdTracker(1, self.locust_classes)
+        id_changes = self.id_tracker.set_user_count(locust_count)
+        self.hatching_greenlet = gevent.spawn(lambda: super(LocalLocustRunner, self).start_hatching(locust_count, hatch_rate, wait=wait, id_changes=id_changes[0]))
         self.greenlet = self.hatching_greenlet
 
 class DistributedLocustRunner(LocustRunner):
@@ -227,11 +315,13 @@ class SlaveNode(object):
         self.state = state
         self.user_count = 0
 
+
 class MasterLocustRunner(DistributedLocustRunner):
-    def __init__(self, *args, **kwargs):
+
+    def __init__(self, locust_classes, options, *args, **kwargs):
         super(MasterLocustRunner, self).__init__(*args, **kwargs)
 
-        class SlaveNodesDict(dict):
+        class SlaveNodesDict(collections.OrderedDict):
             def get_by_state(self, state):
                 return [c for c in self.itervalues() if c.state == state]
 
@@ -272,11 +362,14 @@ class MasterLocustRunner(DistributedLocustRunner):
 
     def start_hatching(self, locust_count, hatch_rate):
         num_slaves = len(self.clients.ready) + len(self.clients.running)
+        if self.id_tracker == None:
+            self.id_tracker = LocustIdTracker(num_slaves, self.locust_classes)
         if not num_slaves:
             logger.warning("You are running in distributed mode but have no slave servers connected. "
                            "Please connect slaves prior to swarming.")
             return
 
+        id_changes = self.id_tracker.set_user_count(locust_count)
         self.num_clients = locust_count
         slave_num_clients = locust_count / (num_slaves or 1)
         slave_hatch_rate = float(hatch_rate) / (num_slaves or 1)
@@ -289,7 +382,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.exceptions = {}
             events.master_start_hatching.fire()
 
-        id_range = 0
+        count = 0
         for client in self.clients.itervalues():
             data = {
                 "hatch_rate":slave_hatch_rate,
@@ -297,9 +390,9 @@ class MasterLocustRunner(DistributedLocustRunner):
                 "num_requests": self.num_requests,
                 "host":self.host,
                 "stop_timeout":None,
-                "id_range_start":id_range
+                "id_changes":id_changes[count]
             }
-            id_range = id_range + slave_num_clients
+            count = count + 1
 
             if remaining > 0:
                 data["num_clients"] += 1
@@ -399,7 +492,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 #self.num_clients = job["num_clients"]
                 self.num_requests = job["num_requests"]
                 self.host = job["host"]
-                self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"], id_range_start=job['id_range_start']))
+                self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"], id_changes=job['id_changes']))
             elif msg.type == "stop":
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))
