@@ -97,12 +97,12 @@ class LocustIdTracker(object):
                     # allocate more ids
                     allocated_ids = self.locust_id_assigners[locust_class].request_ids(locust_count_difference)
                     slave_tracker.allocate_ids(locust_class, allocated_ids)
-                    locust_changes[locust_class] = {'type': 'increase', 'ids': allocated_ids}
+                    locust_changes[locust_class.__name__] = {'type': 'increase', 'ids': allocated_ids}
                 elif locust_count_difference < 0:
                     # release ids
                     released_ids = slave_tracker.release_ids(locust_class, locust_count_difference)
                     self.locust_id_assigners[locust_class].release_ids(released_ids)
-                    locust_changes[locust_class] = {'type': 'decrease', 'ids': released_ids}
+                    locust_changes[locust_class.__name__] = {'type': 'decrease', 'ids': released_ids}
                 #else: pass # No change!
             slave_changes.append(locust_changes)
         return slave_changes
@@ -188,7 +188,7 @@ class LocustRunner(object):
                 if bucket:
                     locust = bucket.pop(random.randint(0, len(bucket)-1))
                     occurence_count[locust.__name__] += 1
-                    id_change = id_changes[locust]
+                    id_change = id_changes[locust.__name__]
 
                 if not bucket:
                     logger.info("All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in occurence_count.iteritems()]))
@@ -319,7 +319,7 @@ class SlaveNode(object):
 class MasterLocustRunner(DistributedLocustRunner):
 
     def __init__(self, locust_classes, options, *args, **kwargs):
-        super(MasterLocustRunner, self).__init__(*args, **kwargs)
+        super(MasterLocustRunner, self).__init__(locust_classes, options, *args, **kwargs)
 
         class SlaveNodesDict(collections.OrderedDict):
             def get_by_state(self, state):
