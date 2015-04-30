@@ -404,6 +404,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.state = STATE_HATCHING
 
     def stop(self):
+        self.id_tracker.set_user_count(0)
         for client in self.clients.hatching + self.clients.running:
             self.server.send(Message("stop", None, None))
         events.master_stop_hatching.fire()
