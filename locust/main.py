@@ -12,7 +12,15 @@ from optparse import OptionParser
 
 import web
 from log import setup_logging, console_logger
-from stats import stats_printer, print_percentile_stats, print_error_report, print_stats
+from stats import (
+    stats_printer,
+    print_percentile_stats,
+    print_error_report,
+    print_stats,
+    get_string_stats,
+    get_string_percentile_stats,
+    get_string_error_report
+)
 from inspectlocust import print_task_ratio, get_task_ratio_dict
 from core import Locust, HttpLocust
 from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
@@ -228,6 +236,16 @@ def parse_options():
         help="show program's version number and exit"
     )
 
+    # stats and error report file
+    parser.add_option(
+        '--reportfile',
+        action='store',
+        type='str',
+        dest='reportfile',
+        default=None,
+        help="Path to stats and error report file. If not set, stats and error report will go to stdout/stderr"
+    )
+
     # Finalize
     # Return three-tuple of parser + the output from parse_args (opt obj, args)
     opts, args = parser.parse_args()
@@ -428,6 +446,14 @@ def main():
         print_percentile_stats(runners.locust_runner.request_stats)
 
         print_error_report()
+
+        if options.reportfile:
+            file = open(options.reportfile, 'w')
+            file.write(get_string_stats(runners.locust_runner.request_stats))
+            file.write(get_string_percentile_stats(runners.locust_runner.request_stats))
+            file.write(get_string_error_report())
+            file.close()
+
         sys.exit(code)
     
     # install SIGTERM handler
