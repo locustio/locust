@@ -102,6 +102,11 @@ quitting = EventHook()
 *quitting* is fired when the locust process in exiting
 """
 
+stopping = EventHook()
+"""
+*stopping* is fired when the locust test run is stopped
+"""
+
 master_start_hatching = EventHook()
 """
 *master_start_hatching* is fired when we initiate the hatching process on the master.
