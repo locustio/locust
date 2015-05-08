@@ -125,3 +125,12 @@ locust_stop_hatching = EventHook()
 """
 *locust_stop_hatching* is fired when terminate the hatching process on any locust worker.
 """
+
+relay_message_available = EventHook()
+"""
+*relay_message_available* is fired when a relay message has been recieved.
+
+Event is fired with the following arguments:
+
+* *message*: the protocol.Message object
+"""
