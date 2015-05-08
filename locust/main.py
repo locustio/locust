@@ -512,7 +512,10 @@ def main():
         def run_timer():
             gevent.sleep(options.run_time)
             logger.info("Run timer expired. Stopping locust.")
-            runners.locust_runner.quit()
+            if hasattr(runners.locust_runner, 'quit'):
+                runners.locust_runner.quit() # distributed
+            else:
+                runners.locust_runner.stop() # local
         gevent.spawn(run_timer)
 
     try:

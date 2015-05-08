@@ -271,10 +271,10 @@ class LocustRunner(object):
             self.id_tracker.set_user_count(0)
         if self.hatching_greenlet and not self.hatching_greenlet.ready():
             self.hatching_greenlet.kill(block=True)
-        self.locusts.kill(block=True)
         self.state = STATE_STOPPED
         events.locust_stop_hatching.fire()
         events.stopping.fire()
+        self.locusts.kill(block=True)
 
     def log_exception(self, node_id, msg, formatted_tb):
         key = hash(formatted_tb)
