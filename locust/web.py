@@ -35,8 +35,9 @@ def check_auth(username, password):
     """This function is called to check if a username /
     password combination is valid.
     """
-    return username == 'qnx' and password == 'password'
-    return True
+    if 'LOCUST_USERNAME' not in os.environ or 'LOCUST_PASSWORD' not in os.environ:
+        return True
+    return os.environ['LOCUST_USERNAME'] == username and os.environ['LOCUST_PASSWORD'] == password
 
 def authenticate():
     """Sends a 401 response that enables basic auth"""
