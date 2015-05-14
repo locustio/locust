@@ -197,10 +197,12 @@ class LocustRunner(object):
                 def start_locust(_, id):
                     try:
                         if locust.__init__.__func__.func_code.co_argcount > 1:
-                            locust(id).run()
+                            instance = locust(id)
                         else:
-                            locust().run()
+                            instance = locust()
+                        instance.run()
                     except GreenletExit:
+                        instance.die()
                         pass
                 new_locust = self.locusts.spawn(start_locust, locust, id_change['ids'].pop())
                 if len(self.locusts) % 10 == 0:

@@ -99,7 +99,8 @@ class Locust(object):
     
     def run(self):
         try:
-            self.task_set(self).run()
+            self._current_task_set = self.task_set(self)
+            self._current_task_set.run()
         except StopLocust:
             pass
         except (RescheduleTask, RescheduleTaskImmediately) as e:
