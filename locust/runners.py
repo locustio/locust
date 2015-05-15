@@ -197,10 +197,12 @@ class LocustRunner(object):
                 def start_locust(_, id):
                     try:
                         if locust.__init__.__func__.func_code.co_argcount > 1:
-                            locust(id).run()
+                            instance = locust(id)
                         else:
-                            locust().run()
+                            instance = locust()
+                        instance.run()
                     except GreenletExit:
+                        instance.die()
                         pass
                 new_locust = self.locusts.spawn(start_locust, locust, id_change['ids'].pop())
                 if len(self.locusts) % 10 == 0:
@@ -452,6 +454,10 @@ class MasterLocustRunner(DistributedLocustRunner):
                     logger.info("Client %r quit. Currently %i clients connected." % (msg.node_id, len(self.clients.ready)))
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
+            elif msg.type == "relay":
+                # broadcast to all slaves cannot be helped - the slave will filter out its own message
+                    self.server.send(Message("relay", msg.data, msg.node_id))
+
 
     @property
     def slave_count(self):
@@ -510,6 +516,9 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 if self.state != STATE_STOPPED:
                     self.stop()
                 self.greenlet.kill(block=True)
+            elif msg.type == "relay":
+                if msg.node_id != self.client_id:
+                    events.relay_message_available.fire(message=msg)
 
     def stats_reporter(self):
         while True:
@@ -522,3 +531,9 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 break
 
             gevent.sleep(SLAVE_REPORT_INTERVAL)
+
+    def send_relay_msg(self, data):
+        """
+        Send it via the master to relay to all slave locusts
+        """
+        self.client.send(Message("relay", data, self.client_id))
