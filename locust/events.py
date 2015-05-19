@@ -102,6 +102,11 @@ quitting = EventHook()
 *quitting* is fired when the locust process in exiting
 """
 
+stopping = EventHook()
+"""
+*stopping* is fired when the locust test run is stopped
+"""
+
 master_start_hatching = EventHook()
 """
 *master_start_hatching* is fired when we initiate the hatching process on the master.
@@ -124,4 +129,13 @@ locust_start_hatching = EventHook()
 locust_stop_hatching = EventHook()
 """
 *locust_stop_hatching* is fired when terminate the hatching process on any locust worker.
+"""
+
+relay_message_available = EventHook()
+"""
+*relay_message_available* is fired when a relay message has been recieved.
+
+Event is fired with the following arguments:
+
+* *message*: the protocol.Message object
 """

@@ -197,10 +197,12 @@ class LocustRunner(object):
                 def start_locust(_, id):
                     try:
                         if locust.__init__.__func__.func_code.co_argcount > 1:
-                            locust(id).run()
+                            instance = locust(id)
                         else:
-                            locust().run()
+                            instance = locust()
+                        instance.run()
                     except GreenletExit:
+                        instance.die()
                         pass
                 new_locust = self.locusts.spawn(start_locust, locust, id_change['ids'].pop())
                 if len(self.locusts) % 10 == 0:
@@ -267,11 +269,14 @@ class LocustRunner(object):
 
     def stop(self):
         # if we are currently hatching locusts we need to kill the hatching greenlet first
+        if self.id_tracker != None:
+            self.id_tracker.set_user_count(0)
         if self.hatching_greenlet and not self.hatching_greenlet.ready():
             self.hatching_greenlet.kill(block=True)
-        self.locusts.kill(block=True)
         self.state = STATE_STOPPED
         events.locust_stop_hatching.fire()
+        events.stopping.fire()
+        self.locusts.kill(block=True)
 
     def log_exception(self, node_id, msg, formatted_tb):
         key = hash(formatted_tb)
@@ -408,8 +413,12 @@ class MasterLocustRunner(DistributedLocustRunner):
         for client in self.clients.hatching + self.clients.running:
             self.server.send(Message("stop", None, None))
         events.master_stop_hatching.fire()
+        events.stopping.fire()
 
     def quit(self):
+        if self.state != STATE_STOPPED:
+            events.stopping.fire()
+            self.state = STATE_STOPPED
         for client in self.clients.itervalues():
             self.server.send(Message("quit", None, None))
         self.greenlet.kill(block=True)
@@ -445,6 +454,10 @@ class MasterLocustRunner(DistributedLocustRunner):
                     logger.info("Client %r quit. Currently %i clients connected." % (msg.node_id, len(self.clients.ready)))
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
+            elif msg.type == "relay":
+                # broadcast to all slaves cannot be helped - the slave will filter out its own message
+                    self.server.send(Message("relay", msg.data, msg.node_id))
+
 
     @property
     def slave_count(self):
@@ -500,8 +513,12 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 self.client.send(Message("client_ready", None, self.client_id))
             elif msg.type == "quit":
                 logger.info("Got quit message from master, shutting down...")
-                self.stop()
+                if self.state != STATE_STOPPED:
+                    self.stop()
                 self.greenlet.kill(block=True)
+            elif msg.type == "relay":
+                if msg.node_id != self.client_id:
+                    events.relay_message_available.fire(message=msg)
 
     def stats_reporter(self):
         while True:
@@ -514,3 +531,9 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 break
 
             gevent.sleep(SLAVE_REPORT_INTERVAL)
+
+    def send_relay_msg(self, data):
+        """
+        Send it via the master to relay to all slave locusts
+        """
+        self.client.send(Message("relay", data, self.client_id))

@@ -10,6 +10,7 @@ import logging
 import socket
 import time
 from optparse import OptionParser
+from .reports_csv import write_exceptions_csv, write_distribution_stats_csv, write_request_stats_csv
 
 import web
 from log import setup_logging, console_logger
@@ -249,6 +250,14 @@ def parse_options():
         help="show program's version number and exit"
     )
 
+    parser.add_option(
+        '--write-csv',
+        dest='write_reports',
+        action='store_true',
+        default=False,
+        help='Write the exceptions, stats and distributions reports to a file on exit.'
+    )
+
     # Finalize
     # Return three-tuple of parser + the output from parse_args (opt obj, args)
     opts, args = parser.parse_args()
@@ -452,6 +461,35 @@ def main():
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
 
+    def write_logs():
+        def get_next_file(output_folder, file_name_root):
+            highest_num = -1
+            for f in os.listdir(output_folder):
+                if os.path.isfile(os.path.join(output_folder, f)) and f.startswith(file_name_root):
+                    file_name = os.path.splitext(f)[0]
+                    try:
+                        file_num = int(file_name[len(file_name_root):])
+                        if file_num > highest_num:
+                            highest_num = file_num
+                    except ValueError:
+                        logger.error('Failed to detect log file number.')
+            output_file = os.path.join(output_folder, file_name_root + str(highest_num + 1)) + '.csv'
+            return output_file
+        try:
+            os.makedirs('./logs')
+        except OSError:
+            pass
+        with open(get_next_file('./logs', 'exceptions'), 'w') as exceptions_csv:
+            write_exceptions_csv(exceptions_csv)
+        if not options.slave:
+            with open(get_next_file('./logs', 'stats'), 'w') as stats_csv:
+                write_request_stats_csv(stats_csv)
+            with open(get_next_file('./logs', 'distribution'), 'w') as percentile_csv:
+                write_distribution_stats_csv(percentile_csv)
+
+    if options.write_reports:
+        events.stopping += write_logs
+
     def shutdown(code=0):
         """
         Shut down locust by firing quitting event, printing stats and exiting
@@ -461,7 +499,6 @@ def main():
         events.quitting.fire()
         print_stats(runners.locust_runner.request_stats)
         print_percentile_stats(runners.locust_runner.request_stats)
-
         print_error_report()
         sys.exit(code)
 
@@ -475,8 +512,10 @@ def main():
         def run_timer():
             gevent.sleep(options.run_time)
             logger.info("Run timer expired. Stopping locust.")
-            runners.locust_runner.stop()
-            runners.locust_runner.quit()
+            if hasattr(runners.locust_runner, 'quit'):
+                runners.locust_runner.quit() # distributed
+            else:
+                runners.locust_runner.stop() # local
         gevent.spawn(run_timer)
 
     try:
