@@ -332,7 +332,7 @@ class MasterLocustRunner(DistributedLocustRunner):
     def __init__(self, locust_classes, options, *args, **kwargs):
         super(MasterLocustRunner, self).__init__(locust_classes, options, *args, **kwargs)
 
-        class SlaveNodesDict(collections.OrderedDict):
+        class SlaveNodesDict(dict):
             def get_by_state(self, state):
                 return [c for c in self.itervalues() if c.state == state]
 
@@ -394,7 +394,9 @@ class MasterLocustRunner(DistributedLocustRunner):
             events.master_start_hatching.fire()
 
         count = 0
-        for client in self.clients.itervalues():
+        sorted_keys = sorted(self.clients.keys())
+        for client_key in sorted_keys:
+            client = self.clients[client_key]
             data = {
                 "hatch_rate":slave_hatch_rate,
                 "num_clients":slave_num_clients,
