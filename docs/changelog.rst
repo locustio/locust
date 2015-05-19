@@ -2,6 +2,13 @@
 Changelog
 ##########
 
+Dev
+===
+
+* Fixed bug where POST requests (and other methods as well) got incorrectly reported as 
+  GET requests, if the request resulted in a redirect.
+
+
 0.7.2
 =====
 

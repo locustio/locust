@@ -58,3 +58,13 @@ class TestHttpSession(WebserverTestCase):
         self.assertEqual(1, stats.num_requests)
         self.assertGreater(stats.avg_response_time, 500)
     
+    def test_post_redirect(self):
+        s = HttpSession("http://127.0.0.1:%i" % self.port)
+        url = "/redirect"
+        r = s.post(url)
+        self.assertEqual(200, r.status_code)
+        post_stats = global_stats.get(url, method="POST")
+        get_stats = global_stats.get(url, method="GET")
+        self.assertEqual(1, post_stats.num_requests)
+        self.assertEqual(0, get_stats.num_requests)
+    

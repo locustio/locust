@@ -19,6 +19,12 @@ To see available options, run::
     locust --help
 
 
+Supported Python Versions
+-------------------------
+
+Locust requires **Python 2.6+**.  It is not currently compatible with Python 3.x.
+
+
 Installing ZeroMQ
 -----------------
 
@@ -48,7 +54,7 @@ You can find an unofficial collection of pre built python packages for windows h
 
 
 Installing Locust on OS X
-----------------------------
+-------------------------
 
 The following is currently the shortest path to installing gevent on OS X using Homebrew.
 
