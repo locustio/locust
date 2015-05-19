@@ -23,14 +23,14 @@ class RequestStats(object):
         self.last_request_timestamp = None
         self.start_time = None
 
-    def get(self, name, request_type, **test_identifiers):
+    def get(self, name, method, **test_identifiers):
         """
         Retrieve a StatsEntry instance by name and method
         """
-        entry_key = (name, request_type) + tuple(test_identifiers.values())
+        entry_key = (name, method) + tuple(test_identifiers.values())
         entry = self.entries.get(entry_key)
         if not entry:
-            entry = StatsEntry(self, name, request_type, **test_identifiers)
+            entry = StatsEntry(self, name, method, **test_identifiers)
             self.entries[entry_key] = entry
         return entry
 
@@ -286,7 +286,7 @@ class StatsEntry(object):
 
     @classmethod
     def unserialize(cls, data):
-        obj = cls(None, data["name"], data["method"], **(data['custom_stats']))
+        obj = cls(None, data["name"], data["method"], **(data.get('custom_stats', {})))
         for key in [
             "last_request_timestamp",
             "start_time",
