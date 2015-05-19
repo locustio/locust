@@ -82,14 +82,18 @@ class LocustIdTracker(object):
             return released_ids
 
     def __init__(self, slave_count, locust_classes):
-        self.locust_id_assigners = {locust_class: LocustIdTracker.LocustIdAssigner() for locust_class in locust_classes}
+        self.locust_id_assigners = {}
+        for locust_class in locust_classes:
+            self.locust_id_assigners[locust_class] = LocustIdTracker.LocustIdAssigner()
         self.slave_trackers = [LocustIdTracker.LocustSlaveIdTracker(locust_classes) for _ in range(slave_count)]
         self.locust_classes = locust_classes
 
     def set_user_count(self, count):
         users_per_slave = count / len(self.slave_trackers)
         total_weight = sum(locust_class.weight for locust_class in self.locust_classes)
-        locusts_per_slave = {locust_class: int(round(locust_class.weight / float(total_weight) * users_per_slave)) for locust_class in self.locust_classes}
+        locusts_per_slave = {}
+        for locust_class in self.locust_classes:
+            locusts_per_slave[locust_class] = int(round(locust_class.weight / float(total_weight) * users_per_slave))
         slave_changes = []
         for slave_tracker in self.slave_trackers:
             locust_changes = {}
