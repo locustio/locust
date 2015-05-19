@@ -4,6 +4,7 @@
 import csv
 from StringIO import StringIO
 from . import runners
+from collections import OrderedDict
 from itertools import chain
 
 def _sort_stats(stats):
@@ -29,11 +30,16 @@ def write_distribution_stats_csv(filelike):
 
 def write_request_stats_csv(filelike):
     writer = csv.writer(filelike)
+    extra_headers = OrderedDict()
+    for stats in runners.locust_runner.request_stats.values():
+        for custom_stat in stats.custom_stats.keys():
+            extra_headers[custom_stat] = None
+
     writer.writerow(['Method', 'Name', '# requests', '# failures', 'Median response time',
         'Average response time', 'Min response time', 'Max response time',
-        'Average Content Size', 'Requests/s'])
+        'Average Content Size', 'Requests/s'] + list(extra_headers.keys()))
     for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
         writer.writerow([s.method, s.name, s.num_requests, s.num_failures, s.median_response_time,
                         s.avg_response_time, s.min_response_time or 0, s.max_response_time,
-                        s.avg_content_length, s.total_rps,])
+                        s.avg_content_length, s.total_rps,] + [s.custom_stats.get(header, None) for header in extra_headers])
     return filelike
