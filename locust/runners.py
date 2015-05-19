@@ -61,7 +61,9 @@ class LocustIdTracker(object):
     class LocustSlaveIdTracker(object):
 
         def __init__(self, locust_classes):
-            self.ids = {locust_class: [] for locust_class in locust_classes}
+            self.ids = {}
+            for locust_class in locust_classes:
+                self.ids[locust_class] = []
 
         def count_for_class(self, locust_class):
             return len(self.ids[locust_class])
