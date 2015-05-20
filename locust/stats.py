@@ -27,7 +27,7 @@ class RequestStats(object):
         """
         Retrieve a StatsEntry instance by name and method
         """
-        entry_key = (name, method) + tuple(test_identifiers.values())
+        entry_key = (name, method) + tuple(value for value in test_identifiers.values() if hasattr(value, '__hash__'))
         entry = self.entries.get(entry_key)
         if not entry:
             entry = StatsEntry(self, name, method, **test_identifiers)
