@@ -9,6 +9,7 @@ import inspect
 import logging
 import socket
 from optparse import OptionParser
+from .reports_csv import write_exceptions_csv, write_distribution_stats_csv, write_request_stats_csv
 
 import web
 from log import setup_logging, console_logger
@@ -153,7 +154,7 @@ def parse_options():
         default=None,
         help="Number of requests to perform. Only used together with --no-web"
     )
-    
+
     # log level
     parser.add_option(
         '--loglevel', '-L',
@@ -226,6 +227,14 @@ def parse_options():
         dest='show_version',
         default=False,
         help="show program's version number and exit"
+    )
+
+    parser.add_option(
+        '--write-csv',
+        dest='write_reports',
+        action='store_true',
+        default=False,
+        help='Write the exceptions, stats and distributions reports to a file on exit.'
     )
 
     # Finalize
@@ -386,11 +395,11 @@ def main():
         }
         console_logger.info(dumps(task_data))
         sys.exit(0)
-    
+
     # if --master is set, make sure --no-web isn't set
     if options.master and options.no_web:
         logger.error("Locust can not run distributed with the web interface disabled (do not use --no-web and --master together)")
-        sys.exit(0)
+            sys.exit(0)
 
     if not options.no_web and not options.slave:
         # spawn web greenlet
@@ -416,7 +425,36 @@ def main():
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
-    
+
+    def write_logs():
+        def get_next_file(output_folder, file_name_root):
+            highest_num = -1
+            for f in os.listdir(output_folder):
+                if os.path.isfile(os.path.join(output_folder, f)) and f.startswith(file_name_root):
+                    file_name = os.path.splitext(f)[0]
+                    try:
+                        file_num = int(file_name[len(file_name_root):])
+                        if file_num > highest_num:
+                            highest_num = file_num
+                    except ValueError:
+                        logger.error('Failed to detect log file number.')
+            output_file = os.path.join(output_folder, file_name_root + str(highest_num + 1)) + '.csv'
+            return output_file
+        try:
+            os.makedirs('./logs')
+        except OSError:
+            pass
+        with open(get_next_file('./logs', 'exceptions'), 'w') as exceptions_csv:
+            write_exceptions_csv(exceptions_csv)
+        if not options.slave:
+            with open(get_next_file('./logs', 'stats'), 'w') as stats_csv:
+                write_request_stats_csv(stats_csv)
+            with open(get_next_file('./logs', 'distribution'), 'w') as percentile_csv:
+                write_distribution_stats_csv(percentile_csv)
+
+    if options.write_reports:
+        events.stopping += write_logs
+
     def shutdown(code=0):
         """
         Shut down locust by firing quitting event, printing stats and exiting
@@ -435,7 +473,7 @@ def main():
         logger.info("Got SIGTERM signal")
         shutdown(0)
     gevent.signal(signal.SIGTERM, sig_term_handler)
-    
+
     try:
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
