@@ -112,6 +112,7 @@ class LocustRunner(object):
                     try:
                         locust().run()
                     except GreenletExit:
+                        instance.die()
                         pass
                 new_locust = self.locusts.spawn(start_locust, locust)
                 if len(self.locusts) % 10 == 0:
