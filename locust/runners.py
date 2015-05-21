@@ -37,7 +37,7 @@ class LocustRunner(object):
         self.hatching_greenlet = None
         self.exceptions = {}
         self.stats = global_stats
-        
+
         # register listener that resets stats when hatching is complete
         def on_hatch_complete(user_count):
             self.state = STATE_RUNNING
@@ -176,9 +176,10 @@ class LocustRunner(object):
         # if we are currently hatching locusts we need to kill the hatching greenlet first
         if self.hatching_greenlet and not self.hatching_greenlet.ready():
             self.hatching_greenlet.kill(block=True)
-        self.locusts.kill(block=True)
         self.state = STATE_STOPPED
         events.locust_stop_hatching.fire()
+        events.stopping.fire()
+        self.locusts.kill(block=True)
 
     def log_exception(self, node_id, msg, formatted_tb):
         key = hash(formatted_tb)
@@ -222,7 +223,7 @@ class SlaveNode(object):
 class MasterLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
         super(MasterLocustRunner, self).__init__(*args, **kwargs)
-        
+
         class SlaveNodesDict(dict):
             def get_by_state(self, state):
                 return [c for c in self.itervalues() if c.state == state]
@@ -280,7 +281,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.stats.clear_all()
             self.exceptions = {}
             events.master_start_hatching.fire()
-        
+
         for client in self.clients.itervalues():
             data = {
                 "hatch_rate":slave_hatch_rate,
@@ -303,8 +304,12 @@ class MasterLocustRunner(DistributedLocustRunner):
         for client in self.clients.hatching + self.clients.running:
             self.server.send(Message("stop", None, None))
         events.master_stop_hatching.fire()
-    
+        events.stopping.fire()
+
     def quit(self):
+        if self.state != STATE_STOPPED:
+            events.stopping.fire()
+            self.state = STATE_STOPPED
         for client in self.clients.itervalues():
             self.server.send(Message("quit", None, None))
         self.greenlet.kill(block=True)
@@ -395,7 +400,8 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 self.client.send(Message("client_ready", None, self.client_id))
             elif msg.type == "quit":
                 logger.info("Got quit message from master, shutting down...")
-                self.stop()
+                if self.state != STATE_STOPPED:
+                    self.stop()
                 self.greenlet.kill(block=True)
 
     def stats_reporter(self):
