@@ -8,6 +8,7 @@ import signal
 import inspect
 import logging
 import socket
+import time
 from optparse import OptionParser
 
 import web
@@ -153,7 +154,27 @@ def parse_options():
         default=None,
         help="Number of requests to perform. Only used together with --no-web"
     )
-    
+
+    # Number of requests
+    parser.add_option(
+        '-t', '--run-time',
+        action='store',
+        type='int',
+        dest='run_time',
+        default=None,
+        help="Total time to run the tests. Only used together with --no-web"
+    )
+
+    # Number of requests
+    parser.add_option(
+        '--slave-count',
+        action='store',
+        type='int',
+        dest='slave_count',
+        default=None,
+        help="Number of slaves to connect to master before beginning hatching. Only used together with --no-web"
+    )
+
     # log level
     parser.add_option(
         '--loglevel', '-L',
@@ -386,11 +407,14 @@ def main():
         }
         console_logger.info(dumps(task_data))
         sys.exit(0)
-    
-    # if --master is set, make sure --no-web isn't set
+
+    # if --master is set and --no-web is set, then ensure that --slave-count and
+    # --run-time are also set (required to know when to start and stop execution).
+    # .. todo:: Enable also using num_request as an end condition.
     if options.master and options.no_web:
-        logger.error("Locust can not run distributed with the web interface disabled (do not use --no-web and --master together)")
-        sys.exit(0)
+        if options.slave_count == None or options.run_time == None:
+            logger.error("Locust can not run distributed with the web interface disabled without --slave-count and --run-time set.")
+            sys.exit(0)
 
     if not options.no_web and not options.slave:
         # spawn web greenlet
@@ -401,10 +425,21 @@ def main():
         runners.locust_runner = LocalLocustRunner(locust_classes, options)
         # spawn client spawning/hatching greenlet
         if options.no_web:
-            runners.locust_runner.start_hatching(wait=True)
+            runners.locust_runner.start_hatching(locust_count=options.num_clients, wait=True)
             main_greenlet = runners.locust_runner.greenlet
     elif options.master:
         runners.locust_runner = MasterLocustRunner(locust_classes, options)
+        if options.no_web:
+            # Wait for X slaves to connect.
+            connected_slaves = len(runners.locust_runner.clients)
+            while connected_slaves < options.slave_count:
+                logger.info('Waiting for slaves to connect. {} / {} connected so far.'.format(connected_slaves, options.slave_count))
+                time.sleep(3)
+                connected_slaves = len(runners.locust_runner.clients)
+            # Start hatching
+            logger.info('All slaves connected. Starting hatching.')
+            runners.locust_runner.start_hatching(locust_count=options.num_clients, hatch_rate=options.hatch_rate)
+            main_greenlet = runners.locust_runner.greenlet
     elif options.slave:
         try:
             runners.locust_runner = SlaveLocustRunner(locust_classes, options)
@@ -435,7 +470,17 @@ def main():
         logger.info("Got SIGTERM signal")
         shutdown(0)
     gevent.signal(signal.SIGTERM, sig_term_handler)
-    
+
+    if options.run_time != None:
+        def run_timer():
+            gevent.sleep(options.run_time)
+            logger.info("Run timer expired. Stopping locust.")
+            if hasattr(runners.locust_runner, 'quit'):
+                runners.locust_runner.quit() # distributed
+            else:
+                runners.locust_runner.stop() # local
+        gevent.spawn(run_timer)
+
     try:
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
