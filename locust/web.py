@@ -16,6 +16,7 @@ from .cache import memoize
 from .runners import MasterLocustRunner
 from locust.stats import median_from_dict
 from locust import version
+import ssl
 
 import logging
 logger = logging.getLogger(__name__)
@@ -198,6 +199,9 @@ def exceptions_csv():
     return response
 
 def start(locust, options):
+    if 'SSL_KEY' in os.environ and 'SSL_CERT' in os.environ:
+        wsgi.WSGIServer((options.web_host, options.port), app, log=None, keyfile=os.environ['SSL_KEY'], certfile=os.environ['SSL_CERT'], ssl_version=ssl.PROTOCOL_TLSv1).serve_forever()
+    else:
     wsgi.WSGIServer((options.web_host, options.port), app, log=None).serve_forever()
 
 def _sort_stats(stats):
