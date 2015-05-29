@@ -45,6 +45,11 @@ class LocustRunner(object):
             self.stats.reset_all()
         events.hatch_complete += on_hatch_complete
 
+        # register listener that sends quit message to slave nodes
+        def on_quitting():
+            self.quit()
+        events.quitting += on_quitting
+
     @property
     def request_stats(self):
         return self.stats.entries
@@ -181,6 +186,10 @@ class LocustRunner(object):
         events.stopping.fire()
         self.locusts.kill(block=True)
 
+    def quit(self):
+        if self.state == STATE_HATCHING or self.state == STATE_RUNNING:
+            self.stop()
+
     def log_exception(self, node_id, msg, formatted_tb):
         key = hash(formatted_tb)
         row = self.exceptions.setdefault(key, {"count": 0, "msg": msg, "traceback": formatted_tb, "nodes": set()})
@@ -253,12 +262,7 @@ class MasterLocustRunner(DistributedLocustRunner):
 
             self.clients[client_id].user_count = data["user_count"]
         events.slave_report += on_slave_report
-        
-        # register listener that sends quit message to slave nodes
-        def on_quitting():
-            self.quit()
-        events.quitting += on_quitting
-    
+
     @property
     def user_count(self):
         return sum([c.user_count for c in self.clients.itervalues()])
@@ -307,9 +311,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         events.stopping.fire()
 
     def quit(self):
-        if self.state != STATE_STOPPED:
-            events.stopping.fire()
-            self.state = STATE_STOPPED
+        super(MasterLocustRunner, self).quit()
         for client in self.clients.itervalues():
             self.server.send(Message("quit", None, None))
         self.greenlet.kill(block=True)
@@ -343,6 +345,8 @@ class MasterLocustRunner(DistributedLocustRunner):
                 if msg.node_id in self.clients:
                     del self.clients[msg.node_id]
                     logger.info("Client %r quit. Currently %i clients connected." % (msg.node_id, len(self.clients.ready)))
+                if self.state != STATE_STOPPED:
+                    self.stop()
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
 
