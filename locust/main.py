@@ -8,6 +8,7 @@ import signal
 import inspect
 import logging
 import socket
+import time
 from optparse import OptionParser
 from .reports_csv import write_exceptions_csv, write_distribution_stats_csv, write_request_stats_csv
 
@@ -427,23 +428,16 @@ def main():
         gevent.spawn(stats_printer)
 
     def write_logs():
+        epoch_time = time.time()
         def get_next_file(output_folder, file_name_root):
-            highest_num = -1
-            for f in os.listdir(output_folder):
-                if os.path.isfile(os.path.join(output_folder, f)) and f.startswith(file_name_root):
-                    file_name = os.path.splitext(f)[0]
-                    try:
-                        file_num = int(file_name[len(file_name_root):])
-                        if file_num > highest_num:
-                            highest_num = file_num
-                    except ValueError:
-                        logger.error('Failed to detect log file number.')
-            output_file = os.path.join(output_folder, file_name_root + str(highest_num + 1)) + '.csv'
+            output_file = os.path.join(output_folder, file_name_root + str(epoch_time)) + '.csv'
             return output_file
+
         try:
             os.makedirs(options.csv_reports_dir)
         except OSError:
             pass
+
         with open(get_next_file(options.csv_reports_dir, 'exceptions'), 'w') as exceptions_csv:
             write_exceptions_csv(exceptions_csv)
         if not options.slave:
