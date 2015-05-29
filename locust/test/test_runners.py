@@ -4,7 +4,7 @@ import gevent
 import mock
 
 from gevent.queue import Queue
-from gevent import sleep
+from gevent import sleep, GreenletExit
 
 from locust.runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner, LocustIdTracker
 from locust.core import Locust, task, TaskSet
@@ -460,7 +460,7 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(id_changes[4][MyOtherTestLocust.__name__]['ids'], [18, 19])
 
     def test_spawn_with_id(self):
-        
+
         init_ids = []
         run_ids = []
 

@@ -216,6 +216,7 @@ class LocustRunner(object):
         self.num_clients = options.num_clients
         self.num_requests = options.num_requests
         self.host = options.host
+        self.no_stats_reset_on_hatch = options.no_stats_reset_on_hatch
         self.locusts = Group()
         self.state = STATE_INIT
         self.hatching_greenlet = None
@@ -226,9 +227,9 @@ class LocustRunner(object):
         # register listener that resets stats when hatching is complete
         def on_hatch_complete(user_count):
             self.state = STATE_RUNNING
-            # todo:: Instead of commenting out, use command line flag.
-            #logger.info("Resetting stats\n")
-            #self.stats.reset_all()
+            if not self.no_stats_reset_on_hatch:
+                logger.info("Resetting stats\n")
+                self.stats.reset_all()
         events.hatch_complete += on_hatch_complete
 
     @property
