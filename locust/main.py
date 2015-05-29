@@ -428,9 +428,9 @@ def main():
         gevent.spawn(stats_printer)
 
     def write_logs():
-        epoch_time = time.time()
+        epoch_time = long(round(time.time()))
         def get_next_file(output_folder, file_name_root):
-            output_file = os.path.join(output_folder, file_name_root + str(epoch_time)) + '.csv'
+            output_file = os.path.join(output_folder, file_name_root + '_' str(epoch_time)) + '.csv'
             return output_file
 
         try:
