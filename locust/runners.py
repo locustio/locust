@@ -27,8 +27,76 @@ SLAVE_REPORT_INTERVAL = 3.0
 
 
 class LocustIdTracker(object):
+    """This class handles tracking IDs for a locust test run.
+
+    The LocustIdTracker is used in either standalone locust runs or in distributed mode.
+    The standalone or master runner will instantiate an ID tracker when a test is run
+    and will destroy it when the test is stopped.
+
+    The job of the locust id tracker is to create and distribute a set of unique IDs
+    to locusts in a test. For every locust type, a range of IDs are created. When hatching
+    is about to begin, the runner will request enough IDs for the number of locusts to
+    be spawned. The ID tracker will then create a set of ids for each locust type and
+    ensure they are divided evenly across slaves.
+
+    This is best illustrated with an example:
+
+    Let's assume we have two locust slaves and three locust types with equal weights. We wish to run
+    the test with 30 locusts. The locust ID tracker will assign 15 locusts for each slave and
+    within each of those 15, there will be a set of ids for each locust type.
+
+    Slave 1::
+
+        Will spawn 5 ``LocustA`` with ids 0-4
+        Will spawn 5 ``LocustB`` with ids 0-4
+        Will spawn 5 ``LocustC`` with ids 0-4
+
+    Slave 2::
+
+        Will spawn 5 ``LocustA`` with ids 5-9
+        Will spawn 5 ``LocustB`` with ids 5-9
+        Will spawn 5 ``LocustC`` with ids 5-9
+
+    If the number of users is increased to 60 during a run, the ID tracker will compensate
+    for already assigned IDs.
+
+    Slave 1::
+
+        Will spawn 5 ``LocustA`` with ids 10-14
+        Will spawn 5 ``LocustB`` with ids 10-14
+        Will spawn 5 ``LocustC`` with ids 10-14
+
+    Slave 2::
+
+        Will spawn 5 ``LocustA`` with ids 15-20
+        Will spawn 5 ``LocustB`` with ids 15-20
+        Will spawn 5 ``LocustC`` with ids 15-20
+
+    As you'll notice, each slave does not have a contiguous block of IDs.
+
+    If we decreased the user count to 42, the ID track will deallocate the highest
+    ids equally across slaves.
+
+    Slave 1::
+
+        Will kill 3 ``LocustA`` with ids 12-14
+        Will kill 3 ``LocustB`` with ids 12-14
+        Will kill 3 ``LocustC`` with ids 12-14
+
+    Slave 2::
+
+        Will kill 3 ``LocustA`` with ids 12-20
+        Will kill 3 ``LocustB`` with ids 12-20
+        Will kill 3 ``LocustC`` with ids 12-20
+    """
 
     class LocustIdAssigner(object):
+        """This class is used internally by the LocustIdTracker to track ids for a Locust type.
+
+        By using a single ID assigner per type, we can ensure that the IDs will be unique
+        across all slaves. This class will track allocated IDs and ensure they aren't reused
+        without being freed first.
+        """
 
         def __init__(self):
             self.free_ids = []
@@ -36,6 +104,12 @@ class LocustIdTracker(object):
             self.total_ids = 0
 
         def request_ids(self, count):
+            """Request a block of ids.
+
+            Note that this block may not be contiguous, but will allocate previously
+            freed ids before assigning new ones. This way we can ensure that all
+            low value ids are assigned first.
+            """
             if count > len(self.free_ids):
                 # If we don't have enough free ids, create more.
                 num_ids_to_add = count - len(self.free_ids)
@@ -48,35 +122,46 @@ class LocustIdTracker(object):
             return assigning_ids
 
         def release_ids(self, ids):
+            """Free the ids in the collection given."""
             for id in ids:
                 self.assigned_ids.remove(id)
                 self.free_ids.append(id)
             self.free_ids.sort()
 
         def release_id(self, id):
+            """Free the id given."""
             self.assigned_ids.remove(id)
             self.free_ids.append(id)
             self.free_ids.sort()
 
     class LocustSlaveIdTracker(object):
+        """Used internally by the LocustIdTracker for tracking IDs assigned per slave."""
 
         def __init__(self, locust_classes):
+            """Create and empty dict mapping locust classes to lists of ids."""
             self.ids = {}
             for locust_class in locust_classes:
                 self.ids[locust_class] = []
 
         def count_for_class(self, locust_class):
+            """Get the number of ids assigned to a given locust type on this slave."""
             return len(self.ids[locust_class])
 
         def allocate_ids(self, locust_class, ids):
+            """Assign more ids to the given locust type."""
             self.ids[locust_class].extend(ids)
             self.ids[locust_class].sort()
 
         def free_ids(self, locust_class, ids):
+            """Free the ids of the given locust type."""
             for id in ids[locust_class]:
                 self.ids[locust_class].remove(id)
 
         def release_ids(self, locust_class, count):
+            """Frees a number of ids of the given locust type.
+
+            This method will free the highest value ids first.
+            """
             released_ids = self.ids[locust_class][count:]
             self.ids[locust_class] = self.ids[locust_class][:count]
             return released_ids
@@ -89,6 +174,16 @@ class LocustIdTracker(object):
         self.locust_classes = locust_classes
 
     def set_user_count(self, count):
+        """Produce a set of ID changes to make.
+
+        This method is the sole interface to the ID tracker. On the first call, it will
+        assign all new IDs as described in the class documentation above. It will handle
+        tracking the IDs as appropriate and returning a map of dictionaries of actions
+        each locust is to take (i.e. increase the user count and assign them these IDs).
+
+        The returned messages will then be forward to each corresponding slave to act
+        upon.
+        """
         users_per_slave = count / len(self.slave_trackers)
         total_weight = sum(locust_class.weight for locust_class in self.locust_classes)
         locusts_per_slave = {}
@@ -139,11 +234,11 @@ class LocustRunner(object):
     @property
     def request_stats(self):
         return self.stats.entries
-    
+
     @property
     def errors(self):
         return self.stats.errors
-    
+
     @property
     def user_count(self):
         return len(self.locusts)
@@ -188,7 +283,7 @@ class LocustRunner(object):
 
         logger.info("Hatching and swarming %i clients at the rate %g clients/s..." % (spawn_count, self.hatch_rate))
         occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
-        
+
         def hatch():
             sleep_time = 1.0 / self.hatch_rate
             while True:
@@ -204,9 +299,12 @@ class LocustRunner(object):
                 def start_locust(_, id):
                     try:
                         if locust.__init__.__func__.func_code.co_argcount > 1:
+                            # if the locust takes an argument, it's the id. Pass it in.
                             instance = locust(id)
                         else:
+                            # Doesn't take an ID argument. Not needed.
                             instance = locust()
+                        instance.id = id
                         instance.run()
                     except GreenletExit:
                         pass
@@ -218,7 +316,7 @@ class LocustRunner(object):
                     return
 
                 gevent.sleep(sleep_time)
-        
+
         hatch()
         if wait:
             self.locusts.join()
@@ -276,7 +374,7 @@ class LocustRunner(object):
     def stop(self):
         # if we are currently hatching locusts we need to kill the hatching greenlet first
         if self.id_tracker != None:
-            self.id_tracker.set_user_count(0)
+            self.id_tracker = None
         if self.hatching_greenlet and not self.hatching_greenlet.ready():
             self.hatching_greenlet.kill(block=True)
         self.locusts.kill(block=True)
@@ -302,7 +400,7 @@ class LocalLocustRunner(LocustRunner):
 
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
         if self.id_tracker == None:
-            self.id_tracker = LocustIdTracker(1, self.locust_classes)
+            self.id_tracker = LocustIdTracker(1, self.locust_classes) # one slave to track.
         id_changes = self.id_tracker.set_user_count(locust_count)
         self.hatching_greenlet = gevent.spawn(lambda: super(LocalLocustRunner, self).start_hatching(locust_count, hatch_rate, wait=wait, id_changes=id_changes[0]))
         self.greenlet = self.hatching_greenlet
@@ -314,7 +412,7 @@ class DistributedLocustRunner(LocustRunner):
         self.master_port = options.master_port
         self.master_bind_host = options.master_bind_host
         self.master_bind_port = options.master_bind_port
-    
+
     def noop(self, *args, **kwargs):
         """ Used to link() greenlets to in order to be compatible with gevent 1.0 """
         pass
@@ -333,24 +431,24 @@ class MasterLocustRunner(DistributedLocustRunner):
         class SlaveNodesDict(dict):
             def get_by_state(self, state):
                 return [c for c in self.itervalues() if c.state == state]
-            
+
             @property
             def ready(self):
                 return self.get_by_state(STATE_INIT)
-            
+
             @property
             def hatching(self):
                 return self.get_by_state(STATE_HATCHING)
-            
+
             @property
             def running(self):
                 return self.get_by_state(STATE_RUNNING)
-        
+
         self.clients = SlaveNodesDict()
         self.server = rpc.Server(self.master_bind_host, self.master_bind_port)
         self.greenlet = Group()
         self.greenlet.spawn(self.client_listener).link_exception(callback=self.noop)
-        
+
         # listener that gathers info on how many locust users the slaves has spawned
         def on_slave_report(client_id, data):
             if client_id not in self.clients:
@@ -359,16 +457,16 @@ class MasterLocustRunner(DistributedLocustRunner):
 
             self.clients[client_id].user_count = data["user_count"]
         events.slave_report += on_slave_report
-        
+
         # register listener that sends quit message to slave nodes
         def on_quitting():
             self.quit()
         events.quitting += on_quitting
-    
+
     @property
     def user_count(self):
         return sum([c.user_count for c in self.clients.itervalues()])
-    
+
     def start_hatching(self, locust_count, hatch_rate):
         num_slaves = len(self.clients.ready) + len(self.clients.running)
         if self.id_tracker == None:
@@ -410,21 +508,21 @@ class MasterLocustRunner(DistributedLocustRunner):
                 remaining -= 1
 
             self.server.send(Message("hatch", data, None))
-        
+
         self.stats.start_time = time()
         self.state = STATE_HATCHING
 
     def stop(self):
-        self.id_tracker.set_user_count(0)
+        self.id_tracker = None
         for client in self.clients.hatching + self.clients.running:
             self.server.send(Message("stop", None, None))
         events.master_stop_hatching.fire()
-    
+
     def quit(self):
         for client in self.clients.itervalues():
             self.server.send(Message("quit", None, None))
         self.greenlet.kill(block=True)
-    
+
     def client_listener(self):
         while True:
             msg = self.server.recv()
@@ -465,24 +563,24 @@ class SlaveLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + md5(str(time() + random.randint(0,10000))).hexdigest()
-        
+
         self.client = rpc.Client(self.master_host, self.master_port)
         self.greenlet = Group()
 
         self.greenlet.spawn(self.worker).link_exception(callback=self.noop)
         self.client.send(Message("client_ready", None, self.client_id))
         self.greenlet.spawn(self.stats_reporter).link_exception(callback=self.noop)
-        
+
         # register listener for when all locust users have hatched, and report it to the master node
         def on_hatch_complete(user_count):
             self.client.send(Message("hatch_complete", {"count":user_count}, self.client_id))
         events.hatch_complete += on_hatch_complete
-        
-        # register listener that adds the current number of spawned locusts to the report that is sent to the master node 
+
+        # register listener that adds the current number of spawned locusts to the report that is sent to the master node
         def on_report_to_master(client_id, data):
             data["user_count"] = self.user_count
         events.report_to_master += on_report_to_master
-        
+
         # register listener that sends quit message to master
         def on_quitting():
             self.client.send(Message("quit", None, self.client_id))
@@ -523,5 +621,5 @@ class SlaveLocustRunner(DistributedLocustRunner):
             except:
                 logger.error("Connection lost to master server. Aborting...")
                 break
-            
+
             gevent.sleep(SLAVE_REPORT_INTERVAL)
