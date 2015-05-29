@@ -30,16 +30,17 @@ def write_distribution_stats_csv(filelike):
 def write_request_stats_csv(filelike):
     writer = csv.writer(filelike)
     extra_headers = {}
-    for stats in runners.locust_runner.request_stats.values():
-        for custom_stat in stats.custom_stats.keys():
-            extra_headers.setdefault(custom_stat, len(extra_headers))
     extra_headers = dict(zip(extra_headers.values(), extra_headers.keys()))
 
     writer.writerow(['Method', 'Name', '# requests', '# failures', 'Median response time',
         'Average response time', 'Min response time', 'Max response time',
         'Average Content Size', 'Requests/s'] + [extra_headers[i] for i in range(len(extra_headers))])
-    for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
+
+    request_stats = runners.locust_runner.request_stats
+    stats = runners.locust_runner.stats
+
+    for s in chain(_sort_stats(request_stats), [stats.aggregated_stats("Total", full_request_history=True)]):
         writer.writerow([s.method, s.name, s.num_requests, s.num_failures, s.median_response_time,
                         s.avg_response_time, s.min_response_time or 0, s.max_response_time,
-                        s.avg_content_length, s.total_rps,] + [s.custom_stats.get(extra_headers[i], None) for i in range(len(extra_headers))])
+                        s.avg_content_length, s.total_rps,])
     return filelike
