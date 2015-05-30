@@ -2,11 +2,13 @@
 Changelog
 ##########
 
-Dev
-===
+0.7.3
+=====
 
 * Fixed bug where POST requests (and other methods as well) got incorrectly reported as 
   GET requests, if the request resulted in a redirect.
+* Added ability to download exceptions in CSV format. Download links has also been moved 
+  to it's own tab in the web UI.
 
 
 0.7.2
