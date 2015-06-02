@@ -12,7 +12,7 @@ from optparse import OptionParser
 
 import web
 from log import setup_logging, console_logger
-from stats import stats_printer, print_percentile_stats, print_error_report, print_stats
+from stats import stats_printer, print_percentile_stats, print_error_report, print_stats, stats_persist
 from inspectlocust import print_task_ratio, get_task_ratio_dict
 from core import Locust, HttpLocust
 from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
@@ -228,6 +228,16 @@ def parse_options():
         help="show program's version number and exit"
     )
 
+    # A file that contains the current request stats.
+    parser.add_option(
+        '--statsfile',
+        action='store',
+        type='str',
+        dest='statsfile',
+        default=None,
+        help="Store current request stats to this file in CSV format.",
+    )
+
     # Finalize
     # Return three-tuple of parser + the output from parse_args (opt obj, args)
     opts, args = parser.parse_args()
@@ -416,6 +426,9 @@ def main():
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
+
+    if options.statsfile:
+        gevent.spawn(stats_persist, options.statsfile)
     
     def shutdown(code=0):
         """
