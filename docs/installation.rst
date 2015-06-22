@@ -64,3 +64,15 @@ The following is currently the shortest path to installing gevent on OS X using 
     brew install libevent
 
 #. Then follow the above instructions.
+
+Increasing Maximum Number of Open Files Limit
+---------------------------------------------
+
+Every HTTP connection on a machine opens a new file (technically a file descriptor).
+Operating systems may set a low limit for the maximum number of files
+that can be open. If the limit is less than the number of simulated users in a test,
+failures will occur.
+
+Increase the operating system's default maximum number of files limit to a number
+higher than the number of simulated users you'll want to run. How to do this depends
+on the operating system in use.
