@@ -1,7 +1,11 @@
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from past.builtins import basestring
 import re
 import time
 from datetime import timedelta
-from urlparse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse
 
 import requests
 from requests import Response, Request
@@ -9,8 +13,8 @@ from requests.auth import HTTPBasicAuth
 from requests.exceptions import (RequestException, MissingSchema,
     InvalidSchema, InvalidURL)
 
-import events
-from exception import CatchResponseError, ResponseError
+from . import events
+from .exception import CatchResponseError, ResponseError
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 

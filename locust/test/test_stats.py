@@ -1,9 +1,11 @@
+from __future__ import absolute_import
+from builtins import range
 import unittest
 import time
 
 from requests.exceptions import RequestException
 
-from testcases import WebserverTestCase
+from .testcases import WebserverTestCase
 from locust.stats import RequestStats, StatsEntry, global_stats
 from locust.core import HttpLocust, Locust, TaskSet, task
 from locust.inspectlocust import get_task_ratio_dict
@@ -27,7 +29,7 @@ class TestRequestStats(unittest.TestCase):
 
     def test_percentile(self):
         s = StatsEntry(self.stats, "percentile_test", "GET")
-        for x in xrange(100):
+        for x in range(100):
             s.log(x, 0)
 
         self.assertEqual(s.get_response_time_percentile(0.5), 50)

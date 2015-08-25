@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 from requests.exceptions import (RequestException, MissingSchema,
         InvalidSchema, InvalidURL)
 
 import gevent
 from locust.clients import HttpSession
 from locust.stats import global_stats
-from testcases import WebserverTestCase
+from .testcases import WebserverTestCase
 
 class TestHttpSession(WebserverTestCase):
     def test_get(self):

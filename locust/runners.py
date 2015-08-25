@@ -1,4 +1,10 @@
 # coding=UTF-8
+from __future__ import division
+from __future__ import absolute_import
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import socket
 import traceback
 import warnings
@@ -11,10 +17,10 @@ import gevent
 from gevent import GreenletExit
 from gevent.pool import Group
 
-import events
-from stats import global_stats
+from . import events
+from .stats import global_stats
 
-from rpc import rpc, Message
+from .rpc import rpc, Message
 
 logger = logging.getLogger(__name__)
 
@@ -75,9 +81,9 @@ class LocustRunner(object):
                 locust.stop_timeout = stop_timeout
 
             # create locusts depending on weight
-            percent = locust.weight / float(weight_sum)
+            percent = old_div(locust.weight, float(weight_sum))
             num_locusts = int(round(amount * percent))
-            bucket.extend([locust for x in xrange(0, num_locusts)])
+            bucket.extend([locust for x in range(0, num_locusts)])
         return bucket
 
     def spawn_locusts(self, spawn_count=None, stop_timeout=None, wait=False):
@@ -99,10 +105,10 @@ class LocustRunner(object):
         occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
         
         def hatch():
-            sleep_time = 1.0 / self.hatch_rate
+            sleep_time = old_div(1.0, self.hatch_rate)
             while True:
                 if not bucket:
-                    logger.info("All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in occurence_count.iteritems()]))
+                    logger.info("All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in occurence_count.items()]))
                     events.hatch_complete.fire(user_count=self.num_clients)
                     return
 
@@ -225,7 +231,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         
         class SlaveNodesDict(dict):
             def get_by_state(self, state):
-                return [c for c in self.itervalues() if c.state == state]
+                return [c for c in self.values() if c.state == state]
             
             @property
             def ready(self):
@@ -260,7 +266,7 @@ class MasterLocustRunner(DistributedLocustRunner):
     
     @property
     def user_count(self):
-        return sum([c.user_count for c in self.clients.itervalues()])
+        return sum([c.user_count for c in self.clients.values()])
     
     def start_hatching(self, locust_count, hatch_rate):
         num_slaves = len(self.clients.ready) + len(self.clients.running)
@@ -270,8 +276,8 @@ class MasterLocustRunner(DistributedLocustRunner):
             return
 
         self.num_clients = locust_count
-        slave_num_clients = locust_count / (num_slaves or 1)
-        slave_hatch_rate = float(hatch_rate) / (num_slaves or 1)
+        slave_num_clients = old_div(locust_count, (num_slaves or 1))
+        slave_hatch_rate = old_div(float(hatch_rate), (num_slaves or 1))
         remaining = locust_count % num_slaves
 
         logger.info("Sending hatch jobs to %d ready clients", num_slaves)
@@ -281,7 +287,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.exceptions = {}
             events.master_start_hatching.fire()
         
-        for client in self.clients.itervalues():
+        for client in self.clients.values():
             data = {
                 "hatch_rate":slave_hatch_rate,
                 "num_clients":slave_num_clients,
@@ -305,7 +311,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         events.master_stop_hatching.fire()
     
     def quit(self):
-        for client in self.clients.itervalues():
+        for client in self.clients.values():
             self.server.send(Message("quit", None, None))
         self.greenlet.kill(block=True)
     
@@ -332,7 +338,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                 self.clients[msg.node_id].state = STATE_RUNNING
                 self.clients[msg.node_id].user_count = msg.data["count"]
                 if len(self.clients.hatching) == 0:
-                    count = sum(c.user_count for c in self.clients.itervalues())
+                    count = sum(c.user_count for c in self.clients.values())
                     events.hatch_complete.fire(user_count=count)
             elif msg.type == "quit":
                 if msg.node_id in self.clients:

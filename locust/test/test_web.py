@@ -1,8 +1,11 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 import csv
 import json
 import sys
 import traceback
-from StringIO import StringIO
+from io import StringIO
 
 import requests
 import mock

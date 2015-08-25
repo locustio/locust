@@ -1,10 +1,14 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
 import base64
 import gevent
 import gevent.pywsgi
 import random
 import unittest
 from copy import copy
-from StringIO import StringIO
+from io import StringIO
 
 from locust import events
 from locust.stats import global_stats
@@ -120,7 +124,7 @@ class LocustTestCase(unittest.TestCase):
                 self._event_handlers[event] = copy(event._handlers)
                       
     def tearDown(self):
-        for event, handlers in self._event_handlers.iteritems():
+        for event, handlers in self._event_handlers.items():
             event._handlers = handlers
     
     def assertIn(self, member, container, msg=None):

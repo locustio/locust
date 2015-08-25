@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 import unittest
 
 from locust.core import HttpLocust, Locust, TaskSet, task, events
 from locust import ResponseError, InterruptTaskSet
 from locust.exception import CatchResponseError, RescheduleTask, RescheduleTaskImmediately, LocustError
 
-from testcases import LocustTestCase, WebserverTestCase
+from .testcases import LocustTestCase, WebserverTestCase
 
 class TestTaskSet(LocustTestCase):
     def setUp(self):

@@ -1,3 +1,4 @@
+from builtins import object
 import zmq.green as zmq
 from .protocol import Message
 
