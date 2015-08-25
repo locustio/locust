@@ -3,7 +3,7 @@ from past.builtins import basestring
 import re
 import time
 from datetime import timedelta
-from urllib.parse import urlparse, urlunparse
+from six.moves.urllib.parse import urlparse, urlunparse
 
 import requests
 from requests import Response, Request

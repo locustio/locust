@@ -7,7 +7,6 @@ import gevent
 import six
 
 from gevent import monkey, GreenletExit
-# from future.utils import with_metaclass, raise_
 monkey.patch_all(thread=False)
 
 from time import time
