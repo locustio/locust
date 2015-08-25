@@ -152,7 +152,7 @@ def request_stats():
             "avg_content_length": s.avg_content_length,
         })
 
-    report = {"stats":stats, "errors":[e.to_dict() for e in runners.locust_runner.errors.values()]}
+    report = {"stats":stats, "errors":[e.to_dict() for e in six.itervalues(runners.locust_runner.errors)]}
     if stats:
         report["total_rps"] = stats[len(stats)-1]["current_rps"]
         report["fail_ratio"] = runners.locust_runner.stats.aggregated_stats("Total").fail_ratio
@@ -162,7 +162,7 @@ def request_stats():
         # entry per url with the median response time as key and the number of requests as
         # value
         response_times = defaultdict(int) # used for calculating total median
-        for i in range(len(stats)-1):
+        for i in six.moves.range(len(stats)-1):
             response_times[stats[i]["median_response_time"]] += stats[i]["num_requests"]
 
         # calculate total median
@@ -178,7 +178,7 @@ def request_stats():
 
 @app.route("/exceptions")
 def exceptions():
-    response = make_response(json.dumps({'exceptions': [{"count": row["count"], "msg": row["msg"], "traceback": row["traceback"], "nodes" : ", ".join(row["nodes"])} for row in runners.locust_runner.exceptions.values()]}))
+    response = make_response(json.dumps({'exceptions': [{"count": row["count"], "msg": row["msg"], "traceback": row["traceback"], "nodes" : ", ".join(row["nodes"])} for row in six.itervalues(runners.locust_runner.exceptions)]}))
     response.headers["Content-type"] = "application/json"
     return response
 
@@ -191,7 +191,7 @@ def exceptions_csv():
 
     writer = csv.writer(data)
     writer.writerow(["Count", "Message", "Traceback", "Nodes"])
-    for exc in runners.locust_runner.exceptions.values():
+    for exc in six.itervalues(runners.locust_runner.exceptions):
         nodes = ", ".join(exc["nodes"])
         writer.writerow([exc["count"], exc["msg"], exc["traceback"], nodes])
 
@@ -207,4 +207,4 @@ def start(locust, options):
     wsgi.WSGIServer((options.web_host, options.port), app, log=None).serve_forever()
 
 def _sort_stats(stats):
-    return [stats[key] for key in sorted(stats.keys())]
+    return [stats[key] for key in sorted(six.iterkeys(stats))]

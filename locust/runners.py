@@ -10,6 +10,7 @@ import traceback
 import warnings
 import random
 import logging
+import six
 from time import time
 from hashlib import md5
 
@@ -83,7 +84,7 @@ class LocustRunner(object):
             # create locusts depending on weight
             percent = old_div(locust.weight, float(weight_sum))
             num_locusts = int(round(amount * percent))
-            bucket.extend([locust for x in range(0, num_locusts)])
+            bucket.extend([locust for x in six.moves.range(0, num_locusts)])
         return bucket
 
     def spawn_locusts(self, spawn_count=None, stop_timeout=None, wait=False):
@@ -231,7 +232,7 @@ class MasterLocustRunner(DistributedLocustRunner):
 
         class SlaveNodesDict(dict):
             def get_by_state(self, state):
-                return [c for c in self.values() if c.state == state]
+                return [c for c in six.itervalues(self) if c.state == state]
 
             @property
             def ready(self):
@@ -266,7 +267,7 @@ class MasterLocustRunner(DistributedLocustRunner):
 
     @property
     def user_count(self):
-        return sum([c.user_count for c in self.clients.values()])
+        return sum([c.user_count for c in six.itervalues(self.clients)])
 
     def start_hatching(self, locust_count, hatch_rate):
         num_slaves = len(self.clients.ready) + len(self.clients.running)
@@ -287,7 +288,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.exceptions = {}
             events.master_start_hatching.fire()
 
-        for client in self.clients.values():
+        for client in six.itervalues(self.clients):
             data = {
                 "hatch_rate":slave_hatch_rate,
                 "num_clients":slave_num_clients,
@@ -311,7 +312,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         events.master_stop_hatching.fire()
 
     def quit(self):
-        for client in self.clients.values():
+        for client in six.itervalues(self.clients):
             self.server.send(Message("quit", None, None))
         self.greenlet.kill(block=True)
 
@@ -338,7 +339,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                 self.clients[msg.node_id].state = STATE_RUNNING
                 self.clients[msg.node_id].user_count = msg.data["count"]
                 if len(self.clients.hatching) == 0:
-                    count = sum(c.user_count for c in self.clients.values())
+                    count = sum(c.user_count for c in six.itervalues(self.clients))
                     events.hatch_complete.fire(user_count=count)
             elif msg.type == "quit":
                 if msg.node_id in self.clients:

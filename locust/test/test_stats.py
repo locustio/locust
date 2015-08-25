@@ -1,7 +1,6 @@
-from __future__ import absolute_import
-from builtins import range
 import unittest
 import time
+import six
 
 from requests.exceptions import RequestException
 
@@ -29,7 +28,7 @@ class TestRequestStats(unittest.TestCase):
 
     def test_percentile(self):
         s = StatsEntry(self.stats, "percentile_test", "GET")
-        for x in range(100):
+        for x in six.moves.range(100):
             s.log(x, 0)
 
         self.assertEqual(s.get_response_time_percentile(0.5), 50)

@@ -2,6 +2,7 @@ from __future__ import division
 from __future__ import absolute_import
 from past.utils import old_div
 import inspect
+import six
 
 from .core import Locust, TaskSet
 from .log import console_logger
@@ -11,7 +12,7 @@ def print_task_ratio(locusts, total=False, level=0, parent_ratio=1.0):
     _print_task_ratio(d)
 
 def _print_task_ratio(x, level=0):
-    for k, v in x.items():
+    for k, v in six.iteritems(x):
         padding = 2*" "*level
         ratio = v.get('ratio', 1)
         console_logger.info(" %-10s %-50s" % (padding + "%-6.1f" % (ratio*100), padding + k))
@@ -33,10 +34,10 @@ def get_task_ratio_dict(tasks, total=False, parent_ratio=1.0):
         ratio[task] += task.weight if hasattr(task, 'weight') else 1
 
     # get percentage
-    ratio_percent = dict((k, old_div(float(v), divisor)) for k, v in ratio.items())
+    ratio_percent = dict((k, old_div(float(v), divisor)) for k, v in six.iteritems(ratio))
 
     task_dict = {}
-    for locust, ratio in ratio_percent.items():
+    for locust, ratio in six.iteritems(ratio_percent):
         d = {"ratio":ratio}
         if inspect.isclass(locust):
             if issubclass(locust, Locust):
@@ -47,7 +48,7 @@ def get_task_ratio_dict(tasks, total=False, parent_ratio=1.0):
                 d["tasks"] = get_task_ratio_dict(T, total, ratio)
             else:
                 d["tasks"] = get_task_ratio_dict(T, total)
-        
+
         task_dict[locust.__name__] = d
 
     return task_dict

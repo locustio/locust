@@ -152,19 +152,19 @@ class TaskSetMeta(type):
         if "tasks" in classDict and classDict["tasks"] is not None:
             tasks = classDict["tasks"]
             if isinstance(tasks, dict):
-                tasks = list(tasks.items())
+                tasks = list(six.iteritems(tasks))
 
             for task in tasks:
                 if isinstance(task, tuple):
                     task, count = task
-                    for i in range(0, count):
+                    for i in six.moves.range(0, count):
                         new_tasks.append(task)
                 else:
                     new_tasks.append(task)
 
-        for item in classDict.values():
+        for item in six.itervalues(classDict):
             if hasattr(item, "locust_task_weight"):
-                for i in range(0, item.locust_task_weight):
+                for i in six.moves.range(0, item.locust_task_weight):
                     new_tasks.append(item)
 
         classDict["tasks"] = new_tasks
