@@ -212,12 +212,10 @@ class TestMasterRunner(LocustTestCase):
 
             @task(1)
             def will_error(self):
-                print('Correct Error')
                 raise HeyAnException(":(")
 
             @task(1)
             def will_stop(self):
-                print('Correct Stop')
                 self.interrupt()
 
         class MyLocust(Locust):

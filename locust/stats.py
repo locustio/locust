@@ -255,7 +255,7 @@ class StatsEntry(object):
         self.num_failures = self.num_failures + other.num_failures
         self.total_response_time = self.total_response_time + other.total_response_time
         self.max_response_time = max(self.max_response_time, other.max_response_time)
-        self.min_response_time = min(self.min_response_time or 0, other.min_response_time) or other.min_response_time
+        self.min_response_time = min(self.min_response_time or 0, other.min_response_time or 0) or other.min_response_time
         self.total_content_length = self.total_content_length + other.total_content_length
 
         if full_request_history:

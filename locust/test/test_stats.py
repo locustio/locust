@@ -135,9 +135,6 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         l = MyLocust()
         path = "/no_content_length"
         r = l.client.get(path)
-        print('-----------------------------------------')
-        print(path)
-        print(global_stats.get(path, 'GET'))
         self.assertEqual(global_stats.get(path, "GET").avg_content_length, len("This response does not have content-length in the header"))
 
     def test_request_stats_no_content_length_streaming(self):
