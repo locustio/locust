@@ -5,6 +5,7 @@ import gevent
 import gevent.pywsgi
 import random
 import unittest
+import six
 from copy import copy
 from io import BytesIO
 
