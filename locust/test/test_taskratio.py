@@ -10,21 +10,21 @@ class TestTaskRatio(unittest.TestCase):
             def root_task1(self):
                 pass
             @task
-            
+
             class SubTasks(TaskSet):
                 @task
                 def task1(self):
                     pass
-                
+
                 @task
                 def task2(self):
                     pass
-        
+
         class User(Locust):
             task_set = Tasks
-        
+
         ratio_dict = get_task_ratio_dict(User.task_set.tasks, total=True)
-        
+
         self.assertEqual({
             'SubTasks': {
                 'tasks': {
@@ -32,10 +32,10 @@ class TestTaskRatio(unittest.TestCase):
                     'task2': {'ratio': 0.25}
                 },
                 'ratio': 0.5
-            }, 
+            },
             'root_task1': {'ratio': 0.5}
         }, ratio_dict)
-    
+
     def test_task_ratio_command_with_locust_weight(self):
         class Tasks(TaskSet):
             @task(1)
@@ -50,7 +50,7 @@ class TestTaskRatio(unittest.TestCase):
             weight = 1
             task_set = Tasks
 
-	class MoreLikelyLocust(Locust):
+        class MoreLikelyLocust(Locust):
             weight = 3
             task_set = Tasks
 

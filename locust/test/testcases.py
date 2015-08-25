@@ -17,7 +17,7 @@ from flask import Flask, request, redirect, make_response, send_file, Response, 
 
 def safe_repr(obj, short=False):
     """
-    Function from python 2.7's unittest.util. Used in methods that is copied 
+    Function from python 2.7's unittest.util. Used in methods that is copied
     from 2.7's unittest.TestCase to work in python 2.6.
     """
     _MAX_LENGTH = 80
@@ -83,7 +83,7 @@ def do_redirect():
 
 @app.route("/basic_auth")
 def basic_auth():
-    auth = base64.b64decode(request.headers.get("Authorization").replace("Basic ", ""))
+    auth = base64.b64decode(request.headers.get("Authorization").replace("Basic ", "")).decode('UTF-8')
     if auth == "locust:menace":
         return "Authorized"
     resp = make_response("401 Authorization Required", 401)
@@ -92,7 +92,8 @@ def basic_auth():
 
 @app.route("/no_content_length")
 def no_content_length():
-    r = send_file(StringIO("This response does not have content-length in the header"), add_etags=False)
+    import io
+    r = send_file(io.BytesIO("This response does not have content-length in the header".encode('UTF-8')), add_etags=False)
     return r
 
 @app.errorhandler(404)
@@ -122,11 +123,11 @@ class LocustTestCase(unittest.TestCase):
             event = getattr(events, name)
             if isinstance(event, events.EventHook):
                 self._event_handlers[event] = copy(event._handlers)
-                      
+
     def tearDown(self):
         for event, handlers in self._event_handlers.items():
             event._handlers = handlers
-    
+
     def assertIn(self, member, container, msg=None):
         """
         Just like self.assertTrue(a in b), but with a nicer default message.
@@ -136,7 +137,7 @@ class LocustTestCase(unittest.TestCase):
             standardMsg = '%s not found in %s' % (safe_repr(member),
                                                   safe_repr(container))
             self.fail(self._formatMessage(msg, standardMsg))
-    
+
     def assertLess(self, a, b, msg=None):
         """Just like self.assertTrue(a < b), but with a nicer default message."""
         if not a < b:
@@ -161,7 +162,7 @@ class LocustTestCase(unittest.TestCase):
             standardMsg = '%s not greater than or equal to %s' % (safe_repr(a), safe_repr(b))
             self.fail(self._formatMessage(msg, standardMsg))
 
-            
+
 class WebserverTestCase(LocustTestCase):
     """
     Test case class that sets up an HTTP server which can be used within the tests
