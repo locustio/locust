@@ -1,0 +1,16 @@
+Flask==0.10.1
+Flask-Sockets==0.1
+Jinja2==2.8
+MarkupSafe==0.23
+Werkzeug==0.10.4
+backports.ssl-match-hostname==3.4.0.2
+gevent==1.1b3
+gevent-websocket==0.9.5
+greenlet==0.4.7
+itsdangerous==0.24
+locustio==0.7.3
+msgpack-python==0.4.6
+requests==2.7.0
+six==1.9.0
+ws4py==0.3.4
+wsgiref==0.1.2
