@@ -48,7 +48,7 @@ def get_task_ratio_dict(tasks, total=False, parent_ratio=1.0):
                 d["tasks"] = get_task_ratio_dict(T, total, ratio)
             else:
                 d["tasks"] = get_task_ratio_dict(T, total)
-
+        
         task_dict[locust.__name__] = d
 
     return task_dict

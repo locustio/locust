@@ -16,7 +16,7 @@ from flask import Flask, request, redirect, make_response, send_file, Response, 
 
 def safe_repr(obj, short=False):
     """
-    Function from python 2.7's unittest.util. Used in methods that is copied
+    Function from python 2.7's unittest.util. Used in methods that is copied 
     from 2.7's unittest.TestCase to work in python 2.6.
     """
     _MAX_LENGTH = 80
@@ -121,11 +121,11 @@ class LocustTestCase(unittest.TestCase):
             event = getattr(events, name)
             if isinstance(event, events.EventHook):
                 self._event_handlers[event] = copy(event._handlers)
-
+                      
     def tearDown(self):
         for event, handlers in six.iteritems(self._event_handlers):
             event._handlers = handlers
-
+    
     def assertIn(self, member, container, msg=None):
         """
         Just like self.assertTrue(a in b), but with a nicer default message.
@@ -135,7 +135,7 @@ class LocustTestCase(unittest.TestCase):
             standardMsg = '%s not found in %s' % (safe_repr(member),
                                                   safe_repr(container))
             self.fail(self._formatMessage(msg, standardMsg))
-
+    
     def assertLess(self, a, b, msg=None):
         """Just like self.assertTrue(a < b), but with a nicer default message."""
         if not a < b:
@@ -160,7 +160,7 @@ class LocustTestCase(unittest.TestCase):
             standardMsg = '%s not greater than or equal to %s' % (safe_repr(a), safe_repr(b))
             self.fail(self._formatMessage(msg, standardMsg))
 
-
+            
 class WebserverTestCase(LocustTestCase):
     """
     Test case class that sets up an HTTP server which can be used within the tests
