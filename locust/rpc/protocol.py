@@ -1,4 +1,6 @@
+from builtins import object
 import msgpack
+import six
 
 class Message(object):
     def __init__(self, message_type, data, node_id):
@@ -11,5 +13,5 @@ class Message(object):
     
     @classmethod
     def unserialize(cls, data):
-        msg = cls(*msgpack.loads(data))
+        msg = cls(*msgpack.loads(data, encoding='UTF-8'))
         return msg

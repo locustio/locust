@@ -1,4 +1,7 @@
+from builtins import range
+from builtins import object
 import unittest
+import six
 
 import gevent
 import mock
@@ -223,12 +226,18 @@ class TestMasterRunner(LocustTestCase):
         runner = LocalLocustRunner([MyLocust], self.options)
         l = MyLocust()
         
+        import warnings
+        # ignore warnings from requests
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+
         # supress stderr
         with mock.patch("sys.stderr") as mocked:
             l.task_set._task_queue = [l.task_set.will_error, l.task_set.will_stop]
             self.assertRaises(LocustError, l.run) # make sure HeyAnException isn't raised
             l.task_set._task_queue = [l.task_set.will_error, l.task_set.will_stop]
             self.assertRaises(LocustError, l.run) # make sure HeyAnException isn't raised
+
         self.assertEqual(2, len(mocked.method_calls))
         
         # make sure exception was stored
@@ -246,4 +255,3 @@ class TestMessageSerializing(unittest.TestCase):
         self.assertEqual(msg.type, rebuilt.type)
         self.assertEqual(msg.data, rebuilt.data)
         self.assertEqual(msg.node_id, rebuilt.node_id)
-        

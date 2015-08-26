@@ -1,5 +1,8 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import filter
 import locust
-import runners
+from . import runners
 
 import gevent
 import sys
@@ -10,13 +13,13 @@ import logging
 import socket
 from optparse import OptionParser
 
-import web
-from log import setup_logging, console_logger
-from stats import stats_printer, print_percentile_stats, print_error_report, print_stats
-from inspectlocust import print_task_ratio, get_task_ratio_dict
-from core import Locust, HttpLocust
-from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
-import events
+from . import web
+from .log import setup_logging, console_logger
+from .stats import stats_printer, print_percentile_stats, print_error_report, print_stats
+from .inspectlocust import print_task_ratio, get_task_ratio_dict
+from .core import Locust, HttpLocust
+from .runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
+from . import events
 
 _internals = [Locust, HttpLocust]
 version = locust.version
@@ -327,7 +330,7 @@ def load_locustfile(path):
         sys.path.insert(index + 1, directory)
         del sys.path[0]
     # Return our two-tuple
-    locusts = dict(filter(is_locust, vars(imported).items()))
+    locusts = dict(list(filter(is_locust, list(vars(imported).items()))))
     return imported.__doc__, locusts
 
 def main():
@@ -338,7 +341,7 @@ def main():
     logger = logging.getLogger(__name__)
     
     if options.show_version:
-        print "Locust %s" % (version,)
+        print("Locust %s" % (version,))
         sys.exit(0)
 
     locustfile = find_locustfile(options.locustfile)
@@ -368,7 +371,7 @@ def main():
             names = set(arguments) & set(locusts.keys())
             locust_classes = [locusts[n] for n in names]
     else:
-        locust_classes = locusts.values()
+        locust_classes = list(locusts.values())
     
     if options.show_task_ratio:
         console_logger.info("\n Task ratio per locust class")
@@ -409,7 +412,7 @@ def main():
         try:
             runners.locust_runner = SlaveLocustRunner(locust_classes, options)
             main_greenlet = runners.locust_runner.greenlet
-        except socket.error, e:
+        except socket.error as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
     
