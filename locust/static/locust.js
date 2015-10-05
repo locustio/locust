@@ -102,7 +102,7 @@ $(".stats_label").click(function(event) {
     alternate = false;
     totalRow = report.stats.pop()
     sortedStats = (report.stats).sort(sortBy(sortAttribute, desc))
-    sortedStats.push(totalRow)
+    sortedStats.unshift(totalRow)
     $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
     alternate = false;
     $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
@@ -127,7 +127,7 @@ function updateStats() {
 
         totalRow = report.stats.pop()
         sortedStats = (report.stats).sort(sortBy(sortAttribute, desc))
-        sortedStats.push(totalRow)
+        sortedStats.unshift(totalRow)
         $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
         alternate = false;
         $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
