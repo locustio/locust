@@ -100,8 +100,8 @@ $(".stats_label").click(function(event) {
     $('#stats tbody').empty();
     $('#errors tbody').empty();
     alternate = false;
-    totalRow = report.stats.pop()
-    sortedStats = (report.stats).sort(sortBy(sortAttribute, desc))
+    totalRow = report.stats.slice(0, 1)
+    sortedStats = (report.stats).slice(1).sort(sortBy(sortAttribute, desc))
     sortedStats.unshift(totalRow)
     $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
     alternate = false;
