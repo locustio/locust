@@ -154,7 +154,11 @@ def request_stats():
     if stats:
         report["total_rps"] = stats[len(stats)-1]["current_rps"]
         report["fail_ratio"] = runners.locust_runner.stats.aggregated_stats("Total").fail_ratio
-        
+        if runners.locust_runner.state != ("stopped" or "ready"):
+            # update run time
+            runners.locust_runner.stats.total_run_time()
+        report["total_run_time"] = runners.locust_runner.stats.run_time
+
         # since generating a total response times dict with all response times from all
         # urls is slow, we make a new total response time dict which will consist of one
         # entry per url with the median response time as key and the number of requests as
