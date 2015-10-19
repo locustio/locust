@@ -4,7 +4,7 @@ from requests.exceptions import (RequestException, MissingSchema,
 import gevent
 from locust.clients import HttpSession
 from locust.stats import global_stats
-from testcases import WebserverTestCase
+from locust.test.testcases import WebserverTestCase
 
 class TestHttpSession(WebserverTestCase):
     def test_get(self):
@@ -23,8 +23,7 @@ class TestHttpSession(WebserverTestCase):
         for url, exception in (
                 (u"http://\x94", InvalidURL),
                 ("telnet://127.0.0.1", InvalidSchema),
-                ("127.0.0.1", MissingSchema), 
-            ):
+                ("127.0.0.1", MissingSchema), ):
             s = HttpSession(url)
             try:
                 self.assertRaises(exception, s.get, "/")

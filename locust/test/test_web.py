@@ -2,17 +2,16 @@ import csv
 import json
 import sys
 import traceback
-from StringIO import StringIO
+from io import StringIO
 
 import requests
-import mock
 import gevent
 from gevent import wsgi
 
 from locust import web, runners, stats
 from locust.runners import LocustRunner
 from locust.main import parse_options
-from .testcases import LocustTestCase
+from locust.test.testcases import LocustTestCase
 
 class TestWebUI(LocustTestCase):
     def setUp(self):
@@ -43,7 +42,7 @@ class TestWebUI(LocustTestCase):
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         
-        data = json.loads(response.content)
+        data = json.loads(response.content.decode())
         self.assertEqual(2, len(data["stats"])) # one entry plus Total
         self.assertEqual("/test", data["stats"][0]["name"])
         self.assertEqual("GET", data["stats"][0]["method"])
@@ -53,17 +52,17 @@ class TestWebUI(LocustTestCase):
         stats.global_stats.get("/test", "GET").log(120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
-        data = json.loads(response.content)
+        data = json.loads(response.content.decode())
         self.assertEqual(2, len(data["stats"])) # one entry plus Total
         
         # add another entry
         stats.global_stats.get("/test2", "GET").log(120, 5612)
-        data = json.loads(requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).content)
+        data = json.loads(requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).content.decode())
         self.assertEqual(2, len(data["stats"])) # old value should be cached now
         
         web.request_stats.clear_cache()
         
-        data = json.loads(requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).content)
+        data = json.loads(requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).content.decode())
         self.assertEqual(3, len(data["stats"])) # this should no longer be cached
     
     def test_request_stats_csv(self):
@@ -87,7 +86,7 @@ class TestWebUI(LocustTestCase):
         response = requests.get("http://127.0.0.1:%i/exceptions/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
         
-        reader = csv.reader(StringIO(response.content))
+        reader = csv.reader(StringIO(response.content.decode()))
         rows = []
         for row in reader:
             rows.append(row)
@@ -95,4 +94,3 @@ class TestWebUI(LocustTestCase):
         self.assertEqual(2, len(rows))
         self.assertEqual("Test exception", rows[1][1])
         self.assertEqual(2, int(rows[1][0]), "Exception count should be 2")
-        

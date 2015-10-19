@@ -6,7 +6,7 @@ import os.path
 from time import time
 from itertools import chain
 from collections import defaultdict
-from StringIO import StringIO
+from io import StringIO
 
 from gevent import wsgi
 from flask import Flask, make_response, request, render_template
@@ -35,7 +35,8 @@ def index():
     else:
         slave_count = 0
     
-    return render_template("index.html",
+    return render_template(
+        "index.html",
         state=runners.locust_runner.state,
         is_distributed=is_distributed,
         slave_count=slave_count,
@@ -150,7 +151,7 @@ def request_stats():
             "avg_content_length": s.avg_content_length,
         })
     
-    report = {"stats":stats, "errors":[e.to_dict() for e in runners.locust_runner.errors.itervalues()]}
+    report = {"stats":stats, "errors":[e.to_dict() for e in runners.locust_runner.errors.values()]}
     if stats:
         report["total_rps"] = stats[len(stats)-1]["current_rps"]
         report["fail_ratio"] = runners.locust_runner.stats.aggregated_stats("Total").fail_ratio
@@ -160,7 +161,7 @@ def request_stats():
         # entry per url with the median response time as key and the number of requests as
         # value
         response_times = defaultdict(int) # used for calculating total median
-        for i in xrange(len(stats)-1):
+        for i in range(len(stats)-1):
             response_times[stats[i]["median_response_time"]] += stats[i]["num_requests"]
         
         # calculate total median
@@ -176,7 +177,7 @@ def request_stats():
 
 @app.route("/exceptions")
 def exceptions():
-    response = make_response(json.dumps({'exceptions': [{"count": row["count"], "msg": row["msg"], "traceback": row["traceback"], "nodes" : ", ".join(row["nodes"])} for row in runners.locust_runner.exceptions.itervalues()]}))
+    response = make_response(json.dumps({'exceptions': [{"count": row["count"], "msg": row["msg"], "traceback": row["traceback"], "nodes" : ", ".join(row["nodes"])} for row in runners.locust_runner.exceptions.values()]}))
     response.headers["Content-type"] = "application/json"
     return response
 
@@ -185,7 +186,7 @@ def exceptions_csv():
     data = StringIO()
     writer = csv.writer(data)
     writer.writerow(["Count", "Message", "Traceback", "Nodes"])
-    for exc in runners.locust_runner.exceptions.itervalues():
+    for exc in runners.locust_runner.exceptions.values():
         nodes = ", ".join(exc["nodes"])
         writer.writerow([exc["count"], exc["msg"], exc["traceback"], nodes])
     
@@ -201,4 +202,4 @@ def start(locust, options):
     wsgi.WSGIServer((options.web_host, options.port), app, log=None).serve_forever()
 
 def _sort_stats(stats):
-    return [stats[key] for key in sorted(stats.iterkeys())]
+    return [stats[key] for key in sorted(stats.keys())]

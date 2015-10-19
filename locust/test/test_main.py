@@ -1,8 +1,6 @@
-import unittest
-
 from locust.core import HttpLocust, Locust, TaskSet
 from locust import main
-from .testcases import LocustTestCase, WebserverTestCase
+from locust.test.testcases import LocustTestCase, WebserverTestCase
 
 class TestTaskSet(LocustTestCase):
     def test_is_locust(self):
