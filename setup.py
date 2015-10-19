@@ -1,7 +1,6 @@
 # encoding: utf-8
 
 from setuptools import setup, find_packages, Command
-import sys, os
 
 version = '0.7.3'
 
@@ -47,8 +46,8 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
-    install_requires=["gevent==1.0.1", "flask>=0.10.1", "requests>=2.4.1", "msgpack-python>=0.4.2"],
-    tests_require=['unittest2', 'mock', 'pyzmq'],
+    install_requires=["gevent==1.1b6", "flask>=0.10.1", "requests>=2.4.1", "msgpack-python>=0.4.2"],
+    tests_require=['unittest2', 'pyzmq'],
     entry_points={
         'console_scripts': [
             'locust = locust.main:main',

@@ -10,10 +10,10 @@ import warnings
 import traceback
 import logging
 
-from clients import HttpSession
-import events
+from .clients import HttpSession
+import locust.events as events
 
-from exception import LocustError, InterruptTaskSet, RescheduleTask, RescheduleTaskImmediately, StopLocust
+from .exception import LocustError, InterruptTaskSet, RescheduleTask, RescheduleTaskImmediately, StopLocust
 
 logger = logging.getLogger(__name__)
 
@@ -102,8 +102,8 @@ class Locust(object):
             self.task_set(self).run()
         except StopLocust:
             pass
-        except (RescheduleTask, RescheduleTaskImmediately) as e:
-            raise LocustError, LocustError("A task inside a Locust class' main TaskSet (`%s.task_set` of type `%s`) seems to have called interrupt() or raised an InterruptTaskSet exception. The interrupt() function is used to hand over execution to a parent TaskSet, and should never be called in the main TaskSet which a Locust class' task_set attribute points to." % (type(self).__name__, self.task_set.__name__)), sys.exc_info()[2]
+        except (RescheduleTask, RescheduleTaskImmediately):
+            raise LocustError("A task inside a Locust class' main TaskSet (`%s.task_set` of type `%s`) seems to have called interrupt() or raised an InterruptTaskSet exception. The interrupt() function is used to hand over execution to a parent TaskSet, and should never be called in the main TaskSet which a Locust class' task_set attribute points to." % (type(self).__name__, self.task_set.__name__))
 
 
 class HttpLocust(Locust):
@@ -146,26 +146,26 @@ class TaskSetMeta(type):
         if "tasks" in classDict and classDict["tasks"] is not None:
             tasks = classDict["tasks"]
             if isinstance(tasks, dict):
-                tasks = list(tasks.iteritems())
+                tasks = list(tasks.items())
             
             for task in tasks:
                 if isinstance(task, tuple):
                     task, count = task
-                    for i in xrange(0, count):
+                    for i in range(0, count):
                         new_tasks.append(task)
                 else:
                     new_tasks.append(task)
         
-        for item in classDict.itervalues():
+        for item in classDict.values():
             if hasattr(item, "locust_task_weight"):
-                for i in xrange(0, item.locust_task_weight):
+                for i in range(0, item.locust_task_weight):
                     new_tasks.append(item)
         
         classDict["tasks"] = new_tasks
         
         return type.__new__(mcs, classname, bases, classDict)
 
-class TaskSet(object):
+class TaskSet(object, metaclass=TaskSetMeta):
     """
     Class defining a set of tasks that a Locust user will execute. 
     
@@ -221,8 +221,6 @@ class TaskSet(object):
     instantiated. Useful for nested TaskSet classes.
     """
 
-    __metaclass__ = TaskSetMeta    
-    
     def __init__(self, parent):
         self._task_queue = []
         self._time_start = time()
@@ -251,11 +249,11 @@ class TaskSet(object):
                 self.on_start()
         except InterruptTaskSet as e:
             if e.reschedule:
-                raise RescheduleTaskImmediately, e, sys.exc_info()[2]
+                raise RescheduleTaskImmediately()
             else:
-                raise RescheduleTask, e, sys.exc_info()[2]
+                raise RescheduleTask()
         
-        while (True):
+        while 1:
             try:
                 if self.locust.stop_timeout is not None and time() - self._time_start > self.locust.stop_timeout:
                     return
@@ -273,9 +271,9 @@ class TaskSet(object):
                     self.wait()
             except InterruptTaskSet as e:
                 if e.reschedule:
-                    raise RescheduleTaskImmediately, e, sys.exc_info()[2]
+                    raise RescheduleTaskImmediately()
                 else:
-                    raise RescheduleTask, e, sys.exc_info()[2]
+                    raise RescheduleTask()
             except StopLocust:
                 raise
             except GreenletExit:
@@ -294,7 +292,7 @@ class TaskSet(object):
     
     def execute_task(self, task, *args, **kwargs):
         # check if the function is a method bound to the current locust, and if so, don't pass self as first argument
-        if hasattr(task, "im_self") and task.__self__ == self:
+        if hasattr(task, '__self__') and task.__self__ == self:
             # task is a bound method on self
             task(*args, **kwargs)
         elif hasattr(task, "tasks") and issubclass(task, TaskSet):
