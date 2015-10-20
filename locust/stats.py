@@ -67,7 +67,11 @@ class RequestStats(object):
 
     def total_run_time(self):
         # return the time that the test has been running for.
-        self.run_time = int(time.time() - self.start_time)
+        if self.start_time is None:
+            self.run_time = 0
+        else:
+            self.run_time = int(time.time() - self.start_time)
+
 
 class StatsEntry(object):
     """
