@@ -66,11 +66,8 @@ class RequestStats(object):
         self.start_time = None
 
     def total_run_time(self):
-        try:
-            # return the time that the test has been running for.
-            self.run_time = int(time.time() - self.start_time)
-        except Exception as ex:
-            print(ex)
+        # return the time that the test has been running for.
+        self.run_time = int(time.time() - self.start_time)
 
 class StatsEntry(object):
     """
