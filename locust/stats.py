@@ -1,7 +1,6 @@
 import time
 import gevent
 import hashlib
-import runners
 
 import events
 from exception import StopLocust
