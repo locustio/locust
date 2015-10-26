@@ -427,7 +427,7 @@ def on_request_success(request_type, name, response_time, response_length):
         "request_url": name,
         "response_time": response_time,
         "response_length": response_length,
-        "user_count": runners.locust_runner.locust_count
+        "user_count": global_stats.locust_count
     })
 
 def on_request_failure(request_type, name, response_time, exception):
