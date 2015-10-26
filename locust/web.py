@@ -132,6 +132,28 @@ def distribution_stats_csv():
     response.headers["Content-disposition"] = disposition
     return response
 
+
+@app.route('/request/history')
+def request_history():
+    rows = [",".join((
+        '"request_time"',
+        '"request_type"',
+        '"request_url"',
+        '"response_time"',
+        '"response_length"',
+        '"user_count"',
+    ))]
+    for s in runners.global_stats.history:
+        rows.append('"%s","%s","%s","%s","%i","%i"' % (s["request_time"], s["request_type"], s["request_url"], s["response_time"], s["response_length"], s["user_count"],))
+
+    response = make_response("\n".join(rows))
+    file_name = "request_history_{0}.csv".format(time())
+    disposition = "attachment;filename={0}".format(file_name)
+    response.headers["Content-type"] = "text/csv"
+    response.headers["Content-disposition"] = disposition
+    return response
+
+
 @app.route('/stats/requests')
 @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
 def request_stats():

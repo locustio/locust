@@ -48,6 +48,10 @@ class LocustRunner(object):
     @property
     def request_stats(self):
         return self.stats.entries
+
+    @property
+    def request_history(self):
+        return self.stats.history
     
     @property
     def errors(self):
@@ -146,6 +150,7 @@ class LocustRunner(object):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
             self.stats.start_time = time()
+            self.stats.locust_count = locust_count
             self.exceptions = {}
             events.locust_start_hatching.fire()
 

@@ -16,11 +16,13 @@ class RequestStats(object):
     def __init__(self):
         self.entries = {}
         self.errors = {}
+        self.history = []
         self.num_requests = 0
         self.num_failures = 0
         self.max_requests = None
         self.last_request_timestamp = None
         self.start_time = None
+        self.locust_count = 0
     
     def get(self, name, method):
         """
@@ -49,6 +51,7 @@ class RequestStats(object):
         self.start_time = time.time()
         self.num_requests = 0
         self.num_failures = 0
+        self.history = []
         for r in self.entries.itervalues():
             r.reset()
     
@@ -60,6 +63,7 @@ class RequestStats(object):
         self.num_failures = 0
         self.entries = {}
         self.errors = {}
+        self.history = []
         self.max_requests = None
         self.last_request_timestamp = None
         self.start_time = None
@@ -416,6 +420,14 @@ def on_request_success(request_type, name, response_time, response_length):
     if global_stats.max_requests is not None and (global_stats.num_requests + global_stats.num_failures) >= global_stats.max_requests:
         raise StopLocust("Maximum number of requests reached")
     global_stats.get(name, request_type).log(response_time, response_length)
+    global_stats.history.append({
+        "request_time": time.time(),
+        "request_type": request_type,
+        "request_url": name,
+        "response_time": response_time,
+        "response_length": response_length,
+        "user_count": global_stats.locust_count
+    })
 
 def on_request_failure(request_type, name, response_time, exception):
     if global_stats.max_requests is not None and (global_stats.num_requests + global_stats.num_failures) >= global_stats.max_requests:
