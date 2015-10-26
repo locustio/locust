@@ -33,7 +33,6 @@ class LocustRunner(object):
         self.num_requests = options.num_requests
         self.host = options.host
         self.locusts = Group()
-        self.locust_count = 0
         self.state = STATE_INIT
         self.hatching_greenlet = None
         self.exceptions = {}

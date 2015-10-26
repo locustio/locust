@@ -23,6 +23,7 @@ class RequestStats(object):
         self.max_requests = None
         self.last_request_timestamp = None
         self.start_time = None
+        self.locust_count = 0
     
     def get(self, name, method):
         """
