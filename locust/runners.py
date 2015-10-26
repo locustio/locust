@@ -33,6 +33,7 @@ class LocustRunner(object):
         self.num_requests = options.num_requests
         self.host = options.host
         self.locusts = Group()
+        self.locust_count = 0
         self.state = STATE_INIT
         self.hatching_greenlet = None
         self.exceptions = {}
@@ -48,6 +49,10 @@ class LocustRunner(object):
     @property
     def request_stats(self):
         return self.stats.entries
+
+    @property
+    def request_history(self):
+        return self.stats.history
     
     @property
     def errors(self):
@@ -92,6 +97,7 @@ class LocustRunner(object):
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
             self.state = STATE_HATCHING
             self.num_clients = spawn_count
+            self.locust_count = self.num_clients
         else:
             self.num_clients += spawn_count
 
@@ -146,6 +152,7 @@ class LocustRunner(object):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
             self.stats.start_time = time()
+            self.stats.locust_count = locust_count
             self.exceptions = {}
             events.locust_start_hatching.fire()
 
