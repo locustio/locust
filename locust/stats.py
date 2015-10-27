@@ -395,6 +395,7 @@ class StatsError(object):
 def avg(values):
     return sum(values, 0.0) / max(len(values), 1)
 
+
 def median_from_dict(total, count):
     """
     total is the number of requests made
@@ -405,6 +406,14 @@ def median_from_dict(total, count):
         if pos < count[k]:
             return k
         pos -= count[k]
+
+
+def median(input_list):
+    input_list.sort()
+    if len(input_list) % 2 == 1:
+        return input_list[len(input_list)/2]
+    else:
+        return (input_list[len(input_list)/2]+input_list[len(input_list)/2 -1])/2.0
 
 
 global_stats = RequestStats()
@@ -454,12 +463,33 @@ def print_stats(stats):
     total_rps = 0
     total_reqs = 0
     total_failures = 0
+    total_min = None
+    running_avg = 0
+    running_median = []
+    total_max = 0
+    total_stat_methods = len(stats)
+
     for key in sorted(stats.iterkeys()):
         r = stats[key]
         total_rps += r.current_rps
         total_reqs += r.num_requests
         total_failures += r.num_failures
+        running_avg += r.avg_response_time
+        running_median.append(r.median_response_time)
+
+        if total_min is None:
+            total_min = r.min_response_time
+
+        if total_max < r.max_response_time:
+            total_max = r.max_response_time
+
+        if total_min > r.min_response_time:
+            total_min = r.min_response_time
+
         console_logger.info(r)
+
+    total_average = float(running_avg / total_stat_methods)
+    total_median = int(median(running_median))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
 
     try:
@@ -467,7 +497,7 @@ def print_stats(stats):
     except ZeroDivisionError:
         fail_percent = 0
 
-    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %42.2f") % ('Total', total_reqs, "%d(%.2f%%)" % (total_failures, fail_percent), total_rps))
+    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d %10d %7.2f") % ('Total', total_reqs, "%d(%.2f%%)" % (total_failures, fail_percent), total_average, total_min, total_max, total_median, total_rps))
     console_logger.info("")
 
 def print_percentile_stats(stats):
