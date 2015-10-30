@@ -409,11 +409,14 @@ def median_from_dict(total, count):
 
 
 def median(input_list):
-    input_list.sort()
-    if len(input_list) % 2 == 1:
-        return input_list[len(input_list)/2]
-    else:
-        return (input_list[len(input_list)/2]+input_list[len(input_list)/2 -1])/2.0
+    try:
+        input_list.sort()
+        if len(input_list) % 2 == 1:
+            return input_list[len(input_list)/2]
+        else:
+            return (input_list[len(input_list)/2]+input_list[len(input_list)/2-1])/2.0
+    except (IndexError, TypeError):
+        return 0
 
 
 global_stats = RequestStats()
@@ -488,15 +491,19 @@ def print_stats(stats):
 
         console_logger.info(r)
 
-    total_average = float(running_avg / total_stat_methods)
-    total_median = int(median(running_median))
-    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
-
     try:
+        total_average = float(running_avg / total_stat_methods)
+        total_median = int(median(running_median))
         fail_percent = (total_failures/float(total_reqs))*100
     except ZeroDivisionError:
+        total_average = 0
+        total_median = 0
         fail_percent = 0
 
+    if total_min is None:
+        total_min = 0
+
+    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d %10d %7.2f") % ('Total', total_reqs, "%d(%.2f%%)" % (total_failures, fail_percent), total_average, total_min, total_max, total_median, total_rps))
     console_logger.info("")
 
