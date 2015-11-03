@@ -170,7 +170,7 @@ class TaskSet(object):
     Class defining a set of tasks that a Locust user will execute. 
     
     When a TaskSet starts running, it will pick a task from the *tasks* attribute, 
-    execute it, call it's wait function which will sleep a random number between
+    execute it, call its wait function which will sleep a random number between
     *min_wait* and *max_wait* milliseconds. It will then schedule another task for 
     execution and so on.
     
@@ -191,7 +191,7 @@ class TaskSet(object):
 
     If tasks is a *(callable,int)* list of two-tuples, or a  {callable:int} dict, 
     the task to be performed will be picked randomly, but each task will be weighted 
-    according to it's corresponding int value. So in the following case *ThreadPage* will 
+    according to its corresponding int value. So in the following case *ThreadPage* will 
     be fifteen times more likely to be picked than *write_post*::
 
         class ForumPage(TaskSet):

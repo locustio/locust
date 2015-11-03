@@ -14,7 +14,7 @@ letting real users in.
 Locust is completely event based, and therefore it's possible to support thousands of concurrent 
 users on a single machine. In contrast to many other event-based apps it doesn't use callbacks. 
 Instead it uses light-weight processes, through `gevent <http://www.gevent.org/>`_. Each locust 
-swarming your site is actually running inside it's own process (or greenlet, to be correct). This 
+swarming your site is actually running inside its own process (or greenlet, to be correct). This 
 allows you to write very expressive scenarios in Python without complicating your code with callbacks.
 
 

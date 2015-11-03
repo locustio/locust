@@ -59,7 +59,7 @@ class LocustRunner(object):
 
     def weight_locusts(self, amount, stop_timeout = None):
         """
-        Distributes the amount of locusts for each WebLocust-class according to it's weight
+        Distributes the amount of locusts for each WebLocust-class according to its weight
         returns a list "bucket" with the weighted locusts
         """
         bucket = []
