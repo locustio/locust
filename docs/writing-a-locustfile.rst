@@ -2,8 +2,8 @@
 Writing a locustfile
 ======================
 
-A locustfile is a normal python file. The only requirement is that it declares at least one class -
-let's call it the locust class - that inherits from the class Locust. 
+A locustfile is a normal python file. The only requirement is that it declares at least one class—
+let's call it the locust class—that inherits from the class Locust. 
 
 The Locust class
 ================
@@ -79,7 +79,7 @@ the brain of the locust. Each Locust class must have a *task_set* attribute set,
 a TaskSet.
 
 A TaskSet is, like its name suggests, a collection of tasks. These tasks are normal python callables 
-and - if we were load-testing an auction website - could do stuff like "loading the start page", 
+and—if we were load-testing an auction website—could do stuff like "loading the start page", 
 "searching for some product" and "making a bid". 
 
 When a load test is started, each instance of the spawned Locust classes will start executing their 
@@ -136,7 +136,7 @@ it. However, it's also possible to define the tasks of a TaskSet by setting the
 just populate the *tasks* attribute).
 
 The *tasks* attribute is either a list of python callables, or a *<callable : int>* dict. 
-The tasks are python callables that receive one argument - the TaskSet class instance that is executing 
+The tasks are python callables that receive one argument—the TaskSet class instance that is executing 
 the task. Here is an extremely simple example of a locustfile (this locustfile won't actually load test anything)::
 
     from locust import Locust, TaskSet
@@ -153,8 +153,8 @@ the task. Here is an extremely simple example of a locustfile (this locustfile w
 
 If the 
 tasks attribute is specified as a list, each time a task is to be performed, it will be randomly 
-chosen from the *tasks* attribute. If however, *tasks* is a dict - with callables as keys and ints 
-as values - the task that is to be executed will be chosen at random but with the int as ratio. So 
+chosen from the *tasks* attribute. If however, *tasks* is a dict—with callables as keys and ints 
+as values—the task that is to be executed will be chosen at random but with the int as ratio. So 
 with a tasks that looks like this::
 
     {my_task: 3, another_task:1}
@@ -220,7 +220,7 @@ self.interrupt() in the ForumPage's stop method. What this does is essentially t
 stop executing the ForumPage task set and the execution will continue in the UserBehaviour instance. 
 If we wouldn't have had a call to the :py:meth:`interrupt() <locust.core.TaskSet.interrupt>` method 
 somewhere in ForumPage, the Locust would never stop running the ForumPage task once it has started. 
-But by having the interrupt function, we can - together with task weighting - define how likely it 
+But by having the interrupt function, we can—together with task weighting—define how likely it 
 is that a simulated user leaves the forum.
 
 It's also possible to declare a nested TaskSet, inline in a class, using the 
@@ -330,9 +330,9 @@ Manually controlling if a request should be considered successful or a failure
 ------------------------------------------------------------------------------
 
 By default, requests are marked as failed requests unless the HTTP response code is OK (2xx). 
-Most of the time, this default is what you want. Sometimes however - for example when testing 
+Most of the time, this default is what you want. Sometimes however—for example when testing 
 a URL endpoint that you expect to return 404, or testing a badly designed system that might 
-return *200 OK* even though an error occurred - there's a need for manually controlling if 
+return *200 OK* even though an error occurred—there's a need for manually controlling if 
 locust should consider a request as a success or a failure.
 
 One can mark requests as failed, even when the response code is OK, by using the 
