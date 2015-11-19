@@ -79,7 +79,7 @@ the brain of the locust. Each Locust class must have a *task_set* attribute set,
 a TaskSet.
 
 A TaskSet is, like its name suggests, a collection of tasks. These tasks are normal python callables 
-and - if we were loadtesting an auction website - could do stuff like "loading the start page", 
+and - if we were load-testing an auction website - could do stuff like "loading the start page", 
 "searching for some product" and "making a bid". 
 
 When a load test is started, each instance of the spawned Locust classes will start executing their 
@@ -264,7 +264,7 @@ class exists. When using this class, each instance gets a
 
 When inheriting from the HttpLocust class, we can use its client attribute to make HTTP requests 
 against the server. Here is an example of a locust file that can be used to load test a site 
-with two urls; **/** and **/about/**::
+with two URLs; **/** and **/about/**::
 
     from locust import HttpLocust, TaskSet, task
     
@@ -329,13 +329,13 @@ Response's *content* attribute will be set to None, and its *status_code* will b
 Manually controlling if a request should be considered successful or a failure
 ------------------------------------------------------------------------------
 
-By default, requests are marked as failed requests unless the HTTP response code is ok (2xx). 
+By default, requests are marked as failed requests unless the HTTP response code is OK (2xx). 
 Most of the time, this default is what you want. Sometimes however - for example when testing 
 a URL endpoint that you expect to return 404, or testing a badly designed system that might 
 return *200 OK* even though an error occurred - there's a need for manually controlling if 
 locust should consider a request as a success or a failure.
 
-One can mark requests as failed, even when the response code is okay, by using the 
+One can mark requests as failed, even when the response code is OK, by using the 
 *catch_response* argument and a with statement::
 
     with client.get("/", catch_response=True) as response:
@@ -355,9 +355,9 @@ Grouping requests to URLs with dynamic parameters
 -------------------------------------------------
 
 It's very common for websites to have pages whose URLs contain some kind of dynamic parameter(s). 
-Often it makes sense to group these URL's together in Locust's statistics. This can be done 
+Often it makes sense to group these URLs together in Locust's statistics. This can be done 
 by passing a *name* argument to the :py:class:`HttpSession's <locust.clients.HttpSession>` 
-different reqeust methods. 
+different request methods. 
 
 Example::
 
