@@ -12,3 +12,4 @@ dist/**
 .vagrant
 build/
 .coverage
+.tox/
