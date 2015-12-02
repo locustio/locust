@@ -1,10 +1,11 @@
 import unittest
+import six
 
 from locust.core import HttpLocust, Locust, TaskSet, task, events
 from locust import ResponseError, InterruptTaskSet
 from locust.exception import CatchResponseError, RescheduleTask, RescheduleTaskImmediately, LocustError
 
-from testcases import LocustTestCase, WebserverTestCase
+from .testcases import LocustTestCase, WebserverTestCase
 
 class TestTaskSet(LocustTestCase):
     def setUp(self):
@@ -151,7 +152,7 @@ class TestTaskSet(LocustTestCase):
         
         l = MySubTaskSet(self.locust)
         self.assertEqual(2, len(l.tasks))
-        self.assertEqual([t1, MySubTaskSet.t2.__func__], l.tasks)
+        self.assertEqual([t1, six.get_unbound_function(MySubTaskSet.t2)], l.tasks)
     
     def test_task_decorator_with_or_without_argument(self):
         class MyTaskSet(TaskSet):
@@ -328,51 +329,51 @@ class TestWebLocustClass(WebserverTestCase):
 
         my_locust = MyLocust()
         t1(my_locust)
-        self.assertEqual(self.response.content, "This is an ultra fast response")
+        self.assertEqual(self.response.text, "This is an ultra fast response")
 
     def test_client_request_headers(self):
         class MyLocust(HttpLocust):
             host = "http://127.0.0.1:%i" % self.port
 
         locust = MyLocust()
-        self.assertEqual("hello", locust.client.get("/request_header_test", headers={"X-Header-Test":"hello"}).content)
+        self.assertEqual("hello", locust.client.get("/request_header_test", headers={"X-Header-Test":"hello"}).text)
 
     def test_client_get(self):
         class MyLocust(HttpLocust):
             host = "http://127.0.0.1:%i" % self.port
 
         locust = MyLocust()
-        self.assertEqual("GET", locust.client.get("/request_method").content)
+        self.assertEqual("GET", locust.client.get("/request_method").text)
     
     def test_client_get_absolute_url(self):
         class MyLocust(HttpLocust):
             host = "http://127.0.0.1:%i" % self.port
 
         locust = MyLocust()
-        self.assertEqual("GET", locust.client.get("http://127.0.0.1:%i/request_method" % self.port).content)
+        self.assertEqual("GET", locust.client.get("http://127.0.0.1:%i/request_method" % self.port).text)
 
     def test_client_post(self):
         class MyLocust(HttpLocust):
             host = "http://127.0.0.1:%i" % self.port
 
         locust = MyLocust()
-        self.assertEqual("POST", locust.client.post("/request_method", {"arg":"hello world"}).content)
-        self.assertEqual("hello world", locust.client.post("/post", {"arg":"hello world"}).content)
+        self.assertEqual("POST", locust.client.post("/request_method", {"arg":"hello world"}).text)
+        self.assertEqual("hello world", locust.client.post("/post", {"arg":"hello world"}).text)
 
     def test_client_put(self):
         class MyLocust(HttpLocust):
             host = "http://127.0.0.1:%i" % self.port
 
         locust = MyLocust()
-        self.assertEqual("PUT", locust.client.put("/request_method", {"arg":"hello world"}).content)
-        self.assertEqual("hello world", locust.client.put("/put", {"arg":"hello world"}).content)
+        self.assertEqual("PUT", locust.client.put("/request_method", {"arg":"hello world"}).text)
+        self.assertEqual("hello world", locust.client.put("/put", {"arg":"hello world"}).text)
 
     def test_client_delete(self):
         class MyLocust(HttpLocust):
             host = "http://127.0.0.1:%i" % self.port
 
         locust = MyLocust()
-        self.assertEqual("DELETE", locust.client.delete("/request_method").content)
+        self.assertEqual("DELETE", locust.client.delete("/request_method").text)
         self.assertEqual(200, locust.client.delete("/request_method").status_code)
 
     def test_client_head(self):
@@ -395,7 +396,7 @@ class TestWebLocustClass(WebserverTestCase):
         locust = MyLocust()
         unauthorized = MyUnauthorizedLocust()
         authorized = MyAuthorizedLocust()
-        self.assertEqual("Authorized", authorized.client.get("/basic_auth").content)
+        self.assertEqual("Authorized", authorized.client.get("/basic_auth").text)
         self.assertFalse(locust.client.get("/basic_auth"))
         self.assertFalse(unauthorized.client.get("/basic_auth"))
     

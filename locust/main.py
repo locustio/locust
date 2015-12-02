@@ -1,5 +1,5 @@
 import locust
-import runners
+from . import runners
 
 import gevent
 import sys
@@ -10,13 +10,13 @@ import logging
 import socket
 from optparse import OptionParser
 
-import web
-from log import setup_logging, console_logger
-from stats import stats_printer, print_percentile_stats, print_error_report, print_stats
-from inspectlocust import print_task_ratio, get_task_ratio_dict
-from core import Locust, HttpLocust
-from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
-import events
+from . import web
+from .log import setup_logging, console_logger
+from .stats import stats_printer, print_percentile_stats, print_error_report, print_stats
+from .inspectlocust import print_task_ratio, get_task_ratio_dict
+from .core import Locust, HttpLocust
+from .runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
+from . import events
 
 _internals = [Locust, HttpLocust]
 version = locust.version
@@ -338,7 +338,7 @@ def main():
     logger = logging.getLogger(__name__)
     
     if options.show_version:
-        print "Locust %s" % (version,)
+        print("Locust %s" % (version,))
         sys.exit(0)
 
     locustfile = find_locustfile(options.locustfile)
@@ -409,7 +409,7 @@ def main():
         try:
             runners.locust_runner = SlaveLocustRunner(locust_classes, options)
             main_greenlet = runners.locust_runner.greenlet
-        except socket.error, e:
+        except socket.error as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
     
