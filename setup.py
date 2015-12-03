@@ -1,26 +1,8 @@
 # encoding: utf-8
 
-from setuptools import setup, find_packages, Command
-import sys, os
+from setuptools import setup, find_packages
 
 version = '0.7.3'
-
-
-class Unit2Discover(Command):
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        import sys, subprocess
-        basecmd = ['unit2', 'discover']
-        errno = subprocess.call(basecmd)
-        raise SystemExit(errno)
-
 
 setup(
     name='locustio',
@@ -52,11 +34,9 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=["gevent==1.1.rc1", "flask>=0.10.1", "requests>=2.4.1", "msgpack-python>=0.4.2", "six>=1.10.0"],
-    tests_require=['unittest2', 'mock', 'pyzmq'],
     entry_points={
         'console_scripts': [
             'locust = locust.main:main',
         ]
     },
-    test_suite='unittest2.collector',
 )
