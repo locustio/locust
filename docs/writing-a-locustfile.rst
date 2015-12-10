@@ -357,7 +357,7 @@ Grouping requests to URLs with dynamic parameters
 It's very common for websites to have pages whose URLs contain some kind of dynamic parameter(s). 
 Often it makes sense to group these URL's together in Locust's statistics. This can be done 
 by passing a *name* argument to the :py:class:`HttpSession's <locust.clients.HttpSession>` 
-different reqeust methods. 
+different request methods. 
 
 Example::
 
