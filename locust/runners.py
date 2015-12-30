@@ -202,8 +202,21 @@ class LocalLocustRunner(LocustRunner):
         self.greenlet = self.hatching_greenlet
 
 class DistributedLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, options):
+    def __init__(self, locust_classes, options, available_locust_classes=None):
+        """
+        :type available_locust_classes: dict
+        :param available_locust_classes: A dict of other locust classes the runner can "switch" to. e.g.
+
+            {
+                'Homepage': [<class Homepage>],
+                'Login': [<class Login>],
+                'Post': [<class Login>, <class Post>]
+            }
+
+            The key should be any string identifier that can be sent to the slaves as a message
+        """
         super(DistributedLocustRunner, self).__init__(locust_classes, options)
+        self.available_locust_classes = available_locust_classes or {}
         self.master_host = options.master_host
         self.master_port = options.master_port
         self.master_bind_host = options.master_bind_host
@@ -299,6 +312,14 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.stats.start_time = time()
         self.state = STATE_HATCHING
 
+    def switch(self, key):
+        """
+        Switch to a different set of locust classes
+        """
+        self.stop()
+        for client in self.clients.itervalues():
+            self.server.send(Message("switch", {"key": key}, None))
+
     def stop(self):
         for client in self.clients.hatching + self.clients.running:
             self.server.send(Message("stop", None, None))
@@ -389,6 +410,12 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 self.num_requests = job["num_requests"]
                 self.host = job["host"]
                 self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
+            elif msg.type == "switch":
+                try:
+                    self.locust_classes = self.available_locust_classes[msg.data["key"]]
+                except KeyError:
+                    logger.error("No available locust classes found with key: {}".format(msg.data["key"]))
+                    self.locust_classes = []
             elif msg.type == "stop":
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))
