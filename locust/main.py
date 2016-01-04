@@ -330,6 +330,46 @@ def load_locustfile(path):
     locusts = dict(filter(is_locust, vars(imported).items()))
     return imported.__doc__, locusts
 
+
+def getmodule(path, suffixes=('.py',)):
+    """
+    Get the relative module name of a file path; return None if not a module or is the __init__ of a package.
+    """
+    if path.endswith('__init__.py') or path.endswith('__init__.pyc') or path.endswith('__init__.pyo'):
+        # This is a package, not a module
+        return None
+
+    module = os.path.split(path)[-1]
+    for s in suffixes:
+        if module.endswith(s):
+            return module.strip(s)
+
+
+def collect_locustfiles(path):
+    """
+    On a given directory path, recursively import and load all locustfiles in that directory.
+    """
+    # Locustfiles will typically import assuming the working path is on the PYTHONPATH. To avoid having to do
+    # PYTHONPATH=. locust ...
+    if os.getcwd() not in sys.path:
+        sys.path.insert(0, os.getcwd())
+
+    files = os.listdir(path)
+    collected = []
+    for file_ in files:
+        fullpath = os.path.abspath(os.path.join(path, file_))
+        if os.path.isfile(fullpath):
+            if getmodule(file_):
+                loaded = load_locustfile(fullpath)
+                if loaded:
+                    collected.append(loaded)
+        elif os.path.isdir(fullpath):
+            # Recurse subdirectories for other locustfiles
+            collected += collect_locustfiles(os.path.join(path, file_))
+
+    return collected
+
+
 def main():
     parser, options, arguments = parse_options()
 
