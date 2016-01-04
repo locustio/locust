@@ -57,7 +57,8 @@ def parse_options():
         '-f', '--locustfile',
         dest='locustfile',
         default='locustfile',
-        help="Python module file to import, e.g. '../other.py'. Default: locustfile"
+        help="Python module file or directory to import, e.g. '../other.py' or 'locustfiles/'. If directory, "
+             "the default locustfile will be the first valid module found in that directory. Default: locustfile"
     )
 
     # if locust should be run in distributed mode as master
