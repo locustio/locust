@@ -143,6 +143,16 @@ class LocustRunner(object):
             self.locusts.killone(g)
         events.hatch_complete.fire(user_count=self.num_clients)
 
+    def switch(self, key):
+        """
+        Set the active locust classes to the executables described by the key
+        """
+        try:
+            self.locust_classes = self.available_locustfiles[key].values()
+        except KeyError:
+            logger.error("No available locust classes found with key: {}".format(key))
+            self.locust_classes = []
+
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
@@ -411,11 +421,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 self.host = job["host"]
                 self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
             elif msg.type == "switch":
-                try:
-                    self.locust_classes = self.available_locustfiles[msg.data["key"]]
-                except KeyError:
-                    logger.error("No available locust classes found with key: {}".format(msg.data["key"]))
-                    self.locust_classes = []
+                self.switch(msg.data["key"])
             elif msg.type == "stop":
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))

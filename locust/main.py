@@ -293,10 +293,10 @@ def is_locust(tup):
 
 def load_locustfile(path):
     """
-    Import given locustfile path and return {module: (docstring, callables)}.
+    Import given locustfile path and return {module: (callables)}.
 
-    Specifically, the locustfile's ``__doc__`` attribute (a string) and a
-    dictionary of ``{'name': callable}`` containing all callables which pass
+    <module> -- the name of the module in which the locusts are contained
+    <callables> -- a dictionary of ``{'name': callable}`` containing all callables which pass
     the "is a Locust" test.
     """
     # Get directory and locustfile name
@@ -327,9 +327,9 @@ def load_locustfile(path):
     if index is not None:
         sys.path.insert(index + 1, directory)
         del sys.path[0]
-    # Return our two-tuple
+
     locusts = dict(filter(is_locust, vars(imported).items()))
-    return {os.path.splitext(locustfile)[0]: (imported.__doc__, locusts)}
+    return {os.path.splitext(locustfile)[0]: locusts}
 
 
 def getmodule(path, suffixes=('.py',)):
@@ -397,7 +397,7 @@ def main():
     logger.info("All available locustfiles: {}".format(all_locustfiles))
 
     # Use the first locustfile for the default locusts
-    docstring, locusts = all_locustfiles.values()[0]
+    locusts = all_locustfiles.values()[0]
 
     if options.list_commands:
         console_logger.info("Available Locusts:")

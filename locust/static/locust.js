@@ -61,6 +61,23 @@ $('#swarm_form').submit(function(event) {
     );
 });
 
+$('#switch_form').submit(function(event) {
+    event.preventDefault();
+    $.post($(this).attr("action"), $(this).serialize(),
+        function(response) {
+            if (response.success) {
+                $("body").attr("class", "hatching");
+                $("#start").fadeOut();
+                $("#status").fadeIn();
+                $(".box_running").fadeIn();
+                $("a.new_test").fadeOut();
+                $("a.edit_test").fadeIn();
+                $(".user_count").fadeIn();
+            }
+        }
+    );
+});
+
 $('#edit_form').submit(function(event) {
     event.preventDefault();
     $.post($(this).attr("action"), $(this).serialize(),

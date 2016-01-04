@@ -51,14 +51,29 @@ def swarm():
     locust_count = int(request.form["locust_count"])
     hatch_rate = float(request.form["hatch_rate"])
     runners.locust_runner.start_hatching(locust_count, hatch_rate)
-    response = make_response(json.dumps({'success':True, 'message': 'Swarming started'}))
+    response = make_response(json.dumps({'success': True, 'message': 'Swarming started'}))
     response.headers["Content-type"] = "application/json"
     return response
 
 @app.route('/stop')
 def stop():
     runners.locust_runner.stop()
-    response = make_response(json.dumps({'success':True, 'message': 'Test stopped'}))
+    response = make_response(json.dumps({'success': True, 'message': 'Test stopped'}))
+    response.headers["Content-type"] = "application/json"
+    return response
+
+@app.route('/switch', methods=["POST"])
+def switch():
+    name = request.form["locustfile"]
+    assert name in runners.locust_runner.available_locustfiles
+
+    runners.locust_runner.stop()
+    runners.locust_runner.stats.reset_all()
+    runners.locust_runner.switch(name)
+    # Use whatever existing clients and hatch rate numbers are
+    runners.locust_runner.start_hatching(runners.locust_runner.num_clients, runners.locust_runner.hatch_rate)
+
+    response = make_response(json.dumps({'success': True, 'message': 'Switched to locustfile "{}"'.format(name)}))
     response.headers["Content-type"] = "application/json"
     return response
 
