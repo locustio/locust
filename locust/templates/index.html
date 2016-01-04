@@ -58,6 +58,13 @@
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
+                    <label for="locustfile">Locust file to execute</label>
+                    <select name="locustfile" id="locustfile" class="val">
+                        {% for name in available_locustfiles %}
+                            <option value="{{name}}">{{name}}</option>
+                        {% endfor %}
+                    </select>
+                    <br>
                     <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button">
                 </form>
                 <div style="clear:right;"></div>

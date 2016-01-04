@@ -122,12 +122,16 @@ a {
     float: right;
 }
 
+.start select {
+    width: 100%;
+}
+
 
 .stopped .start {
     display: none;
     border-radius: 5px;
     -moz-border-radius: 5px;
-    -webkit-border-radisu: 5px;
+    -webkit-border-radius: 5px;
     border: 3px solid #eee;
     background: #111717;
 }
@@ -137,7 +141,7 @@ a {
     display: none;
     border-radius: 5px;
     -moz-border-radius: 5px;
-    -webkit-border-radisu: 5px;
+    -webkit-border-radius: 5px;
     border: 3px solid #eee;
     background: #111717;
 }
@@ -265,7 +269,7 @@ ul.tabs li a.current {
     margin-left: -169px;
     border-radius: 5px;
     -moz-border-radius: 5px;
-    -webkit-border-radisu: 5px;
+    -webkit-border-radius: 5px;
     border: 3px solid #eee;
     background: #111717;
 }

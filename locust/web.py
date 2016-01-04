@@ -34,12 +34,13 @@ def index():
         slave_count = runners.locust_runner.slave_count
     else:
         slave_count = 0
-    
+
     return render_template("index.html",
         state=runners.locust_runner.state,
         is_distributed=is_distributed,
         slave_count=slave_count,
         user_count=runners.locust_runner.user_count,
+        available_locustfiles=runners.locust_runner.available_locustfiles.keys(),
         version=version
     )
 
