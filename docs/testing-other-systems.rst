@@ -2,7 +2,7 @@
 Testing other systems using custom clients
 ===========================================
 
-Locust was built with HTTP as it's main target. However, it can easily be extended to load test 
+Locust was built with HTTP as its main target. However, it can easily be extended to load test 
 any request/response based system, by writing a custom client that triggers 
 :py:attr:`request_success <locust.events.request_success>` and 
 :py:attr:`request_failure <locust.events.request_failure>` events.
@@ -16,7 +16,7 @@ Here is an example of a Locust class, **XmlRpcLocust**, which provides an XML-RP
 .. literalinclude:: ../examples/custom_xmlrpc_client/xmlrpc_locustfile.py
 
 If you've written Locust tests before, you'll recognize the class called *ApiUser* which is a normal 
-Locust class that has a *TaskSet* class with *tasks* in it's *task_set* attribute. However, the *ApiUser* 
+Locust class that has a *TaskSet* class with *tasks* in its *task_set* attribute. However, the *ApiUser* 
 inherits from *XmlRpcLocust* that you can see right above ApiUser. The *XmlRpcLocust* class provides an 
 instance of XmlRpcClient under the *client* attribute. The *XmlRpcClient* is a wrapper around the standard 
 library's :py:class:`xmlrpclib.ServerProxy`. It  basically just proxies the function calls, but with the 

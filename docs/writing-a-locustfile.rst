@@ -212,7 +212,7 @@ instead of referring to a python function, you point it to another TaskSet::
             pass
 
 So in above example, if the ForumPage would get selected for execution when the UserBehaviour 
-TaskSet is executing, is. that the ForumPage TaskSet would start executing. The ForumPage TaskSet 
+TaskSet is executing, then the ForumPage TaskSet would start executing. The ForumPage TaskSet 
 would then pick one of its own tasks, execute it, then wait, and so on. 
 
 There is one important thing to note about the above example, and that is the call to 
