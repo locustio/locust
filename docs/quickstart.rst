@@ -67,7 +67,7 @@ Another way we could declare tasks, which is usually more convenient, is to use 
         max_wait=9000
 
 The Locust class (as well as HttpLocust, since it's a subclass) also allows one to specify minimum 
-and maximum wait time - per simulated user - between the execution of tasks (*min_wait* and *max_wait*) 
+and maximum wait time—per simulated user—between the execution of tasks (*min_wait* and *max_wait*) 
 as well as other user behaviours.
 
 

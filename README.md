@@ -10,27 +10,28 @@
 
 ## Description
 
-Locust is an easy-to-use, distributed, user load testing tool. Intended for load testing web sites (or other systems) and figuring
-out how many concurrent users a system can handle.
+Locust is an easy-to-use, distributed, user load testing tool. It is intended for load-testing web sites (or other systems) and
+figuring out how many concurrent users a system can handle.
 
 The idea is that during a test, a swarm of locusts will attack your website. The behavior of each locust (or test user if you will) is 
 defined by you and the swarming process is monitored from a web UI in real-time. This will help you battle test and identify bottlenecks 
 in your code before letting real users in.
 
-Locust is completely event based, and therefore it's possible to support thousands of concurrent users on a single machine.
+Locust is completely event-based, and therefore it's possible to support thousands of concurrent users on a single machine.
 In contrast to many other event-based apps it doesn't use callbacks. Instead it uses light-weight processes, through <a href="http://www.gevent.org/">gevent</a>.
-Each locust swarming your site is actually running inside it's own process (or greenlet, to be correct).
+Each locust swarming your site is actually running inside its own process (or greenlet, to be correct).
 This allows you to write very expressive scenarios in Python without complicating your code with callbacks.
 
 
 ## Features
 * **Write user test scenarios in plain-old Python**<br>
- No need for clunky UIs or bloated XML, just code as you normally would. Based on coroutines instead of callbacks (aka boomerang code) allows code to look and behave like normal, blocking Python code.
+ No need for clunky UIs or bloated XML—just code as you normally would. Based on coroutines instead
+of callbacks, your code looks and behaves like normal, blocking Python code.
 
 * **Distributed & Scalable - supports hundreds of thousands of users**<br>
  Locust supports running load tests distributed over multiple machines.
- Being event based, even one Locust node can handle thousands of users in a single process.
- Part of the reason behind this is that even if you simulate that many users, not all are actively hitting your system. Often, users are idle figuring out what to do next. Request per second != number of users online.
+ Being event-based, even one Locust node can handle thousands of users in a single process.
+ Part of the reason behind this is that even if you simulate that many users, not all are actively hitting your system. Often, users are idle figuring out what to do next. Requests per second != number of users online.
 
 * **Web-based UI**<br>
  Locust has a neat HTML+JS that shows all relevent test details in real-time. And since the UI is web-based, it's cross-platform and easily extendable. 
