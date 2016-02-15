@@ -117,7 +117,7 @@ function updateStats() {
         $("#status_text").html(report.state);
         $("#userCount").html(report.user_count);
 
-        if (report.slave_count)
+        if (typeof report.slave_count !== "undefined")
             $("#slaveCount").html(report.slave_count)
 
         $('#stats tbody').empty();
