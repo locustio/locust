@@ -8,18 +8,23 @@ import signal
 import inspect
 import logging
 import socket
+import time
 from optparse import OptionParser
+from gevent.pool import Group
 
 import web
 from log import setup_logging, console_logger
 from stats import stats_printer, print_percentile_stats, print_error_report, print_stats
 from inspectlocust import print_task_ratio, get_task_ratio_dict
 from core import Locust, HttpLocust
-from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
+from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner, NoWebMasterLocustRunner
 import events
+
+import polling
 
 _internals = [Locust, HttpLocust]
 version = locust.version
+
 
 def parse_options():
     """
@@ -57,7 +62,8 @@ def parse_options():
         '-f', '--locustfile',
         dest='locustfile',
         default='locustfile',
-        help="Python module file to import, e.g. '../other.py'. Default: locustfile"
+        help="Python module file or directory to import, e.g. '../other.py' or 'locustfiles/'. If directory, "
+             "the default locustfile will be the first valid module found in that directory. Default: locustfile"
     )
 
     # if locust should be run in distributed mode as master
@@ -115,6 +121,15 @@ def parse_options():
         help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557. Note that Locust will also use this port + 1, so by default the master node will bind to 5557 and 5558."
     )
 
+    parser.add_option(
+        '--min-slaves',
+        action='store',
+        type='int',
+        dest='min_slaves',
+        default=1,
+        help="The minimum number of slaves for the master to expect before it starts swarming. Only used when running with --master and --no-web."
+    )
+
     # if we should print stats in the console
     parser.add_option(
         '--no-web',
@@ -152,6 +167,24 @@ def parse_options():
         dest='num_requests',
         default=None,
         help="Number of requests to perform. Only used together with --no-web"
+    )
+
+    parser.add_option(
+        '-t', '--timeout',
+        action='store',
+        type='int',
+        dest='timeout',
+        default=None,
+        help="Maximum number of seconds to run each locustfile for. Note that there may be multiple locustfiles and this is not a global timeout."
+    )
+
+    parser.add_option(
+        '--cooldown',
+        action='store',
+        type='int',
+        dest='cooldown',
+        default=0,
+        help='Number of seconds to wait before running the next locustfile.'
     )
     
     # log level
@@ -292,10 +325,10 @@ def is_locust(tup):
 
 def load_locustfile(path):
     """
-    Import given locustfile path and return (docstring, callables).
+    Import given locustfile path and return {module: (callables)}.
 
-    Specifically, the locustfile's ``__doc__`` attribute (a string) and a
-    dictionary of ``{'name': callable}`` containing all callables which pass
+    <module> -- the name of the module in which the locusts are contained
+    <callables> -- a dictionary of ``{'name': callable}`` containing all callables which pass
     the "is a Locust" test.
     """
     # Get directory and locustfile name
@@ -326,9 +359,51 @@ def load_locustfile(path):
     if index is not None:
         sys.path.insert(index + 1, directory)
         del sys.path[0]
-    # Return our two-tuple
+
     locusts = dict(filter(is_locust, vars(imported).items()))
-    return imported.__doc__, locusts
+    return {os.path.splitext(locustfile)[0]: locusts}
+
+
+def getmodule(path, suffixes=('.py',)):
+    """
+    Get the relative module name of a file path; return None if not a module or is the __init__ of a package.
+    """
+    if path.endswith('__init__.py') or path.endswith('__init__.pyc') or path.endswith('__init__.pyo'):
+        # This is a package, not a module
+        return None
+
+    module = os.path.split(path)[-1]
+    for s in suffixes:
+        if module.endswith(s):
+            return module.strip(s)
+
+    return None
+
+
+def collect_locustfiles(path):
+    """
+    On a given directory path, recursively import and load all locustfiles in that directory.
+    """
+    # Locustfiles will typically import assuming the working path is on the PYTHONPATH. To avoid having to do
+    # PYTHONPATH=. locust ...
+    if os.getcwd() not in sys.path:
+        sys.path.insert(0, os.getcwd())
+
+    files = os.listdir(path)
+    collected = dict()
+    for file_ in files:
+        fullpath = os.path.abspath(os.path.join(path, file_))
+        if os.path.isfile(fullpath):
+            if getmodule(file_):
+                loaded = load_locustfile(fullpath)
+                if loaded:
+                    collected.update(loaded)
+        elif os.path.isdir(fullpath):
+            # Recurse subdirectories for other locustfiles
+            collected.update(collect_locustfiles(os.path.join(path, file_)))
+
+    return collected
+
 
 def main():
     parser, options, arguments = parse_options()
@@ -341,12 +416,20 @@ def main():
         print "Locust %s" % (version,)
         sys.exit(0)
 
-    locustfile = find_locustfile(options.locustfile)
-    if not locustfile:
-        logger.error("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.")
-        sys.exit(1)
+    if os.path.isdir(options.locustfile):
+        all_locustfiles = collect_locustfiles(options.locustfile)
+    else:
+        locustfile = find_locustfile(options.locustfile)
+        if not locustfile:
+            logger.error("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.")
+            sys.exit(1)
 
-    docstring, locusts = load_locustfile(locustfile)
+        all_locustfiles = load_locustfile(locustfile)
+
+    logger.info("All available locustfiles: {}".format(all_locustfiles))
+
+    # Use the first locustfile for the default locusts
+    locusts = all_locustfiles.values()[0]
 
     if options.list_commands:
         console_logger.info("Available Locusts:")
@@ -386,32 +469,56 @@ def main():
         }
         console_logger.info(dumps(task_data))
         sys.exit(0)
-    
-    # if --master is set, make sure --no-web isn't set
-    if options.master and options.no_web:
-        logger.error("Locust can not run distributed with the web interface disabled (do not use --no-web and --master together)")
-        sys.exit(0)
+
+    if options.master and options.no_web and not options.min_slaves:
+        logger.error("When running --master and --no-web, you must specify --min-slaves to be available before starting to swarm")
+        sys.exit(1)
+
+    if options.master and options.no_web and not (options.timeout or options.num_requests):
+        logger.error("When running --master and --no-web, you must specify either --num-request or --timeout to tell the slaves when to stop running each locustfile")
+        sys.exit(1)
 
     if not options.no_web and not options.slave:
         # spawn web greenlet
         logger.info("Starting web monitor at %s:%s" % (options.web_host or "*", options.port))
         main_greenlet = gevent.spawn(web.start, locust_classes, options)
-    
-    if not options.master and not options.slave:
-        runners.locust_runner = LocalLocustRunner(locust_classes, options)
-        # spawn client spawning/hatching greenlet
-        if options.no_web:
-            runners.locust_runner.start_hatching(wait=True)
-            main_greenlet = runners.locust_runner.greenlet
-    elif options.master:
-        runners.locust_runner = MasterLocustRunner(locust_classes, options)
-    elif options.slave:
+
+    if options.slave:
+        logger.info("Waiting for master to become available")
         try:
-            runners.locust_runner = SlaveLocustRunner(locust_classes, options)
-            main_greenlet = runners.locust_runner.greenlet
-        except socket.error, e:
-            logger.error("Failed to connect to the Locust master: %s", e)
+            runners.locust_runner = polling.poll(
+                lambda: SlaveLocustRunner(locust_classes, options, available_locustfiles=all_locustfiles),
+                timeout=60,
+                step=1,
+                ignore_exceptions=(socket.error,))
+
+        except polling.TimeoutException, e:
+            logger.error("Failed to connect to the Locust master: %s", e.last)
             sys.exit(-1)
+
+        main_greenlet = runners.locust_runner.greenlet
+
+    elif options.master:
+
+        if options.no_web:
+            # Just start running the suites as soon as the minimum number of slaves come online
+            runners.locust_runner = NoWebMasterLocustRunner(locust_classes, options, available_locustfiles=all_locustfiles)
+
+            logger.info("Waiting for {} slaves to become available before swarming".format(options.min_slaves))
+            try:
+                runners.locust_runner.wait_for_slaves(options.min_slaves, timeout=60)
+            except polling.TimeoutException, e:
+                logger.error("Minimum expected slaves were never available. Expected {} ({} available)".format(options.min_slaves, e.last))
+                sys.exit(1)
+
+            runners.locust_runner.slaves_start_swarming(
+                max_num_requests=options.num_requests,
+                max_seconds_elapsed=options.timeout)
+
+        else:
+            runners.locust_runner = MasterLocustRunner(locust_classes, options, available_locustfiles=all_locustfiles)
+
+        main_greenlet = runners.locust_runner.greenlet
     
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet

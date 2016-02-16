@@ -1,4 +1,5 @@
 # coding=UTF-8
+import copy
 import socket
 import traceback
 import warnings
@@ -8,6 +9,7 @@ from time import time
 from hashlib import md5
 
 import gevent
+import polling
 from gevent import GreenletExit
 from gevent.pool import Group
 
@@ -26,8 +28,9 @@ SLAVE_REPORT_INTERVAL = 3.0
 
 
 class LocustRunner(object):
-    def __init__(self, locust_classes, options):
+    def __init__(self, locust_classes, options, available_locustfiles=None):
         self.locust_classes = locust_classes
+        self.available_locustfiles = available_locustfiles or {}
         self.hatch_rate = options.hatch_rate
         self.num_clients = options.num_clients
         self.num_requests = options.num_requests
@@ -142,6 +145,16 @@ class LocustRunner(object):
             self.locusts.killone(g)
         events.hatch_complete.fire(user_count=self.num_clients)
 
+    def switch(self, key):
+        """
+        Set the active locust classes to the executables described by the key
+        """
+        try:
+            self.locust_classes = self.available_locustfiles[key].values()
+        except KeyError:
+            logger.error("No available locust classes found with key: {}".format(key))
+            self.locust_classes = []
+
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
@@ -188,8 +201,8 @@ class LocustRunner(object):
         self.exceptions[key] = row
 
 class LocalLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, options):
-        super(LocalLocustRunner, self).__init__(locust_classes, options)
+    def __init__(self, locust_classes, options, available_locustfiles=None):
+        super(LocalLocustRunner, self).__init__(locust_classes, options, available_locustfiles)
 
         # register listener thats logs the exception for the local runner
         def on_locust_error(locust_instance, exception, tb):
@@ -202,8 +215,20 @@ class LocalLocustRunner(LocustRunner):
         self.greenlet = self.hatching_greenlet
 
 class DistributedLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, options):
-        super(DistributedLocustRunner, self).__init__(locust_classes, options)
+    def __init__(self, locust_classes, options, available_locustfiles=None):
+        """
+        :type available_locustfiles: dict
+        :param available_locustfiles: A dict of other locust classes the runner can "switch" to. e.g.
+
+            {
+                'Homepage': [<class Homepage>],
+                'Login': [<class Login>],
+                'Post': [<class Login>, <class Post>]
+            }
+
+            The key should be any string identifier that can be sent to the slaves as a message
+        """
+        super(DistributedLocustRunner, self).__init__(locust_classes, options, available_locustfiles)
         self.master_host = options.master_host
         self.master_port = options.master_port
         self.master_bind_host = options.master_bind_host
@@ -299,6 +324,14 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.stats.start_time = time()
         self.state = STATE_HATCHING
 
+    def switch(self, key):
+        """
+        Switch to a different set of locust classes
+        """
+        self.stats.clear_all()
+        for client in self.clients.itervalues():
+            self.server.send(Message("switch", {"key": key}, None))
+
     def stop(self):
         for client in self.clients.hatching + self.clients.running:
             self.server.send(Message("stop", None, None))
@@ -345,6 +378,72 @@ class MasterLocustRunner(DistributedLocustRunner):
     def slave_count(self):
         return len(self.clients.ready) + len(self.clients.hatching) + len(self.clients.running)
 
+
+class NoWebMasterLocustRunner(MasterLocustRunner):
+
+    def __init__(self, *args, **kwargs):
+        super(NoWebMasterLocustRunner, self).__init__(*args, **kwargs)
+        self.all_stats = {}
+        self.greenlet = Group()
+        self.max_num_requests = None
+        self.max_seconds_elapsed = None
+
+    def run_locustfiles(self):
+        """
+        Iterate through all locustfiles and run each locustfile until the maximum number of requests are hit or
+        the maximum timeout in seconds has elapsed. When one of those conditions are met on each locustfile,
+        move on to the next one, storing the stats result of each locustfile run.
+        """
+        for run_count, locustfile_key in enumerate(self.available_locustfiles.keys()):
+            self.switch(locustfile_key)
+            super(NoWebMasterLocustRunner, self).start_hatching(self.num_clients, self.hatch_rate)
+
+            while True:
+                import time
+
+                hit_max_requests = self.max_num_requests and (self.stats.aggregated_stats().num_requests >= self.max_num_requests)
+                hit_max_elapsed_time = self.max_seconds_elapsed and (time.time() - self.stats.start_time >= self.max_seconds_elapsed)
+
+                if hit_max_requests or hit_max_elapsed_time:
+                    break
+
+                time.sleep(1)
+
+            self.all_stats[locustfile_key] = copy.deepcopy(self.stats)
+            self.stop()
+
+    def wait_for_slaves(self, min_slaves, timeout):
+        """
+        Wait the specified timeout seconds until the minimum number of slaves come online
+
+        :param min_slaves: Minimum number of slaves to expect
+        :param timeout: Max number of seconds to wait before raising an exception
+        :raises: polling.TimeoutException
+        :return: The count of slaves currently available
+        """
+        return polling.poll(
+            lambda: len(self.clients.ready),
+            check_success=lambda ready: ready >= min_slaves,
+            timeout=timeout,
+            step=1)
+
+    def slaves_start_swarming(self, max_num_requests=None, max_seconds_elapsed=None):
+        """
+        Instruct the slaves to start swarming for the available locustfiles asynchronously
+
+        :param max_num_requests: Stop when the total number of requests for a locustfile reach this number
+        :param max_seconds_elapsed: Stop when the total elapsed seconds for a locustfile reach this number
+        """
+        if max_num_requests is not None:
+            self.max_num_requests = max_num_requests
+        elif max_seconds_elapsed is not None:
+            self.max_seconds_elapsed = max_seconds_elapsed
+        else:
+            raise ValueError('You must specify the total number or requests to be made or a timeout')
+
+        self.state = STATE_HATCHING
+        self.greenlet.spawn(self.run_locustfiles).link_exception(callback=self.noop)
+
 class SlaveLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
@@ -356,6 +455,11 @@ class SlaveLocustRunner(DistributedLocustRunner):
         self.greenlet.spawn(self.worker).link_exception(callback=self.noop)
         self.client.send(Message("client_ready", None, self.client_id))
         self.greenlet.spawn(self.stats_reporter).link_exception(callback=self.noop)
+
+        # Register listener for when a locust starts hatching
+        def on_locust_start_hatching():
+            self.client.send(Message("hatching", None, self.client_id))
+        events.locust_start_hatching += on_locust_start_hatching
         
         # register listener for when all locust users have hatched, and report it to the master node
         def on_hatch_complete(user_count):
@@ -389,6 +493,11 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 self.num_requests = job["num_requests"]
                 self.host = job["host"]
                 self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
+            elif msg.type == "switch":
+                self.stop()
+                self.switch(msg.data["key"])
+                self.client.send(Message("hatching", None, self.client_id))
+                self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=self.num_clients, hatch_rate=self.hatch_rate))
             elif msg.type == "stop":
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))
