@@ -149,6 +149,9 @@ class StatsEntry(object):
         self.stats.last_request_timestamp = t
 
     def _log_response_time(self, response_time):
+        # clients using non-monotonic timers can lead to negative response times, e.g. NTP corrections
+        response_time = max(response_time, 0)
+        
         self.total_response_time += response_time
 
         if self.min_response_time is None:
