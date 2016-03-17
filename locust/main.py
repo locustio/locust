@@ -22,9 +22,11 @@ from .stats import (print_error_report, print_percentile_stats, print_stats,
 _internals = [Locust, HttpLocust]
 version = locust.__version__
 
-def parse_options():
+def parse_options(args=None):
     """
     Handle command-line options with optparse.OptionParser.
+    If args is given, parser regards them as command line arguments like ['--opt1=value1', '-o', value2'].
+    If not, sys.argv[1:] will be used.(default action of OptionParser)
 
     Return list of arguments, largely for use in `parse_arguments`.
     """
@@ -258,8 +260,11 @@ def parse_options():
 
     # Finalize
     # Return three-tuple of parser + the output from parse_args (opt obj, args)
-    opts, args = parser.parse_args()
-    return parser, opts, args
+    if args:
+        options, arguments = parser.parse_args(args)
+    else:
+        options, arguments = parser.parse_args()
+    return parser, options, arguments
 
 
 def _is_package(path):
@@ -358,8 +363,8 @@ def load_locustfile(path):
     locusts = dict(filter(is_locust, vars(imported).items()))
     return imported.__doc__, locusts
 
-def main():
-    parser, options, arguments = parse_options()
+def main(args=None):
+    parser, options, arguments = parse_options(args)
 
     # setup logging
     setup_logging(options.loglevel, options.logfile)
