@@ -1,3 +1,5 @@
+import shlex
+
 from locust import main
 from locust.core import HttpLocust, Locust, TaskSet
 
@@ -27,3 +29,17 @@ class TestTaskSet(LocustTestCase):
             pass
         
         self.assertFalse(main.is_locust(("ThriftLocust", ThriftLocust)))
+
+
+    def test_parse_options(self):
+
+        parser, options, args = main.parse_options()
+        self.assertEqual('locustfile', options.locustfile)
+        self.assertEqual(None, options.host)
+        # The value: python setup.py 'test'
+        self.assertEqual(['test'], args)
+
+        parser, options, args = main.parse_options(args=shlex.split('--locustfile=test.py -H http://localhost:5000'))
+        self.assertEqual('test.py', options.locustfile)
+        self.assertEqual('http://localhost:5000', options.host)
+        self.assertEqual([], args)
