@@ -88,6 +88,26 @@ Event is fired with following arguments:
 * *data*: Data dict with the data from the slave node
 """
 
+configuration_to_slaves = EventHook()
+"""
+*configuration_to_slaves* is used when locust is running in --master mode and is fired master server
+is about to start hatching slaves.
+
+It can be used to distribute master configuration to slaves.
+
+Event is fired with the following arguments:
+* *data*: Data dict that can be modified in order to define configuration parameters
+"""
+
+master_configuration = EventHook()
+"""
+*master_configuration* is used when it is necessary to obtain configuration data
+from the master node before actual hatching is started.
+
+Event is fired with the following arguments:
+* *data* configuration data from the master node
+"""
+
 hatch_complete = EventHook()
 """
 *hatch_complete* is fired when all locust users has been spawned.
