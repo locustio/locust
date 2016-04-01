@@ -276,6 +276,9 @@ class MasterLocustRunner(DistributedLocustRunner):
 
         logger.info("Sending hatch jobs to %d ready clients", num_slaves)
 
+        config = {}
+        events.configuration_to_slaves.fire(data=config)
+
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
             self.exceptions = {}
@@ -287,7 +290,8 @@ class MasterLocustRunner(DistributedLocustRunner):
                 "num_clients":slave_num_clients,
                 "num_requests": self.num_requests,
                 "host":self.host,
-                "stop_timeout":None
+                "stop_timeout":None,
+                "master_config":config,
             }
 
             if remaining > 0:
@@ -378,6 +382,10 @@ class SlaveLocustRunner(DistributedLocustRunner):
             self.client.send(Message("exception", {"msg" : str(exception), "traceback" : formatted_tb}, self.client_id))
         events.locust_error += on_locust_error
 
+    def start_hatching(self, locust_count, hatch_rate, master_config):
+        events.master_configuration.fire(data=master_config)
+        super(SlaveLocustRunner, self).start_hatching(locust_count=locust_count, hatch_rate=hatch_rate)
+
     def worker(self):
         while True:
             msg = self.client.recv()
@@ -388,7 +396,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 #self.num_clients = job["num_clients"]
                 self.num_requests = job["num_requests"]
                 self.host = job["host"]
-                self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
+                self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"], master_config=job["master_config"]))
             elif msg.type == "stop":
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))
