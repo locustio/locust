@@ -74,5 +74,5 @@ Available hooks
 The following event hooks are available under the **locust.events** module:
 
 .. automodule:: locust.events
-	:members: request_success, request_failure, locust_error, report_to_master, slave_report, hatch_complete, quitting
+	:members: request_success, request_failure, locust_error, report_to_master, slave_report, configuration_to_slaves, master_configuration, hatch_complete, quitting
 
