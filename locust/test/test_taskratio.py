@@ -50,7 +50,7 @@ class TestTaskRatio(unittest.TestCase):
             weight = 1
             task_set = Tasks
 
-	class MoreLikelyLocust(Locust):
+        class MoreLikelyLocust(Locust):
             weight = 3
             task_set = Tasks
 

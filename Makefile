@@ -1,5 +1,5 @@
 test:
-	python setup.py test
+	unit2 discover
 
 release:
 	python setup.py sdist upload
