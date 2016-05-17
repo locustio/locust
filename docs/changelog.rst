@@ -2,6 +2,14 @@
 Changelog
 ##########
 
+0.7.4
+=====
+
+* Use a newer version of requests, which fixed an issue for users with older versions of 
+  requests getting ConnectionErrors (https://github.com/locustio/locust/issues/273).
+* Various fixes to documentation.
+
+
 0.7.3
 =====
 
