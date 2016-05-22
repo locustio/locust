@@ -21,7 +21,7 @@ class RequestStats(object):
         self.max_requests = None
         self.last_request_timestamp = None
         self.start_time = None
-    
+
     def get(self, name, method):
         """
         Retrieve a StatsEntry instance by name and method
@@ -113,7 +113,7 @@ class StatsEntry(object):
     
     last_request_timestamp = None
     """ Time of the last request for this entry """
-    
+
     def __init__(self, stats, name, method):
         self.stats = stats
         self.name = name
@@ -233,13 +233,13 @@ class StatsEntry(object):
     
     def extend(self, other, full_request_history=False):
         """
-        Extend the data fro the current StatsEntry with the stats from another
-        StatsEntry instance. 
-        
-        If full_request_history is False, we'll only care to add the data from 
-        the last 20 seconds of other's stats. The reason for this argument is that 
-        extend can be used to generate an aggregate of multiple different StatsEntry 
-        instances on the fly, in order to get the *total* current RPS, average 
+        Extend the data from the current StatsEntry with the stats from another
+        StatsEntry instance.
+
+        If full_request_history is False, we'll only care to add the data from
+        the last 20 seconds of other's stats. The reason for this argument is that
+        extend can be used to generate an aggregate of multiple different StatsEntry
+        instances on the fly, in order to get the *total* current RPS, average
         response time, etc.
         """
         self.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
@@ -278,7 +278,7 @@ class StatsEntry(object):
             "response_times": self.response_times,
             "num_reqs_per_sec": self.num_reqs_per_sec,
         }
-    
+
     @classmethod
     def unserialize(cls, data):
         obj = cls(None, data["name"], data["method"])
@@ -340,8 +340,12 @@ class StatsEntry(object):
     def percentile(self, tpl=" %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
         if not self.num_requests:
             raise ValueError("Can't calculate percentile on url with no successful requests")
-        
-        return tpl % (
+        return tpl % self.percentiles()
+
+    def percentiles(self):
+        if not self.num_requests:
+            raise ValueError("Can't calculate percentile on url with no successful requests")
+        return (
             str(self.method) + " " + self.name,
             self.num_requests,
             self.get_response_time_percentile(0.5),
@@ -412,22 +416,22 @@ global_stats = RequestStats()
 A global instance for holding the statistics. Should be removed eventually.
 """
 
-def on_request_success(request_type, name, response_time, response_length):
+def on_request_success(request_type, name, response_time, response_length, **kwargs):
     if global_stats.max_requests is not None and (global_stats.num_requests + global_stats.num_failures) >= global_stats.max_requests:
         raise StopLocust("Maximum number of requests reached")
     global_stats.get(name, request_type).log(response_time, response_length)
 
-def on_request_failure(request_type, name, response_time, exception):
+def on_request_failure(request_type, name, response_time, exception, **kwargs):
     if global_stats.max_requests is not None and (global_stats.num_requests + global_stats.num_failures) >= global_stats.max_requests:
         raise StopLocust("Maximum number of requests reached")
     global_stats.get(name, request_type).log_error(exception)
 
-def on_report_to_master(client_id, data):
+def on_report_to_master(client_id, data, **kwargs):
     data["stats"] = [global_stats.entries[key].get_stripped_report() for key in global_stats.entries.iterkeys() if not (global_stats.entries[key].num_requests == 0 and global_stats.entries[key].num_failures == 0)]
     data["errors"] =  dict([(k, e.to_dict()) for k, e in global_stats.errors.iteritems()])
     global_stats.errors = {}
 
-def on_slave_report(client_id, data):
+def on_slave_report(client_id, data, **kwargs):
     for stats_data in data["stats"]:
         entry = StatsEntry.unserialize(stats_data)
         request_key = (entry.name, entry.method)
