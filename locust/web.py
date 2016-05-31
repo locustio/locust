@@ -15,7 +15,7 @@ from . import runners
 from .cache import memoize
 from .runners import MasterLocustRunner
 from locust.stats import median_from_dict
-from locust import version
+from locust import __version__ as version
 
 import logging
 logger = logging.getLogger(__name__)

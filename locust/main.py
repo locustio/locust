@@ -19,7 +19,7 @@ from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
 import events
 
 _internals = [Locust, HttpLocust]
-version = locust.version
+version = locust.__version__
 
 def parse_options():
     """
