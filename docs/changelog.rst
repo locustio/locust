@@ -2,6 +2,12 @@
 Changelog
 ##########
 
+0.7.5
+=====
+
+* Use version 1.1.1 of gevent. Fixes an install issue on certain versions of python.
+
+
 0.7.4
 =====
 
