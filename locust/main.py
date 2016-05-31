@@ -124,6 +124,15 @@ def parse_options():
         help="Disable the web interface, and instead start running the test immediately. Requires -c and -r to be specified."
     )
 
+    # Output request and distribution stats to console
+    parser.add_option(
+        '--dump-csv-stats',
+        action='store_true',
+        dest='dump_csv_stats',
+        default=False,
+        help="Dump the request and distribution stats to CSV file."
+    )
+
     # Number of clients
     parser.add_option(
         '-c', '--clients',
@@ -330,6 +339,14 @@ def load_locustfile(path):
     locusts = dict(filter(is_locust, vars(imported).items()))
     return imported.__doc__, locusts
 
+def dump_csv_stats_on_quit():
+    file_name, csv = runners.locust_runner.stats.get_distribution_stats_csv()
+    with open(file_name, 'w') as f:
+      f.write(csv)
+    file_name, csv = runners.locust_runner.stats.get_request_stats_csv()
+    with open(file_name, 'w') as f:
+      f.write(csv)
+
 def main():
     parser, options, arguments = parse_options()
 
@@ -416,6 +433,9 @@ def main():
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
+
+    if options.dump_csv_stats:
+      events.quitting += dump_csv_stats_on_quit
     
     def shutdown(code=0):
         """
