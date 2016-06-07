@@ -220,30 +220,31 @@ class SlaveNode(object):
         self.user_count = 0
 
 class MasterLocustRunner(DistributedLocustRunner):
-    def __init__(self, *args, **kwargs):
-        super(MasterLocustRunner, self).__init__(*args, **kwargs)
-        
+    def __init__(self, locust_classes, options):
+        super(MasterLocustRunner, self).__init__(locust_classes, options)
+
         class SlaveNodesDict(dict):
             def get_by_state(self, state):
                 return [c for c in self.itervalues() if c.state == state]
-            
+
             @property
             def ready(self):
                 return self.get_by_state(STATE_INIT)
-            
+
             @property
             def hatching(self):
                 return self.get_by_state(STATE_HATCHING)
-            
+
             @property
             def running(self):
                 return self.get_by_state(STATE_RUNNING)
-        
+
         self.clients = SlaveNodesDict()
+        self.master_required_slaves = options.master_required_slaves
         self.server = rpc.Server(self.master_bind_host, self.master_bind_port)
         self.greenlet = Group()
         self.greenlet.spawn(self.client_listener).link_exception(callback=self.noop)
-        
+
         # listener that gathers info on how many locust users the slaves has spawned
         def on_slave_report(client_id, data):
             if client_id not in self.clients:
@@ -252,16 +253,16 @@ class MasterLocustRunner(DistributedLocustRunner):
 
             self.clients[client_id].user_count = data["user_count"]
         events.slave_report += on_slave_report
-        
+
         # register listener that sends quit message to slave nodes
         def on_quitting():
             self.quit()
         events.quitting += on_quitting
-    
+
     @property
     def user_count(self):
         return sum([c.user_count for c in self.clients.itervalues()])
-    
+
     def start_hatching(self, locust_count, hatch_rate):
         num_slaves = len(self.clients.ready) + len(self.clients.running)
         if not num_slaves:
@@ -280,7 +281,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.stats.clear_all()
             self.exceptions = {}
             events.master_start_hatching.fire()
-        
+
         for client in self.clients.itervalues():
             data = {
                 "hatch_rate":slave_hatch_rate,
@@ -295,7 +296,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                 remaining -= 1
 
             self.server.send(Message("hatch", data, None))
-        
+
         self.stats.start_time = time()
         self.state = STATE_HATCHING
 
@@ -303,22 +304,28 @@ class MasterLocustRunner(DistributedLocustRunner):
         for client in self.clients.hatching + self.clients.running:
             self.server.send(Message("stop", None, None))
         events.master_stop_hatching.fire()
-    
+
     def quit(self):
         for client in self.clients.itervalues():
             self.server.send(Message("quit", None, None))
         self.greenlet.kill(block=True)
-    
+
     def client_listener(self):
         while True:
+            if self.state == STATE_INIT or self.state == STATE_STOPPED:
+                if self.master_required_slaves is not None and self.slave_count >= self.master_required_slaves:
+                    self.start_hatching(self.num_clients, self.hatch_rate)
+                else:
+                    logger.info("Waiting for %d slaves. Got only %d." % (self.master_required_slaves, self.slave_count))
+
             msg = self.server.recv()
             if msg.type == "client_ready":
+                #    warnings.warn("The slave node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
                 id = msg.node_id
                 self.clients[id] = SlaveNode(id)
-                logger.info("Client %r reported as ready. Currently %i clients ready to swarm." % (id, len(self.clients.ready)))
-                ## emit a warning if the slave's clock seem to be out of sync with our clock
                 #if abs(time() - msg.data["time"]) > 5.0:
-                #    warnings.warn("The slave node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
+                ## emit a warning if the slave's clock seem to be out of sync with our clock
+                logger.info("Client %r reported as ready. Currently %i clients ready to swarm." % (id, len(self.clients.ready)))
             elif msg.type == "client_stopped":
                 del self.clients[msg.node_id]
                 if len(self.clients.hatching + self.clients.running) == 0:

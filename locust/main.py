@@ -115,6 +115,14 @@ def parse_options():
         help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557. Note that Locust will also use this port + 1, so by default the master node will bind to 5557 and 5558."
     )
 
+    parser.add_option(
+        '--master-required-slaves',
+        action='store',
+        type='int',
+        dest='master_required_slaves',
+        help="The number of slaves required for a locust master to start hatching clients. Only used when running with --master and --no-web."
+    )
+
     # if we should print stats in the console
     parser.add_option(
         '--no-web',
@@ -388,9 +396,9 @@ def main():
         sys.exit(0)
     
     # if --master is set, make sure --no-web isn't set
-    if options.master and options.no_web:
-        logger.error("Locust can not run distributed with the web interface disabled (do not use --no-web and --master together)")
-        sys.exit(0)
+    # if options.master and options.no_web:
+    #     logger.error("Locust can not run distributed with the web interface disabled (do not use --no-web and --master together)")
+    #     sys.exit(0)
 
     if not options.no_web and not options.slave:
         # spawn web greenlet
@@ -405,6 +413,12 @@ def main():
             main_greenlet = runners.locust_runner.greenlet
     elif options.master:
         runners.locust_runner = MasterLocustRunner(locust_classes, options)
+
+        if options.no_web:
+            if not options.master_required_slaves:
+                logger.error("You must specify how many slaves are required in order to start hatching. Use --master-required-slaves to do so.")
+                sys.exit(1)
+            main_greenlet = runners.locust_runner.greenlet
     elif options.slave:
         try:
             runners.locust_runner = SlaveLocustRunner(locust_classes, options)
