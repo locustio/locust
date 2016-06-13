@@ -1,9 +1,19 @@
+sudo: false
 language: python
 python:
-  - "2.6"
-  - "2.7"
-# command to install dependencies
+  # Workaround for https://github.com/travis-ci/travis-ci/issues/4794
+  - 3.5
+env:
+  - TOXENV=py26
+  - TOXENV=py27
+  - TOXENV=py33
+  - TOXENV=py34
+  - TOXENV=py35
+addons:
+  apt:
+    packages:
+      - libevent-dev
 install:
-  - sudo apt-get install -y libevent-dev
-# command to run tests
-script: python setup.py test
+  - pip install tox
+script:
+  - tox
