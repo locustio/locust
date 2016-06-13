@@ -81,7 +81,7 @@ def do_redirect():
 
 @app.route("/basic_auth")
 def basic_auth():
-    auth = base64.b64decode(request.headers.get("Authorization").replace("Basic ", "")).decode('utf-8')
+    auth = base64.b64decode(request.headers.get("Authorization", "").replace("Basic ", "")).decode('utf-8')
     if auth == "locust:menace":
         return "Authorized"
     resp = make_response("401 Authorization Required", 401)
