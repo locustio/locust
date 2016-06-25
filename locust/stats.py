@@ -373,7 +373,7 @@ class StatsError(object):
         self.occurences += 1
 
     def to_name(self):
-        return "%s %s: %r" % (self.method, 
+        return "%s %s: %r" % (self.method,
             self.name, repr(self.error))
 
     def to_dict(self):
@@ -387,9 +387,9 @@ class StatsError(object):
     @classmethod
     def from_dict(cls, data):
         return cls(
-            data["method"], 
-            data["name"], 
-            data["error"], 
+            data["method"],
+            data["name"],
+            data["error"],
             data["occurences"]
         )
 
@@ -499,7 +499,7 @@ def print_error_report():
     console_logger.info("")
 
 def stats_printer():
-    from runners import locust_runner
+    from .runners import locust_runner
     while True:
         print_stats(locust_runner.request_stats)
         gevent.sleep(2)
