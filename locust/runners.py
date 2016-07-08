@@ -350,7 +350,7 @@ class MasterLocustRunner(DistributedLocustRunner):
 class SlaveLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
-        self.client_id = socket.gethostname() + "_" + md5(str(time() + random.randint(0,10000))).hexdigest()
+        self.client_id = socket.gethostname() + "_" + md5(str(time() + random.randint(0,10000)).encode('utf-8')).hexdigest()
         
         self.client = rpc.Client(self.master_host, self.master_port)
         self.greenlet = Group()
