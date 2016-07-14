@@ -177,7 +177,7 @@ class TaskSet(object):
     *min_wait* and *max_wait* milliseconds. It will then schedule another task for 
     execution and so on.
     
-    TaskTests can be nested, which means that a TaskSet's *tasks* attribute can contain 
+    TaskSets can be nested, which means that a TaskSet's *tasks* attribute can contain 
     another TaskSet. If the nested TaskSet it scheduled to be executed, it will be 
     instantiated and called from the current executing TaskSet. Execution in the
     currently running TaskSet will then be handed over to the nested TaskSet which will 
