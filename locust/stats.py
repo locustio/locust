@@ -381,7 +381,7 @@ class StatsError(object):
     @classmethod
     def create_key(cls, method, name, error):
         key = "%s.%s.%r" % (method, name, StatsError.parse_error(error))
-        return hashlib.md5(key).hexdigest()
+        return hashlib.md5(key.encode('utf-8')).hexdigest()
 
     def occured(self):
         self.occurences += 1
