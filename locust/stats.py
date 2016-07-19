@@ -370,11 +370,11 @@ class StatsError(object):
         target = "object at 0x"
         target_index = string_error.find(target)
         if target_index < 0:
-            return string_error
+            return error
         start = target_index + len(target) - 2
         end = string_error.find(">", start)
         if end < 0:
-            return string_error
+            return error
         hex = string_error[start:end]
         return string_error.replace(hex, "0x....")
 
