@@ -366,7 +366,7 @@ class StatsError(object):
 
     @classmethod
     def parse_error(cls, error):
-        string_error = repr(error)
+        string_error = str(error)
         target = "object at 0x"
         target_index = string_error.find(target)
         if target_index < 0:
