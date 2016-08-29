@@ -15,7 +15,7 @@ from flask import Flask, make_response, request, render_template
 from . import runners
 from .cache import memoize
 from .runners import MasterLocustRunner
-from locust.stats import median_from_dict
+from locust.stats import median_from_dict,line90_from_dict
 from locust import __version__ as version
 
 import logging
@@ -148,6 +148,7 @@ def request_stats():
             "max_response_time": s.max_response_time,
             "current_rps": s.current_rps,
             "median_response_time": s.median_response_time,
+            "line90_response_time": s.line90_response_time,
             "avg_content_length": s.avg_content_length,
         })
     
@@ -166,6 +167,9 @@ def request_stats():
         
         # calculate total median
         stats[len(stats)-1]["median_response_time"] = median_from_dict(stats[len(stats)-1]["num_requests"], response_times)
+        # calculate 90% line
+        stats[len(stats) - 1]["line90_response_time"] = line90_from_dict(stats[len(stats) - 1]["num_requests"],
+                                                                         response_times)
     
     is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
     if is_distributed:
