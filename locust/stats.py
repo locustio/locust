@@ -499,7 +499,7 @@ def print_error_report():
     console_logger.info("")
 
 def stats_printer():
-    from runners import locust_runner
+    from .runners import locust_runner
     while True:
         print_stats(locust_runner.request_stats)
         gevent.sleep(2)
