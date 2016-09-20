@@ -108,7 +108,7 @@ class TestRequestStats(unittest.TestCase):
         s.log_error(Exception("Exception!"))
             
         self.assertEqual(1, len(self.stats.errors))
-        self.assertEqual(2, self.stats.errors.values()[0].occurences)
+        self.assertEqual(2, list(self.stats.errors.values())[0].occurences)
         
         s.log_error(Exception("Another exception!"))
         s.log_error(Exception("Another exception!"))
