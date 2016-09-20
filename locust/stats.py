@@ -375,8 +375,8 @@ class StatsError(object):
         end = string_error.find(">", start)
         if end < 0:
             return error
-        hex = string_error[start:end]
-        return string_error.replace(hex, "0x....")
+        hex_address = string_error[start:end]
+        return string_error.replace(hex_address, "0x....")
 
     @classmethod
     def create_key(cls, method, name, error):
