@@ -365,8 +365,22 @@ class StatsError(object):
         self.occurences = occurences
 
     @classmethod
+    def parse_error(cls, error):
+        string_error = str(error)
+        target = "object at 0x"
+        target_index = string_error.find(target)
+        if target_index < 0:
+            return error
+        start = target_index + len(target) - 2
+        end = string_error.find(">", start)
+        if end < 0:
+            return error
+        hex = string_error[start:end]
+        return string_error.replace(hex, "0x....")
+
+    @classmethod
     def create_key(cls, method, name, error):
-        key = "%s.%s.%r" % (method, name, error)
+        key = "%s.%s.%r" % (method, name, StatsError.parse_error(error))
         return hashlib.md5(key.encode('utf-8')).hexdigest()
 
     def occured(self):
@@ -380,7 +394,7 @@ class StatsError(object):
         return {
             "method": self.method,
             "name": self.name,
-            "error": repr(self.error),
+            "error": StatsError.parse_error(self.error),
             "occurences": self.occurences
         }
 
