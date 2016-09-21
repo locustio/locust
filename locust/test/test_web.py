@@ -84,6 +84,7 @@ class TestWebUI(LocustTestCase):
         stats.global_stats.get("/", "GET").log_error(Exception("Error1337"))
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
+        self.assertIn("Error1337", str(response.content))
     
     def test_exceptions(self):
         try:
@@ -95,7 +96,7 @@ class TestWebUI(LocustTestCase):
         
         response = requests.get("http://127.0.0.1:%i/exceptions" % self.web_port)
         self.assertEqual(200, response.status_code)
-        self.assertIn("A cool test exception", response.content)
+        self.assertIn("A cool test exception", str(response.content))
         
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
