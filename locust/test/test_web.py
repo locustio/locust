@@ -76,6 +76,21 @@ class TestWebUI(LocustTestCase):
         response = requests.get("http://127.0.0.1:%i/stats/distribution/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
     
+    def test_exceptions(self):
+        try:
+            raise Exception(u"A cool test exception")
+        except Exception as e:
+            tb = sys.exc_info()[2]
+            runners.locust_runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
+            runners.locust_runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
+        
+        response = requests.get("http://127.0.0.1:%i/exceptions" % self.web_port)
+        self.assertEqual(200, response.status_code)
+        self.assertIn("A cool test exception", response.content)
+        
+        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
+        self.assertEqual(200, response.status_code)
+    
     def test_exceptions_csv(self):
         try:
             raise Exception("Test exception")
