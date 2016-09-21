@@ -366,15 +366,15 @@ class StatsError(object):
 
     @classmethod
     def parse_error(cls, error):
-        string_error = str(error)
+        string_error = repr(error)
         target = "object at 0x"
         target_index = string_error.find(target)
         if target_index < 0:
-            return error
+            return string_error
         start = target_index + len(target) - 2
         end = string_error.find(">", start)
         if end < 0:
-            return error
+            return string_error
         hex_address = string_error[start:end]
         return string_error.replace(hex_address, "0x....")
 

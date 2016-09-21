@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import csv
 import json
 import sys
@@ -22,6 +24,8 @@ class TestWebUI(LocustTestCase):
         parser = parse_options()[0]
         options = parser.parse_args([])[0]
         runners.locust_runner = LocustRunner([], options)
+        
+        web.request_stats.clear_cache()
         
         self._web_ui_server = wsgi.WSGIServer(('127.0.0.1', 0), web.app, log=None)
         gevent.spawn(lambda: self._web_ui_server.serve_forever())
@@ -74,6 +78,11 @@ class TestWebUI(LocustTestCase):
     def test_distribution_stats_csv(self):
         stats.global_stats.get("/test", "GET").log(120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/distribution/csv" % self.web_port)
+        self.assertEqual(200, response.status_code)
+    
+    def test_request_stats_with_errors(self):
+        stats.global_stats.get("/", "GET").log_error(Exception("Error1337"))
+        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
     
     def test_exceptions(self):
