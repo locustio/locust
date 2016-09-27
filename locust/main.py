@@ -298,6 +298,8 @@ def load_locustfile(path):
     dictionary of ``{'name': callable}`` containing all callables which pass
     the "is a Locust" test.
     """
+    # Start with making sure the current working dir is in the sys.path
+    sys.path.insert(0, os.getcwd())
     # Get directory and locustfile name
     directory, locustfile = os.path.split(path)
     # If the directory isn't in the PYTHONPATH, add it so our import will work
