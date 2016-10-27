@@ -48,7 +48,7 @@ class HttpSession(requests.Session):
                            and then mark it as successful even if the response code was not (i.e 500 or 404).
     """
     def __init__(self, base_url, *args, **kwargs):
-        requests.Session.__init__(self, *args, **kwargs)
+        super(HttpSession, self).__init__(*args, **kwargs)
 
         self.base_url = base_url
         
