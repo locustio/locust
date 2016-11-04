@@ -26,8 +26,8 @@ Below is a quick little example of a simple **locustfile.py**::
     
     class WebsiteUser(HttpLocust):
         task_set = UserBehavior
-        min_wait=5000
-        max_wait=9000
+        min_wait = 5000
+        max_wait = 9000
     
 
 Here we define a number of locust tasks, which are normal Python callables that take one argument 
@@ -63,8 +63,8 @@ Another way we could declare tasks, which is usually more convenient, is to use 
     
     class WebsiteUser(HttpLocust):
         task_set = UserBehavior
-        min_wait=5000
-        max_wait=9000
+        min_wait = 5000
+        max_wait = 9000
 
 The Locust class (as well as HttpLocust, since it's a subclass) also allows one to specify minimum 
 and maximum wait time—per simulated user—between the execution of tasks (*min_wait* and *max_wait*) 

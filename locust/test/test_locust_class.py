@@ -178,8 +178,8 @@ class TestTaskSet(LocustTestCase):
     
     def test_sub_taskset(self):
         class MySubTaskSet(TaskSet):
-            min_wait=1
-            max_wait=1
+            min_wait = 1
+            max_wait = 1
             @task()
             def a_task(self):
                 self.locust.sub_locust_task_executed = True
@@ -198,8 +198,8 @@ class TestTaskSet(LocustTestCase):
         class MyTaskSet(TaskSet):
             @task
             class MySubTaskSet(TaskSet):
-                min_wait=1
-                max_wait=1
+                min_wait = 1
+                max_wait = 1
                 @task()
                 def a_task(self):
                     self.locust.sub_locust_task_executed = True
@@ -213,8 +213,8 @@ class TestTaskSet(LocustTestCase):
     
     def test_sub_taskset_arguments(self):
         class MySubTaskSet(TaskSet):
-            min_wait=1
-            max_wait=1
+            min_wait = 1
+            max_wait = 1
             @task()
             def a_task(self):
                 self.locust.sub_taskset_args = self.args
