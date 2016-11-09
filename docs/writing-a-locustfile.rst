@@ -386,13 +386,13 @@ A flat file structure works out of the box:
 
   * ``locustfile_ecommerce.py``
 
-The locustfiles may import common libraries using, e.g. ``import commonlib_auth.py``.  This approach does not
-cleanly separate common libraries from locustfiles, however.
+The locustfiles may import common libraries using, e.g. ``import commonlib_auth``.  This approach does not
+cleanly separate common libraries from locust files, however.
 
-Subdirectories can be a cleaner approach, but locust cannot currenly cope with importing modules which live
-outside the locustfile directory.  Current workaround: for every locustfile, make sure to write
-`sys.path.append(os.getcwd())` before importing any common libraries---this will ensure that the project root
-(i.e. the current working directory) is always importable.
+Subdirectories can be a cleaner approach (see example below), but locust cannot currently cope with importing
+modules which live outside the locustfiles directory.  Current workaround: for every locust file, make sure to
+write ``sys.path.append(os.getcwd())`` before importing any common libraries---this will ensure that the
+project root (i.e. the current working directory) is always importable.
 
 * project root
 
@@ -415,3 +415,8 @@ outside the locustfile directory.  Current workaround: for every locustfile, mak
     * ``api.py``
 
     * ``ecommerce.py``
+
+With the above project structure, your locust files can import common libraries using::
+
+    sys.path.append(os.getcwd())
+    import common.auth
