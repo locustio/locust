@@ -376,19 +376,17 @@ A flat file structure works out of the box:
 
 * project root
 
-  * `__init__.py`
+  * ``commonlib_config.py``
 
-  * `commonlib_config.py`
+  * ``commonlib_auth.py``
 
-  * `commonlib_auth.py`
+  * ``locustfile_web_app.py``
 
-  * `locustfile_web_app.py`
+  * ``locustfile_api.py``
 
-  * `locustfile_api.py`
+  * ``locustfile_ecommerce.py``
 
-  * `locustfile_ecommerce.py`
-
-The locustfiles may import common libraries using, e.g. `import commonlib_auth.py`.  This approach does not
+The locustfiles may import common libraries using, e.g. ``import commonlib_auth.py``.  This approach does not
 cleanly separate common libraries from locustfiles, however.
 
 Subdirectories can be a cleaner approach, but locust cannot currenly cope with importing modules which live
@@ -398,22 +396,22 @@ outside the locustfile directory.  Current workaround: for every locustfile, mak
 
 * project root
 
-  * `__init__.py`
+  * ``__init__.py``
 
-  * `common/`
+  * ``common/``
 
-    * `__init__.py`
+    * ``__init__.py``
 
-    * `config.py`
+    * ``config.py``
 
-    * `auth.py`
+    * ``auth.py``
 
-  * `locustfiles/`
+  * ``locustfiles/``
 
-    * `__init__.py`
+    * ``__init__.py``
 
-    * `web_app.py`
+    * ``web_app.py``
 
-    * `api.py`
+    * ``api.py``
 
-    * `ecommerce.py`
+    * ``ecommerce.py``

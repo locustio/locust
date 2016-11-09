@@ -80,11 +80,12 @@ directory, we could run::
     locust --host=http://example.com
 
 If the locust file is located under a subdirectory and/or named different than *locustfile.py*, specify
-it using `-f`::
+it using ``-f``::
 
     locust -f locust_files/my_locust_file.py --host=http://example.com
 
-To run Locust distributed across multiple processes we would start a master process by specifying --master::
+To run Locust distributed across multiple processes we would start a master process by specifying
+``--master``::
 
     locust -f locust_files/my_locust_file.py --master --host=http://example.com
 
