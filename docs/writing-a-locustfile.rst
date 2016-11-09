@@ -292,7 +292,7 @@ called client that simply returns self.locust.client.
 
 
 Using the HTTP client
-======================
+----------------------
 
 Each instance of HttpLocust has an instance of :py:class:`HttpSession <locust.clients.HttpSession>` 
 in the *client* attribute. The HttpSession class is actually a subclass of 
@@ -364,3 +364,56 @@ Example::
     # Statistics for these requests will be grouped under: /blog/?id=[id]
     for i in range(10):
         client.get("/blog?id=%i" % i, name="/blog?id=[id]")
+
+Common libraries
+=================
+
+Often, people wish to group multiple locustfiles that share common libraries.  In that case, it is important
+to define the *project root* to be the directory where you invoke locust, and it is suggested that all
+locustfiles live somewhere beneath the project root.
+
+A flat file structure works out of the box:
+
+* project root
+
+  * `__init__.py`
+
+  * `commonlib_config.py`
+
+  * `commonlib_auth.py`
+
+  * `locustfile_web_app.py`
+
+  * `locustfile_api.py`
+
+  * `locustfile_ecommerce.py`
+
+The locustfiles may import common libraries using, e.g. `import commonlib_auth.py`.  This approach does not
+cleanly separate common libraries from locustfiles, however.
+
+Subdirectories can be a cleaner approach, but locust cannot currenly cope with importing modules which live
+outside the locustfile directory.  Current workaround: for every locustfile, make sure to write
+`sys.path.append(os.getcwd())` before importing any common libraries---this will ensure that the project root
+(i.e. the current working directory) is always importable.
+
+* project root
+
+  * `__init__.py`
+
+  * `common/`
+
+    * `__init__.py`
+
+    * `config.py`
+
+    * `auth.py`
+
+  * `locustfiles/`
+
+    * `__init__.py`
+
+    * `web_app.py`
+
+    * `api.py`
+
+    * `ecommerce.py`
