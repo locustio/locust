@@ -389,10 +389,11 @@ A flat file structure works out of the box:
 The locustfiles may import common libraries using, e.g. ``import commonlib_auth``.  This approach does not
 cleanly separate common libraries from locust files, however.
 
-Subdirectories can be a cleaner approach (see example below), but locust cannot currently cope with importing
-modules which live outside the locustfiles directory.  Current workaround: for every locust file, make sure to
-write ``sys.path.append(os.getcwd())`` before importing any common libraries---this will ensure that the
-project root (i.e. the current working directory) is always importable.
+Subdirectories can be a cleaner approach (see example below), but locust will only import modules relative to
+the directory in which the running locustfile is placed. If you wish to import from your project root (i.e. the
+location where you are running the locust command), make sure to write ``sys.path.append(os.getcwd())`` in your
+locust file(s) before importing any common libraries---this will make the project root (i.e. the current
+working directory) importable.
 
 * project root
 
