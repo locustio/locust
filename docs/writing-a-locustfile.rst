@@ -292,7 +292,7 @@ called client that simply returns self.locust.client.
 
 
 Using the HTTP client
-======================
+----------------------
 
 Each instance of HttpLocust has an instance of :py:class:`HttpSession <locust.clients.HttpSession>` 
 in the *client* attribute. The HttpSession class is actually a subclass of 
@@ -364,3 +364,60 @@ Example::
     # Statistics for these requests will be grouped under: /blog/?id=[id]
     for i in range(10):
         client.get("/blog?id=%i" % i, name="/blog?id=[id]")
+
+Common libraries
+=================
+
+Often, people wish to group multiple locustfiles that share common libraries.  In that case, it is important
+to define the *project root* to be the directory where you invoke locust, and it is suggested that all
+locustfiles live somewhere beneath the project root.
+
+A flat file structure works out of the box:
+
+* project root
+
+  * ``commonlib_config.py``
+
+  * ``commonlib_auth.py``
+
+  * ``locustfile_web_app.py``
+
+  * ``locustfile_api.py``
+
+  * ``locustfile_ecommerce.py``
+
+The locustfiles may import common libraries using, e.g. ``import commonlib_auth``.  This approach does not
+cleanly separate common libraries from locust files, however.
+
+Subdirectories can be a cleaner approach (see example below), but locust will only import modules relative to
+the directory in which the running locustfile is placed. If you wish to import from your project root (i.e. the
+location where you are running the locust command), make sure to write ``sys.path.append(os.getcwd())`` in your
+locust file(s) before importing any common libraries---this will make the project root (i.e. the current
+working directory) importable.
+
+* project root
+
+  * ``__init__.py``
+
+  * ``common/``
+
+    * ``__init__.py``
+
+    * ``config.py``
+
+    * ``auth.py``
+
+  * ``locustfiles/``
+
+    * ``__init__.py``
+
+    * ``web_app.py``
+
+    * ``api.py``
+
+    * ``ecommerce.py``
+
+With the above project structure, your locust files can import common libraries using::
+
+    sys.path.append(os.getcwd())
+    import common.auth
