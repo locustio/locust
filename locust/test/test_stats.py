@@ -99,6 +99,34 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(s.median_response_time, 38)
         self.assertEqual(s.avg_response_time, 43.2)
     
+    def test_error_grouping(self):
+        # reset stats
+        self.stats = RequestStats()
+        
+        s = StatsEntry(self.stats, "/some-path", "GET")
+        s.log_error(Exception("Exception!"))
+        s.log_error(Exception("Exception!"))
+            
+        self.assertEqual(1, len(self.stats.errors))
+        self.assertEqual(2, list(self.stats.errors.values())[0].occurences)
+        
+        s.log_error(Exception("Another exception!"))
+        s.log_error(Exception("Another exception!"))
+        s.log_error(Exception("Third exception!"))
+        self.assertEqual(3, len(self.stats.errors))
+    
+    def test_error_grouping_errors_with_memory_addresses(self):
+        # reset stats
+        self.stats = RequestStats()
+        class Dummy(object):
+            pass
+        
+        s = StatsEntry(self.stats, "/", "GET")
+        s.log_error(Exception("Error caused by %r" % Dummy()))
+        s.log_error(Exception("Error caused by %r" % Dummy()))
+        
+        self.assertEqual(1, len(self.stats.errors))
+    
     def test_serialize_through_message(self):
         """
         Serialize a RequestStats instance, then serialize it through a Message, 

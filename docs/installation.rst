@@ -41,7 +41,7 @@ Installing Locust on Windows
 ----------------------------
 
 The easiest way to get Locust running on Windows is to first install pre built binary packages for
-gevent (0.13) and greenlet and then follow the above instructions. 
+gevent and greenlet and then follow the above instructions. 
 
 You can find an unofficial collection of pre built python packages for windows here: 
 `http://www.lfd.uci.edu/~gohlke/pythonlibs/ <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_

@@ -26,8 +26,8 @@ Below is a quick little example of a simple **locustfile.py**::
     
     class WebsiteUser(HttpLocust):
         task_set = UserBehavior
-        min_wait=5000
-        max_wait=9000
+        min_wait = 5000
+        max_wait = 9000
     
 
 Here we define a number of locust tasks, which are normal Python callables that take one argument 
@@ -63,8 +63,8 @@ Another way we could declare tasks, which is usually more convenient, is to use 
     
     class WebsiteUser(HttpLocust):
         task_set = UserBehavior
-        min_wait=5000
-        max_wait=9000
+        min_wait = 5000
+        max_wait = 9000
 
 The Locust class (as well as HttpLocust, since it's a subclass) also allows one to specify minimum 
 and maximum wait time—per simulated user—between the execution of tasks (*min_wait* and *max_wait*) 
@@ -74,28 +74,30 @@ as well as other user behaviours.
 Start Locust
 ============
 
-To run Locust with the above locust file, if it was named *locustfile.py*, we could run 
-(in the same directory as locustfile.py)::
+To run Locust with the above locust file, if it was named *locustfile.py* and located in the current working
+directory, we could run::
 
     locust --host=http://example.com
 
-or if the locust file is located elsewhere we could run::
+If the locust file is located under a subdirectory and/or named different than *locustfile.py*, specify
+it using ``-f``::
 
-    locust -f ../locust_files/my_locust_file.py --host=http://example.com
+    locust -f locust_files/my_locust_file.py --host=http://example.com
 
-To run Locust distributed across multiple processes we would start a master process by specifying --master::
+To run Locust distributed across multiple processes we would start a master process by specifying
+``--master``::
 
-    locust -f ../locust_files/my_locust_file.py --master --host=http://example.com
+    locust -f locust_files/my_locust_file.py --master --host=http://example.com
 
 and then we would start an arbitrary number of slave processes::
 
-    locust -f ../locust_files/my_locust_file.py --slave --host=http://example.com
+    locust -f locust_files/my_locust_file.py --slave --host=http://example.com
 
 If we want to run locust distributed on multiple machines we would also have to specify the master host when
 starting the slaves (this is not needed when running locust distributed on a single machine, since the master 
 host defaults to 127.0.0.1)::
 
-    locust -f ../locust_files/my_locust_file.py --slave --master-host=192.168.0.100 --host=http://example.com
+    locust -f locust_files/my_locust_file.py --slave --master-host=192.168.0.100 --host=http://example.com
 
 .. note::
 
