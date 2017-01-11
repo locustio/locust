@@ -28,6 +28,7 @@ SLAVE_REPORT_INTERVAL = 3.0
 
 
 class LocustRunner(object):
+    client_index = 0
     def __init__(self, locust_classes, options):
         self.options = options
         self.locust_classes = locust_classes
@@ -114,7 +115,7 @@ class LocustRunner(object):
                 occurence_count[locust.__name__] += 1
                 def start_locust(_):
                     try:
-                        locust().run()
+                        locust(self).run()
                     except GreenletExit:
                         pass
                 new_locust = self.locusts.spawn(start_locust, locust)
@@ -285,13 +286,14 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.exceptions = {}
             events.master_start_hatching.fire()
         
-        for client in six.itervalues(self.clients):
+        for client_index, client in enumerate(six.itervalues(self.clients)):
             data = {
                 "hatch_rate":slave_hatch_rate,
                 "num_clients":slave_num_clients,
                 "num_requests": self.num_requests,
                 "host":self.host,
-                "stop_timeout":None
+                "stop_timeout":None,
+                "client_index": client_index,
             }
 
             if remaining > 0:
@@ -392,6 +394,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 #self.num_clients = job["num_clients"]
                 self.num_requests = job["num_requests"]
                 self.host = job["host"]
+                self.client_index = job["client_index"]
                 self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
             elif msg.type == "stop":
                 self.stop()

@@ -96,9 +96,9 @@ class Locust(object):
     client = NoClientWarningRaiser()
     _catch_exceptions = True
     
-    def __init__(self):
-        super(Locust, self).__init__()
-    
+    def __init__(self, runner=None):
+        self.runner = runner
+
     def run(self):
         try:
             self.task_set(self).run()
@@ -125,8 +125,8 @@ class HttpLocust(Locust):
     The client support cookies, and therefore keeps the session between HTTP requests.
     """
     
-    def __init__(self):
-        super(HttpLocust, self).__init__()
+    def __init__(self, runner=None):
+        super(HttpLocust, self).__init__(runner=runner)
         if self.host is None:
             raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
         
