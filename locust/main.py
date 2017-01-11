@@ -323,7 +323,7 @@ def write_stats_csv(file_prefix, timestamp=None):
     if timestamp is None:
         timestamp = time.time()
 
-    file_name = "{0}stats_{1}.csv".format(file_prefix, timestamp)
+    file_name = "{0}stats.csv".format(file_prefix)
     console_logger.info("Writing request stats to %s", file_name)
     with open(file_name, 'wb') as file:
         data = runners.locust_runner.stats.get_request_stats_dataset()
@@ -421,7 +421,7 @@ def main():
     if options.show_task_ratio_json:
         from json import dumps
         task_data = {
-            "per_class": get_task_ratio_dict(locust_classes), 
+            "per_class": get_task_ratio_dict(locust_classes),
             "total": get_task_ratio_dict(locust_classes, total=True)
         }
         console_logger.info(dumps(task_data))
@@ -464,8 +464,8 @@ def main():
         logger.info("Shutting down (exit code %s), bye." % code)
 
         events.quitting.fire()
-        print_stats(runners.locust_runner.request_stats)
-        print_percentile_stats(runners.locust_runner.request_stats)
+        # print_stats(runners.locust_runner.request_stats)
+        # print_percentile_stats(runners.locust_runner.request_stats)
 
         print_error_report()
         sys.exit(code)
@@ -489,7 +489,6 @@ def main():
             else:
                 file_prefix = ''
             timestamp = time.time()
-            write_distribution_stats_csv(file_prefix, timestamp)
             write_stats_csv(file_prefix, timestamp)
 
         shutdown(code=code)
