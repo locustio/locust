@@ -66,9 +66,9 @@ The *host* attribute
 --------------------
 
 The host attribute is a URL prefix (i.e. "http://google.com") to the host that is to be loaded. 
-Usually, this is specified on the command line, using the :code:`--host` option, when locust is started. 
+Usually, this is specified in the UI on the web site or on the command line, using the :code:`--host` option, when locust is started. 
 If one declares a host attribute in the locust class, it will be used in the case when no :code:`--host` 
-is specified on the command line.
+is specified on the command line or in the web request.
 
 
 TaskSet class
