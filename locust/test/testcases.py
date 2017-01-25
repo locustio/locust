@@ -90,7 +90,7 @@ def basic_auth():
 
 @app.route("/no_content_length")
 def no_content_length():
-    r = send_file(BytesIO("This response does not have content-length in the header".encode('utf-8')), add_etags=False)
+    r = send_file(BytesIO("This response does not have content-length in the header".encode('utf-8')), add_etags=False, mimetype="text/plain")
     return r
 
 @app.errorhandler(404)
