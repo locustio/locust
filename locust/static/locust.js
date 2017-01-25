@@ -44,6 +44,10 @@ var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');
 var exceptions_tpl = $('#exceptions-template');
 
+function setHostName(hostname) {
+    $('.hostname .value').attr('href', hostname).text(hostname);
+}
+
 $('#swarm_form').submit(function(event) {
     event.preventDefault();
     $.post($(this).attr("action"), $(this).serialize(),
@@ -56,6 +60,7 @@ $('#swarm_form').submit(function(event) {
                 $("a.new_test").fadeOut();
                 $("a.edit_test").fadeIn();
                 $(".user_count").fadeIn();
+                setHostName(response.host);
             }
         }
     );
@@ -68,6 +73,7 @@ $('#edit_form').submit(function(event) {
             if (response.success) {
                 $("body").attr("class", "hatching");
                 $("#edit").fadeOut();
+                setHostName(response.host);
             }
         }
     );
