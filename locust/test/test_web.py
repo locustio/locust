@@ -14,7 +14,7 @@ from gevent import wsgi
 from locust import web, runners, stats
 from locust.runners import LocustRunner
 from locust.main import parse_options
-from testcases import LocustTestCase
+from locust.test.testcases import LocustTestCase
 
 ALTERNATIVE_HOST = 'http://locust.io'
 SWARM_DATA_WITH_HOST = {'locust_count': 5, 'hatch_rate': 5, 'host': ALTERNATIVE_HOST}
