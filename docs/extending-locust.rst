@@ -7,16 +7,16 @@ Locust comes with a number of events that provides hooks for extending locust in
 Event listeners can be registered at the module level in a locust file. Here's an example::
 
     from locust import events
-    
-    def my_success_handler(method, path, response_time, response, **kw):
-        print "Successfully fetched: %s" % (path)
-    
+
+    def my_success_handler(request_type, name, response_time, response_length, **kw):
+        print "Successfully fetched: %s" % (name)
+
     events.request_success += my_success_handler
 
 .. note::
 
-    It's highly recommended that you add a wildcard keyword argument in your listeners 
-    (the \**kw in the code above), to prevent your code from breaking if new arguments are 
+    It's highly recommended that you add a wildcard keyword argument in your listeners
+    (the \**kw in the code above), to prevent your code from breaking if new arguments are
     added in a future version.
 
 .. seealso::
@@ -28,11 +28,11 @@ Event listeners can be registered at the module level in a locust file. Here's a
 Adding Web Routes
 ==================
 
-Locust uses Flask to serve the web UI and therefore it is easy to add web end-points to the web UI. 
+Locust uses Flask to serve the web UI and therefore it is easy to add web end-points to the web UI.
 Just import the Flask app in your locustfile and set up a new route::
 
     from locust import web
-    
+
     @web.app.route("/added_page")
     def my_added_page():
         return "Another page"

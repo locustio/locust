@@ -1,8 +1,8 @@
 test:
-	python setup.py test
+	unit2 discover
 
 release:
-	python setup.py sdist upload
+	rm dist/* && python setup.py sdist && twine upload dist/*
 
 build_docs:
 	sphinx-build -b html docs/ docs/_build/

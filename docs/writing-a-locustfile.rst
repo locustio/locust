@@ -2,8 +2,8 @@
 Writing a locustfile
 ======================
 
-A locustfile is a normal python file. The only requirement is that it declares at least one class -
-let's call it the locust class - that inherits from the class Locust. 
+A locustfile is a normal python file. The only requirement is that it declares at least one class—
+let's call it the locust class—that inherits from the class Locust. 
 
 The Locust class
 ================
@@ -66,8 +66,8 @@ The *host* attribute
 --------------------
 
 The host attribute is a URL prefix (i.e. "http://google.com") to the host that is to be loaded. 
-Usually, this is specified on the command line, using the --host option, when locust is started. 
-If one declares a host attribute in the locust class, it will be used in the case when no --host 
+Usually, this is specified on the command line, using the :code:`--host` option, when locust is started. 
+If one declares a host attribute in the locust class, it will be used in the case when no :code:`--host` 
 is specified on the command line.
 
 
@@ -79,7 +79,7 @@ the brain of the locust. Each Locust class must have a *task_set* attribute set,
 a TaskSet.
 
 A TaskSet is, like its name suggests, a collection of tasks. These tasks are normal python callables 
-and - if we were loadtesting an auction website - could do stuff like "loading the start page", 
+and—if we were load-testing an auction website—could do stuff like "loading the start page", 
 "searching for some product" and "making a bid". 
 
 When a load test is started, each instance of the spawned Locust classes will start executing their 
@@ -136,7 +136,7 @@ it. However, it's also possible to define the tasks of a TaskSet by setting the
 just populate the *tasks* attribute).
 
 The *tasks* attribute is either a list of python callables, or a *<callable : int>* dict. 
-The tasks are python callables that receive one argument - the TaskSet class instance that is executing 
+The tasks are python callables that receive one argument—the TaskSet class instance that is executing 
 the task. Here is an extremely simple example of a locustfile (this locustfile won't actually load test anything)::
 
     from locust import Locust, TaskSet
@@ -153,8 +153,8 @@ the task. Here is an extremely simple example of a locustfile (this locustfile w
 
 If the 
 tasks attribute is specified as a list, each time a task is to be performed, it will be randomly 
-chosen from the *tasks* attribute. If however, *tasks* is a dict - with callables as keys and ints 
-as values - the task that is to be executed will be chosen at random but with the int as ratio. So 
+chosen from the *tasks* attribute. If however, *tasks* is a dict—with callables as keys and ints 
+as values—the task that is to be executed will be chosen at random but with the int as ratio. So 
 with a tasks that looks like this::
 
     {my_task: 3, another_task:1}
@@ -212,7 +212,7 @@ instead of referring to a python function, you point it to another TaskSet::
             pass
 
 So in above example, if the ForumPage would get selected for execution when the UserBehaviour 
-TaskSet is executing, is. that the ForumPage TaskSet would start executing. The ForumPage TaskSet 
+TaskSet is executing, then the ForumPage TaskSet would start executing. The ForumPage TaskSet 
 would then pick one of its own tasks, execute it, then wait, and so on. 
 
 There is one important thing to note about the above example, and that is the call to 
@@ -220,7 +220,7 @@ self.interrupt() in the ForumPage's stop method. What this does is essentially t
 stop executing the ForumPage task set and the execution will continue in the UserBehaviour instance. 
 If we wouldn't have had a call to the :py:meth:`interrupt() <locust.core.TaskSet.interrupt>` method 
 somewhere in ForumPage, the Locust would never stop running the ForumPage task once it has started. 
-But by having the interrupt function, we can - together with task weighting - define how likely it 
+But by having the interrupt function, we can—together with task weighting—define how likely it 
 is that a simulated user leaves the forum.
 
 It's also possible to declare a nested TaskSet, inline in a class, using the 
@@ -264,7 +264,7 @@ class exists. When using this class, each instance gets a
 
 When inheriting from the HttpLocust class, we can use its client attribute to make HTTP requests 
 against the server. Here is an example of a locust file that can be used to load test a site 
-with two urls; **/** and **/about/**::
+with two URLs; **/** and **/about/**::
 
     from locust import HttpLocust, TaskSet, task
     
@@ -292,7 +292,7 @@ called client that simply returns self.locust.client.
 
 
 Using the HTTP client
-======================
+----------------------
 
 Each instance of HttpLocust has an instance of :py:class:`HttpSession <locust.clients.HttpSession>` 
 in the *client* attribute. The HttpSession class is actually a subclass of 
@@ -329,13 +329,13 @@ Response's *content* attribute will be set to None, and its *status_code* will b
 Manually controlling if a request should be considered successful or a failure
 ------------------------------------------------------------------------------
 
-By default, requests are marked as failed requests unless the HTTP response code is ok (2xx). 
-Most of the time, this default is what you want. Sometimes however - for example when testing 
+By default, requests are marked as failed requests unless the HTTP response code is OK (2xx). 
+Most of the time, this default is what you want. Sometimes however—for example when testing 
 a URL endpoint that you expect to return 404, or testing a badly designed system that might 
-return *200 OK* even though an error occurred - there's a need for manually controlling if 
+return *200 OK* even though an error occurred—there's a need for manually controlling if 
 locust should consider a request as a success or a failure.
 
-One can mark requests as failed, even when the response code is okay, by using the 
+One can mark requests as failed, even when the response code is OK, by using the 
 *catch_response* argument and a with statement::
 
     with client.get("/", catch_response=True) as response:
@@ -355,12 +355,69 @@ Grouping requests to URLs with dynamic parameters
 -------------------------------------------------
 
 It's very common for websites to have pages whose URLs contain some kind of dynamic parameter(s). 
-Often it makes sense to group these URL's together in Locust's statistics. This can be done 
+Often it makes sense to group these URLs together in Locust's statistics. This can be done 
 by passing a *name* argument to the :py:class:`HttpSession's <locust.clients.HttpSession>` 
-different reqeust methods. 
+different request methods. 
 
 Example::
 
     # Statistics for these requests will be grouped under: /blog/?id=[id]
     for i in range(10):
         client.get("/blog?id=%i" % i, name="/blog?id=[id]")
+
+Common libraries
+=================
+
+Often, people wish to group multiple locustfiles that share common libraries.  In that case, it is important
+to define the *project root* to be the directory where you invoke locust, and it is suggested that all
+locustfiles live somewhere beneath the project root.
+
+A flat file structure works out of the box:
+
+* project root
+
+  * ``commonlib_config.py``
+
+  * ``commonlib_auth.py``
+
+  * ``locustfile_web_app.py``
+
+  * ``locustfile_api.py``
+
+  * ``locustfile_ecommerce.py``
+
+The locustfiles may import common libraries using, e.g. ``import commonlib_auth``.  This approach does not
+cleanly separate common libraries from locust files, however.
+
+Subdirectories can be a cleaner approach (see example below), but locust will only import modules relative to
+the directory in which the running locustfile is placed. If you wish to import from your project root (i.e. the
+location where you are running the locust command), make sure to write ``sys.path.append(os.getcwd())`` in your
+locust file(s) before importing any common libraries---this will make the project root (i.e. the current
+working directory) importable.
+
+* project root
+
+  * ``__init__.py``
+
+  * ``common/``
+
+    * ``__init__.py``
+
+    * ``config.py``
+
+    * ``auth.py``
+
+  * ``locustfiles/``
+
+    * ``__init__.py``
+
+    * ``web_app.py``
+
+    * ``api.py``
+
+    * ``ecommerce.py``
+
+With the above project structure, your locust files can import common libraries using::
+
+    sys.path.append(os.getcwd())
+    import common.auth

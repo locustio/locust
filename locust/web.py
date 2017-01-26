@@ -6,7 +6,8 @@ import os.path
 from time import time
 from itertools import chain
 from collections import defaultdict
-from StringIO import StringIO
+from six.moves import StringIO, xrange
+import six
 
 from gevent import wsgi
 from flask import Flask, make_response, request, render_template
@@ -15,7 +16,7 @@ from . import runners
 from .cache import memoize
 from .runners import MasterLocustRunner
 from locust.stats import median_from_dict
-from locust import version
+from locust import __version__ as version
 
 import logging
 logger = logging.getLogger(__name__)
@@ -150,7 +151,7 @@ def request_stats():
             "avg_content_length": s.avg_content_length,
         })
     
-    report = {"stats":stats, "errors":[e.to_dict() for e in runners.locust_runner.errors.itervalues()]}
+    report = {"stats":stats, "errors":[e.to_dict() for e in six.itervalues(runners.locust_runner.errors)]}
     if stats:
         report["total_rps"] = stats[len(stats)-1]["current_rps"]
         report["fail_ratio"] = runners.locust_runner.stats.aggregated_stats("Total").fail_ratio
@@ -176,7 +177,16 @@ def request_stats():
 
 @app.route("/exceptions")
 def exceptions():
-    response = make_response(json.dumps({'exceptions': [{"count": row["count"], "msg": row["msg"], "traceback": row["traceback"], "nodes" : ", ".join(row["nodes"])} for row in runners.locust_runner.exceptions.itervalues()]}))
+    response = make_response(json.dumps({
+        'exceptions': [
+            {
+                "count": row["count"], 
+                "msg": row["msg"], 
+                "traceback": row["traceback"], 
+                "nodes" : ", ".join(row["nodes"])
+            } for row in six.itervalues(runners.locust_runner.exceptions)
+        ]
+    }))
     response.headers["Content-type"] = "application/json"
     return response
 
@@ -185,7 +195,7 @@ def exceptions_csv():
     data = StringIO()
     writer = csv.writer(data)
     writer.writerow(["Count", "Message", "Traceback", "Nodes"])
-    for exc in runners.locust_runner.exceptions.itervalues():
+    for exc in six.itervalues(runners.locust_runner.exceptions):
         nodes = ", ".join(exc["nodes"])
         writer.writerow([exc["count"], exc["msg"], exc["traceback"], nodes])
     
@@ -201,4 +211,4 @@ def start(locust, options):
     wsgi.WSGIServer((options.web_host, options.port), app, log=None).serve_forever()
 
 def _sort_stats(stats):
-    return [stats[key] for key in sorted(stats.iterkeys())]
+    return [stats[key] for key in sorted(six.iterkeys(stats))]

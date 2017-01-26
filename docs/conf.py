@@ -42,10 +42,10 @@ intersphinx_mapping = {
 # other places throughout the built documents.
 #
 # The short X.Y version.
-from locust import version
+from locust import __version__
 
 # The full version, including alpha/beta/rc tags.
-release = version
+release = __version__
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
