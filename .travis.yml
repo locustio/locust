@@ -2,7 +2,7 @@ sudo: false
 language: python
 python:
   # Workaround for https://github.com/travis-ci/travis-ci/issues/4794
-  - 3.6
+  - 3.5
 env:
   - TOXENV=py27
   - TOXENV=py33
