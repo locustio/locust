@@ -1,7 +1,7 @@
 # Locust
 
-[![Build Status](https://secure.travis-ci.org/locustio/locust.png)](http://travis-ci.org/locustio/locust) 
-[![Gitter Chat](https://badges.gitter.im/locustio/locust.png)](https://gitter.im/locustio/locust) 
+[![Build Status](https://secure.travis-ci.org/locustio/locust.png)](http://travis-ci.org/locustio/locust)
+[![Gitter Chat](https://badges.gitter.im/locustio/locust.png)](https://gitter.im/locustio/locust)
 
 ## Links
 
@@ -13,8 +13,8 @@
 Locust is an easy-to-use, distributed, user load testing tool. It is intended for load-testing web sites (or other systems) and
 figuring out how many concurrent users a system can handle.
 
-The idea is that during a test, a swarm of locusts will attack your website. The behavior of each locust (or test user if you will) is 
-defined by you and the swarming process is monitored from a web UI in real-time. This will help you battle test and identify bottlenecks 
+The idea is that during a test, a swarm of locusts will attack your website. The behavior of each locust (or test user if you will) is
+defined by you and the swarming process is monitored from a web UI in real-time. This will help you battle test and identify bottlenecks
 in your code before letting real users in.
 
 Locust is completely event-based, and therefore it's possible to support thousands of concurrent users on a single machine.
@@ -34,7 +34,7 @@ of callbacks, your code looks and behaves like normal, blocking Python code.
  Part of the reason behind this is that even if you simulate that many users, not all are actively hitting your system. Often, users are idle figuring out what to do next. Requests per second != number of users online.
 
 * **Web-based UI**<br>
- Locust has a neat HTML+JS that shows all relevent test details in real-time. And since the UI is web-based, it's cross-platform and easily extendable. 
+ Locust has a neat HTML+JS that shows all relevent test details in real-time. And since the UI is web-based, it's cross-platform and easily extendable.
 
 * **Can test any system**<br>
  Even though Locust is web-oriented, it can be used to test almost any system. Just write a client for what ever you wish to test and swarm it with locusts! It's super easy!
@@ -62,4 +62,4 @@ Open source licensed under the MIT license (see _LICENSE_ file for details).
 
 ## Supported Python Versions
 
-Locust supports Python 2.7, 3.3, 3.4 and 3.5.
+Locust supports Python 2.7, 3.3, 3.4, 3.5, and 3.6.
