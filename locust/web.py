@@ -42,7 +42,7 @@ def index():
         slave_count=slave_count,
         user_count=runners.locust_runner.user_count,
         version=version,
-        host=runners.locust_runner.host
+        host=runners.locust_runner.host if runners.locust_runner.host else ""
     )
 
 @app.route('/swarm', methods=["POST"])
