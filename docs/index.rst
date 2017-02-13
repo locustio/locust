@@ -25,6 +25,7 @@ Locust Documentation
     :maxdepth: 2
     
     writing-a-locustfile
+    using-other-languages
 
 .. toctree ::
     :maxdepth: 1
