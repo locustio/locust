@@ -278,3 +278,15 @@ ul.tabs li a.current {
     padding: 30px;
     padding-top: 0px;
 }
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    padding: 8px 0;
+    border-top: 1px solid #292f2f;
+    width: 100%;
+    text-align: right;
+}
+
+.footer a { margin-right: 10px; }
+.footer a:last-child { margin-right: 18px; }
