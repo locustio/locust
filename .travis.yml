@@ -1,9 +1,8 @@
 language: python
 python:
-  - "2.6"
   - "2.7"
-# command to install dependencies
 install:
   - sudo apt-get install -y libevent-dev
-# command to run tests
 script: python setup.py test
+notifications:
+  slack: locustio:wHSORyi1vjMxKXEbIpujpy3F
