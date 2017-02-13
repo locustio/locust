@@ -211,6 +211,13 @@ class StatsEntry(object):
         return median_from_dict(self.num_requests, self.response_times)
 
     @property
+    def line90_response_time(self):
+        if not self.response_times:
+            return 0
+
+        return line90_from_dict(self.num_requests, self.response_times)
+
+    @property
     def current_rps(self):
         if self.stats.last_request_timestamp is None:
             return 0
@@ -313,7 +320,7 @@ class StatsEntry(object):
         except ZeroDivisionError:
             fail_percent = 0
         
-        return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d  | %7d %7.2f") % (
+        return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d  | %7d %7d %7.2f") % (
             self.method + " " + self.name,
             self.num_requests,
             "%d(%.2f%%)" % (self.num_failures, fail_percent),
@@ -321,6 +328,7 @@ class StatsEntry(object):
             self.min_response_time or 0,
             self.max_response_time,
             self.median_response_time or 0,
+            self.line90_response_time or 0,
             self.current_rps or 0
         )
     
@@ -411,16 +419,33 @@ class StatsError(object):
 def avg(values):
     return sum(values, 0.0) / max(len(values), 1)
 
+
+def __percent_from_dict(total, count, percent):
+    """
+    total is the number of requests made
+    count is a dict {response_time: count}
+    percent is position of the requests.
+    """
+    pos = (total - 1) * percent
+    for k in sorted(six.iterkeys(count)):
+        if pos < count[k]:
+            return k
+        pos -= count[k]
+
+
 def median_from_dict(total, count):
     """
     total is the number of requests made
     count is a dict {response_time: count}
     """
-    pos = (total - 1) / 2
-    for k in sorted(six.iterkeys(count)):
-        if pos < count[k]:
-            return k
-        pos -= count[k]
+    return __percent_from_dict(total,count,0.5)
+
+def line90_from_dict(total, count):
+    """
+    total is the number of requests made
+    count is a dict {response_time: count}
+    """
+    return __percent_from_dict(total,count,0.9)
 
 
 global_stats = RequestStats()
@@ -465,7 +490,7 @@ events.slave_report += on_slave_report
 
 
 def print_stats(stats):
-    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s'))
+    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', '90% Line', 'req/s'))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     total_rps = 0
     total_reqs = 0
