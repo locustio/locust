@@ -12,6 +12,8 @@ Changelog
 
 * Support Python 3
 * Various bug fixes and improvements
+* Added `--no-reset-stats` option for controling if the statistics should be reset once 
+  the hatching is complete
 
 
 0.7.5
