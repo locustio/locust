@@ -1,10 +1,10 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html>
-<head> 
-    <title>Locust</title> 
+<head>
+    <title>Locust</title>
     <link rel="stylesheet" type="text/css" href="/static/style.css" media="screen">
     <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon"/>
-</head> 
+</head>
 <body class="{{state}}">
     <div class="top">
         <div class="top_content">
@@ -46,7 +46,7 @@
         </div>
     </div>
     <div class="main">
-        
+
         <div class="start" id="start">
             <div style="position:relative;">
                 <a href="#" class="close_link">Close</a>
@@ -80,10 +80,11 @@
                 <div style="clear:right;"></div>
             </div>
         </div>
-        
+
         <div class="status" id="status">
             <ul class="tabs">
                 <li><a href="#">Statistics</a></li>
+                <li><a href="#">Charts</a></li>
                 <li><a href="#">Failures</a></li>
                 <li><a href="#">Exceptions</a></li>
                 <li><a href="#">Download Data</a></li>
@@ -109,6 +110,9 @@
                         <tbody>
                         </tbody>
                     </table>
+                </div>
+                <div id="charts" style="display:none;">
+                    <p>There is no persistence of these charts, if you refresh this page, new charts will be created.</p>
                 </div>
                 <div style="display:none;">
                     <table id="errors" class="stats">
@@ -141,7 +145,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="about" style="display:none;">
             <div style="position:relative;">
                 <a href="#" class="close_link">Close</a>
@@ -149,26 +153,26 @@
             <div class="padder">
                 <h1>About</h1>
                 <p>
-                    The original idea for Locust was Carl Byström's who made a first proof of concept in June 2010. 
+                    The original idea for Locust was Carl Byström's who made a first proof of concept in June 2010.
                     Jonatan Heyman picked up Locust in January 2011, implemented the current concept of Locust classes
                     and made it work distributed across multiple machines.
-                </p>                
+                </p>
                 <p>
-                    Jonatan, Carl and Joakim Hamrén has continued the development of Locust at their job, 
+                    Jonatan, Carl and Joakim Hamrén has continued the development of Locust at their job,
                     ESN Social Software, who have adopted Locust as an inhouse Open Source project.
                 </p>
-                
+
                 <h1>Authors and Copyright</h1>
                 <a href="http://cgbystrom.com/">Carl Byström</a> (<a href="http://twitter.com/cgbystrom/">@cgbystrom</a>)<br>
                 <a href="http://heyman.info/">Jonatan Heyman</a> (<a href="http://twitter.com/jonatanheyman/">@jonatanheyman</a>)<br>
                 Joakim Hamrén (<a href="http://twitter.com/Jahaaja/">@jahaaja</a>)<br>
                 <a href="http://esn.me/">ESN Social Software</a> (<a href="http://twitter.com/uprise_ea/">@uprise_ea</a>)<br>
                 Hugo Heyman (<a href="http://twitter.com/hugoheyman/">@hugoheyman</a>)
-                
-                
+
+
                 <h1>License</h1>
                 Open source licensed under the MIT license.
-                
+
                 <h1>Version</h1>
                 {{version}}<br>
                 <a href="http://locust.io/">http://locust.io</a>
@@ -183,6 +187,10 @@
     <script type="text/javascript" src="/static/jquery-1.4.min.js"></script>
     <script type="text/javascript" src="/static/jquery.jqote2.min.js"></script>
     <script type="text/javascript" src="/static/jquery.tools.min.js"></script>
+    <!-- echarts from https://github.com/ecomfe/echarts -->
+    <script type="text/javascript" src="/static/echarts.common.min.js"></script>
+    <!-- vintage theme of echarts -->
+    <script type="text/javascript" src="/static/vintage.js"></script>
     <script type="text/x-jqote-template" id="stats-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%> <%=(this.name == "Total" ? "total" : "")%>">

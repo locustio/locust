@@ -22,7 +22,7 @@ a {
     position: fixed;
     top: 0px;
     left: 0px;
-    z-index: 1;
+    z-index: 2;
 }
 .top_content {
     width: 1000px;
@@ -92,6 +92,7 @@ a {
     left: 50%;
     top: 100px;
     margin-left: -169px;
+    z-index: 1;
 }
 
 .start .padder, .edit .padder {
