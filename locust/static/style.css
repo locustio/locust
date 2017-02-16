@@ -1,3 +1,6 @@
+html {
+    height: 100%;
+}
 body {
     background: #111717;
     padding: 0;
@@ -5,8 +8,11 @@ body {
     font-family: Arial, Helvetica, sans-serif;
     font-size: 14px;
     color: #fff;
-    padding-bottom: 20px;
+    padding-bottom: 35px;
     padding-top: 93px;
+    position: relative;
+    box-sizing: border-box;
+    min-height: 100%;
 }
 
 a {
@@ -257,6 +263,9 @@ ul.tabs li a.current {
 .panes {
     margin-top: 20px;
 }
+.panes > div {
+    overflow: hidden;
+}
 
 .about {
     width: 398px;
@@ -287,7 +296,14 @@ ul.tabs li a.current {
     border-top: 1px solid #292f2f;
     width: 100%;
     text-align: right;
+    box-sizing: border-box;
+    height: 35px;
 }
 
-.footer a { margin-right: 10px; }
-.footer a:last-child { margin-right: 18px; }
+.footer a {
+    margin-right: 10px;
+    color: #256182;
+}
+.footer a:last-child {
+    margin-right: 18px;
+}
