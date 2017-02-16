@@ -28,8 +28,9 @@ SLAVE_REPORT_INTERVAL = 3.0
 
 
 class LocustRunner(object):
-    def __init__(self, locust_classes, options):
+    def __init__(self, locust_classes, options, available_locustfiles=None):
         self.locust_classes = locust_classes
+        self.available_locustfiles = available_locustfiles or {}
         self.hatch_rate = options.hatch_rate
         self.num_clients = options.num_clients
         self.num_requests = options.num_requests
@@ -144,6 +145,16 @@ class LocustRunner(object):
             self.locusts.killone(g)
         events.hatch_complete.fire(user_count=self.num_clients)
 
+    def switch(self, key):
+        """
+        Set the active locust classes to the executables described by the key
+        """
+        try:
+            self.locust_classes = self.available_locustfiles[key].values()
+        except KeyError:
+            logger.error("No available locust classes found with key: {}".format(key))
+            self.locust_classes = []
+
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
@@ -190,8 +201,8 @@ class LocustRunner(object):
         self.exceptions[key] = row
 
 class LocalLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, options):
-        super(LocalLocustRunner, self).__init__(locust_classes, options)
+    def __init__(self, locust_classes, options, available_locustfiles=None):
+        super(LocalLocustRunner, self).__init__(locust_classes, options, available_locustfiles)
 
         # register listener thats logs the exception for the local runner
         def on_locust_error(locust_instance, exception, tb):
@@ -204,8 +215,20 @@ class LocalLocustRunner(LocustRunner):
         self.greenlet = self.hatching_greenlet
 
 class DistributedLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, options):
-        super(DistributedLocustRunner, self).__init__(locust_classes, options)
+    def __init__(self, locust_classes, options, available_locustfiles=None):
+        """
+        :type available_locustfiles: dict
+        :param available_locustfiles: A dict of other locust classes the runner can "switch" to. e.g.
+
+            {
+                'Homepage': [<class Homepage>],
+                'Login': [<class Login>],
+                'Post': [<class Login>, <class Post>]
+            }
+
+            The key should be any string identifier that can be sent to the slaves as a message
+        """
+        super(DistributedLocustRunner, self).__init__(locust_classes, options, available_locustfiles)
         self.master_host = options.master_host
         self.master_port = options.master_port
         self.master_bind_host = options.master_bind_host
@@ -301,6 +324,14 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.stats.start_time = time()
         self.state = STATE_HATCHING
 
+    def switch(self, key):
+        """
+        Switch to a different set of locust classes
+        """
+        self.stop()
+        for client in self.clients.itervalues():
+            self.server.send(Message("switch", {"key": key}, None))
+
     def stop(self):
         for client in self.clients.hatching + self.clients.running:
             self.server.send(Message("stop", None, None))
@@ -391,6 +422,8 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 self.num_requests = job["num_requests"]
                 self.host = job["host"]
                 self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
+            elif msg.type == "switch":
+                self.switch(msg.data["key"])
             elif msg.type == "stop":
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))

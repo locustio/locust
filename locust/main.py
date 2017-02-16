@@ -57,7 +57,8 @@ def parse_options():
         '-f', '--locustfile',
         dest='locustfile',
         default='locustfile',
-        help="Python module file to import, e.g. '../other.py'. Default: locustfile"
+        help="Python module file or directory to import, e.g. '../other.py' or 'locustfiles/'. If directory, "
+             "the default locustfile will be the first valid module found in that directory. Default: locustfile"
     )
 
     # if locust should be run in distributed mode as master
@@ -292,10 +293,10 @@ def is_locust(tup):
 
 def load_locustfile(path):
     """
-    Import given locustfile path and return (docstring, callables).
+    Import given locustfile path and return {module: (callables)}.
 
-    Specifically, the locustfile's ``__doc__`` attribute (a string) and a
-    dictionary of ``{'name': callable}`` containing all callables which pass
+    <module> -- the name of the module in which the locusts are contained
+    <callables> -- a dictionary of ``{'name': callable}`` containing all callables which pass
     the "is a Locust" test.
     """
     # Get directory and locustfile name
@@ -326,9 +327,51 @@ def load_locustfile(path):
     if index is not None:
         sys.path.insert(index + 1, directory)
         del sys.path[0]
-    # Return our two-tuple
+
     locusts = dict(filter(is_locust, vars(imported).items()))
-    return imported.__doc__, locusts
+    return {os.path.splitext(locustfile)[0]: locusts}
+
+
+def getmodule(path, suffixes=('.py',)):
+    """
+    Get the relative module name of a file path; return None if not a module or is the __init__ of a package.
+    """
+    if path.endswith('__init__.py') or path.endswith('__init__.pyc') or path.endswith('__init__.pyo'):
+        # This is a package, not a module
+        return None
+
+    module = os.path.split(path)[-1]
+    for s in suffixes:
+        if module.endswith(s):
+            return module.strip(s)
+
+    return None
+
+
+def collect_locustfiles(path):
+    """
+    On a given directory path, recursively import and load all locustfiles in that directory.
+    """
+    # Locustfiles will typically import assuming the working path is on the PYTHONPATH. To avoid having to do
+    # PYTHONPATH=. locust ...
+    if os.getcwd() not in sys.path:
+        sys.path.insert(0, os.getcwd())
+
+    files = os.listdir(path)
+    collected = dict()
+    for file_ in files:
+        fullpath = os.path.abspath(os.path.join(path, file_))
+        if os.path.isfile(fullpath):
+            if getmodule(file_):
+                loaded = load_locustfile(fullpath)
+                if loaded:
+                    collected.update(loaded)
+        elif os.path.isdir(fullpath):
+            # Recurse subdirectories for other locustfiles
+            collected.update(collect_locustfiles(os.path.join(path, file_)))
+
+    return collected
+
 
 def main():
     parser, options, arguments = parse_options()
@@ -341,12 +384,20 @@ def main():
         print("Locust %s" % (version,))
         sys.exit(0)
 
-    locustfile = find_locustfile(options.locustfile)
-    if not locustfile:
-        logger.error("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.")
-        sys.exit(1)
+    if os.path.isdir(options.locustfile):
+        all_locustfiles = collect_locustfiles(options.locustfile)
+    else:
+        locustfile = find_locustfile(options.locustfile)
+        if not locustfile:
+            logger.error("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.")
+            sys.exit(1)
 
-    docstring, locusts = load_locustfile(locustfile)
+        all_locustfiles = load_locustfile(locustfile)
+
+    logger.info("All available locustfiles: {}".format(all_locustfiles))
+
+    # Use the first locustfile for the default locusts
+    locusts = all_locustfiles.values()[0]
 
     if options.list_commands:
         console_logger.info("Available Locusts:")
@@ -398,16 +449,16 @@ def main():
         main_greenlet = gevent.spawn(web.start, locust_classes, options)
     
     if not options.master and not options.slave:
-        runners.locust_runner = LocalLocustRunner(locust_classes, options)
+        runners.locust_runner = LocalLocustRunner(locust_classes, options, available_locustfiles=all_locustfiles)
         # spawn client spawning/hatching greenlet
         if options.no_web:
             runners.locust_runner.start_hatching(wait=True)
             main_greenlet = runners.locust_runner.greenlet
     elif options.master:
-        runners.locust_runner = MasterLocustRunner(locust_classes, options)
+        runners.locust_runner = MasterLocustRunner(locust_classes, options, available_locustfiles=all_locustfiles)
     elif options.slave:
         try:
-            runners.locust_runner = SlaveLocustRunner(locust_classes, options)
+            runners.locust_runner = SlaveLocustRunner(locust_classes, options, available_locustfiles=all_locustfiles)
             main_greenlet = runners.locust_runner.greenlet
         except socket.error as e:
             logger.error("Failed to connect to the Locust master: %s", e)
