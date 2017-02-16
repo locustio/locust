@@ -3,12 +3,15 @@ import gevent
 import hashlib
 import six
 from six.moves import xrange
+import tablib
+from tabulate import tabulate
 
 from . import events
 from .exception import StopLocust
 from .log import console_logger
 
 STATS_NAME_WIDTH = 60
+PERCENTILES = (0.5, 0.66, 0.75, 0.80, 0.9, 0.95, 0.98, 0.99)
 
 class RequestStatsAdditionError(Exception):
     pass
@@ -65,7 +68,80 @@ class RequestStats(object):
         self.max_requests = None
         self.last_request_timestamp = None
         self.start_time = None
-        
+
+    def percentile_column_name(self, percentile):
+        """
+        Return the name of the column for the `percentile` value.
+        """
+        return "{0:.0%}".format(percentile)
+
+    def get_percentile_dataset(self, include_empty=False):
+        data = tablib.Dataset()
+        data.headers = ['Method', 'Name', '# reqs']
+
+        for percentile in PERCENTILES:
+            data.headers.append(self.percentile_column_name(percentile))
+
+        data.headers.append("100%")
+
+        # Using iteritems() allows us to sort by the key while only using
+        # the value.
+        for _, stats in sorted(six.iteritems(self.entries)):
+            data.append(stats.percentile(include_empty))
+
+        total_stats = self.aggregated_stats(full_request_history=True)
+        if total_stats.response_times:
+            data.append(total_stats.percentile(include_empty))
+
+        return data
+
+    def get_request_stats_dataset(self):
+        data = tablib.Dataset()
+        data.headers = [
+            "Method",
+            "Name",
+            "# requests",
+            "# failures",
+            "Median response time",
+            "Average response time",
+            "Min response time",
+            "Max response time",
+            "Average Content Size",
+            "Requests/s",
+        ]
+
+        # Using iteritems() allows us to sort by the key while only using
+        # the value.
+        for _, stats in sorted(six.iteritems(self.entries)):
+            data.append((
+                stats.method,
+                stats.name,
+                stats.num_requests,
+                stats.num_failures,
+                stats.median_response_time,
+                stats.avg_response_time,
+                stats.min_response_time or 0,
+                stats.max_response_time,
+                stats.avg_content_length,
+                stats.total_rps,
+            ))
+
+        total = self.aggregated_stats(full_request_history=True)
+        data.append((
+            total.method,
+            total.name,
+            total.num_requests,
+            total.num_failures,
+            total.median_response_time,
+            total.avg_response_time,
+            total.min_response_time or 0,
+            total.max_response_time,
+            total.avg_content_length,
+            total.total_rps,
+        ))
+
+        return data
+
 
 class StatsEntry(object):
     """
@@ -339,23 +415,24 @@ class StatsEntry(object):
             if((self.num_requests - processed_count) <= num_of_request):
                 return response_time
 
-    def percentile(self, tpl=" %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
-        if not self.num_requests:
+    def percentile(self, include_empty=False):
+        if not self.num_requests and not include_empty:
             raise ValueError("Can't calculate percentile on url with no successful requests")
-        
-        return tpl % (
-            str(self.method) + " " + self.name,
-            self.num_requests,
-            self.get_response_time_percentile(0.5),
-            self.get_response_time_percentile(0.66),
-            self.get_response_time_percentile(0.75),
-            self.get_response_time_percentile(0.80),
-            self.get_response_time_percentile(0.90),
-            self.get_response_time_percentile(0.95),
-            self.get_response_time_percentile(0.98),
-            self.get_response_time_percentile(0.99),
-            self.max_response_time
-        )
+
+        results = [self.method, self.name, self.num_requests]
+
+        if self.num_requests > 0:
+            for percentile in PERCENTILES:
+                results.append(self.get_response_time_percentile(percentile))
+
+            results.append(self.max_response_time)
+        else:
+            entry_count = len(PERCENTILES) + 1
+
+            result.extend(["N/A"] * entry_count)
+
+        return tuple(results)
+
 
 class StatsError(object):
     def __init__(self, method, name, error, occurences=0):
@@ -465,40 +542,15 @@ events.slave_report += on_slave_report
 
 
 def print_stats(stats):
-    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s'))
-    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
-    total_rps = 0
-    total_reqs = 0
-    total_failures = 0
-    for key in sorted(six.iterkeys(stats)):
-        r = stats[key]
-        total_rps += r.current_rps
-        total_reqs += r.num_requests
-        total_failures += r.num_failures
-        console_logger.info(r)
-    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
-
-    try:
-        fail_percent = (total_failures/float(total_reqs))*100
-    except ZeroDivisionError:
-        fail_percent = 0
-
-    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %42.2f") % ('Total', total_reqs, "%d(%.2f%%)" % (total_failures, fail_percent), total_rps))
+    data = stats.get_request_stats_dataset()
+    console_logger.info(tabulate(data.dict, headers="keys"))
     console_logger.info("")
 
 def print_percentile_stats(stats):
+    data = stats.get_percentile_dataset()
+
     console_logger.info("Percentage of the requests completed within given times")
-    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %8s %6s %6s %6s %6s %6s %6s %6s %6s %6s") % ('Name', '# reqs', '50%', '66%', '75%', '80%', '90%', '95%', '98%', '99%', '100%'))
-    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
-    for key in sorted(six.iterkeys(stats)):
-        r = stats[key]
-        if r.response_times:
-            console_logger.info(r.percentile())
-    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
-    
-    total_stats = global_stats.aggregated_stats()
-    if total_stats.response_times:
-        console_logger.info(total_stats.percentile())
+    console_logger.info(tabulate(data.dict, headers="keys"))
     console_logger.info("")
 
 def print_error_report():
@@ -515,5 +567,5 @@ def print_error_report():
 def stats_printer():
     from .runners import locust_runner
     while True:
-        print_stats(locust_runner.request_stats)
+        print_stats(locust_runner.stats)
         gevent.sleep(2)
