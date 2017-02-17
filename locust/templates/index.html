@@ -7,8 +7,8 @@
 </head>
 <body class="{{state}}">
     <div class="top">
-        <div class="top_content">
-            <a href="/"><img src="/static/img/logo.png" class="logo" /></a>
+        <div class="top-content container">
+            <img src="/static/img/logo.png" class="logo" />
             <div class="boxes">
                 <div class="top_box box_status">
                     <div class="label">STATUS</div>
@@ -46,7 +46,6 @@
         </div>
     </div>
     <div class="main">
-
         <div class="start" id="start">
             <div style="position:relative;">
                 <a href="#" class="close_link">Close</a>
@@ -82,15 +81,16 @@
         </div>
 
         <div class="status" id="status">
-            <ul class="tabs">
-                <li><a href="#">Statistics</a></li>
-                <li><a href="#">Charts</a></li>
-                <li><a href="#">Failures</a></li>
-                <li><a href="#">Exceptions</a></li>
-                <li><a href="#">Download Data</a></li>
-            </ul>
-            <div style="clear:left;"></div>
-            <div class="panes">
+            <nav class="menu">
+                <ul class="tabs container">
+                    <li><a href="#">Statistics</a></li>
+                    <li><a href="#">Charts</a></li>
+                    <li><a href="#">Failures</a></li>
+                    <li><a href="#">Exceptions</a></li>
+                    <li><a href="#">Download Data</a></li>
+                </ul>
+            </nav>
+            <div class="panes container">
                 <div style="display:none;">
                     <table id="stats" class="stats">
                         <thead>
@@ -180,7 +180,9 @@
         </div>
     </div>
     <nav class="footer">
-        <a href="#" onclick="$('.about').fadeIn();">About</a>
+        <div class="container">
+            <a href="#" onclick="$('.about').fadeIn();">About</a>
+        </div>
     </nav>
 
 

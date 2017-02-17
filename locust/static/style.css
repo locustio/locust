@@ -2,22 +2,32 @@ html {
     height: 100%;
 }
 body {
-    background: #111717;
+    background: #125338;
     padding: 0;
     margin: 0;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 14px;
     color: #fff;
-    padding-bottom: 35px;
+    padding-bottom: 40px;
     padding-top: 93px;
     position: relative;
     box-sizing: border-box;
     min-height: 100%;
+    -webkit-font-smoothing: antialiased;
+}
+
+ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
 a {
-    color: #308dbf;
+    color: #2be6a4;
     text-decoration: none;
+}
+a:hover {
+    color: #4ff9bd;
 }
 
 .top {
@@ -30,15 +40,17 @@ a {
     left: 0px;
     z-index: 2;
 }
-.top_content {
-    width: 1000px;
-    margin-left: auto;
-    margin-right: auto;
+.top a {
+    color: #308dbf;
+}
+.top-content {
     padding-top: 20px;
 }
 .top .logo {
     float: left;
-    cursor: pointer;
+    width: 200px;
+    height: 48px;
+    margin-top: 2px;
 }
 
 
@@ -84,12 +96,18 @@ a {
 .stopped .boxes .box_running {display: block;}
 .stopped .boxes .box_stop {display: none;}
 
-.main {
-    width: 1000px;
+.container {
+    max-width: 1200px;
+    min-width: 1000px;
     margin-left: auto;
     margin-right: auto;
+    box-sizing: border-box;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.main {
     position: relative;
-    padding-top: 20px;
 }
 
 .start, .edit {
@@ -180,36 +198,46 @@ a {
 }
 
 .status table {
-    border-collapse: collapse;
     width: 100%;
+    border-radius: 3px;
+    border: 2px solid #0b3524;
+    border-spacing: 0;
 }
 .status thead {
-    background-color: #000;
+    background: #0b3524;
     padding: 0;
     margin: 0;
-    color: #6d6d6d;
-    border-bottom: 1px solid #292f2f;
-}
-.status tr.total td {
-    border-top: 1px solid #292f2f;
+    color: #a9c5ba;
 }
 .status td, .status th {
     padding: 10px;
     margin: 0;
     text-align: left;
 }
+.status td:first-child, .status th:first-child {
+    padding-left: 16px;
+}
+.status td:last-child, .status th:last-child {
+    padding-right: 16px;
+}
 .status td.numeric,
 .status th.numeric {
     text-align: right;
 }
 .status tr.dark {
-    background:#0d1111;
+    background:#104831;
 }
 .status th {
-    font-weight: normal;
+    font-weight: bold;
 }
 .status th.error_count {
     width: 70px;
+}
+.status tr.total {
+    background: #0b3524;
+}
+.status tr.total td {
+    font-weight: bold;
 }
 
 #errors td, #errors th {
@@ -243,25 +271,44 @@ em {
     font-family: Palatino, Times New Roman, serif;
 }
 
+nav.menu {
+    background: #104831;
+}
 ul.tabs {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    margin-top: 0px;
+    overflow: hidden
 }
 ul.tabs li {
     display: block;
     float: left;
-    margin-right: 16px;
     font-size: 16px;
+}
+ul.tabs li a {
+    padding: 14px 10px;
+    display: inline-block;
+    color: #b5e2cd;
+    position: relative;
+    font-weight: 600;
+    font-size: 14px;
+}
+ul.tabs li a:hover {
+    background: #0e3c29;
 }
 ul.tabs li a.current {
     color: #fff;
-    /*font-weight: bold;*/
+}
+ul.tabs li a.current:after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    height: 3px;
+    background: #fff;
 }
 
 .panes {
-    margin-top: 20px;
+    margin-top: 30px;
 }
 .panes > div {
     overflow: hidden;
@@ -292,18 +339,15 @@ ul.tabs li a.current {
 .footer {
     position: absolute;
     bottom: 0;
-    padding: 8px 0;
-    border-top: 1px solid #292f2f;
+    padding: 12px 0;
+    background: #104831;
     width: 100%;
     text-align: right;
     box-sizing: border-box;
-    height: 35px;
+    height: 40px;
 }
 
 .footer a {
     margin-right: 10px;
-    color: #256182;
-}
-.footer a:last-child {
-    margin-right: 18px;
+    color: #48a584;
 }
