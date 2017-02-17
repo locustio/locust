@@ -11,9 +11,10 @@ Changelog
 
 
 * Support Python 3
-* Various bug fixes and improvements
 * Added `--no-reset-stats` option for controling if the statistics should be reset once 
   the hatching is complete
+* Added charts, for RPS and average response time, to the web UI
+* Various bug fixes and improvements
 
 
 0.7.5
