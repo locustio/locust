@@ -2,7 +2,7 @@ html {
     height: 100%;
 }
 body {
-    background: #125338;
+    background: #173529;
     padding: 0;
     margin: 0;
     font-family: Arial, Helvetica, sans-serif;
@@ -154,7 +154,8 @@ a:hover {
     -moz-border-radius: 5px;
     -webkit-border-radisu: 5px;
     border: 3px solid #eee;
-    background: #111717;
+    background: #132b21;
+    box-shadow: 0 0 60px rgba(0,0,0,0.3);
 }
 
 .stopped .edit {display: none;}
@@ -164,7 +165,8 @@ a:hover {
     -moz-border-radius: 5px;
     -webkit-border-radisu: 5px;
     border: 3px solid #eee;
-    background: #111717;
+    background: #132b21;
+    box-shadow: 0 0 60px rgba(0,0,0,0.3);
 }
 .running .start, .hatching .start {display: none;}
 
@@ -200,14 +202,20 @@ a:hover {
 .status table {
     width: 100%;
     border-radius: 3px;
-    border: 2px solid #0b3524;
+    border: 2px solid #132b21;
     border-spacing: 0;
 }
 .status thead {
-    background: #0b3524;
+    background: #132b21;
     padding: 0;
     margin: 0;
     color: #a9c5ba;
+}
+.status table thead tr:hover {
+    background: none;
+}
+.status table tr:hover {
+    background: #1d4434;
 }
 .status td, .status th {
     padding: 10px;
@@ -225,7 +233,7 @@ a:hover {
     text-align: right;
 }
 .status tr.dark {
-    background:#104831;
+    background:#153126;
 }
 .status th {
     font-weight: bold;
@@ -234,7 +242,7 @@ a:hover {
     width: 70px;
 }
 .status tr.total {
-    background: #0b3524;
+    background: #132b21;
 }
 .status tr.total td {
     font-weight: bold;
@@ -272,7 +280,7 @@ em {
 }
 
 nav.menu {
-    background: #104831;
+    background: #132b21;
 }
 ul.tabs {
     overflow: hidden
@@ -285,13 +293,13 @@ ul.tabs li {
 ul.tabs li a {
     padding: 14px 10px;
     display: inline-block;
-    color: #b5e2cd;
+    color: #b3c3bc;
     position: relative;
     font-weight: 600;
     font-size: 14px;
 }
 ul.tabs li a:hover {
-    background: #0e3c29;
+    background: #10211a;
 }
 ul.tabs li a.current {
     color: #fff;
@@ -324,7 +332,8 @@ ul.tabs li a.current:after {
     -moz-border-radius: 5px;
     -webkit-border-radisu: 5px;
     border: 3px solid #eee;
-    background: #111717;
+    background: #132b21;
+    box-shadow: 0 0 60px rgba(0,0,0,0.3);
 }
 .about a.close_link {
     position: absolute;
@@ -340,7 +349,7 @@ ul.tabs li a.current:after {
     position: absolute;
     bottom: 0;
     padding: 12px 0;
-    background: #104831;
+    background: #132b21;
     width: 100%;
     text-align: right;
     box-sizing: border-box;
