@@ -228,7 +228,7 @@ function initChart(stat) {
 }
 
 function updateCharts(stats) {
-    var rsp_chart, rps_data, now, date, avt_chart, avt_data;
+    var rps_chart, rps_data, now, date, avt_chart, avt_data;
     
     $.each(stats, function(index, stat){
         if (stat.name != "Total") {
