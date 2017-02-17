@@ -112,11 +112,11 @@ $(".stats_label").click(function(event) {
 var charts = {}
 
 function initChart(stat) {
-    // FIXME: hardcoded width and height
-    var rps_element = $('<div class="stats" style="float:left; width: 500px; height: 300px;"></div>');
-    var avt_element = $('<div class="stats" style="float:left; width: 500px; height: 300px;"></div>');
-    rps_element.appendTo("#charts");
-    avt_element.appendTo("#charts");
+    var width = $(".main").width();
+    var rps_element = $('<div class="chart"></div>').css("width", width);
+    var avt_element = $('<div class="chart"></div>').css("width", width);
+    rps_element.appendTo("#charts .charts-container");
+    avt_element.appendTo("#charts .charts-container");
 
     var date = [];
     var rps_data = [];
@@ -133,17 +133,21 @@ function initChart(stat) {
         "name": now,
         "value": Math.round(stat.avg_response_time)
     });
+    
+    var gridSettings = {x:60, y:70, x2:40, y2:40};
 
     var rps_chart = echarts.init(rps_element.get(0), 'vintage');
     rps_chart.setOption({
         title: {
-            text: stat.name + ': RPS'
+            text: 'RPS',
+            x: 10,
+            y: 10,
         },
         tooltip: {
             trigger: 'axis',
             formatter: function (params) {
                 param = params[0];
-                return param.name + ': RPS ' + param.value;
+                return param.name + ': ' + param.value + ' reqs/s';
             },
             axisPointer: {
                 animation: true
@@ -169,19 +173,22 @@ function initChart(stat) {
             showSymbol: false,
             hoverAnimation: false,
             data: rps_data
-        }]
+        }],
+        grid: gridSettings,
     });
 
     var avt_chart = echarts.init(avt_element.get(0), 'vintage');
     avt_chart.setOption({
         title: {
-            text: stat.name + ': average response time(ms)'
+            text: 'Average Response Time',
+            x: 10,
+            y: 10,
         },
         tooltip: {
             trigger: 'axis',
             formatter: function (params) {
                 param = params[0];
-                return param.name + ':' + param.value + 'ms';
+                return param.name + ': ' + param.value + 'ms';
             },
             axisPointer: {
                 animation: true
@@ -207,7 +214,8 @@ function initChart(stat) {
             showSymbol: false,
             hoverAnimation: false,
             data: avt_data
-        }]
+        }],
+        grid: gridSettings,
     });
 
     charts[stat.name] = {};
@@ -220,8 +228,13 @@ function initChart(stat) {
 }
 
 function updateCharts(stats) {
-
+    var rsp_chart, rps_data, now, date, avt_chart, avt_data;
+    
     $.each(stats, function(index, stat){
+        if (stat.name != "Total") {
+            // Only render charts for the total data
+            return;
+        }
         if (stat.name in charts) {
             now = new Date().toLocaleTimeString();
             date = charts[stat.name]["date"];
@@ -261,7 +274,6 @@ function updateCharts(stats) {
             initChart(stat);
         }
     });
-
 }
 
 

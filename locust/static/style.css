@@ -234,6 +234,24 @@ a {
     white-space: pre;
 }
 
+#charts {
+    width: 100%;
+}
+#charts .chart {
+    height: 350px;
+    margin-bottom: 30px;
+    box-sizing: border-box;
+    border: 1px solid #1b1f1f;
+}
+#charts p.note {
+    color: #777;
+    margin-bottom: 30px;
+    border-radius: 3px;
+    background: #1b2727;
+    padding: 10px;
+    display: inline-block;
+}
+
 em {
     width: 100%;
     color: white;
