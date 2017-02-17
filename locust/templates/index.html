@@ -2,13 +2,13 @@
 <html>
 <head>
     <title>Locust</title>
-    <link rel="stylesheet" type="text/css" href="/static/style.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="/static/style.css?v={{ version }}" media="screen">
     <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon"/>
 </head>
 <body class="{{state}}">
     <div class="top">
         <div class="top-content container">
-            <img src="/static/img/logo.png" class="logo" />
+            <img src="/static/img/logo.png?v={{ version }}" class="logo" />
             <div class="boxes">
                 <div class="top_box box_status">
                     <div class="label">STATUS</div>
@@ -231,6 +231,6 @@
         <% alternate = !alternate; %>
         ]]>
     </script>
-    <script type="text/javascript" src="/static/locust.js"></script>
+    <script type="text/javascript" src="/static/locust.js?v={{ version }}"></script>
 </body>
 </html>
