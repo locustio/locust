@@ -202,11 +202,11 @@ a:hover {
 .status table {
     width: 100%;
     border-radius: 3px;
-    border: 2px solid #132b21;
+    border: 2px solid #11251c;
     border-spacing: 0;
 }
 .status thead {
-    background: #132b21;
+    background: #11251c;
     padding: 0;
     margin: 0;
     color: #a9c5ba;
@@ -242,7 +242,7 @@ a:hover {
     width: 70px;
 }
 .status tr.total {
-    background: #132b21;
+    background: #11251c;
 }
 .status tr.total td {
     font-weight: bold;
