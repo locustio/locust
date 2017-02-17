@@ -139,7 +139,7 @@ function initChart(stat) {
     var rps_chart = echarts.init(rps_element.get(0), 'vintage');
     rps_chart.setOption({
         title: {
-            text: 'RPS',
+            text: 'Total Requests per Second',
             x: 10,
             y: 10,
         },
