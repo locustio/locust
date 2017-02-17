@@ -376,7 +376,8 @@ def main():
             names = set(arguments) & set(locusts.keys())
             locust_classes = [locusts[n] for n in names]
     else:
-        locust_classes = locusts.values()
+        # list() call is needed to consume the dict_view object in Python 3
+        locust_classes = list(locusts.values())
     
     if options.show_task_ratio:
         console_logger.info("\n Task ratio per locust class")
