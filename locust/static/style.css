@@ -87,6 +87,46 @@ a:hover {
 .boxes .box_status .value {
     text-transform: uppercase;
 }
+.top_box .stop-button {
+    display: block;
+    float: left;
+    background: #d81212;
+    border-radius: 5px;
+    color: #fff;
+    padding: 9px 18px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: bold;
+    margin-right: 12px;
+}
+.top_box .stop-button:hover {
+    background: #c80202;
+}
+.top_box .stop-button i {
+    display: block;
+    background: #fff;
+    width: 17px;
+    height: 17px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 7px;
+    box-shadow: 0 0 20px rgba(255,255,255, 1.0)
+}
+.top_box .reset-button {
+    display: block;
+    float: left;
+    background: #5a4b4b;
+    border-radius: 5px;
+    color: #fff;
+    padding: 11px 16px;
+    line-height: 1.5em;
+    text-align: center;
+    font-size: 11px;
+    font-weight: bold;
+}
+.top_box .reset-button:hover {
+    background: #4e4141;
+}
 
 .boxes .box_running {
     display: none;

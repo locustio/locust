@@ -4,7 +4,7 @@ $(window).ready(function() {
     }
 });
 
-$("#box_stop a").click(function(event) {
+$("#box_stop a.stop-button").click(function(event) {
     event.preventDefault();
     $.get($(this).attr("href"));
     $("body").attr("class", "stopped");
@@ -14,7 +14,7 @@ $("#box_stop a").click(function(event) {
     $(".user_count").hide();
 });
 
-$("#box_reset a").click(function(event) {
+$("#box_stop a.reset-button").click(function(event) {
     event.preventDefault();
     $.get($(this).attr("href"));
 });
