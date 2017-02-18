@@ -110,7 +110,7 @@ a:hover {
     margin-left: auto;
     margin-right: auto;
     margin-bottom: 7px;
-    box-shadow: 0 0 20px rgba(255,255,255, 1.0)
+    box-shadow: 0 0 20px rgba(255,255,255, 0.5)
 }
 .top_box .reset-button {
     display: block;
