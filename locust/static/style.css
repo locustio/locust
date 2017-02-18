@@ -182,9 +182,21 @@ a:hover {
     font-size: 24px;
     padding-left: 10px;
 }
-.start input.start_button, .edit input.start_button {
+.start button,
+.edit button {
     margin-top: 20px;
     float: right;
+    font-size: 16px;
+    font-weight: bold;
+    background: #8adaba;
+    padding: 14px 30px;
+    border-style: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.start button:hover,
+.edit button:hover {
+    background: #74b99d;
 }
 
 
