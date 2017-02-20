@@ -350,8 +350,13 @@ def main():
         sys.exit(0)
 
     locustfile = find_locustfile(options.locustfile)
+
     if not locustfile:
         logger.error("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.")
+        sys.exit(1)
+
+    if locustfile == "locust.py":
+        logger.error("The locustfile must not be named `locust.py`. Please rename the file and try again.")
         sys.exit(1)
 
     docstring, locusts = load_locustfile(locustfile)
