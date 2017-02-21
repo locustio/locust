@@ -22,7 +22,7 @@ To see available options, run::
 Supported Python Versions
 -------------------------
 
-Locust requires **Python 2.7+**.  It is not currently compatible with Python 3.x.
+Locust supports Python 2.7, 3.3, 3.4, 3.5, and 3.6.
 
 
 Installing ZeroMQ
