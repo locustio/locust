@@ -54,6 +54,11 @@
                     splitLine: {
                         show: false
                     },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#5b6f66',
+                        },
+                    },
                     data: this.dates,
                 },
                 yAxis: {
@@ -61,7 +66,12 @@
                     boundaryGap: [0, '100%'],
                     splitLine: {
                         show: false
-                    }
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#5b6f66',
+                        },
+                    },
                 },
                 series: seriesData,
                 grid: {x:60, y:70, x2:40, y2:40},
