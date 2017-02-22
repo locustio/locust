@@ -242,16 +242,10 @@ class StatsEntry(object):
         except ZeroDivisionError:
             return 0
     
-    def extend(self, other, full_request_history=False):
+    def extend(self, other):
         """
         Extend the data fro the current StatsEntry with the stats from another
         StatsEntry instance. 
-        
-        If full_request_history is False, we'll only care to add the data from 
-        the last 20 seconds of other's stats. The reason for this argument is that 
-        extend can be used to generate an aggregate of multiple different StatsEntry 
-        instances on the fly, in order to get the *total* current RPS, average 
-        response time, etc.
         """
         self.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
         self.start_time = min(self.start_time, other.start_time)
@@ -263,16 +257,10 @@ class StatsEntry(object):
         self.min_response_time = min(self.min_response_time or 0, other.min_response_time or 0) or other.min_response_time
         self.total_content_length = self.total_content_length + other.total_content_length
 
-        if full_request_history:
-            for key in other.response_times:
-                self.response_times[key] = self.response_times.get(key, 0) + other.response_times[key]
-            for key in other.num_reqs_per_sec:
-                self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) +  other.num_reqs_per_sec[key]
-        else:
-            # still add the number of reqs per seconds the last 20 seconds
-            for i in xrange(other.last_request_timestamp-20, other.last_request_timestamp+1):
-                if i in other.num_reqs_per_sec:
-                    self.num_reqs_per_sec[i] = self.num_reqs_per_sec.get(i, 0) + other.num_reqs_per_sec[i]
+        for key in other.response_times:
+            self.response_times[key] = self.response_times.get(key, 0) + other.response_times[key]
+        for key in other.num_reqs_per_sec:
+            self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) +  other.num_reqs_per_sec[key]
     
     def serialize(self):
         return {
@@ -459,7 +447,7 @@ def on_slave_report(client_id, data):
         request_key = (entry.name, entry.method)
         if not request_key in global_stats.entries:
             global_stats.entries[request_key] = StatsEntry(global_stats, entry.name, entry.method)
-        global_stats.entries[request_key].extend(entry, full_request_history=True)
+        global_stats.entries[request_key].extend(entry)
 
     for error_key, error in six.iteritems(data["errors"]):
         if error_key not in global_stats.errors:
@@ -467,7 +455,7 @@ def on_slave_report(client_id, data):
         else:
             global_stats.errors[error_key].occurences += error["occurences"]
     
-    global_stats.total.extend(StatsEntry.unserialize(data["stats_total"]), full_request_history=True)
+    global_stats.total.extend(StatsEntry.unserialize(data["stats_total"]))
 
 events.request_success += on_request_success
 events.request_failure += on_request_failure

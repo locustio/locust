@@ -91,8 +91,8 @@ class TestRequestStats(unittest.TestCase):
         s2.log(97, 0)
 
         s = StatsEntry(self.stats, "GET", "")
-        s.extend(s1, full_request_history=True)
-        s.extend(s2, full_request_history=True)
+        s.extend(s1)
+        s.extend(s2)
 
         self.assertEqual(s.num_requests, 10)
         self.assertEqual(s.num_failures, 3)
