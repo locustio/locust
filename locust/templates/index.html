@@ -2,13 +2,13 @@
 <html>
 <head>
     <title>Locust</title>
-    <link rel="stylesheet" type="text/css" href="/static/style.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="/static/style.css?v={{ version }}" media="screen">
     <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon"/>
 </head>
 <body class="{{state}}">
     <div class="top">
-        <div class="top_content">
-            <a href="/"><img src="/static/img/logo.png" class="logo" /></a>
+        <div class="top-content container">
+            <img src="/static/img/logo.png?v={{ version }}" class="logo" />
             <div class="boxes">
                 <div class="top_box box_status">
                     <div class="label">STATUS</div>
@@ -36,17 +36,14 @@
                     <div class="value"><span id="fail_ratio"></span>%</div>
                 </div>
                 <div class="top_box box_stop box_running" id="box_stop">
-                    <a href="/stop"><img src="/static/img/stop.png" style="border:0;"></a>
-                </div>
-                <div class="top_box box_stop box_running" id="box_reset">
-                    <a href="/stats/reset">Reset Stats</a>
+                    <a href="/stop" class="stop-button"><i></i>STOP</a>
+                    <a href="/stats/reset" class="reset-button">Reset<br>Stats</a>
                 </div>
             </div>
             <div style="clear:both;"></div>
         </div>
     </div>
     <div class="main">
-
         <div class="start" id="start">
             <div style="position:relative;">
                 <a href="#" class="close_link">Close</a>
@@ -58,7 +55,7 @@
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
-                    <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button">
+                    <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
             </div>
@@ -75,22 +72,23 @@
                     <input type="text" name="locust_count" id="new_locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="new_hatch_rate" class="val" /><br>
-                    <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button">
+                    <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
             </div>
         </div>
 
         <div class="status" id="status">
-            <ul class="tabs">
-                <li><a href="#">Statistics</a></li>
-                <li><a href="#" class="chart-tab-link">Charts</a></li>
-                <li><a href="#">Failures</a></li>
-                <li><a href="#">Exceptions</a></li>
-                <li><a href="#">Download Data</a></li>
-            </ul>
-            <div style="clear:left;"></div>
-            <div class="panes">
+            <nav class="menu">
+                <ul class="tabs container">
+                    <li><a href="#">Statistics</a></li>
+                    <li><a href="#" class="chart-tab-link">Charts</a></li>
+                    <li><a href="#">Failures</a></li>
+                    <li><a href="#">Exceptions</a></li>
+                    <li><a href="#">Download Data</a></li>
+                </ul>
+            </nav>
+            <div class="panes container">
                 <div style="display:none;">
                     <table id="stats" class="stats">
                         <thead>
@@ -181,7 +179,9 @@
         </div>
     </div>
     <nav class="footer">
-        <a href="#" onclick="$('.about').fadeIn();">About</a>
+        <div class="container">
+            <a href="#" onclick="$('.about').fadeIn();">About</a>
+        </div>
     </nav>
 
 
@@ -230,7 +230,7 @@
         <% alternate = !alternate; %>
         ]]>
     </script>
-    <script type="text/javascript" src="/static/chart.js"></script>
-    <script type="text/javascript" src="/static/locust.js"></script>
+    <script type="text/javascript" src="/static/chart.js?v={{ version }}"></script>
+    <script type="text/javascript" src="/static/locust.js?v={{ version }}"></script>
 </body>
 </html>

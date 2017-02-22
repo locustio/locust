@@ -9,8 +9,8 @@ class TestTaskRatio(unittest.TestCase):
             @task
             def root_task1(self):
                 pass
-            @task
             
+            @task
             class SubTasks(TaskSet):
                 @task
                 def task1(self):

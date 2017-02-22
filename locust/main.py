@@ -350,8 +350,13 @@ def main():
         sys.exit(0)
 
     locustfile = find_locustfile(options.locustfile)
+
     if not locustfile:
         logger.error("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.")
+        sys.exit(1)
+
+    if locustfile == "locust.py":
+        logger.error("The locustfile must not be named `locust.py`. Please rename the file and try again.")
         sys.exit(1)
 
     docstring, locusts = load_locustfile(locustfile)
@@ -376,7 +381,8 @@ def main():
             names = set(arguments) & set(locusts.keys())
             locust_classes = [locusts[n] for n in names]
     else:
-        locust_classes = locusts.values()
+        # list() call is needed to consume the dict_view object in Python 3
+        locust_classes = list(locusts.values())
     
     if options.show_task_ratio:
         console_logger.info("\n Task ratio per locust class")
