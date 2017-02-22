@@ -84,7 +84,7 @@ def request_stats_csv():
         ])
     ]
     
-    for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
+    for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
         rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
             s.method,
             s.name,
@@ -120,7 +120,7 @@ def distribution_stats_csv():
         '"99%"',
         '"100%"',
     ))]
-    for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
+    for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
         if s.num_requests:
             rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
         else:
@@ -137,7 +137,7 @@ def distribution_stats_csv():
 @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
 def request_stats():
     stats = []
-    for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total")]):
+    for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
         stats.append({
             "method": s.method,
             "name": s.name,
@@ -159,7 +159,7 @@ def request_stats():
 
     if stats:
         report["total_rps"] = stats[len(stats)-1]["current_rps"]
-        report["fail_ratio"] = runners.locust_runner.stats.aggregated_stats("Total").fail_ratio
+        report["fail_ratio"] = runners.locust_runner.stats.total.fail_ratio
         
         # since generating a total response times dict with all response times from all
         # urls is slow, we make a new total response time dict which will consist of one

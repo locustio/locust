@@ -100,6 +100,37 @@ class TestMasterRunner(LocustTestCase):
             s = master.stats.get("/", "GET")
             self.assertEqual(700, s.median_response_time)
     
+    def test_master_total_stats(self):
+        import mock
+        
+        class MyTestLocust(Locust):
+            pass
+        
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
+            master = MasterLocustRunner(MyTestLocust, self.options)
+            server.mocked_send(Message("client_ready", None, "fake_client"))
+            sleep(0)
+            stats = RequestStats()
+            stats.log_request("GET", "/1", 100, 3546)
+            stats.log_request("GET", "/1", 800, 56743)
+            stats2 = RequestStats()
+            stats2.log_request("GET", "/2", 700, 2201)
+            server.mocked_send(Message("stats", {
+                "stats":stats.serialize_stats(), 
+                "stats_total": stats.total.serialize(),
+                "errors":stats.serialize_errors(),
+                "user_count": 1,
+            }, "fake_client"))
+            sleep(0)
+            server.mocked_send(Message("stats", {
+                "stats":stats2.serialize_stats(), 
+                "stats_total": stats2.total.serialize(),
+                "errors":stats2.serialize_errors(),
+                "user_count": 2,
+            }, "fake_client"))
+            sleep(0)
+            self.assertEqual(700, master.stats.total.median_response_time)
+    
     def test_spawn_zero_locusts(self):
         class MyTaskSet(TaskSet):
             @task

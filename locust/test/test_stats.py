@@ -42,10 +42,10 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(self.s.total_rps, 7)
 
     def test_current_rps(self):
-        self.stats.last_request_timestamp = int(time.time()) + 4
+        self.stats.total.last_request_timestamp = int(time.time()) + 4
         self.assertEqual(self.s.current_rps, 3.5)
 
-        self.stats.last_request_timestamp = int(time.time()) + 25
+        self.stats.total.last_request_timestamp = int(time.time()) + 25
         self.assertEqual(self.s.current_rps, 0)
 
     def test_num_reqs_fails(self):
@@ -103,16 +103,15 @@ class TestRequestStats(unittest.TestCase):
         # reset stats
         self.stats = RequestStats()
         
-        s = StatsEntry(self.stats, "/some-path", "GET")
-        s.log_error(Exception("Exception!"))
-        s.log_error(Exception("Exception!"))
+        self.stats.log_error("GET", "/some-path", Exception("Exception!"))
+        self.stats.log_error("GET", "/some-path", Exception("Exception!"))
             
         self.assertEqual(1, len(self.stats.errors))
         self.assertEqual(2, list(self.stats.errors.values())[0].occurences)
         
-        s.log_error(Exception("Another exception!"))
-        s.log_error(Exception("Another exception!"))
-        s.log_error(Exception("Third exception!"))
+        self.stats.log_error("GET", "/some-path", Exception("Another exception!"))
+        self.stats.log_error("GET", "/some-path", Exception("Another exception!"))
+        self.stats.log_error("GET", "/some-path", Exception("Third exception!"))
         self.assertEqual(3, len(self.stats.errors))
     
     def test_error_grouping_errors_with_memory_addresses(self):
@@ -121,10 +120,7 @@ class TestRequestStats(unittest.TestCase):
         class Dummy(object):
             pass
         
-        s = StatsEntry(self.stats, "/", "GET")
-        s.log_error(Exception("Error caused by %r" % Dummy()))
-        s.log_error(Exception("Error caused by %r" % Dummy()))
-        
+        self.stats.log_error("GET", "/", Exception("Error caused by %r" % Dummy()))
         self.assertEqual(1, len(self.stats.errors))
     
     def test_serialize_through_message(self):
