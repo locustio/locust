@@ -82,7 +82,7 @@
             <nav class="menu">
                 <ul class="tabs container">
                     <li><a href="#">Statistics</a></li>
-                    <li><a href="#">Charts</a></li>
+                    <li><a href="#" class="chart-tab-link">Charts</a></li>
                     <li><a href="#">Failures</a></li>
                     <li><a href="#">Exceptions</a></li>
                     <li><a href="#">Download Data</a></li>
@@ -110,7 +110,8 @@
                     </table>
                 </div>
                 <div id="charts" style="display:none;">
-                    <p>There is no persistence of these charts, if you refresh this page, new charts will be created.</p>
+                    <div class="charts-container"></div>
+                    <p class="note">Note: There is no persistence of these charts, if you refresh this page, new charts will be created.</p>
                 </div>
                 <div style="display:none;">
                     <table id="errors" class="stats">
@@ -184,7 +185,7 @@
     </nav>
 
 
-    <script type="text/javascript" src="/static/jquery-1.4.min.js"></script>
+    <script type="text/javascript" src="/static/jquery-1.11.3.min.js"></script>
     <script type="text/javascript" src="/static/jquery.jqote2.min.js"></script>
     <script type="text/javascript" src="/static/jquery.tools.min.js"></script>
     <!-- echarts from https://github.com/ecomfe/echarts -->
@@ -229,6 +230,7 @@
         <% alternate = !alternate; %>
         ]]>
     </script>
+    <script type="text/javascript" src="/static/chart.js?v={{ version }}"></script>
     <script type="text/javascript" src="/static/locust.js?v={{ version }}"></script>
 </body>
 </html>

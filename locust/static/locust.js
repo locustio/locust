@@ -38,7 +38,14 @@ $(".close_link").click(function(event) {
 
 var alternate = false;
 
-$("ul.tabs").tabs("div.panes > div");
+$("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
+    if (event.target == $(".chart-tab-link")[0]) {
+        // trigger resizing of charts
+        rpsChart.resize();
+        responseTimeChart.resize();
+        usersChart.resize();
+    }
+});
 
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');
@@ -108,162 +115,10 @@ $(".stats_label").click(function(event) {
     $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
 });
 
-
-var charts = {}
-
-function initChart(stat) {
-    // FIXME: hardcoded width and height
-    var rps_element = $('<div class="stats" style="float:left; width: 500px; height: 300px;"></div>');
-    var avt_element = $('<div class="stats" style="float:left; width: 500px; height: 300px;"></div>');
-    rps_element.appendTo("#charts");
-    avt_element.appendTo("#charts");
-
-    var date = [];
-    var rps_data = [];
-    var avt_data = [];
-
-    now = new Date().toLocaleTimeString();
-    date.push(now);
-    rps_data.push({
-        "name": now,
-        "value": Math.round(stat.current_rps*100)/100
-    });
-
-    avt_data.push({
-        "name": now,
-        "value": Math.round(stat.avg_response_time)
-    });
-
-    var rps_chart = echarts.init(rps_element.get(0), 'vintage');
-    rps_chart.setOption({
-        title: {
-            text: stat.name + ': RPS'
-        },
-        tooltip: {
-            trigger: 'axis',
-            formatter: function (params) {
-                param = params[0];
-                return param.name + ': RPS ' + param.value;
-            },
-            axisPointer: {
-                animation: true
-            }
-        },
-        xAxis: {
-            type: 'category',
-            splitLine: {
-                show: false
-            },
-            data: date
-        },
-        yAxis: {
-            type: 'value',
-            boundaryGap: [0, '100%'],
-            splitLine: {
-                show: false
-            }
-        },
-        series: [{
-            name: 'RPS',
-            type: 'line',
-            showSymbol: false,
-            hoverAnimation: false,
-            data: rps_data
-        }]
-    });
-
-    var avt_chart = echarts.init(avt_element.get(0), 'vintage');
-    avt_chart.setOption({
-        title: {
-            text: stat.name + ': average response time(ms)'
-        },
-        tooltip: {
-            trigger: 'axis',
-            formatter: function (params) {
-                param = params[0];
-                return param.name + ':' + param.value + 'ms';
-            },
-            axisPointer: {
-                animation: true
-            }
-        },
-        xAxis: {
-            type: 'category',
-            splitLine: {
-                show: false
-            },
-            data: date
-        },
-        yAxis: {
-            type: 'value',
-            boundaryGap: [0, '100%'],
-            splitLine: {
-                show: false
-            }
-        },
-        series: [{
-            name: 'AVT',
-            type: 'line',
-            showSymbol: false,
-            hoverAnimation: false,
-            data: avt_data
-        }]
-    });
-
-    charts[stat.name] = {};
-    charts[stat.name]["date"] = date;
-    charts[stat.name]["rps_chart"] = rps_chart;
-    charts[stat.name]["rps_data"] = rps_data;
-    charts[stat.name]["avt_chart"] = avt_chart;
-    charts[stat.name]["avt_data"] = avt_data;
-
-}
-
-function updateCharts(stats) {
-
-    $.each(stats, function(index, stat){
-        if (stat.name in charts) {
-            now = new Date().toLocaleTimeString();
-            date = charts[stat.name]["date"];
-            date.push(now);
-
-            rps_chart = charts[stat.name]["rps_chart"];
-            rps_data = charts[stat.name]["rps_data"];
-            rps_data.push({
-                "name": now,
-                "value": Math.round(stat.current_rps*100)/100
-            });
-            rps_chart.setOption({
-                xAxis: {
-                    data: date
-                },
-                series: [{
-                    data: rps_data
-                }]
-            });
-
-            avt_chart = charts[stat.name]["avt_chart"];
-            avt_data = charts[stat.name]["avt_data"];
-            avt_data.push({
-                "name": now,
-                "value": Math.round(stat.avg_response_time)
-            });
-
-            avt_chart.setOption({
-                xAxis: {
-                    data: date
-                },
-                series: [{
-                    data: avt_data
-                }]
-            });
-        } else {
-            initChart(stat);
-        }
-    });
-
-}
-
+// init charts
+var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS"], "reqs/s");
+var responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", ["Average Response Time"], "ms");
+var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 
 function updateStats() {
     $.get('/stats/requests', function (data) {
@@ -290,7 +145,12 @@ function updateStats() {
         $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
 
         if (report.state !== "stopped"){
-            updateCharts(sortedStats);
+            // get total stats row
+            var total = report.stats[report.stats.length-1];
+            // update charts
+            rpsChart.addValue([total.current_rps]);
+            responseTimeChart.addValue([total.avg_response_time]);
+            usersChart.addValue([report.user_count]);
         }
 
         setTimeout(updateStats, 2000);

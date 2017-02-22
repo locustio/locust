@@ -322,6 +322,25 @@ a:hover {
     white-space: pre;
 }
 
+#charts {
+    width: 100%;
+}
+#charts .chart {
+    height: 350px;
+    margin-bottom: 30px;
+    box-sizing: border-box;
+    border: 1px solid #11271e;
+    border-radius: 3px;
+}
+#charts .note {
+    color: #b3c3bc;
+    margin-bottom: 30px;
+    border-radius: 3px;
+    background: #132b21;
+    padding: 10px;
+    display: inline-block;
+}
+
 em {
     width: 100%;
     color: white;

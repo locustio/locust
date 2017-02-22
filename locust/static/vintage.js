@@ -19,12 +19,17 @@
         log('ECharts is not Loaded');
         return;
     }
-    var colorPalette = ['#d87c7c','#919e8b', '#d7ab82',  '#6e7074','#61a0a8','#efa18d', '#787464', '#cc7e63', '#724e58', '#4b565b'];
+    var colorPalette = ['#00ca5a','#919e8b', '#d7ab82',  '#6e7074','#61a0a8','#efa18d', '#787464', '#cc7e63', '#724e58', '#4b565b'];
     echarts.registerTheme('vintage', {
         color: colorPalette,
-        backgroundColor: '#fef8ef',
+        backgroundColor: '#132b21',
+        xAxis: {lineColor: "#f00"},
         graph: {
-            color: colorPalette
-        }
+            color: colorPalette,
+        },
+        textStyle: {color:"#b3c3bc"},
+        title: {
+            textStyle:{color:"#b3c3bc"}
+        },
     });
 }));
