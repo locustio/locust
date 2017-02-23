@@ -1,4 +1,3 @@
-import unittest
 import six
 
 from locust.core import HttpLocust, Locust, TaskSet, task, events

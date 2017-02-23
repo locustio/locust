@@ -1,7 +1,6 @@
 from requests.exceptions import (RequestException, MissingSchema,
         InvalidSchema, InvalidURL)
 
-import gevent
 from locust.clients import HttpSession
 from locust.stats import global_stats
 from .testcases import WebserverTestCase
