@@ -402,7 +402,7 @@ class TestWebLocustClass(WebserverTestCase):
         self.assertEqual(401, unauthorized.client.get("/basic_auth").status_code)
     
     def test_log_request_name_argument(self):
-        from locust.stats import RequestStats, global_stats
+        from locust.stats import global_stats
         self.response = ""
         
         class MyLocust(HttpLocust):
