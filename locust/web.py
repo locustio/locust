@@ -35,13 +35,21 @@ def index():
         slave_count = runners.locust_runner.slave_count
     else:
         slave_count = 0
+
+    if runners.locust_runner.host:
+        host = runners.locust_runner.host
+    elif len(runners.locust_runner.locust_classes) > 0:
+        host = runners.locust_runner.locust_classes[0].host
+    else:
+        host = None
     
     return render_template("index.html",
         state=runners.locust_runner.state,
         is_distributed=is_distributed,
         slave_count=slave_count,
         user_count=runners.locust_runner.user_count,
-        version=version
+        version=version,
+        host=host
     )
 
 @app.route('/swarm', methods=["POST"])
