@@ -69,7 +69,7 @@ Another way we could declare tasks, which is usually more convenient, is to use 
 The Locust class (as well as HttpLocust, since it's a subclass) also allows one to specify minimum 
 and maximum wait time—per simulated user—between the execution of tasks (*min_wait* and *max_wait*) 
 as well as other user behaviours.
-
+Also, here can one set the host URL (*host = http://example.com*) so, there will be no need to provide it every time as a command-line argument (*--host=http://example.com*). 
 
 Start Locust
 ============
