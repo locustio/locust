@@ -520,7 +520,7 @@ def store_stats(filename, stats):
             # need to add try - except block if one of the value is None
             try:
                 f.write("%s,%s,%d,%d,%d,%d,%d\n" % (r.name,r.method,r.num_requests,r.num_failures,r.min_response_time,r.max_response_time,r.avg_response_time));
-            except:
+            except TypeError:
                 pass
 
 def stats_printer():
