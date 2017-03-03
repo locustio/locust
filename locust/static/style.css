@@ -299,6 +299,17 @@ a:hover {
 .status tr.total td {
     font-weight: bold;
 }
+.status td {
+    max-width: 450px;
+    overflow: hidden;
+    whitespace: no-wrap;
+    text-overflow: ellipsis;
+}
+@media (max-width: 1100px) {
+    .status td {
+        max-width: 350px;
+    }
+}
 
 #errors td, #errors th {
     text-align: left;
