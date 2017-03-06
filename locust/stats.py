@@ -151,13 +151,6 @@ class StatsEntry(object):
         self.stats.last_request_timestamp = t
 
     def _log_response_time(self, response_time):
-        self.total_response_time += response_time
-
-        if self.min_response_time is None:
-            self.min_response_time = response_time
-
-        self.min_response_time = min(self.min_response_time, response_time)
-        self.max_response_time = max(self.max_response_time, response_time)
 
         # to avoid to much data that has to be transfered to the master node when
         # running in distributed mode, we save the response time rounded in a dict
@@ -170,6 +163,14 @@ class StatsEntry(object):
             rounded_response_time = int(round(response_time, -2))
         else:
             rounded_response_time = int(round(response_time, -3))
+
+        self.total_response_time += rounded_response_time
+
+        if self.min_response_time is None:
+            self.min_response_time = rounded_response_time
+
+        self.min_response_time = min(self.min_response_time, rounded_response_time)
+        self.max_response_time = max(self.max_response_time, rounded_response_time)
 
         # increase request count for the rounded key in response time dict
         self.response_times.setdefault(rounded_response_time, 0)

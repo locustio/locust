@@ -41,6 +41,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=["gevent>=1.1.2", "flask>=0.10.1", "requests>=2.9.1", "msgpack-python>=0.4.2", "six>=1.10.0", "pyzmq==15.2.0"],
+    test_suite="locust.test",
     tests_require=['unittest2', 'mock'],
     entry_points={
         'console_scripts': [

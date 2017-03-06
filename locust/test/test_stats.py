@@ -52,7 +52,7 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(self.s.num_failures, 3)
 
     def test_avg(self):
-        self.assertEqual(self.s.avg_response_time, 187.71428571428571428571428571429)
+        self.assertEqual(self.s.avg_response_time, 189.0)
 
     def test_reset(self):
         self.s.reset()
@@ -63,13 +63,13 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(self.s.total_rps, 2)
         self.assertEqual(self.s.num_requests, 2)
         self.assertEqual(self.s.num_failures, 1)
-        self.assertEqual(self.s.avg_response_time, 420.5)
+        self.assertEqual(self.s.avg_response_time, 422.5)
         self.assertEqual(self.s.median_response_time, 85)
     
     def test_reset_min_response_time(self):
         self.s.reset()
         self.s.log(756, 0)
-        self.assertEqual(756, self.s.min_response_time)
+        self.assertEqual(760, self.s.min_response_time)
 
     def test_aggregation(self):
         s1 = StatsEntry(self.stats, "aggregate me!", "GET")
@@ -97,6 +97,34 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(s.num_failures, 3)
         self.assertEqual(s.median_response_time, 38)
         self.assertEqual(s.avg_response_time, 43.2)
+
+    def test_aggregation_with_rounding(self):
+        s1 = StatsEntry(self.stats, "round me!", "GET")
+        s1.log(122, 0)    # (rounded 120) min
+        s1.log(992, 0)    # (rounded 990) max
+        s1.log(142, 0)    # (rounded 140)
+        s1.log(552, 0)    # (rounded 550)
+        s1.log(557, 0)    # (rounded 560)
+        s1.log(387, 0)    # (rounded 390)
+        s1.log(557, 0)    # (rounded 560)
+        s1.log(977, 0)    # (rounded 980)
+
+        self.assertEqual(s1.num_requests, 8)
+        self.assertEqual(s1.median_response_time, 550)
+        self.assertEqual(s1.avg_response_time, 536.25)
+        self.assertEqual(s1.min_response_time, 120)
+        self.assertEqual(s1.max_response_time, 990)
+
+    def test_percentile_rounded(self):
+        s1 = StatsEntry(self.stats, "rounding down!", "GET")
+        s1.log(122, 0)    # (rounded 120) min
+        actual_percentile = s1.percentile()
+        self.assertEqual(actual_percentile, " GET rounding down!                                                  1    120    120    120    120    120    120    120    120    120")
+
+        s2 = StatsEntry(self.stats, "rounding up!", "GET")
+        s2.log(127, 0)    # (rounded 130) min
+        actual_percentile = s2.percentile()
+        self.assertEqual(actual_percentile, " GET rounding up!                                                    1    130    130    130    130    130    130    130    130    130")
     
     def test_error_grouping(self):
         # reset stats
