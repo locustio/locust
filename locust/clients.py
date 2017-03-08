@@ -1,6 +1,5 @@
 import re
 import time
-from datetime import timedelta
 from six.moves.urllib.parse import urlparse, urlunparse
 import six
 

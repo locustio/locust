@@ -8,7 +8,6 @@ monkey.patch_all(thread=False)
 from time import time
 import sys
 import random
-import warnings
 import traceback
 import logging
 

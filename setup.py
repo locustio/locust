@@ -1,7 +1,7 @@
 # encoding: utf-8
 
-from setuptools import setup, find_packages, Command
-import sys, os, re, ast
+from setuptools import setup, find_packages
+import os, re, ast
 
 
 # parse version from locust/__init__.py

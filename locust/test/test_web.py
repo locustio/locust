@@ -7,7 +7,6 @@ import traceback
 from six.moves import StringIO
 
 import requests
-import mock
 import gevent
 from gevent import wsgi
 
