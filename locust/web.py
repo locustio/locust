@@ -160,17 +160,8 @@ def request_stats():
     if stats:
         report["total_rps"] = stats[len(stats)-1]["current_rps"]
         report["fail_ratio"] = runners.locust_runner.stats.total.fail_ratio
-        
-        # since generating a total response times dict with all response times from all
-        # urls is slow, we make a new total response time dict which will consist of one
-        # entry per url with the median response time as key and the number of requests as
-        # value
-        response_times = defaultdict(int) # used for calculating total median
-        for i in xrange(len(stats)-1):
-            response_times[stats[i]["median_response_time"]] += stats[i]["num_requests"]
-        
-        # calculate total median
-        stats[len(stats)-1]["median_response_time"] = median_from_dict(stats[len(stats)-1]["num_requests"], response_times)
+        report["current_response_time_percentile_95"] = runners.locust_runner.stats.total.get_current_response_time_percentile(0.95)
+        report["current_response_time_percentile_50"] = runners.locust_runner.stats.total.get_current_response_time_percentile(0.5)
     
     is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
     if is_distributed:
