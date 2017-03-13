@@ -10,7 +10,7 @@ from locust.runners import LocalLocustRunner, MasterLocustRunner
 from locust.core import Locust, task, TaskSet
 from locust.exception import LocustError
 from locust.rpc import Message
-from locust.stats import global_stats
+from locust.stats import RequestStats, global_stats
 from locust.main import parse_options
 from locust.test.testcases import LocustTestCase
 from locust import events
