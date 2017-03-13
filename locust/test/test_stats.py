@@ -4,7 +4,7 @@ import time
 from six.moves import xrange
 
 from .testcases import WebserverTestCase
-from locust.stats import RequestStats, StatsEntry, global_stats
+from locust.stats import RequestStats, StatsEntry, CachedResponseTimes, global_stats
 from locust.core import HttpLocust, TaskSet, task
 from locust.inspectlocust import get_task_ratio_dict
 from locust.rpc.protocol import Message
@@ -138,6 +138,59 @@ class TestRequestStats(unittest.TestCase):
         u1 = StatsEntry.unserialize(data)
         
         self.assertEqual(20, u1.median_response_time)
+    
+    
+class TestStatsEntryResponseTimesCache(unittest.TestCase):
+    def setUp(self, *args, **kwargs):
+        super(TestStatsEntryResponseTimesCache, self).setUp(*args, **kwargs)
+        self.stats = RequestStats()
+    
+    def test_response_times_cached(self):
+        s = StatsEntry(self.stats, "/", "GET", use_response_times_cache=True)
+        s.log(11, 1337)
+        self.assertEqual(0, len(s.response_times_cache))
+        s.last_request_timestamp -= 1
+        s.log(666, 1337)
+        self.assertEqual(1, len(s.response_times_cache))
+        self.assertEqual(CachedResponseTimes(
+            response_times={11:1}, 
+            num_requests=1,
+        ), s.response_times_cache[s.last_request_timestamp-1])
+    
+    def test_response_times_not_cached_if_not_enabled(self):
+        s = StatsEntry(self.stats, "/", "GET")
+        s.log(11, 1337)
+        self.assertEqual(None, s.response_times_cache)
+        s.last_request_timestamp -= 1
+        s.log(666, 1337)
+        self.assertEqual(None, s.response_times_cache)
+    
+    def test_latest_total_response_times_pruned(self):
+        """
+        Check that RequestStats.latest_total_response_times are pruned when execeeding 20 entries
+        """
+        s = StatsEntry(self.stats, "/", "GET", use_response_times_cache=True)
+        t = int(time.time())
+        for i in reversed(range(2, 30)):
+            s.response_times_cache[t-i] = CachedResponseTimes(response_times={}, num_requests=0)
+        self.assertEqual(28, len(s.response_times_cache))
+        s.log(17, 1337)
+        s.last_request_timestamp -= 1
+        s.log(1, 1)
+        self.assertEqual(20, len(s.response_times_cache))
+        self.assertEqual(
+            CachedResponseTimes(response_times={17:1}, num_requests=1),
+            s.response_times_cache.popitem(last=True)[1],
+        )
+    
+    def test_get_current_response_time_percentile(self):
+        s = StatsEntry(self.stats, "/", "GET", use_response_times_cache=True)
+        t = int(time.time())
+        s.response_times_cache[t-10] = CachedResponseTimes(
+            response_times={i:1 for i in xrange(100)},
+            num_requests=100
+        )
+        self.assertEqual(95, s.get_current_response_time_percentile(0.95))
 
 
 class TestRequestStatsWithWebserver(WebserverTestCase):

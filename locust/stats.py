@@ -2,6 +2,8 @@ import time
 import gevent
 import hashlib
 import six
+from collections import OrderedDict, namedtuple
+from copy import copy
 from six.moves import xrange
 
 from . import events
@@ -10,15 +12,38 @@ from .log import console_logger
 
 STATS_NAME_WIDTH = 60
 
+
+CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_requests"])
+
+
 class RequestStatsAdditionError(Exception):
     pass
+
+
+def calculate_response_time_percentile(response_times, num_requests, percent):
+    """
+    Get the response time that a certain number of percent of the requests
+    finished within. Arguments:
+    
+    response_times: A StatsEntry.response_times dict
+    num_requests: Number of request made (could be derived from response_times, 
+                  but we save some CPU cycles by using the value which we already store)
+    percent: The percentile we want to calculate. Specified in range: 0.0 - 1.0
+    """
+    num_of_request = int((num_requests * percent))
+
+    processed_count = 0
+    for response_time in sorted(six.iterkeys(response_times), reverse=True):
+        processed_count += response_times[response_time]
+        if((num_requests - processed_count) <= num_of_request):
+            return response_time
 
 
 class RequestStats(object):
     def __init__(self):
         self.entries = {}
         self.errors = {}
-        self.total = StatsEntry(self, "Total", None)
+        self.total = StatsEntry(self, "Total", None, use_response_times_cache=True)
         self.max_requests = None
         self.start_time = None
     
@@ -73,7 +98,7 @@ class RequestStats(object):
         """
         Remove all stats entries and errors
         """
-        self.total = StatsEntry(self, "Total", None)
+        self.total = StatsEntry(self, "Total", None, use_response_times_cache=True)
         self.entries = {}
         self.errors = {}
         self.max_requests = None
@@ -126,6 +151,19 @@ class StatsEntry(object):
     This dict is used to calculate the median and percentile response times.
     """
     
+    use_response_times_cache = False
+    """
+    If set to True, the copy of the response_time dict will be stored in response_times_cache 
+    every second, and kept for 20 seconds. We can use this dict to calculate the *current* 
+    median response time, as well as other response time percentiles.
+    """
+    
+    response_times_cache = None
+    """
+    If use_response_times_cache is set to True, this will be a {timestamp => CachedResponseTimes()} 
+    OrderedDict that holds a copy of the response_times dict for each of the last 20 seconds.
+    """
+    
     total_content_length = None
     """ The sum of the content length of all the requests for this entry """
     
@@ -135,10 +173,11 @@ class StatsEntry(object):
     last_request_timestamp = None
     """ Time of the last request for this entry """
     
-    def __init__(self, stats, name, method):
+    def __init__(self, stats, name, method, use_response_times_cache=False):
         self.stats = stats
         self.name = name
         self.method = method
+        self.use_response_times_cache = use_response_times_cache
         self.reset()
     
     def reset(self):
@@ -147,6 +186,8 @@ class StatsEntry(object):
         self.num_failures = 0
         self.total_response_time = 0
         self.response_times = {}
+        if self.use_response_times_cache:
+            self.response_times_cache = OrderedDict()
         self.min_response_time = None
         self.max_response_time = 0
         self.last_request_timestamp = int(time.time())
@@ -154,16 +195,21 @@ class StatsEntry(object):
         self.total_content_length = 0
     
     def log(self, response_time, content_length):
+        # get the time
+        t = int(time.time())
+        
+        if self.use_response_times_cache and self.last_request_timestamp and t > self.last_request_timestamp:
+            # see if we shall make a copy of the respone_times dict and store in the cache
+            self._cache_response_times(t-1)
+        
         self.num_requests += 1
-
-        self._log_time_of_request()
+        self._log_time_of_request(t)
         self._log_response_time(response_time)
 
         # increase total content-length
         self.total_content_length += content_length
 
-    def _log_time_of_request(self):
-        t = int(time.time())
+    def _log_time_of_request(self, t):
         self.num_reqs_per_sec[t] = self.num_reqs_per_sec.setdefault(t, 0) + 1
         self.last_request_timestamp = t
 
@@ -328,14 +374,32 @@ class StatsEntry(object):
         
         Percent specified in range: 0.0 - 1.0
         """
-        num_of_request = int((self.num_requests * percent))
-
-        processed_count = 0
-        for response_time in sorted(six.iterkeys(self.response_times), reverse=True):
-            processed_count += self.response_times[response_time]
-            if((self.num_requests - processed_count) <= num_of_request):
-                return response_time
-
+        return calculate_response_time_percentile(self.response_times, self.num_requests, percent)
+    
+    def get_current_response_time_percentile(self, percent):
+        """
+        Calculate the *current* response time for a certain percentile. We use a sliding 
+        window of (approximately) the last 10 seconds when calculating this.
+        """
+        if not self.use_response_times_cache:
+            raise ValueError("StatsEntry.use_response_times_cache must be set to True if we should be able to calculate the _current_ response time percentile")
+        # First, we want to determine which of the cached response_times dicts we should 
+        # use to get response_times for approximately the last 10 seconds. 
+        t = int(time.time())
+        # Since we can't be sure that the cache contains an entry for every second. 
+        # We'll construct a list of timestamps which we consider acceptable keys to be used 
+        # when trying to fetch the cached response_times. We construct this list in such a way 
+        # that it's ordered by preference by starting to add t-10, then t-11
+        acceptable_timestamps = []
+        for i in xrange(9):
+            acceptable_timestamps.append(t-10-i)
+            acceptable_timestamps.append(t-10+i)
+        
+        for ts in acceptable_timestamps:
+            if ts in self.response_times_cache:
+                cached = self.response_times_cache[ts]
+                return calculate_response_time_percentile(cached.response_times, cached.num_requests, percent)
+    
     def percentile(self, tpl=" %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
         if not self.num_requests:
             raise ValueError("Can't calculate percentile on url with no successful requests")
@@ -353,6 +417,17 @@ class StatsEntry(object):
             self.get_response_time_percentile(0.99),
             self.max_response_time
         )
+    
+    def _cache_response_times(self, t):
+        self.response_times_cache[t] = CachedResponseTimes(
+            response_times=copy(self.response_times),
+            num_requests=self.num_requests,
+        )
+        if len(self.response_times_cache) > 20:
+            # only keep the latest 20 response_times dicts
+            for i in xrange(len(self.response_times_cache) - 20):
+                self.response_times_cache.popitem(last=False)
+
 
 class StatsError(object):
     def __init__(self, method, name, error, occurences=0):
