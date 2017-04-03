@@ -7,6 +7,7 @@
 
 * Website: <a href="http://locust.io">locust.io</a>
 * Documentation: <a href="http://docs.locust.io">docs.locust.io</a>
+* Support/Questions: [Slack signup](https://slack.locust.io/)
 
 ## Description
 
