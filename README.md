@@ -1,12 +1,12 @@
 # Locust
 
 [![Build Status](https://secure.travis-ci.org/locustio/locust.png)](http://travis-ci.org/locustio/locust)
-[![Gitter Chat](https://badges.gitter.im/locustio/locust.png)](https://gitter.im/locustio/locust)
 
 ## Links
 
 * Website: <a href="http://locust.io">locust.io</a>
 * Documentation: <a href="http://docs.locust.io">docs.locust.io</a>
+* Support/Questions: [Slack signup](https://slack.locust.io/)
 
 ## Description
 
