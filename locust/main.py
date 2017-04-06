@@ -419,6 +419,11 @@ def main():
             main_greenlet = runners.locust_runner.greenlet
     elif options.master:
         runners.locust_runner = MasterLocustRunner(locust_classes, options)
+        from monitor import Monitor
+        monitor_log_file = os.environ["MONITOR_LOG_FILE"]
+        monitor_sleep = float(os.environ["MONITOR_SLEEP"])
+        Monitor(monitor_log_file, monitor_sleep).start(runners.locust_runner)
+        
     elif options.slave:
         try:
             runners.locust_runner = SlaveLocustRunner(locust_classes, options)
