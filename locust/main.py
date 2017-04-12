@@ -8,6 +8,7 @@ import signal
 import inspect
 import logging
 import socket
+import time
 from optparse import OptionParser
 
 from . import web
@@ -113,6 +114,15 @@ def parse_options():
         dest='master_bind_port',
         default=5557,
         help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557. Note that Locust will also use this port + 1, so by default the master node will bind to 5557 and 5558."
+    )
+
+    parser.add_option(
+        '--expect-slaves',
+        action='store',
+        type='int',
+        dest='expect_slaves',
+        default=1,
+        help="How many slaves master should expect to connect before starting the test (only when --no-web used)."
     )
 
     # if we should print stats in the console
@@ -400,11 +410,6 @@ def main():
         }
         console_logger.info(dumps(task_data))
         sys.exit(0)
-    
-    # if --master is set, make sure --no-web isn't set
-    if options.master and options.no_web:
-        logger.error("Locust can not run distributed with the web interface disabled (do not use --no-web and --master together)")
-        sys.exit(0)
 
     if not options.no_web and not options.slave:
         # spawn web greenlet
@@ -419,6 +424,14 @@ def main():
             main_greenlet = runners.locust_runner.greenlet
     elif options.master:
         runners.locust_runner = MasterLocustRunner(locust_classes, options)
+        if options.no_web:
+            while len(runners.locust_runner.clients.ready)<options.expect_slaves:
+                logging.info("Waiting for slaves to be ready, %s of %s connected",
+                             len(runners.locust_runner.clients.ready), options.expect_slaves)
+                time.sleep(1)
+
+            runners.locust_runner.start_hatching(options.num_clients, options.hatch_rate)
+            main_greenlet = runners.locust_runner.greenlet
     elif options.slave:
         try:
             runners.locust_runner = SlaveLocustRunner(locust_classes, options)
