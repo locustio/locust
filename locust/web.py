@@ -56,17 +56,22 @@ def index():
 def swarm():
     assert request.method == "POST"
 
-    locust_count = int(request.form["locust_count"])
-    hatch_rate = float(request.form["hatch_rate"])
-    runners.locust_runner.start_hatching(locust_count, hatch_rate)
-    response = make_response(json.dumps({'success':True, 'message': 'Swarming started'}))
+    try:
+        locust_count = int(request.form["locust_count"])
+        hatch_rate = float(request.form["hatch_rate"])
+        runners.locust_runner.start_hatching(locust_count, hatch_rate)
+        data = {'success': True, 'message': 'Swarming started'}
+    except ValueError:
+        data = {'success': False, 'message': 'Invalid swarm settings'}
+
+    response = make_response(json.dumps(data))
     response.headers["Content-type"] = "application/json"
     return response
 
 @app.route('/stop')
 def stop():
     runners.locust_runner.stop()
-    response = make_response(json.dumps({'success':True, 'message': 'Test stopped'}))
+    response = make_response(json.dumps({'success': True, 'message': 'Test stopped'}))
     response.headers["Content-type"] = "application/json"
     return response
 

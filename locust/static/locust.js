@@ -63,6 +63,8 @@ $('#swarm_form').submit(function(event) {
                 $("a.new_test").fadeOut();
                 $("a.edit_test").fadeIn();
                 $(".user_count").fadeIn();
+            } else {
+                alert(response.message);
             }
         }
     );
@@ -75,6 +77,8 @@ $('#edit_form').submit(function(event) {
             if (response.success) {
                 $("body").attr("class", "hatching");
                 $("#edit").fadeOut();
+            } else {
+                alert(response.message);
             }
         }
     );
