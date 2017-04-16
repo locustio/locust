@@ -96,6 +96,7 @@ class LocustRunner(object):
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
             self.state = STATE_HATCHING
             self.num_clients = spawn_count
+            events.hatch_starting.fire(client_types=bucket)
         else:
             self.num_clients += spawn_count
 

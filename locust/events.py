@@ -92,14 +92,23 @@ hatch_complete = EventHook()
 """
 *hatch_complete* is fired when all locust users has been spawned.
 
-Event is fire with the following arguments:
+Event is fired with the following arguments:
 
-* *user_count*: Number of users that was hatched
+* *user_count*: Number of users that were hatched
+"""
+
+hatch_starting = EventHook()
+"""
+*hatch_starting* is fired before any locust users have been spawned.
+
+Event is fired with the following arguments:
+
+* *client_types*: Dictionary of Locust classes that will be created once hatching starts
 """
 
 quitting = EventHook()
 """
-*quitting* is fired when the locust process in exiting
+*quitting* is fired when the locust process is exiting
 """
 
 master_start_hatching = EventHook()
