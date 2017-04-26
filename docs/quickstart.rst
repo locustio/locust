@@ -105,7 +105,7 @@ host defaults to 127.0.0.1)::
 
     To see all available options type
 
-        locust --help
+        ``locust --help``
 
 
 Open up Locust's web interface
