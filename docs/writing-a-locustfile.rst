@@ -50,6 +50,8 @@ You can run two locusts from the same file like so::
 
     locust -f locust_file.py WebUserLocust MobileUserLocust
 
+By default, all locusts in the locustfile with a *task_set* are used.
+
 If you wish to make one of these locusts execute more often you can set a weight attribute on those
 classes. Say for example, web users are three times more likely than mobile users::
 
@@ -61,6 +63,9 @@ classes. Say for example, web users are three times more likely than mobile user
         weight = 1
         ....
 
+In this case, if you were to hatch 100 locusts using the UI and assuming each of the above had min/max
+wait of 1s, they would combine to produce 100 requests per second, with 75rps from *WebUserLocust* and
+25rps from *MobileUserLocust*.
 
 The *host* attribute
 --------------------
