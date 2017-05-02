@@ -9,7 +9,7 @@ from .exception import StopLocust
 from .log import console_logger
 
 STATS_NAME_WIDTH = 60
-
+ 
 class RequestStatsAdditionError(Exception):
     pass
 
@@ -512,8 +512,26 @@ def print_error_report():
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     console_logger.info("")
 
+def store_stats(filename, stats):
+    with open(filename, "w") as f:
+        f.write("path,method,num_requests,num_failures,min_response_time,max_response_time,avg_response_time\n")
+        for k in stats:
+            r = stats[k]
+            # need to add try - except block if one of the value is None
+            try:
+                f.write("%s,%s,%d,%d,%d,%d,%d\n" % (r.name,r.method,r.num_requests,r.num_failures,r.min_response_time,r.max_response_time,r.avg_response_time));
+            except:
+                pass
+
 def stats_printer():
     from .runners import locust_runner
     while True:
         print_stats(locust_runner.request_stats)
         gevent.sleep(2)
+
+def stats_persist(filename):
+    from runners import locust_runner
+    while True:
+        store_stats(filename, locust_runner.request_stats);
+        gevent.sleep(2)
+        

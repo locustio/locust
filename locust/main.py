@@ -246,6 +246,16 @@ def parse_options():
         help="show program's version number and exit"
     )
 
+    # A file that contains the current request stats.
+    parser.add_option(
+        '--statsfile',
+        action='store',
+        type='str',
+        dest='statsfile',
+        default=None,
+        help="Store current request stats to this file in CSV format.",
+    )
+
     # Finalize
     # Return three-tuple of parser + the output from parse_args (opt obj, args)
     opts, args = parser.parse_args()
@@ -443,6 +453,9 @@ def main():
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
+
+    if options.statsfile:
+        gevent.spawn(stats_persist, options.statsfile)
     
     def shutdown(code=0):
         """
@@ -475,3 +488,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
