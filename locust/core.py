@@ -124,9 +124,10 @@ class HttpLocust(Locust):
     The client support cookies, and therefore keeps the session between HTTP requests.
     """
     
-    def __init__(self):
+    def __init__(self, host=None):
         super(HttpLocust, self).__init__()
-        if self.host is None:
+        self.host = host
+        if not self.host:
             raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
         
         self.client = HttpSession(base_url=self.host)
