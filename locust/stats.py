@@ -387,7 +387,7 @@ class StatsError(object):
         self.occurences += 1
 
     def to_name(self):
-        return "%s %s: %r" % (self.method, 
+        return "%s %s: %r" % (self.method,
             self.name, repr(self.error))
 
     def to_dict(self):
@@ -401,9 +401,9 @@ class StatsError(object):
     @classmethod
     def from_dict(cls, data):
         return cls(
-            data["method"], 
-            data["name"], 
-            data["error"], 
+            data["method"],
+            data["name"],
+            data["error"],
             data["occurences"]
         )
 
