@@ -23,6 +23,8 @@ class StdOutWrapper(object):
     Wrapper for stdout
     """
     def write(self, s):
+        if s == None or s.strip() == '':
+            return
         stdout_logger.info(s.strip())
 
     def flush(self, *args, **kwargs):
@@ -34,6 +36,8 @@ class StdErrWrapper(object):
     Wrapper for stderr
     """
     def write(self, s):
+        if s == None or s.strip() == '':
+            return
         stderr_logger.error(s.strip())
 
     def flush(self, *args, **kwargs):
