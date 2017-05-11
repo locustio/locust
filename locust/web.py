@@ -145,7 +145,7 @@ def distribution_stats_csv():
 @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
 def request_stats():
     stats = []
-    for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total")]):
+    for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
         stats.append({
             "method": s.method,
             "name": s.name,
