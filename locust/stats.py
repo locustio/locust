@@ -95,6 +95,9 @@ class StatsEntry(object):
     
     num_reqs_per_sec = None
     """ A {second => request_count} dict that holds the number of requests made per second """
+
+    num_fail_per_sec = None
+    """ A (second => failure_count) dict that hold the number of failures per second """
     
     response_times = None
     """
@@ -132,6 +135,7 @@ class StatsEntry(object):
         self.max_response_time = 0
         self.last_request_timestamp = int(time.time())
         self.num_reqs_per_sec = {}
+        self.num_fail_per_sec = {}
         self.total_content_length = 0
     
     def log(self, response_time, content_length):
@@ -175,7 +179,7 @@ class StatsEntry(object):
         self.response_times.setdefault(rounded_response_time, 0)
         self.response_times[rounded_response_time] += 1
 
-    def log_error(self, error):
+    def log_error(self, response_time, error):
         self.num_failures += 1
         self.stats.num_failures += 1
         key = StatsError.create_key(self.method, self.name, error)
@@ -183,6 +187,8 @@ class StatsEntry(object):
         if not entry:
             entry = StatsError(self.method, self.name, error)
             self.stats.errors[key] = entry
+        t = int(time.time())
+        self.num_fail_per_sec[t] = self.num_fail_per_sec.setdefault(t, 0) + 1
 
         entry.occured()
 
@@ -220,11 +226,22 @@ class StatsEntry(object):
         return avg(reqs)
 
     @property
+    def current_fps(self):
+        if self.stats.last_request_timestamp is None:
+            return 0
+        slice_start_time = max(self.stats.last_request_timestamp - 12, int(self.stats.start_time or 0))
+
+        reqs = [self.num_fail_per_sec.get(t, 0) for t in range(slice_start_time, self.stats.last_request_timestamp-2)]
+        return avg(reqs)
+
+
+    @property
     def total_rps(self):
         if not self.stats.last_request_timestamp or not self.stats.start_time:
             return 0.0
 
         return self.num_requests / max(self.stats.last_request_timestamp - self.stats.start_time, 1)
+
 
     @property
     def avg_content_length(self):
@@ -235,7 +252,7 @@ class StatsEntry(object):
     
     def extend(self, other, full_request_history=False):
         """
-        Extend the data fro the current StatsEntry with the stats from another
+        Extend the data from the current StatsEntry with the stats from another
         StatsEntry instance. 
         
         If full_request_history is False, we'll only care to add the data from 
@@ -259,11 +276,15 @@ class StatsEntry(object):
                 self.response_times[key] = self.response_times.get(key, 0) + other.response_times[key]
             for key in other.num_reqs_per_sec:
                 self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) +  other.num_reqs_per_sec[key]
+            for key in other.num_fail_per_sec:
+                self.num_fail_per_sec[key] = self.num_fail_per_sec.get(key, 0) +  other.num_fail_per_sec[key]
         else:
             # still add the number of reqs per seconds the last 20 seconds
             for i in xrange(other.last_request_timestamp-20, other.last_request_timestamp+1):
                 if i in other.num_reqs_per_sec:
                     self.num_reqs_per_sec[i] = self.num_reqs_per_sec.get(i, 0) + other.num_reqs_per_sec[i]
+                if i in other.num_fail_per_sec:
+                    self.num_fail_per_sec[i] = self.num_fail_per_sec.get(i, 0) + other.num_fail_per_sec[i]
     
     def serialize(self):
         return {
@@ -279,6 +300,7 @@ class StatsEntry(object):
             "total_content_length": self.total_content_length,
             "response_times": self.response_times,
             "num_reqs_per_sec": self.num_reqs_per_sec,
+            "num_fail_per_sec": self.num_fail_per_sec,
         }
     
     @classmethod
@@ -295,6 +317,7 @@ class StatsEntry(object):
             "total_content_length",
             "response_times",
             "num_reqs_per_sec",
+            "num_fail_per_sec",
         ]:
             setattr(obj, key, data[key])
         return obj
@@ -321,7 +344,7 @@ class StatsEntry(object):
             self.min_response_time or 0,
             self.max_response_time,
             self.median_response_time or 0,
-            self.current_rps or 0
+            self.current_rps or 0,
         )
     
     def get_response_time_percentile(self, percent):
@@ -434,7 +457,7 @@ def on_request_success(request_type, name, response_time, response_length):
         raise StopLocust("Maximum number of requests reached")
 
 def on_request_failure(request_type, name, response_time, exception):
-    global_stats.get(name, request_type).log_error(exception)
+    global_stats.get(name, request_type).log_error(response_time, exception)
     if global_stats.max_requests is not None and (global_stats.num_requests + global_stats.num_failures) >= global_stats.max_requests:
         raise StopLocust("Maximum number of requests reached")
 
