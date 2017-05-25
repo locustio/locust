@@ -19,7 +19,7 @@ from .exception import LocustError, InterruptTaskSet, RescheduleTask, Reschedule
 logger = logging.getLogger(__name__)
 
 
-def task(weight=1):
+def task(weight=1, order=-sys.maxint - 1):
     """
     Used as a convenience decorator to be able to declare tasks for a TaskSet 
     inline in the class. Example::
@@ -33,9 +33,9 @@ def task(weight=1):
             def create_thread(self):
                 pass
     """
-    
+
     def decorator_func(func):
-        func.locust_task_weight = weight
+        func.locust_task_info = {"weight": weight, "order": order}
         return func
     
     """
@@ -158,12 +158,18 @@ class TaskSetMeta(type):
                     new_tasks.append(task)
         
         for item in six.itervalues(classDict):
-            if hasattr(item, "locust_task_weight"):
-                for i in xrange(0, item.locust_task_weight):
+            if hasattr(item, "locust_task_info"):
+                for i in xrange(0, item.locust_task_info["weight"]):
                     new_tasks.append(item)
-        
+
+        if "random_execute" not in classDict:
+            classDict["random_execute"] = True
+        elif not classDict['random_execute']:
+            new_tasks = sorted(
+                new_tasks, cmp=lambda left, right: cmp(left.locust_task_info["order"], right.locust_task_info["order"]))
+
         classDict["tasks"] = new_tasks
-        
+
         return type.__new__(mcs, classname, bases, classDict)
 
 @six.add_metaclass(TaskSetMeta)
@@ -241,6 +247,8 @@ class TaskSet(object):
             self.min_wait = self.locust.min_wait
         if not self.max_wait:
             self.max_wait = self.locust.max_wait
+
+        self.last_execute_task_index = 0
 
     def run(self, *args, **kwargs):
         self.args = args
@@ -322,8 +330,13 @@ class TaskSet(object):
             self._task_queue.append(task)
     
     def get_next_task(self):
-        return random.choice(self.tasks)
-    
+        if self.random_execute:
+            return random.choice(self.tasks)
+        else:
+            next_task = self.tasks[self.last_execute_task_index]
+            self.last_execute_task_index = (self.last_execute_task_index + 1) % len(self.tasks)
+            return next_task
+
     def wait(self):
         millis = random.randint(self.min_wait, self.max_wait)
         seconds = millis / 1000.0
