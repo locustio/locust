@@ -19,7 +19,7 @@ from .exception import LocustError, InterruptTaskSet, RescheduleTask, Reschedule
 logger = logging.getLogger(__name__)
 
 
-def task(weight=1, order=-sys.maxint - 1):
+def task(weight=1, order=2147483647):
     """
     Used as a convenience decorator to be able to declare tasks for a TaskSet 
     inline in the class. Example::
