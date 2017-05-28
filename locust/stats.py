@@ -421,7 +421,7 @@ def percentile_from_dict(total, count, percentile):
     total is the number of requests made
     count is a dict {response_time: count}
     """
-    pos = (total - 1) * (percentile / 100)
+    pos = (total - 1) * (percentile / 100.0)
     for k in sorted(six.iterkeys(count)):
         if pos < count[k]:
             return k
