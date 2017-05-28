@@ -207,8 +207,13 @@ class StatsEntry(object):
     def median_response_time(self):
         if not self.response_times:
             return 0
+        return percentile_from_dict(self.num_requests, self.response_times, 50)
 
-        return median_from_dict(self.num_requests, self.response_times)
+    @property
+    def ninetieth_response_time(self):
+        if not self.response_times:
+            return 0
+        return percentile_from_dict(self.num_requests, self.response_times, 90)
 
     @property
     def current_rps(self):
@@ -411,17 +416,16 @@ class StatsError(object):
 def avg(values):
     return sum(values, 0.0) / max(len(values), 1)
 
-def median_from_dict(total, count):
+def percentile_from_dict(total, count, percentile):
     """
     total is the number of requests made
     count is a dict {response_time: count}
     """
-    pos = (total - 1) / 2
+    pos = (total - 1) * (percentile / 100)
     for k in sorted(six.iterkeys(count)):
         if pos < count[k]:
             return k
         pos -= count[k]
-
 
 global_stats = RequestStats()
 """

@@ -15,7 +15,7 @@ from flask import Flask, make_response, request, render_template
 from . import runners
 from .cache import memoize
 from .runners import MasterLocustRunner
-from locust.stats import median_from_dict
+from locust.stats import percentile_from_dict
 from locust import __version__ as version
 
 import logging
@@ -93,12 +93,13 @@ def request_stats_csv():
     ]
     
     for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
-        rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
+        rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%i,%.2f' % (
             s.method,
             s.name,
             s.num_requests,
             s.num_failures,
             s.median_response_time,
+            s.ninetieth_response_time,
             s.avg_response_time,
             s.min_response_time or 0,
             s.max_response_time,
@@ -156,6 +157,7 @@ def request_stats():
             "max_response_time": s.max_response_time,
             "current_rps": s.current_rps,
             "median_response_time": s.median_response_time,
+            "ninetieth_response_time": s.ninetieth_response_time,
             "avg_content_length": s.avg_content_length,
         })
 
@@ -178,7 +180,8 @@ def request_stats():
             response_times[stats[i]["median_response_time"]] += stats[i]["num_requests"]
         
         # calculate total median
-        stats[len(stats)-1]["median_response_time"] = median_from_dict(stats[len(stats)-1]["num_requests"], response_times)
+        stats[len(stats)-1]["median_response_time"] = percentile_from_dict(stats[len(stats)-1]["num_requests"], response_times, 50)
+        stats[len(stats)-1]["ninetieth_response_time"] = percentile_from_dict(stats[len(stats)-1]["num_requests"], response_times, 90)
     
     is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
     if is_distributed:
