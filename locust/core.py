@@ -37,7 +37,7 @@ def task(weight=1, order=2147483647):
     def decorator_func(func):
         func.locust_task_info = {"weight": weight, "order": order}
         return func
-    
+
     """
     Check if task was used without parentheses (not called), like this::
     
@@ -73,31 +73,31 @@ class Locust(object):
     example when load testing an HTTP system, you probably want to use the 
     :py:class:`HttpLocust <locust.core.HttpLocust>` class.
     """
-    
+
     host = None
     """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
-    
+
     min_wait = 1000
     """Minimum waiting time between the execution of locust tasks"""
-    
+
     max_wait = 1000
     """Maximum waiting time between the execution of locust tasks"""
-    
+
     task_set = None
     """TaskSet class that defines the execution behaviour of this locust"""
-    
+
     stop_timeout = None
     """Number of seconds after which the Locust will die. If None it won't timeout."""
 
     weight = 10
     """Probability of locust being chosen. The higher the weight, the greater is the chance of it being chosen."""
-        
+
     client = NoClientWarningRaiser()
     _catch_exceptions = True
-    
+
     def __init__(self):
         super(Locust, self).__init__()
-    
+
     def run(self):
         try:
             self.task_set(self).run()
@@ -117,18 +117,18 @@ class HttpLocust(Locust):
     This class creates a *client* attribute on instantiation which is an HTTP client with support 
     for keeping a user session between requests.
     """
-    
+
     client = None
     """
     Instance of HttpSession that is created upon instantiation of Locust. 
     The client support cookies, and therefore keeps the session between HTTP requests.
     """
-    
+
     def __init__(self):
         super(HttpLocust, self).__init__()
         if self.host is None:
             raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
-        
+
         self.client = HttpSession(base_url=self.host)
 
 
@@ -137,26 +137,36 @@ class TaskSetMeta(type):
     Meta class for the main Locust class. It's used to allow Locust classes to specify task execution 
     ratio using an {task:int} dict, or a [(task0,int), ..., (taskN,int)] list.
     """
-    
+
     def __new__(mcs, classname, bases, classDict):
         new_tasks = []
         for base in bases:
             if hasattr(base, "tasks") and base.tasks:
                 new_tasks += base.tasks
-        
+
         if "tasks" in classDict and classDict["tasks"] is not None:
             tasks = classDict["tasks"]
             if isinstance(tasks, dict):
                 tasks = six.iteritems(tasks)
-            
+
             for task in tasks:
                 if isinstance(task, tuple):
                     task, count = task
-                    for i in xrange(0, count):
-                        new_tasks.append(task)
+                    if isinstance(count, int):
+                        setattr(task, 'locust_task_info', {'weight': count, 'order': 2147483647})
+                        for i in xrange(0, count):
+                            new_tasks.append(task)
+                    else:
+                        if 'weight' not in count:
+                            count['weight'] = 1
+                        if 'order' not in count:
+                            count['order'] = 2147483647
+                        setattr(task, 'locust_task_info', count)
+                        for i in xrange(0, count['weight']):
+                            new_tasks.append(task)
                 else:
                     new_tasks.append(task)
-        
+
         for item in six.itervalues(classDict):
             if hasattr(item, "locust_task_info"):
                 for i in xrange(0, item.locust_task_info["weight"]):
@@ -190,7 +200,7 @@ class TaskSet(object):
     :py:meth:`TaskSet.interrupt() <locust.core.TaskSet.interrupt>` is called. (execution 
     will then continue in the first TaskSet).
     """
-    
+
     tasks = []
     """
     List with python callables that represents a locust user task.
@@ -205,21 +215,21 @@ class TaskSet(object):
         class ForumPage(TaskSet):
             tasks = {ThreadPage:15, write_post:1}
     """
-    
+
     min_wait = None
     """
     Minimum waiting time between the execution of locust tasks. Can be used to override 
     the min_wait defined in the root Locust class, which will be used if not set on the 
     TaskSet.
     """
-    
+
     max_wait = None
     """
     Maximum waiting time between the execution of locust tasks. Can be used to override 
     the max_wait defined in the root Locust class, which will be used if not set on the 
     TaskSet.
     """
-    
+
     locust = None
     """Will refer to the root Locust class instance when the TaskSet has been instantiated"""
 
@@ -232,7 +242,7 @@ class TaskSet(object):
     def __init__(self, parent):
         self._task_queue = []
         self._time_start = time()
-        
+
         if isinstance(parent, TaskSet):
             self.locust = parent.locust
         elif isinstance(parent, Locust):
@@ -241,7 +251,7 @@ class TaskSet(object):
             raise LocustError("TaskSet should be called with Locust instance or TaskSet instance as first argument")
 
         self.parent = parent
-        
+
         # if this class doesn't have a min_wait or max_wait defined, copy it from Locust
         if not self.min_wait:
             self.min_wait = self.locust.min_wait
@@ -253,7 +263,7 @@ class TaskSet(object):
     def run(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
-        
+
         try:
             if hasattr(self, "on_start"):
                 self.on_start()
@@ -262,15 +272,15 @@ class TaskSet(object):
                 six.reraise(RescheduleTaskImmediately, RescheduleTaskImmediately(e.reschedule), sys.exc_info()[2])
             else:
                 six.reraise(RescheduleTask, RescheduleTask(e.reschedule), sys.exc_info()[2])
-        
+
         while (True):
             try:
                 if self.locust.stop_timeout is not None and time() - self._time_start > self.locust.stop_timeout:
                     return
-        
+
                 if not self._task_queue:
                     self.schedule_task(self.get_next_task())
-                
+
                 try:
                     self.execute_next_task()
                 except RescheduleTaskImmediately:
@@ -295,11 +305,11 @@ class TaskSet(object):
                     self.wait()
                 else:
                     raise
-    
+
     def execute_next_task(self):
         task = self._task_queue.pop(0)
         self.execute_task(task["callable"], *task["args"], **task["kwargs"])
-    
+
     def execute_task(self, task, *args, **kwargs):
         # check if the function is a method bound to the current locust, and if so, don't pass self as first argument
         if hasattr(task, "__self__") and task.__self__ == self:
@@ -311,7 +321,7 @@ class TaskSet(object):
         else:
             # task is a function
             task(self, *args, **kwargs)
-    
+
     def schedule_task(self, task_callable, args=None, kwargs=None, first=False):
         """
         Add a task to the Locust's task execution queue.
@@ -328,7 +338,7 @@ class TaskSet(object):
             self._task_queue.insert(0, task)
         else:
             self._task_queue.append(task)
-    
+
     def get_next_task(self):
         if self.random_execute:
             return random.choice(self.tasks)
@@ -344,7 +354,7 @@ class TaskSet(object):
 
     def _sleep(self, seconds):
         gevent.sleep(seconds)
-    
+
     def interrupt(self, reschedule=True):
         """
         Interrupt the TaskSet and hand over execution control back to the parent TaskSet.
@@ -357,7 +367,7 @@ class TaskSet(object):
         classes further down the hierarchy.
         """
         raise InterruptTaskSet(reschedule)
-    
+
     @property
     def client(self):
         """
