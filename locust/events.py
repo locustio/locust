@@ -26,6 +26,16 @@ class EventHook(object):
         for handler in self._handlers:
             handler(**kwargs)
 
+load_success = EventHook()
+"""
+*load_success* is fired when locust program load all socusts successfully.
+
+Listeners should task the following arguments:
+
+* *options*: Program startup options.
+* *locusts*: All locusts dictionary.
+"""
+
 request_success = EventHook()
 """
 *request_success* is fired when a request is completed successfully.

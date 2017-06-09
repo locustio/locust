@@ -381,6 +381,8 @@ def main():
         logger.error("No Locust class found!")
         sys.exit(1)
 
+    events.load_success.fire(options=options, locusts=locusts)
+
     # make sure specified Locust exists
     if arguments:
         missing = set(arguments) - set(locusts.keys())
