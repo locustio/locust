@@ -30,7 +30,7 @@ load_success = EventHook()
 """
 *load_success* is fired when locust program load all socusts successfully.
 
-Listeners should task the following arguments:
+Listeners should take the following arguments:
 
 * *options*: Program startup options.
 * *locusts*: All locusts dictionary.
@@ -134,4 +134,23 @@ locust_start_hatching = EventHook()
 locust_stop_hatching = EventHook()
 """
 *locust_stop_hatching* is fired when terminate the hatching process on any locust worker.
+"""
+
+locust_update = EventHook()
+"""
+*locust_update* is fired when update interval timeout.
+
+Listeners should take the following arguments:
+
+* *times*: Update times.
+"""
+
+locust_update_error = EventHook()
+"""
+*locust_update_error* is fired when update failed.
+
+Listeners should talk the following arguments:
+
+* *times*: Update times.
+* *e*: Exception.
 """

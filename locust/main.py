@@ -246,6 +246,16 @@ def parse_options():
         help="show program's version number and exit"
     )
 
+    # Interval update
+    parser.add_option(
+        '-u', '--update-interval',
+        action='store',
+        type=float,
+        dest='update_interval',
+        default=1,
+        help='set locust_update event fire interval, in seconds'
+    )
+
     # Finalize
     # Return three-tuple of parser + the output from parse_args (opt obj, args)
     opts, args = parser.parse_args()
@@ -464,7 +474,21 @@ def main():
         logger.info("Got SIGTERM signal")
         shutdown(0)
     gevent.signal(signal.SIGTERM, sig_term_handler)
-    
+
+    # interval updater
+    def do_interval_update(update_interval):
+        update_times = 1
+        while True:
+            try:
+                events.locust_update.fire(times=update_times)
+            except Exception, e:
+                events.locust_update_error.fire(times=update_times, e=e)
+            finally:
+                update_times = update_times + 1
+                gevent.sleep(update_interval)
+
+    interval_updater = gevent.spawn(do_interval_update, options.update_interval)
+
     try:
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
