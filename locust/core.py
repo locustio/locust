@@ -83,6 +83,9 @@ class Locust(object):
     max_wait = 1000
     """Maximum waiting time between the execution of locust tasks"""
 
+    random_execute = True
+    """Random execute flag, default is True"""
+
     task_set = None
     """TaskSet class that defines the execution behaviour of this locust"""
 
@@ -97,10 +100,11 @@ class Locust(object):
 
     def __init__(self):
         super(Locust, self).__init__()
+        self.task_set_instance = self.task_set(self)
 
     def run(self):
         try:
-            self.task_set(self).run()
+            self.task_set_instance.run()
         except StopLocust:
             pass
         except (RescheduleTask, RescheduleTaskImmediately) as e:
@@ -172,15 +176,34 @@ class TaskSetMeta(type):
                 for i in xrange(0, item.locust_task_info["weight"]):
                     new_tasks.append(item)
 
-        if "random_execute" not in classDict:
-            classDict["random_execute"] = True
-        elif not classDict['random_execute']:
-            new_tasks = sorted(
-                new_tasks, cmp=lambda left, right: cmp(left.locust_task_info["order"], right.locust_task_info["order"]))
+        new_tasks = sorted(
+            new_tasks, cmp=lambda left, right: cmp(left.locust_task_info["order"], right.locust_task_info["order"]))
 
         classDict["tasks"] = new_tasks
 
         return type.__new__(mcs, classname, bases, classDict)
+
+
+class TaskInstance(object):
+    """Class defining a set of task instance"""
+    Function = 1
+    BoundMethod = 2
+    NestedTaskSet = 3
+
+    def __init__(self, task_templ, owner, task_index):
+        self.owner = owner
+        self.task_templ = task_templ
+        self.task_index = task_index
+        if hasattr(task_templ, "tasks") and issubclass(task_templ, TaskSet):
+            self.task_type = self.NestedTaskSet
+            self.task_inst = task_templ(owner)
+        elif hasattr(task, "__self__") and task.__self__ == owner:
+            self.task_type = self.BoundMethod
+            self.task_inst = task_templ
+        else:
+            self.task_type = self.Function
+            self.task_inst = task_templ
+
 
 @six.add_metaclass(TaskSetMeta)
 class TaskSet(object):
@@ -230,6 +253,9 @@ class TaskSet(object):
     TaskSet.
     """
 
+    random_execute = None
+    """random execute falg"""
+
     locust = None
     """Will refer to the root Locust class instance when the TaskSet has been instantiated"""
 
@@ -258,7 +284,30 @@ class TaskSet(object):
         if not self.max_wait:
             self.max_wait = self.locust.max_wait
 
+        # if this class doesn't have a random_execute defined, copy it from Locust
+        if self.random_execute is None:
+            self.random_execute = self.locust.random_execute
+
+        # create all task instances
         self.last_execute_task_index = 0
+        self.task_instances = {}
+        for task_index_id in xrange(len(self.tasks)):
+            task = self.tasks[task_index_id]
+            self.task_instances[task] = TaskInstance(task, self, task_index_id)
+
+        # add all task instances to order_to_task_instance index by task order
+        self.order_to_task_instances = {}
+        for task, inst in self.task_instances.iteritems():
+            task_order = task.locust_task_info.get('order')
+            if task_order is None:
+                task_order = 2147483647
+            same_order_tasks = self.order_to_task_instances.get(task_order)
+            if same_order_tasks is None:
+                same_order_tasks = []
+                self.order_to_task_instances[task_order] = same_order_tasks
+            same_order_tasks.append(inst)
+
+        self.next_jump_to_order = None
 
     def run(self, *args, **kwargs):
         self.args = args
@@ -317,7 +366,8 @@ class TaskSet(object):
             task(*args, **kwargs)
         elif hasattr(task, "tasks") and issubclass(task, TaskSet):
             # task is another (nested) TaskSet class
-            task(self).run(*args, **kwargs)
+            # task(self).run(*args, **kwargs)
+            self.task_instances[task].task_inst.run(*args, **kwargs)
         else:
             # task is a function
             task(self, *args, **kwargs)
@@ -338,6 +388,18 @@ class TaskSet(object):
             self._task_queue.insert(0, task)
         else:
             self._task_queue.append(task)
+
+    def schedule_order(self, order, *args, **kwargs):
+        tasks = self.order_to_task_instances.get(order)
+        if tasks is None:
+            raise Exception('Not exist order = {} tasks in TaskSet {}'.format(order, self.__class__))
+
+        last_task = None
+        for task in tasks:
+            last_task = task
+            self.schedule_task(task.task_templ, *args, **kwargs)
+
+        self.last_execute_task_index = (last_task.task_index + 1) % len(self.tasks)
 
     def get_next_task(self):
         if self.random_execute:
