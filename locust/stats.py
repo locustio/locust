@@ -127,28 +127,33 @@ class StatsEntry(object):
         self.num_requests = 0
         self.num_failures = 0
         self.total_response_time = 0
+        self.total_response_time_per_sec = {}
         self.response_times = {}
         self.min_response_time = None
         self.max_response_time = 0
         self.last_request_timestamp = int(time.time())
         self.num_reqs_per_sec = {}
         self.total_content_length = 0
-    
+        self.total_content_length_per_sec = {}
+
     def log(self, response_time, content_length):
         self.stats.num_requests += 1
         self.num_requests += 1
 
-        self._log_time_of_request()
+        self._log_time_of_request(response_time, content_length)
         self._log_response_time(response_time)
 
         # increase total content-length
         self.total_content_length += content_length
 
-    def _log_time_of_request(self):
+    def _log_time_of_request(self, response_time, content_length):
         t = int(time.time())
         self.num_reqs_per_sec[t] = self.num_reqs_per_sec.setdefault(t, 0) + 1
         self.last_request_timestamp = t
         self.stats.last_request_timestamp = t
+
+        self.total_response_time_per_sec[t] = self.total_response_time_per_sec.setdefault(t, 0) + response_time
+        self.total_content_length_per_sec[t] = self.total_content_length_per_sec.setdefault(t, 0) + content_length
 
     def _log_response_time(self, response_time):
         self.total_response_time += response_time
@@ -258,7 +263,9 @@ class StatsEntry(object):
             for key in other.response_times:
                 self.response_times[key] = self.response_times.get(key, 0) + other.response_times[key]
             for key in other.num_reqs_per_sec:
-                self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) +  other.num_reqs_per_sec[key]
+                self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) + other.num_reqs_per_sec[key]
+            for key in other.total_content_length_per_sec:
+                self.total_content_length_per_sec[key] = self.total_content_length_per_sec.get(key, 0) + other.total_content_length_per_sec[key]
         else:
             # still add the number of reqs per seconds the last 20 seconds
             for i in xrange(other.last_request_timestamp-20, other.last_request_timestamp+1):
