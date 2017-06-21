@@ -200,10 +200,14 @@ def request_stats():
     entry_infos = {}
     for stat_entry in runners.locust_runner.stats.entries.itervalues():
         assert isinstance(stat_entry, StatsEntry)
-        entry_infos[stat_entry.name] = {
-        }
+        entry_name = stat_entry.name
+        entry_meth = stat_entry.method or 'Unknown'
+        if entry_meth not in entry_infos:
+            entry_infos[entry_meth] = {}
+
+        entry_infos[entry_meth][entry_name] = dict()
         for collect_time in xrange(now_time - 2, now_time):
-            entry_infos[stat_entry.name][collect_time] = \
+            entry_infos[entry_meth][entry_name][collect_time] = \
                 {'rps': stat_entry.num_reqs_per_sec.get(collect_time, 0),
                  'total_content_length': stat_entry.total_content_length_per_sec.get(collect_time, 0),
                  'total_response_time': stat_entry.total_response_time_per_sec.get(collect_time, 0),

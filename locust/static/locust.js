@@ -159,36 +159,40 @@ function updateStats() {
             usersChart.addValue([report.user_count]);
 
             var entry_infos = report.entry_infos;
-            for (var entry_name in entry_infos) {
-                var total_rt = 0;
-                var total_rps = 0;
-                var entry_info = entry_infos[entry_name];
-                var collect_count = Object.keys(entry_info).length;
-                for (var collect_time in entry_info) {
-                    total_rps += entry_info[collect_time]["rps"];
-                    total_rt += entry_info[collect_time]["total_response_time"];
+            for (var entry_meth in entry_infos) {
+                var infos_per_meth = entry_infos[entry_meth]
+                for (var entry_name in infos_per_meth) {
+                    var total_rt = 0;
+                    var total_rps = 0;
+                    var entry_info = infos_per_meth[entry_name];
+                    var collect_count = Object.keys(entry_info).length;
+                    for (var collect_time in entry_info) {
+                        total_rps += entry_info[collect_time]["rps"];
+                        total_rt += entry_info[collect_time]["total_response_time"];
+                    }
+
+                    var chart_name_prefix = entry_meth + ": " + entry_name;
+                    if (detailCharts[chart_name_prefix] == null) {
+                        var div_name_prefix = entry_meth + "_" + entry_name;
+                        var div_name = div_name_prefix + "_Chart";
+                        $("<div class=" + div_name + "></div>").css("width", "100%").appendTo($(".charts-container"));
+
+                        var rps_div_name = div_name_prefix + "_RPS_Chart";
+                        $("<div class=" + rps_div_name + "></div>").css("width", "50%").css("float", "left").appendTo($("." + div_name));
+
+                        var rt_div_name = div_name_prefix + "_RT_Chart";
+                        $("<div class=" + rt_div_name + "></div>").css("width", "50%").css("float", "left").appendTo($("." + div_name));
+
+                        var entry_charts = [new LocustLineChart($("." + rps_div_name),
+                            chart_name_prefix + ": Requests per Second", ["RPS"], "reqs/s"),
+                            new LocustLineChart($("." + rt_div_name),
+                                chart_name_prefix + ": Average Response Time", ["Average Response Time"], "ms")];
+                        detailCharts[chart_name_prefix] = entry_charts;
+                    }
+
+                    detailCharts[chart_name_prefix][0].addValue([collect_count != 0 ? total_rps / collect_count : 0]);
+                    detailCharts[chart_name_prefix][1].addValue([total_rps != 0 ? total_rt / total_rps : 0]);
                 }
-
-                if (detailCharts[entry_name] == null) {
-                    // this.element = $('<div class="chart"></div>').css("width", "100%").appendTo(container);
-                    var div_name = entry_name + "_Chart";
-                    $("<div class=" + div_name + "></div>").css("width", "100%").appendTo($(".charts-container"));
-
-                    var rps_div_name = entry_name + "_RPS_Chart";
-                    $("<div class=" + rps_div_name + "></div>").css("width", "50%").css("float", "left").appendTo($("." + div_name));
-
-                    var rt_div_name = entry_name + "_RT_Chart";
-                    $("<div class=" + rt_div_name + "></div>").css("width", "50%").css("float", "left").appendTo($("." + div_name));
-
-                    var entry_charts = [new LocustLineChart($("." + rps_div_name),
-                            entry_name + ": Requests per Second", ["RPS"], "reqs/s"),
-                        new LocustLineChart($("." + rt_div_name),
-                            entry_name + ": Average Response Time", ["Average Response Time"], "ms")];
-                    detailCharts[entry_name] = entry_charts;
-                }
-
-                detailCharts[entry_name][0].addValue([total_rps / collect_count]);
-                detailCharts[entry_name][1].addValue([total_rt / collect_count]);
             }
 
         }
