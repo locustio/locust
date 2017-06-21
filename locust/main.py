@@ -281,16 +281,17 @@ def find_locustfile(locustfile):
                     return os.path.abspath(expanded)
     else:
         # Otherwise, start in cwd and work downwards towards filesystem root
-        path = '.'
-        # Stop before falling off root of filesystem (should be platform
-        # agnostic)
-        while os.path.split(os.path.abspath(path))[1]:
+        path = os.path.abspath('.')
+        while True:
             for name in names:
                 joined = os.path.join(path, name)
                 if os.path.exists(joined):
                     if name.endswith('.py') or _is_package(joined):
                         return os.path.abspath(joined)
-            path = os.path.join('..', path)
+            np = os.path.dirname(path)
+            if np == path:
+                break
+            path = np
     # Implicit 'return None' if nothing was found
 
 
