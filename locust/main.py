@@ -13,7 +13,7 @@ from optparse import OptionParser
 
 from . import web
 from .log import setup_logging, console_logger
-from .stats import stats_printer, print_percentile_stats, print_error_report, print_stats
+from .stats import stats_printer, print_percentile_stats, print_error_report, print_stats, stats_writer, write_stat_csvs
 from .inspectlocust import print_task_ratio, get_task_ratio_dict
 from .core import Locust, HttpLocust
 from .runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
@@ -59,6 +59,16 @@ def parse_options():
         dest='locustfile',
         default='locustfile',
         help="Python module file to import, e.g. '../other.py'. Default: locustfile"
+    )
+
+    # A file that contains the current request stats.
+    parser.add_option(
+        '--csv', '--csv-base-name',
+        action='store',
+        type='str',
+        dest='csvfilebase',
+        default=None,
+        help="Store current request stats to files in CSV format.",
     )
 
     # if locust should be run in distributed mode as master
@@ -443,17 +453,22 @@ def main():
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
+
+    if options.csvfilebase:
+        gevent.spawn(stats_writer, options.csvfilebase)
+
     
     def shutdown(code=0):
         """
-        Shut down locust by firing quitting event, printing stats and exiting
+        Shut down locust by firing quitting event, printing/writing stats and exiting
         """
         logger.info("Shutting down (exit code %s), bye." % code)
 
         events.quitting.fire()
         print_stats(runners.locust_runner.request_stats)
         print_percentile_stats(runners.locust_runner.request_stats)
-
+        if options.csvfilebase:
+            write_stat_csvs(options.csvfilebase)
         print_error_report()
         sys.exit(code)
     
