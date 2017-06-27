@@ -51,7 +51,7 @@ More info and documentation can be found at: <a href="http://docs.locust.io/">ht
 
 For questions about how to use Locust, feel free to stop by the Slack or ask questions on Stack Overflow tagged Locust.
 
-## Bug reporting
+## Bug reporting or feature requests
 
 Open a Github issue and follow the template listed there.
 
