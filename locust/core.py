@@ -316,6 +316,8 @@ class TaskSet(object):
         try:
             if hasattr(self, "on_start"):
                 self.on_start()
+            if not self.task_instances:
+                raise InterruptTaskSet(reschedule=True)
         except InterruptTaskSet as e:
             if e.reschedule:
                 six.reraise(RescheduleTaskImmediately, RescheduleTaskImmediately(e.reschedule), sys.exc_info()[2])
