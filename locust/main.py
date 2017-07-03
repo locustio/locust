@@ -1,3 +1,5 @@
+import traceback
+
 import locust
 from . import runners
 
@@ -359,145 +361,150 @@ def load_locustfile(path):
     return imported.__doc__, locusts
 
 def main():
-    parser, options, arguments = parse_options()
-
-    # setup logging
-    setup_logging(options.loglevel, options.logfile)
-    logger = logging.getLogger(__name__)
-    
-    if options.show_version:
-        print("Locust %s" % (version,))
-        sys.exit(0)
-
-    locustfile = find_locustfile(options.locustfile)
-
-    if not locustfile:
-        logger.error("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.")
-        sys.exit(1)
-
-    if locustfile == "locust.py":
-        logger.error("The locustfile must not be named `locust.py`. Please rename the file and try again.")
-        sys.exit(1)
-
-    docstring, locusts = load_locustfile(locustfile)
-
-    if options.list_commands:
-        console_logger.info("Available Locusts:")
-        for name in locusts:
-            console_logger.info("    " + name)
-        sys.exit(0)
-
-    if not locusts:
-        logger.error("No Locust class found!")
-        sys.exit(1)
-
-    events.load_success.fire(options=options, locusts=locusts)
-
-    # make sure specified Locust exists
-    if arguments:
-        missing = set(arguments) - set(locusts.keys())
-        if missing:
-            logger.error("Unknown Locust(s): %s\n" % (", ".join(missing)))
-            sys.exit(1)
-        else:
-            names = set(arguments) & set(locusts.keys())
-            locust_classes = [locusts[n] for n in names]
-    else:
-        # list() call is needed to consume the dict_view object in Python 3
-        locust_classes = list(locusts.values())
-    
-    if options.show_task_ratio:
-        console_logger.info("\n Task ratio per locust class")
-        console_logger.info( "-" * 80)
-        print_task_ratio(locust_classes)
-        console_logger.info("\n Total task ratio")
-        console_logger.info("-" * 80)
-        print_task_ratio(locust_classes, total=True)
-        sys.exit(0)
-    if options.show_task_ratio_json:
-        from json import dumps
-        task_data = {
-            "per_class": get_task_ratio_dict(locust_classes), 
-            "total": get_task_ratio_dict(locust_classes, total=True)
-        }
-        console_logger.info(dumps(task_data))
-        sys.exit(0)
-
-    if not options.no_web and not options.slave:
-        # spawn web greenlet
-        logger.info("Starting web monitor at %s:%s" % (options.web_host or "*", options.port))
-        main_greenlet = gevent.spawn(web.start, locust_classes, options)
-    
-    if not options.master and not options.slave:
-        runners.locust_runner = LocalLocustRunner(locust_classes, options)
-        # spawn client spawning/hatching greenlet
-        if options.no_web:
-            runners.locust_runner.start_hatching(wait=True)
-            main_greenlet = runners.locust_runner.greenlet
-    elif options.master:
-        runners.locust_runner = MasterLocustRunner(locust_classes, options)
-        if options.no_web:
-            while len(runners.locust_runner.clients.ready)<options.expect_slaves:
-                logging.info("Waiting for slaves to be ready, %s of %s connected",
-                             len(runners.locust_runner.clients.ready), options.expect_slaves)
-                time.sleep(1)
-
-            runners.locust_runner.start_hatching(options.num_clients, options.hatch_rate)
-            main_greenlet = runners.locust_runner.greenlet
-    elif options.slave:
-        try:
-            runners.locust_runner = SlaveLocustRunner(locust_classes, options)
-            main_greenlet = runners.locust_runner.greenlet
-        except socket.error as e:
-            logger.error("Failed to connect to the Locust master: %s", e)
-            sys.exit(-1)
-    
-    if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
-        # spawn stats printing greenlet
-        gevent.spawn(stats_printer)
-    
-    def shutdown(code=0):
-        """
-        Shut down locust by firing quitting event, printing stats and exiting
-        """
-        logger.info("Shutting down (exit code %s), bye." % code)
-
-        events.quitting.fire()
-        print_stats(runners.locust_runner.request_stats)
-        print_percentile_stats(runners.locust_runner.request_stats)
-
-        print_error_report()
-        sys.exit(code)
-    
-    # install SIGTERM handler
-    def sig_term_handler():
-        logger.info("Got SIGTERM signal")
-        shutdown(0)
-    gevent.signal(signal.SIGTERM, sig_term_handler)
-
-    # interval updater
-    def do_interval_update(update_interval):
-        update_times = 1
-        while True:
-            try:
-                events.locust_update.fire(times=update_times)
-            except Exception, e:
-                events.locust_update_error.fire(times=update_times, e=e)
-            finally:
-                update_times = update_times + 1
-                gevent.sleep(update_interval)
-
-    interval_updater = gevent.spawn(do_interval_update, options.update_interval)
-
     try:
-        logger.info("Starting Locust %s" % version)
-        main_greenlet.join()
-        code = 0
-        if len(runners.locust_runner.errors):
-            code = 1
-        shutdown(code=code)
-    except KeyboardInterrupt as e:
-        shutdown(0)
-
+        parser, options, arguments = parse_options()
+    
+        # setup logging
+        setup_logging(options.loglevel, options.logfile)
+        logger = logging.getLogger(__name__)
+        
+        if options.show_version:
+            print("Locust %s" % (version,))
+            sys.exit(0)
+    
+        locustfile = find_locustfile(options.locustfile)
+    
+        if not locustfile:
+            logger.error("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.")
+            sys.exit(1)
+    
+        if locustfile == "locust.py":
+            logger.error("The locustfile must not be named `locust.py`. Please rename the file and try again.")
+            sys.exit(1)
+    
+        docstring, locusts = load_locustfile(locustfile)
+    
+        if options.list_commands:
+            console_logger.info("Available Locusts:")
+            for name in locusts:
+                console_logger.info("    " + name)
+            sys.exit(0)
+    
+        if not locusts:
+            logger.error("No Locust class found!")
+            sys.exit(1)
+    
+        events.load_success.fire(options=options, locusts=locusts)
+    
+        # make sure specified Locust exists
+        if arguments:
+            missing = set(arguments) - set(locusts.keys())
+            if missing:
+                logger.error("Unknown Locust(s): %s\n" % (", ".join(missing)))
+                sys.exit(1)
+            else:
+                names = set(arguments) & set(locusts.keys())
+                locust_classes = [locusts[n] for n in names]
+        else:
+            # list() call is needed to consume the dict_view object in Python 3
+            locust_classes = list(locusts.values())
+        
+        if options.show_task_ratio:
+            console_logger.info("\n Task ratio per locust class")
+            console_logger.info( "-" * 80)
+            print_task_ratio(locust_classes)
+            console_logger.info("\n Total task ratio")
+            console_logger.info("-" * 80)
+            print_task_ratio(locust_classes, total=True)
+            sys.exit(0)
+        if options.show_task_ratio_json:
+            from json import dumps
+            task_data = {
+                "per_class": get_task_ratio_dict(locust_classes), 
+                "total": get_task_ratio_dict(locust_classes, total=True)
+            }
+            console_logger.info(dumps(task_data))
+            sys.exit(0)
+    
+        if not options.no_web and not options.slave:
+            # spawn web greenlet
+            logger.info("Starting web monitor at %s:%s" % (options.web_host or "*", options.port))
+            main_greenlet = gevent.spawn(web.start, locust_classes, options)
+        
+        if not options.master and not options.slave:
+            runners.locust_runner = LocalLocustRunner(locust_classes, options)
+            # spawn client spawning/hatching greenlet
+            if options.no_web:
+                runners.locust_runner.start_hatching(wait=True)
+                main_greenlet = runners.locust_runner.greenlet
+        elif options.master:
+            runners.locust_runner = MasterLocustRunner(locust_classes, options)
+            if options.no_web:
+                while len(runners.locust_runner.clients.ready)<options.expect_slaves:
+                    logging.info("Waiting for slaves to be ready, %s of %s connected",
+                                 len(runners.locust_runner.clients.ready), options.expect_slaves)
+                    time.sleep(1)
+    
+                runners.locust_runner.start_hatching(options.num_clients, options.hatch_rate)
+                main_greenlet = runners.locust_runner.greenlet
+        elif options.slave:
+            try:
+                runners.locust_runner = SlaveLocustRunner(locust_classes, options)
+                main_greenlet = runners.locust_runner.greenlet
+            except socket.error as e:
+                logger.error("Failed to connect to the Locust master: %s", e)
+                sys.exit(-1)
+        
+        if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
+            # spawn stats printing greenlet
+            gevent.spawn(stats_printer)
+        
+        def shutdown(code=0):
+            """
+            Shut down locust by firing quitting event, printing stats and exiting
+            """
+            logger.info("Shutting down (exit code %s), bye." % code)
+    
+            events.quitting.fire()
+            print_stats(runners.locust_runner.request_stats)
+            print_percentile_stats(runners.locust_runner.request_stats)
+    
+            print_error_report()
+            sys.exit(code)
+        
+        # install SIGTERM handler
+        def sig_term_handler():
+            logger.info("Got SIGTERM signal")
+            shutdown(0)
+        gevent.signal(signal.SIGTERM, sig_term_handler)
+    
+        # interval updater
+        def do_interval_update(update_interval):
+            update_times = 1
+            while True:
+                try:
+                    events.locust_update.fire(times=update_times)
+                except Exception, e:
+                    events.locust_update_error.fire(times=update_times, e=e)
+                finally:
+                    update_times = update_times + 1
+                    gevent.sleep(update_interval)
+    
+        interval_updater = gevent.spawn(do_interval_update, options.update_interval)
+    
+        try:
+            logger.info("Starting Locust %s" % version)
+            main_greenlet.join()
+            code = 0
+            if len(runners.locust_runner.errors):
+                code = 1
+            shutdown(code=code)
+        except KeyboardInterrupt as e:
+            shutdown(0)
+    except Exception:
+        if os.name != 'nt':
+            raise
+        raw_input('Run locust failed, exception:\n{}'.format(traceback.format_exc()))
+    
 if __name__ == '__main__':
     main()
