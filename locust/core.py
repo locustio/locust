@@ -324,6 +324,15 @@ class TaskSet(object):
             else:
                 six.reraise(RescheduleTask, RescheduleTask(e.reschedule), sys.exc_info()[2])
 
+        def _schedule_totask(totask):
+            for taskIdx in xrange(len(self.tasks)):
+                task = self.tasks[taskIdx]
+                if task != totask:
+                    continue
+                self.schedule_task(task)
+                if not self.random_execute:
+                    self.last_execute_task_index = (taskIdx + 1) % len(self.tasks)
+
         while (True):
             try:
                 if self.locust.stop_timeout is not None and time() - self._time_start > self.locust.stop_timeout:
@@ -334,17 +343,21 @@ class TaskSet(object):
 
                 try:
                     self.execute_next_task()
-                except RescheduleTaskImmediately:
+                except RescheduleTaskImmediately as e:
+                    if e.totaskset is not None:
+                        _schedule_totask(e.totaskset)
                     pass
-                except RescheduleTask:
+                except RescheduleTask as e:
+                    if e.totaskset is not None:
+                        _schedule_totask(e.totaskset)
                     self.wait()
                 else:
                     self.wait()
             except InterruptTaskSet as e:
                 if e.reschedule:
-                    six.reraise(RescheduleTaskImmediately, RescheduleTaskImmediately(e.reschedule), sys.exc_info()[2])
+                    six.reraise(RescheduleTaskImmediately, RescheduleTaskImmediately(e.totaskset), sys.exc_info()[2])
                 else:
-                    six.reraise(RescheduleTask, RescheduleTask(e.reschedule), sys.exc_info()[2])
+                    six.reraise(RescheduleTask, RescheduleTask(e.totaskset), sys.exc_info()[2])
             except StopLocust:
                 raise
             except GreenletExit:
