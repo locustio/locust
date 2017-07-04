@@ -49,3 +49,40 @@ def get_task_ratio_dict(tasks, total=False, parent_ratio=1.0):
         task_dict[locust.__name__] = d
 
     return task_dict
+
+
+def get_task_execution_order(locust):
+    """
+    Return a dict containing task execution order info
+    """
+    task_list = []
+    for task in locust.task_set.tasks:
+        task_list.append(task.__name__)
+    return task_list
+
+
+def get_task_dict_with_order(tasks):
+    """
+    Return a dict containing task execution order info
+    """
+    order_dict = {}
+    for task in tasks:
+        order_dict.setdefault(task, None)
+        if hasattr(task, 'order'):
+            order_dict[task] = task.order
+        elif hasattr(task, 'locust_task_order'):
+            order_dict[task] = task.locust_task_order
+
+    task_dict = {}
+    for locust, order in six.iteritems(order_dict):
+        d = {"order":order}
+        if inspect.isclass(locust):
+            if issubclass(locust, Locust):
+                T = locust.task_set.tasks
+            elif issubclass(locust, TaskSet):
+                T = locust.tasks
+            d["tasks"] = get_task_dict_with_order(T)
+
+        task_dict[locust.__name__] = d
+
+    return task_dict

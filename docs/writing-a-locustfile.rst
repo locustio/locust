@@ -61,6 +61,20 @@ classes. Say for example, web users are three times more likely than mobile user
         weight = 1
         ....
 
+The *order* attribute
+----------------------
+
+You can setup the order between tasks inside a locust, or even between locusts::
+
+    locust -f locust_file.py SecondOrderedLocust FirstOrderedLocust
+
+    class SecondOrderedLocust(Locust):
+        order = 2
+        ....
+
+    class FirstOrderedLocust(Locust):
+        order = 1
+        ....
 
 The *host* attribute
 --------------------
@@ -105,7 +119,7 @@ Here is an example::
     class MyLocust(Locust):
         task_set = MyTaskSet
 
-**@task** takes an optional weight argument that can be used to specify the task's execution ratio. In 
+**@task** takes two optional arguments: *weight* and *order*. Weight that can be used to specify the task's execution ratio. In
 the following example *task2* will be executed twice as much as *task1*::
     
     from locust import Locust, TaskSet, task
@@ -125,6 +139,30 @@ the following example *task2* will be executed twice as much as *task1*::
     class MyLocust(Locust):
         task_set = MyTaskSet
 
+You can setup the *weight*, with or without naming:
+
+    @task(3)
+    def task1(self):
+        pass
+
+It's equal to:
+
+    @task(weight=3)
+    def task1(self):
+        pass
+
+The other argument is *order*, which is used when you want to perform a task after another one on the same TaskSet. In
+the following example *task2* will be executed before *task1*::
+
+    class MyTaskSet(TaskSet):
+
+        @task(order=2)
+        def task1(self):
+            pass
+
+        @task(order=1)
+        def task2(self):
+            pass
 
 tasks attribute
 --------------

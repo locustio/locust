@@ -19,7 +19,7 @@ from .exception import LocustError, InterruptTaskSet, RescheduleTask, Reschedule
 logger = logging.getLogger(__name__)
 
 
-def task(weight=1):
+def task(weight=1, order=None):
     """
     Used as a convenience decorator to be able to declare tasks for a TaskSet 
     inline in the class. Example::
@@ -36,6 +36,7 @@ def task(weight=1):
     
     def decorator_func(func):
         func.locust_task_weight = weight
+        func.locust_task_order = order
         return func
     
     """
@@ -91,6 +92,9 @@ class Locust(object):
 
     weight = 10
     """Probability of locust being chosen. The higher the weight, the greater is the chance of it being chosen."""
+
+    order = None
+    """Order of locust between it siblings whom has an order setted. The lower the order, the closer to the top of the tasks list."""
         
     client = NoClientWarningRaiser()
     _catch_exceptions = True
@@ -161,6 +165,8 @@ class TaskSetMeta(type):
             if hasattr(item, "locust_task_weight"):
                 for i in xrange(0, item.locust_task_weight):
                     new_tasks.append(item)
+            if getattr(item, "locust_task_order", None):
+                new_tasks = sorted(new_tasks, key=lambda x: x.locust_task_order)
         
         classDict["tasks"] = new_tasks
         
