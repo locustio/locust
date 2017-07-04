@@ -150,6 +150,9 @@ class TaskSetMeta(type):
 
         if "tasks" in classDict and classDict["tasks"] is not None:
             tasks = classDict["tasks"]
+            if isinstance(tasks, (list, tuple)):
+                tasks = dict([(tasks[idx], {'order': idx + 1}) for idx in xrange(len(tasks))])
+
             if isinstance(tasks, dict):
                 tasks = six.iteritems(tasks)
 
