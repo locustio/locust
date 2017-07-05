@@ -3,6 +3,7 @@ import six
 from locust.core import HttpLocust, Locust, TaskSet, task, events
 from locust import ResponseError, InterruptTaskSet
 from locust.exception import CatchResponseError, RescheduleTask, RescheduleTaskImmediately, LocustError
+from locust.inspectlocust import get_task_queue_names, get_task_history_names
 
 from .testcases import LocustTestCase, WebserverTestCase
 
@@ -131,12 +132,78 @@ class TestTaskSet(LocustTestCase):
                 self.t2_executed = True
         
         taskset = MyTasks(self.locust)
-        taskset.schedule_task(taskset.get_next_task())
+        taskset.schedule_task()
         taskset.execute_next_task()
         self.assertTrue(taskset.t1_executed)
         taskset.execute_next_task()
         self.assertTrue(taskset.t2_executed)
         
+    def test_schedule_dependency(self):
+        class MyTasks(TaskSet):
+            @task
+            def task1(self):
+                pass
+
+            @task
+            def task2(self):
+                pass
+
+            def get_next_task(self, last_task):
+                if last_task and last_task['callable'].__name__ == 'task1':
+                    return self.task2
+                else:
+                    return self.task1
+
+        taskset = MyTasks(self.locust)
+
+        self.assertEqual([], get_task_queue_names(taskset))
+        self.assertEqual([], get_task_history_names(taskset))
+
+        taskset.schedule_task()
+
+        self.assertEqual(['task1'], get_task_queue_names(taskset))
+        self.assertEqual([], get_task_history_names(taskset))
+
+        taskset.execute_next_task()
+
+        self.assertEqual([], get_task_queue_names(taskset))
+        self.assertEqual(['task1'], get_task_history_names(taskset))
+
+        taskset.schedule_task()
+
+        self.assertEqual(['task2'], get_task_queue_names(taskset))
+        self.assertEqual(['task1'], get_task_history_names(taskset))
+
+        taskset.execute_next_task()
+
+        self.assertEqual([], get_task_queue_names(taskset))
+        self.assertEqual(['task1', 'task2'], get_task_history_names(taskset))
+
+        taskset.schedule_task()
+
+        self.assertEqual(['task1'], get_task_queue_names(taskset))
+        self.assertEqual(['task1', 'task2'], get_task_history_names(taskset))
+
+    def test_schedule_task_history(self):
+        class MyTasks(TaskSet):
+            @task
+            def task1(self):
+                pass
+
+        taskset = MyTasks(self.locust)
+
+        self.assertEqual([], get_task_queue_names(taskset))
+        self.assertEqual([], get_task_history_names(taskset))
+
+        taskset.schedule_task()
+
+        self.assertEqual(['task1'], get_task_queue_names(taskset))
+        self.assertEqual([], get_task_history_names(taskset))
+
+        taskset.execute_next_task()
+
+        self.assertEqual([], get_task_queue_names(taskset))
+        self.assertEqual(['task1'], get_task_history_names(taskset))
     
     def test_taskset_inheritance(self):
         def t1(l):
@@ -189,7 +256,7 @@ class TestTaskSet(LocustTestCase):
         
         self.sub_locust_task_executed = False
         loc = MyTaskSet(self.locust)
-        loc.schedule_task(loc.get_next_task())
+        loc.schedule_task()
         self.assertRaises(RescheduleTaskImmediately, lambda: loc.execute_next_task())
         self.assertTrue(self.locust.sub_locust_task_executed)
     
@@ -206,7 +273,7 @@ class TestTaskSet(LocustTestCase):
         
         self.sub_locust_task_executed = False
         loc = MyTaskSet(self.locust)
-        loc.schedule_task(loc.get_next_task())
+        loc.schedule_task()
         self.assertRaises(RescheduleTaskImmediately, lambda: loc.execute_next_task())
         self.assertTrue(self.locust.sub_locust_task_executed)
     

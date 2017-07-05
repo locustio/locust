@@ -17,6 +17,20 @@ def _print_task_ratio(x, level=0):
             _print_task_ratio(v['tasks'], level + 1)
 
 
+def get_task_history_names(task_set):
+    names = []
+    for task in task_set._task_history:
+        names.append(task['callable'].__name__)
+    return names
+
+
+def get_task_queue_names(task_set):
+    names = []
+    for task in task_set._task_queue:
+        names.append(task['callable'].__name__)
+    return names
+
+
 def get_task_ratio_dict(tasks, total=False, parent_ratio=1.0):
     """
     Return a dict containing task execution ratio info

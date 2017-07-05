@@ -225,6 +225,7 @@ class TaskSet(object):
 
     def __init__(self, parent):
         self._task_queue = []
+        self._task_history = []
         self._time_start = time()
         
         if isinstance(parent, TaskSet):
@@ -241,6 +242,12 @@ class TaskSet(object):
             self.min_wait = self.locust.min_wait
         if not self.max_wait:
             self.max_wait = self.locust.max_wait
+
+    def get_last_task(self):
+        if not self._task_history:
+            return None
+
+        return self._task_history[-1]
 
     def run(self, *args, **kwargs):
         self.args = args
@@ -261,7 +268,7 @@ class TaskSet(object):
                     return
         
                 if not self._task_queue:
-                    self.schedule_task(self.get_next_task())
+                    self.schedule_task()
                 
                 try:
                     self.execute_next_task()
@@ -290,6 +297,7 @@ class TaskSet(object):
     
     def execute_next_task(self):
         task = self._task_queue.pop(0)
+        self._task_history.append(task)
         self.execute_task(task["callable"], *task["args"], **task["kwargs"])
     
     def execute_task(self, task, *args, **kwargs):
@@ -304,7 +312,14 @@ class TaskSet(object):
             # task is a function
             task(self, *args, **kwargs)
     
-    def schedule_task(self, task_callable, args=None, kwargs=None, first=False):
+    def prepare_task(self, task_callable, args=None, kwargs=None, first=False):
+        return {
+            "callable": task_callable,
+            "args": args or [],
+            "kwargs": kwargs or {}
+        }
+
+    def schedule_task(self, task_callable=None, args=None, kwargs=None, first=False):
         """
         Add a task to the Locust's task execution queue.
         
@@ -315,13 +330,16 @@ class TaskSet(object):
         * kwargs: Dict of keyword arguments that will be passed to the task callable.
         * first: Optional keyword argument. If True, the task will be put first in the queue.
         """
-        task = {"callable":task_callable, "args":args or [], "kwargs":kwargs or {}}
+        if not task_callable:
+            task_callable = self.get_next_task(self.get_last_task())
+
+        task = self.prepare_task(task_callable, args, kwargs)
         if first:
             self._task_queue.insert(0, task)
         else:
             self._task_queue.append(task)
     
-    def get_next_task(self):
+    def get_next_task(self, last_task):
         return random.choice(self.tasks)
     
     def wait(self):
