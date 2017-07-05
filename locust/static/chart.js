@@ -3,33 +3,74 @@
         /**
          * lines should be an array of line names
          */
-        constructor(container, title, lines, unit) {
+        constructor(container, title, lines, unit, yLabelUnit, drawMarkLine) {
             this.container = $(container);
             this.title = title;
             this.lines = lines;
-            
+
             this.element = $('<div class="chart"></div>').css("width", "100%").appendTo(container);
             this.data = [];
             this.dates = [];
-            
+
             var seriesData = [];
             for (var i=0; i<lines.length; i++) {
                 seriesData.push({
                     name: lines[i],
                     type: 'line',
                     showSymbol: true,
+                    symbolSize: 6,
                     hoverAnimation: false,
-                    data: [],
+                    data: []
                 });
                 this.data.push([]);
             }
-            
+
+            if (drawMarkLine)
+            {
+                for (var i=0; i<seriesData.length; i++)
+                {
+                    seriesData[i]['markLine'] = {
+                        silent: true,
+                        symbol: 'pin',
+                        symbolSize: 8,
+                        lineStyle: {
+                          normal: {
+                              color: '#e7be55'
+                          }
+                        },
+                        data: [
+                            {
+                                name: 'Max',
+                                type: 'max'
+                            }
+                        ]
+                    }
+                }
+            }
+
             this.chart = echarts.init(this.element[0], 'vintage');
             this.chart.setOption({
                 title: {
                     text: this.title,
                     x: 10,
                     y: 10,
+                },
+                toolbox: {
+                    feature: {
+                        dataZoom: {
+                            show: true,
+                            yAxisIndex: false,
+                            title: {
+                                zoom: '查看局部',
+                                back: '恢复全局显示'
+                            }
+                        },
+                        saveAsImage: {
+                            type: 'png',
+                            title: '保存为图片',
+                            pixelRatio: 8
+                        }
+                    }
                 },
                 tooltip: {
                     trigger: 'axis',
@@ -42,7 +83,7 @@
                             }
                             return str;
                         } else {
-                            return "No data";
+                            return '<span style="color:#e7be55">No data</span>';
                         }
                     },
                     axisPointer: {
@@ -72,12 +113,15 @@
                             color: '#5b6f66',
                         },
                     },
+                    axisLabel: {
+                        formatter: yLabelUnit ? '{value} ' + yLabelUnit : '{value}'
+                    }
                 },
                 series: seriesData,
                 grid: {x:60, y:70, x2:40, y2:40},
             })
         }
-        
+
         addValue(values) {
             this.dates.push(new Date().toLocaleTimeString());
             var seriesData = [];
@@ -93,7 +137,7 @@
                 series: seriesData
             });
         }
-        
+
         resize() {
             this.chart.resize();
         }

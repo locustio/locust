@@ -122,7 +122,7 @@ $(".stats_label").click(function (event) {
 
 // init charts
 var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS"], "reqs/s");
-var responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", ["Average Response Time"], "ms");
+var responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", ["Average Response Time"], "ms", "ms");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 var detailCharts = new Array()
 
@@ -184,10 +184,14 @@ function updateStats() {
                         $("<div class=" + rt_div_name + "></div>").css("width", "50%").css("float", "left").appendTo($("." + div_name));
 
                         var entry_charts = [new LocustLineChart($("." + rps_div_name),
-                            chart_name_prefix + ": Requests per Second", ["RPS"], "reqs/s"),
+                            chart_name_prefix + ": Requests per Second", ["RPS"], "reqs/s", null, true),
                             new LocustLineChart($("." + rt_div_name),
-                                chart_name_prefix + ": Average Response Time", ["Average Response Time"], "ms")];
+                                chart_name_prefix + ": Average Response Time", ["Average Response Time"], "ms", "ms", true)];
                         detailCharts[chart_name_prefix] = entry_charts;
+
+                        entry_charts[0].chart.group = div_name;
+                        entry_charts[1].chart.group = div_name;
+                        echarts.connect([entry_charts[0].chart, entry_charts[1].chart]);
                     }
 
                     detailCharts[chart_name_prefix][0].addValue([collect_count != 0 ? total_rps / collect_count : 0]);
