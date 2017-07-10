@@ -15,8 +15,7 @@ from flask import Flask, make_response, request, render_template
 from . import runners
 from .cache import memoize
 from .runners import MasterLocustRunner
-from .stats import sort_stats
-from locust.stats import median_from_dict, requests_csv, distribution_csv
+from .stats import sort_stats, median_from_dict, requests_csv, distribution_csv
 from locust import __version__ as version
 
 import logging
