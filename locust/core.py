@@ -379,6 +379,8 @@ class TaskSet(object):
 
     def execute_task(self, task, *args, **kwargs):
         # check if the function is a method bound to the current locust, and if so, don't pass self as first argument
+        if hasattr(self, 'on_pretask'):
+            self.on_pretask(task.__name__)
         if hasattr(task, "__self__") and task.__self__ == self:
             # task is a bound method on self
             task(*args, **kwargs)
@@ -389,6 +391,9 @@ class TaskSet(object):
         else:
             # task is a function
             task(self, *args, **kwargs)
+
+        if hasattr(self, 'on_posttask'):
+            self.on_posttask(task.__name__)
 
     def schedule_task(self, task_callable, args=None, kwargs=None, first=False):
         """
