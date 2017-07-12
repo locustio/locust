@@ -136,7 +136,7 @@ class TestRequestStats(unittest.TestCase):
         self.stats.log_error("GET", "/some-path", Exception("Exception!"))
             
         self.assertEqual(1, len(self.stats.errors))
-        self.assertEqual(2, list(self.stats.errors.values())[0].occurences)
+        self.assertEqual(2, list(self.stats.errors.values())[0].occurrences)
         
         self.stats.log_error("GET", "/some-path", Exception("Another exception!"))
         self.stats.log_error("GET", "/some-path", Exception("Another exception!"))

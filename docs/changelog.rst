@@ -55,7 +55,7 @@ Changelog
 * Fixed bug which caused the download time of the request body not to be included in the 
   reported response time. 
 * Fixed bug that occurred on some linux dists that were tampering with the python-requests 
-  system package (removing dependencies which requests is bundling). This bug only occured 
+  system package (removing dependencies which requests is bundling). This bug only occurred 
   when installing Locust in the python system packages, and not when using virtualenv.
 * Various minor fixes and improvements.
 
