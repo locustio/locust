@@ -72,6 +72,15 @@ def parse_options():
         help="Store current request stats to files in CSV format.",
     )
 
+    # if locust should append the CSV file instead of replacing it.
+    parser.add_option(
+        '--csv-append',
+        action='store_true',
+        dest='csvappend',
+        default=False,
+        help="Set locust to append CSV file at set interval instead of replacing.",
+    )
+
     # if locust should be run in distributed mode as master
     parser.add_option(
         '--master',
@@ -475,15 +484,17 @@ def main():
         except socket.error as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
-    
+
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
 
     if options.csvfilebase:
-        gevent.spawn(stats_writer, options.csvfilebase)
+        gevent.spawn(stats_writer,
+                     options.csvfilebase,
+                     options.csvappend)
 
-    
+
     def shutdown(code=0):
         """
         Shut down locust by firing quitting event, printing/writing stats and exiting
@@ -494,7 +505,8 @@ def main():
         print_stats(runners.locust_runner.request_stats)
         print_percentile_stats(runners.locust_runner.request_stats)
         if options.csvfilebase:
-            write_stat_csvs(options.csvfilebase)
+            write_stat_csvs(options.csvfilebase,
+                            options.csvappend)
         print_error_report()
         sys.exit(code)
     

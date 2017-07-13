@@ -16,7 +16,7 @@ STATS_NAME_WIDTH = 60
 
 """Default interval for how frequently the CSV file is written if this option
 is configured."""
-CSV_STATS_INTERVAL_SEC = 2
+CSV_STATS_INTERVAL_SEC = 10
 
 """Default interval for how frequently results are written to console."""
 CONSOLE_STATS_INTERVAL_SEC = 2
@@ -103,7 +103,7 @@ class RequestStats(object):
         if not entry:
             entry = StatsError(method, name, error)
             self.errors[key] = entry
-        entry.occured()
+        entry.occurred()
     
     def get(self, name, method):
         """
@@ -407,6 +407,7 @@ class StatsEntry(object):
         
         Percent specified in range: 0.0 - 1.0
         """
+
         return calculate_response_time_percentile(self.response_times, self.num_requests, percent)
     
     def get_current_response_time_percentile(self, percent):
@@ -446,13 +447,15 @@ class StatsEntry(object):
                 self.num_requests - cached.num_requests, 
                 percent,
             )
-    
-    def percentile(self, tpl=" %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
+
+
+    def percentile(self, tpl=" %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d %6d", elapsed_time=0):
         if not self.num_requests:
             raise ValueError("Can't calculate percentile on url with no successful requests")
-        
+
         return tpl % (
             (self.method and self.method + " " or "") + self.name,
+            elapsed_time,
             self.num_requests,
             self.get_response_time_percentile(0.5),
             self.get_response_time_percentile(0.66),
@@ -656,34 +659,45 @@ def stats_printer():
         print_stats(runners.locust_runner.request_stats)
         gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
 
-def stats_writer(base_filepath):
-    """Writes the csv files for the locust run."""
+def stats_writer(base_filepath, append_file=False):
+    """Writes the csv files for the locust run.""" 
+    write_stat_csvs(base_filepath, include_totals=(not append_file))
     while True:
-        write_stat_csvs(base_filepath)
         gevent.sleep(CSV_STATS_INTERVAL_SEC)
+        write_stat_csvs(base_filepath, append_file, include_totals=(not append_file))
 
 
-def write_stat_csvs(base_filepath):
-    """Writes the requests and distribution csvs."""
-    with open(base_filepath + '_requests.csv', "w") as f:
-        f.write(requests_csv())
+def write_stat_csvs(base_filepath, append_file=False, include_totals=True):
+    """
+    Writes the requests and distribution CSV files.
 
-    with open(base_filepath + '_distribution.csv', 'w') as f:
-        f.write(distribution_csv())
+    By default overwrites the existing file,
+    optionally appends the existing file
+    """
+
+    file_mode = "a" if append_file else "w"
+
+    with open(base_filepath + '_requests.csv', file_mode) as f:
+        f.write(requests_csv(append_file, include_totals) + "\n")
+
+    with open(base_filepath + '_distribution.csv', file_mode) as f:
+        f.write(distribution_csv(append_file, include_totals) + "\n")
 
 
 def sort_stats(stats):
     return [stats[key] for key in sorted(six.iterkeys(stats))]
 
 
-def requests_csv():
+def requests_csv(append_file=False, include_totals=True):
     from . import runners
 
     """Returns the contents of the 'requests' tab as CSV."""
-    rows = [
-        ",".join([
+    rows = []
+    if not append_file:
+        rows.append(",".join([
             '"Method"',
             '"Name"',
+            '"Total elapsed time"',
             '"# requests"',
             '"# failures"',
             '"Median response time"',
@@ -693,12 +707,17 @@ def requests_csv():
             '"Average Content Size"',
             '"Requests/s"',
         ])
-    ]
+    )
 
-    for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
-        rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
+    maybe_agg_stats = [] 
+    if include_totals:
+        maybe_agg_stats = [runners.locust_runner.stats.total]
+    elapsed_time = int(time.time()) - runners.locust_runner.runner_start_time
+    for s in chain(sort_stats(runners.locust_runner.request_stats), maybe_agg_stats):
+        rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%i,%.2f' % (
             s.method,
             s.name,
+            elapsed_time,
             s.num_requests,
             s.num_failures,
             s.median_response_time,
@@ -710,12 +729,16 @@ def requests_csv():
         ))
     return "\n".join(rows)
 
-def distribution_csv():
+
+def distribution_csv(append_file=False, include_totals=True):
     """Returns the contents of the 'distribution' tab as CSV."""
     from . import runners
 
-    rows = [",".join((
+    rows = []
+    if not append_file:
+        rows.append(",".join((
         '"Name"',
+        '"Total elapsed time"',
         '"# requests"',
         '"50%"',
         '"66%"',
@@ -726,11 +749,18 @@ def distribution_csv():
         '"98%"',
         '"99%"',
         '"100%"',
-    ))]
-    for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
+    )))
+
+    maybe_agg_stats = []
+    if include_totals:
+        maybe_agg_stats = [runners.locust_runner.stats.total]
+    elapsed_time = int(time.time()) - runners.locust_runner.runner_start_time
+    for s in chain(sort_stats(runners.locust_runner.request_stats), maybe_agg_stats):
         if s.num_requests:
-            rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
+            rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i',
+                                     elapsed_time=elapsed_time)
+                        )
         else:
-            rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
+            rows.append('"%s",0,%i,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % (s.name,elapsed_time))
 
     return "\n".join(rows)
