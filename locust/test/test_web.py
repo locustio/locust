@@ -37,6 +37,9 @@ class TestWebUI(LocustTestCase):
     
     def test_index(self):
         self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % self.web_port).status_code)
+
+    def test_metrics(self):
+        self.assertEqual(200, requests.get("http://127.0.0.1:%i/metrics" % self.web_port).status_code)
     
     def test_stats_no_data(self):
         self.assertEqual(200, requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).status_code)
