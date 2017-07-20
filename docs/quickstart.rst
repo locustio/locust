@@ -36,7 +36,7 @@ Here we define a number of Locust tasks, which are normal Python callables that 
 :py:class:`HttpLocust <locust.core.HttpLocust>` class which represents a user, where we define how
 long a simulated user should wait between executing tasks, as well as what
 :py:class:`TaskSet <locust.core.TaskSet>` class should define the user's "behaviour".
-:py:class:`TaskSet <locust.core.TaskSet>`s can be nested.
+:py:class:`TaskSet <locust.core.TaskSet>` objects can be nested.
 
 The :py:class:`HttpLocust <locust.core.HttpLocust>` class inherits from the
 :py:class:`Locust <locust.core.Locust>` class, and it adds a client attribute which is an instance of
