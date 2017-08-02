@@ -379,6 +379,9 @@ class TaskSet(object):
 
     def execute_task(self, task, *args, **kwargs):
         # check if the function is a method bound to the current locust, and if so, don't pass self as first argument
+        if hasattr(self.locust, 'on_pretask'):
+            self.locust.on_pretask(self, task.__name__)
+
         if hasattr(self, 'on_pretask'):
             self.on_pretask(task.__name__)
         if hasattr(task, "__self__") and task.__self__ == self:
