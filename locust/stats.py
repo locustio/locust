@@ -65,6 +65,13 @@ class RequestStats(object):
         self.max_requests = None
         self.last_request_timestamp = None
         self.start_time = None
+
+    @classmethod
+    def sum_stats(cls, name="Total", full_request_history=False):
+        stats = RequestStats(None, name)
+        for s in cls.requests.itervalues():
+            stats.iadd_stats(s, full_request_history)
+        return stats
         
 
 class StatsEntry(object):
@@ -409,6 +416,7 @@ class StatsError(object):
 
 
 def avg(values):
+    print(values)
     return sum(values, 0.0) / max(len(values), 1)
 
 def median_from_dict(total, count):

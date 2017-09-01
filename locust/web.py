@@ -17,6 +17,7 @@ from .cache import memoize
 from .runners import MasterLocustRunner
 from locust.stats import median_from_dict
 from locust import __version__ as version
+import gevent
 
 import logging
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ DEFAULT_CACHE_TIME = 2.0
 app = Flask(__name__)
 app.debug = True
 app.root_path = os.path.dirname(os.path.abspath(__file__))
-
+_ramp = False
 
 @app.route('/')
 def index():
@@ -49,6 +50,7 @@ def index():
         slave_count=slave_count,
         user_count=runners.locust_runner.user_count,
         version=version,
+        ramp = _ramp,
         host=host
     )
 
@@ -220,7 +222,27 @@ def exceptions_csv():
     response.headers["Content-disposition"] = disposition
     return response
 
+@app.route("/ramp", methods=["POST"])
+def ramp():
+    from locust.ramping import start_ramping
+    
+    init_clients = int(request.form["init_count"])
+    hatch_rate = int(request.form["hatch_rate"])
+    hatch_stride = int(request.form["hatch_stride"])
+    precision = int(request.form["precision"])
+    max_clients = int(request.form["max_count"])
+    response_time = int(request.form["response_time"])
+    percentile = float(int(request.form["percentile"]) / 100.0)
+    fail_rate = float(int(request.form["fail_rate"]) / 100.0)
+    calibration_time = int(request.form["wait_time"])
+    gevent.spawn(start_ramping, hatch_rate, max_clients, hatch_stride, percentile, response_time, fail_rate, precision, init_clients, calibration_time)
+    response = make_response(json.dumps({'success':True, 'message': 'Ramping started'}))
+    response.headers["Content-type"] = "application/json"
+    return response
+
 def start(locust, options):
+    global _ramp
+    _ramp = options.ramp
     wsgi.WSGIServer((options.web_host, options.port), app, log=None).serve_forever()
 
 def _sort_stats(stats):
