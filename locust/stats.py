@@ -416,7 +416,6 @@ class StatsError(object):
 
 
 def avg(values):
-    print(values)
     return sum(values, 0.0) / max(len(values), 1)
 
 def median_from_dict(total, count):
