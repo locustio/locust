@@ -19,8 +19,15 @@ $("#box_stop a.reset-button").click(function(event) {
     $.get($(this).attr("href"));
 });
 
+$(".ramp_test").click(function(event) {
+    event.preventDefault();
+    $("#start").hide();
+    $("#ramp").show();
+});
+
 $("#new_test").click(function(event) {
     event.preventDefault();
+    $("#ramp").hide();
     $("#start").show();
     $("#locust_count").focus().select();
 });
@@ -34,6 +41,23 @@ $(".edit_test").click(function(event) {
 $(".close_link").click(function(event) {
     event.preventDefault();
     $(this).parent().parent().hide();
+});
+
+$('#ramp_form').submit(function(event) {
+    event.preventDefault();
+    $.post($(this).attr("action"), $(this).serialize(),
+        function(response) {
+            if (response.success) {
+                $("body").attr("class", "hatching");
+                $("#ramp").fadeOut();
+                $("#status").fadeIn();
+                $(".box_running").fadeIn();
+                $("a.new_test").fadeOut();
+                $("a.edit_test").fadeIn();
+                $(".user_count").fadeIn();
+            }
+        }
+    );
 });
 
 var alternate = false;
