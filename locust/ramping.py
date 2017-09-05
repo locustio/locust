@@ -19,9 +19,9 @@ is_distributed = isinstance(locust_runner, DistributedLocustRunner)
 response_times = deque([])
 
 def on_request_success_ramping(**kwargs):
-    logger.info('success ramping')
+    '''logger.info('success ramping')'''
     response_time = kwargs.get('response_time', '')
-    logger.info('{} : {}'.format('response time', response_time))
+    '''logger.info('{} : {}'.format('response time', response_time))'''
     if is_distributed:
         response_times.append(response_time)
     else:
@@ -30,8 +30,8 @@ def on_request_success_ramping(**kwargs):
         # remove from the queue
         rps = runners.locust_runner.stats.aggregated_stats("Total").current_rps
         current_users = runners.locust_runner.user_count
-        logger.info('{} : {}'.format('rps', rps))
-        logger.info('{} : {}'.format('users', current_users))
+        '''logger.info('{} : {}'.format('rps', rps))'''
+        '''logger.info('{} : {}'.format('users', current_users))'''
         if len(response_times) > rps*PERCENTILE_TIME_WINDOW:
             for i in range(len(response_times) - int(math.ceil(rps*PERCENTILE_TIME_WINDOW))):
                 response_times.popleft()
@@ -92,23 +92,18 @@ def percentile(N, percent, key=lambda x:x):
 def start_ramping(hatch_rate=None, max_locusts=1000, hatch_stride=100,
           percent=0.95, response_time_limit=2000, acceptable_fail=0.05,
           precision=200, start_count=0, calibration_time=15):
-    logger.info('a')
+    
     register_listeners()
     
     def ramp_up(clients, hatch_stride, boundery_found=False):
-        logger.info('before while up')
         while True:
-            logger.info('up')
-            logger.info('{} : {}'.format('state', locust_runner.state))
             if locust_runner.state != STATE_HATCHING:
-                logger.info('{} : {} : {}'.format('num_clients', locust_runner.num_clients, max_locusts))
                 if locust_runner.num_clients >= max_locusts:
                     logger.info("Ramp up halted; Max locusts limit reached: %d" % max_locusts)
                     return ramp_down(clients, hatch_stride)
 
                 gevent.sleep(calibration_time)
                 fail_ratio = runners.locust_runner.stats.aggregated_stats("Total").fail_ratio
-                logger.info('{} : {}'.format('fail ratio', fail_ratio))
                 if fail_ratio > acceptable_fail:
                     logger.info("Ramp up halted; Acceptable fail ratio %d%% exceeded with fail ratio %d%%" % (acceptable_fail*100, fail_ratio*100))
                     return ramp_down(clients, hatch_stride)
@@ -130,15 +125,11 @@ def start_ramping(hatch_rate=None, max_locusts=1000, hatch_stride=100,
             gevent.sleep(1)
 
     def ramp_down(clients, hatch_stride):
-        logger.info('before while down')
         while True:
-            logger.info('down')
-            logger.info('{} : {}'.format('state', locust_runner.state))
             if locust_runner.state != STATE_HATCHING:
                 if locust_runner.num_clients < max_locusts:
                     gevent.sleep(calibration_time)
                     fail_ratio = runners.locust_runner.stats.aggregated_stats("Total").fail_ratio
-                    logger.info('{} : {}'.format('fail ratio', fail_ratio))
                     if fail_ratio <= acceptable_fail:
                         p = current_percentile(percent)
                         if p <= response_time_limit:
@@ -159,7 +150,7 @@ def start_ramping(hatch_rate=None, max_locusts=1000, hatch_stride=100,
                     locust_runner.start_hatching(clients, locust_runner.hatch_rate)
                 else:
                     logger.warning("No responses met the ramping thresholds, check your ramp configuration, locustfile and \"--host\" address")
-                    logger.info("RAMING STOPPED")
+                    logger.info("RAMPING STOPPED")
                     return remove_listeners()
             gevent.sleep(1)
 
