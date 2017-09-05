@@ -57,9 +57,9 @@ def register_listeners():
     events.request_success += on_request_success_ramping
 
 def remove_listeners():
-    events.report_to_master.__idec__(on_report_to_master_ramping)
-    events.slave_report.__idec__(on_slave_report_ramping)
-    events.request_success.__idec__(on_request_success_ramping)
+    events.report_to_master.__isub__(on_report_to_master_ramping)
+    events.slave_report.__isub__(on_slave_report_ramping)
+    events.request_success.__isub__(on_request_success_ramping)
 
 def current_percentile(percent):
     if is_distributed:
