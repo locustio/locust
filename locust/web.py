@@ -15,7 +15,7 @@ from flask import Flask, make_response, request, render_template
 from . import runners
 from .cache import memoize
 from .runners import MasterLocustRunner
-from locust.stats import median_from_dict
+from .stats import sort_stats, median_from_dict, requests_csv, distribution_csv
 from locust import __version__ as version
 
 import logging
@@ -77,36 +77,8 @@ def reset_stats():
     
 @app.route("/stats/requests/csv")
 def request_stats_csv():
-    rows = [
-        ",".join([
-            '"Method"',
-            '"Name"',
-            '"# requests"',
-            '"# failures"',
-            '"Median response time"',
-            '"Average response time"',
-            '"Min response time"', 
-            '"Max response time"',
-            '"Average Content Size"',
-            '"Requests/s"',
-        ])
-    ]
-    
-    for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
-        rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
-            s.method,
-            s.name,
-            s.num_requests,
-            s.num_failures,
-            s.median_response_time,
-            s.avg_response_time,
-            s.min_response_time or 0,
-            s.max_response_time,
-            s.avg_content_length,
-            s.total_rps,
-        ))
+    response = make_response(requests_csv())
 
-    response = make_response("\n".join(rows))
     file_name = "requests_{0}.csv".format(time())
     disposition = "attachment;filename={0}".format(file_name)
     response.headers["Content-type"] = "text/csv"
@@ -115,26 +87,8 @@ def request_stats_csv():
 
 @app.route("/stats/distribution/csv")
 def distribution_stats_csv():
-    rows = [",".join((
-        '"Name"',
-        '"# requests"',
-        '"50%"',
-        '"66%"',
-        '"75%"',
-        '"80%"',
-        '"90%"',
-        '"95%"',
-        '"98%"',
-        '"99%"',
-        '"100%"',
-    ))]
-    for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
-        if s.num_requests:
-            rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
-        else:
-            rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
 
-    response = make_response("\n".join(rows))
+    response = make_response(distribution_csv())
     file_name = "distribution_{0}.csv".format(time())
     disposition = "attachment;filename={0}".format(file_name)
     response.headers["Content-type"] = "text/csv"
@@ -145,7 +99,7 @@ def distribution_stats_csv():
 @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
 def request_stats():
     stats = []
-    for s in chain(_sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total")]):
+    for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total")]):
         stats.append({
             "method": s.method,
             "name": s.name,
@@ -223,5 +177,3 @@ def exceptions_csv():
 def start(locust, options):
     wsgi.WSGIServer((options.web_host, options.port), app, log=None).serve_forever()
 
-def _sort_stats(stats):
-    return [stats[key] for key in sorted(six.iterkeys(stats))]
