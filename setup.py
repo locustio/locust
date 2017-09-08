@@ -1,8 +1,9 @@
 # encoding: utf-8
+import ast
+import os
+import re
 
-from setuptools import setup, find_packages
-import os, re, ast
-
+from setuptools import find_packages, setup
 
 # parse version from locust/__init__.py
 _version_re = re.compile(r'__version__\s+=\s+(.*)')
