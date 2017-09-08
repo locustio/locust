@@ -1,11 +1,12 @@
-# encoding: utf-8
+# -*- coding: utf-8 -*-
 
 """
 This is an example of a locustfile that uses Locust's built in event hooks to 
 track the sum of the content-length header in all successful HTTP responses
 """
 
-from locust import HttpLocust, TaskSet, task, events, web
+from locust import HttpLocust, TaskSet, events, task, web
+
 
 class MyTaskSet(TaskSet):
     @task(2)

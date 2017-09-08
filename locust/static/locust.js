@@ -4,7 +4,7 @@ $(window).ready(function() {
     }
 });
 
-$("#box_stop a").click(function(event) {
+$("#box_stop a.stop-button").click(function(event) {
     event.preventDefault();
     $.get($(this).attr("href"));
     $("body").attr("class", "stopped");
@@ -14,7 +14,7 @@ $("#box_stop a").click(function(event) {
     $(".user_count").hide();
 });
 
-$("#box_reset a").click(function(event) {
+$("#box_stop a.reset-button").click(function(event) {
     event.preventDefault();
     $.get($(this).attr("href"));
 });
@@ -38,7 +38,14 @@ $(".close_link").click(function(event) {
 
 var alternate = false;
 
-$("ul.tabs").tabs("div.panes > div");
+$("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
+    if (event.target == $(".chart-tab-link")[0]) {
+        // trigger resizing of charts
+        rpsChart.resize();
+        responseTimeChart.resize();
+        usersChart.resize();
+    }
+});
 
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');
@@ -110,6 +117,11 @@ $(".stats_label").click(function(event) {
     $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
 });
 
+// init charts
+var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS"], "reqs/s");
+var responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", ["Average Response Time"], "ms");
+var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
+
 function updateStats() {
     $.get('/stats/requests', function (data) {
         report = JSON.parse(data);
@@ -118,7 +130,6 @@ function updateStats() {
         $("#fail_ratio").html(Math.round(report.fail_ratio*100));
         $("#status_text").html(report.state);
         $("#userCount").html(report.user_count);
-
 
         if (report.slaves) {
             slaves = (report.slaves).sort(sortBy(slaveSortAttribute, desc));
@@ -138,6 +149,16 @@ function updateStats() {
         $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
         alternate = false;
         $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
+
+        if (report.state !== "stopped"){
+            // get total stats row
+            var total = report.stats[report.stats.length-1];
+            // update charts
+            rpsChart.addValue([total.current_rps]);
+            responseTimeChart.addValue([total.avg_response_time]);
+            usersChart.addValue([report.user_count]);
+        }
+
         setTimeout(updateStats, 2000);
     });
 }

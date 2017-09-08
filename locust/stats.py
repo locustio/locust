@@ -1,12 +1,24 @@
-import time
-import gevent
 import hashlib
+import time
+from itertools import chain
 
-import events
-from exception import StopLocust
-from log import console_logger
+import gevent
+import six
+
+from six.moves import xrange
+
+from . import events
+from .exception import StopLocust
+from .log import console_logger
 
 STATS_NAME_WIDTH = 60
+
+"""Default interval for how frequently the CSV file is written if this option
+is configured."""
+CSV_STATS_INTERVAL_SEC = 2
+
+"""Default interval for how frequently results are written to console."""
+CONSOLE_STATS_INTERVAL_SEC = 2
 
 class RequestStatsAdditionError(Exception):
     pass
@@ -38,7 +50,7 @@ class RequestStats(object):
         within entries.
         """
         total = StatsEntry(self, name, method=None)
-        for r in self.entries.itervalues():
+        for r in six.itervalues(self.entries):
             total.extend(r, full_request_history=full_request_history)
         return total
     
@@ -49,7 +61,7 @@ class RequestStats(object):
         self.start_time = time.time()
         self.num_requests = 0
         self.num_failures = 0
-        for r in self.entries.itervalues():
+        for r in six.itervalues(self.entries):
             r.reset()
     
     def clear_all(self):
@@ -249,7 +261,7 @@ class StatsEntry(object):
         self.num_failures = self.num_failures + other.num_failures
         self.total_response_time = self.total_response_time + other.total_response_time
         self.max_response_time = max(self.max_response_time, other.max_response_time)
-        self.min_response_time = min(self.min_response_time, other.min_response_time) or other.min_response_time
+        self.min_response_time = min(self.min_response_time or 0, other.min_response_time or 0) or other.min_response_time
         self.total_content_length = self.total_content_length + other.total_content_length
 
         if full_request_history:
@@ -332,7 +344,7 @@ class StatsEntry(object):
         num_of_request = int((self.num_requests * percent))
 
         processed_count = 0
-        for response_time in sorted(self.response_times.iterkeys(), reverse=True):
+        for response_time in sorted(six.iterkeys(self.response_times), reverse=True):
             processed_count += self.response_times[response_time]
             if((self.num_requests - processed_count) <= num_of_request):
                 return response_time
@@ -363,9 +375,23 @@ class StatsError(object):
         self.occurences = occurences
 
     @classmethod
+    def parse_error(cls, error):
+        string_error = repr(error)
+        target = "object at 0x"
+        target_index = string_error.find(target)
+        if target_index < 0:
+            return string_error
+        start = target_index + len(target) - 2
+        end = string_error.find(">", start)
+        if end < 0:
+            return string_error
+        hex_address = string_error[start:end]
+        return string_error.replace(hex_address, "0x....")
+
+    @classmethod
     def create_key(cls, method, name, error):
-        key = "%s.%s.%r" % (method, name, error)
-        return hashlib.md5(key).hexdigest()
+        key = "%s.%s.%r" % (method, name, StatsError.parse_error(error))
+        return hashlib.md5(key.encode('utf-8')).hexdigest()
 
     def occured(self):
         self.occurences += 1
@@ -378,7 +404,7 @@ class StatsError(object):
         return {
             "method": self.method,
             "name": self.name,
-            "error": repr(self.error),
+            "error": StatsError.parse_error(self.error),
             "occurences": self.occurences
         }
 
@@ -401,7 +427,7 @@ def median_from_dict(total, count):
     count is a dict {response_time: count}
     """
     pos = (total - 1) / 2
-    for k in sorted(count.iterkeys()):
+    for k in sorted(six.iterkeys(count)):
         if pos < count[k]:
             return k
         pos -= count[k]
@@ -413,18 +439,18 @@ A global instance for holding the statistics. Should be removed eventually.
 """
 
 def on_request_success(request_type, name, response_time, response_length):
+    global_stats.get(name, request_type).log(response_time, response_length)
     if global_stats.max_requests is not None and (global_stats.num_requests + global_stats.num_failures) >= global_stats.max_requests:
         raise StopLocust("Maximum number of requests reached")
-    global_stats.get(name, request_type).log(response_time, response_length)
 
 def on_request_failure(request_type, name, response_time, exception):
+    global_stats.get(name, request_type).log_error(exception)
     if global_stats.max_requests is not None and (global_stats.num_requests + global_stats.num_failures) >= global_stats.max_requests:
         raise StopLocust("Maximum number of requests reached")
-    global_stats.get(name, request_type).log_error(exception)
 
 def on_report_to_master(client_id, data):
-    data["stats"] = [global_stats.entries[key].get_stripped_report() for key in global_stats.entries.iterkeys() if not (global_stats.entries[key].num_requests == 0 and global_stats.entries[key].num_failures == 0)]
-    data["errors"] =  dict([(k, e.to_dict()) for k, e in global_stats.errors.iteritems()])
+    data["stats"] = [global_stats.entries[key].get_stripped_report() for key in six.iterkeys(global_stats.entries) if not (global_stats.entries[key].num_requests == 0 and global_stats.entries[key].num_failures == 0)]
+    data["errors"] =  dict([(k, e.to_dict()) for k, e in six.iteritems(global_stats.errors)])
     global_stats.errors = {}
 
 def on_slave_report(client_id, data):
@@ -434,9 +460,9 @@ def on_slave_report(client_id, data):
         if not request_key in global_stats.entries:
             global_stats.entries[request_key] = StatsEntry(global_stats, entry.name, entry.method)
         global_stats.entries[request_key].extend(entry, full_request_history=True)
-        global_stats.last_request_timestamp = max(global_stats.last_request_timestamp, entry.last_request_timestamp)
+        global_stats.last_request_timestamp = max(global_stats.last_request_timestamp or 0, entry.last_request_timestamp)
 
-    for error_key, error in data["errors"].iteritems():
+    for error_key, error in six.iteritems(data["errors"]):
         if error_key not in global_stats.errors:
             global_stats.errors[error_key] = StatsError.from_dict(error)
         else:
@@ -454,7 +480,7 @@ def print_stats(stats):
     total_rps = 0
     total_reqs = 0
     total_failures = 0
-    for key in sorted(stats.iterkeys()):
+    for key in sorted(six.iterkeys(stats)):
         r = stats[key]
         total_rps += r.current_rps
         total_reqs += r.num_requests
@@ -474,7 +500,7 @@ def print_percentile_stats(stats):
     console_logger.info("Percentage of the requests completed within given times")
     console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %8s %6s %6s %6s %6s %6s %6s %6s %6s %6s") % ('Name', '# reqs', '50%', '66%', '75%', '80%', '90%', '95%', '98%', '99%', '100%'))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
-    for key in sorted(stats.iterkeys()):
+    for key in sorted(six.iterkeys(stats)):
         r = stats[key]
         if r.response_times:
             console_logger.info(r.percentile())
@@ -491,13 +517,92 @@ def print_error_report():
     console_logger.info("Error report")
     console_logger.info(" %-18s %-100s" % ("# occurences", "Error"))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
-    for error in global_stats.errors.itervalues():
+    for error in six.itervalues(global_stats.errors):
         console_logger.info(" %-18i %-100s" % (error.occurences, error.to_name()))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     console_logger.info("")
 
 def stats_printer():
-    from runners import locust_runner
+    from . import runners
     while True:
-        print_stats(locust_runner.request_stats)
-        gevent.sleep(2)
+        print_stats(runners.locust_runner.request_stats)
+        gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
+
+def stats_writer(base_filepath):
+    """Writes the csv files for the locust run."""
+    while True:
+        write_stat_csvs(base_filepath)
+        gevent.sleep(CSV_STATS_INTERVAL_SEC)
+
+
+def write_stat_csvs(base_filepath):
+    """Writes the requests and distribution csvs."""
+    with open(base_filepath + '_requests.csv', "w") as f:
+        f.write(requests_csv())
+
+    with open(base_filepath + '_distribution.csv', 'w') as f:
+        f.write(distribution_csv())
+
+
+def sort_stats(stats):
+    return [stats[key] for key in sorted(six.iterkeys(stats))]
+
+
+def requests_csv():
+    from . import runners
+
+    """Returns the contents of the 'requests' tab as CSV."""
+    rows = [
+        ",".join([
+            '"Method"',
+            '"Name"',
+            '"# requests"',
+            '"# failures"',
+            '"Median response time"',
+            '"Average response time"',
+            '"Min response time"',
+            '"Max response time"',
+            '"Average Content Size"',
+            '"Requests/s"',
+        ])
+    ]
+
+    for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
+        rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
+            s.method,
+            s.name,
+            s.num_requests,
+            s.num_failures,
+            s.median_response_time,
+            s.avg_response_time,
+            s.min_response_time or 0,
+            s.max_response_time,
+            s.avg_content_length,
+            s.total_rps,
+        ))
+    return "\n".join(rows)
+
+def distribution_csv():
+    """Returns the contents of the 'distribution' tab as CSV."""
+    from . import runners
+
+    rows = [",".join((
+        '"Name"',
+        '"# requests"',
+        '"50%"',
+        '"66%"',
+        '"75%"',
+        '"80%"',
+        '"90%"',
+        '"95%"',
+        '"98%"',
+        '"99%"',
+        '"100%"',
+    ))]
+    for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
+        if s.num_requests:
+            rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
+        else:
+            rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
+
+    return "\n".join(rows)

@@ -1,16 +1,17 @@
 import re
 import time
-from datetime import timedelta
-from urlparse import urlparse, urlunparse
 
 import requests
-from requests import Response, Request
+import six
+from requests import Request, Response
 from requests.auth import HTTPBasicAuth
-from requests.exceptions import (RequestException, MissingSchema,
-    InvalidSchema, InvalidURL)
+from requests.exceptions import (InvalidSchema, InvalidURL, MissingSchema,
+                                 RequestException)
 
-import events
-from exception import CatchResponseError, ResponseError
+from six.moves.urllib.parse import urlparse, urlunparse
+
+from . import events
+from .exception import CatchResponseError, ResponseError
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
@@ -47,7 +48,7 @@ class HttpSession(requests.Session):
                            and then mark it as successful even if the response code was not (i.e 500 or 404).
     """
     def __init__(self, base_url, *args, **kwargs):
-        requests.Session.__init__(self, *args, **kwargs)
+        super(HttpSession, self).__init__(*args, **kwargs)
 
         self.base_url = base_url
         
@@ -235,7 +236,7 @@ class ResponseContextManager(LocustResponse):
                 if response.content == "":
                     response.failure("No data")
         """
-        if isinstance(exc, basestring):
+        if isinstance(exc, six.string_types):
             exc = CatchResponseError(exc)
         
         events.request_failure.fire(

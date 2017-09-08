@@ -1,11 +1,11 @@
-import struct
 import logging
+import struct
 
 import gevent
 from gevent import socket
-from gevent import queue
 
 from locust.exception import LocustError
+
 from .protocol import Message
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ def _send_obj(sock, msg):
     packed = struct.pack('!i', len(data)) + data
     try:
         sock.sendall(packed)
-    except Exception as e:
+    except Exception:
         try:
             sock.close()
         except:
@@ -52,7 +52,7 @@ class Client(object):
             try:
                 while True:
                     self.command_queue.put_nowait(_recv_obj(sock))
-            except Exception as e:
+            except Exception:
                 try:
                     sock.close()
                 except:
@@ -99,7 +99,7 @@ class Server(object):
             try:
                 while True:
                     self.event_queue.put_nowait(_recv_obj(sock))
-            except Exception as e:
+            except Exception:
                 logger.info("Slave disconnected")
                 slaves.remove(sock)
                 if self.slave_index == len(slaves) and len(slaves) > 0:

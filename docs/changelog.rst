@@ -2,6 +2,35 @@
 Changelog
 ##########
 
+0.8a2
+=====
+
+.. note::
+
+   Locust 0.8 only exists as a pre-release on PyPI, and can be installed using: pip install locustio==0.8a2
+
+
+* Support Python 3
+* Added `--no-reset-stats` option for controling if the statistics should be reset once 
+  the hatching is complete
+* Added charts, for RPS and average response time, to the web UI
+* Various bug fixes and improvements
+
+
+0.7.5
+=====
+
+* Use version 1.1.1 of gevent. Fixes an install issue on certain versions of python.
+
+
+0.7.4
+=====
+
+* Use a newer version of requests, which fixed an issue for users with older versions of 
+  requests getting ConnectionErrors (https://github.com/locustio/locust/issues/273).
+* Various fixes to documentation.
+
+
 0.7.3
 =====
 

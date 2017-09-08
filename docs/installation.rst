@@ -12,7 +12,7 @@ or::
     easy_install locustio
 
 When Locust is installed, a **locust** command should be available in your shell (if you're not using 
-virtualenv - which you should - make sure your python script directory is on your path).
+virtualenv—which you should—make sure your python script directory is on your path).
 
 To see available options, run::
 
@@ -22,7 +22,7 @@ To see available options, run::
 Supported Python Versions
 -------------------------
 
-Locust requires **Python 2.6+**.  It is not currently compatible with Python 3.x.
+Locust supports Python 2.7, 3.3, 3.4, 3.5, and 3.6.
 
 
 Installing ZeroMQ
@@ -41,7 +41,7 @@ Installing Locust on Windows
 ----------------------------
 
 The easiest way to get Locust running on Windows is to first install pre built binary packages for
-gevent (0.13) and greenlet and then follow the above instructions. 
+gevent and greenlet and then follow the above instructions. 
 
 You can find an unofficial collection of pre built python packages for windows here: 
 `http://www.lfd.uci.edu/~gohlke/pythonlibs/ <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_
