@@ -1,4 +1,4 @@
-# encoding: utf-8
+# -*- coding: utf-8 -*-
 
 """
 This is an example of a locustfile that uses Locust's built in event hooks to 
