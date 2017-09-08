@@ -1,13 +1,14 @@
-import unittest
 import time
+import unittest
 
-from six.moves import xrange
-
-from .testcases import WebserverTestCase
-from locust.stats import RequestStats, StatsEntry, global_stats
 from locust.core import HttpLocust, TaskSet, task
 from locust.inspectlocust import get_task_ratio_dict
 from locust.rpc.protocol import Message
+from locust.stats import RequestStats, StatsEntry, global_stats
+from six.moves import xrange
+
+from .testcases import WebserverTestCase
+
 
 class TestRequestStats(unittest.TestCase):
     def setUp(self):

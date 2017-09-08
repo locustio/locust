@@ -1,9 +1,11 @@
-from requests.exceptions import (RequestException, MissingSchema,
-        InvalidSchema, InvalidURL)
+from requests.exceptions import (InvalidSchema, InvalidURL, MissingSchema,
+                                 RequestException)
 
 from locust.clients import HttpSession
 from locust.stats import global_stats
+
 from .testcases import WebserverTestCase
+
 
 class TestHttpSession(WebserverTestCase):
     def test_get(self):
@@ -66,4 +68,3 @@ class TestHttpSession(WebserverTestCase):
         get_stats = global_stats.get(url, method="GET")
         self.assertEqual(1, post_stats.num_requests)
         self.assertEqual(0, get_stats.num_requests)
-    

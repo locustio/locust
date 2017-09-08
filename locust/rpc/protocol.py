@@ -1,5 +1,6 @@
 import msgpack
 
+
 class Message(object):
     def __init__(self, message_type, data, node_id):
         self.type = message_type

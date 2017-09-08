@@ -1,6 +1,6 @@
 import logging
-import sys
 import socket
+import sys
 
 host = socket.gethostname()
 
