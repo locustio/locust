@@ -1,5 +1,6 @@
 from time import time
 
+
 def memoize(timeout, dynamic_timeout=False):
     """
     Memoization decorator with support for timeout.
@@ -28,4 +29,3 @@ def memoize(timeout, dynamic_timeout=False):
         wrapper.clear_cache = clear_cache
         return wrapper
     return decorator
-

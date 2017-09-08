@@ -3,6 +3,7 @@ import unittest
 from locust.core import Locust, TaskSet, task
 from locust.inspectlocust import get_task_ratio_dict
 
+
 class TestTaskRatio(unittest.TestCase):
     def test_task_ratio_command(self):
         class Tasks(TaskSet):

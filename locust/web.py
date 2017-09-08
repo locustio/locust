@@ -1,24 +1,25 @@
-# encoding: utf-8
+# -*- coding: utf-8 -*-
 
 import csv
 import json
+import logging
 import os.path
-from time import time
-from itertools import chain
 from collections import defaultdict
-from six.moves import StringIO, xrange
-import six
+from itertools import chain
+from time import time
 
+import six
+from flask import Flask, make_response, render_template, request
 from gevent import pywsgi
-from flask import Flask, make_response, request, render_template
+
+from locust import __version__ as version
+from six.moves import StringIO, xrange
 
 from . import runners
 from .cache import memoize
 from .runners import MasterLocustRunner
-from .stats import sort_stats, median_from_dict, requests_csv, distribution_csv
-from locust import __version__ as version
+from .stats import distribution_csv, median_from_dict, requests_csv, sort_stats
 
-import logging
 logger = logging.getLogger(__name__)
 
 DEFAULT_CACHE_TIME = 2.0
@@ -177,4 +178,3 @@ def exceptions_csv():
 def start(locust, options):
     pywsgi.WSGIServer((options.web_host, options.port),
                       app, log=None).serve_forever()
-

@@ -1,21 +1,21 @@
+import logging
+import random
+import sys
+import traceback
+from time import time
+
 import gevent
-from gevent import monkey, GreenletExit
 import six
+from gevent import GreenletExit, monkey
+
 from six.moves import xrange
 
-monkey.patch_all(thread=False)
-
-from time import time
-import sys
-import random
-import traceback
-import logging
-
-from .clients import HttpSession
 from . import events
+from .clients import HttpSession
+from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
+                        RescheduleTaskImmediately, StopLocust)
 
-from .exception import LocustError, InterruptTaskSet, RescheduleTask, RescheduleTaskImmediately, StopLocust
-
+monkey.patch_all(thread=False)
 logger = logging.getLogger(__name__)
 
 
@@ -352,4 +352,3 @@ class TaskSet(object):
         Locust instance.
         """
         return self.locust.client
-

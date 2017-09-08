@@ -1,19 +1,18 @@
 import unittest
 
 import gevent
-import mock
-
-from gevent.queue import Queue
 from gevent import sleep
+from gevent.queue import Queue
 
-from locust.runners import LocalLocustRunner, MasterLocustRunner
-from locust.core import Locust, task, TaskSet
-from locust.exception import LocustError
-from locust.rpc import Message
-from locust.stats import global_stats
-from locust.main import parse_options
-from locust.test.testcases import LocustTestCase
+import mock
 from locust import events
+from locust.core import Locust, TaskSet, task
+from locust.exception import LocustError
+from locust.main import parse_options
+from locust.rpc import Message
+from locust.runners import LocalLocustRunner, MasterLocustRunner
+from locust.stats import global_stats
+from locust.test.testcases import LocustTestCase
 
 
 def mocked_rpc_server():
@@ -246,4 +245,3 @@ class TestMessageSerializing(unittest.TestCase):
         self.assertEqual(msg.type, rebuilt.type)
         self.assertEqual(msg.data, rebuilt.data)
         self.assertEqual(msg.node_id, rebuilt.node_id)
-        
