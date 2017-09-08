@@ -1,9 +1,11 @@
-import time
-import gevent
 import hashlib
-import six
-from six.moves import xrange
+import time
 from itertools import chain
+
+import gevent
+import six
+
+from six.moves import xrange
 
 from . import events
 from .exception import StopLocust

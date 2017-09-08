@@ -1,16 +1,18 @@
 import base64
-import gevent
-import gevent.pywsgi
 import random
+import sys
 import unittest
 from copy import copy
 from io import BytesIO
-import sys
+
+import gevent
+import gevent.pywsgi
 import six
+from flask import (Flask, Response, make_response, redirect, request,
+                   send_file, stream_with_context)
 
 from locust import events
 from locust.stats import global_stats
-from flask import Flask, request, redirect, make_response, send_file, Response, stream_with_context
 
 
 def safe_repr(obj, short=False):

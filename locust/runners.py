@@ -1,22 +1,22 @@
 # coding=UTF-8
+import logging
+import random
 import socket
 import traceback
 import warnings
-import random
-import logging
-from time import time
 from hashlib import md5
+from time import time
 
 import gevent
+import six
 from gevent import GreenletExit
 from gevent.pool import Group
-import six
+
 from six.moves import xrange
 
 from . import events
+from .rpc import Message, rpc
 from .stats import global_stats
-
-from .rpc import rpc, Message
 
 logger = logging.getLogger(__name__)
 

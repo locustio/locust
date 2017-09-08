@@ -1,23 +1,23 @@
-import locust
-from . import runners
-
-import gevent
-import sys
-import os
-import signal
 import inspect
 import logging
+import os
+import signal
 import socket
+import sys
 import time
 from optparse import OptionParser
 
-from . import web
-from .log import setup_logging, console_logger
-from .stats import stats_printer, print_percentile_stats, print_error_report, print_stats, stats_writer, write_stat_csvs
-from .inspectlocust import print_task_ratio, get_task_ratio_dict
-from .core import Locust, HttpLocust
-from .runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
-from . import events
+import gevent
+
+import locust
+
+from . import events, runners, web
+from .core import HttpLocust, Locust
+from .inspectlocust import get_task_ratio_dict, print_task_ratio
+from .log import console_logger, setup_logging
+from .runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner
+from .stats import (print_error_report, print_percentile_stats, print_stats,
+                    stats_printer, stats_writer, write_stat_csvs)
 
 _internals = [Locust, HttpLocust]
 version = locust.__version__

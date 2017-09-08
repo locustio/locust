@@ -1,10 +1,11 @@
-import struct
 import logging
+import struct
 
 import gevent
 from gevent import socket
 
 from locust.exception import LocustError
+
 from .protocol import Message
 
 logger = logging.getLogger(__name__)
