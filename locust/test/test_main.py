@@ -36,8 +36,7 @@ class TestTaskSet(LocustTestCase):
         parser, options, args = main.parse_options()
         self.assertEqual('locustfile', options.locustfile)
         self.assertEqual(None, options.host)
-        # The value: python setup.py 'test'
-        self.assertEqual(['test'], args)
+        self.assertEqual([], args)
 
         parser, options, args = main.parse_options(args=shlex.split('--locustfile=test.py -H http://localhost:5000'))
         self.assertEqual('test.py', options.locustfile)
