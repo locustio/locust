@@ -10,7 +10,7 @@ from time import time
 
 import six
 from flask import Flask, make_response, render_template, request
-from gevent import wsgi
+from gevent import pywsgi
 
 from locust import __version__ as version
 from six.moves import StringIO, xrange
@@ -176,4 +176,5 @@ def exceptions_csv():
     return response
 
 def start(locust, options):
-    wsgi.WSGIServer((options.web_host, options.port), app, log=None).serve_forever()
+    pywsgi.WSGIServer((options.web_host, options.port),
+                      app, log=None).serve_forever()
