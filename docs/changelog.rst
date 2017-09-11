@@ -2,12 +2,12 @@
 Changelog
 ##########
 
-0.8a2
+0.8a3
 =====
 
 .. note::
 
-   Locust 0.8 only exists as a pre-release on PyPI, and can be installed using: pip install locustio==0.8a2
+   Locust 0.8 only exists as a pre-release on PyPI, and can be installed using: pip install locustio==0.8a3
 
 
 * Support Python 3
@@ -15,6 +15,7 @@ Changelog
   the hatching is complete
 * Added charts, for RPS and average response time, to the web UI
 * Various bug fixes and improvements
+* Added ability to write a CSV file for results via command line flag
 
 
 0.7.5
