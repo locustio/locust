@@ -1,25 +1,26 @@
-import locust
-import runners
-
-import gevent
-import sys
-import os
-import signal
 import inspect
 import logging
+import os
+import signal
 import socket
+import sys
+import time
 from optparse import OptionParser
 
-import web
-from log import setup_logging, console_logger
-from stats import stats_printer, print_percentile_stats, print_error_report, print_stats
-from inspectlocust import print_task_ratio, get_task_ratio_dict
-from core import Locust, HttpLocust
-from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
-import events
+import gevent
+
+import locust
+
+from . import events, runners, web
+from .core import HttpLocust, Locust
+from .inspectlocust import get_task_ratio_dict, print_task_ratio
+from .log import console_logger, setup_logging
+from .runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner
+from .stats import (print_error_report, print_percentile_stats, print_stats,
+                    stats_printer, stats_writer, write_stat_csvs)
 
 _internals = [Locust, HttpLocust]
-version = locust.version
+version = locust.__version__
 
 def parse_options():
     """
@@ -58,6 +59,16 @@ def parse_options():
         dest='locustfile',
         default='locustfile',
         help="Python module file to import, e.g. '../other.py'. Default: locustfile"
+    )
+
+    # A file that contains the current request stats.
+    parser.add_option(
+        '--csv', '--csv-base-name',
+        action='store',
+        type='str',
+        dest='csvfilebase',
+        default=None,
+        help="Store current request stats to files in CSV format.",
     )
 
     # if locust should be run in distributed mode as master
@@ -113,6 +124,15 @@ def parse_options():
         dest='master_bind_port',
         default=5557,
         help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557. Note that Locust will also use this port + 1, so by default the master node will bind to 5557 and 5558."
+    )
+
+    parser.add_option(
+        '--expect-slaves',
+        action='store',
+        type='int',
+        dest='expect_slaves',
+        default=1,
+        help="How many slaves master should expect to connect before starting the test (only when --no-web used)."
     )
 
     # if we should print stats in the console
@@ -190,6 +210,14 @@ def parse_options():
        dest='only_summary',
        default=False,
        help='Only print the summary stats'
+    )
+
+    parser.add_option(
+        '--no-reset-stats',
+        action='store_true',
+        dest='no_reset_stats',
+        default=False,
+        help="Do not reset statistics once hatching has been completed",
     )
     
     # List locust commands found in loaded locust files/source files
@@ -338,12 +366,17 @@ def main():
     logger = logging.getLogger(__name__)
     
     if options.show_version:
-        print "Locust %s" % (version,)
+        print("Locust %s" % (version,))
         sys.exit(0)
 
     locustfile = find_locustfile(options.locustfile)
+
     if not locustfile:
         logger.error("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.")
+        sys.exit(1)
+
+    if locustfile == "locust.py":
+        logger.error("The locustfile must not be named `locust.py`. Please rename the file and try again.")
         sys.exit(1)
 
     docstring, locusts = load_locustfile(locustfile)
@@ -368,7 +401,8 @@ def main():
             names = set(arguments) & set(locusts.keys())
             locust_classes = [locusts[n] for n in names]
     else:
-        locust_classes = locusts.values()
+        # list() call is needed to consume the dict_view object in Python 3
+        locust_classes = list(locusts.values())
     
     if options.show_task_ratio:
         console_logger.info("\n Task ratio per locust class")
@@ -386,11 +420,6 @@ def main():
         }
         console_logger.info(dumps(task_data))
         sys.exit(0)
-    
-    # if --master is set, make sure --no-web isn't set
-    if options.master and options.no_web:
-        logger.error("Locust can not run distributed with the web interface disabled (do not use --no-web and --master together)")
-        sys.exit(0)
 
     if not options.no_web and not options.slave:
         # spawn web greenlet
@@ -405,28 +434,41 @@ def main():
             main_greenlet = runners.locust_runner.greenlet
     elif options.master:
         runners.locust_runner = MasterLocustRunner(locust_classes, options)
+        if options.no_web:
+            while len(runners.locust_runner.clients.ready)<options.expect_slaves:
+                logging.info("Waiting for slaves to be ready, %s of %s connected",
+                             len(runners.locust_runner.clients.ready), options.expect_slaves)
+                time.sleep(1)
+
+            runners.locust_runner.start_hatching(options.num_clients, options.hatch_rate)
+            main_greenlet = runners.locust_runner.greenlet
     elif options.slave:
         try:
             runners.locust_runner = SlaveLocustRunner(locust_classes, options)
             main_greenlet = runners.locust_runner.greenlet
-        except socket.error, e:
+        except socket.error as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
     
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
+
+    if options.csvfilebase:
+        gevent.spawn(stats_writer, options.csvfilebase)
+
     
     def shutdown(code=0):
         """
-        Shut down locust by firing quitting event, printing stats and exiting
+        Shut down locust by firing quitting event, printing/writing stats and exiting
         """
         logger.info("Shutting down (exit code %s), bye." % code)
 
         events.quitting.fire()
         print_stats(runners.locust_runner.request_stats)
         print_percentile_stats(runners.locust_runner.request_stats)
-
+        if options.csvfilebase:
+            write_stat_csvs(options.csvfilebase)
         print_error_report()
         sys.exit(code)
     
