@@ -26,6 +26,9 @@ class EventHook(object):
         for handler in self._handlers:
             handler(**kwargs)
 
+    def clear(self):
+        del self._handlers[:]
+
 request_success = EventHook()
 """
 *request_success* is fired when a request is completed successfully.
@@ -71,20 +74,20 @@ Note that the keys "stats" and "errors" are used by Locust and shouldn't be over
 
 Event is fired with the following arguments:
 
-* *client_id*: The client id of the running locust process.
+* *node_id*: The client id of the running locust process.
 * *data*: Data dict that can be modified in order to attach data that should be sent to the master.
 """
 
-slave_report = EventHook()
+node_report = EventHook()
 """
-*slave_report* is used when Locust is running in --master mode and is fired when the master
+*node_report* is used when Locust is running in --master mode and is fired when the master
 server receives a report from a Locust slave server.
 
 This event can be used to aggregate data from the locust slave servers.
 
 Event is fired with following arguments:
 
-* *client_id*: Client id of the reporting locust slave
+* *node_id*: Client id of the reporting locust slave
 * *data*: Data dict with the data from the slave node
 """
 
@@ -125,3 +128,16 @@ locust_stop_hatching = EventHook()
 """
 *locust_stop_hatching* is fired when terminate the hatching process on any locust worker.
 """
+
+def clear_events_handlers():
+    request_success.clear()
+    request_failure.clear()
+    locust_error.clear()
+    report_to_master.clear()
+    node_report.clear()
+    hatch_complete.clear()
+    quitting.clear()
+    master_start_hatching.clear()
+    master_stop_hatching.clear()
+    locust_start_hatching.clear()
+    locust_stop_hatching.clear()

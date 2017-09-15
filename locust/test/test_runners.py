@@ -40,7 +40,7 @@ def mocked_rpc_server():
 class TestMasterRunner(LocustTestCase):
     def setUp(self):
         global_stats.reset_all()
-        self._slave_report_event_handlers = [h for h in events.slave_report._handlers]
+        self._slave_report_event_handlers = [h for h in events.node_report._handlers]
 
         parser, _, _ = parse_options()
         args = [
@@ -51,7 +51,7 @@ class TestMasterRunner(LocustTestCase):
         self.options = opts
         
     def tearDown(self):
-        events.slave_report._handlers = self._slave_report_event_handlers
+        events.node_report._handlers = self._slave_report_event_handlers
     
     def test_slave_connect(self):
         import mock

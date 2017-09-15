@@ -33,7 +33,7 @@ class RequestStats(object):
         self.max_requests = None
         self.last_request_timestamp = None
         self.start_time = None
-    
+
     def get(self, name, method):
         """
         Retrieve a StatsEntry instance by name and method
@@ -43,17 +43,17 @@ class RequestStats(object):
             entry = StatsEntry(self, name, method)
             self.entries[(name, method)] = entry
         return entry
-    
+
     def aggregated_stats(self, name="Total", full_request_history=False):
         """
-        Returns a StatsEntry which is an aggregate of all stats entries 
+        Returns a StatsEntry which is an aggregate of all stats entries
         within entries.
         """
         total = StatsEntry(self, name, method=None)
         for r in six.itervalues(self.entries):
             total.extend(r, full_request_history=full_request_history)
         return total
-    
+
     def reset_all(self):
         """
         Go through all stats entries and reset them to zero
@@ -63,7 +63,7 @@ class RequestStats(object):
         self.num_failures = 0
         for r in six.itervalues(self.entries):
             r.reset()
-    
+
     def clear_all(self):
         """
         Remove all stats entries and errors
@@ -75,7 +75,7 @@ class RequestStats(object):
         self.max_requests = None
         self.last_request_timestamp = None
         self.start_time = None
-        
+
 
 class StatsEntry(object):
     """
@@ -143,7 +143,7 @@ class StatsEntry(object):
         self.last_request_timestamp = int(time.time())
         self.num_reqs_per_sec = {}
         self.total_content_length = 0
-    
+
     def log(self, response_time, content_length):
         self.stats.num_requests += 1
         self.num_requests += 1
@@ -448,12 +448,12 @@ def on_request_failure(request_type, name, response_time, exception):
     if global_stats.max_requests is not None and (global_stats.num_requests + global_stats.num_failures) >= global_stats.max_requests:
         raise StopLocust("Maximum number of requests reached")
 
-def on_report_to_master(client_id, data):
+def on_report_to_master(node_id, data):
     data["stats"] = [global_stats.entries[key].get_stripped_report() for key in six.iterkeys(global_stats.entries) if not (global_stats.entries[key].num_requests == 0 and global_stats.entries[key].num_failures == 0)]
     data["errors"] =  dict([(k, e.to_dict()) for k, e in six.iteritems(global_stats.errors)])
     global_stats.errors = {}
 
-def on_slave_report(client_id, data):
+def on_node_report(node_id, data):
     for stats_data in data["stats"]:
         entry = StatsEntry.unserialize(stats_data)
         request_key = (entry.name, entry.method)
@@ -468,11 +468,13 @@ def on_slave_report(client_id, data):
         else:
             global_stats.errors[error_key].occurences += error["occurences"]
 
-events.request_success += on_request_success
-events.request_failure += on_request_failure
-events.report_to_master += on_report_to_master
-events.slave_report += on_slave_report
+def subscribe_stats():
+    events.request_success += on_request_success
+    events.request_failure += on_request_failure
+    events.report_to_master += on_report_to_master
+    events.node_report += on_node_report   
 
+subscribe_stats()
 
 def print_stats(stats):
     console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s'))

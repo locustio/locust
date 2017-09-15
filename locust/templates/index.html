@@ -27,12 +27,14 @@
                     <a href="#" class="new_test" id="new_test">New test</a>
                     <a href="#" class="edit_test">Edit</a>
                 </div>
-                {% if is_distributed %}
-                    <div class="top_box box_slaves" id="box_rps">
-                        <div class="label">SLAVES</div>
-                        <div class="value" id="slaveCount">{{slave_count}}</div>
-                    </div>
-                {% endif %}
+                <div class="top_box box_slaves" id="box_rps">
+                    <div class="label">NODES</div>
+                    <div class="value" id="slaveCount">{{slave_count}}</div>
+                </div>
+                <div class="top_box box_slaves" id="box_rps">
+                    <div class="label">WORKERS</div>
+                    <div class="value" id="slaveCount">{{worker_count}}</div>
+                </div>
                 <div class="top_box box_rps box_running" id="box_rps">
                     <div class="label">RPS</div>
                     <div class="value" id="total_rps">0</div>

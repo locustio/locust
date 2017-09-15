@@ -39,7 +39,7 @@ def on_request_success(request_type, name, response_time, response_length):
     """
     stats["content-length"] += response_length
 
-def on_report_to_master(client_id, data):
+def on_report_to_master(node_id, data):
     """
     This event is triggered on the slave instances every time a stats report is
     to be sent to the locust master. It will allow us to add our extra content-length
@@ -48,7 +48,7 @@ def on_report_to_master(client_id, data):
     data["content-length"] = stats["content-length"]
     stats["content-length"] = 0
 
-def on_slave_report(client_id, data):
+def on_node_report(node_id, data):
     """
     This event is triggered on the master instance when a new stats report arrives
     from a slave. Here we just add the content-length to the master's aggregated
@@ -59,7 +59,7 @@ def on_slave_report(client_id, data):
 # Hook up the event listeners
 events.request_success += on_request_success
 events.report_to_master += on_report_to_master
-events.slave_report += on_slave_report
+events.node_report += on_node_report
 
 @web.app.route("/content-length")
 def total_content_length():

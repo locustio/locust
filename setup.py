@@ -41,7 +41,15 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
-    install_requires=["gevent>=1.2.2", "flask>=0.10.1", "requests>=2.9.1", "msgpack-python>=0.4.2", "six>=1.10.0", "pyzmq==15.2.0"],
+    install_requires=[
+        "gevent>=1.2.2",
+        "flask>=0.10.1",
+        "requests>=2.9.1",
+        "msgpack-python>=0.4.2",
+        "six>=1.10.0",
+        "pyzmq>=15.4.0,<16",
+        "socketIO-client>=0.7.2,<0.8"
+    ],
     tests_require=['unittest2', 'mock'],
     entry_points={
         'console_scripts': [

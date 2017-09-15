@@ -129,8 +129,7 @@ function updateStats() {
         $("#status_text").html(report.state);
         $("#userCount").html(report.user_count);
 
-        if (typeof report.slave_count !== "undefined")
-            $("#slaveCount").html(report.slave_count)
+        $("#slaveCount").html(report.slave_count)
 
         $('#stats tbody').empty();
         $('#errors tbody').empty();
@@ -162,7 +161,7 @@ function updateExceptions() {
     $.get('/exceptions', function (data) {
         $('#exceptions tbody').empty();
         $('#exceptions tbody').jqoteapp(exceptions_tpl, data.exceptions);
-        setTimeout(updateExceptions, 5000);
+        // setTimeout(updateExceptions, 5000);
     });
 }
-updateExceptions();
+// updateExceptions();
