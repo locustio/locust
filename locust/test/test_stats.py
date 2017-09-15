@@ -4,7 +4,7 @@ import unittest
 from locust.core import HttpLocust, TaskSet, task
 from locust.inspectlocust import get_task_ratio_dict
 from locust.rpc.protocol import Message
-from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, global_stats
+from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_response_time_dicts, global_stats
 from six.moves import xrange
 
 from .testcases import WebserverTestCase
@@ -189,9 +189,37 @@ class TestStatsEntryResponseTimesCache(unittest.TestCase):
         t = int(time.time())
         s.response_times_cache[t-10] = CachedResponseTimes(
             response_times={i:1 for i in xrange(100)},
-            num_requests=100
+            num_requests=200
         )
+        s.response_times_cache[t-10].response_times[1] = 201
+        
+        s.response_times = {i:2 for i in xrange(100)}
+        s.response_times[1] = 202
+        s.num_requests = 300
+        
         self.assertEqual(95, s.get_current_response_time_percentile(0.95))
+    
+    def test_diff_response_times_dicts(self):
+        self.assertEqual({1:5, 6:8}, diff_response_time_dicts(
+            {1:6, 6:16, 2:2}, 
+            {1:1, 6:8, 2:2},
+        ))
+        self.assertEqual({}, diff_response_time_dicts(
+            {}, 
+            {},
+        ))
+        self.assertEqual({10:15}, diff_response_time_dicts(
+            {10:15}, 
+            {},
+        ))
+        self.assertEqual({10:10}, diff_response_time_dicts(
+            {10:10}, 
+            {},
+        ))
+        self.assertEqual({}, diff_response_time_dicts(
+            {1:1}, 
+            {1:1},
+        ))
 
 
 class TestRequestStatsWithWebserver(WebserverTestCase):

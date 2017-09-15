@@ -48,6 +48,20 @@ def calculate_response_time_percentile(response_times, num_requests, percent):
             return response_time
 
 
+def diff_response_time_dicts(latest, old):
+    """
+    Returns the delta between two {response_times:request_count} dicts.
+    
+    Used together with the response_times cache to get the response times for the 
+    last X seconds, which in turn is used to calculate the current response time 
+    percentiles.
+    """
+    new = {}
+    for time in latest:
+        new[time] = latest[time] - old.get(time, 0)
+    return new
+
+
 class RequestStats(object):
     def __init__(self):
         self.entries = {}
@@ -393,7 +407,7 @@ class StatsEntry(object):
         if not self.use_response_times_cache:
             raise ValueError("StatsEntry.use_response_times_cache must be set to True if we should be able to calculate the _current_ response time percentile")
         # First, we want to determine which of the cached response_times dicts we should 
-        # use to get response_times for approximately the last 10 seconds. 
+        # use to get response_times for approximately 10 seconds ago. 
         t = int(time.time())
         # Since we can't be sure that the cache contains an entry for every second. 
         # We'll construct a list of timestamps which we consider acceptable keys to be used 
@@ -404,10 +418,22 @@ class StatsEntry(object):
             acceptable_timestamps.append(t-10-i)
             acceptable_timestamps.append(t-10+i)
         
+        cached = None
         for ts in acceptable_timestamps:
             if ts in self.response_times_cache:
                 cached = self.response_times_cache[ts]
-                return calculate_response_time_percentile(cached.response_times, cached.num_requests, percent)
+                break
+        
+        if cached:
+            # If we fond an acceptable cached response times, we'll calculate a new response 
+            # times dict of the last 10 seconds (approximately) by diffing it with the current 
+            # total response times. Then we'll use that to calculate a response time percentile 
+            # for that timeframe
+            return calculate_response_time_percentile(
+                diff_response_time_dicts(self.response_times, cached.response_times), 
+                self.num_requests - cached.num_requests, 
+                percent,
+            )
     
     def percentile(self, tpl=" %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
         if not self.num_requests:
