@@ -1,19 +1,20 @@
-# encoding: utf-8
-
+# -*- coding: utf-8 -*-
 import csv
 import json
 import sys
 import traceback
-from six.moves import StringIO
 
-import requests
 import gevent
+import requests
 from gevent import wsgi
 
-from locust import web, runners, stats
-from locust.runners import LocustRunner
+from locust import runners, stats, web
 from locust.main import parse_options
+from locust.runners import LocustRunner
+from six.moves import StringIO
+
 from .testcases import LocustTestCase
+
 
 class TestWebUI(LocustTestCase):
     def setUp(self):
@@ -119,4 +120,3 @@ class TestWebUI(LocustTestCase):
         self.assertEqual(2, len(rows))
         self.assertEqual("Test exception", rows[1][1])
         self.assertEqual(2, int(rows[1][0]), "Exception count should be 2")
-        
