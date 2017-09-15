@@ -15,7 +15,7 @@ matrix:
 addons:
   apt:
     packages:
-      - libevent-dev
+      - libev-dev
 install:
   - pip install tox
 script:

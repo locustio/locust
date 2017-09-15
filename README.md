@@ -1,12 +1,12 @@
 # Locust
 
 [![Build Status](https://secure.travis-ci.org/locustio/locust.png)](http://travis-ci.org/locustio/locust)
-[![Gitter Chat](https://badges.gitter.im/locustio/locust.png)](https://gitter.im/locustio/locust)
 
 ## Links
 
 * Website: <a href="http://locust.io">locust.io</a>
 * Documentation: <a href="http://docs.locust.io">docs.locust.io</a>
+* Support/Questions: [Slack signup](https://slack.locust.io/)
 
 ## Description
 
@@ -34,7 +34,7 @@ of callbacks, your code looks and behaves like normal, blocking Python code.
  Part of the reason behind this is that even if you simulate that many users, not all are actively hitting your system. Often, users are idle figuring out what to do next. Requests per second != number of users online.
 
 * **Web-based UI**<br>
- Locust has a neat HTML+JS that shows all relevent test details in real-time. And since the UI is web-based, it's cross-platform and easily extendable.
+ Locust has a neat HTML+JS that shows all relevant test details in real-time. And since the UI is web-based, it's cross-platform and easily extendable.
 
 * **Can test any system**<br>
  Even though Locust is web-oriented, it can be used to test almost any system. Just write a client for what ever you wish to test and swarm it with locusts! It's super easy!
@@ -47,6 +47,13 @@ of callbacks, your code looks and behaves like normal, blocking Python code.
 
 More info and documentation can be found at: <a href="http://docs.locust.io/">http://docs.locust.io/</a>
 
+## Questions/help?
+
+For questions about how to use Locust, feel free to stop by the Slack or ask questions on Stack Overflow tagged Locust.
+
+## Bug reporting or feature requests
+
+Open a Github issue and follow the template listed there.
 
 ## Authors
 

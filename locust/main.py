@@ -1,22 +1,23 @@
-import locust
-from . import runners
-
-import gevent
-import sys
-import os
-import signal
 import inspect
 import logging
+import os
+import signal
 import socket
+import sys
+import time
 from optparse import OptionParser
 
-from . import web
-from .log import setup_logging, console_logger
-from .stats import stats_printer, print_percentile_stats, print_error_report, print_stats
-from .inspectlocust import print_task_ratio, get_task_ratio_dict
-from .core import Locust, HttpLocust
-from .runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
-from . import events
+import gevent
+
+import locust
+
+from . import events, runners, web
+from .core import HttpLocust, Locust
+from .inspectlocust import get_task_ratio_dict, print_task_ratio
+from .log import console_logger, setup_logging
+from .runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner
+from .stats import (print_error_report, print_percentile_stats, print_stats,
+                    stats_printer, stats_writer, write_stat_csvs)
 
 _internals = [Locust, HttpLocust]
 version = locust.__version__
@@ -58,6 +59,16 @@ def parse_options():
         dest='locustfile',
         default='locustfile',
         help="Python module file to import, e.g. '../other.py'. Default: locustfile"
+    )
+
+    # A file that contains the current request stats.
+    parser.add_option(
+        '--csv', '--csv-base-name',
+        action='store',
+        type='str',
+        dest='csvfilebase',
+        default=None,
+        help="Store current request stats to files in CSV format.",
     )
 
     # if locust should be run in distributed mode as master
@@ -113,6 +124,15 @@ def parse_options():
         dest='master_bind_port',
         default=5557,
         help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557. Note that Locust will also use this port + 1, so by default the master node will bind to 5557 and 5558."
+    )
+
+    parser.add_option(
+        '--expect-slaves',
+        action='store',
+        type='int',
+        dest='expect_slaves',
+        default=1,
+        help="How many slaves master should expect to connect before starting the test (only when --no-web used)."
     )
 
     # if we should print stats in the console
@@ -400,11 +420,6 @@ def main():
         }
         console_logger.info(dumps(task_data))
         sys.exit(0)
-    
-    # if --master is set, make sure --no-web isn't set
-    if options.master and options.no_web:
-        logger.error("Locust can not run distributed with the web interface disabled (do not use --no-web and --master together)")
-        sys.exit(0)
 
     if not options.no_web and not options.slave:
         # spawn web greenlet
@@ -419,6 +434,14 @@ def main():
             main_greenlet = runners.locust_runner.greenlet
     elif options.master:
         runners.locust_runner = MasterLocustRunner(locust_classes, options)
+        if options.no_web:
+            while len(runners.locust_runner.clients.ready)<options.expect_slaves:
+                logging.info("Waiting for slaves to be ready, %s of %s connected",
+                             len(runners.locust_runner.clients.ready), options.expect_slaves)
+                time.sleep(1)
+
+            runners.locust_runner.start_hatching(options.num_clients, options.hatch_rate)
+            main_greenlet = runners.locust_runner.greenlet
     elif options.slave:
         try:
             runners.locust_runner = SlaveLocustRunner(locust_classes, options)
@@ -430,17 +453,22 @@ def main():
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
+
+    if options.csvfilebase:
+        gevent.spawn(stats_writer, options.csvfilebase)
+
     
     def shutdown(code=0):
         """
-        Shut down locust by firing quitting event, printing stats and exiting
+        Shut down locust by firing quitting event, printing/writing stats and exiting
         """
         logger.info("Shutting down (exit code %s), bye." % code)
 
         events.quitting.fire()
         print_stats(runners.locust_runner.request_stats)
         print_percentile_stats(runners.locust_runner.request_stats)
-
+        if options.csvfilebase:
+            write_stat_csvs(options.csvfilebase)
         print_error_report()
         sys.exit(code)
     
