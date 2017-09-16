@@ -2,20 +2,22 @@
 Changelog
 ##########
 
-0.8a3
+0.8a4
 =====
 
 .. note::
 
-   Locust 0.8 only exists as a pre-release on PyPI, and can be installed using: pip install locustio==0.8a3
+   Locust 0.8 only exists as a pre-release on PyPI, and can be installed using: pip install locustio==0.8a4
 
 
 * Support Python 3
 * Added `--no-reset-stats` option for controling if the statistics should be reset once 
   the hatching is complete
 * Added charts, for RPS and average response time, to the web UI
-* Various bug fixes and improvements
 * Added ability to write a CSV file for results via command line flag
+* We now also apply gevent's monkey patching of threads. This fixes an issue when 
+  using Locust to test Cassandra (https://github.com/locustio/locust/issues/569).
+* Various bug fixes and improvements
 
 
 0.7.5
