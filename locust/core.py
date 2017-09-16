@@ -6,16 +6,20 @@ from time import time
 
 import gevent
 import six
-from gevent import GreenletExit, monkey
 
+from gevent import GreenletExit, monkey
 from six.moves import xrange
+
+# The monkey patching must run before requests is imported, or else 
+# we'll get an infinite recursion when doing SSL/HTTPS requests.
+# See: https://github.com/requests/requests/issues/3752#issuecomment-294608002
+monkey.patch_all(thread=False)
 
 from . import events
 from .clients import HttpSession
 from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
                         RescheduleTaskImmediately, StopLocust)
 
-monkey.patch_all(thread=False)
 logger = logging.getLogger(__name__)
 
 
