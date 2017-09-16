@@ -58,7 +58,9 @@ def diff_response_time_dicts(latest, old):
     """
     new = {}
     for time in latest:
-        new[time] = latest[time] - old.get(time, 0)
+        diff = latest[time] - old.get(time, 0)
+        if diff:
+            new[time] = diff
     return new
 
 
