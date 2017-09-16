@@ -26,6 +26,7 @@ def mocked_rpc_server():
         @classmethod
         def mocked_send(cls, message):
             cls.queue.put(message.serialize())
+            sleep(0)
         
         def recv(self):
             results = self.queue.get()
@@ -108,7 +109,6 @@ class TestMasterRunner(LocustTestCase):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
             master = MasterLocustRunner(MyTestLocust, self.options)
             server.mocked_send(Message("client_ready", None, "fake_client"))
-            sleep(0)
             stats = RequestStats()
             stats.log_request("GET", "/1", 100, 3546)
             stats.log_request("GET", "/1", 800, 56743)
@@ -120,14 +120,12 @@ class TestMasterRunner(LocustTestCase):
                 "errors":stats.serialize_errors(),
                 "user_count": 1,
             }, "fake_client"))
-            sleep(0)
             server.mocked_send(Message("stats", {
                 "stats":stats2.serialize_stats(), 
                 "stats_total": stats2.total.serialize(),
                 "errors":stats2.serialize_errors(),
                 "user_count": 2,
             }, "fake_client"))
-            sleep(0)
             self.assertEqual(700, master.stats.total.median_response_time)
     
     def test_spawn_zero_locusts(self):
