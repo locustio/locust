@@ -148,11 +148,12 @@ class TestStatsEntryResponseTimesCache(unittest.TestCase):
     
     def test_response_times_cached(self):
         s = StatsEntry(self.stats, "/", "GET", use_response_times_cache=True)
+        self.assertEqual(1, len(s.response_times_cache))
         s.log(11, 1337)
-        self.assertEqual(0, len(s.response_times_cache))
+        self.assertEqual(1, len(s.response_times_cache))
         s.last_request_timestamp -= 1
         s.log(666, 1337)
-        self.assertEqual(1, len(s.response_times_cache))
+        self.assertEqual(2, len(s.response_times_cache))
         self.assertEqual(CachedResponseTimes(
             response_times={11:1}, 
             num_requests=1,
@@ -174,7 +175,7 @@ class TestStatsEntryResponseTimesCache(unittest.TestCase):
         t = int(time.time())
         for i in reversed(range(2, 30)):
             s.response_times_cache[t-i] = CachedResponseTimes(response_times={}, num_requests=0)
-        self.assertEqual(28, len(s.response_times_cache))
+        self.assertEqual(29, len(s.response_times_cache))
         s.log(17, 1337)
         s.last_request_timestamp -= 1
         s.log(1, 1)

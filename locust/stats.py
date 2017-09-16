@@ -211,13 +211,14 @@ class StatsEntry(object):
         self.num_failures = 0
         self.total_response_time = 0
         self.response_times = {}
-        if self.use_response_times_cache:
-            self.response_times_cache = OrderedDict()
         self.min_response_time = None
         self.max_response_time = 0
         self.last_request_timestamp = int(time.time())
         self.num_reqs_per_sec = {}
         self.total_content_length = 0
+        if self.use_response_times_cache:
+            self.response_times_cache = OrderedDict()
+            self._cache_response_times(int(time.time()))
     
     def log(self, response_time, content_length):
         # get the time
