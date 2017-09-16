@@ -63,17 +63,14 @@ class TestMasterRunner(LocustTestCase):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
             master = MasterLocustRunner(MyTestLocust, self.options)
             server.mocked_send(Message("client_ready", None, "zeh_fake_client1"))
-            sleep(0)
             self.assertEqual(1, len(master.clients))
             self.assertTrue("zeh_fake_client1" in master.clients, "Could not find fake client in master instance's clients dict")
             server.mocked_send(Message("client_ready", None, "zeh_fake_client2"))
             server.mocked_send(Message("client_ready", None, "zeh_fake_client3"))
             server.mocked_send(Message("client_ready", None, "zeh_fake_client4"))
-            sleep(0)
             self.assertEqual(4, len(master.clients))
             
             server.mocked_send(Message("quit", None, "zeh_fake_client3"))
-            sleep(0)
             self.assertEqual(3, len(master.clients))
     
     def test_slave_stats_report_median(self):
@@ -85,7 +82,6 @@ class TestMasterRunner(LocustTestCase):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
             master = MasterLocustRunner(MyTestLocust, self.options)
             server.mocked_send(Message("client_ready", None, "fake_client"))
-            sleep(0)
             
             master.stats.get("/", "GET").log(100, 23455)
             master.stats.get("/", "GET").log(800, 23455)
@@ -96,7 +92,6 @@ class TestMasterRunner(LocustTestCase):
             master.stats.clear_all()
             
             server.mocked_send(Message("stats", data, "fake_client"))
-            sleep(0)
             s = master.stats.get("/", "GET")
             self.assertEqual(700, s.median_response_time)
     
@@ -217,7 +212,6 @@ class TestMasterRunner(LocustTestCase):
             master = MasterLocustRunner(MyTestLocust, self.options)
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
-                sleep(0)
             
             master.start_hatching(7, 7)
             self.assertEqual(5, len(server.outbox))
@@ -238,7 +232,6 @@ class TestMasterRunner(LocustTestCase):
             master = MasterLocustRunner(MyTestLocust, self.options)
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
-                sleep(0)
             
             master.start_hatching(2, 2)
             self.assertEqual(5, len(server.outbox))
