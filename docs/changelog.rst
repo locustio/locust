@@ -15,6 +15,8 @@ Changelog
   the hatching is complete
 * Added charts, for RPS and average response time, to the web UI
 * Added ability to write a CSV file for results via command line flag
+* We now also apply gevent's monkey patching of threads. This fixes an issue when 
+  using Locust to test Cassandra (https://github.com/locustio/locust/issues/569).
 * Various bug fixes and improvements
 
 
