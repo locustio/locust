@@ -316,7 +316,7 @@ class StatsEntry(object):
     
     def extend(self, other):
         """
-        Extend the data fro the current StatsEntry with the stats from another
+        Extend the data from the current StatsEntry with the stats from another
         StatsEntry instance. 
         """
         self.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
@@ -570,7 +570,20 @@ def on_slave_report(client_id, data):
         else:
             global_stats.errors[error_key].occurences += error["occurences"]
     
+    # save the old last_request_timestamp, to see if we should store a new copy
+    # of the response times in the response times cache
+    old_last_request_timestamp = global_stats.total.last_request_timestamp
+    # update the total StatsEntry
     global_stats.total.extend(StatsEntry.unserialize(data["stats_total"]))
+    if global_stats.total.last_request_timestamp > old_last_request_timestamp:
+        # If we've entered a new second, we'll cache the response times. Note that there 
+        # might still be reports from other slave nodes - that contains requests for the same 
+        # time periods - that hasn't been received/accounted for yet. This will cause the cache to 
+        # lag behind a second or two, but since StatsEntry.current_response_time_percentile() 
+        # (which is what the response times cache is used for) uses an approximation of the 
+        # last 10 seconds anyway, it should be fine to ignore this. 
+        global_stats.total._cache_response_times(global_stats.total.last_request_timestamp)
+    
 
 events.request_success += on_request_success
 events.request_failure += on_request_failure

@@ -128,6 +128,57 @@ class TestMasterRunner(LocustTestCase):
             }, "fake_client"))
             self.assertEqual(700, master.stats.total.median_response_time)
     
+    def test_master_current_response_times(self):
+        import mock
+        
+        class MyTestLocust(Locust):
+            pass
+        
+        start_time = 1
+        with mock.patch("time.time") as mocked_time:
+            mocked_time.return_value = start_time
+            global_stats.reset_all()
+            with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
+                master = MasterLocustRunner(MyTestLocust, self.options)
+                mocked_time.return_value += 1
+                server.mocked_send(Message("client_ready", None, "fake_client"))
+                stats = RequestStats()
+                stats.log_request("GET", "/1", 100, 3546)
+                stats.log_request("GET", "/1", 800, 56743)
+                server.mocked_send(Message("stats", {
+                    "stats":stats.serialize_stats(),
+                    "stats_total": stats.total.get_stripped_report(),
+                    "errors":stats.serialize_errors(),
+                    "user_count": 1,
+                }, "fake_client"))
+                mocked_time.return_value += 1
+                stats2 = RequestStats()
+                stats2.log_request("GET", "/2", 400, 2201)
+                server.mocked_send(Message("stats", {
+                    "stats":stats2.serialize_stats(),
+                    "stats_total": stats2.total.get_stripped_report(),
+                    "errors":stats2.serialize_errors(),
+                    "user_count": 2,
+                }, "fake_client"))
+                mocked_time.return_value += 4
+                self.assertEqual(400, master.stats.total.get_current_response_time_percentile(0.5))
+                self.assertEqual(800, master.stats.total.get_current_response_time_percentile(0.95))
+                
+                # let 10 second pass, do some more requests, send it to the master and make
+                # sure the current response time percentiles only accounts for these new requests
+                mocked_time.return_value += 10
+                stats.log_request("GET", "/1", 20, 1)
+                stats.log_request("GET", "/1", 30, 1)
+                stats.log_request("GET", "/1", 3000, 1)
+                server.mocked_send(Message("stats", {
+                    "stats":stats.serialize_stats(),
+                    "stats_total": stats.total.get_stripped_report(),
+                    "errors":stats.serialize_errors(),
+                    "user_count": 2,
+                }, "fake_client"))
+                self.assertEqual(30, master.stats.total.get_current_response_time_percentile(0.5))
+                self.assertEqual(3000, master.stats.total.get_current_response_time_percentile(0.95))
+    
     def test_spawn_zero_locusts(self):
         class MyTaskSet(TaskSet):
             @task
