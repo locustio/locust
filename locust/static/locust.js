@@ -130,6 +130,7 @@ function updateStats() {
         $("#userCount").html(report.user_count);
 
         $("#slaveCount").html(report.slave_count)
+        $("#workerCount").html(report.worker_count)
 
         $('#stats tbody').empty();
         $('#errors tbody').empty();
@@ -161,7 +162,7 @@ function updateExceptions() {
     $.get('/exceptions', function (data) {
         $('#exceptions tbody').empty();
         $('#exceptions tbody').jqoteapp(exceptions_tpl, data.exceptions);
-        // setTimeout(updateExceptions, 5000);
+        setTimeout(updateExceptions, 5000);
     });
 }
-// updateExceptions();
+updateExceptions();

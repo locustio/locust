@@ -296,6 +296,7 @@ def parse_options():
         default=False,
         help="print table of the locust classes' task execution ratio"
     )
+
     # Display ratio table of all tasks in JSON format
     parser.add_option(
         '--show-task-ratio-json',
@@ -303,6 +304,15 @@ def parse_options():
         dest='show_task_ratio_json',
         default=False,
         help="print json data of the locust classes' task execution ratio"
+    )
+
+    # Display ratio table of all tasks in JSON format
+    parser.add_option(
+        '--print-stats',
+        action='store_true',
+        dest='print_stats',
+        default=False,
+        help="print testrun statistics to console"
     )
 
     # Version number (optparse gives you --version but we have to do it

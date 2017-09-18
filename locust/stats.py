@@ -527,7 +527,7 @@ def print_error_report():
 def stats_printer():
     from . import runners
     while True:
-        print_stats(runners.locust_runner.request_stats)
+        print_stats(runners.main.request_stats)
         gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
 
 def stats_writer(base_filepath):
@@ -569,7 +569,7 @@ def requests_csv():
         ])
     ]
 
-    for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
+    for s in chain(sort_stats(runners.main.request_stats), [runners.main.stats.aggregated_stats("Total", full_request_history=True)]):
         rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
             s.method,
             s.name,
@@ -601,7 +601,7 @@ def distribution_csv():
         '"99%"',
         '"100%"',
     ))]
-    for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total", full_request_history=True)]):
+    for s in chain(sort_stats(runners.main.request_stats), [runners.main.stats.aggregated_stats("Total", full_request_history=True)]):
         if s.num_requests:
             rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
         else:

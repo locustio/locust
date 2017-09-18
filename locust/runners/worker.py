@@ -189,16 +189,6 @@ class LocustRunner(object):
         self.state = STATE.STOPPED
         events.locust_stop_hatching.fire()
 
-    def log_exception(self, node_id, msg, formatted_tb):
-        key = hash(formatted_tb)
-        row = self.exceptions.setdefault(
-            key,
-            {"count": 0, "msg": msg, "traceback": formatted_tb, "nodes": set()}
-        )
-        row["count"] += 1
-        row["nodes"].add(node_id)
-        self.exceptions[key] = row
-
 
 class WorkerLocustRunner(LocustRunner):
     """Locust runner with communication layer"""
@@ -223,9 +213,7 @@ class WorkerLocustRunner(LocustRunner):
             )
 
         def on_stop(self, msg):
-            self.worker.stop()
-            self.worker.client.send_all(Message("worker_stopped", None, self.worker.worker_id))
-            self.worker.client.send_all(Message("worker_ready", None, self.worker.worker_id))
+            events.quitting.fire()
 
         def on_quit(self, msg):
             events.quitting.fire()
@@ -291,9 +279,9 @@ class WorkerLocustRunner(LocustRunner):
         self.greenlet.spawn(self.stats_reporter).link_exception(callback=noop)
 
     def quit(self):
-        self.client.send_all(Message("quit", None, None))
-        self.greenlet.kill(block=True)
+        self.client.send_all(Message("quit", None, self.worker_id))
         self.client.close()
+        self.greenlet.kill(block=True)
 
     def slave_listener(self):
         while True:

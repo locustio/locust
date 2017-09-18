@@ -135,7 +135,7 @@ def request_stats():
     report["state"] = runners.main.state
     report["user_count"] = runners.main.user_count
     report["worker_count"] = runners.main.worker_count
-    
+
     return json.dumps(report)
 
 @app.route("/exceptions")
@@ -147,7 +147,7 @@ def exceptions():
                 "msg": row["msg"],
                 "traceback": row["traceback"],
                 "nodes" : ", ".join(row["nodes"])
-            } for row in six.itervalues(runners.locust_runner.exceptions)
+            } for row in six.itervalues(runners.main.exceptions)
         ]
     }))
     response.headers["Content-type"] = "application/json"
@@ -158,7 +158,7 @@ def exceptions_csv():
     data = StringIO()
     writer = csv.writer(data)
     writer.writerow(["Count", "Message", "Traceback", "Nodes"])
-    for exc in six.itervalues(runners.locust_runner.exceptions):
+    for exc in six.itervalues(runners.main.exceptions):
         nodes = ", ".join(exc["nodes"])
         writer.writerow([exc["count"], exc["msg"], exc["traceback"], nodes])
 

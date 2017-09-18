@@ -74,6 +74,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         super(MasterLocustRunner, self).__init__(locust_classes, options)
 
         self.state = STATE.INIT
+        self.exceptions = {}
         self.server = rpc.MasterServer(self.master_bind_host, self.master_bind_port)
         self.server.bind_handler(self.MasterServerHandler(self))
         self.greenlet = Group()
@@ -98,6 +99,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.spawn_slave()
         self.greenlet.spawn(self.slaves_listener).link_exception(callback=self.noop)
         self.wait_for_slaves(1)
+        self.greenlet.spawn(self.heartbeat).link_exception(callback=self.noop)
 
     @property
     def user_count(self):
@@ -142,6 +144,13 @@ class MasterLocustRunner(DistributedLocustRunner):
         for _slave in self.slaves.hatching + self.slaves.running:
             self.server.send_all(Message("stop", None, None))
         events.master_stop_hatching.fire()
+        counter = 0
+        while counter <= SLAVE_INIT_TIMEOUT:
+            if len(self.slaves.hatching + self.slaves.running) == 0:
+                return
+            gevent.sleep(1)
+            counter += 1
+        raise Exception("Some slaves were not stopped")
 
     def quit(self):
         self.server.send_all(Message("quit", None, None))
@@ -154,7 +163,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             for dead_slave in gen:
                 self.server.send_to(dead_slave.id, Message("quit", None, None))
                 del self.slaves[dead_slave.id]
-                logger.warn("Connection to %s was slave lost", dead_slave.id)
+                logger.warn("Connection to %s slave was lost", dead_slave.id)
 
             for slave in self.slaves.itervalues():
                 slave.ping_answ = False
@@ -166,15 +175,16 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.server.recv()
 
     def start_hatching(self, locust_count, hatch_rate):
-        self.state = STATE.HATCHING
         worker_num = self.slave_count
 
-        if self.state != STATE.RUNNING and self.state != STATE.HATCHING:
-            self.stats.clear_all()
-            self.exceptions = {}
-            events.master_start_hatching.fire()
+        if self.state != STATE.INIT and self.state != STATE.STOPPED:
+            self.stop()
 
-        self.greenlet.spawn(self.heartbeat).link_exception(callback=self.noop)
+        self.stats.clear_all()
+        self.stats.reset_all()
+        self.exceptions = {}
+        events.master_start_hatching.fire()
+        self.state = STATE.HATCHING
 
         calc = lambda x: locust_count / worker_num + 1 - x // worker_num
         slave_locust_count = [calc(x) for x in range(1, worker_num + 1)]
@@ -196,3 +206,13 @@ class MasterLocustRunner(DistributedLocustRunner):
 
         self.stats.start_time = time.time()
         self.state = STATE.HATCHING
+
+    def log_exception(self, node_id, msg, formatted_tb):
+        key = hash(formatted_tb)
+        row = self.exceptions.setdefault(
+            key,
+            {"count": 0, "msg": msg, "traceback": formatted_tb, "nodes": set()}
+        )
+        row["count"] += 1
+        row["nodes"].add(node_id)
+        self.exceptions[key] = row
