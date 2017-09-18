@@ -46,7 +46,7 @@
                 </div>
                 <div class="top_box box_stop box_running" id="box_stop">
                     <a href="/stop" class="stop-button" onclick="stopClock()"><i></i>STOP</a>
-                    <a href="/stats/reset" class="reset-button" onclick="stopClock()">Reset<br>Stats</a>
+                    <a href="/stats/reset" class="reset-button">Reset<br>Stats</a>
                 </div>
                 <div class="top_box box_timer box_running" id="box_timer">
                     <div class="label">TIMER</div>
@@ -62,20 +62,11 @@
                 <a href="#" class="close_link">Close</a>
             </div>
             <div class="padder">
-                <h2>Fill parameter with array of duration and locust count</h2>
+                <h2>Start new Locust swarm</h2>
                 <form action="/swarm" method="POST" id="swarm_form" onClick="startClock()">
-                    <label for="locust_count">Number of users to simulate</label>
-                    <input type="text" name="locust_count" id="locust_count" class="val" placeholder="first value"/>
-                    <input type="text" name="locust_count2" id="locust_count2" class="val" placeholder="second value"/><br>
-                    <input type="text" name="locust_count3" id="locust_count3" class="val" placeholder="third value"/><br>
+                    <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="hatch_rate" id="hatch_rate" class="val" placeholder="first value"/><br>
-                    <input type="text" name="hatch_rate2" id="hatch_rate2" class="val" placeholder="second value"/><br>
-                    <input type="text" name="hatch_rate3" id="hatch_rate3" class="val" placeholder="third value"/><br>
-                    <label for="duration">Duration for this running stage</label>
-                    <input type="text" name="duration" id="duration" class="val" placeholder="first value"/><br>
-                    <input type="text" name="duration2" id="duration2" class="val" placeholder="second value"/><br>
-                    <input type="text" name="duration3" id="duration3" class="val" placeholder="third value"/><br>
+                    <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -300,12 +291,6 @@
     <script type="text/javascript" src="/static/chart.js?v={{ version }}"></script>
     <script type="text/javascript" src="/static/locust.js?v={{ version }}"></script>
     <script type="text/javascript">
-      // var sec = 0;
-      // function pad ( val ) { return val > 9 ? val : "0" + val; }
-      //   setInterval( function(){
-      //   document.getElementById("seconds").innerHTML=pad(++sec%60);
-      //   document.getElementById("minutes").innerHTML=pad(parseInt(sec/60,10));
-      // }, 1000);
 
       var clicked = false;
       var sec = 0;
