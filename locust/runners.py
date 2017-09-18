@@ -36,6 +36,7 @@ class LocustRunner(object):
         self.num_requests = options.num_requests
         self.host = options.host
         self.locusts = Group()
+        self.greenlet = self.locusts
         self.state = STATE_INIT
         self.hatching_greenlet = None
         self.exceptions = {}
@@ -183,6 +184,10 @@ class LocustRunner(object):
         self.locusts.kill(block=True)
         self.state = STATE_STOPPED
         events.locust_stop_hatching.fire()
+    
+    def quit(self):
+        self.stop()
+        self.greenlet.kill(block=True)
 
     def log_exception(self, node_id, msg, formatted_tb):
         key = hash(formatted_tb)
