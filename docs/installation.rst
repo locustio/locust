@@ -25,11 +25,18 @@ Locust supports Python 2.7, 3.3, 3.4, 3.5, and 3.6.
 Installing Locust on Windows
 ----------------------------
 
-The easiest way to get Locust running on Windows is to first install pre built binary packages for
-gevent, greenlet and pyzmq and then follow the above instructions. 
+On Windows, running ``pip install locustio`` might fail depedning on if you have a build environment 
+set up correctly. In that case, the easiest way to get Locust running on windows is to first install 
+the pre built binary package for pyzmq (and possibly for gevent and greenlet as well). 
 
 You can find an unofficial collection of pre built python packages for windows here: 
 `http://www.lfd.uci.edu/~gohlke/pythonlibs/ <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_
+
+When you've downloaded a pre-built ``.whl`` file, you can install it with::
+
+    pip install pyzmq‑16.0.2‑cp36‑cp36m‑win32.whl
+
+Once you've done that you should be able to just ``pip install locustio``. 
 
 .. note::
 
