@@ -101,19 +101,6 @@ host defaults to 127.0.0.1)::
 
     locust -f locust_files/my_locust_file.py --slave --master-host=192.168.0.100 --host=http://example.com
 
-You may wish to consume your Locust results via a csv file. In this case, there are two ways to do this.
-
-First, when running the webserver, you can retrieve a csv from ``localhost:8089/stats/requests/csv`` and ``localhost:8089/stats/distribution/csv``.
-Second you can run Locust with a flag which will periodically save the csv file. This is particularly useful
-if you plan on running Locust in an automated way with the ``--no-web`` flag::
-
-    locust -f locust_files/my_locust_file.py --csv=foobar --no-web -n10 -c1
-
-You can also customize how frequently this is written if you desire faster (or slower) writing::
-
-
-    import locust.stats
-    locust.stats.CSV_STATS_INTERVAL_SEC = 5 # default is 2 seconds
 
 .. note::
 
@@ -128,3 +115,34 @@ and point it to http://127.0.0.1:8089 (if you are running Locust locally). Then 
 greeted with something like this:
 
 .. image:: images/webui-splash-screenshot.png
+
+
+Run Locust without the web interface
+====================================
+
+You can run locust without the web UI - for example if you want to run it in some automated flow, 
+like a CI server - by using the ``--no-web`` flag together with ``-c`` and ``-r``::
+
+    locust -f locust_files/my_locust_file.py --no-web -c 1000 -r 100
+    
+``-c`` specified the number of Locust users to spawn, and ``-r`` specifies the hatch rate 
+(number of users to spawn per second).
+
+
+
+Retrieve test statistics in CSV format
+======================================
+
+You may wish to consume your Locust results via a csv file. In this case, there are two ways to do this.
+
+When running the web UI, you can retrieve CSV files under the Download Data tab. 
+
+You can also run Locust with a flag which will periodically save the CSV file. This is particularly useful
+if you plan on running Locust in an automated way with the ``--no-web`` flag::
+
+    locust -f locust_files/my_locust_file.py --csv=foobar --no-web -n10 -c1
+
+You can also customize how frequently this is written if you desire faster (or slower) writing::
+
+    import locust.stats
+    locust.stats.CSV_STATS_INTERVAL_SEC = 5 # default is 2 seconds
