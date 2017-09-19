@@ -117,9 +117,7 @@ You can also customize how frequently this is written if you desire faster (or s
 
 .. note::
 
-To see all available options type::
-
-    locust --help
+    To see all available options type: ``locust --help``
 
 
 Open up Locust's web interface
