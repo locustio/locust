@@ -1,4 +1,7 @@
 =====================
+Third party tools
+=====================
+
 Using other languages
 =====================
 
@@ -7,7 +10,7 @@ supported by many languages. So, you can write your Locust tasks in any language
 libraries do the job as a slave runner. They run your Locust tasks, and report to master regularly.
 
 
-Boomer
-======
+Boomer (Golang)
+---------------
 
 `Boomer <https://github.com/myzhan/boomer/>`_ is a Locust slave runner written in golang.
