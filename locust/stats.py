@@ -21,6 +21,12 @@ CSV_STATS_INTERVAL_SEC = 2
 """Default interval for how frequently results are written to console."""
 CONSOLE_STATS_INTERVAL_SEC = 2
 
+"""
+Default window size/resolution - in seconds - when calculating the current 
+response time percentile
+"""
+CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW = 10
+
 
 CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_requests"])
 
@@ -177,8 +183,9 @@ class StatsEntry(object):
     use_response_times_cache = False
     """
     If set to True, the copy of the response_time dict will be stored in response_times_cache 
-    every second, and kept for 20 seconds. We can use this dict to calculate the *current* 
-    median response time, as well as other response time percentiles.
+    every second, and kept for 20 seconds (by default, will be CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW + 10). 
+    We can use this dict to calculate the *current*  median response time, as well as other response 
+    time percentiles.
     """
     
     response_times_cache = None
@@ -403,7 +410,8 @@ class StatsEntry(object):
     def get_current_response_time_percentile(self, percent):
         """
         Calculate the *current* response time for a certain percentile. We use a sliding 
-        window of (approximately) the last 10 seconds when calculating this.
+        window of (approximately) the last 10 seconds (specified by CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW) 
+        when calculating this.
         """
         if not self.use_response_times_cache:
             raise ValueError("StatsEntry.use_response_times_cache must be set to True if we should be able to calculate the _current_ response time percentile")
@@ -413,11 +421,12 @@ class StatsEntry(object):
         # Since we can't be sure that the cache contains an entry for every second. 
         # We'll construct a list of timestamps which we consider acceptable keys to be used 
         # when trying to fetch the cached response_times. We construct this list in such a way 
-        # that it's ordered by preference by starting to add t-10, then t-11
+        # that it's ordered by preference by starting to add t-10, then t-11, t-9, t-12, t-8, 
+        # and so on
         acceptable_timestamps = []
         for i in xrange(9):
-            acceptable_timestamps.append(t-10-i)
-            acceptable_timestamps.append(t-10+i)
+            acceptable_timestamps.append(t-CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW-i)
+            acceptable_timestamps.append(t-CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW+i)
         
         cached = None
         for ts in acceptable_timestamps:
@@ -459,9 +468,17 @@ class StatsEntry(object):
             response_times=copy(self.response_times),
             num_requests=self.num_requests,
         )
-        if len(self.response_times_cache) > 20:
+        
+        
+        # We'll use a cache size of CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW + 10 since - in the extreme case -
+        # we might still use response times (from the cache) for t-CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW-10 
+        # to calculate the current response time percentile, if we're missing cached values for the subsequent 
+        # 20 seconds
+        cache_size = CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW + 10
+        
+        if len(self.response_times_cache) > cache_size:
             # only keep the latest 20 response_times dicts
-            for i in xrange(len(self.response_times_cache) - 20):
+            for i in xrange(len(self.response_times_cache) - cache_size):
                 self.response_times_cache.popitem(last=False)
 
 
