@@ -1,6 +1,10 @@
 # Locust
 
-[![Build Status](https://secure.travis-ci.org/locustio/locust.png)](http://travis-ci.org/locustio/locust)
+[![Build Status](https://img.shields.io/travis/locustio/locust.svg)]()
+[![license](https://img.shields.io/github/license/locustio/locust.svg)]()
+[![PyPI](https://img.shields.io/pypi/v/locustio.svg)]()
+[![PyPI](https://img.shields.io/pypi/pyversions/locustio.svg)]()
+[![GitHub contributors](https://img.shields.io/github/contributors/locustio/locust.svg)]()
 
 ## Links
 
