@@ -16,9 +16,9 @@ from locust import __version__ as version
 from six.moves import StringIO, xrange
 
 from . import runners
-from .cache import memoize
 from .runners import MasterLocustRunner
 from .stats import distribution_csv, median_from_dict, requests_csv, sort_stats
+from .util.cache import memoize
 
 logger = logging.getLogger(__name__)
 
