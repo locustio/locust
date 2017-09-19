@@ -7,9 +7,6 @@ Locust is available on PyPI and can be installed through pip or easy_install
 
     pip install locustio
 
-or::
-
-    easy_install locustio
 
 When Locust is installed, a **locust** command should be available in your shell (if you're not using 
 virtualenv—which you should—make sure your python script directory is on your path).
