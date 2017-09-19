@@ -79,7 +79,6 @@ def reset_stats():
 @app.route("/stats/requests/csv")
 def request_stats_csv():
     response = make_response(requests_csv())
-
     file_name = "requests_{0}.csv".format(time())
     disposition = "attachment;filename={0}".format(file_name)
     response.headers["Content-type"] = "text/csv"
@@ -88,7 +87,6 @@ def request_stats_csv():
 
 @app.route("/stats/distribution/csv")
 def distribution_stats_csv():
-
     response = make_response(distribution_csv())
     file_name = "distribution_{0}.csv".format(time())
     disposition = "attachment;filename={0}".format(file_name)
@@ -100,7 +98,8 @@ def distribution_stats_csv():
 @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
 def request_stats():
     stats = []
-    for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.aggregated_stats("Total")]):
+    
+    for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
         stats.append({
             "method": s.method,
             "name": s.name,
@@ -122,18 +121,9 @@ def request_stats():
 
     if stats:
         report["total_rps"] = stats[len(stats)-1]["current_rps"]
-        report["fail_ratio"] = runners.locust_runner.stats.aggregated_stats("Total").fail_ratio
-        
-        # since generating a total response times dict with all response times from all
-        # urls is slow, we make a new total response time dict which will consist of one
-        # entry per url with the median response time as key and the number of requests as
-        # value
-        response_times = defaultdict(int) # used for calculating total median
-        for i in xrange(len(stats)-1):
-            response_times[stats[i]["median_response_time"]] += stats[i]["num_requests"]
-        
-        # calculate total median
-        stats[len(stats)-1]["median_response_time"] = median_from_dict(stats[len(stats)-1]["num_requests"], response_times)
+        report["fail_ratio"] = runners.locust_runner.stats.total.fail_ratio
+        report["current_response_time_percentile_95"] = runners.locust_runner.stats.total.get_current_response_time_percentile(0.95)
+        report["current_response_time_percentile_50"] = runners.locust_runner.stats.total.get_current_response_time_percentile(0.5)
     
     is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
     if is_distributed:
