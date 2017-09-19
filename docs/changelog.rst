@@ -5,7 +5,7 @@ Changelog
 0.8
 ===
 
-* Support Python 3
+* Python 3 support
 * Dropped support for Python 2.6
 * Added `--no-reset-stats` option for controling if the statistics should be reset once 
   the hatching is complete
