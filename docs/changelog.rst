@@ -2,13 +2,8 @@
 Changelog
 ##########
 
-0.8a4
-=====
-
-.. note::
-
-   Locust 0.8 only exists as a pre-release on PyPI, and can be installed using: pip install locustio==0.8a4
-
+0.8
+===
 
 * Support Python 3
 * Dropped support for Python 2.6
