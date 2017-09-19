@@ -44,7 +44,7 @@ def calculate_response_time_percentile(response_times, num_requests, percent):
     processed_count = 0
     for response_time in sorted(six.iterkeys(response_times), reverse=True):
         processed_count += response_times[response_time]
-        if((num_requests - processed_count) <= num_of_request):
+        if(num_requests - processed_count <= num_of_request):
             return response_time
 
 
