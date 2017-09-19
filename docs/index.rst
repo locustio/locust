@@ -30,6 +30,12 @@ Locust Documentation
     :maxdepth: 1
 
     running-locust-distributed
+    running-locust-without-web-ui
+
+.. toctree ::
+    :maxdepth: 1
+    
+    retrieving-stats
     testing-other-systems
     api
     extending-locust

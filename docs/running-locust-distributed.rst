@@ -1,3 +1,5 @@
+.. _running-locust-distributed:
+
 ===========================
 Running Locust distributed
 ===========================
@@ -71,3 +73,15 @@ will bind to. Defaults to * (all available interfaces).
 Optionally used together with ``--master``. Determines what network ports that the master node will
 listen to. Defaults to 5557. Note that locust will use the port specified, as well as the port 
 number +1. So if 5557 is used, locust will use both port 5557 and 5558.
+
+``--expect-slaves=X``
+---------------------
+
+Used when starting the master node with ``--no-web``. The master node will then wait until X slave 
+nodes has connected before the test is started.
+
+
+Running Locust distributed without the web UI
+=============================================
+
+See :ref:`running-locust-distributed-without-web-ui`
