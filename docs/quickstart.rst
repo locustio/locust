@@ -128,6 +128,11 @@ like a CI server - by using the ``--no-web`` flag together with ``-c`` and ``-r`
 ``-c`` specified the number of Locust users to spawn, and ``-r`` specifies the hatch rate 
 (number of users to spawn per second).
 
+If you want to run Locust distributed without the web UI, you should use the 
+``--expect-slaves`` option on the master node, to specify the number of slave nodes that 
+are expected to connect. It will then wait until that many slave nodes have connected 
+before starting the test.
+
 
 
 Retrieve test statistics in CSV format
