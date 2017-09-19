@@ -1,10 +1,10 @@
 # Locust
 
-[![Build Status](https://img.shields.io/travis/locustio/locust.svg)]()
-[![license](https://img.shields.io/github/license/locustio/locust.svg)]()
-[![PyPI](https://img.shields.io/pypi/v/locustio.svg)]()
-[![PyPI](https://img.shields.io/pypi/pyversions/locustio.svg)]()
-[![GitHub contributors](https://img.shields.io/github/contributors/locustio/locust.svg)]()
+[![Build Status](https://img.shields.io/travis/locustio/locust.svg)](https://travis-ci.org/locustio/locust)
+[![license](https://img.shields.io/github/license/locustio/locust.svg)](https://github.com/locustio/locust/blob/master/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/locustio.svg)](https://pypi.python.org/pypi/locustio)
+[![PyPI](https://img.shields.io/pypi/pyversions/locustio.svg)](https://pypi.python.org/pypi/locustio)
+[![GitHub contributors](https://img.shields.io/github/contributors/locustio/locust.svg)](https://github.com/locustio/locust/graphs/contributors)
 
 ## Links
 
