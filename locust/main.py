@@ -63,19 +63,20 @@ def main():
 
     # Master / Slave init
     if options.slave:
-        slave = SlaveLocustRunner(locusts, options)
-        runners.main = slave
-        main_greenlet = runners.main.greenlet
         logger.info(
             "Starting slave node. Connecting to %s:%s",
             options.master_host,
             options.master_port
         )
+        slave = SlaveLocustRunner(locusts, options)
+        runners.main = slave
+        main_greenlet = runners.main.greenlet
+
     else:
+        logger.info("Starting master node")
         master = MasterLocustRunner(locusts, options)
         runners.main = master
         main_greenlet = runners.main.greenlet
-        logger.info("Starting master node")
 
     # Headful / headless init
     if options.no_web or options.slave:
@@ -85,9 +86,8 @@ def main():
         runners.main.wait_for_slaves(options.expect_slaves)
         runners.main.start_hatching(options.num_clients, options.hatch_rate)
     else:
-        gevent.spawn(web.start, locusts, options)
         logger.info("Starting web monitor at %s:%s", options.web_host or "*", options.port)
-
+        gevent.spawn(web.start, locusts, options)
 
     #### Stats, etc
     if options.print_stats:

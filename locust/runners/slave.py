@@ -54,9 +54,10 @@ class SlaveLocustRunner(DistributedLocustRunner):
         def on_ping(self, msg):
             self.slave.client.send_all(Message("pong", None, self.slave.slave_id))
             if self.slave.scheduled:
-                self.slave.scheduled.pop()
                 with self.slave.zmq_listener_pause():
-                    self.slave.spawn_worker()
+                    for _ in range(len(self.slave.scheduled)):
+                        self.slave.scheduled.pop()
+                        self.slave.spawn_worker()
 
 
     class SlaveServerHandler(object):

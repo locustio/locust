@@ -101,6 +101,7 @@
                     <table id="stats" class="stats">
                         <thead>
                             <tr>
+                                <th class="stats_label" href="#" data-sortkey="task">Task</th>
                                 <th class="stats_label" href="#" data-sortkey="method">Type</th>
                                 <th class="stats_label" href="#" data-sortkey="name">Name</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="num_requests" title="Number of successful requests"># requests</th>
@@ -203,6 +204,7 @@
     <script type="text/x-jqote-template" id="stats-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%> <%=(this.name == "Total" ? "total" : "")%>">
+            <td class="name" title="<%= this.task %>"><%= this.task %></td>
             <td><%= (this.method ? this.method : "") %></td>
             <td class="name" title="<%= this.name %>"><%= this.name %></td>
             <td class="numeric"><%= this.num_requests %></td>

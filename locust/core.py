@@ -97,7 +97,8 @@ class Locust(object):
     
     def __init__(self):
         super(Locust, self).__init__()
-    
+        self.current_task = None
+
     def run(self):
         try:
             self.task_set(self).run()
@@ -129,7 +130,7 @@ class HttpLocust(Locust):
         if self.host is None:
             raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
         
-        self.client = HttpSession(base_url=self.host)
+        self.client = HttpSession(locust=self, base_url=self.host)
 
 
 class TaskSetMeta(type):
@@ -229,8 +230,10 @@ class TaskSet(object):
         
         if isinstance(parent, TaskSet):
             self.locust = parent.locust
+            self.base_name = "{}::{}".format(parent.__class__.__name__, self.locust.__class__.__name__)
         elif isinstance(parent, Locust):
             self.locust = parent
+            self.base_name = parent.__class__.__name__
         else:
             raise LocustError("TaskSet should be called with Locust instance or TaskSet instance as first argument")
 
@@ -262,7 +265,7 @@ class TaskSet(object):
         
                 if not self._task_queue:
                     self.schedule_task(self.get_next_task())
-                
+
                 try:
                     self.execute_next_task()
                 except RescheduleTaskImmediately:
@@ -294,6 +297,11 @@ class TaskSet(object):
     
     def execute_task(self, task, *args, **kwargs):
         # check if the function is a method bound to the current locust, and if so, don't pass self as first argument
+        self.locust.current_task = "{}::{}".format(
+            self.base_name,
+            task.__name__.replace('_', ' ')
+        )
+
         if hasattr(task, "__self__") and task.__self__ == self:
             # task is a bound method on self
             task(*args, **kwargs)

@@ -97,6 +97,7 @@ def request_stats():
     stats = []
     for s in chain(sort_stats(runners.main.request_stats), [runners.main.stats.aggregated_stats("Total")]):
         stats.append({
+            "task": s.task,
             "method": s.method,
             "name": s.name,
             "num_requests": s.num_requests,

@@ -65,7 +65,8 @@ class WebSocketClient(object):
     TIMEOUT = 1200
     SYNC_TIME = 0.5 # Not influence on request-response sequence time tracking
 
-    def __init__(self, host, resource, service):
+    def __init__(self, locust, host, resource, service):
+        self.binded_locust = locust
         self.client_id = str(uuid.uuid4())
         self._messages = deque([], self.MSG_CACHE)
         self._listener = None
@@ -234,7 +235,8 @@ class WebSocketClient(object):
         msg = {
             'request_type': 'socketio-' + request,
             'name': name,
-            'response_time': time
+            'response_time': time,
+            'task': self.binded_locust.current_task
         }
         msg.update(kwarg)
         return msg

@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 class ZMQClient(object):
     """ZMQ wrapper for Locust client substitution"""
 
-    def __init__(self, endpoint, name=None):
+    def __init__(self, locust, endpoint, name=None):
+        self.binded_locust = locust
         self._endpoint = endpoint
         self._name = name
         self._context = zmq.Context()
@@ -48,7 +49,8 @@ class ZMQClient(object):
         msg = {
             'request_type': 'zmq-send',
             'name': self._name or self._endpoint,
-            'response_time': 0
+            'response_time': 0,
+            'task': self.binded_locust.current_task
         }
         msg.update(kwargs)
         return msg
