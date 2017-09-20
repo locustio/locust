@@ -136,7 +136,7 @@ def request_stats():
     report["state"] = runners.main.state
     report["user_count"] = runners.main.user_count
     report["worker_count"] = runners.main.worker_count
-
+    
     return json.dumps(report)
 
 @app.route("/exceptions")

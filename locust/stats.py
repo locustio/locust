@@ -25,6 +25,9 @@ class RequestStatsAdditionError(Exception):
 
 
 class RequestStats(object):
+    
+    action_agreate_label = 'Action Total'
+
     def __init__(self):
         self.entries = {}
         self.errors = {}
@@ -44,6 +47,16 @@ class RequestStats(object):
             self.entries[(task, name, method)] = entry
         return entry
 
+    def log(self, task, name, request_type, response_time, response_length):
+        """Perform StatsEntry log for task and action in total"""
+        self.get(task, name, request_type).log(response_time, response_length)
+        self.get(self.action_agreate_label, name, request_type).log(response_time, response_length)
+
+    def log_error(self, task, name, request_type, exception):
+        """Perform StatsEntry log error for task and action in total"""
+        self.get(task, name, request_type).log_error(exception)
+        self.get(self.action_agreate_label, name, request_type).log_error(exception)
+
     def aggregated_stats(self, name="Total", full_request_history=False):
         """
         Returns a StatsEntry which is an aggregate of all stats entries
@@ -51,7 +64,8 @@ class RequestStats(object):
         """
         total = StatsEntry(self, '', name, method=None)
         for r in six.itervalues(self.entries):
-            total.extend(r, full_request_history=full_request_history)
+            if r.task != self.action_agreate_label:
+                total.extend(r, full_request_history=full_request_history)
         return total
 
     def reset_all(self):
@@ -326,7 +340,7 @@ class StatsEntry(object):
             fail_percent = 0
 
         return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d  | %7d %7.2f") % (
-            self.method + " " + self.name,
+            "[" + self.task + "]" + " " + self.method + " " + self.name,
             self.num_requests,
             "%d(%.2f%%)" % (self.num_failures, fail_percent),
             self.avg_response_time,
@@ -356,7 +370,7 @@ class StatsEntry(object):
             raise ValueError("Can't calculate percentile on url with no successful requests")
 
         return tpl % (
-            str(self.method) + " " + self.name,
+            "[" + self.task + "]" + " " + str(self.method) + " " + self.name,
             self.num_requests,
             self.get_response_time_percentile(0.5),
             self.get_response_time_percentile(0.66),
@@ -400,11 +414,12 @@ class StatsError(object):
         self.occurences += 1
 
     def to_name(self):
-        return "%s %s: %r" % (self.method, 
+        return "[%s] %s %s: %r" % (self.task, self.method, 
             self.name, repr(self.error))
 
     def to_dict(self):
         return {
+            "task": self.task,
             "method": self.method,
             "name": self.name,
             "error": StatsError.parse_error(self.error),
@@ -414,6 +429,7 @@ class StatsError(object):
     @classmethod
     def from_dict(cls, data):
         return cls(
+            data["task"],
             data["method"], 
             data["name"], 
             data["error"], 
@@ -442,12 +458,12 @@ A global instance for holding the statistics. Should be removed eventually.
 """
 
 def on_request_success(request_type, name, response_time, response_length, task):
-    global_stats.get(task, name, request_type).log(response_time, response_length)
+    global_stats.log(task, name, request_type, response_time, response_length)
     if global_stats.max_requests is not None and (global_stats.num_requests + global_stats.num_failures) >= global_stats.max_requests:
         raise StopLocust("Maximum number of requests reached")
 
 def on_request_failure(request_type, name, response_time, exception, task):
-    global_stats.get(task, name, request_type).log_error(exception)
+    global_stats.log_error(task, name, request_type, exception)
     if global_stats.max_requests is not None and (global_stats.num_requests + global_stats.num_failures) >= global_stats.max_requests:
         raise StopLocust("Maximum number of requests reached")
 
@@ -573,7 +589,8 @@ def requests_csv():
     ]
 
     for s in chain(sort_stats(runners.main.request_stats), [runners.main.stats.aggregated_stats("Total", full_request_history=True)]):
-        rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
+        rows.append('"%s","%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
+            s.task,
             s.method,
             s.name,
             s.num_requests,

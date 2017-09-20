@@ -17,6 +17,9 @@ $("#box_stop a.stop-button").click(function(event) {
 $("#box_stop a.reset-button").click(function(event) {
     event.preventDefault();
     $.get($(this).attr("href"));
+    rpsChart.reset();
+    responseTimeChart.reset();
+    usersChart.reset();
 });
 
 $("#new_test").click(function(event) {
@@ -116,8 +119,8 @@ $(".stats_label").click(function(event) {
 });
 
 // init charts
-var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS"], "reqs/s");
-var responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", ["Average Response Time"], "ms");
+var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["Total"], "reqs/s");
+var responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", ["Total"], "ms");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 
 function updateStats() {
@@ -143,14 +146,29 @@ function updateStats() {
         $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
         alternate = false;
         $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
+        
+        
 
         if (report.state !== "stopped"){
-            // get total stats row
-            var total = report.stats[report.stats.length-1];
             // update charts
-            rpsChart.addValue([total.current_rps]);
-            responseTimeChart.addValue([total.avg_response_time]);
-            usersChart.addValue([report.user_count]);
+            rps = report.stats
+                .filter(function(x) { return x.task == "Action Total" || x.name == "Total" })
+                .map(function(x) {
+                return x.name == "Total" ? 
+                    {name: "Total", value: x.current_rps} : 
+                    {name: `${x.method} ${x.name}`, value: x.current_rps}
+            });
+            responseTime = report.stats
+                .filter(function(x) { return x.task == "Action Total" || x.name == "Total" })
+                .map(function(x) {
+                return x.name == "Total" ? 
+                    {name: "Total", value: x.avg_response_time} : 
+                    {name: `${x.method} ${x.name}`, value: x.avg_response_time}
+            });
+            
+            rpsChart.addValue(rps);
+            responseTimeChart.addValue(responseTime);
+            usersChart.addValue([{name: "Users", value: report.user_count}]);
         }
 
         setTimeout(updateStats, 2000);
