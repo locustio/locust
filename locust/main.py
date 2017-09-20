@@ -152,7 +152,7 @@ def parse_options():
         type='int',
         dest='num_clients',
         default=1,
-        help="Number of concurrent clients. Only used together with --no-web"
+        help="Number of concurrent Locust users. Only used together with --no-web"
     )
 
     # Client hatch rate
