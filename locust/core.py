@@ -227,6 +227,14 @@ class TaskSet(object):
     instantiated. Useful for nested TaskSet classes.
     """
 
+    always_run_on_stop = False
+    """
+    Used to control how the `on_stop` method is run.
+
+    If True, the `on_stop` method will be run regardless if the `on_start` method
+    has finished
+    """
+
     def __init__(self, parent):
         self._task_queue = []
         self._time_start = time()
@@ -250,6 +258,8 @@ class TaskSet(object):
         self.args = args
         self.kwargs = kwargs
         
+        if self.always_run_on_stop and hasattr(self, "on_stop"):
+            events.gevent_quitting += self.on_stop
         try:
             if hasattr(self, "on_start"):
                 self.on_start()
@@ -258,6 +268,8 @@ class TaskSet(object):
                 six.reraise(RescheduleTaskImmediately, RescheduleTaskImmediately(e.reschedule), sys.exc_info()[2])
             else:
                 six.reraise(RescheduleTask, RescheduleTask(e.reschedule), sys.exc_info()[2])
+        if not self.always_run_on_stop and hasattr(self, "on_stop"):
+            events.gevent_quitting += self.on_stop
         
         while (True):
             try:

@@ -1,3 +1,5 @@
+import gevent
+
 class EventHook(object):
     """
     Simple event class used to provide hooks for different types of events in Locust.
@@ -25,6 +27,19 @@ class EventHook(object):
     def fire(self, **kwargs):
         for handler in self._handlers:
             handler(**kwargs)
+
+
+class ParallelEventHook(EventHook):
+    """
+    Based off of EventHook and is used in the same way
+
+    Used to run many events in parallel
+    """
+    def fire(self, **kwargs):
+        g_handlers = []
+        for handler in self._handlers:
+            gevent.spawn(handler, **kwargs)
+        gevent.joinall(g_handlers)
 
 request_success = EventHook()
 """
@@ -100,6 +115,13 @@ Event is fire with the following arguments:
 quitting = EventHook()
 """
 *quitting* is fired when the locust process in exiting
+"""
+
+parallel_quitting = ParallelEventHook()
+"""
+*parallel_quitting* is fired when the locust process is exiting
+
+This should be used when wanting to run many events before exiting
 """
 
 master_start_hatching = EventHook()

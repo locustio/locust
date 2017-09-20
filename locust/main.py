@@ -491,6 +491,7 @@ def main():
         logger.info("Shutting down (exit code %s), bye." % code)
 
         events.quitting.fire()
+        events.parallel_quitting.fire()
         print_stats(runners.locust_runner.request_stats)
         print_percentile_stats(runners.locust_runner.request_stats)
         if options.csvfilebase:
