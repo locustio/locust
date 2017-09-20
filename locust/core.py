@@ -259,7 +259,7 @@ class TaskSet(object):
         self.kwargs = kwargs
         
         if self.always_run_on_stop and hasattr(self, "on_stop"):
-            events.gevent_quitting += self.on_stop
+            events.parallel_quitting += self.on_stop
         try:
             if hasattr(self, "on_start"):
                 self.on_start()
@@ -269,7 +269,7 @@ class TaskSet(object):
             else:
                 six.reraise(RescheduleTask, RescheduleTask(e.reschedule), sys.exc_info()[2])
         if not self.always_run_on_stop and hasattr(self, "on_stop"):
-            events.gevent_quitting += self.on_stop
+            events.parallel_quitting += self.on_stop
         
         while (True):
             try:

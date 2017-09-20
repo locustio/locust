@@ -38,7 +38,7 @@ class ParallelEventHook(EventHook):
     def fire(self, **kwargs):
         g_handlers = []
         for handler in self._handlers:
-            gevent.spawn(handler, **kwargs)
+            g_handlers.append(gevent.spawn(handler, **kwargs))
         gevent.joinall(g_handlers)
 
 request_success = EventHook()
