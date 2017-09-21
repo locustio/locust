@@ -25,18 +25,6 @@ Supported Python Versions
 Locust supports Python 2.7, 3.3, 3.4, 3.5, and 3.6.
 
 
-Installing ZeroMQ
------------------
-
-If you intend to run Locust distributed across multiple processes/machines, we recommend you to also 
-install **pyzmq**::
-
-    pip install pyzmq
-
-or::
-
-    easy_install pyzmq
-
 Installing Locust on Windows
 ----------------------------
 

@@ -91,6 +91,8 @@ def main():
     #### Stats, etc
     if options.print_stats and not options.slave:
         gevent.spawn(stats_printer)
+    if options.csvfilebase and not options.slave:
+        gevent.spawn(stats_writer, options.csvfilebase)
 
     def shutdown(code=0):
         """

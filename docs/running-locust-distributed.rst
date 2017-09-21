@@ -5,14 +5,19 @@ Running Locust distributed
 Once a single machine isn't enough to simulate the number of users that you need, Locust supports 
 running load tests distributed across multiple machines. 
 
-To do this, you start one instance of Locust in master mode using the ``--master`` flag. This is 
-the instance that will be running Locust's web interface where you start the test and see live 
-statistics. The master node doesn't simulate any users itself. Instead you have to start one or 
+To do this, you start one instance of Master Locust process on master machine. 
+Automaticaly slave process will be created on the same machine and registered as node.
+This is  the instance that will be running Locust's web interface where you start the test and see live 
+statistics. The master process doesn't simulate any users itself also as slave process. Instead you have to start one or 
 —most likely—multiple slave Locust nodes using the ``--slave`` flag, together with the 
-``--master-host`` (to specify the IP/hostname of the master node).
+``--master-host`` (to specify the IP/hostname of the master node) on different machines.
 
-A common set up is to run a single master on one machine, and then run one slave instance per 
-processor core, on the slave machines.
+Each node process will spawn several worker process, which perform tasks intelf. 
+By default locust will worker process for each 10 requested locust threads.
+Also locust preformes heartbeats between master -> slave nodes and slave -> workers process.
+In case if one of workers stops to respond, slave will make attempt to close it and starts new one.
+
+A common set up is to run a master on one machine, and then connect bunch of slaves to it.
 
 .. note::
     Both the master and each slave machine, must have a copy of the locust test scripts 
@@ -24,7 +29,7 @@ Example
 
 To start locust in master mode::
 
-    locust -f my_locustfile.py --master
+    locust -f my_locustfile.py
 
 And then on each slave (replace ``192.168.0.14`` with IP of the master machine)::
 
@@ -33,12 +38,6 @@ And then on each slave (replace ``192.168.0.14`` with IP of the master machine):
 
 Options
 =======
-
-``--master``
-------------
-
-Sets locust in master mode. The web interface will run on this node.
-
 
 ``--slave``
 -----------

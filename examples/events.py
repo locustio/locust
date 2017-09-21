@@ -5,19 +5,19 @@ This is an example of a locustfile that uses Locust's built in event hooks to
 track the sum of the content-length header in all successful HTTP responses
 """
 
-from locust import HttpLocust, TaskSet, events, task, web
+from locust import WebLocust, TaskSet, events, task, web
 
 
 class MyTaskSet(TaskSet):
     @task(2)
     def index(l):
-        l.client.get("/")
+        l.client.http.get("/")
     
     @task(1)
     def stats(l):
-        l.client.get("/stats/requests")
+        l.client.http.get("/stats/requests")
 
-class WebsiteUser(HttpLocust):
+class WebsiteUser(WebLocust):
     host = "http://127.0.0.1:8089"
     min_wait = 2000
     max_wait = 5000

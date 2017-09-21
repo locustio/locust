@@ -7,24 +7,28 @@ Example locustfile.py
 
 Below is a quick little example of a simple **locustfile.py**::
 
-    from locust import HttpLocust, TaskSet
+    from locust import WebLocust, TaskSet
     
     def login(l):
-        l.client.post("/login", {"username":"ellen_key", "password":"education"})
+        l.client.http.post("/login", {"username":"ellen_key", "password":"education"})
     
     def index(l):
-        l.client.get("/")
+        l.client.http.get("/")
     
     def profile(l):
-        l.client.get("/profile")
+        l.client.http.get("/profile")
     
     class UserBehavior(TaskSet):
         tasks = {index: 2, profile: 1}
         
         def on_start(self):
+            self.context['credentioals'] = {"username":"ellen_key", "password":"education"}
+            pass
+        
+        def on_task_start(self):
             login(self)
     
-    class WebsiteUser(HttpLocust):
+    class WebsiteUser(WebLocust):
         task_set = UserBehavior
         min_wait = 5000
         max_wait = 9000
@@ -33,42 +37,51 @@ Below is a quick little example of a simple **locustfile.py**::
 Here we define a number of Locust tasks, which are normal Python callables that take one argument
 (a :py:class:`Locust <locust.core.Locust>` class instance). These tasks are gathered under a
 :py:class:`TaskSet <locust.core.TaskSet>` class in the *tasks* attribute. Then we have a
-:py:class:`HttpLocust <locust.core.HttpLocust>` class which represents a user, where we define how
+:py:class:`WebLocust <locust.core.WebLocust>` class which represents a user, where we define how
 long a simulated user should wait between executing tasks, as well as what
 :py:class:`TaskSet <locust.core.TaskSet>` class should define the user's "behaviour".
 :py:class:`TaskSet <locust.core.TaskSet>`s can be nested.
 
-The :py:class:`HttpLocust <locust.core.HttpLocust>` class inherits from the
+The :py:class:`WebLocust <locust.core.WebLocust>` class inherits from the
 :py:class:`Locust <locust.core.Locust>` class, and it adds a client attribute which is an instance of
-:py:class:`HttpSession <locust.clients.HttpSession>` that can be used to make HTTP requests.
+LocustWebClient :py:class:`Locust <locust.core.LocustWebClient>` whish incapsulates:
+* :py:class:`HttpSession <locust.clients.http.WebSocketClient>` that can be used to make HTTP requests
+* :py:class:`HttpSession <locust.clients.websocket.Websocket>` that can be used to make websocket related actions
+* :py:class:`HttpSession <locust.clients.zmq.ZMQClient>` that can be used to make zmq pub fires
 
 Another way we could declare tasks, which is usually more convenient, is to use the
 ``@task`` decorator. The following code is equivalent to the above::
 
-    from locust import HttpLocust, TaskSet, task
+    from locust import WebLocust, TaskSet, task
     
     class UserBehavior(TaskSet):
+
         def on_start(self):
+            context['username'] = 'ellen_key'
+            context['password'] = 'education'
+
+        def on_task_start(self):
             """ on_start is called when a Locust start before any task is scheduled """
             self.login()
         
         def login(self):
-            self.client.post("/login", {"username":"ellen_key", "password":"education"})
+            payload = {"username": self.context['username'], "password": self.context['password']}
+            self.client.post("/login", payload)
         
         @task(2)
         def index(self):
-            self.client.get("/")
+            self.client.http.get("/")
         
         @task(1)
         def profile(self):
-            self.client.get("/profile")
+            self.client.http.get("/profile")
     
-    class WebsiteUser(HttpLocust):
+    class WebsiteUser(WebLocust):
         task_set = UserBehavior
         min_wait = 5000
         max_wait = 9000
 
-The :py:class:`Locust <locust.core.Locust>` class (as well as :py:class:`HttpLocust <locust.core.HttpLocust>`
+The :py:class:`Locust <locust.core.Locust>` class (as well as :py:class:`WebLocust <locust.core.WebLocust>`
 since it's a subclass) also allows one to specify minimum and maximum wait time—per simulated
 user—between the execution of tasks (*min_wait* and *max_wait*) as well as other user behaviours.
 
@@ -86,20 +99,15 @@ it using ``-f``::
 
     locust -f locust_files/my_locust_file.py --host=http://example.com
 
-To run Locust distributed across multiple processes we would start a master process by specifying
-``--master``::
+By default Locust run as destributed system so you can add node anytime before actual testrun started::
 
-    locust -f locust_files/my_locust_file.py --master --host=http://example.com
+    locust -f locust_files/my_locust_file.py --slave
 
-and then we would start an arbitrary number of slave processes::
+but more meaning to add node from separate machine. If we want to run Locust distributed on multiple machines 
+we would also have to specify the master host when starting the slaves (this is not needed when running Locust 
+distributed on a single machine, since the master host defaults to 127.0.0.1)::
 
-    locust -f locust_files/my_locust_file.py --slave --host=http://example.com
-
-If we want to run Locust distributed on multiple machines we would also have to specify the master host when
-starting the slaves (this is not needed when running Locust distributed on a single machine, since the master
-host defaults to 127.0.0.1)::
-
-    locust -f locust_files/my_locust_file.py --slave --master-host=192.168.0.100 --host=http://example.com
+    locust -f locust_files/my_locust_file.py --slave --master-host=192.168.0.100
 
 You may wish to consume your Locust results via a csv file. In this case, there are two ways to do this.
 

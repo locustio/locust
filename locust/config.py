@@ -279,6 +279,16 @@ def parse_options():
         help="Path to log file. If not set, log will go to stdout/stderr",
     )
 
+    # A file that contains the current request stats.
+    parser.add_option(
+        '--csv', '--csv-base-name',
+        action='store',
+        type='str',
+        dest='csvfilebase',
+        default='csv_stats',
+        help="Store current request stats to files in CSV format.",
+    )
+
     # List locust commands found in loaded locust files/source files
     parser.add_option(
         '-l', '--list',

@@ -2,6 +2,15 @@
 Changelog
 ##########
 
+0.8dr1
+=====
+* Based on 0.8a2
+* Executed always in distributed mode
+* Added websocket and zmq clients support
+* Added statistics per task
+* Added charts per request type
+* Various bug fixes and improvements
+
 0.8a2
 =====
 

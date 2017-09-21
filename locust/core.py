@@ -87,10 +87,10 @@ class Locust(object):
     host = None
     """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
 
-    min_wait = 1000
+    min_wait = None
     """Minimum waiting time between the execution of locust tasks"""
 
-    max_wait = 1000
+    max_wait = None
     """Maximum waiting time between the execution of locust tasks"""
 
     task_set = None
@@ -112,6 +112,10 @@ class Locust(object):
         self.current_task = None
         from .config import locust_config
         self.config = locust_config
+        if not self.min_wait:
+            self.min_wait = self.config.min_wait
+        if not self.max_wait:
+            self.max_wait = self.config.max_wait            
 
     def run(self):
         try:
@@ -325,7 +329,7 @@ class TaskSet(object):
 
         try:
             if hasattr(self, "on_start"):
-                self.on_start(self.client.context)
+                self.on_start()
                 self.client.persistent_values = self.client.context.copy()
         except InterruptTaskSet as e:
             if e.reschedule:
@@ -344,26 +348,20 @@ class TaskSet(object):
                 try:
                     task_start_time = time()
                     if hasattr(self, 'on_task_start'):
-                        self.on_task_start(self.client.context)
+                        self.on_task_start()
                     self.execute_next_task()
                 except RescheduleTaskImmediately as e:
                     self.fire_task_failure(task_start_time, e.reason, e.action)
-                    if hasattr(self, 'on_task_end'):
-                        self.on_task_end(self.client.context)
-                    self.client.clear_context()
                     pass
                 except RescheduleTask as e:
                     self.fire_task_failure(task_start_time, e.reason, e.action)
-                    if hasattr(self, 'on_task_end'):
-                        self.on_task_end(self.client.context)
-                    self.client.clear_context()
                     self.wait()
                 else:
                     self.fire_task_success(task_start_time)
-                    if hasattr(self, 'on_task_end'):
-                        self.on_task_end(self.client.context)
-                    self.client.clear_context()
                     self.wait()
+                if hasattr(self, 'on_task_end'):
+                    self.on_task_end()
+                    self.client.clear_context()
             except InterruptTaskSet as e:
                 if e.reschedule:
                     six.reraise(RescheduleTaskImmediately, RescheduleTaskImmediately(e.reschedule), sys.exc_info()[2])
@@ -465,6 +463,14 @@ class TaskSet(object):
         Locust instance.
         """
         return self.locust.client
+
+    @property
+    def context(self):
+        """
+        Reference to the :py:attr:`client <locust.core.Locust.client.context>` attribute of the root
+        Locust instance.
+        """
+        return self.locust.client.context
 
     def _apply_task_context(self, task):
         func = task['callable']

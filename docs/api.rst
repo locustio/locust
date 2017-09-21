@@ -9,12 +9,16 @@ Locust class
 .. autoclass:: locust.core.Locust
 	:members: min_wait, max_wait, task_set, weight
 
-HttpLocust class
+WebLocust class
 ================
 
-.. autoclass:: locust.core.HttpLocust
+.. autoclass:: locust.core.WebLocust
 	:members: min_wait, max_wait, task_set, client
 
+LocustWebClient
+================
+.. autoclass:: locust.core.LocustWebClient
+	:members: http, websocket, zmq, context
 
 TaskSet class
 =============
@@ -31,7 +35,7 @@ task decorator
 HttpSession class
 =================
 
-.. autoclass:: locust.clients.HttpSession
+.. autoclass:: locust.clients.http.HttpSession
 	:members: __init__, request, get, post, delete, put, head, options, patch
 
 Response class
@@ -52,6 +56,23 @@ ResponseContextManager class
 
 .. autoclass:: locust.clients.ResponseContextManager
 	:members: success, failure
+
+WebSocketClient class
+=================
+
+.. autoclass:: locust.clients.websocket.WebSocketClient
+	:members: __init__, close, send_sync, send_async, wait_for_message, wait_for_message_amount
+
+SocketIOMSG class
+=================
+.. autoclass:: locust.clients.websocket.SocketIOMSG
+	:members: type, payload, timestamp
+
+ZMQClient class
+=================
+
+.. autoclass:: locust.clients.zmq.ZMQClient
+	:members: __init__, close, send
 
 
 InterruptTaskSet Exception
@@ -74,5 +95,4 @@ Available hooks
 The following event hooks are available under the **locust.events** module:
 
 .. automodule:: locust.events
-	:members: request_success, request_failure, locust_error, report_to_master, slave_report, hatch_complete, quitting
-
+	:members: request_success, request_failure, locust_error, report_to_master, slave_report, hatch_complete, quitting, task_success, task_failure
