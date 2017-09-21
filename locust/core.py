@@ -3,6 +3,7 @@ import random
 import sys
 import traceback
 from time import time
+from collections import defaultdict
 
 import gevent
 import six
@@ -52,6 +53,15 @@ def task(weight=1):
     else:
         return decorator_func
 
+def mod_context(key, value):
+    """Decorator way to set context variables to task"""
+    def wrapper_func(func):
+        mods = getattr(func, 'context_mods', {})
+        mods[key] = value
+        func.context_mods = mods
+        return func
+
+    return wrapper_func
 
 class NoClientWarningRaiser(object):
     """
@@ -125,6 +135,8 @@ class LocustWebClient(object):
         self._http_client = None
         self._websocket_client = None
         self._zmq_client = None
+        self.context = defaultdict(lambda: None)
+        self.persistent_values = {}
 
     @property
     def http(self):
@@ -164,6 +176,10 @@ class LocustWebClient(object):
             self._zmq_client.close()
             self._zmq_client = None
 
+    def clear_context(self):
+        """Clearing context without flushing "persistent" clients values"""
+        self.context.clear()
+        self.context.update(self.persistent_values)
 
 class WebLocust(Locust):
     """
@@ -309,7 +325,8 @@ class TaskSet(object):
 
         try:
             if hasattr(self, "on_start"):
-                self.on_start()
+                self.on_start(self.client.context)
+                self.client.persistent_values = self.client.context.copy()
         except InterruptTaskSet as e:
             if e.reschedule:
                 six.reraise(RescheduleTaskImmediately, RescheduleTaskImmediately(e.reschedule), sys.exc_info()[2])
@@ -326,15 +343,26 @@ class TaskSet(object):
 
                 try:
                     task_start_time = time()
+                    if hasattr(self, 'on_task_start'):
+                        self.on_task_start(self.client.context)
                     self.execute_next_task()
                 except RescheduleTaskImmediately as e:
                     self.fire_task_failure(task_start_time, e.reason, e.action)
+                    if hasattr(self, 'on_task_end'):
+                        self.on_task_end(self.client.context)
+                    self.client.clear_context()
                     pass
                 except RescheduleTask as e:
                     self.fire_task_failure(task_start_time, e.reason, e.action)
+                    if hasattr(self, 'on_task_end'):
+                        self.on_task_end(self.client.context)
+                    self.client.clear_context()
                     self.wait()
                 else:
                     self.fire_task_success(task_start_time)
+                    if hasattr(self, 'on_task_end'):
+                        self.on_task_end(self.client.context)
+                    self.client.clear_context()
                     self.wait()
             except InterruptTaskSet as e:
                 if e.reschedule:
@@ -354,14 +382,9 @@ class TaskSet(object):
                     raise
 
     def execute_next_task(self):
-        if hasattr(self, 'on_task_start'):
-            self.on_task_start()
         task = self._task_queue.pop(0)
-
+        self._apply_task_context(task)
         self.execute_task(task["callable"], *task["args"], **task["kwargs"])
-        
-        if hasattr(self, 'on_task_end'):
-            self.on_task_end()
 
     def execute_task(self, task, *args, **kwargs):
         # check if the function is a method bound to the current locust, and if so, don't pass self as first argument
@@ -442,3 +465,8 @@ class TaskSet(object):
         Locust instance.
         """
         return self.locust.client
+
+    def _apply_task_context(self, task):
+        func = task['callable']
+        if hasattr(func, 'context_mods'):
+            self.client.context.update(func.context_mods)
