@@ -35,9 +35,9 @@ class SlaveLocustRunner(DistributedLocustRunner):
 
         def on_hatch(self, msg):
             self.slave.state = STATE.HATCHING
-            self.hatch_rate = msg.data["hatch_rate"]
-            self.num_requests = msg.data["num_requests"]
-            self.host =  msg.data["host"]
+            self.slave.hatch_rate = msg.data["hatch_rate"]
+            self.slave.num_requests = msg.data["num_requests"]
+            self.slave.host = msg.data["host"]
             self.slave.start_hatching(msg.data["num_clients"], msg.data["hatch_rate"])
 
         def on_stop(self, msg):

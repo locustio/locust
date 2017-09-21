@@ -53,6 +53,28 @@ Event is fired with the following arguments:
 * *exception*: Exception instance that was thrown
 """
 
+task_success = EventHook()
+"""
+*task_success* is fired when a task is completed successfully.
+
+Listeners should take the following arguments:
+
+* *task_name*: Task name
+* *task_time*: Time was taken for task execution
+"""
+
+task_failure = EventHook()
+"""
+*task_failure* is fired when a task is interrupted by request failure during its execution.
+
+Listeners should take the following arguments:
+
+* *task_name*: Task name
+* *task_time*: Time was taken for task execution
+* *exception*: Exception instance that was thrown
+* *action*: Exception instance that was thrown
+"""
+
 locust_error = EventHook()
 """
 *locust_error* is fired when an exception occurs inside the execution of a Locust class.
@@ -141,3 +163,5 @@ def clear_events_handlers():
     master_stop_hatching.clear()
     locust_start_hatching.clear()
     locust_stop_hatching.clear()
+    task_success.clear()
+    task_failure.clear()

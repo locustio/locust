@@ -51,7 +51,9 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
 });
 
 var stats_tpl = $('#stats-template');
+var task_stats_tpl = $('#task-stats-template');
 var errors_tpl = $('#errors-template');
+var task_errors_tpl = $('#task-errors-template')
 var exceptions_tpl = $('#exceptions-template');
 
 $('#swarm_form').submit(function(event) {
@@ -100,6 +102,7 @@ var sortBy = function(field, reverse, primer){
 
 // Sorting by column
 var sortAttribute = "name";
+var altSortAttribute = "task";
 var desc = false;
 var report;
 $(".stats_label").click(function(event) {
@@ -116,6 +119,25 @@ $(".stats_label").click(function(event) {
     $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
     alternate = false;
     $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
+});
+
+$(".alt_stats_label").click(function(event) {
+    event.preventDefault();
+    sortAttribute = $(this).attr("data-sortkey");
+    desc = !desc;
+
+    $('#taskStats tbody').empty();
+    $('#taskErrors tbody').empty();
+    alternate = false;
+    totalStatsRow = report.taskStats.pop();
+    sortedTaskStats = (report.taskStats).sort(sortBy(altSortAttribute, desc));
+    sortedTaskStats.push(totalStatsRow);
+    $('#taskStats tbody').jqoteapp(task_stats_tpl, sortedTaskStats);
+    alternate = false;
+    $('#taskErrors tbody').jqoteapp(
+        task_errors_tpl, 
+        (report.tasksFailures).sort(sortBy(altSortAttribute, desc))
+    );
 });
 
 // init charts
@@ -138,16 +160,27 @@ function updateStats() {
         $('#stats tbody').empty();
         $('#errors tbody').empty();
 
+        $('#taskStats tbody').empty();
+        $('#taskErrors tbody').empty();
+
         alternate = false;
 
-        totalRow = report.stats.pop()
-        sortedStats = (report.stats).sort(sortBy(sortAttribute, desc))
-        sortedStats.push(totalRow)
+        totalRow = report.stats.pop();
+        sortedStats = (report.stats).sort(sortBy(sortAttribute, desc));
+        sortedStats.push(totalRow);
         $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
         alternate = false;
         $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
         
-        
+        totalStatsRow = report.taskStats.pop();
+        sortedTaskStats = (report.taskStats).sort(sortBy(altSortAttribute, desc));
+        sortedTaskStats.push(totalStatsRow);
+        $('#taskStats tbody').jqoteapp(task_stats_tpl, sortedTaskStats);
+        alternate = false;
+        $('#taskErrors tbody').jqoteapp(
+            task_errors_tpl, 
+            (report.tasksFailures).sort(sortBy(altSortAttribute, desc))
+        );
 
         if (report.state !== "stopped"){
             // update charts

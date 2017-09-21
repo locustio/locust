@@ -131,6 +131,21 @@ def request_stats():
         # calculate total median
         stats[len(stats)-1]["median_response_time"] = median_from_dict(stats[len(stats)-1]["num_requests"], response_times)
 
+    task_stats = []
+    for t in chain(sort_stats(runners.main.task_stats), [runners.main.stats.aggregated_task_stats("Total")]):
+        task_stats.append({
+            "task": t.task,
+            "num_success": t.num_success,
+            "num_failures": t.num_failures,
+            "avg_execution_time": t.avg_execution_time,
+            "max_execution_time": t.max_execution_time,
+            "min_execution_time": t.min_execution_time
+        })
+    
+    tasks_failures = [f.to_dict() for f in six.itervalues(runners.main.stats.tasks_failures)]
+    report["taskStats"] = task_stats
+    report["tasksFailures"] = tasks_failures
+
     report["slave_count"] = runners.main.slave_count
 
     report["state"] = runners.main.state

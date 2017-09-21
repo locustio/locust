@@ -9,6 +9,7 @@ from pprint import pformat
 
 from socketIO_client import SocketIO, BaseNamespace
 from locust import events as LocustEventHandler
+from locust.exception import RescheduleTask
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +72,7 @@ class WebSocketClient(object):
         self._messages = deque([], self.MSG_CACHE)
         self._listener = None
         self._graceful_close = False
+        self._service = service
         self._connect(host, resource, service)
 
     def _connect(self, host, resource, service):
@@ -146,12 +148,13 @@ class WebSocketClient(object):
         success = False
         try:
             logger.debug("Message sent:\n%s", str(msg))
-            self._socket.emit(msg.type, msg.payload, path=self.SOCKETIO_SERVICE_PATH)
+            self._socket.emit(msg.type, msg.payload, path=self._service)
         except Exception as e:
             logger.debug("Message sent failure: %s", msg.type)
             LocustEventHandler.request_failure.fire(
                 **self._locust_event('request', action_name, 0, exception=e)
             )
+            raise RescheduleTask(e, action_name)
         else:
             success = True
         return success
@@ -253,3 +256,4 @@ class WebSocketClient(object):
             LocustEventHandler.request_failure.fire(
                 **self._locust_event(event, name, exec_time, exception=exception)
             )
+            raise RescheduleTask(exception, name)

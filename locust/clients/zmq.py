@@ -7,6 +7,7 @@ from pprint import pformat
 
 import zmq
 from locust import events as LocustEventHandler
+from locust.exception import RescheduleTask
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ class ZMQClient(object):
             LocustEventHandler.request_failure.fire(
                 **self._locust_event(exception=e)
             )
+            raise RescheduleTask(e, self._name or self._endpoint)
 
     def _locust_event(self, **kwargs):
         msg = {

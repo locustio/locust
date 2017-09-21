@@ -118,6 +118,10 @@ class MasterLocustRunner(DistributedLocustRunner):
         return self.stats.entries
 
     @property
+    def task_stats(self):
+        return self.stats.tasks
+
+    @property
     def errors(self):
         return self.stats.errors
 

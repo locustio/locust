@@ -202,9 +202,9 @@ class WorkerLocustRunner(LocustRunner):
         def on_hatch(self, msg):
             self.worker.client.send_all(Message("hatching", None, self.worker.worker_id))
             job = msg.data
-            self.hatch_rate = job["hatch_rate"]
-            self.num_requests = job["num_requests"]
-            self.host = job["host"]
+            self.worker.hatch_rate = job["hatch_rate"]
+            self.worker.num_requests = job["num_requests"]
+            self.worker.host = job["host"]
             self.hatching_greenlet = gevent.spawn(
                 lambda: self.worker.start_hatching(
                     locust_count=job["num_clients"],

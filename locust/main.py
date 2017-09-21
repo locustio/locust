@@ -13,7 +13,7 @@ import locust
 
 from runners import MasterLocustRunner, SlaveLocustRunner
 from . import events, runners, web
-from .core import HttpLocust, Locust
+from .core import WebLocust, Locust
 from .inspectlocust import get_task_ratio_dict, print_task_ratio
 from .log import console_logger, setup_logging
 from .stats import (print_error_report, print_percentile_stats, print_stats,
@@ -23,7 +23,7 @@ from . import config
 
 from runners import MasterLocustRunner, SlaveLocustRunner
 
-_internals = [Locust, HttpLocust]
+_internals = [Locust, WebLocust]
 version = locust.__version__
 
 main_greenlet = None
@@ -71,7 +71,6 @@ def main():
         slave = SlaveLocustRunner(locusts, options)
         runners.main = slave
         main_greenlet = runners.main.greenlet
-
     else:
         logger.info("Starting master node")
         master = MasterLocustRunner(locusts, options)
@@ -90,7 +89,7 @@ def main():
         gevent.spawn(web.start, locusts, options)
 
     #### Stats, etc
-    if options.print_stats:
+    if options.print_stats and not options.slave:
         gevent.spawn(stats_printer)
 
     def shutdown(code=0):

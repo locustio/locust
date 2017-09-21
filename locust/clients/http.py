@@ -14,7 +14,7 @@ from requests.exceptions import (InvalidSchema, InvalidURL, MissingSchema,
 from six.moves.urllib.parse import urlparse, urlunparse
 
 from locust import events
-from locust.exception import CatchResponseError, ResponseError
+from locust.exception import CatchResponseError, ResponseError, RescheduleTask
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 logger = logging.getLogger(__name__)
@@ -222,6 +222,8 @@ class HttpSession(LoggedSession):
                     exception=exception,
                     task=self.binded_locust.current_task
                 )
+                name = "{} {}".format(request_meta["method"], request_meta["name"])
+                raise RescheduleTask(exception, name)
             else:
                 events.request_success.fire(
                     request_type=request_meta["method"],
@@ -333,3 +335,5 @@ class ResponseContextManager(LocustResponse):
             task=self.task
         )
         self._is_reported = True
+        name = "{} {}".format(self.locust_request_meta["method"], self.locust_request_meta["name"])
+        raise RescheduleTask(exc, name)
