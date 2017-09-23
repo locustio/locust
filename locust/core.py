@@ -108,7 +108,7 @@ class Locust(object):
             self.setup()
         if hasattr(self, "teardown") and self._teardown_is_set is False:
             self._set_teardown_flag()
-            events.parallel_quitting += self.teardown
+            events.quitting += self.teardown
 
     @classmethod
     def _set_setup_flag(cls):
@@ -283,7 +283,7 @@ class TaskSet(object):
             self.setup()
         if hasattr(self, "teardown") and self._teardown_is_set is False:
             self._set_teardown_flag()
-            events.parallel_quitting += self.teardown
+            events.quitting += self.teardown
 
     @classmethod
     def _set_setup_flag(cls):

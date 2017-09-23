@@ -492,7 +492,7 @@ def main():
 
         if runners.locust_runner is not None:
             runners.locust_runner.quit()
-        events.quitting.fire()
+        events.quitting.fire(reverse=True)
         events.parallel_quitting.fire(reverse=True)
         print_stats(runners.locust_runner.request_stats)
         print_percentile_stats(runners.locust_runner.request_stats)
