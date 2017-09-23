@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # global locust runner singleton
 locust_runner = None
 
-STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_STOPPED = ["ready", "hatching", "running", "stopped"]
+STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_CLEANUP, STATE_STOPPED = ["ready", "hatching", "running", "cleanup", "stopped"]
 SLAVE_REPORT_INTERVAL = 3.0
 
 
@@ -111,7 +111,7 @@ class LocustRunner(object):
                 occurence_count[locust.__name__] += 1
                 def start_locust(_):
                     try:
-                        locust().run()
+                        locust().run(runner=self)
                     except GreenletExit:
                         pass
                 new_locust = self.locusts.spawn(start_locust, locust)

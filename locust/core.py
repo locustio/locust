@@ -19,7 +19,7 @@ from . import events
 from .clients import HttpSession
 from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
                         RescheduleTaskImmediately, StopLocust)
-
+from .runners import STATE_CLEANUP
 logger = logging.getLogger(__name__)
 
 
@@ -118,7 +118,7 @@ class Locust(object):
     def _set_teardown_flag(cls):
         cls._teardown_is_set = True
     
-    def run(self):
+    def run(self, runner=None):
         task_set_instance = self.task_set(self)
         try:
             task_set_instance.run()
@@ -127,6 +127,8 @@ class Locust(object):
         except (RescheduleTask, RescheduleTaskImmediately) as e:
             six.reraise(LocustError, LocustError("A task inside a Locust class' main TaskSet (`%s.task_set` of type `%s`) seems to have called interrupt() or raised an InterruptTaskSet exception. The interrupt() function is used to hand over execution to a parent TaskSet, and should never be called in the main TaskSet which a Locust class' task_set attribute points to." % (type(self).__name__, self.task_set.__name__)), sys.exc_info()[2])
         except GreenletExit as e:
+            if runner:
+                runner.state = STATE_CLEANUP
             # Run the task_set on_stop method, if it has one
             if hasattr(task_set_instance, "on_stop"):
                 task_set_instance.on_stop()
