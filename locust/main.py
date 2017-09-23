@@ -492,6 +492,8 @@ def main():
 
         events.quitting.fire()
         events.parallel_quitting.fire()
+        if runners.locust_runner is not None:
+            runners.locust_runner.quit()
         print_stats(runners.locust_runner.request_stats)
         print_percentile_stats(runners.locust_runner.request_stats)
         if options.csvfilebase:
