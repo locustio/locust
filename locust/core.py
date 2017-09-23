@@ -103,12 +103,18 @@ class Locust(object):
         super(Locust, self).__init__()
     
     def run(self):
+        task_set_instance = self.task_set(self)
         try:
-            self.task_set(self).run()
+            task_set_instance.run()
         except StopLocust:
             pass
         except (RescheduleTask, RescheduleTaskImmediately) as e:
             six.reraise(LocustError, LocustError("A task inside a Locust class' main TaskSet (`%s.task_set` of type `%s`) seems to have called interrupt() or raised an InterruptTaskSet exception. The interrupt() function is used to hand over execution to a parent TaskSet, and should never be called in the main TaskSet which a Locust class' task_set attribute points to." % (type(self).__name__, self.task_set.__name__)), sys.exc_info()[2])
+        except GreenletExit as e:
+            # Run the task_set on_stop method, if it has one
+            if hasattr(task_set_instance, "on_stop"):
+                task_set_instance.on_stop()
+            raise  # Maybe something relies on this except being raised?
 
 
 class HttpLocust(Locust):
