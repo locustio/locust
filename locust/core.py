@@ -98,9 +98,25 @@ class Locust(object):
         
     client = NoClientWarningRaiser()
     _catch_exceptions = True
+    _setup_has_run = False  # Internal state to see if we have already run
+    _teardown_is_set = False  # Internal state to see if we have already run
     
     def __init__(self):
         super(Locust, self).__init__()
+        if hasattr(self, "setup") and self._setup_has_run is False:
+            self._set_setup_flag()
+            self.setup()
+        if hasattr(self, "teardown") and self._teardown_is_set is False:
+            self._set_teardown_flag()
+            events.parallel_quitting += self.teardown
+
+    @classmethod
+    def _set_setup_flag(cls):
+        cls._setup_has_run = True
+
+    @classmethod
+    def _set_teardown_flag(cls):
+        cls._teardown_is_set = True
     
     def run(self):
         task_set_instance = self.task_set(self)
@@ -240,6 +256,8 @@ class TaskSet(object):
     If True, the `on_stop` method will be run regardless if the `on_start` method
     has finished
     """
+    _setup_has_run = False  # Internal state to see if we have already run
+    _teardown_is_set = False  # Internal state to see if we have already run
 
     def __init__(self, parent):
         self._task_queue = []
@@ -260,12 +278,25 @@ class TaskSet(object):
         if not self.max_wait:
             self.max_wait = self.locust.max_wait
 
+        if hasattr(self, "setup") and self._setup_has_run is False:
+            self._set_setup_flag()
+            self.setup()
+        if hasattr(self, "teardown") and self._teardown_is_set is False:
+            self._set_teardown_flag()
+            events.parallel_quitting += self.teardown
+
+    @classmethod
+    def _set_setup_flag(cls):
+        cls._setup_has_run = True
+
+    @classmethod
+    def _set_teardown_flag(cls):
+        cls._teardown_is_set = True
+
     def run(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
         
-        if self.always_run_on_stop and hasattr(self, "on_stop"):
-            events.parallel_quitting += self.on_stop
         try:
             if hasattr(self, "on_start"):
                 self.on_start()
@@ -274,8 +305,6 @@ class TaskSet(object):
                 six.reraise(RescheduleTaskImmediately, RescheduleTaskImmediately(e.reschedule), sys.exc_info()[2])
             else:
                 six.reraise(RescheduleTask, RescheduleTask(e.reschedule), sys.exc_info()[2])
-        if not self.always_run_on_stop and hasattr(self, "on_stop"):
-            events.parallel_quitting += self.on_stop
         
         while (True):
             try:

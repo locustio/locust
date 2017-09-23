@@ -31,12 +31,16 @@ class EventHook(object):
 
 class ParallelEventHook(EventHook):
     """
-    Based off of EventHook and is used in the same way
-
+    Based off of EventHook and is used in a similar way
     Used to run many events in parallel
+
+    If reverse is True, then the handlers will run in the reverse order
+    that they were inserted
     """
-    def fire(self, **kwargs):
+    def fire(self, reverse=False, **kwargs):
         g_handlers = []
+        if reverse:
+            self._handlers.reverse()
         for handler in self._handlers:
             g_handlers.append(gevent.spawn(handler, **kwargs))
         gevent.joinall(g_handlers)
