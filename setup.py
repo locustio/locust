@@ -50,7 +50,7 @@ setup(
         "pyzmq>=15.4.0,<16",
         "socketIO-client>=0.7.2,<0.8"
     ],
-    tests_require=['unittest2', 'mock'],
+    tests_require=['unittest2', 'mock', 'python-socketio'],
     entry_points={
         'console_scripts': [
             'locust = locust.main:main',

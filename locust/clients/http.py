@@ -15,6 +15,7 @@ from six.moves.urllib.parse import urlparse, urlunparse
 
 from locust import events
 from locust.exception import CatchResponseError, ResponseError, RescheduleTask
+from locust.log import LazyLog
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 logger = logging.getLogger(__name__)
@@ -63,9 +64,9 @@ class LoggedSession(requests.Session):
         }
         send_kwargs.update(settings)
 
-        logger.debug(self._format_request(prep, data or json))
+        logger.debug(LazyLog(self._format_request, prep, data or json))
         resp = self.send(prep, **send_kwargs)
-        logger.debug(self._format_response(resp, method))
+        logger.debug(LazyLog(self._format_response, resp, method))
 
         return resp
 

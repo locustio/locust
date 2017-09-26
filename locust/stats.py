@@ -57,11 +57,13 @@ class RequestStats(object):
 
     def log(self, task, name, request_type, response_time, response_length):
         """Perform StatsEntry log for task and action in total"""
+        self.num_requests += 1
         self.get(task, name, request_type).log(response_time, response_length)
         self.get(self.action_agreate_label, name, request_type).log(response_time, response_length)
 
     def log_error(self, task, name, request_type, exception):
         """Perform StatsEntry log error for task and action in total"""
+        self.num_failures += 1
         self.get(task, name, request_type).log_error(exception)
         self.get(self.action_agreate_label, name, request_type).log_error(exception)
 
@@ -186,7 +188,6 @@ class StatsEntry(object):
         self.total_content_length = 0
 
     def log(self, response_time, content_length):
-        self.stats.num_requests += 1
         self.num_requests += 1
 
         self._log_time_of_request()
@@ -228,7 +229,6 @@ class StatsEntry(object):
 
     def log_error(self, error):
         self.num_failures += 1
-        self.stats.num_failures += 1
         key = StatsError.create_key(self.task, self.method, self.name, error)
         entry = self.stats.errors.get(key)
         if not entry:
@@ -366,7 +366,7 @@ class StatsEntry(object):
             fail_percent = 0
 
         return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d  | %7d %7.2f") % (
-            "[" + self.task + "]" + " " + self.method + " " + self.name,
+            "[" + str(self.task) + "]" + " " + self.method + " " + self.name,
             self.num_requests,
             "%d(%.2f%%)" % (self.num_failures, fail_percent),
             self.avg_response_time,
@@ -396,7 +396,7 @@ class StatsEntry(object):
             raise ValueError("Can't calculate percentile on url with no successful requests")
 
         return tpl % (
-            "[" + self.task + "]" + " " + str(self.method) + " " + self.name,
+            "[" + str(self.task) + "]" + " " + str(self.method) + " " + self.name,
             self.num_requests,
             self.get_response_time_percentile(0.5),
             self.get_response_time_percentile(0.66),

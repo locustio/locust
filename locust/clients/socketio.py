@@ -1,4 +1,4 @@
-"""Websocket Locust client"""
+"""SocketIO Locust client"""
 import time
 import uuid
 import atexit
@@ -7,9 +7,11 @@ from collections import deque
 from contextlib import contextmanager
 from pprint import pformat
 
+import gevent
 from socketIO_client import SocketIO, BaseNamespace
 from locust import events as LocustEventHandler
 from locust.exception import RescheduleTask
+from locust.log import LazyLog
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +24,7 @@ class SocketIOMSG(object):
         self.timestamp = time.time()
 
     def __str__(self):
-        return "  Websocket message\n" +\
+        return "  SocketIO message\n" +\
                 "  Message type: {}\n".format(self.type) +\
                 "  Timestamp: {}\n".format(self.timestamp) +\
                 "  Payload:\n{}\n".format(pformat(self.payload))
@@ -55,27 +57,27 @@ class SocketIOAbstractListener(object):
         self._exec_time = int((time.time() - self._start_time) * 1000)
 
 
-class WebSocketTimeoutError(Exception):
+class SocketIOTimeoutError(Exception):
     """Timeout waiting for response from MMQueue."""
     pass
 
 
-class WebSocketClient(object):
+class SocketIOClient(object):
     """SocketIO client wrapper"""
     MSG_CACHE = 100 # Amount of recived messages cached
     TIMEOUT = 1200
     SYNC_TIME = 0.5 # Not influence on request-response sequence time tracking
 
-    def __init__(self, locust, host, resource, service):
+    def __init__(self, locust, host, resource, namespace):
         self.binded_locust = locust
         self.client_id = str(uuid.uuid4())
         self._messages = deque([], self.MSG_CACHE)
         self._listener = None
         self._graceful_close = False
-        self._service = service
-        self._connect(host, resource, service)
+        self._namespace = namespace
+        self._connect(host, resource, namespace)
 
-    def _connect(self, host, resource, service):
+    def _connect(self, host, resource, namespace):
         client_wrapper = self
 
         class Namespace(BaseNamespace):
@@ -87,6 +89,7 @@ class WebSocketClient(object):
                 pass
 
             def on_disconnect(self):
+                self._io._opened = False
                 client_wrapper._handle_disconnect(self)
 
             def on_event(self, event, *args):
@@ -101,31 +104,33 @@ class WebSocketClient(object):
                                 verify=True,
                                 wait_for_connection=True,
                                 resource=resource)
+        gevent.sleep(0.5)
         self._socket.define(Namespace)
-        self._socket.define(Namespace, path=service)
-        logger.debug("Created websocket client. ID: %s", self.client_id)
-        logger.debug("Established websocket connection to %s", host)
+        self._socket.define(Namespace, path=namespace)
+        logger.debug("Created socketIO client. ID: %s", self.client_id)
+        logger.debug("Established socketIO connection to %s", host)
 
         atexit.register(self.close)
 
     def close(self):
-        """Close websocket connection"""
+        """Close socketIO connection"""
         self._graceful_close = True
         self._socket.disconnect()
-        logger.debug("Closed websocket connection. Client id: %s", self.client_id)
+        self._socket.disconnect(self._namespace)
+        logger.debug("Closed socketIO connection. Client id: %s", self.client_id)
 
     def _handle_disconnect(self, namespace):
         attempt = 0
         if not self._graceful_close:
             while not self._socket.connected and attempt < 4:
+                self._socket.wait(0.5)
                 logger.debug('Connection lost. Trying to reconnect...')
                 namespace.reconnect()
-                self._socket.wait(0.5)
                 attempt += 1
 
     def _receive(self, msg):
         self._messages.append(msg)
-        logger.debug("Message received:\n%s", str(msg))
+        logger.debug("Message received:\n%s", msg)
         if callable(self._listener):
             self._listener(msg)
 
@@ -147,8 +152,8 @@ class WebSocketClient(object):
     def _emit(self, msg, action_name):
         success = False
         try:
-            logger.debug("Message sent:\n%s", str(msg))
-            self._socket.emit(msg.type, msg.payload, path=self._service)
+            logger.debug("Message sent:\n%s", msg)
+            self._socket.emit(msg.type, msg.payload, path=self._namespace)
         except Exception as e:
             logger.debug("Message sent failure: %s", msg.type)
             LocustEventHandler.request_failure.fire(
@@ -252,7 +257,7 @@ class WebSocketClient(object):
             )
         else:
             logger.debug("Listener resolved by timeout")
-            exception = WebSocketTimeoutError('WebSocket listener timeout')
+            exception = SocketIOTimeoutError('SocketIO listener timeout')
             LocustEventHandler.request_failure.fire(
                 **self._locust_event(event, name, exec_time, exception=exception)
             )

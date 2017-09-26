@@ -12,7 +12,7 @@ from gevent import GreenletExit, monkey
 from six.moves import xrange
 
 from . import events
-from .clients import HttpSession, WebSocketClient, ZMQClient
+from .clients import HttpSession, SocketIOClient, ZMQClient
 from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
                         RescheduleTaskImmediately, StopLocust)
 
@@ -103,7 +103,7 @@ class Locust(object):
     """Probability of locust being chosen. The higher the weight, the greater is the chance of it being chosen."""
 
     http = NoClientWarningRaiser()
-    websocket = NoClientWarningRaiser()
+    socket_io = NoClientWarningRaiser()
     zmq = NoClientWarningRaiser()
     _catch_exceptions = True
 
@@ -128,7 +128,7 @@ class Locust(object):
 
 class LocustWebClient(object):
     """
-    Wrapper around HTTP, Websocket, ZMQ Locust clients to be used as single entry point
+    Wrapper around HTTP, SocketIO, ZMQ Locust clients to be used as single entry point
     for Locust Task
     """
 
@@ -137,7 +137,7 @@ class LocustWebClient(object):
         self.host = locust.host
         self.config = locust.config
         self._http_client = None
-        self._websocket_client = None
+        self._socket_io_client = None
         self._zmq_client = None
         self.context = defaultdict(lambda: None)
         self.persistent_values = {}
@@ -150,16 +150,16 @@ class LocustWebClient(object):
         return self._http_client
 
     @property
-    def websocket(self):
-        """Lazy creation of websocket client WebSocketClient"""
-        if not self._websocket_client:
-            self._websocket_client = WebSocketClient(
+    def socket_io(self):
+        """Lazy creation of socketIO client SocketIOClient"""
+        if not self._socket_io_client:
+            self._socket_io_client = SocketIOClient(
                 self.locust,
                 self.host,
-                self.config.socket_resource,
-                self.config.websocket_service
+                self.config.socket_io_resource,
+                self.config.socket_io_service
             )
-        return self._websocket_client
+        return self._socket_io_client
 
     @property
     def zmq(self):
@@ -173,9 +173,9 @@ class LocustWebClient(object):
         if self._http_client:
             self._http_client.close()
             self._http_client = None
-        if self._websocket_client:
-            self._websocket_client.close()
-            self._websocket_client = None
+        if self._socket_io_client:
+            self._socket_io_client.close()
+            self._socket_io_client = None
         if self._zmq_client:
             self._zmq_client.close()
             self._zmq_client = None
@@ -330,7 +330,8 @@ class TaskSet(object):
         try:
             if hasattr(self, "on_start"):
                 self.on_start()
-                self.client.persistent_values = self.client.context.copy()
+                if hasattr(self, "client"):
+                    self.client.persistent_values = self.client.context.copy()
         except InterruptTaskSet as e:
             if e.reschedule:
                 six.reraise(RescheduleTaskImmediately, RescheduleTaskImmediately(e.reschedule), sys.exc_info()[2])
@@ -359,6 +360,7 @@ class TaskSet(object):
                 else:
                     self.fire_task_success(task_start_time)
                     self.wait()
+                self.locust.current_task = ""
                 if hasattr(self, 'on_task_end'):
                     self.on_task_end()
                     self.client.clear_context()

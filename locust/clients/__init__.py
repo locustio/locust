@@ -1,3 +1,3 @@
 from http import HttpSession, ResponseContextManager
-from websocket import WebSocketClient
-from zmq import ZMQClient
+from socketio import SocketIOClient
+from zmq_client import ZMQClient

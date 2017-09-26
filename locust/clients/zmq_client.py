@@ -5,7 +5,9 @@ import atexit
 import logging
 from pprint import pformat
 
-import zmq
+import zmq.green as zmq
+import gevent
+
 from locust import events as LocustEventHandler
 from locust.exception import RescheduleTask
 
@@ -21,7 +23,7 @@ class ZMQClient(object):
         self._context = zmq.Context()
         self._socket = self._context.socket(zmq.PUB)
         self._socket.connect(endpoint)
-        time.sleep(0.5)
+        gevent.sleep(0.5)
         logger.debug("ZMQ Connection set. Endpoint %s", endpoint)
         atexit.register(self.close)
 
@@ -49,7 +51,7 @@ class ZMQClient(object):
 
     def _locust_event(self, **kwargs):
         msg = {
-            'request_type': 'zmq-send',
+            'request_type': 'zmq-fire',
             'name': self._name or self._endpoint,
             'response_time': 0,
             'task': self.binded_locust.current_task

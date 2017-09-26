@@ -237,7 +237,9 @@ class SlaveLocustRunner(DistributedLocustRunner):
 
         self.wait_for_workers(worker_num)
 
-        calc = lambda x: locust_count / worker_num + 1 - x // worker_num
+        leftover = locust_count - (locust_count / worker_num) * worker_num
+        adjust = lambda x: 1 if x <= leftover else 0
+        calc = lambda x: locust_count / worker_num + adjust(x)
         worker_locust_count = [calc(x) for x in range(1, worker_num + 1)]
         worker_hatch_rate = hatch_rate / float(worker_num)
         worker_num_requests = self.num_requests / 4 if self.num_requests else None

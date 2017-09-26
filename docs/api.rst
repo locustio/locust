@@ -18,7 +18,7 @@ WebLocust class
 LocustWebClient
 ================
 .. autoclass:: locust.core.LocustWebClient
-	:members: http, websocket, zmq, context
+	:members: http, socketio, zmq, context
 
 TaskSet class
 =============
@@ -57,15 +57,15 @@ ResponseContextManager class
 .. autoclass:: locust.clients.ResponseContextManager
 	:members: success, failure
 
-WebSocketClient class
+SocketIOClient class
 =================
 
-.. autoclass:: locust.clients.websocket.WebSocketClient
+.. autoclass:: locust.clients.socketio.SocketIOClient
 	:members: __init__, close, send_sync, send_async, wait_for_message, wait_for_message_amount
 
 SocketIOMSG class
 =================
-.. autoclass:: locust.clients.websocket.SocketIOMSG
+.. autoclass:: locust.clients.socketio.SocketIOMSG
 	:members: type, payload, timestamp
 
 ZMQClient class

@@ -19,8 +19,8 @@ class LocustConfig(object):
 
     LOGGER_MAP = {
         'locust_logging': 'locust',
-        'zmq_logging': 'locust.clients.zmq',
-        'websocket_logging': 'locust.clients.websocket',
+        'zmq_logging': 'locust.clients.zmq_client',
+        'socketio_logging': 'locust.clients.socketio',
         'http_logging': 'locust.clients.http',
     }
 
@@ -29,8 +29,8 @@ class LocustConfig(object):
         'host': None,
         'scheme': 'http',
         'port': None,
-        'socket_resource': 'socket.io-queue',
-        'websocket_service': '',
+        'socket_io_resource': 'socket.io-queue',
+        'socketio_logging': '',
 
         # Execution related config
         'min_wait': 1,
@@ -53,7 +53,7 @@ class LocustConfig(object):
 
         # Logging
         'http_logging': 'ERROR',
-        'websocket_logging': 'ERROR',
+        'socketio_logging': 'ERROR',
         'zmq_logging': 'ERROR',
         'locust_logging': 'ERROR',
         'logfile': None
@@ -71,9 +71,11 @@ class LocustConfig(object):
     def _validate(self):
         """Validate settings"""
         if not self._config['host']:
-            logger.error("No target host were provided. Please provide target host via cli or setup contextmanager")
+            logger.error(
+                "No target host were provided." +\
+                "Please provide target host via cli or setup contextmanager"
+            )
             sys.exit(1)
-        # if 
 
     @property
     def host(self):
@@ -82,7 +84,7 @@ class LocustConfig(object):
         return '{}://{}{}'.format(config['scheme'], config['host'], port)
 
     @property
-    def web_socket(self):
+    def socket_io(self):
         return self.host
 
     def __getattr__(self, attr):
@@ -108,7 +110,7 @@ def process_options():
     with configure() as config:
         loglevel = opts.__dict__.pop('loglevel')
         config.http_logging = loglevel
-        config.websocket_logging = loglevel
+        config.socketio_logging = loglevel
         config.zmq_logging = loglevel
         config.locust_logging = loglevel
         host = opts.__dict__.pop('host')

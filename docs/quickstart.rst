@@ -45,9 +45,9 @@ long a simulated user should wait between executing tasks, as well as what
 The :py:class:`WebLocust <locust.core.WebLocust>` class inherits from the
 :py:class:`Locust <locust.core.Locust>` class, and it adds a client attribute which is an instance of
 LocustWebClient :py:class:`Locust <locust.core.LocustWebClient>` whish incapsulates:
-* :py:class:`HttpSession <locust.clients.http.WebSocketClient>` that can be used to make HTTP requests
-* :py:class:`HttpSession <locust.clients.websocket.Websocket>` that can be used to make websocket related actions
-* :py:class:`HttpSession <locust.clients.zmq.ZMQClient>` that can be used to make zmq pub fires
+* :py:class:`HttpSession <locust.clients.http.HttpSession>` that can be used to make HTTP requests
+* :py:class:`SocketIO <locust.clients.socketio.SocketIOClient>` that can be used to make socketIO related actions
+* :py:class:`ZMQClient <locust.clients.zmq.ZMQClient>` that can be used to make zmq pub fires
 
 Another way we could declare tasks, which is usually more convenient, is to use the
 ``@task`` decorator. The following code is equivalent to the above::

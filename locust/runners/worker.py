@@ -45,6 +45,11 @@ class LocustRunner(object):
                 self.stats.reset_all()
         events.hatch_complete += on_hatch_complete
 
+        def on_locust_error(locust_instance, exception, tb):
+            formatted_tb = "".join(traceback.format_tb(tb))
+            self.log_exception("local", str(exception), formatted_tb)
+        events.locust_error += on_locust_error
+
     @property
     def request_stats(self):
         return self.stats.entries
@@ -188,6 +193,14 @@ class LocustRunner(object):
         self.locusts.kill(block=True)
         self.state = STATE.STOPPED
         events.locust_stop_hatching.fire()
+
+    def log_exception(self, node_id, msg, formatted_tb):
+        key = hash(formatted_tb)
+        row_body = {"count": 0, "msg": msg, "traceback": formatted_tb, "nodes": set()}
+        row = self.exceptions.setdefault(key, row_body)
+        row["count"] += 1
+        row["nodes"].add(node_id)
+        self.exceptions[key] = row
 
 
 class WorkerLocustRunner(LocustRunner):

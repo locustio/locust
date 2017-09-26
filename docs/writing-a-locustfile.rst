@@ -288,7 +288,7 @@ using *self.client.http* inside the TaskSet, and not *self.locust.client*. We ca
 because the :py:class:`TaskSet <locust.core.TaskSet>` class has a convenience property 
 called client that simply returns self.locust.client.
 
-Making Websocket actions 
+Making SocketIO actions 
 =====================
 
 For it can be used the same :py:class:`WebLocust <locust.core.WebLocust>`
@@ -297,7 +297,7 @@ For it can be used the same :py:class:`WebLocust <locust.core.WebLocust>`
     :members: client
     :noindex:
 
-When inheriting from the WebLocust class, we can use its client attribute to make Websocket related actions
+When inheriting from the WebLocust class, we can use its client attribute to make SocketIO related actions
 against the server. Here is an example:
 
     from locust import WebLocust, TaskSet, task
@@ -305,11 +305,11 @@ against the server. Here is an example:
     class MyTaskSet(TaskSet):
         @task(2)
         def index(self):
-            self.client.websocket.send_sync("authorize", "token", "authorize-response")
+            self.client.socket_io.send_sync("authorize", "token", "authorize-response")
         
         @task(1)
         def about(self):
-            self.client.websocket.wait_for_message_amount(10)
+            self.client.socket_io.wait_for_message_amount(10)
     
     class MyLocust(WebLocust):
         task_set = MyTaskSet
@@ -329,7 +329,7 @@ ZMQ action exist in beta version and supports only fire in PUB socket
     :members: client
     :noindex:
 
-When inheriting from the WebLocust class, we can use its client attribute to make Websocket related actions
+When inheriting from the WebLocust class, we can use its client attribute to make SocketIO related actions
 against the server. Here is an example:
 
     from locust import WebLocust, TaskSet, task
@@ -421,6 +421,22 @@ Example::
     # Statistics for these requests will be grouped under: /blog/?id=[id]
     for i in range(10):
         client.http.get("/blog?id=%i" % i, name="/blog?id=[id]")
+
+Configuration
+=================
+
+For more precise configuration is recommended to be done via locust.configure context manager:
+
+Example::
+
+    import locust
+
+    with locust.configure() as config:
+        config.host = 'google.com'
+        config.port = 8080
+        config.custom_par = 'value'
+
+This configuration aslo could be accessible via locust.locust_config
 
 Common libraries
 =================
