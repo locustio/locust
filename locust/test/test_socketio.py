@@ -13,7 +13,7 @@ class SimpleSocketIOServer(object):
         self.messages = []
 
         self.server = None
-        self.sio = socketio.Server(async_mode='gevent')
+        self.sio = socketio.Server(async_mode='gevent', logger=False)
 
         @self.sio.on('connect', namespace=service)
         def connect(sid, environ):

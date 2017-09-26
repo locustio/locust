@@ -313,6 +313,10 @@ class TestLocustTaskStatistics(unittest.TestCase):
         class User(WebLocust):
             host = "http://127.0.0.1"
         self.locust = User()
+        global_stats.clear_all()
+
+    def tearDown(self):
+        global_stats.clear_all()
 
     def test_task_success(self):
         class MyTasks(TaskSet):
