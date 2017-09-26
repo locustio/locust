@@ -45,7 +45,7 @@
                     <div class="value"><span id="fail_ratio"></span>%</div>
                 </div>
                 <div class="top_box box_stop box_running" id="box_stop">
-                    <a href="/stop" class="stop-button" onclick="stopClock()"><i></i>STOP</a>
+                    <a href="/stop" class="stop-button" onclick="stopClock()""><i></i>STOP</a>
                     <a href="/stats/reset" class="reset-button">Reset<br>Stats</a>
                 </div>
                 <div class="top_box box_timer box_running" id="box_timer">
@@ -63,7 +63,7 @@
             </div>
             <div class="padder">
                 <h2>Start new Locust swarm</h2>
-                <form action="/swarm" method="POST" id="swarm_form" onClick="startClock()">
+                <form action="/swarm" method="POST" id="swarm_form" onClick="startAndReset()">
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
@@ -86,7 +86,7 @@
             </div>
             <div class="padder">
                 <h2>Change the locust count</h2>
-                <form action="/swarm" method="POST" id="edit_form" onClick="startClock()>
+                <form action="/swarm" method="POST" id="edit_form" onClick="startClock()">
                     <label for="locust_count">Number of users to simulate</label>
                     <input type="text" name="locust_count" id="new_locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
@@ -295,10 +295,14 @@
       var clicked = false;
       var sec = 0;
 
+      function startAndReset(){
+        startClock();
+        resetClock();
+      }
       function startClock() {
       	if (clicked === false) {
       		clock = setInterval("stopWatch()", 1000);
-      		clicked = true;
+      		clicked = true;;
       	}
       	else if (clicked === true) {
       	}
@@ -306,13 +310,19 @@
       function stopWatch() {
         document.getElementById("seconds").innerHTML = ++sec%60;
         document.getElementById("minutes").innerHTML = parseInt(sec/60,10);
+        console.log(sec);
       }
       function stopClock() {
       	window.clearInterval(clock);
-      	sec = 0;
-      	document.getElementById("seconds").innerHTML = 0;
-        document.getElementById("minutes").innerHTML = 0;
+        console.log(clock);
+      	document.getElementById("seconds").innerHTML = sec%60;
+        document.getElementById("minutes").innerHTML = parseInt(sec/60,10);
       	clicked = false;
+      }
+      function resetClock(){
+        sec = 0;
+        document.getElementById("seconds").innerHTML = 0;
+        document.getElementById("minutes").innerHTML = 0;
       }
     </script>
 </body>
