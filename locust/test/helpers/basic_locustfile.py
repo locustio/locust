@@ -8,14 +8,14 @@ with config.configure() as config:
 
 class UserWorkflow(core.TaskSet):
 
-    def on_start(self, context):
-        context['persistent_var'] = 'version 1'
+    def on_start(self):
+        self.context['persistent_var'] = 'version 1'
 
-    def on_task_start(self, context):
-        context['persistent_var'] = 'version 2'
+    def on_task_start(self):
+        self.context['persistent_var'] = 'version 2'
         pass
 
-    def on_task_end(self, context):
+    def on_task_end(self):
         pass
 
     @core.task(1)

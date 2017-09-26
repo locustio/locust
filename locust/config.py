@@ -287,7 +287,7 @@ def parse_options():
         action='store',
         type='str',
         dest='csvfilebase',
-        default='csv_stats',
+        default=None,
         help="Store current request stats to files in CSV format.",
     )
 
