@@ -234,7 +234,7 @@ a:hover {
 .running .start, .hatching .start {display: none;}
 
 .ready .edit {display: none;}
-.ready .start {display: block;}
+.ready .start {display: inline;}
 
 .running .status, .hatching .status {display: block;}
 .stopped .status {display: block;}
