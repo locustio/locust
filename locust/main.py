@@ -78,14 +78,14 @@ def main():
         main_greenlet = runners.main.greenlet
 
     # Headful / headless init
-    if options.no_web or options.slave:
+    if options.no_web and options.slave:
         logger.info("Slave connected in headless mode")
     elif options.no_web and not options.slave:
         logger.info("Starting headless execution")
         runners.main.wait_for_slaves(options.expect_slaves)
         runners.main.start_hatching(options.num_clients, options.hatch_rate)
     else:
-        logger.info("Starting web monitor at %s:%s", options.web_host or "*", options.port)
+        logger.info("Starting web monitor at %s:%s", options.web_host or "localhost", options.web_port)
         gevent.spawn(web.start, locusts, options)
 
     #### Stats, etc

@@ -29,8 +29,8 @@ class LocustConfig(object):
         'host': None,
         'scheme': 'http',
         'port': None,
-        'socket_io_resource': 'socket.io-queue',
-        'socketio_logging': '',
+        'socket_io_resource': 'socket.io',
+        'socket_io_service': '',
 
         # Execution related config
         'min_wait': 1,
