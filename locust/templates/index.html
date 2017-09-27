@@ -63,7 +63,7 @@
             </div>
             <div class="padder">
                 <h2>Start new Locust swarm</h2>
-                <form action="/swarm" method="POST" id="swarm_form" onClick="startAndReset()">
+                <form action="/swarm" method="POST" id="swarm_form" onsubmit="startAndReset()">
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
@@ -86,7 +86,7 @@
             </div>
             <div class="padder">
                 <h2>Change the locust count</h2>
-                <form action="/swarm" method="POST" id="edit_form" onClick="startClock()">
+                <form action="/swarm" method="POST" id="edit_form" onsubmit="startClock()">
                     <label for="locust_count">Number of users to simulate</label>
                     <input type="text" name="locust_count" id="new_locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
@@ -104,7 +104,7 @@
                 </div>
                 <div class="padder">
                     <h2>Ramping</h2>
-                    <form action="/ramp" method="POST" id="ramp_form">
+                    <form action="/ramp" method="POST" id="ramp_form" onsubmit="startAndReset()">
                         <div style="float:left;">
                         <label for="init_count" title="This is the number of initial number of locusts that will be spawned. Pick a number you know can be handled.">Initial number of clients</label>
                         <input type="text" name="init_count" id="init_count" class="val" /><br>
