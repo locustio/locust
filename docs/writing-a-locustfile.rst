@@ -127,7 +127,7 @@ the following example *task2* will be executed twice as much as *task1*::
 
 
 tasks attribute
---------------
+---------------
 
 Using the @task decorator to declare tasks is a convenience, and usually the best way to do 
 it. However, it's also possible to define the tasks of a TaskSet by setting the 

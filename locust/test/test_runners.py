@@ -1,19 +1,18 @@
 import unittest
 
 import gevent
-import mock
-
-from gevent.queue import Queue
 from gevent import sleep
+from gevent.queue import Queue
 
-from locust.runners import LocalLocustRunner, MasterLocustRunner
-from locust.core import Locust, task, TaskSet
-from locust.exception import LocustError
-from locust.rpc import Message
-from locust.stats import global_stats
-from locust.main import parse_options
-from locust.test.testcases import LocustTestCase
+import mock
 from locust import events
+from locust.core import Locust, TaskSet, task
+from locust.exception import LocustError
+from locust.main import parse_options
+from locust.rpc import Message
+from locust.runners import LocalLocustRunner, MasterLocustRunner
+from locust.stats import global_stats, RequestStats
+from locust.test.testcases import LocustTestCase
 
 
 def mocked_rpc_server():
@@ -27,6 +26,7 @@ def mocked_rpc_server():
         @classmethod
         def mocked_send(cls, message):
             cls.queue.put(message.serialize())
+            sleep(0)
         
         def recv(self):
             results = self.queue.get()
@@ -63,17 +63,14 @@ class TestMasterRunner(LocustTestCase):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
             master = MasterLocustRunner(MyTestLocust, self.options)
             server.mocked_send(Message("client_ready", None, "zeh_fake_client1"))
-            sleep(0)
             self.assertEqual(1, len(master.clients))
             self.assertTrue("zeh_fake_client1" in master.clients, "Could not find fake client in master instance's clients dict")
             server.mocked_send(Message("client_ready", None, "zeh_fake_client2"))
             server.mocked_send(Message("client_ready", None, "zeh_fake_client3"))
             server.mocked_send(Message("client_ready", None, "zeh_fake_client4"))
-            sleep(0)
             self.assertEqual(4, len(master.clients))
             
             server.mocked_send(Message("quit", None, "zeh_fake_client3"))
-            sleep(0)
             self.assertEqual(3, len(master.clients))
     
     def test_slave_stats_report_median(self):
@@ -85,7 +82,6 @@ class TestMasterRunner(LocustTestCase):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
             master = MasterLocustRunner(MyTestLocust, self.options)
             server.mocked_send(Message("client_ready", None, "fake_client"))
-            sleep(0)
             
             master.stats.get("/", "GET").log(100, 23455)
             master.stats.get("/", "GET").log(800, 23455)
@@ -96,9 +92,87 @@ class TestMasterRunner(LocustTestCase):
             master.stats.clear_all()
             
             server.mocked_send(Message("stats", data, "fake_client"))
-            sleep(0)
             s = master.stats.get("/", "GET")
             self.assertEqual(700, s.median_response_time)
+    
+    def test_master_total_stats(self):
+        import mock
+        
+        class MyTestLocust(Locust):
+            pass
+        
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
+            master = MasterLocustRunner(MyTestLocust, self.options)
+            server.mocked_send(Message("client_ready", None, "fake_client"))
+            stats = RequestStats()
+            stats.log_request("GET", "/1", 100, 3546)
+            stats.log_request("GET", "/1", 800, 56743)
+            stats2 = RequestStats()
+            stats2.log_request("GET", "/2", 700, 2201)
+            server.mocked_send(Message("stats", {
+                "stats":stats.serialize_stats(), 
+                "stats_total": stats.total.serialize(),
+                "errors":stats.serialize_errors(),
+                "user_count": 1,
+            }, "fake_client"))
+            server.mocked_send(Message("stats", {
+                "stats":stats2.serialize_stats(), 
+                "stats_total": stats2.total.serialize(),
+                "errors":stats2.serialize_errors(),
+                "user_count": 2,
+            }, "fake_client"))
+            self.assertEqual(700, master.stats.total.median_response_time)
+    
+    def test_master_current_response_times(self):
+        import mock
+        
+        class MyTestLocust(Locust):
+            pass
+        
+        start_time = 1
+        with mock.patch("time.time") as mocked_time:
+            mocked_time.return_value = start_time
+            global_stats.reset_all()
+            with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
+                master = MasterLocustRunner(MyTestLocust, self.options)
+                mocked_time.return_value += 1
+                server.mocked_send(Message("client_ready", None, "fake_client"))
+                stats = RequestStats()
+                stats.log_request("GET", "/1", 100, 3546)
+                stats.log_request("GET", "/1", 800, 56743)
+                server.mocked_send(Message("stats", {
+                    "stats":stats.serialize_stats(),
+                    "stats_total": stats.total.get_stripped_report(),
+                    "errors":stats.serialize_errors(),
+                    "user_count": 1,
+                }, "fake_client"))
+                mocked_time.return_value += 1
+                stats2 = RequestStats()
+                stats2.log_request("GET", "/2", 400, 2201)
+                server.mocked_send(Message("stats", {
+                    "stats":stats2.serialize_stats(),
+                    "stats_total": stats2.total.get_stripped_report(),
+                    "errors":stats2.serialize_errors(),
+                    "user_count": 2,
+                }, "fake_client"))
+                mocked_time.return_value += 4
+                self.assertEqual(400, master.stats.total.get_current_response_time_percentile(0.5))
+                self.assertEqual(800, master.stats.total.get_current_response_time_percentile(0.95))
+                
+                # let 10 second pass, do some more requests, send it to the master and make
+                # sure the current response time percentiles only accounts for these new requests
+                mocked_time.return_value += 10
+                stats.log_request("GET", "/1", 20, 1)
+                stats.log_request("GET", "/1", 30, 1)
+                stats.log_request("GET", "/1", 3000, 1)
+                server.mocked_send(Message("stats", {
+                    "stats":stats.serialize_stats(),
+                    "stats_total": stats.total.get_stripped_report(),
+                    "errors":stats.serialize_errors(),
+                    "user_count": 2,
+                }, "fake_client"))
+                self.assertEqual(30, master.stats.total.get_current_response_time_percentile(0.5))
+                self.assertEqual(3000, master.stats.total.get_current_response_time_percentile(0.95))
     
     def test_spawn_zero_locusts(self):
         class MyTaskSet(TaskSet):
@@ -138,7 +212,6 @@ class TestMasterRunner(LocustTestCase):
             master = MasterLocustRunner(MyTestLocust, self.options)
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
-                sleep(0)
             
             master.start_hatching(7, 7)
             self.assertEqual(5, len(server.outbox))
@@ -159,7 +232,6 @@ class TestMasterRunner(LocustTestCase):
             master = MasterLocustRunner(MyTestLocust, self.options)
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
-                sleep(0)
             
             master.start_hatching(2, 2)
             self.assertEqual(5, len(server.outbox))
@@ -246,4 +318,3 @@ class TestMessageSerializing(unittest.TestCase):
         self.assertEqual(msg.type, rebuilt.type)
         self.assertEqual(msg.data, rebuilt.data)
         self.assertEqual(msg.node_id, rebuilt.node_id)
-        

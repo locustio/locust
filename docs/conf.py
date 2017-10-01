@@ -10,6 +10,12 @@
 
 import os
 
+# The default replacements for |version| and |release|, also used in various
+# other places throughout the built documents.
+#
+# The short X.Y version.
+from locust import __version__
+
 # General configuration
 # ---------------------
 
@@ -38,11 +44,6 @@ intersphinx_mapping = {
     'requests': ('http://requests.readthedocs.org/en/latest/', None),
 }
 
-# The default replacements for |version| and |release|, also used in various
-# other places throughout the built documents.
-#
-# The short X.Y version.
-from locust import __version__
 
 # The full version, including alpha/beta/rc tags.
 release = __version__

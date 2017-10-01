@@ -1,4 +1,7 @@
+from __future__ import absolute_import
+
 from time import time
+
 
 def memoize(timeout, dynamic_timeout=False):
     """
@@ -28,4 +31,3 @@ def memoize(timeout, dynamic_timeout=False):
         wrapper.clear_cache = clear_cache
         return wrapper
     return decorator
-

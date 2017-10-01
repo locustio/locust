@@ -1,22 +1,22 @@
-# coding=UTF-8
+# -*- coding: utf-8 -*-
+import logging
+import random
 import socket
 import traceback
 import warnings
-import random
-import logging
-from time import time
 from hashlib import md5
+from time import time
 
 import gevent
+import six
 from gevent import GreenletExit
 from gevent.pool import Group
-import six
+
 from six.moves import xrange
 
 from . import events
+from .rpc import Message, rpc
 from .stats import global_stats
-
-from .rpc import rpc, Message
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +33,9 @@ class LocustRunner(object):
         self.locust_classes = locust_classes
         self.hatch_rate = options.hatch_rate
         self.num_clients = options.num_clients
-        self.num_requests = options.num_requests
         self.host = options.host
         self.locusts = Group()
+        self.greenlet = self.locusts
         self.state = STATE_INIT
         self.hatching_greenlet = None
         self.exceptions = {}
@@ -87,9 +87,6 @@ class LocustRunner(object):
     def spawn_locusts(self, spawn_count=None, stop_timeout=None, wait=False):
         if spawn_count is None:
             spawn_count = self.num_clients
-
-        if self.num_requests is not None:
-            self.stats.max_requests = self.num_requests
 
         bucket = self.weight_locusts(spawn_count, stop_timeout)
         spawn_count = len(bucket)
@@ -183,6 +180,10 @@ class LocustRunner(object):
         self.locusts.kill(block=True)
         self.state = STATE_STOPPED
         events.locust_stop_hatching.fire()
+    
+    def quit(self):
+        self.stop()
+        self.greenlet.kill(block=True)
 
     def log_exception(self, node_id, msg, formatted_tb):
         key = hash(formatted_tb)
@@ -289,7 +290,6 @@ class MasterLocustRunner(DistributedLocustRunner):
             data = {
                 "hatch_rate":slave_hatch_rate,
                 "num_clients":slave_num_clients,
-                "num_requests": self.num_requests,
                 "host":self.host,
                 "stop_timeout":None
             }
@@ -390,7 +390,6 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 job = msg.data
                 self.hatch_rate = job["hatch_rate"]
                 #self.num_clients = job["num_clients"]
-                self.num_requests = job["num_requests"]
                 self.host = job["host"]
                 self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
             elif msg.type == "stop":

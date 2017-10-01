@@ -77,6 +77,8 @@ a:hover {
     color: #000;
     font-size: 16px;
     font-weight: bold;
+    max-width: 165px;
+    word-wrap: break-word;
 }
 .boxes .box_rps .value, .boxes .box_slaves .value {
     font-size: 32px;
@@ -128,6 +130,10 @@ a:hover {
     background: #4e4141;
 }
 
+#host_url {
+    font-size: 14px;
+    font-weight: normal;
+}
 .boxes .box_running {
     display: none;
 }

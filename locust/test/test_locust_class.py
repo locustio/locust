@@ -1,10 +1,12 @@
 import six
 
-from locust.core import HttpLocust, Locust, TaskSet, task, events
-from locust import ResponseError, InterruptTaskSet
-from locust.exception import CatchResponseError, RescheduleTask, RescheduleTaskImmediately, LocustError
+from locust import InterruptTaskSet, ResponseError
+from locust.core import HttpLocust, Locust, TaskSet, events, task
+from locust.exception import (CatchResponseError, LocustError, RescheduleTask,
+                              RescheduleTaskImmediately)
 
 from .testcases import LocustTestCase, WebserverTestCase
+
 
 class TestTaskSet(LocustTestCase):
     def setUp(self):

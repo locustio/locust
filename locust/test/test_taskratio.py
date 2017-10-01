@@ -3,6 +3,7 @@ import unittest
 from locust.core import Locust, TaskSet, task
 from locust.inspectlocust import get_task_ratio_dict
 
+
 class TestTaskRatio(unittest.TestCase):
     def test_task_ratio_command(self):
         class Tasks(TaskSet):
@@ -56,7 +57,7 @@ class TestTaskRatio(unittest.TestCase):
 
         ratio_dict = get_task_ratio_dict([UnlikelyLocust, MoreLikelyLocust], total=True)
 
-        self.assertEquals({
+        self.assertEqual({
                'UnlikelyLocust':   {'tasks': {'task1': {'ratio': 0.25*0.25}, 'task3': {'ratio': 0.25*0.75}}, 'ratio': 0.25},
                'MoreLikelyLocust': {'tasks': {'task1': {'ratio': 0.75*0.25}, 'task3': {'ratio': 0.75*0.75}}, 'ratio': 0.75}
                }, ratio_dict)
