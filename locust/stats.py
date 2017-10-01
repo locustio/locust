@@ -245,6 +245,7 @@ class StatsEntry(object):
         self.last_request_timestamp = t
 
     def _log_response_time(self, response_time):
+
         self.total_response_time += response_time
 
         if self.min_response_time is None:
@@ -460,7 +461,7 @@ class StatsEntry(object):
             self.get_response_time_percentile(0.95),
             self.get_response_time_percentile(0.98),
             self.get_response_time_percentile(0.99),
-            self.max_response_time
+            self.get_response_time_percentile(1.00)
         )
     
     def _cache_response_times(self, t):
