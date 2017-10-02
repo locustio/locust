@@ -13,6 +13,7 @@ from six.moves import xrange
 
 from . import events
 from .clients import HttpSession, SocketIOClient, ZMQClient
+from .config import LocustConfig
 from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
                         RescheduleTaskImmediately, StopLocust)
 
@@ -110,8 +111,12 @@ class Locust(object):
     def __init__(self):
         super(Locust, self).__init__()
         self.current_task = None
-        from .config import locust_config
-        self.config = locust_config
+        if hasattr(self, 'config'):
+            if not isinstance(self.config, LocustConfig):
+                raise AttributeError('Config object sgould be inherited from LocustConfig')
+        else:
+            from .config import locust_config
+            self.config = locust_config
         if not self.min_wait:
             self.min_wait = self.config.min_wait
         if not self.max_wait:

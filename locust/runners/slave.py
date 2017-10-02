@@ -213,6 +213,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
         while True:
             gen = (w for w in self.workers.copy().itervalues() if not w.ping_answ)
             for dead_worker in gen:
+                logger.info("Worker does not respond. Killing it %s", dead_worker.id)
                 self.server.send_to(dead_worker.id, Message("quit", None, None))
                 self.task_pool.append(dead_worker.task)
                 del self.workers[dead_worker.id]
