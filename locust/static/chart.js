@@ -7,29 +7,71 @@
             this.container = $(container);
             this.title = title;
             this.lines = lines;
-            
+            this.unit = unit;
             this.element = $('<div class="chart"></div>').css("width", "100%").appendTo(container);
-            this.data = [];
-            this.dates = [];
+            this.init();
+        }
+        
+        addValue(values) {
+            this.dates.push(new Date().toLocaleTimeString());
             
             var seriesData = [];
-            for (var i=0; i<lines.length; i++) {
-                seriesData.push({
-                    name: lines[i],
-                    type: 'line',
-                    showSymbol: true,
-                    hoverAnimation: false,
-                    data: [],
-                });
-                this.data.push([]);
+            this.lines = values.map(function(x) { return x.name })
+            for (var i=0; i<values.length; i++) {
+                var value = Math.round(values[i].value * 100) / 100;
+                this.data[values[i].name] = this.data[values[i].name] || new Array(this.dates.length);
+                this.data[values[i].name].push(value);
+                seriesData.push(this.seriesDataLine(values[i].name, this.data[this.lines[i]]));
             }
-            
+
+            this.chart.setOption({
+                legend: {
+                    data: this.lines
+                },
+                xAxis: {
+                    data: this.dates,
+                },
+                series: seriesData
+            });
+        }
+        
+        resize() {
+            this.chart.resize();
+        }
+
+        reset () {
+            this.init();
+        }
+
+        seriesDataLine (name, data) {
+            return {
+                name: name,
+                type: 'line',
+                showSymbol: true,
+                hoverAnimation: false,
+                data: data,
+            }
+        }
+
+        init () {
+            this.data = {};
+            this.dates = [];
+
+            var seriesData = [];
+            for (var i=0; i<this.lines.length; i++) {
+                seriesData.push(this.seriesDataLine(this.lines[i], []));
+                this.data[this.lines[i]] = []
+            }
+
             this.chart = echarts.init(this.element[0], 'vintage');
             this.chart.setOption({
                 title: {
                     text: this.title,
                     x: 10,
                     y: 10,
+                },
+                legend: {
+                    data: this.lines
                 },
                 tooltip: {
                     trigger: 'axis',
@@ -76,26 +118,6 @@
                 series: seriesData,
                 grid: {x:60, y:70, x2:40, y2:40},
             })
-        }
-        
-        addValue(values) {
-            this.dates.push(new Date().toLocaleTimeString());
-            var seriesData = [];
-            for (var i=0; i<values.length; i++) {
-                var value = Math.round(values[i] * 100) / 100;
-                this.data[i].push(value);
-                seriesData.push({data: this.data[i]});
-            }
-            this.chart.setOption({
-                xAxis: {
-                    data: this.dates,
-                },
-                series: seriesData
-            });
-        }
-        
-        resize() {
-            this.chart.resize();
         }
     }
     window.LocustLineChart = LocustLineChart;

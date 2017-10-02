@@ -1,4 +1,5 @@
-from .core import HttpLocust, Locust, TaskSet, task
+from .core import WebLocust, Locust, TaskSet, task, mod_context
 from .exception import InterruptTaskSet, ResponseError, RescheduleTaskImmediately
+from .config import configure, locust_config
 
-__version__ = "0.8a2"
+__version__ = "0.8dr1"

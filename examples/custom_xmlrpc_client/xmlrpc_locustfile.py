@@ -2,7 +2,7 @@ import time
 import xmlrpclib
 
 from locust import Locust, TaskSet, events, task
-
+from locust.exception import RescheduleTask
 
 class XmlRpcClient(xmlrpclib.ServerProxy):
     """
@@ -19,6 +19,7 @@ class XmlRpcClient(xmlrpclib.ServerProxy):
             except xmlrpclib.Fault as e:
                 total_time = int((time.time() - start_time) * 1000)
                 events.request_failure.fire(request_type="xmlrpc", name=name, response_time=total_time, exception=e)
+                raise RescheduleTask(e, name)
             else:
                 total_time = int((time.time() - start_time) * 1000)
                 events.request_success.fire(request_type="xmlrpc", name=name, response_time=total_time, response_length=0)

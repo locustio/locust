@@ -25,12 +25,18 @@ class StopLocust(Exception):
 class RescheduleTask(Exception):
     """
     When raised in a task it's equivalent of a return statement.
-    
-    Used internally by TaskSet. When raised within the task control flow of a TaskSet, 
+
+    Used internally by TaskSet. When raised within the task control flow of a TaskSet,
     but not inside a task, the execution should be handed over to the parent TaskSet.
     """
+    def __init__(self, reason=None, action=None):
+        self.reason = reason
+        self.action = action
 
 class RescheduleTaskImmediately(Exception):
     """
     When raised in a Locust task, another locust task will be rescheduled immediately
     """
+    def __init__(self, reason=None, action=None):
+        self.reason = reason
+        self.action = action

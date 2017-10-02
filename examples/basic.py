@@ -1,22 +1,22 @@
-from locust import HttpLocust, TaskSet, task
+from locust import WebLocust, TaskSet, task
 
 
 def index(l):
-    l.client.get("/")
+    l.client.http.get("/")
 
 def stats(l):
-    l.client.get("/stats/requests")
+    l.client.http.get("/stats/requests")
 
 class UserTasks(TaskSet):
     # one can specify tasks like this
     tasks = [index, stats]
-    
+
     # but it might be convenient to use the @task decorator
     @task
     def page404(self):
-        self.client.get("/does_not_exist")
-    
-class WebsiteUser(HttpLocust):
+        self.client.http.get("/does_not_exist")
+
+class WebsiteUser(WebLocust):
     """
     Locust user class that does requests to the locust web server running on localhost
     """

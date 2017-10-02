@@ -9,7 +9,7 @@ Locust Documentation
     Locust is a scalable load testing framework written in Python
 
     * **Website**: `http://locust.io <http://locust.io>`_
-    * **Source code**: `http://github.com/locustio/locust <http://github.com/locustio/locust>`_
+    * **Source code**: `https://github.com/datarobot/locust <https://github.com/datarobot/locust>`_
     * **Twitter**: `@locustio <http://twitter.com/locustio>`_
 
 

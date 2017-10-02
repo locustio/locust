@@ -1,12 +1,12 @@
 import time
 import unittest
 
-from locust.core import HttpLocust, TaskSet, task
+from locust.core import WebLocust, TaskSet, task
 from locust.inspectlocust import get_task_ratio_dict
 from locust.rpc.protocol import Message
 from locust.stats import RequestStats, StatsEntry, global_stats
 from six.moves import xrange
-
+from locust.exception import RescheduleTask, InterruptTaskSet
 from .testcases import WebserverTestCase
 
 
@@ -14,7 +14,7 @@ class TestRequestStats(unittest.TestCase):
     def setUp(self):
         self.stats = RequestStats()
         self.stats.start_time = time.time()
-        self.s = StatsEntry(self.stats, "test_entry", "GET")
+        self.s = StatsEntry(self.stats, "task", "test_entry", "GET")
         self.s.log(45, 0)
         self.s.log(135, 0)
         self.s.log(44, 0)
@@ -27,7 +27,7 @@ class TestRequestStats(unittest.TestCase):
         self.s.log_error(Exception("dummy fail"))
 
     def test_percentile(self):
-        s = StatsEntry(self.stats, "percentile_test", "GET")
+        s = StatsEntry(self.stats, "task", "percentile_test", "GET")
         for x in xrange(100):
             s.log(x, 0)
 
@@ -73,13 +73,13 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(756, self.s.min_response_time)
 
     def test_aggregation(self):
-        s1 = StatsEntry(self.stats, "aggregate me!", "GET")
+        s1 = StatsEntry(self.stats, "test", "aggregate me!", "GET")
         s1.log(12, 0)
         s1.log(12, 0)
         s1.log(38, 0)
         s1.log_error("Dummy exzeption")
 
-        s2 = StatsEntry(self.stats, "aggregate me!", "GET")
+        s2 = StatsEntry(self.stats, "test", "aggregate me!", "GET")
         s2.log_error("Dummy exzeption")
         s2.log_error("Dummy exzeption")
         s2.log(12, 0)
@@ -90,7 +90,7 @@ class TestRequestStats(unittest.TestCase):
         s2.log(55, 0)
         s2.log(97, 0)
 
-        s = StatsEntry(self.stats, "GET", "")
+        s = StatsEntry(self.stats, "test", "GET", "")
         s.extend(s1, full_request_history=True)
         s.extend(s2, full_request_history=True)
 
@@ -103,7 +103,7 @@ class TestRequestStats(unittest.TestCase):
         # reset stats
         self.stats = RequestStats()
         
-        s = StatsEntry(self.stats, "/some-path", "GET")
+        s = StatsEntry(self.stats, "test", "/some-path", "GET")
         s.log_error(Exception("Exception!"))
         s.log_error(Exception("Exception!"))
             
@@ -121,7 +121,7 @@ class TestRequestStats(unittest.TestCase):
         class Dummy(object):
             pass
         
-        s = StatsEntry(self.stats, "/", "GET")
+        s = StatsEntry(self.stats, "test", "/", "GET")
         s.log_error(Exception("Error caused by %r" % Dummy()))
         s.log_error(Exception("Error caused by %r" % Dummy()))
         
@@ -133,7 +133,7 @@ class TestRequestStats(unittest.TestCase):
         and unserialize the whole thing again. This is done "IRL" when stats are sent 
         from slaves to master.
         """
-        s1 = StatsEntry(self.stats, "test", "GET")
+        s1 = StatsEntry(self.stats, "test", "test", "GET")
         s1.log(10, 0)
         s1.log(20, 0)
         s1.log(40, 0)
@@ -147,71 +147,73 @@ class TestRequestStats(unittest.TestCase):
 
 class TestRequestStatsWithWebserver(WebserverTestCase):
     def test_request_stats_content_length(self):
-        class MyLocust(HttpLocust):
+        class MyLocust(WebLocust):
             host = "http://127.0.0.1:%i" % self.port
     
         locust = MyLocust()
-        locust.client.get("/ultra_fast")
-        self.assertEqual(global_stats.get("/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response"))
-        locust.client.get("/ultra_fast")
-        self.assertEqual(global_stats.get("/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response"))
+        locust.client.http.get("/ultra_fast")
+        self.assertEqual(global_stats.get(None, "/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response"))
+        locust.client.http.get("/ultra_fast")
+        self.assertEqual(global_stats.get(None, "/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response"))
     
     def test_request_stats_no_content_length(self):
-        class MyLocust(HttpLocust):
+        class MyLocust(WebLocust):
             host = "http://127.0.0.1:%i" % self.port
         l = MyLocust()
         path = "/no_content_length"
-        r = l.client.get(path)
-        self.assertEqual(global_stats.get(path, "GET").avg_content_length, len("This response does not have content-length in the header"))
+        r = l.client.http.get(path)
+        self.assertEqual(global_stats.get(None, path, "GET").avg_content_length, len("This response does not have content-length in the header"))
     
     def test_request_stats_no_content_length_streaming(self):
-        class MyLocust(HttpLocust):
+        class MyLocust(WebLocust):
             host = "http://127.0.0.1:%i" % self.port
         l = MyLocust()
         path = "/no_content_length"
-        r = l.client.get(path, stream=True)
-        self.assertEqual(0, global_stats.get(path, "GET").avg_content_length)
+        r = l.client.http.get(path, stream=True)
+        self.assertEqual(0, global_stats.get(None, path, "GET").avg_content_length)
     
     def test_request_stats_named_endpoint(self):
-        class MyLocust(HttpLocust):
+        class MyLocust(WebLocust):
             host = "http://127.0.0.1:%i" % self.port
     
         locust = MyLocust()
-        locust.client.get("/ultra_fast", name="my_custom_name")
-        self.assertEqual(1, global_stats.get("my_custom_name", "GET").num_requests)
+        locust.client.http.get("/ultra_fast", name="my_custom_name")
+        self.assertEqual(1, global_stats.get(None, "my_custom_name", "GET").num_requests)
     
     def test_request_stats_query_variables(self):
-        class MyLocust(HttpLocust):
+        class MyLocust(WebLocust):
             host = "http://127.0.0.1:%i" % self.port
     
         locust = MyLocust()
-        locust.client.get("/ultra_fast?query=1")
-        self.assertEqual(1, global_stats.get("/ultra_fast?query=1", "GET").num_requests)
+        locust.client.http.get("/ultra_fast?query=1")
+        self.assertEqual(1, global_stats.get(None, "/ultra_fast?query=1", "GET").num_requests)
     
     def test_request_stats_put(self):
-        class MyLocust(HttpLocust):
+        class MyLocust(WebLocust):
             host = "http://127.0.0.1:%i" % self.port
     
         locust = MyLocust()
-        locust.client.put("/put")
-        self.assertEqual(1, global_stats.get("/put", "PUT").num_requests)
+        locust.client.http.put("/put")
+        self.assertEqual(1, global_stats.get(None, "/put", "PUT").num_requests)
     
     def test_request_connection_error(self):
-        class MyLocust(HttpLocust):
+        class MyLocust(WebLocust):
             host = "http://localhost:1"
         
         locust = MyLocust()
-        response = locust.client.get("/", timeout=0.1)
-        self.assertEqual(response.status_code, 0)
-        self.assertEqual(1, global_stats.get("/", "GET").num_failures)
-        self.assertEqual(0, global_stats.get("/", "GET").num_requests)
+        try:
+            response = locust.client.http.get("/", timeout=0.1)
+        except RescheduleTask:
+            pass
+        self.assertEqual(1, global_stats.get(None, "/", "GET").num_failures)
+        self.assertEqual(0, global_stats.get(None, "/", "GET").num_requests)
     
     def test_max_requests(self):
         class MyTaskSet(TaskSet):
             @task
             def my_task(self):
-                self.client.get("/ultra_fast")
-        class MyLocust(HttpLocust):
+                self.client.http.get("/ultra_fast")
+        class MyLocust(WebLocust):
             host = "http://127.0.0.1:%i" % self.port
             task_set = MyTaskSet
             min_wait = 1
@@ -240,11 +242,11 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         class MyTaskSet(TaskSet):
             @task
             def my_task(self):
-                self.client.get("/ultra_fast")
-                self.client.get("/fail")
-                self.client.get("/fail")
+                self.client.http.get("/ultra_fast")
+                self.client.http.get("/fail")
+                self.client.http.get("/fail")
             
-        class MyLocust(HttpLocust):
+        class MyLocust(WebLocust):
             host = "http://127.0.0.1:%i" % self.port
             task_set = MyTaskSet
             min_wait = 1
@@ -257,9 +259,9 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
             
             l = MyLocust()
             self.assertRaises(StopLocust, lambda: l.task_set(l).run())
-            self.assertEqual(1, global_stats.num_requests)
-            self.assertEqual(2, global_stats.num_failures)
-            
+            self.assertEqual(2, global_stats.num_requests)
+            self.assertEqual(1, global_stats.num_failures)
+
             global_stats.clear_all()
             global_stats.max_requests = 2
             self.assertEqual(0, global_stats.num_requests)
@@ -302,3 +304,78 @@ class TestInspectLocust(unittest.TestCase):
         self.assertEqual(0.25, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["ratio"])
         self.assertEqual(0.125, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["tasks"]["task1"]["ratio"])
         self.assertEqual(0.125, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["tasks"]["task2"]["ratio"])
+
+class TestLocustTaskStatistics(unittest.TestCase):
+
+    def setUp(self):
+        super(TestLocustTaskStatistics, self).setUp()
+
+        class User(WebLocust):
+            host = "http://127.0.0.1"
+        self.locust = User()
+        global_stats.clear_all()
+
+    def tearDown(self):
+        global_stats.clear_all()
+
+    def test_task_success(self):
+        class MyTasks(TaskSet):
+            def on_task_end(self):
+                raise InterruptTaskSet(reschedule=False)
+
+            @task
+            def t1(self):
+                pass
+        loc = MyTasks(self.locust)
+        self.assertRaises(RescheduleTask, lambda: loc.run())
+        self.assertEqual(len(global_stats.tasks), 1)
+        self.assertEqual(global_stats.num_success_tasks, 1)
+
+    def test_task_failure(self):
+        class MyTasks(TaskSet):
+            completed = False
+            @task
+            def t1(self):
+                if not self.completed:
+                    self.completed = True
+                    raise RescheduleTask
+                else:
+                    raise InterruptTaskSet(reschedule=False)
+
+        loc = MyTasks(self.locust)
+        self.assertRaises(RescheduleTask, lambda: loc.run())
+        self.assertEqual(len(global_stats.tasks), 1)
+        self.assertEqual(global_stats.num_success_tasks, 0)
+        self.assertEqual(len(global_stats.tasks_failures), 1)
+        self.assertEqual(global_stats.num_failed_tasks, 1)
+
+    def test_task_requests_tracking_on_success(self):
+        class MyTasks(TaskSet):
+            def on_task_end(self):
+                raise InterruptTaskSet(reschedule=False)
+
+            @task
+            def t1(self):
+                self.client.http.get("/ultra_fast")
+        loc = MyTasks(self.locust)
+        self.assertRaises(RescheduleTask, lambda: loc.run())
+
+        self.assertIn(('Action Total', '/ultra_fast', 'GET'), global_stats.entries.keys())
+        self.assertIn(('User::t1', '/ultra_fast', 'GET'), global_stats.entries.keys())
+
+    def test_task_requests_tracking_on_failure(self):
+        class MyTasks(TaskSet):
+            def on_task_end(self):
+                raise InterruptTaskSet(reschedule=False)
+
+            @task
+            def t1(self):
+                self.client.http.post("/ultra_fast")
+        loc = MyTasks(self.locust)
+        self.assertRaises(RescheduleTask, lambda: loc.run())
+
+        self.assertIn(('Action Total', '/ultra_fast', 'POST'), global_stats.entries.keys())
+        self.assertIn(('User::t1', '/ultra_fast', 'POST'), global_stats.entries.keys())
+        error_names = [f.task for f in global_stats.errors.values()]
+        self.assertIn('Action Total', error_names)
+        self.assertIn('User::t1', error_names)

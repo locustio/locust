@@ -251,31 +251,31 @@ Making HTTP requests
 =====================
 
 So far, we've only covered the task scheduling part of a Locust user. In order to actually load test 
-a system we need to make HTTP requests. To help us do this, the :py:class:`HttpLocust <locust.core.HttpLocust>`
+a system we need to make HTTP requests. To help us do this, the :py:class:`WebLocust <locust.core.WebLocust>`
 class exists. When using this class, each instance gets a 
-:py:attr:`client <locust.core.Locust.client>` attribute which will be an instance of 
-:py:attr:`HttpSession <locust.core.client.HttpSession>` which can be used to make HTTP requests.
+:py:attr:`client <locust.core.Locust.client.http>` attribute which will be an instance of 
+:py:attr:`HttpSession <locust.core.client.http.HttpSession>` which can be used to make HTTP requests.
 
-.. autoclass:: locust.core.HttpLocust
+.. autoclass:: locust.core.WebLocust
     :members: client
     :noindex:
 
-When inheriting from the HttpLocust class, we can use its client attribute to make HTTP requests 
+When inheriting from the WebLocust class, we can use its client attribute to make HTTP requests 
 against the server. Here is an example of a locust file that can be used to load test a site 
 with two URLs; **/** and **/about/**::
 
-    from locust import HttpLocust, TaskSet, task
+    from locust import WebLocust, TaskSet, task
     
     class MyTaskSet(TaskSet):
         @task(2)
         def index(self):
-            self.client.get("/")
+            self.client.http.get("/")
         
         @task(1)
         def about(self):
-            self.client.get("/about/")
+            self.client.http.get("/about/")
     
-    class MyLocust(HttpLocust):
+    class MyLocust(WebLocust):
         task_set = MyTaskSet
         min_wait = 5000
         max_wait = 15000
@@ -284,37 +284,96 @@ Using the above Locust class, each simulated user will wait between 5 and 15 sec
 between the requests, and **/** will be requested twice as much as **/about/**.
 
 The attentive reader will find it odd that we can reference the HttpSession instance 
-using *self.client* inside the TaskSet, and not *self.locust.client*. We can do this 
+using *self.client.http* inside the TaskSet, and not *self.locust.client*. We can do this 
 because the :py:class:`TaskSet <locust.core.TaskSet>` class has a convenience property 
 called client that simply returns self.locust.client.
+
+Making SocketIO actions 
+=====================
+
+For it can be used the same :py:class:`WebLocust <locust.core.WebLocust>`
+
+.. autoclass:: locust.core.WebLocust
+    :members: client
+    :noindex:
+
+When inheriting from the WebLocust class, we can use its client attribute to make SocketIO related actions
+against the server. Here is an example:
+
+    from locust import WebLocust, TaskSet, task
+    
+    class MyTaskSet(TaskSet):
+        @task(2)
+        def index(self):
+            self.client.socket_io.send_sync("authorize", "token", "authorize-response")
+        
+        @task(1)
+        def about(self):
+            self.client.socket_io.wait_for_message_amount(10)
+    
+    class MyLocust(WebLocust):
+        task_set = MyTaskSet
+        min_wait = 5000
+        max_wait = 15000
+
+Using the above Locust class, each simulated user will wait between 5 and 15 seconds 
+between the actions, and sync will be requested twice as much as message amount listener resolution.
+
+Making ZMQ actions 
+=====================
+
+For it can be used the same :py:class:`WebLocust <locust.core.WebLocust>`. 
+ZMQ action exist in beta version and supports only fire in PUB socket
+
+.. autoclass:: locust.core.WebLocust
+    :members: client
+    :noindex:
+
+When inheriting from the WebLocust class, we can use its client attribute to make SocketIO related actions
+against the server. Here is an example:
+
+    from locust import WebLocust, TaskSet, task
+    
+    class MyTaskSet(TaskSet):
+        @task(2)
+        def index(self):
+            self.client.zmq.send({"type": "ping"})
+        
+    class MyLocust(WebLocust):
+        task_set = MyTaskSet
+        min_wait = 5000
+        max_wait = 15000
+
+Using the above Locust class, each simulated user will wait between 5 and 15 seconds 
 
 
 Using the HTTP client
 ----------------------
 
-Each instance of HttpLocust has an instance of :py:class:`HttpSession <locust.clients.HttpSession>` 
+Each instance of WebLocust has an instance of :py:class:`LocustWebClient <locust.core.LocustWebClient>` 
+which refers to :py:class:`HttpSession <locust.clients.http.HttpSession>` on http attribute
 in the *client* attribute. The HttpSession class is actually a subclass of 
 :py:class:`requests.Session` and can be used to  make HTTP requests, that will be reported to Locust's
-statistics, using the :py:meth:`get <locust.clients.HttpSession.get>`, 
-:py:meth:`post <locust.clients.HttpSession.post>`, :py:meth:`put <locust.clients.HttpSession.put>`, 
-:py:meth:`delete <locust.clients.HttpSession.delete>`, :py:meth:`head <locust.clients.HttpSession.head>`, 
-:py:meth:`patch <locust.clients.HttpSession.patch>` and :py:meth:`options <locust.clients.HttpSession.options>` 
+statistics, using the :py:meth:`get <locust.clients.http.HttpSession.get>`, 
+:py:meth:`post <locust.clients.http.HttpSession.post>`, :py:meth:`put <locust.clients.http.HttpSession.put>`, 
+:py:meth:`delete <locust.clients.http.HttpSession.delete>`, :py:meth:`head <locust.clients.http.HttpSession.head>`, 
+:py:meth:`patch <locust.clients.http.HttpSession.patch>` and :py:meth:`options <locust.clients.http.HttpSession.options>` 
 methods. The HttpSession instance will preserve cookies between requests so that it can be used to log in 
 to websites and keep a session between requests. The client attribute can also be referenced from the Locust 
 instance's TaskSet instances so that it's easy to retrieve the client and make HTTP requests from within your 
 tasks.
 
 Here's a simple example that makes a GET request to the */about* path (in this case we assume *self* 
-is an instance of a :py:class:`TaskSet <locust.core.TaskSet>` or :py:class:`HttpLocust <locust.core.Locust>` 
+is an instance of a :py:class:`TaskSet <locust.core.TaskSet>` or :py:class:`WebLocust <locust.core.WebLocust>` 
 class::
 
-    response = self.client.get("/about")
+    response = self.client.http.get("/about")
     print "Response status code:", response.status_code
     print "Response content:", response.content
 
 And here's an example making a POST request::
 
-    response = self.client.post("/login", {"username":"testuser", "password":"secret"})
+    response = self.client.http.post("/login", {"username":"testuser", "password":"secret"})
 
 Safe mode
 ---------
@@ -336,7 +395,7 @@ locust should consider a request as a success or a failure.
 One can mark requests as failed, even when the response code is OK, by using the 
 *catch_response* argument and a with statement::
 
-    with client.get("/", catch_response=True) as response:
+    with client.http.get("/", catch_response=True) as response:
         if response.content != "Success":
             response.failure("Got wrong response")
 
@@ -354,14 +413,30 @@ Grouping requests to URLs with dynamic parameters
 
 It's very common for websites to have pages whose URLs contain some kind of dynamic parameter(s). 
 Often it makes sense to group these URLs together in Locust's statistics. This can be done 
-by passing a *name* argument to the :py:class:`HttpSession's <locust.clients.HttpSession>` 
+by passing a *name* argument to the :py:class:`HttpSession's <locust.clients.http.HttpSession>` 
 different request methods. 
 
 Example::
 
     # Statistics for these requests will be grouped under: /blog/?id=[id]
     for i in range(10):
-        client.get("/blog?id=%i" % i, name="/blog?id=[id]")
+        client.http.get("/blog?id=%i" % i, name="/blog?id=[id]")
+
+Configuration
+=================
+
+For more precise configuration is recommended to be done via locust.configure context manager:
+
+Example::
+
+    import locust
+
+    with locust.configure() as config:
+        config.host = 'google.com'
+        config.port = 8080
+        config.custom_par = 'value'
+
+This configuration aslo could be accessible via locust.locust_config
 
 Common libraries
 =================

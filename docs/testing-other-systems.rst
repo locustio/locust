@@ -5,7 +5,8 @@ Testing other systems using custom clients
 Locust was built with HTTP as its main target. However, it can easily be extended to load test 
 any request/response based system, by writing a custom client that triggers 
 :py:attr:`request_success <locust.events.request_success>` and 
-:py:attr:`request_failure <locust.events.request_failure>` events.
+:py:attr:`request_failure <locust.events.request_failure>` events
+and also rises RescheduleTask after request_failure fire to interrupt current task execution
 
 Sample XML-RPC Locust client
 ============================

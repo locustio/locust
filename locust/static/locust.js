@@ -17,6 +17,9 @@ $("#box_stop a.stop-button").click(function(event) {
 $("#box_stop a.reset-button").click(function(event) {
     event.preventDefault();
     $.get($(this).attr("href"));
+    rpsChart.reset();
+    responseTimeChart.reset();
+    usersChart.reset();
 });
 
 $("#new_test").click(function(event) {
@@ -48,7 +51,9 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
 });
 
 var stats_tpl = $('#stats-template');
+var task_stats_tpl = $('#task-stats-template');
 var errors_tpl = $('#errors-template');
+var task_errors_tpl = $('#task-errors-template')
 var exceptions_tpl = $('#exceptions-template');
 
 $('#swarm_form').submit(function(event) {
@@ -97,6 +102,7 @@ var sortBy = function(field, reverse, primer){
 
 // Sorting by column
 var sortAttribute = "name";
+var altSortAttribute = "task";
 var desc = false;
 var report;
 $(".stats_label").click(function(event) {
@@ -115,9 +121,28 @@ $(".stats_label").click(function(event) {
     $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
 });
 
+$(".alt_stats_label").click(function(event) {
+    event.preventDefault();
+    sortAttribute = $(this).attr("data-sortkey");
+    desc = !desc;
+
+    $('#taskStats tbody').empty();
+    $('#taskErrors tbody').empty();
+    alternate = false;
+    totalStatsRow = report.taskStats.pop();
+    sortedTaskStats = (report.taskStats).sort(sortBy(altSortAttribute, desc));
+    sortedTaskStats.push(totalStatsRow);
+    $('#taskStats tbody').jqoteapp(task_stats_tpl, sortedTaskStats);
+    alternate = false;
+    $('#taskErrors tbody').jqoteapp(
+        task_errors_tpl, 
+        (report.tasksFailures).sort(sortBy(altSortAttribute, desc))
+    );
+});
+
 // init charts
-var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS"], "reqs/s");
-var responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", ["Average Response Time"], "ms");
+var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["Total"], "reqs/s");
+var responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", ["Total"], "ms");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 
 function updateStats() {
@@ -129,28 +154,54 @@ function updateStats() {
         $("#status_text").html(report.state);
         $("#userCount").html(report.user_count);
 
-        if (typeof report.slave_count !== "undefined")
-            $("#slaveCount").html(report.slave_count)
+        $("#slaveCount").html(report.slave_count)
+        $("#workerCount").html(report.worker_count)
 
         $('#stats tbody').empty();
         $('#errors tbody').empty();
 
+        $('#taskStats tbody').empty();
+        $('#taskErrors tbody').empty();
+
         alternate = false;
 
-        totalRow = report.stats.pop()
-        sortedStats = (report.stats).sort(sortBy(sortAttribute, desc))
-        sortedStats.push(totalRow)
+        totalRow = report.stats.pop();
+        sortedStats = (report.stats).sort(sortBy(sortAttribute, desc));
+        sortedStats.push(totalRow);
         $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
         alternate = false;
         $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
+        
+        totalStatsRow = report.taskStats.pop();
+        sortedTaskStats = (report.taskStats).sort(sortBy(altSortAttribute, desc));
+        sortedTaskStats.push(totalStatsRow);
+        $('#taskStats tbody').jqoteapp(task_stats_tpl, sortedTaskStats);
+        alternate = false;
+        $('#taskErrors tbody').jqoteapp(
+            task_errors_tpl, 
+            (report.tasksFailures).sort(sortBy(altSortAttribute, desc))
+        );
 
         if (report.state !== "stopped"){
-            // get total stats row
-            var total = report.stats[report.stats.length-1];
             // update charts
-            rpsChart.addValue([total.current_rps]);
-            responseTimeChart.addValue([total.avg_response_time]);
-            usersChart.addValue([report.user_count]);
+            rps = report.stats
+                .filter(function(x) { return x.task == "Action Total" || x.name == "Total" })
+                .map(function(x) {
+                return x.name == "Total" ? 
+                    {name: "Total", value: x.current_rps} : 
+                    {name: `${x.method} ${x.name}`, value: x.current_rps}
+            });
+            responseTime = report.stats
+                .filter(function(x) { return x.task == "Action Total" || x.name == "Total" })
+                .map(function(x) {
+                return x.name == "Total" ? 
+                    {name: "Total", value: x.avg_response_time} : 
+                    {name: `${x.method} ${x.name}`, value: x.avg_response_time}
+            });
+            
+            rpsChart.addValue(rps);
+            responseTimeChart.addValue(responseTime);
+            usersChart.addValue([{name: "Users", value: report.user_count}]);
         }
 
         setTimeout(updateStats, 2000);

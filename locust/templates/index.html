@@ -11,7 +11,7 @@
             <img src="/static/img/logo.png?v={{ version }}" class="logo" />
             <div class="boxes">
                 <div class="top_box box_url">
-                    <div class="label">HOST</div>
+                    <div class="label">TARGET HOST</div>
                     <div class="value" id="host_url">
                         {{host}}
                     </div>
@@ -27,12 +27,14 @@
                     <a href="#" class="new_test" id="new_test">New test</a>
                     <a href="#" class="edit_test">Edit</a>
                 </div>
-                {% if is_distributed %}
-                    <div class="top_box box_slaves" id="box_rps">
-                        <div class="label">SLAVES</div>
-                        <div class="value" id="slaveCount">{{slave_count}}</div>
-                    </div>
-                {% endif %}
+                <div class="top_box box_slaves" id="box_rps">
+                    <div class="label">NODES</div>
+                    <div class="value" id="slaveCount">{{slave_count}}</div>
+                </div>
+                <div class="top_box box_slaves" id="box_rps">
+                    <div class="label">WORKERS</div>
+                    <div class="value" id="workerCount">{{worker_count}}</div>
+                </div>
                 <div class="top_box box_rps box_running" id="box_rps">
                     <div class="label">RPS</div>
                     <div class="value" id="total_rps">0</div>
@@ -96,10 +98,12 @@
             </nav>
             <div class="panes container">
                 <div style="display:none;">
+                    <h3>Request Statistics</h3>
                     <table id="stats" class="stats">
                         <thead>
                             <tr>
-                                <th class="stats_label" href="#" data-sortkey="method">Type</th>
+                                <th class="stats_label" href="#" data-sortkey="task">Task</th>
+                                <th class="stats_label" href="#" data-sortkey="method">Action</th>
                                 <th class="stats_label" href="#" data-sortkey="name">Name</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="num_requests" title="Number of successful requests"># requests</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="num_failures" title="Number of failures"># fails</th>
@@ -114,22 +118,52 @@
                         <tbody>
                         </tbody>
                     </table>
+                    <h3>Tasks Statistics</h3>
+                    <table id="taskStats" class="stats">
+                        <thead>
+                            <tr>
+                                <th class="alt_stats_label" href="#" data-sortkey="task">Task</th>
+                                <th class="alt_stats_label numeric" href="#" data-sortkey="num_success" title="Number of successful executions"># successful</th>
+                                <th class="alt_stats_label numeric" href="#" data-sortkey="num_failures" title="Number of failures"># fails</th>
+                                <th class="alt_stats_label numeric" href="#" data-sortkey="avg_execution_time" title="Average task time">Average (ms)</th>
+                                <th class="alt_stats_label numeric" href="#" data-sortkey="min_execution_time" title="Min task time">Min (ms)</th>
+                                <th class="alt_stats_label numeric" href="#" data-sortkey="max_execution_time" title="Max task time">Max (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                    <br>
                 </div>
                 <div id="charts" style="display:none;">
                     <div class="charts-container"></div>
                     <p class="note">Note: There is no persistence of these charts, if you refresh this page, new charts will be created.</p>
                 </div>
                 <div style="display:none;">
+                    <h3>Request Errors</h3>
                     <table id="errors" class="stats">
                         <thead>
                             <th class="error_count stats_label" data-sortkey="1"># fails</th>
-                            <th class="stats_label" href="#" data-sortkey="method">Method</th>
+                            <th class="stats_label" href="#" data-sortkey="task">Task</th>
+                            <th class="stats_label" href="#" data-sortkey="method">Type</th>
                             <th class="stats_label" href="#" data-sortkey="name">Name</th>
                             <th class="error_type stats_label" data-sortkey="0">Type</th>
                         </thead>
                         <tbody>
                         </tbody>
                     </table>
+                    <h3>Tasks Errors</h3>
+                    <table id="taskErrors" class="stats">
+                        <thead>
+                            <th class="error_count alt_stats_label" data-sortkey="1"># fails</th>
+                            <th class="alt_stats_label" href="#" data-sortkey="task">Task</th>
+                            <th class="alt_stats_label" href="#" data-sortkey="action">Action</th>
+                            <th class="error_type alt_stats_label" data-sortkey="0">Type</th>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                    <br>
                 </div>
                 <div style="display:none;">
                     <table id="exceptions" class="stats">
@@ -201,6 +235,7 @@
     <script type="text/x-jqote-template" id="stats-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%> <%=(this.name == "Total" ? "total" : "")%>">
+            <td class="name" title="<%= this.task %>"><%= this.task %></td>
             <td><%= (this.method ? this.method : "") %></td>
             <td class="name" title="<%= this.name %>"><%= this.name %></td>
             <td class="numeric"><%= this.num_requests %></td>
@@ -215,13 +250,38 @@
         <% alternate = !alternate; %>
         ]]>
     </script>
+    <script type="text/x-jqote-template" id="task-stats-template">
+        <![CDATA[
+        <tr class="<%=(alternate ? "dark" : "")%> <%=(this.task == "Total" ? "total" : "")%>">
+            <td class="name" title="<%= this.task %>"><%= this.task %></td>
+            <td class="numeric"><%= this.num_success %></td>
+            <td class="numeric"><%= this.num_failures %></td>
+            <td class="numeric"><%= Math.round(this.avg_execution_time) %></td>
+            <td class="numeric"><%= this.min_execution_time %></td>
+            <td class="numeric"><%= this.max_execution_time %></td>
+        </tr>
+        <% alternate = !alternate; %>
+        ]]>
+    </script>
     <script type="text/x-jqote-template" id="errors-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%>">
             <td><%= this.occurences %></td>
+            <td><%= this.task %></td>
             <td><%= this.method %></td>
             <td><%= this.name %></td>
             <td><%= function(e) { return e.replace("<", "&lt;"); }(this.error) %></td>
+        </tr>
+        <% alternate = !alternate; %>
+        ]]>
+    </script>
+    <script type="text/x-jqote-template" id="task-errors-template">
+        <![CDATA[
+        <tr class="<%=(alternate ? "dark" : "")%>">
+            <td><%= this.occurences %></td>
+            <td><%= this.task %></td>
+            <td><%= this.action %></td>
+            <td><%= function(e) { return e.replace("<", "&lt;"); }(this.exception) %></td>
         </tr>
         <% alternate = !alternate; %>
         ]]>
