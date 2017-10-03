@@ -44,13 +44,23 @@
                     <div class="label">FAILURES</div>
                     <div class="value"><span id="fail_ratio"></span>%</div>
                 </div>
-                <div class="top_box box_stop box_running" id="box_stop">
-                    <a href="/stop" class="stop-button" onclick="stopClock()""><i></i>STOP</a>
-                    <a href="/stats/reset" class="reset-button">Reset<br>Stats</a>
-                </div>
+<!--                 <div class="top_box box_run_time box_running" id="box_run_time">
+                    <div class="label">RUN TIME</div>
+                    <div class="value"><span id="run_time"></span>
+                    {% if run_time == 0 %}
+                        <label id="minutes">00</label>:<label id="seconds">00</label>
+                    {% else %}
+                        {{ run_time }}
+                    {% endif %}
+                    </div>
+                </div> -->
                 <div class="top_box box_timer box_running" id="box_timer">
                     <div class="label">TIMER</div>
-                    <div class="value"><label id="minutes">00</label>:<label id="seconds">00</label></div>
+                    <div class="value"><label id="minutes">{{ run_time }}</label>:<label id="seconds">{{ seconds_run_time }}</label></div>
+                </div>
+                <div class="top_box box_stop box_running" id="box_stop">
+                    <a href="/stop" class="stop-button" onclick="stopClock();checkCookie();"><i></i>STOP</a>
+                    <a href="/stats/reset" class="reset-button">Reset<br>Stats</a>
                 </div>
             </div>
             <div style="clear:both;"></div>
@@ -280,10 +290,12 @@
     </script>
     <script type="text/x-jqote-template" id="exceptions-template">
         <![CDATA[
-        <tr class="<%=(alternate ? "dark" : "")%>">
-            <td class="occurences"><%= this.count %></td>
-            <td class="traceback" title="Occured on: <%= this.nodes %>"><%= function(e) { return e.replace("<", "&lt;"); }(this.traceback) %>
-<%= function(e) { return e.replace("<", "&lt;"); }(this.msg) %></td>
+        <tr class="<%=(alternate ? " dark" : "")%>">
+        <td class="occurences"><%= this.count %></td>
+        <td class="traceback" title="Occured on: <%= this.nodes %>"><%= function(e) { return e.replace("<", "&lt;");
+            }(this.traceback) %>
+            <%= function(e) { return e.replace("<", "&lt;"); }(this.msg) %>
+        </td>
         </tr>
         <% alternate = !alternate; %>
         ]]>
@@ -291,39 +303,102 @@
     <script type="text/javascript" src="/static/chart.js?v={{ version }}"></script>
     <script type="text/javascript" src="/static/locust.js?v={{ version }}"></script>
     <script type="text/javascript">
+        function setCookie(cname, cvalue, exdays) {
+            var d = new Date();
+            d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+            var expires = "expires=" + d.toGMTString();
+            document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+        }
 
-      var clicked = false;
-      var sec = 0;
+        function getCookie(cname) {
+            var name = cname + "=";
+            var decodedCookie = decodeURIComponent(document.cookie);
+            var ca = decodedCookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
 
-      function startAndReset(){
-        startClock();
-        resetClock();
-      }
-      function startClock() {
-      	if (clicked === false) {
-      		clock = setInterval("stopWatch()", 1000);
-      		clicked = true;;
-      	}
-      	else if (clicked === true) {
-      	}
-      }
-      function stopWatch() {
-        document.getElementById("seconds").innerHTML = ++sec%60;
-        document.getElementById("minutes").innerHTML = parseInt(sec/60,10);
-        console.log(sec);
-      }
-      function stopClock() {
-      	window.clearInterval(clock);
-        console.log(clock);
-      	document.getElementById("seconds").innerHTML = sec%60;
-        document.getElementById("minutes").innerHTML = parseInt(sec/60,10);
-      	clicked = false;
-      }
-      function resetClock(){
-        sec = 0;
-        document.getElementById("seconds").innerHTML = 0;
-        document.getElementById("minutes").innerHTML = 0;
-      }
+{#        function checkCookie() {#}
+{#            var runTime = {{ run_time }};#}
+{##}
+{#            var user = getCookie("username");#}
+{#            if (user != "") {#}
+{#                alert("Welcome again " + user);#}
+{#            } else {#}
+{#                user = prompt("Please enter your name: {{ run_time }}", "");#}
+{#                if (user != "" && user != null) {#}
+{#                    setCookie("username", runTime, 30);#}
+{#                }#}
+{#            }#}
+{#        }#}
+081510895555
+        function checkCookie() {
+            {#            var user = getCookie("username");#}
+            {#            if (user != "") {#}
+            {#                alert("Welcome again " + user);#}
+            {#            } else {#}
+            {#                user = prompt("Please enter your name: ", "");#}
+            {#                if (user != "" && user != null) {#}
+            {#                    setCookie("username", user, 30);#}
+            {#                }#}
+            {#            }#}
+            var user = getCookie("username");
+            alert("Welcome again " + user);
+            user = document.getElementById('runTimeHTML').innerHTML;
+            setCookie("username", user, 30);
+        }
+    </script>
+
+    <script type="text/html" id="runTimeHTML">
+    {{ run_times }}
+
+    </script>
+    <script type="text/javascript">
+        var clicked = false;
+        var sec = 0;
+
+        function startAndReset() {
+            startClock();
+            resetClock();
+        }
+
+        function startClock() {
+            if (clicked === false) {
+                clock = setInterval("stopWatch()", 1000);
+                clicked = true;
+                ;
+            }
+            else if (clicked === true) {
+            }
+        }
+
+        function stopWatch() {
+            document.getElementById("seconds").innerHTML = ++sec % 60;
+            document.getElementById("minutes").innerHTML = parseInt(sec / 60, 10);
+            console.log(sec);
+        }
+
+        function stopClock() {
+            window.clearInterval(clock);
+            console.log(clock);
+            document.getElementById("seconds").innerHTML = sec % 60;
+            document.getElementById("minutes").innerHTML = parseInt(sec / 60, 10);
+            clicked = false;
+        }
+
+        function resetClock() {
+            sec = 0;
+            document.getElementById("seconds").innerHTML = 0;
+            document.getElementById("minutes").innerHTML = 0;
+        }
     </script>
 </body>
 </html>

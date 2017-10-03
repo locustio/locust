@@ -104,6 +104,19 @@ $('#edit_form').submit(function(event) {
     );
 });
 
+String.prototype.toHHMMSS = function () {
+    var sec_num = parseInt(this, 10);
+    var hours   = Math.floor(sec_num / 3600);
+    var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+    var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+    if (hours   < 10) {hours   = "0"+hours;}
+    if (minutes < 10) {minutes = "0"+minutes;}
+    if (seconds < 10) {seconds = "0"+seconds;}
+    var time = hours+':'+minutes+':'+seconds;
+    return time;
+};
+
 var sortBy = function(field, reverse, primer){
     reverse = (reverse) ? -1 : 1;
     return function(a,b){
@@ -152,6 +165,10 @@ function updateStats() {
         $("#fail_ratio").html(Math.round(report.fail_ratio*100));
         $("#status_text").html(report.state);
         $("#userCount").html(report.user_count);
+        $("#run_time").html(String(report.total_run_time).toHHMMSS());
+
+        $("#minutes_run_time").html(String(report.total_run_time).toHHMMSS().substring(1,2));
+        $("#seconds_run_time").html(String(report.total_run_time).toSS());
 
         if (typeof report.slave_count !== "undefined")
             $("#slaveCount").html(report.slave_count)
