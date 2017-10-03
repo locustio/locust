@@ -175,11 +175,11 @@ function updateTimer() {
         report = JSON.parse(data);
         var time;
         var totalRunTimeInSeconds = report.total_run_time;
-
-        if (totalRunTimeInSeconds < sec) {
-            time = sec;
-        } else {
+        
+        if (totalRunTimeInSeconds >= sec) {
             time = totalRunTimeInSeconds;
+        } else {
+            time = sec;
         }
         $("#run_time").html(String(time).toHHMMSS());
         setTimeout(updateTimer, 1000);
@@ -200,7 +200,6 @@ function updateStats() {
         $("#fail_ratio").html(Math.round(report.fail_ratio*100));
         $("#status_text").html(report.state);
         $("#userCount").html(report.user_count);
-        // $("#run_time").html(String(report.total_run_time).toHHMMSS());
 
         if (typeof report.slave_count !== "undefined")
             $("#slaveCount").html(report.slave_count)
