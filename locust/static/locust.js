@@ -157,6 +157,42 @@ var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per S
 var responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", ["Average Response Time"], "ms");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 
+// new function for timer
+function startClock() {
+    clicked = true;
+    sec = 0;
+}
+
+function stopClock() {
+    clicked = false;
+}
+
+var sec = 0;
+var clicked = false;
+
+function updateTimer() {
+    $.get('/stats/requests', function (data) {
+        report = JSON.parse(data);
+        var time;
+        var totalRunTimeInSeconds = report.total_run_time;
+
+        if (totalRunTimeInSeconds < sec) {
+            time = sec;
+        } else {
+            time = totalRunTimeInSeconds;
+        }
+        $("#run_time").html(String(time).toHHMMSS());
+        setTimeout(updateTimer, 1000);
+        if (clicked) {
+            sec++;
+        }
+    });
+}
+
+updateTimer();
+
+// end of timer function
+
 function updateStats() {
     $.get('/stats/requests', function (data) {
         report = JSON.parse(data);
@@ -164,7 +200,7 @@ function updateStats() {
         $("#fail_ratio").html(Math.round(report.fail_ratio*100));
         $("#status_text").html(report.state);
         $("#userCount").html(report.user_count);
-        $("#run_time").html(String(report.total_run_time).toHHMMSS());
+        // $("#run_time").html(String(report.total_run_time).toHHMMSS());
 
         if (typeof report.slave_count !== "undefined")
             $("#slaveCount").html(report.slave_count)
