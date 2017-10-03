@@ -161,14 +161,10 @@ function updateStats() {
     $.get('/stats/requests', function (data) {
         report = JSON.parse(data);
         $("#total_rps").html(Math.round(report.total_rps*100)/100);
-        //$("#fail_ratio").html(Math.round(report.fail_ratio*10000)/100);
         $("#fail_ratio").html(Math.round(report.fail_ratio*100));
         $("#status_text").html(report.state);
         $("#userCount").html(report.user_count);
         $("#run_time").html(String(report.total_run_time).toHHMMSS());
-
-        $("#minutes_run_time").html(String(report.total_run_time).toHHMMSS().substring(1,2));
-        $("#seconds_run_time").html(String(report.total_run_time).toSS());
 
         if (typeof report.slave_count !== "undefined")
             $("#slaveCount").html(report.slave_count)

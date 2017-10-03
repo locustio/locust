@@ -70,6 +70,7 @@ def stop():
     runners.locust_runner.stop()
     response = make_response(json.dumps({'success':True, 'message': 'Test stopped'}))
     response.headers["Content-type"] = "application/json"
+    runners.locust_runner.stats.total_run_time()
     return response
 
 @app.route("/stats/reset")
