@@ -156,7 +156,7 @@ a:hover {
     position: relative;
 }
 
-.start, .edit {
+.start, .edit, .config {
     width: 398px;
     position: absolute;
     left: 50%;
@@ -165,22 +165,22 @@ a:hover {
     z-index: 1;
 }
 
-.start .padder, .edit .padder {
+.start .padder, .edit .padder, .config .padder {
     padding: 30px;
     padding-top: 0px;
 }
-.start h2, .edit h2 {
+.start h2, .edit h2, .config h2 {
     color: #addf82;
     font-size: 26px;
     font-weight: bold;
 }
-.start label, .edit label {
+.start label, .edit label, .config label {
     display: block;
     margin-bottom: 10px;
     margin-top: 20px;
     font-size: 16px;
 }
-.start input.val, .edit input.val {
+.start input.val, .edit input.val, .config input.val {
     border: none;
     background: #fff;
     height: 52px;
@@ -189,7 +189,8 @@ a:hover {
     padding-left: 10px;
 }
 .start button,
-.edit button {
+.edit button,
+.config button {
     margin-top: 20px;
     float: right;
     font-size: 16px;
@@ -201,12 +202,13 @@ a:hover {
     cursor: pointer;
 }
 .start button:hover,
-.edit button:hover {
+.edit button:hover,
+.config button:hover {
     background: #74b99d;
 }
 
 
-.stopped .start {
+.stopped .start, .stopped .config {
     display: none;
     border-radius: 5px;
     -moz-border-radius: 5px;
@@ -217,7 +219,8 @@ a:hover {
 }
 
 .stopped .edit {display: none;}
-.running .edit, .hatching .edit {
+.running .edit, .hatching .edit,  
+.running .config, .hatching .config {
     display: none;
     border-radius: 5px;
     -moz-border-radius: 5px;
@@ -228,7 +231,7 @@ a:hover {
 }
 .running .start, .hatching .start {display: none;}
 
-.ready .edit {display: none;}
+.ready .edit, .ready .config {display: none;}
 .ready .start {display: block;}
 
 .running .status, .hatching .status {display: block;}
@@ -242,13 +245,17 @@ a:hover {
 .running a.new_test {display: none;}
 .stopped a.new_test {display: block;}
 
-.start a.close_link, .edit a.close_link{
+.start a.close_link, .edit a.close_link, .config a.close_link {
     position: absolute;
     right: 10px;
     top: 10px;
 }
-.stopped .start a.close_link {display: inline;}
-.running .start a.close_link, .ready .start a.close_link, .hatching .start a.close_link  {display: none;}
+
+.stopped .start a.close_link, .stopped .config a.close_link {display: inline;}
+.running .start a.close_link, .ready .start a.close_link, .hatching .start a.close_link,
+.running .config a.close_link, .ready .config a.close_link, .hatching .config a.close_link  {
+    display: none;
+}
 
 .stopped .edit a.close_link, .ready .edit a.close_link {display: none;}
 .running .edit a.close_link, .hatching .edit a.close_link {display: inline;}

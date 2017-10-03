@@ -1,11 +1,8 @@
-# import inspect
 import logging
-# import os
 import signal
 import socket
 import sys
 import time
-# from optparse import OptionParser
 
 import gevent
 
@@ -85,7 +82,11 @@ def main():
         runners.main.wait_for_slaves(options.expect_slaves)
         runners.main.start_hatching(options.num_clients, options.hatch_rate)
     else:
-        logger.info("Starting web monitor at %s:%s", options.web_host or "localhost", options.web_port)
+        logger.info(
+            "Starting web monitor at %s:%s",
+            options.web_host or "localhost",
+            options.web_port
+        )
         gevent.spawn(web.start, locusts, options)
 
     #### Stats, etc

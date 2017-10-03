@@ -7,6 +7,10 @@ from .testcases import LocustTestCase
 
 class TestTaskSet(LocustTestCase):
 
+    def tearDown(self):
+        super(TestTaskSet, self).tearDown()
+        config.locust_config = config.LocustConfig()
+
     def test_default_config(self):
         self.assertTrue(isinstance(config.locust_config, config.LocustConfig))
 
@@ -33,3 +37,21 @@ class TestTaskSet(LocustTestCase):
         locusts = config.load_locusts(MockOpts, [])
         self.assertEqual(len(locusts), 1)
 
+    def test_config_to_dict(self):
+        with locust.configure() as l_config:
+            l_config.http_logging = 'DEBUG'
+            l_config.custom_param = 'custom value'
+        config_dict = config.locust_config.to_dict()
+        self.assertIsInstance(config_dict, dict)
+        self.assertDictContainsSubset(
+            {'http_logging': 'DEBUG', 'custom_param':'custom value'},
+            config_dict
+        )
+        config_dict['http_logging'] = 'ERROR'
+        self.assertEqual(config.locust_config.http_logging, 'DEBUG')
+
+    def test_update_config_values(self):
+        updates = {'host': 'example.com', 'port': None, 'master_host': 'http_new_host'}
+        config.locust_config.update_config(updates)
+        self.assertEqual(config.locust_config.host, 'http://example.com')
+        self.assertEqual(config.locust_config.master_host, '127.0.0.1')

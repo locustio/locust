@@ -13,7 +13,6 @@ from six.moves import xrange
 
 from . import events
 from .clients import HttpSession, SocketIOClient, ZMQClient
-from .config import LocustConfig
 from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
                         RescheduleTaskImmediately, StopLocust)
 
@@ -66,7 +65,7 @@ def mod_context(key, value):
 
 class NoClientWarningRaiser(object):
     """
-    The purpose of this class is to emit a sensible error message for old test scripts that 
+    The purpose of this class is to emit a sensible error message for old test scripts that
     inherits from Locust, and expects there to be an HTTP client under the client attribute.
     """
     def __getattr__(self, _):
@@ -85,20 +84,14 @@ class Locust(object):
     :py:class:`WebLocust <locust.core.WebLocust>` class.
     """
 
-    host = None
-    """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
+    task_set = None
+    """TaskSet class that defines the execution behaviour of this locust"""
 
     min_wait = None
     """Minimum waiting time between the execution of locust tasks"""
 
     max_wait = None
     """Maximum waiting time between the execution of locust tasks"""
-
-    task_set = None
-    """TaskSet class that defines the execution behaviour of this locust"""
-
-    stop_timeout = None
-    """Number of seconds after which the Locust will die. If None it won't timeout."""
 
     weight = 10
     """Probability of locust being chosen. The higher the weight, the greater is the chance of it being chosen."""
@@ -108,19 +101,14 @@ class Locust(object):
     zmq = NoClientWarningRaiser()
     _catch_exceptions = True
 
-    def __init__(self):
+    def __init__(self, options):
         super(Locust, self).__init__()
         self.current_task = None
-        if hasattr(self, 'config'):
-            if not isinstance(self.config, LocustConfig):
-                raise AttributeError('Config object sgould be inherited from LocustConfig')
-        else:
-            from .config import locust_config
-            self.config = locust_config
-        if not self.min_wait:
-            self.min_wait = self.config.min_wait
-        if not self.max_wait:
-            self.max_wait = self.config.max_wait            
+        self.options = options
+        self.host = options.host
+        self.min_wait = self.min_wait or options.min_wait
+        self.max_wait = self.max_wait or options.max_wait
+        self.stop_timeout = options.stop_timeout
 
     def run(self):
         try:
@@ -140,7 +128,7 @@ class LocustWebClient(object):
     def __init__(self, locust):
         self.locust = locust
         self.host = locust.host
-        self.config = locust.config
+        self.config = locust.options
         self._http_client = None
         self._socket_io_client = None
         self._zmq_client = None
@@ -207,9 +195,8 @@ class WebLocust(Locust):
     The client support cookies, and therefore keeps the session between HTTP requests.
     """
 
-    def __init__(self):
-        super(WebLocust, self).__init__()
-        self.host = self.host or self.config.host
+    def __init__(self, options):
+        super(WebLocust, self).__init__(options)
         if self.host is None:
             raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
 
@@ -407,7 +394,7 @@ class TaskSet(object):
         else:
             # task is a function
             task(self, *args, **kwargs)
-    
+
     def schedule_task(self, task_callable, args=None, kwargs=None, first=False):
         """
         Add a task to the Locust's task execution queue.

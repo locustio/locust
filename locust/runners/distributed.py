@@ -40,9 +40,7 @@ class DistributedLocustRunner(object):
         self.state = STATE.INIT
         self.locust_classes = locust_classes
         self.options = options
-        self.host = options.host
         self.stats = global_stats
-        self.num_requests = options.num_requests
         self.master_host = options.master_host
         self.master_port = options.master_port
         self.master_bind_host = options.master_bind_host

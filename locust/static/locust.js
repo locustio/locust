@@ -28,6 +28,12 @@ $("#new_test").click(function(event) {
     $("#locust_count").focus().select();
 });
 
+$("#new_target").click(function(event) {
+    event.preventDefault();
+    $("#config").show();
+    $("#host_url").focus().select();
+});
+
 $(".edit_test").click(function(event) {
     event.preventDefault();
     $("#edit").show();
@@ -80,6 +86,18 @@ $('#edit_form').submit(function(event) {
             if (response.success) {
                 $("body").attr("class", "hatching");
                 $("#edit").fadeOut();
+            }
+        }
+    );
+});
+
+$('#config_form').submit(function(event) {
+    event.preventDefault();
+    $.post($(this).attr("action"), $(this).serialize(),
+        function(response) {
+            if (response.success) {
+                $("#host_url").html(response.new_host);
+                $("#config").fadeOut();
             }
         }
     );

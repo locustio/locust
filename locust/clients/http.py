@@ -9,7 +9,7 @@ from pprint import pformat
 from requests import Request, Response
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import (InvalidSchema, InvalidURL, MissingSchema,
-                                 RequestException)
+                                 RequestException, HTTPError)
 
 from six.moves.urllib.parse import urlparse, urlunparse
 
@@ -19,6 +19,25 @@ from locust.log import LazyLog
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 logger = logging.getLogger(__name__)
+
+
+def fire_success(meta, task):
+    events.request_success.fire(
+        request_type=meta["method"],
+        name=meta["name"],
+        response_time=meta["response_time"],
+        response_length=meta["content_size"],
+        task=task
+    )
+
+def fire_failure(meta, task, exception):
+    events.request_failure.fire(
+        request_type=meta["method"],
+        name=meta["name"],
+        response_time=meta["response_time"],
+        exception=exception,
+        task=task
+    )   
 
 class LocustResponse(Response):
 
@@ -215,24 +234,23 @@ class HttpSession(LoggedSession):
         else:
             try:
                 response.raise_for_status()
-            except RequestException as exception:
-                events.request_failure.fire(
-                    request_type=request_meta["method"],
-                    name=request_meta["name"],
-                    response_time=request_meta["response_time"],
-                    exception=exception,
-                    task=self.binded_locust.current_task
+            except HTTPError as exception:
+                error = exception.message.split('for url:')[0]
+                message = "{}for: {} {} ".format(error, method, request_meta["name"])
+                exception = exception.__class__(
+                    message,
+                    request=exception.request,
+                    response=exception.response,
                 )
+                fire_failure(request_meta, self.binded_locust.current_task, exception)
+                name = "{} {}".format(request_meta["method"], request_meta["name"])
+                raise RescheduleTask(exception, name)
+            except RequestException as exception:
+                fire_failure(request_meta, self.binded_locust.current_task, exception)
                 name = "{} {}".format(request_meta["method"], request_meta["name"])
                 raise RescheduleTask(exception, name)
             else:
-                events.request_success.fire(
-                    request_type=request_meta["method"],
-                    name=request_meta["name"],
-                    response_time=request_meta["response_time"],
-                    response_length=request_meta["content_size"],
-                    task=self.binded_locust.current_task
-                )
+                fire_success(request_meta, self.binded_locust.current_task)
             return response
 
     def _send_request_safe_mode(self, method, url, **kwargs):
@@ -303,13 +321,7 @@ class ResponseContextManager(LocustResponse):
                 if response.status_code == 404:
                     response.success()
         """
-        events.request_success.fire(
-            request_type=self.locust_request_meta["method"],
-            name=self.locust_request_meta["name"],
-            response_time=self.locust_request_meta["response_time"],
-            response_length=self.locust_request_meta["content_size"],
-            task=self.task
-        )
+        fire_success(self.locust_request_meta, self.task)
         self._is_reported = True
 
     def failure(self, exc):
@@ -328,13 +340,7 @@ class ResponseContextManager(LocustResponse):
         if isinstance(exc, six.string_types):
             exc = CatchResponseError(exc)
 
-        events.request_failure.fire(
-            request_type=self.locust_request_meta["method"],
-            name=self.locust_request_meta["name"],
-            response_time=self.locust_request_meta["response_time"],
-            exception=exc,
-            task=self.task
-        )
+        fire_failure(self.locust_request_meta, self.task, exc)
         self._is_reported = True
         name = "{} {}".format(self.locust_request_meta["method"], self.locust_request_meta["name"])
         raise RescheduleTask(exc, name)

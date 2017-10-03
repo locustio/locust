@@ -1,12 +1,13 @@
 import time
 import unittest
+from six.moves import xrange
 
 from locust.core import WebLocust, TaskSet, task
 from locust.inspectlocust import get_task_ratio_dict
 from locust.rpc.protocol import Message
 from locust.stats import RequestStats, StatsEntry, global_stats
-from six.moves import xrange
 from locust.exception import RescheduleTask, InterruptTaskSet
+from locust import config
 from .testcases import WebserverTestCase
 
 
@@ -146,75 +147,61 @@ class TestRequestStats(unittest.TestCase):
 
 
 class TestRequestStatsWithWebserver(WebserverTestCase):
-    def test_request_stats_content_length(self):
+    def setUp(self):
+        super(TestRequestStatsWithWebserver, self).setUp()
+        options = config.LocustConfig()
+        options.update_config({'host': '127.0.0.1', 'port': self.port})
+
         class MyLocust(WebLocust):
-            host = "http://127.0.0.1:%i" % self.port
+            pass
+        self.locust = MyLocust(options)
     
-        locust = MyLocust()
-        locust.client.http.get("/ultra_fast")
+    def test_request_stats_content_length(self):
+
+    
+        self.locust.client.http.get("/ultra_fast")
         self.assertEqual(global_stats.get(None, "/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response"))
-        locust.client.http.get("/ultra_fast")
+        self.locust.client.http.get("/ultra_fast")
         self.assertEqual(global_stats.get(None, "/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response"))
     
     def test_request_stats_no_content_length(self):
-        class MyLocust(WebLocust):
-            host = "http://127.0.0.1:%i" % self.port
-        l = MyLocust()
         path = "/no_content_length"
-        r = l.client.http.get(path)
+        r = self.locust.client.http.get(path)
         self.assertEqual(global_stats.get(None, path, "GET").avg_content_length, len("This response does not have content-length in the header"))
     
     def test_request_stats_no_content_length_streaming(self):
-        class MyLocust(WebLocust):
-            host = "http://127.0.0.1:%i" % self.port
-        l = MyLocust()
         path = "/no_content_length"
-        r = l.client.http.get(path, stream=True)
+        r = self.locust.client.http.get(path, stream=True)
         self.assertEqual(0, global_stats.get(None, path, "GET").avg_content_length)
     
     def test_request_stats_named_endpoint(self):
-        class MyLocust(WebLocust):
-            host = "http://127.0.0.1:%i" % self.port
-    
-        locust = MyLocust()
-        locust.client.http.get("/ultra_fast", name="my_custom_name")
+        self.locust.client.http.get("/ultra_fast", name="my_custom_name")
         self.assertEqual(1, global_stats.get(None, "my_custom_name", "GET").num_requests)
     
     def test_request_stats_query_variables(self):
-        class MyLocust(WebLocust):
-            host = "http://127.0.0.1:%i" % self.port
-    
-        locust = MyLocust()
-        locust.client.http.get("/ultra_fast?query=1")
+        self.locust.client.http.get("/ultra_fast?query=1")
         self.assertEqual(1, global_stats.get(None, "/ultra_fast?query=1", "GET").num_requests)
     
     def test_request_stats_put(self):
-        class MyLocust(WebLocust):
-            host = "http://127.0.0.1:%i" % self.port
-    
-        locust = MyLocust()
-        locust.client.http.put("/put")
+        self.locust.client.http.put("/put")
         self.assertEqual(1, global_stats.get(None, "/put", "PUT").num_requests)
     
     def test_request_connection_error(self):
-        class MyLocust(WebLocust):
-            host = "http://localhost:1"
-        
-        locust = MyLocust()
         try:
-            response = locust.client.http.get("/", timeout=0.1)
+            response = self.locust.client.http.get("/", timeout=0.1)
         except RescheduleTask:
             pass
         self.assertEqual(1, global_stats.get(None, "/", "GET").num_failures)
         self.assertEqual(0, global_stats.get(None, "/", "GET").num_requests)
     
     def test_max_requests(self):
+        options = config.LocustConfig()
+        options.update_config({'host': '127.0.0.1', 'port': self.port})
         class MyTaskSet(TaskSet):
             @task
             def my_task(self):
                 self.client.http.get("/ultra_fast")
         class MyLocust(WebLocust):
-            host = "http://127.0.0.1:%i" % self.port
             task_set = MyTaskSet
             min_wait = 1
             max_wait = 1
@@ -224,7 +211,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
             global_stats.clear_all()
             global_stats.max_requests = 2
             
-            l = MyLocust()
+            l = MyLocust(options)
             self.assertRaises(StopLocust, lambda: l.task_set(l).run())
             self.assertEqual(2, global_stats.num_requests)
             
@@ -239,6 +226,8 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
             global_stats.max_requests = None
     
     def test_max_requests_failed_requests(self):
+        options = config.LocustConfig()
+        options.update_config({'host': '127.0.0.1', 'port': self.port})
         class MyTaskSet(TaskSet):
             @task
             def my_task(self):
@@ -247,7 +236,6 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
                 self.client.http.get("/fail")
             
         class MyLocust(WebLocust):
-            host = "http://127.0.0.1:%i" % self.port
             task_set = MyTaskSet
             min_wait = 1
             max_wait = 1
@@ -257,7 +245,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
             global_stats.clear_all()
             global_stats.max_requests = 3
             
-            l = MyLocust()
+            l = MyLocust(options)
             self.assertRaises(StopLocust, lambda: l.task_set(l).run())
             self.assertEqual(2, global_stats.num_requests)
             self.assertEqual(1, global_stats.num_failures)
@@ -309,10 +297,11 @@ class TestLocustTaskStatistics(unittest.TestCase):
 
     def setUp(self):
         super(TestLocustTaskStatistics, self).setUp()
-
+        options = config.LocustConfig()
+        options.update_config({'host': '127.0.0.1'})
         class User(WebLocust):
-            host = "http://127.0.0.1"
-        self.locust = User()
+            pass
+        self.locust = User(options)
         global_stats.clear_all()
 
     def tearDown(self):

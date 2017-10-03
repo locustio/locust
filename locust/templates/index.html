@@ -15,6 +15,7 @@
                     <div class="value" id="host_url">
                         {{host}}
                     </div>
+                    <a href="#" class="new_test" id="new_target">New target</a>
                 </div>
                 <div class="top_box box_status">
                     <div class="label">STATUS</div>
@@ -64,6 +65,21 @@
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
                     <button type="submit">Start swarming</button>
+                </form>
+                <div style="clear:right;"></div>
+            </div>
+        </div>
+
+        <div class="config" id="config">
+            <div style="position:relative;">
+                <a href="#" class="close_link">Close</a>
+            </div>
+            <div class="padder">
+                <h2>Set new target host</h2>
+                <form action="/config" method="POST" id="config_form">
+                    <label for="host_url">New target host URL</label>
+                    <input type="text" name="host_url" id="host_url" class="val" /><br>
+                    <button type="submit">Set target host</button>
                 </form>
                 <div style="clear:right;"></div>
             </div>

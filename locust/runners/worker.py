@@ -27,10 +27,6 @@ class LocustRunner(object):
     def __init__(self, locust_classes, options):
         self.options = options
         self.locust_classes = locust_classes
-        self.hatch_rate = options.hatch_rate
-        self.num_clients = options.num_clients
-        self.num_requests = options.num_requests
-        self.host = options.host
         self.locusts = Group()
         self.state = STATE.INIT
         self.hatching_greenlet = None
@@ -76,8 +72,6 @@ class LocustRunner(object):
                 )
                 continue
 
-            if self.host is not None:
-                locust.host = self.host
             if stop_timeout is not None:
                 locust.stop_timeout = stop_timeout
 
@@ -89,10 +83,10 @@ class LocustRunner(object):
 
     def spawn_locusts(self, spawn_count=None, stop_timeout=None, wait=False):
         if spawn_count is None:
-            spawn_count = self.num_clients
+            spawn_count = self.options.num_clients
 
-        if self.num_requests is not None:
-            self.stats.max_requests = self.num_requests
+        if self.options.num_requests is not None:
+            self.stats.max_requests = self.options.num_requests
 
         bucket = self.weight_locusts(spawn_count, stop_timeout)
         spawn_count = len(bucket)
@@ -122,12 +116,12 @@ class LocustRunner(object):
 
                 locust = bucket.pop(random.randint(0, len(bucket)-1))
                 occurence_count[locust.__name__] += 1
-                def start_locust(_):
+                def start_locust(locust, options):
                     try:
-                        locust().run()
+                        locust(options).run()
                     except GreenletExit:
                         pass
-                new_locust = self.locusts.spawn(start_locust, locust)
+                new_locust = self.locusts.spawn(start_locust, locust, self.options)
                 if len(self.locusts) % 10 == 0:
                     logger.debug("%i locusts hatched" % len(self.locusts))
                 gevent.sleep(sleep_time)
@@ -216,8 +210,7 @@ class WorkerLocustRunner(LocustRunner):
             self.worker.client.send_all(Message("hatching", None, self.worker.worker_id))
             job = msg.data
             self.worker.hatch_rate = job["hatch_rate"]
-            self.worker.num_requests = job["num_requests"]
-            self.worker.host = job["host"]
+            self.worker.options.num_requests = job["num_requests"]
             self.hatching_greenlet = gevent.spawn(
                 lambda: self.worker.start_hatching(
                     locust_count=job["num_clients"],

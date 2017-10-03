@@ -35,7 +35,7 @@ class TestHttpSession(WebserverTestCase):
                 self.assertRaises(exception, s.get, "/")
             except KeyError:
                 self.fail("Invalid URL %s was not propagated" % url)
-    
+
     def test_streaming_response(self):
         """
         Test a request to an endpoint that returns a streaming response

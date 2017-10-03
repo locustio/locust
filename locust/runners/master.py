@@ -33,6 +33,8 @@ class MasterLocustRunner(DistributedLocustRunner):
                 id,
                 len(self.master.slaves.ready)
             )
+            options = self.master.options.to_dict()
+            self.master.server.send_to(id, Message("new_config", options, None))
 
         def on_slave_stopped(self, msg):
             del self.master.slaves[msg.node_id]
@@ -142,6 +144,11 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.slave_count, n
         ))
 
+    def propagate_config(self, updates=None):
+        if updates is not None:
+            self.options.update_config(updates)
+        self.server.send_all(Message("new_config", self.options.to_dict(), None))
+
     def stop(self):
         for _slave in self.slaves.hatching + self.slaves.running:
             self.server.send_all(Message("stop", None, None))
@@ -193,7 +200,10 @@ class MasterLocustRunner(DistributedLocustRunner):
         calc = lambda x: locust_count / worker_num + adjust(x)
         slave_locust_count = [calc(x) for x in range(1, worker_num + 1)]
         slave_hatch_rate = hatch_rate / float(worker_num)
-        slave_num_requests = self.num_requests / 4 if self.num_requests else None
+        if self.options.num_requests:
+            slave_num_requests = int(self.options.num_requests / self.slave_count)
+        else:
+            slave_num_requests = None
 
         logger.info("Sending hatch jobs to %d ready slave(s)", worker_num)
 
@@ -201,9 +211,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             data = {
                 "hatch_rate": slave_hatch_rate,
                 "num_clients": client_rate,
-                "num_requests": slave_num_requests,
-                "host": self.host,
-                "stop_timeout": None
+                "num_requests": slave_num_requests
             }
             self.server.send_to(slave_id, Message("hatch", data, None))
             self.slaves[slave_id].task = data

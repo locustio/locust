@@ -9,6 +9,7 @@ from itertools import chain
 from time import time
 
 import six
+from six.moves.urllib.parse import urlparse
 from flask import Flask, make_response, render_template, request
 from gevent import pywsgi
 
@@ -32,8 +33,8 @@ app.root_path = os.path.dirname(os.path.abspath(__file__))
 
 @app.route('/')
 def index():
-    if runners.main.host:
-        host = runners.main.host
+    if runners.main.options.host:
+        host = runners.main.options.host
     elif len(runners.main.locust_classes) > 0:
         host = runners.main.locust_classes[0].host
     else:
@@ -70,6 +71,22 @@ def stop():
 def reset_stats():
     runners.main.stats.reset_all()
     return "ok"
+
+@app.route("/config", methods=["POST"])
+def propagate_config():
+    assert request.method == "POST"
+    url = urlparse(request.form["host_url"])
+    password = ":{}".format(url.password) if url.password else ''
+    userdata = "{}{}@".format(url.username, password) if (password or url.username) else ''
+    updates = {
+        'scheme': url.scheme or runners.main.options.scheme,
+        'host': "{}{}".format(userdata, url.hostname),
+        'port': url.port,
+    }
+    runners.main.propagate_config(updates=updates)
+    response = make_response(json.dumps({'success': True, 'new_host': runners.main.options.host}))
+    response.headers["Content-type"] = "application/json"
+    return response
 
 @app.route("/stats/requests/csv")
 def request_stats_csv():

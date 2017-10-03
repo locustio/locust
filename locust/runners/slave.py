@@ -35,10 +35,11 @@ class SlaveLocustRunner(DistributedLocustRunner):
 
         def on_hatch(self, msg):
             self.slave.state = STATE.HATCHING
-            self.slave.hatch_rate = msg.data["hatch_rate"]
-            self.slave.num_requests = msg.data["num_requests"]
-            self.slave.host = msg.data["host"]
+            self.slave.options.num_requests = msg.data["num_requests"]
             self.slave.start_hatching(msg.data["num_clients"], msg.data["hatch_rate"])
+
+        def on_new_config(self, msg):
+            self.slave.options.update_config(msg.data)
 
         def on_stop(self, msg):
             logger.info("Got stop message from master, stopping...")
@@ -243,7 +244,10 @@ class SlaveLocustRunner(DistributedLocustRunner):
         calc = lambda x: locust_count / worker_num + adjust(x)
         worker_locust_count = [calc(x) for x in range(1, worker_num + 1)]
         worker_hatch_rate = hatch_rate / float(worker_num)
-        worker_num_requests = self.num_requests / 4 if self.num_requests else None
+        if self.options.num_requests:
+            worker_num_requests = int(self.options.num_requests / worker_num)
+        else:
+            worker_num_requests = None
 
         logger.info("Sending hatch jobs to %d ready workers", worker_num)
 
@@ -251,9 +255,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
             data = {
                 "hatch_rate": worker_hatch_rate,
                 "num_clients": client_rate,
-                "num_requests": worker_num_requests,
-                "host": self.host,
-                "stop_timeout": None
+                "num_requests": worker_num_requests
             }
             self.server.send_to(slave_id, Message("hatch", data, None))
             self.workers[slave_id].task = data

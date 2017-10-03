@@ -3,6 +3,7 @@ import gevent
 from gevent import pywsgi
 from locust.clients import SocketIOClient
 from locust.stats import global_stats
+from locust import config
 from .testcases import LocustTestCase
 
 class SimpleSocketIOServer(object):
@@ -54,7 +55,7 @@ class SimpleSocketIOServer(object):
 
     def run(self):
         app = socketio.Middleware(self.sio)
-        self.server = pywsgi.WSGIServer(('127.0.0.1', 8080), app)
+        self.server = pywsgi.WSGIServer(('127.0.0.1', 8081), app)
         self.server.init_socket()
         self.server.start()
 
@@ -84,46 +85,46 @@ class TestSocketIO(LocustTestCase):
         self.server.stop()
 
     def test_connect_disconnect(self):
-        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8080', 'socket.io', '')
+        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8081', 'socket.io', '')
         self.assertEqual(len(self.server.clients), 1)
         gevent.sleep(0.5)
         self.client.close()
         self.assertEqual(len(self.server.clients), 0)
 
     def test_send_async(self):
-        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8080', 'socket.io', '')
+        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8081', 'socket.io', '')
         self.client.send_async('async_message', {'key': 'value'})
         self.assertIn({'async_message': {'key': 'value'}}, self.server.messages)
 
     def test_send_sync(self):
-        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8080', 'socket.io', '')
+        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8081', 'socket.io', '')
         payload = {'key': 'value'}
         result = self.client.send_sync('sync_message', payload, response='reply-sync-message')
         self.assertIn({'sync_message': {'key': 'value'}}, self.server.messages)
         self.assertEqual(result.payload, {'key1': 'value1'})
 
     def test_reconnect(self):
-        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8080', 'socket.io', '')
+        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8081', 'socket.io', '')
         self.client.send_async('self_disconnect', {})
         self.assertEqual(len(self.server.clients), 0)
         self.client._socket.wait(1)
         self.assertEqual(len(self.server.clients), 1)
 
     def test_wait_for_message(self):
-        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8080', 'socket.io', '')
+        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8081', 'socket.io', '')
         self.client.send_async('wait_for_message', ['long_wait'])
         result = self.client.wait_for_message('long_wait')
         self.assertEqual(result.payload, {'key1': 'value1'})
 
     def test_wait_for_message_with_condition(self):
-        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8080', 'socket.io', '')
+        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8081', 'socket.io', '')
         self.client.send_async('wait_for_message', ['stub'])
         condition = lambda msg: 'key1' in msg.payload.keys()
         result = self.client.wait_for_message('stub', condition=condition)
         self.assertEqual(result.payload, {'key1': 'value1'})
 
     def test_wait_for_message_with_amount(self):
-        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8080', 'socket.io', '')
+        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8081', 'socket.io', '')
         self.client.send_async('wait_for_message_amount', 5)
         messages = self.client.wait_for_message_amount(5)
         self.assertEqual(len(messages), 5)
@@ -134,7 +135,7 @@ class TestSocketIO(LocustTestCase):
         self.server = SimpleSocketIOServer('/test')
         self.server.run()
         gevent.sleep(0.5)
-        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8080', 'socket.io', '/test')
+        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8081', 'socket.io', '/test')
         self.assertEqual(len(self.server.clients), 1)
         payload = {'key': 'value'}
         result = self.client.send_sync('sync_message', payload, response='reply-sync-message')
@@ -146,7 +147,7 @@ class TestSocketIO(LocustTestCase):
         self.assertEqual(len(self.server.clients), 2)
 
     def test_stats_tracking(self):
-        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8080', 'socket.io', '')
+        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8081', 'socket.io', '')
         self.client.send_async('async_message', {'key': 'value'})
         self.assertEqual(global_stats.num_requests, 1)
         self.assertIn(
@@ -159,7 +160,7 @@ class TestSocketIO(LocustTestCase):
         )
 
     def test_custom_action_name(self):
-        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8080', 'socket.io', '')
+        self.client = SocketIOClient(Locust, 'http://127.0.0.1:8081', 'socket.io', '')
         self.client.send_async('async_message', {'key': 'value'}, description='test_namespace')
         self.assertEqual(global_stats.num_requests, 1)
         self.assertIn(
