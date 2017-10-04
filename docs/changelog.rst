@@ -2,6 +2,13 @@
 Changelog
 ##########
 
+0.8dr2
+=====
+* Based on 0.8dr1
+* Added config propagation. Locust able to be reconfigured without relounch
+* Added host setup through UI
+* HTTP error aggregation
+
 0.8dr1
 =====
 * Based on 0.8a2
