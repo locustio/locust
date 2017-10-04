@@ -117,24 +117,28 @@ class LocustConfig(object):
             self._config[attr] = value
 
 # global locust config singleton
-locust_config = LocustConfig()
+_locust_config = LocustConfig()
+
+def locust_config():
+    return _locust_config
 
 def register_config(config):
+    global _locust_config
     """
     Update default locust configuration object with custom instance
     config argument should be instance of LocustConfig or inherited class
     """
     if not isinstance(config, LocustConfig):
         raise AttributeError('Config object sgould be instance of LocustConfig')
-    locust_config = config
+    _locust_config = config
 
 @contextmanager
 def configure():
     """locust configuration context manager"""
-    yield locust_config
+    yield _locust_config
 
 def process_options():
-    parser, opts, args = parse_options()
+    _parser, opts, args = parse_options()
     setup_logging(opts.loglevel, opts.logfile)
     with configure() as config:
         loglevel = opts.__dict__.pop('loglevel')
@@ -152,10 +156,10 @@ def process_options():
             setattr(config, attr, value)
 
     locusts = load_locusts(opts, args)
-    locust_config._apply()
-    locust_config._validate()
+    _locust_config._apply()
+    _locust_config._validate()
 
-    return locust_config, locusts
+    return _locust_config, locusts
 
 def parse_options():
     """

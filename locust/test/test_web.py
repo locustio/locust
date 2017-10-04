@@ -23,7 +23,7 @@ class TestWebUI(LocustTestCase):
         stats.global_stats.clear_all()
         # parser = parse_options()[0]
         # options = parser.parse_args([])[0]
-        runners.main = MasterLocustRunner([], config.locust_config)
+        runners.main = MasterLocustRunner([], config.locust_config())
 
         web.request_stats.clear_cache()
 

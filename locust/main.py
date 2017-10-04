@@ -25,9 +25,13 @@ version = locust.__version__
 
 main_greenlet = None
 
-def main():
-
-    options, locusts = config.process_options()
+def launch(options, locusts):
+    """
+    Locust entrypoint, could be called for programmatical launch:
+        * options - Any object which implements field access by attribute
+                    Recommended to use extended locust.config.LocustConfig object
+        * locusts - list of locust classes inherited from locust.core.Locust
+    """
     logger = logging.getLogger(__name__)
 
     if options.show_version:
@@ -75,7 +79,7 @@ def main():
         main_greenlet = runners.main.greenlet
 
     # Headful / headless init
-    if options.no_web and options.slave:
+    if options.slave:
         logger.info("Slave connected in headless mode")
     elif options.no_web and not options.slave:
         logger.info("Starting headless execution")
@@ -122,6 +126,10 @@ def main():
         shutdown(code=code)
     except KeyboardInterrupt:
         shutdown(0)
+
+def main():
+    options, locusts = config.process_options()
+    launch(options, locusts)
 
 if __name__ == '__main__':
     main()

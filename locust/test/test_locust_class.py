@@ -16,7 +16,7 @@ class TestTaskSet(LocustTestCase):
         class User(WebLocust):
             pass
 
-        self.locust = User(config.locust_config)
+        self.locust = User(config.locust_config())
 
     def test_task_ratio(self):
         t1 = lambda l: None
@@ -253,8 +253,8 @@ class TestTaskSet(LocustTestCase):
         class MyLocust2(Locust):
             task_set = MyTaskSet2
 
-        l = MyLocust(config.locust_config)
-        l2 = MyLocust2(config.locust_config)
+        l = MyLocust(config.locust_config())
+        l2 = MyLocust2(config.locust_config())
         self.assertRaises(LocustError, lambda: l.run())
         self.assertRaises(LocustError, lambda: l2.run())
         
@@ -285,7 +285,7 @@ class TestTaskSet(LocustTestCase):
         class MyLocust(Locust):
             task_set = SubTaskSet
 
-        l = MyLocust(config.locust_config)
+        l = MyLocust(config.locust_config())
         task_set = SubTaskSet(l)
         self.assertRaises(RescheduleTaskImmediately, lambda: task_set.run(reschedule=True))
         self.assertRaises(RescheduleTask, lambda: task_set.run(reschedule=False))
@@ -311,7 +311,7 @@ class TestTaskSet(LocustTestCase):
         class MyLocust(Locust):
             task_set = RootTaskSet
 
-        l = MyLocust(config.locust_config)
+        l = MyLocust(config.locust_config())
         l.run()
         self.assertTrue(isinstance(parents["sub"], RootTaskSet))
         self.assertTrue(isinstance(parents["subsub"], SubTaskSet))
@@ -473,7 +473,7 @@ class TestWebLocustClass(WebserverTestCase):
         class MyLocust(WebLocust):
             task_set = MyTaskSet
 
-        my_locust = MyLocust(config.locust_config)
+        my_locust = MyLocust(config.locust_config())
         self.assertRaises(RescheduleTask, lambda: my_locust.client.http.get("/"))
         my_taskset = MyTaskSet(my_locust)
         self.assertRaises(RescheduleTask, lambda: my_taskset.client.http.get("/"))
