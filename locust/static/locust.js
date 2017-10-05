@@ -68,6 +68,11 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
         rpsChart.resize();
         responseTimeChart.resize();
         usersChart.resize();
+        if(endpointResponseTimeCharts.length > 0) {
+          for (var chartKey in endpointResponseTimeCharts) {
+            endpointResponseTimeCharts[chartKey].resize();
+          }
+        }
     }
 });
 
@@ -143,6 +148,8 @@ $(".stats_label").click(function(event) {
 var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS"], "reqs/s");
 var responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", ["Average Response Time"], "ms");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
+var endpointResponseTimeCharts = []
+var endpointChartSize = 0
 
 function updateStats() {
     $.get('/stats/requests', function (data) {
@@ -168,6 +175,18 @@ function updateStats() {
         $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
 
         if (report.state !== "stopped"){
+            endpointChartSize = report.stats.length - 1
+            for(i=0; i< endpointChartSize; i++) {
+              chartKey = report.stats[i].name
+              if(!endpointResponseTimeCharts[chartKey]) {
+                console.log("creating chart " + chartKey)
+                title = "Average Response Times [" + chartKey + "]"
+                endpointResponseTimeCharts[chartKey] = new LocustLineChart($(".charts-container"), title, [chartKey], "ms");
+              }
+              console.log("updating chart " + chartKey)
+              endpointResponseTimeCharts[chartKey].addValue([report.stats[i].avg_response_time]);
+            }
+
             // get total stats row
             var total = report.stats[report.stats.length-1];
             // update charts
