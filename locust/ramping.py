@@ -36,12 +36,12 @@ def on_request_success_ramping(**kwargs):
             for i in range(len(response_times) - int(math.ceil(rps*PERCENTILE_TIME_WINDOW))):
                 response_times.popleft()
 
-def on_report_to_master_ramping(_, data):
+def on_report_to_master_ramping(client_id, data):
     global response_times
     data["current_responses"] = response_times
     response_times = []
 
-def on_slave_report_ramping(_, data):
+def on_slave_report_ramping(client_id, data):
     if "current_responses" in data:
         response_times.append(data["current_responses"])
 
