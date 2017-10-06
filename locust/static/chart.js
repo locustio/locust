@@ -13,10 +13,10 @@
             this.element = $('<div class="chart"></div>').css("width", width).css("float","left").appendTo(container);
             this.data = [];
             this.dates = [];
-            
-            var seriesData = [];
+
+            this.seriesData = [];
             for (var i=0; i<lines.length; i++) {
-                seriesData.push({
+                this.seriesData.push({
                     name: lines[i],
                     type: 'line',
                     showSymbol: true,
@@ -25,7 +25,7 @@
                 });
                 this.data.push([]);
             }
-            
+
             this.chart = echarts.init(this.element[0], 'vintage');
             this.chart.setOption({
                 title: {
@@ -76,27 +76,49 @@
                         },
                     },
                 },
-                series: seriesData,
+                series: this.seriesData,
                 grid: {x:60, y:70, x2:40, y2:40},
             })
         }
-        
+
         addValue(values) {
             this.dates.push(new Date().toLocaleTimeString());
-            var seriesData = [];
+            this.seriesData = [];
             for (var i=0; i<values.length; i++) {
                 var value = Math.round(values[i] * 100) / 100;
                 this.data[i].push(value);
-                seriesData.push({data: this.data[i]});
+                this.seriesData.push({data: this.data[i]});
             }
             this.chart.setOption({
                 xAxis: {
                     data: this.dates,
                 },
-                series: seriesData
+                series: this.seriesData
             });
         }
-        
+
+        addLine(key) {
+          this.lines.push(key)
+          this.seriesData.push({
+              name: key,
+              type: 'line',
+              showSymbol: true,
+              hoverAnimation: false,
+              data: [],
+          });
+          this.data.push([]);
+          this.chart.setOption({
+              series: this.seriesData
+          });
+        }
+
+        isLineExist(value) {
+          for(i=0; i < this.lines.length; i++) {
+            if ( value == this.lines[i]) return true;
+          }
+          return false;
+        }
+
         resize() {
             this.chart.resize();
         }
