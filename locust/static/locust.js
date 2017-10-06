@@ -68,10 +68,9 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
         rpsChart.resize();
         responseTimeChart.resize();
         usersChart.resize();
-        if(endpointResponseTimeCharts.length > 0) {
-          for (var chartKey in endpointResponseTimeCharts) {
-            endpointResponseTimeCharts[chartKey].resize();
-          }
+        for (var chartKey in endpointResponseTimeCharts) {
+          endpointResponseTimeCharts[chartKey].resize();
+          endpointRpsCharts[chartKey].resize();
         }
     }
 });
@@ -145,11 +144,11 @@ $(".stats_label").click(function(event) {
 });
 
 // init charts
-var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS"], "reqs/s");
-var responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", ["Average Response Time"], "ms");
-var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
+var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", "", ["RPS"], "reqs/s", "100%");
+var responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", "", ["Average Response Time"], "ms", "100%");
+var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", "", ["Users"], "users", "100%");
 var endpointResponseTimeCharts = []
-var endpointChartSize = 0
+var endpointRpsCharts = []
 
 function updateStats() {
     $.get('/stats/requests', function (data) {
@@ -178,13 +177,10 @@ function updateStats() {
             endpointChartSize = report.stats.length - 1
             for(i=0; i< endpointChartSize; i++) {
               chartKey = report.stats[i].name
-              if(!endpointResponseTimeCharts[chartKey]) {
-                console.log("creating chart " + chartKey)
-                title = "Average Response Times [" + chartKey + "]"
-                endpointResponseTimeCharts[chartKey] = new LocustLineChart($(".charts-container"), title, [chartKey], "ms");
-              }
-              console.log("updating chart " + chartKey)
-              endpointResponseTimeCharts[chartKey].addValue([report.stats[i].avg_response_time]);
+              createEndpointCharts(chartKey, (chartKey) => {
+                endpointResponseTimeCharts[chartKey].addValue([report.stats[i].avg_response_time]);
+                endpointRpsCharts[chartKey].addValue([report.stats[i].current_rps]);
+              })
             }
 
             // get total stats row
@@ -208,3 +204,17 @@ function updateExceptions() {
     });
 }
 updateExceptions();
+
+function createEndpointCharts(chartKey, callback) {
+  if(!endpointResponseTimeCharts[chartKey]) {
+    title = "Average Response Times"
+    endpointResponseTimeCharts[chartKey] = new LocustLineChart($(".charts-container"), title, chartKey, ["Average Response Time"], "ms", "50%");
+    endpointResponseTimeCharts[chartKey].resize()
+  }
+  if(!endpointRpsCharts[chartKey]) {
+    title = "Requests per Second"
+    endpointRpsCharts[chartKey] = new LocustLineChart($(".charts-container"), title, chartKey, ["RPS"], "request", "50%");
+    endpointRpsCharts[chartKey].resize()
+  }
+  callback(chartKey)
+}

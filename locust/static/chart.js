@@ -3,12 +3,14 @@
         /**
          * lines should be an array of line names
          */
-        constructor(container, title, lines, unit) {
+        constructor(container, title, subtitle, lines, unit, width) {
             this.container = $(container);
             this.title = title;
+            this.subtitle = subtitle;
             this.lines = lines;
-            
-            this.element = $('<div class="chart"></div>').css("width", "100%").appendTo(container);
+            this.width = width;
+
+            this.element = $('<div class="chart"></div>').css("width", width).css("float","left").appendTo(container);
             this.data = [];
             this.dates = [];
             
@@ -28,6 +30,7 @@
             this.chart.setOption({
                 title: {
                     text: this.title,
+                    subtext: this.subtitle,
                     x: 10,
                     y: 10,
                 },
