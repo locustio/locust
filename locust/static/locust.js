@@ -157,42 +157,6 @@ var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per S
 var responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", ["Average Response Time"], "ms");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 
-// new function for timer
-function startClock() {
-    clicked = true;
-    sec = 0;
-}
-
-function stopClock() {
-    clicked = false;
-}
-
-var sec = 0;
-var clicked = false;
-
-function updateTimer() {
-    $.get('/stats/requests', function (data) {
-        report = JSON.parse(data);
-        var time;
-        var totalRunTimeInSeconds = report.total_run_time;
-        
-        if (totalRunTimeInSeconds >= sec) {
-            time = totalRunTimeInSeconds;
-        } else {
-            time = sec;
-        }
-        $("#run_time").html(String(time).toHHMMSS());
-        setTimeout(updateTimer, 1000);
-        if (clicked) {
-            sec++;
-        }
-    });
-}
-
-updateTimer();
-
-// end of timer function
-
 function updateStats() {
     $.get('/stats/requests', function (data) {
         report = JSON.parse(data);
