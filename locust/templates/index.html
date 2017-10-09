@@ -44,13 +44,13 @@
                     <div class="label">FAILURES</div>
                     <div class="value"><span id="fail_ratio"></span>%</div>
                 </div>
-                <div class="top_box box_stop box_running" id="box_stop">
-                    <a href="/stop" class="stop-button" onclick="stopClock()""><i></i>STOP</a>
-                    <a href="/stats/reset" class="reset-button">Reset<br>Stats</a>
+                 <div class="top_box box_run_time box_running" id="box_run_time">
+                    <div class="label">RUN TIME</div>
+                    <div class="value"><span id="run_time"></span>{{ run_time }}</div>
                 </div>
-                <div class="top_box box_timer box_running" id="box_timer">
-                    <div class="label">TIMER</div>
-                    <div class="value"><label id="minutes">00</label>:<label id="seconds">00</label></div>
+                <div class="top_box box_stop box_running" id="box_stop">
+                    <a href="/stop" class="stop-button stop-clock"><i></i>STOP</a>
+                    <a href="/stats/reset" class="reset-button">Reset<br>Stats</a>
                 </div>
             </div>
             <div style="clear:both;"></div>
@@ -63,7 +63,7 @@
             </div>
             <div class="padder">
                 <h2>Start new Locust swarm</h2>
-                <form action="/swarm" method="POST" id="swarm_form" onsubmit="startAndReset()">
+                <form action="/swarm" method="POST" id="swarm_form" class="start-clock">
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
@@ -86,7 +86,7 @@
             </div>
             <div class="padder">
                 <h2>Change the locust count</h2>
-                <form action="/swarm" method="POST" id="edit_form" onsubmit="startClock()">
+                <form action="/swarm" method="POST" id="edit_form">
                     <label for="locust_count">Number of users to simulate</label>
                     <input type="text" name="locust_count" id="new_locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
@@ -104,7 +104,7 @@
                 </div>
                 <div class="padder">
                     <h2>Ramping</h2>
-                    <form action="/ramp" method="POST" id="ramp_form" onsubmit="startAndReset()">
+                    <form action="/ramp" method="POST" id="ramp_form" >
                         <div style="float:left;">
                         <label for="init_count" title="This is the number of initial number of locusts that will be spawned. Pick a number you know can be handled.">Initial number of clients</label>
                         <input type="text" name="init_count" id="init_count" class="val" /><br>
@@ -280,50 +280,19 @@
     </script>
     <script type="text/x-jqote-template" id="exceptions-template">
         <![CDATA[
-        <tr class="<%=(alternate ? "dark" : "")%>">
-            <td class="occurences"><%= this.count %></td>
-            <td class="traceback" title="Occured on: <%= this.nodes %>"><%= function(e) { return e.replace("<", "&lt;"); }(this.traceback) %>
-<%= function(e) { return e.replace("<", "&lt;"); }(this.msg) %></td>
+        <tr class="<%=(alternate ? " dark" : "")%>">
+        <td class="occurences"><%= this.count %></td>
+        <td class="traceback" title="Occured on: <%= this.nodes %>"><%= function(e) { return e.replace("<", "&lt;");
+            }(this.traceback) %>
+            <%= function(e) { return e.replace("<", "&lt;"); }(this.msg) %>
+        </td>
         </tr>
         <% alternate = !alternate; %>
         ]]>
     </script>
     <script type="text/javascript" src="/static/chart.js?v={{ version }}"></script>
     <script type="text/javascript" src="/static/locust.js?v={{ version }}"></script>
-    <script type="text/javascript">
+    <script type="text/javascript" src="/static/timer.js"></script>
 
-      var clicked = false;
-      var sec = 0;
-
-      function startAndReset(){
-        startClock();
-        resetClock();
-      }
-      function startClock() {
-      	if (clicked === false) {
-      		clock = setInterval("stopWatch()", 1000);
-      		clicked = true;;
-      	}
-      	else if (clicked === true) {
-      	}
-      }
-      function stopWatch() {
-        document.getElementById("seconds").innerHTML = ++sec%60;
-        document.getElementById("minutes").innerHTML = parseInt(sec/60,10);
-        console.log(sec);
-      }
-      function stopClock() {
-      	window.clearInterval(clock);
-        console.log(clock);
-      	document.getElementById("seconds").innerHTML = sec%60;
-        document.getElementById("minutes").innerHTML = parseInt(sec/60,10);
-      	clicked = false;
-      }
-      function resetClock(){
-        sec = 0;
-        document.getElementById("seconds").innerHTML = 0;
-        document.getElementById("minutes").innerHTML = 0;
-      }
-    </script>
 </body>
 </html>
