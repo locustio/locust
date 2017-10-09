@@ -71,7 +71,8 @@ def stop():
     runners.locust_runner.stop()
     response = make_response(json.dumps({'success':True, 'message': 'Test stopped'}))
     response.headers["Content-type"] = "application/json"
-    greenlet_spawner.kill(block=True)
+    if greenlet_spawner != None:
+        greenlet_spawner.kill(block=True)
     return response
 
 @app.route("/stats/reset")
