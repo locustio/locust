@@ -84,9 +84,10 @@
         addValue(values) {
             this.dates.push(new Date().toLocaleTimeString());
             this.seriesData = [];
+            var pointX = this.data[0].length;
             for (var i=0; i<values.length; i++) {
                 var value = Math.round(values[i] * 100) / 100;
-                this.data[i].push(value);
+                this.data[i][pointX] = value;
                 this.seriesData.push({data: this.data[i]});
             }
             this.chart.setOption({
