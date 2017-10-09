@@ -220,17 +220,17 @@ updateExceptions();
 function createEndpointCharts(chartKey, callback) {
   if(!endpointResponseTimeCharts[chartKey]) {
     title = "Average Response Times"
-    endpointResponseTimeCharts[chartKey] = new LocustLineChart($(".charts-container"), title, chartKey, ["Average Response Time"], "ms", "33%");
+    endpointResponseTimeCharts[chartKey] = new LocustLineChart($(".charts-container"), title, chartKey, ["Average Response Time"], "ms", "33.3%");
     endpointResponseTimeCharts[chartKey].resize()
   }
   if(!endpointRpsCharts[chartKey]) {
     title = "Requests per Second"
-    endpointRpsCharts[chartKey] = new LocustLineChart($(".charts-container"), title, chartKey, ["RPS"], "request", "33%");
+    endpointRpsCharts[chartKey] = new LocustLineChart($(".charts-container"), title, chartKey, ["RPS"], "request", "33.3%");
     endpointRpsCharts[chartKey].resize()
   }
   if(!endpointFailureCharts[chartKey]) {
     title = "Failures"
-    endpointFailureCharts[chartKey] = new LocustLineChart($(".charts-container"), title, chartKey, ["Failure"], "failure", "33%");
+    endpointFailureCharts[chartKey] = new LocustLineChart($(".charts-container"), title, chartKey, ["Failure"], "failure", "33.3%");
     endpointFailureCharts[chartKey].resize()
   }
   if(!rpsChart.isLineExist(chartKey)) rpsChart.addLine(chartKey);
