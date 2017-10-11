@@ -28,9 +28,10 @@ SLAVE_REPORT_INTERVAL = 3.0
 
 
 class LocustRunner(object):
-    def __init__(self, locust_classes, options):
+    def __init__(self, locust_classes, options, available_locustfiles=None):
         self.options = options
         self.locust_classes = locust_classes
+        self.available_locustfiles = available_locustfiles or {}
         self.hatch_rate = options.hatch_rate
         self.num_clients = options.num_clients
         self.num_requests = options.num_requests
@@ -192,8 +193,8 @@ class LocustRunner(object):
         self.exceptions[key] = row
 
 class LocalLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, options):
-        super(LocalLocustRunner, self).__init__(locust_classes, options)
+    def __init__(self, locust_classes, options, available_locustfiles=None):
+        super(LocalLocustRunner, self).__init__(locust_classes, options, available_locustfiles)
 
         # register listener thats logs the exception for the local runner
         def on_locust_error(locust_instance, exception, tb):
@@ -206,8 +207,8 @@ class LocalLocustRunner(LocustRunner):
         self.greenlet = self.hatching_greenlet
 
 class DistributedLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, options):
-        super(DistributedLocustRunner, self).__init__(locust_classes, options)
+    def __init__(self, locust_classes, options, available_locustfiles=None):
+        super(DistributedLocustRunner, self).__init__(locust_classes, options, available_locustfiles)
         self.master_host = options.master_host
         self.master_port = options.master_port
         self.master_bind_host = options.master_bind_host
