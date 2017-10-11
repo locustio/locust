@@ -58,6 +58,7 @@ def index():
         is_distributed=is_distributed,
         slave_count=slave_count,
         user_count=runners.locust_runner.user_count,
+        available_locustfiles = runners.locust_runner.available_locustfiles.keys(),
         version=version,
         ramp = _ramp,
         host=host,
@@ -242,7 +243,7 @@ def exceptions_csv():
 @app.route("/ramp", methods=["POST"])
 def ramp():
     from locust.ramping import start_ramping
-    
+
     init_clients = int(request.form["init_count"])
     hatch_rate = int(request.form["hatch_rate"])
     hatch_stride = int(request.form["hatch_stride"])
