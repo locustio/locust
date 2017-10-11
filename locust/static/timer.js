@@ -25,10 +25,11 @@ function updateTimer() {
         if (clicked) {
             sec++;
         }
-        setTimeout(updateTimer, 1000);
+
     });
 }
 
+setInterval(updateTimer, 1000);
 updateTimer();
 
 String.prototype.toHHMMSS = function () {
