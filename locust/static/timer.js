@@ -30,7 +30,6 @@ function updateTimer() {
 }
 
 setInterval(updateTimer, 1000);
-updateTimer();
 
 String.prototype.toHHMMSS = function () {
     var sec_num = parseInt(this, 10);
