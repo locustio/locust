@@ -148,6 +148,7 @@ class LocustRunner(object):
         events.hatch_complete.fire(user_count=self.num_clients)
 
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
+        print("MASUK HATCH LocustRunner")
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
             self.stats.start_time = time()
@@ -195,7 +196,7 @@ class LocustRunner(object):
 class LocalLocustRunner(LocustRunner):
     def __init__(self, locust_classes, options, available_locustfiles=None):
         super(LocalLocustRunner, self).__init__(locust_classes, options, available_locustfiles)
-
+        print("LALALA ", LocalLocustRunner.__mro__)
         # register listener thats logs the exception for the local runner
         def on_locust_error(locust_instance, exception, tb):
             formatted_tb = "".join(traceback.format_tb(tb))
@@ -203,7 +204,9 @@ class LocalLocustRunner(LocustRunner):
         events.locust_error += on_locust_error
 
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
+        print("MASUK HATCH LocalLocustRunner")
         self.hatching_greenlet = gevent.spawn(lambda: super(LocalLocustRunner, self).start_hatching(locust_count, hatch_rate, wait=wait))
+        print("SETELAH MASUK HATCH LocustRunner")
         self.greenlet = self.hatching_greenlet
 
 class DistributedLocustRunner(LocustRunner):

@@ -330,6 +330,8 @@ def load_locustfile(path):
     # If the directory isn't in the PYTHONPATH, add it so our import will work
     added_to_path = False
     index = None
+    print("PATH ", path)
+    print("DIRECTORY ", directory)
     if directory not in sys.path:
         sys.path.insert(0, directory)
         added_to_path = True
@@ -365,8 +367,13 @@ def collect_locustfiles(path):
         # print("ROOT ", root)
         # print("DIRS ", dirs)
         # print("FILES ", files)
+
+ #        if os.getcwd() not in sys.path:
+ # +        sys.path.insert(0, os.getcwd())
+
         if files:
             for file_ in files:
+                print("OS GETCWD ", os.getcwd())
                 fullpath = os.path.abspath(os.path.join(root, file_))
                 if not file_.endswith('__init__.py') or not file_.endswith('__init__.pyc') or not file_.endswith('__init__.pyo'):
                     loaded = load_locustfile(fullpath)
@@ -424,9 +431,12 @@ def main():
         else:
             names = set(arguments) & set(locusts.keys())
             locust_classes = [locusts[n] for n in names]
+            print("MASUK ARGUMENT LOCUST CLASS ", locust_classes)
     else:
         # list() call is needed to consume the dict_view object in Python 3
+        print(locusts)
         locust_classes = list(locusts.values())
+        print("MASUK ELSE ARGUMENT LOCUST CLASS ", locust_classes)
 
     if options.show_task_ratio:
         console_logger.info("\n Task ratio per locust class")
