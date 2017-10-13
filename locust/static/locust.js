@@ -168,6 +168,12 @@ function updateStats() {
         $('#stats tbody').empty();
         $('#errors tbody').empty();
 
+        //Handle if user request to reset stats
+        if(report.total_run_time < runTime ) {
+          runTime = report.total_run_time;
+          $("#run_time").html(String(runTime).toHHMMSS())
+        }
+
         alternate = false;
 
         totalRow = report.stats.pop()

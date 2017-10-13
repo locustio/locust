@@ -49,7 +49,7 @@
                     <div class="value"><span id="run_time"></span>{{ run_time }}</div>
                 </div>
                 <div class="top_box box_stop box_running" id="box_stop">
-                    <a href="/stop" class="stop-button stop-clock"><i></i>STOP</a>
+                    <a href="/stop" class="stop-button stop-timer"><i></i>STOP</a>
                     <a href="/stats/reset" class="reset-button">Reset<br>Stats</a>
                 </div>
             </div>
@@ -63,7 +63,7 @@
             </div>
             <div class="padder">
                 <h2>Start new Locust swarm</h2>
-                <form action="/swarm" method="POST" id="swarm_form" class="start-clock">
+                <form action="/swarm" method="POST" id="swarm_form" class="start-timer">
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
@@ -104,7 +104,7 @@
                 </div>
                 <div class="padder">
                     <h2>Ramping</h2>
-                    <form action="/ramp" method="POST" id="ramp_form" class="start-clock">
+                    <form action="/ramp" method="POST" id="ramp_form" class="start-timer">
                         <div style="float:left;">
                         <label for="init_count" title="This is the number of initial number of locusts that will be spawned. Pick a number you know can be handled.">Initial number of clients</label>
                         <input type="text" name="init_count" id="init_count" class="val" /><br>
@@ -291,8 +291,8 @@
         ]]>
     </script>
     <script type="text/javascript" src="/static/chart.js?v={{ version }}"></script>
-    <script type="text/javascript" src="/static/locust.js?v={{ version }}"></script>
     <script type="text/javascript" src="/static/timer.js"></script>
+    <script type="text/javascript" src="/static/locust.js?v={{ version }}"></script>
 
 </body>
 </html>

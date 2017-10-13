@@ -1,34 +1,29 @@
-var sec = 0;
-var clicked = false;
+var runTime = 0;
+var isTestRunning = false;
 
-$(".stop-clock").click(function (event) {
-    clicked = false;
+$(".stop-timer").click(function (event) {
+  isTestRunning = false;
 });
 
-$(".start-clock").click(function (event) {
-    clicked = true;
-    sec = 0;
+$(".start-timer").click(function (event) {
+  runTime = 0;
 });
 
 function updateTimer() {
-    $.get('/stats/requests', function (data) {
-        report = JSON.parse(data);
-        var time;
-        var totalRunTimeInSeconds = report.total_run_time;
-
-        if (totalRunTimeInSeconds >= sec) {
-            time = totalRunTimeInSeconds;
-        } else {
-            time = sec;
-        }
-        $("#run_time").html(String(time).toHHMMSS());
-        if (clicked) {
-            sec++;
-        }
-
-    });
+    if ( runTime == 0 ) {
+      $.get('/stats/requests', function (data) {
+          report = JSON.parse(data);
+          runTime = report.total_run_time;
+          isTestRunning = (report.state == "stopped") ? false : true;
+          //update the UI of timer to the last/current runtime
+          $("#run_time").html(String(runTime).toHHMMSS())
+          if (isTestRunning) ++runTime
+          else runTime = 0
+      })
+    } else if (isTestRunning) {
+      $("#run_time").html(String(runTime++).toHHMMSS());
+    }
 }
-
 setInterval(updateTimer, 1000);
 
 String.prototype.toHHMMSS = function () {
