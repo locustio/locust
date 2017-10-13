@@ -66,7 +66,6 @@
                 },
                 yAxis: {
                     type: 'value',
-                    boundaryGap: [0, '100%'],
                     splitLine: {
                         show: false
                     },
@@ -75,6 +74,31 @@
                             color: '#5b6f66',
                         },
                     },
+                },
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        show: true,
+                        xAxisIndex: [0]
+                    },
+                    {
+                        type: 'slider',
+                        show: true,
+                        yAxisIndex: [0]
+                    },
+                    {
+                        type: 'inside',
+                        xAxisIndex: [0]
+                    },
+                    {
+                        type: 'inside',
+                        yAxisIndex: [0]
+                    }
+                ],
+                toolbox: {
+                    feature: {
+                        restore: {}
+                    }
                 },
                 series: this.seriesData,
                 grid: {x:60, y:70, x2:40, y2:40},
