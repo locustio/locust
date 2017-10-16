@@ -126,11 +126,6 @@
                         yAxisIndex: [0]
                     }
                 ],
-                toolbox: {
-                    feature: {
-                        restore: {}
-                    }
-                },
                 series: this.seriesData,
                 grid: {x:60, y:70, x2:40, y2:40},
             })
