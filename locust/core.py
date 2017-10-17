@@ -5,6 +5,7 @@ import traceback
 from time import time
 
 import gevent
+import gevent.lock
 import six
 
 from gevent import GreenletExit, monkey
@@ -100,15 +101,18 @@ class Locust(object):
     _catch_exceptions = True
     _setup_has_run = False  # Internal state to see if we have already run
     _teardown_is_set = False  # Internal state to see if we have already run
+    _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
     
     def __init__(self):
         super(Locust, self).__init__()
+        self._lock.acquire()
         if hasattr(self, "setup") and self._setup_has_run is False:
             self._set_setup_flag()
             self.setup()
         if hasattr(self, "teardown") and self._teardown_is_set is False:
             self._set_teardown_flag()
             events.quitting += self.teardown
+        self._lock.release()
 
     @classmethod
     def _set_setup_flag(cls):
@@ -260,6 +264,7 @@ class TaskSet(object):
     """
     _setup_has_run = False  # Internal state to see if we have already run
     _teardown_is_set = False  # Internal state to see if we have already run
+    _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
 
     def __init__(self, parent):
         self._task_queue = []
@@ -280,12 +285,14 @@ class TaskSet(object):
         if not self.max_wait:
             self.max_wait = self.locust.max_wait
 
+        self._lock.acquire()
         if hasattr(self, "setup") and self._setup_has_run is False:
             self._set_setup_flag()
             self.setup()
         if hasattr(self, "teardown") and self._teardown_is_set is False:
             self._set_teardown_flag()
             events.quitting += self.teardown
+        self._lock.release()
 
     @classmethod
     def _set_setup_flag(cls):
