@@ -81,6 +81,7 @@
                         orient: 'horizontal',
                         type: 'slider',
                         show: true,
+                        filterMode: 'none',
                         height: 10,
                         xAxisIndex: [0],
                         bottom: 290,
@@ -101,6 +102,7 @@
                         orient: 'vertical',
                         type: 'slider',
                         show: true,
+                        filterMode: 'none',
                         width: 10,
                         yAxisIndex: [0],
                         right: 20,
@@ -116,14 +118,6 @@
                             shadowOffsetX: 2,
                             shadowOffsetY: 2
                         }
-                    },
-                    {
-                        type: 'inside',
-                        xAxisIndex: [0]
-                    },
-                    {
-                        type: 'inside',
-                        yAxisIndex: [0]
                     }
                 ],
                 series: this.seriesData,
