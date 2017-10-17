@@ -33,20 +33,6 @@ class EventHook(object):
         for handler in self._handlers:
             handler(**kwargs)
 
-
-class ParallelEventHook(EventHook):
-    """
-    Based off of EventHook and is used in a similar way
-    Used to run many events in parallel
-    """
-    def fire(self, reverse=False, **kwargs):
-        g_handlers = []
-        if reverse:
-            self._handlers.reverse()
-        for handler in self._handlers:
-            g_handlers.append(gevent.spawn(handler, **kwargs))
-        gevent.joinall(g_handlers)
-
 request_success = EventHook()
 """
 *request_success* is fired when a request is completed successfully.
@@ -121,13 +107,6 @@ Event is fire with the following arguments:
 quitting = EventHook()
 """
 *quitting* is fired when the locust process in exiting
-"""
-
-parallel_quitting = ParallelEventHook()
-"""
-*parallel_quitting* is fired when the locust process is exiting
-
-This should be used when wanting to run many events before exiting
 """
 
 master_start_hatching = EventHook()
