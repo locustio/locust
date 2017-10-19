@@ -347,7 +347,9 @@ def load_locustfile(path):
             sys.path.insert(0, directory)
             del sys.path[i + 1]
     # Perform the import (trimming off the .py)
+    print('a:'+locustfile)
     imported = __import__(os.path.splitext(locustfile)[0])
+    print(imported)
     # Remove directory from path if we added it ourselves (just to be neat)
     if added_to_path:
         del sys.path[0]
@@ -357,8 +359,10 @@ def load_locustfile(path):
         del sys.path[0]
     # Return our two-tuple
     locusts = dict(filter(is_locust, vars(imported).items()))
+    print(vars(imported).items())
     # return imported.__doc__, locusts
-    return {os.path.splitext(locustfile)[0]: locusts}
+    print(locustfile)
+    return {path: locusts}
 
 def collect_locustfiles(path):
     collected = dict()
@@ -373,13 +377,19 @@ def collect_locustfiles(path):
 
         if files:
             for file_ in files:
-                print("OS GETCWD ", os.getcwd())
-                fullpath = os.path.abspath(os.path.join(root, file_))
-                if not file_.endswith('__init__.py') or not file_.endswith('__init__.pyc') or not file_.endswith('__init__.pyo'):
+                if file_.endswith('.py') and not file_.endswith('__init__.py'):
+                    print("OS GETCWD ", os.getcwd())
+                    fullpath = os.path.abspath(os.path.join(root, file_))
+                    print("file_:"+file_)
+                    #fullpath = os.path.abspath(file_)
+                    print(fullpath)
+                    #if not file_.endswith('__init__.py') or not file_.endswith('__init__.pyc') or not file_.endswith('__init__.pyo'):
+                    print('lol:'+fullpath)
                     loaded = load_locustfile(fullpath)
+                    print(loaded.viewvalues())
+                    print(loaded.viewitems())
                     if loaded:
                         collected.update(loaded)
-
     return collected
 
 def main():
@@ -395,6 +405,7 @@ def main():
 
     if os.path.isdir(options.locustfile):
         all_locustfiles = collect_locustfiles(options.locustfile)
+        print(all_locustfiles)
     else:
         locustfile = find_locustfile(options.locustfile)
 
