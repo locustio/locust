@@ -234,6 +234,13 @@ container_title {
     font-size: 24px;
     padding-left: 10px;
 }
+.start select.val{
+    border: none;
+    background: #fff;
+    height: 40px;
+    width: 338px;
+    font-size: 18px;
+}
 .start button,
 .edit button, .edit_config button {
     margin-top: 20px;

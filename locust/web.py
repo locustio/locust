@@ -58,7 +58,7 @@ def index():
         is_distributed=is_distributed,
         slave_count=slave_count,
         user_count=runners.locust_runner.user_count,
-        available_locustfiles = runners.locust_runner.available_locustfiles.keys(),
+        available_locustfiles = sorted(runners.locust_runner.available_locustfiles.keys()),
         version=version,
         ramp = _ramp,
         host=host,

@@ -316,6 +316,24 @@ def is_locust(tup):
         and not name.startswith('_')
     )
 
+def truncate_path(path):
+    # split path which comes from command on terminal
+    splitted_path = os.path.normpath(path).split(os.path.sep)
+
+    final_path = ""
+    count = 0
+    for i in reversed(xrange(len(splitted_path))):
+        if count < 3 and splitted_path[i]:
+            if count == 0:
+                final_path = splitted_path[i]
+            elif count == 2:
+                final_path = os.path.join("...", splitted_path[i], final_path)
+            else:
+                final_path = os.path.join(splitted_path[i], final_path)
+            count += 1
+        else:
+            break
+    return final_path
 
 def load_locustfile(path):
     """
@@ -330,8 +348,6 @@ def load_locustfile(path):
     # If the directory isn't in the PYTHONPATH, add it so our import will work
     added_to_path = False
     index = None
-    print("PATH ", path)
-    print("DIRECTORY ", directory)
     if directory not in sys.path:
         sys.path.insert(0, directory)
         added_to_path = True
@@ -347,9 +363,7 @@ def load_locustfile(path):
             sys.path.insert(0, directory)
             del sys.path[i + 1]
     # Perform the import (trimming off the .py)
-    print('a:'+locustfile)
     imported = __import__(os.path.splitext(locustfile)[0])
-    print(imported)
     # Remove directory from path if we added it ourselves (just to be neat)
     if added_to_path:
         del sys.path[0]
@@ -359,35 +373,21 @@ def load_locustfile(path):
         del sys.path[0]
     # Return our two-tuple
     locusts = dict(filter(is_locust, vars(imported).items()))
-    print(vars(imported).items())
-    # return imported.__doc__, locusts
-    print(locustfile)
-    return {path: locusts}
+
+    # truncate the fullpath
+    final_path = truncate_path(path)
+
+    return {final_path: locusts}
 
 def collect_locustfiles(path):
     collected = dict()
 
     for root, dirs, files in os.walk(path):
-        # print("ROOT ", root)
-        # print("DIRS ", dirs)
-        # print("FILES ", files)
-
- #        if os.getcwd() not in sys.path:
- # +        sys.path.insert(0, os.getcwd())
-
         if files:
             for file_ in files:
                 if file_.endswith('.py') and not file_.endswith('__init__.py'):
-                    print("OS GETCWD ", os.getcwd())
                     fullpath = os.path.abspath(os.path.join(root, file_))
-                    print("file_:"+file_)
-                    #fullpath = os.path.abspath(file_)
-                    print(fullpath)
-                    #if not file_.endswith('__init__.py') or not file_.endswith('__init__.pyc') or not file_.endswith('__init__.pyo'):
-                    print('lol:'+fullpath)
                     loaded = load_locustfile(fullpath)
-                    print(loaded.viewvalues())
-                    print(loaded.viewitems())
                     if loaded:
                         collected.update(loaded)
     return collected
@@ -405,7 +405,6 @@ def main():
 
     if os.path.isdir(options.locustfile):
         all_locustfiles = collect_locustfiles(options.locustfile)
-        print(all_locustfiles)
     else:
         locustfile = find_locustfile(options.locustfile)
 
@@ -442,12 +441,9 @@ def main():
         else:
             names = set(arguments) & set(locusts.keys())
             locust_classes = [locusts[n] for n in names]
-            print("MASUK ARGUMENT LOCUST CLASS ", locust_classes)
     else:
         # list() call is needed to consume the dict_view object in Python 3
-        print(locusts)
         locust_classes = list(locusts.values())
-        print("MASUK ELSE ARGUMENT LOCUST CLASS ", locust_classes)
 
     if options.show_task_ratio:
         console_logger.info("\n Task ratio per locust class")
