@@ -40,6 +40,7 @@ class LocustRunner(object):
         self.hatching_greenlet = None
         self.exceptions = {}
         self.stats = global_stats
+        self.running_type = "normal"
 
         # register listener that resets stats when hatching is complete
         def on_hatch_complete(user_count):
@@ -99,6 +100,7 @@ class LocustRunner(object):
         else:
             self.num_clients += spawn_count
 
+        logger.info(locust_runner.running_type)
         logger.info("Hatching and swarming %i clients at the rate %g clients/s..." % (spawn_count, self.hatch_rate))
         occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
 

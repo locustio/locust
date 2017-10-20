@@ -93,6 +93,7 @@ def start_ramping(hatch_rate=None, max_locusts=1000, hatch_stride=100,
           percent=0.95, response_time_limit=2000, acceptable_fail=0.05,
           precision=200, start_count=0, calibration_time=15):
     
+    locust_runner.running_type = "auto"
     register_listeners()
     
     def ramp_up(clients, hatch_stride, boundery_found=False):
@@ -158,5 +159,6 @@ def start_ramping(hatch_rate=None, max_locusts=1000, hatch_stride=100,
         locust_runner.hatch_rate = hatch_rate
     if start_count > 0:
         locust_runner.start_hatching(start_count, hatch_rate)
+    logger.info(locust_runner.running_type)
     logger.info("RAMPING STARTED")
     ramp_up(start_count, hatch_stride)
