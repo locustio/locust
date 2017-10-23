@@ -1,6 +1,7 @@
 import locust
 from . import runners
 
+import imp
 import gevent
 import sys
 import os
@@ -363,7 +364,7 @@ def load_locustfile(path):
             sys.path.insert(0, directory)
             del sys.path[i + 1]
     # Perform the import (trimming off the .py)
-    imported = __import__(os.path.splitext(locustfile)[0])
+    imported = imp.load_source(os.path.splitext(locustfile)[0], path)
     # Remove directory from path if we added it ourselves (just to be neat)
     if added_to_path:
         del sys.path[0]

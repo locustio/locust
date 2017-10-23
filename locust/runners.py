@@ -154,9 +154,8 @@ class LocustRunner(object):
             Set the active locust classes to the executeables described by the key
         """
         try:
-            print("AVAILABLE LOCFILE ", self.available_locustfiles)
             self.locust_classes = self.available_locustfiles[key].values()
-            print("LOCCLASS ", self.locust_classes)
+            print("SELECTED FILE VALUE ", self.locust_classes)
         except KeyError:
             logger.error("No available locust classes found with key: {}".format(key))
             self.locust_classes = []
