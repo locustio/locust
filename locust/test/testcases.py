@@ -152,31 +152,31 @@ class LocustTestCase(unittest.TestCase):
         if member not in container:
             standardMsg = '%s not found in %s' % (safe_repr(member),
                                                   safe_repr(container))
-            self.fail(self._formatMessage(msg, standardMsg))
+            raise AssertionError, self._formatMessage(msg, standardMsg)
     
     def assertLess(self, a, b, msg=None):
         """Just like self.assertTrue(a < b), but with a nicer default message."""
         if not a < b:
             standardMsg = '%s not less than %s' % (safe_repr(a), safe_repr(b))
-            self.fail(self._formatMessage(msg, standardMsg))
+            raise AssertionError, self._formatMessage(msg, standardMsg)
 
     def assertLessEqual(self, a, b, msg=None):
         """Just like self.assertTrue(a <= b), but with a nicer default message."""
         if not a <= b:
             standardMsg = '%s not less than or equal to %s' % (safe_repr(a), safe_repr(b))
-            self.fail(self._formatMessage(msg, standardMsg))
+            raise AssertionError, self._formatMessage(msg, standardMsg)
 
     def assertGreater(self, a, b, msg=None):
         """Just like self.assertTrue(a > b), but with a nicer default message."""
         if not a > b:
             standardMsg = '%s not greater than %s' % (safe_repr(a), safe_repr(b))
-            self.fail(self._formatMessage(msg, standardMsg))
+            raise AssertionError, self._formatMessage(msg, standardMsg)
 
     def assertGreaterEqual(self, a, b, msg=None):
         """Just like self.assertTrue(a >= b), but with a nicer default message."""
         if not a >= b:
             standardMsg = '%s not greater than or equal to %s' % (safe_repr(a), safe_repr(b))
-            self.fail(self._formatMessage(msg, standardMsg))
+            raise AssertionError, self._formatMessage(msg, standardMsg)
 
             
 class WebserverTestCase(LocustTestCase):

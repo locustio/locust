@@ -3,6 +3,7 @@ import unittest
 import gevent
 from gevent import sleep
 from gevent.queue import Queue
+from pytest import raises
 
 import mock
 from locust import events
@@ -63,15 +64,15 @@ class TestMasterRunner(LocustTestCase):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
             master = MasterLocustRunner(MyTestLocust, self.options)
             server.mocked_send(Message("client_ready", None, "zeh_fake_client1"))
-            self.assertEqual(1, len(master.clients))
-            self.assertTrue("zeh_fake_client1" in master.clients, "Could not find fake client in master instance's clients dict")
+            assert 1 == len(master.clients)
+            assert "zeh_fake_client1" in master.clients, "Could not find fake client in master instance's clients dict"
             server.mocked_send(Message("client_ready", None, "zeh_fake_client2"))
             server.mocked_send(Message("client_ready", None, "zeh_fake_client3"))
             server.mocked_send(Message("client_ready", None, "zeh_fake_client4"))
-            self.assertEqual(4, len(master.clients))
+            assert 4 == len(master.clients)
             
             server.mocked_send(Message("quit", None, "zeh_fake_client3"))
-            self.assertEqual(3, len(master.clients))
+            assert 3 == len(master.clients)
     
     def test_slave_stats_report_median(self):
         import mock
@@ -93,7 +94,7 @@ class TestMasterRunner(LocustTestCase):
             
             server.mocked_send(Message("stats", data, "fake_client"))
             s = master.stats.get("/", "GET")
-            self.assertEqual(700, s.median_response_time)
+            assert 700 == s.median_response_time
     
     def test_master_total_stats(self):
         import mock
@@ -121,7 +122,7 @@ class TestMasterRunner(LocustTestCase):
                 "errors":stats2.serialize_errors(),
                 "user_count": 2,
             }, "fake_client"))
-            self.assertEqual(700, master.stats.total.median_response_time)
+            assert 700 == master.stats.total.median_response_time
     
     def test_master_current_response_times(self):
         import mock
@@ -156,8 +157,8 @@ class TestMasterRunner(LocustTestCase):
                     "user_count": 2,
                 }, "fake_client"))
                 mocked_time.return_value += 4
-                self.assertEqual(400, master.stats.total.get_current_response_time_percentile(0.5))
-                self.assertEqual(800, master.stats.total.get_current_response_time_percentile(0.95))
+                assert 400 == master.stats.total.get_current_response_time_percentile(0.5)
+                assert 800 == master.stats.total.get_current_response_time_percentile(0.95)
                 
                 # let 10 second pass, do some more requests, send it to the master and make
                 # sure the current response time percentiles only accounts for these new requests
@@ -171,8 +172,8 @@ class TestMasterRunner(LocustTestCase):
                     "errors":stats.serialize_errors(),
                     "user_count": 2,
                 }, "fake_client"))
-                self.assertEqual(30, master.stats.total.get_current_response_time_percentile(0.5))
-                self.assertEqual(3000, master.stats.total.get_current_response_time_percentile(0.95))
+                assert 30 == master.stats.total.get_current_response_time_percentile(0.5)
+                assert 3000 == master.stats.total.get_current_response_time_percentile(0.95)
     
     def test_spawn_zero_locusts(self):
         class MyTaskSet(TaskSet):
@@ -194,7 +195,7 @@ class TestMasterRunner(LocustTestCase):
             runner.start_hatching(0, 1, wait=True)
             runner.greenlet.join()
         except gevent.Timeout:
-            self.fail("Got Timeout exception. A locust seems to have been spawned, even though 0 was specified.")
+            raise AssertionError("Got Timeout exception. A locust seems to have been spawned, even though 0 was specified.")
         finally:
             timeout.cancel()
     
@@ -214,13 +215,13 @@ class TestMasterRunner(LocustTestCase):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
             
             master.start_hatching(7, 7)
-            self.assertEqual(5, len(server.outbox))
+            assert 5 == len(server.outbox)
             
             num_clients = 0
             for msg in server.outbox:
                 num_clients += Message.unserialize(msg).data["num_clients"]
             
-            self.assertEqual(7, num_clients, "Total number of locusts that would have been spawned is not 7")
+            assert 7 == num_clients, "Total number of locusts that would have been spawned is not 7"
     
     def test_spawn_fewer_locusts_than_slaves(self):
         import mock
@@ -234,13 +235,13 @@ class TestMasterRunner(LocustTestCase):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
             
             master.start_hatching(2, 2)
-            self.assertEqual(5, len(server.outbox))
+            assert 5 == len(server.outbox)
             
             num_clients = 0
             for msg in server.outbox:
                 num_clients += Message.unserialize(msg).data["num_clients"]
             
-            self.assertEqual(2, num_clients, "Total number of locusts that would have been spawned is not 2")
+            assert 2 == num_clients, "Total number of locusts that would have been spawned is not 2"
     
     def test_exception_in_task(self):
         class HeyAnException(Exception):
@@ -257,14 +258,14 @@ class TestMasterRunner(LocustTestCase):
         l = MyLocust()
         l._catch_exceptions = False
         
-        self.assertRaises(HeyAnException, l.run)
-        self.assertRaises(HeyAnException, l.run)
-        self.assertEqual(1, len(runner.exceptions))
+        raises(HeyAnException, l.run)
+        raises(HeyAnException, l.run)
+        assert 1 == len(runner.exceptions)
         
         hash_key, exception = runner.exceptions.popitem()
-        self.assertTrue("traceback" in exception)
-        self.assertTrue("HeyAnException" in exception["traceback"])
-        self.assertEqual(2, exception["count"])
+        assert "traceback" in exception
+        assert "HeyAnException" in exception["traceback"]
+        assert 2 == exception["count"]
     
     def test_exception_is_catched(self):
         """ Test that exceptions are stored, and execution continues """
@@ -298,23 +299,23 @@ class TestMasterRunner(LocustTestCase):
         # supress stderr
         with mock.patch("sys.stderr") as mocked:
             l.task_set._task_queue = [l.task_set.will_error, l.task_set.will_stop]
-            self.assertRaises(LocustError, l.run) # make sure HeyAnException isn't raised
+            raises(LocustError, l.run) # make sure HeyAnException isn't raised
             l.task_set._task_queue = [l.task_set.will_error, l.task_set.will_stop]
-            self.assertRaises(LocustError, l.run) # make sure HeyAnException isn't raised
-        self.assertEqual(2, len(mocked.method_calls))
+            raises(LocustError, l.run) # make sure HeyAnException isn't raised
+        assert 2 == len(mocked.method_calls)
         
         # make sure exception was stored
-        self.assertEqual(1, len(runner.exceptions))
+        assert 1 == len(runner.exceptions)
         hash_key, exception = runner.exceptions.popitem()
-        self.assertTrue("traceback" in exception)
-        self.assertTrue("HeyAnException" in exception["traceback"])
-        self.assertEqual(2, exception["count"])
+        assert "traceback" in exception
+        assert "HeyAnException" in exception["traceback"]
+        assert 2 == exception["count"]
 
 
 class TestMessageSerializing(unittest.TestCase):
     def test_message_serialize(self):
         msg = Message("client_ready", None, "my_id")
         rebuilt = Message.unserialize(msg.serialize())
-        self.assertEqual(msg.type, rebuilt.type)
-        self.assertEqual(msg.data, rebuilt.data)
-        self.assertEqual(msg.node_id, rebuilt.node_id)
+        assert msg.type == rebuilt.type
+        assert msg.data == rebuilt.data
+        assert msg.node_id == rebuilt.node_id
