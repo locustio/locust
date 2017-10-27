@@ -30,7 +30,7 @@
                 {% if is_distributed %}
                     <div class="top_box box_slaves" id="box_rps">
                         <div class="label">SLAVES</div>
-                        <div class="value" id="slaveCount">{{slave_count}}</div>
+                        <div class="value" id="slaveCount">0</div>
                     </div>
                 {% endif %}
                 <div class="top_box box_rps box_running" id="box_rps">
@@ -92,6 +92,9 @@
                     <li><a href="#">Failures</a></li>
                     <li><a href="#">Exceptions</a></li>
                     <li><a href="#">Download Data</a></li>
+                    {% if is_distributed %}
+                    <li><a href="#">Slaves</a></li>
+                    {% endif %}
                 </ul>
             </nav>
             <div class="panes container">
@@ -147,6 +150,19 @@
                         <a href="/stats/distribution/csv">Download response time distribution CSV</a><br>
                         <a href="/exceptions/csv">Download exceptions CSV</a>
                     </div>
+                </div>
+                <div style="display:none;">
+                    <table id="slaves">
+                        <thead>
+                            <tr>
+                                <th class="stats_label" href="#" data-sortkey="id">Slave</th>
+                                <th class="stats_label" href="#" data-sortkey="state">State</th>
+                                <th class="stats_label numeric" href="#" data-sortkey="user_count" title="Number of users on this slave"># users</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -232,6 +248,16 @@
             <td class="occurences"><%= this.count %></td>
             <td class="traceback" title="Occured on: <%= this.nodes %>"><%= function(e) { return e.replace("<", "&lt;"); }(this.traceback) %>
 <%= function(e) { return e.replace("<", "&lt;"); }(this.msg) %></td>
+        </tr>
+        <% alternate = !alternate; %>
+        ]]>
+    </script>
+    <script type="text/x-jqote-template" id="slave-template">
+        <![CDATA[
+        <tr class="<%=(alternate ? "dark" : "")%> <%=(this.name == "Total" ? "total" : "")%>">
+            <td><%= this.id %></td>
+            <td><%= this.state %></td>
+            <td class="numeric"><%= this.user_count %></td>
         </tr>
         <% alternate = !alternate; %>
         ]]>
