@@ -168,7 +168,8 @@ function updateStats() {
         if (typeof report.slave_count !== "undefined")
             $("#slaveCount").html(report.slave_count)
 
-        if (report.running_type == "auto") {
+        RAMP = "Auto"
+        if (report.running_type == RAMP) {
             $(".edit_test").addClass("none")
         } else {
             $(".edit_test").removeClass("none")

@@ -45,7 +45,7 @@ def index():
     else:
         host = None
     
-    if runners.locust_runner.running_type == "Normal":
+    if runners.locust_runner.running_type == runners.NORMAL:
         edit_label = "Edit"
     else:
         edit_label = ""
