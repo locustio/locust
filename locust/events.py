@@ -125,3 +125,8 @@ locust_stop_hatching = EventHook()
 """
 *locust_stop_hatching* is fired when terminate the hatching process on any locust worker.
 """
+
+slave_report_custom_stats = EventHook()
+"""
+*slave_custom_stats* is fired when receive message names "custom_stats"
+"""
