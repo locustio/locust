@@ -321,7 +321,6 @@ def truncate_path(path):
     # split path which comes from command on terminal
     splitted_path = os.path.normpath(path).split(os.path.sep)
 
-    final_path = ""
     count = 0
     for i in reversed(xrange(len(splitted_path))):
         if count < 3 and splitted_path[i]:

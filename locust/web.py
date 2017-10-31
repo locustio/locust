@@ -71,9 +71,9 @@ def swarm():
 
     locust_count = int(request.form["locust_count"])
     hatch_rate = float(request.form["hatch_rate"])
-    name = request.form["locustfile"]
-    assert name in runners.locust_runner.available_locustfiles
-    runners.locust_runner.select_file(name)
+    locustfile = request.form["locustfile"]
+    assert locustfile in runners.locust_runner.available_locustfiles
+    runners.locust_runner.select_file(locustfile)
 
     runners.locust_runner.start_hatching(locust_count, hatch_rate)
     response = make_response(json.dumps({'success':True, 'message': 'Swarming started'}))
