@@ -68,6 +68,7 @@
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
+                    <a href="#" class="edit_config_json">Edit Config</a>
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -128,6 +129,7 @@
                         <label for="fail_rate" title="This threshold is the highest ratio in percent of all requests that are allowed to fail.">Accepted fail ratio (%)</label>
                         <input type="text" name="fail_rate" id="fail_rate" class="val" value="5" /><br>
                         <br><br>
+                        <a href="#" class="edit_config_json">Edit Config</a>
                         <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button">
                         </div>
 
@@ -136,6 +138,22 @@
                 </div>
             </div>
         {% endif %}
+
+        <div class="edit_config" id="edit_config" >
+            <div style="position:relative;">
+                <a href="#" class="edit_test">Back to New Test</a><br>
+                <a href="#" class="ramp_test">Back to New Ramp</a>
+            </div>
+            <div class="padder">
+                <h2>Edit Config.json</h2>
+                <form action="/config" method="POST" id="edit_config_form">
+                    <label for="locust_count">Number of users to simulate</label>
+                    <textarea name="config_json" id="config_json"></textarea>
+                    <button type="submit">Save</button>
+                </form>
+                <div style="clear:right;"></div>
+            </div>
+        </div>
 
         <div class="status" id="status">
             <nav class="menu">

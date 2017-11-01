@@ -156,7 +156,7 @@ a:hover {
     position: relative;
 }
 
-.start, .edit {
+.start, .edit, .edit_config {
     width: 398px;
     position: absolute;
     left: 50%;
@@ -165,26 +165,47 @@ a:hover {
     z-index: 1;
 }
 
-.ramp {
+.ramp, {
     width:800px;
     margin-left: -370px;
 }
 
-.start .padder, .edit .padder {
+.edit_config {
+    display: block;
+    width:800px;
+    margin-left: -370px;
+    align-content: center
+}
+
+.start .padder, .edit .padder, .edit_config .padder {
     padding: 30px;
     padding-top: 0px;
 }
-.start h2, .edit h2 {
+
+
+
+.start h2, .edit h2, .edit_config h2 {
     color: #addf82;
     font-size: 26px;
     font-weight: bold;
 }
-.start label, .edit label {
+.start label, .edit label, .edit_config label {
     display: block;
     margin-bottom: 10px;
     margin-top: 20px;
     font-size: 16px;
 }
+
+.edit_config textarea {
+    display: block;
+    resize: none;
+    width: 800px;
+    height: 400px;
+    margin-bottom: 10px;
+    margin-top: 20px;
+    font-size: 16px;
+}
+
 .start input.val, .edit input.val {
     border: none;
     background: #fff;
@@ -194,7 +215,7 @@ a:hover {
     padding-left: 10px;
 }
 .start button,
-.edit button {
+.edit button, .edit_config button {
     margin-top: 20px;
     float: right;
     font-size: 16px;
@@ -206,7 +227,8 @@ a:hover {
     cursor: pointer;
 }
 .start button:hover,
-.edit button:hover {
+.edit button:hover,
+.edit_config button:hover {
     background: #74b99d;
 }
 
@@ -221,7 +243,7 @@ a:hover {
     box-shadow: 0 0 60px rgba(0,0,0,0.3);
 }
 
-.stopped .edit {display: none;}
+.stopped .edit, .stopped .edit_config {display: none;}
 .running .edit, .hatching .edit {
     display: none;
     border-radius: 5px;
@@ -233,7 +255,7 @@ a:hover {
 }
 .running .start, .hatching .start {display: none;}
 
-.ready .edit {display: none;}
+.ready .edit, .ready .edit_config {display: none;}
 .ready .start {display: inline;}
 
 .running .status, .hatching .status {display: block;}

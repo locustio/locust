@@ -22,12 +22,15 @@ $("#box_stop a.reset-button").click(function(event) {
 $(".ramp_test").click(function(event) {
     event.preventDefault();
     $("#start").hide();
+    $("#edit_config").hide();
     $("#ramp").show();
+    
 });
 
 $("#new_test").click(function(event) {
     event.preventDefault();
     $("#ramp").hide();
+    $("#edit_config").hide();
     $("#start").show();
     $("#locust_count").focus().select();
 });
@@ -36,6 +39,14 @@ $(".edit_test").click(function(event) {
     event.preventDefault();
     $("#edit").show();
     $("#new_locust_count").focus().select();
+});
+
+$(".edit_config_json").click(function(event) {
+    event.preventDefault();
+    $("#start").hide();
+    $("#ramp").hide();
+    $("#edit_config").show();
+    $("#config_json").focus().select();
 });
 
 $(".close_link").click(function(event) {
