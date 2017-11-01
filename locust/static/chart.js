@@ -33,24 +33,27 @@
                     subtext: this.subtitle,
                     x: 10,
                     y: 10,
-                    padding: [-7,0,0,0]
+                    padding: [-7, 0, 0, 0]
                 },
                 tooltip: {
                     trigger: 'axis',
+                    confine: true,
+                    axisPointer: {
+                        animation: true
+                    },
                     formatter: function (params) {
                         if (!!params && params.length > 0 && !!params[0].value) {
-                            var str = params[0].name;
-                            for (var i=0; i<params.length; i++) {
-                                var param = params[i];
-                                str += '<br><span style="color:' + param.color + ';">' + param.seriesName + ': ' + param.data + '</span>';
+                            let protomatch = /^(https?|http):\/\//;
+                            let str = params[0].name;                            
+                            for (let i = 0; i < params.length; i++) {
+                                let param = params[i];
+                                let seriesNameFiltered = param.seriesName.substring(0, 64).replace(protomatch, "");
+                                str += '<br><span style="color:' + param.color + ';">' + seriesNameFiltered + ': ' + param.data + '</span>';
                             }
                             return str;
                         } else {
                             return "No data";
                         }
-                    },
-                    axisPointer: {
-                        animation: true
                     }
                 },
                 xAxis: {
