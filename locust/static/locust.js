@@ -197,14 +197,12 @@ function updateStats() {
             for (let i=0; i < report.stats.length; i++) {
               chartKey = report.stats[i].name
               if (total != report.stats[i]) {
-                createEndpointCharts(chartKey, (chartKey) => {
-                  endpointResponseTimeCharts[chartKey].addValue([report.stats[i].avg_response_time]);
-                  endpointRpsCharts[chartKey].addValue([report.stats[i].current_rps]);
-                  endpointFailureCharts[chartKey].addValue([report.stats[i].num_failures]);
+                chartKey = chartKey + i
+                createEndpointLines(chartKey, report.stats[i].name, (chartKey) => {
+                  rpsValues.push(report.stats[i].current_rps)
+                  responseTimeValues.push(report.stats[i].avg_response_time)
+                  failureValues.push(report.stats[i].num_failures)
                 })
-                rpsValues.push(report.stats[i].current_rps)
-                responseTimeValues.push(report.stats[i].avg_response_time)
-                failureValues.push(report.stats[i].num_failures)
               } else {
                 endpointResponseTimeCharts[totalKey].addValue([report.stats[i].avg_response_time]);
                 endpointRpsCharts[totalKey].addValue([report.stats[i].current_rps]);
@@ -231,27 +229,11 @@ function updateExceptions() {
 }
 updateExceptions();
 
-function createEndpointCharts(chartKey, callback) {
-  if(!endpointResponseTimeCharts[chartKey]) {
-    title = "Average Response Times"
-    endpointResponseTimeCharts[chartKey] = new LocustLineChart($(".charts-container"), title, chartKey, ["Average Response Time"], "ms", "33.3%");
-    endpointResponseTimeCharts[chartKey].resize()
-  }
-  if(!endpointRpsCharts[chartKey]) {
-    title = "Requests per Second"
-    endpointRpsCharts[chartKey] = new LocustLineChart($(".charts-container"), title, chartKey, ["RPS"], "request", "33.3%");
-    endpointRpsCharts[chartKey].resize()
-  }
-  if(!endpointFailureCharts[chartKey]) {
-    title = "Failures"
-    endpointFailureCharts[chartKey] = new LocustLineChart($(".charts-container"), title, chartKey, ["Failure"], "failure", "33.3%");
-    endpointFailureCharts[chartKey].resize()
-  }
-  if(!rpsChart.isLineExist(chartKey)) rpsChart.addLine(chartKey);
-  if(!responseTimeChart.isLineExist(chartKey)) responseTimeChart.addLine(chartKey);
-  if(!failureChart.isLineExist(chartKey)) failureChart.addLine(chartKey);
-
-  callback(chartKey)
+function createEndpointLines(chartKey, endpointName, callback) {
+    if(!rpsChart.isLineExist(chartKey)) rpsChart.addLine(chartKey);
+    if(!responseTimeChart.isLineExist(chartKey)) responseTimeChart.addLine(chartKey);
+    if(!failureChart.isLineExist(chartKey)) failureChart.addLine(chartKey);
+    callback(chartKey)
 }
 
 function initTotalCharts() {
