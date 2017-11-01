@@ -49,6 +49,14 @@ $(".edit_config_json").click(function(event) {
     $("#config_json").focus().select();
 });
 
+$(".back_new_test").click(function(event) {
+    event.preventDefault();
+    $("#start").show();
+    $("#ramp").hide();
+    $("#edit_config").hide();
+    $("#locust_count").focus().select();
+});
+
 $(".close_link").click(function(event) {
     event.preventDefault();
     $(this).parent().parent().hide();
