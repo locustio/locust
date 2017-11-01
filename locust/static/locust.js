@@ -72,6 +72,7 @@ $('#ramp_form').submit(function(event) {
                 $("#status").fadeIn();
                 $(".box_running").fadeIn();
                 $("a.new_test").fadeOut();
+                $("a.edit_config_json").fadeOut();
                 $("a.edit_test").fadeIn();
                 $(".user_count").fadeIn();
                 resetCharts();
@@ -113,6 +114,7 @@ $('#swarm_form').submit(function(event) {
                 $("#status").fadeIn();
                 $(".box_running").fadeIn();
                 $("a.new_test").fadeOut();
+                $("a.edit_config_json").fadeOut();
                 $("a.edit_test").fadeIn();
                 $(".user_count").fadeIn();
                 resetCharts();
@@ -128,6 +130,7 @@ $('#edit_form').submit(function(event) {
             if (response.success) {
                 $("body").attr("class", "hatching");
                 $("#edit").fadeOut();
+                $(".edit_config_json").hide();
             }
         }
     );

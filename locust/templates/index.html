@@ -67,7 +67,7 @@
                     <label for="locust_count">Number of users to simulate</label>
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
+                    <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br><br>
                     <a href="#" class="edit_config_json">Edit Config</a>
                     <button type="submit">Start swarming</button>
                 </form>
@@ -92,7 +92,8 @@
                     <label for="locust_count">Number of users to simulate</label>
                     <input type="text" name="locust_count" id="new_locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="hatch_rate" id="new_hatch_rate" class="val" /><br>
+                    <input type="text" name="hatch_rate" id="new_hatch_rate" class="val" /><br><br>
+                    <a href="#" class="edit_config_json">Edit Config</a>
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -128,8 +129,8 @@
                         <input type="text" name="response_time" id="response_time" class="val" value="2000" /><br>
                         <label for="fail_rate" title="This threshold is the highest ratio in percent of all requests that are allowed to fail.">Accepted fail ratio (%)</label>
                         <input type="text" name="fail_rate" id="fail_rate" class="val" value="5" /><br>
-                        <br><br>
-                        <a href="#" class="edit_config_json">Edit Config</a>
+                        <br><br><br>
+                        <a href="#" class="edit_config_json">Edit Config</a><br>
                         <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button">
                         </div>
 
@@ -139,10 +140,12 @@
             </div>
         {% endif %}
 
-        <div class="edit_config" id="edit_config" >
+        <div class="edit_config" id="edit_config" style="display:none;">
             <div style="position:relative;">
                 <a href="#" class="back_new_test">Back to New Test</a><br>
+                {% if ramp %}
                 <a href="#" class="ramp_test">Back to New Ramp</a>
+                {% endif %}
             </div>
             <div class="padder">
                 <h2>Edit Config.json</h2>

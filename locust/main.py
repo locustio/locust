@@ -369,6 +369,7 @@ def main():
         sys.exit(0)
 
     locustfile = find_locustfile(options.locustfile)
+    print("asd")
 
     if not locustfile:
         logger.error("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.")
