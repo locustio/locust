@@ -144,10 +144,10 @@
             });
         }
 
-        addLine(key) {
+        addLine(key, name) {
           this.lines.push(key)
           this.seriesData.push({
-              name: key,
+              name: name,
               type: 'line',
               showSymbol: true,
               hoverAnimation: false,

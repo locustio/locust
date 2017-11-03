@@ -230,9 +230,9 @@ function updateExceptions() {
 updateExceptions();
 
 function createEndpointLines(chartKey, endpointName, callback) {
-    if(!rpsChart.isLineExist(chartKey)) rpsChart.addLine(chartKey);
-    if(!responseTimeChart.isLineExist(chartKey)) responseTimeChart.addLine(chartKey);
-    if(!failureChart.isLineExist(chartKey)) failureChart.addLine(chartKey);
+    if(!rpsChart.isLineExist(chartKey)) rpsChart.addLine(chartKey, endpointName);
+    if(!responseTimeChart.isLineExist(chartKey)) responseTimeChart.addLine(chartKey, endpointName);
+    if(!failureChart.isLineExist(chartKey)) failureChart.addLine(chartKey, endpointName);
     callback(chartKey)
 }
 
