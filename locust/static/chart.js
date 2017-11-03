@@ -42,7 +42,7 @@
                         animation: true
                     },
                     formatter: function (params) {
-                        if (!!params && params.length > 0 && !!params[0].value) {
+                        if (!!params && params.length > 0 && !!params[0].name) {
                             let protomatch = /^(https?|http):\/\//;
                             let str = params[0].name;
                             for (let i = 0; i < params.length; i++) {
