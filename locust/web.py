@@ -28,6 +28,7 @@ app = Flask(__name__)
 app.debug = True
 app.root_path = os.path.dirname(os.path.abspath(__file__))
 _ramp = False
+greenlet_spawner = None
 
 @app.route('/')
 def index():
@@ -70,6 +71,8 @@ def stop():
     runners.locust_runner.stop()
     response = make_response(json.dumps({'success':True, 'message': 'Test stopped'}))
     response.headers["Content-type"] = "application/json"
+    if greenlet_spawner != None:
+        greenlet_spawner.kill(block=True)
     return response
 
 @app.route("/stats/reset")
@@ -170,6 +173,10 @@ def request_stats():
     if stats:
         report["total_rps"] = stats[len(stats)-1]["current_rps"]
         report["fail_ratio"] = runners.locust_runner.stats.aggregated_stats("Total").fail_ratio
+        if runners.locust_runner.state != ("stopped" or "ready"):
+            # update run time
+            runners.locust_runner.stats.total_run_time()
+        report["total_run_time"] = runners.locust_runner.stats.run_time
 
         # since generating a total response times dict with all response times from all
         # urls is slow, we make a new total response time dict which will consist of one
@@ -235,7 +242,8 @@ def ramp():
     percentile = float(int(request.form["percentile"]) / 100.0)
     fail_rate = float(int(request.form["fail_rate"]) / 100.0)
     calibration_time = int(request.form["wait_time"])
-    gevent.spawn(start_ramping, hatch_rate, max_clients, hatch_stride, percentile, response_time, fail_rate, precision, init_clients, calibration_time)
+    global greenlet_spawner
+    greenlet_spawner = gevent.spawn(start_ramping, hatch_rate, max_clients, hatch_stride, percentile, response_time, fail_rate, precision, init_clients, calibration_time)
     response = make_response(json.dumps({'success':True, 'message': 'Ramping started'}))
     response.headers["Content-type"] = "application/json"
     return response
