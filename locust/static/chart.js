@@ -15,7 +15,7 @@
             this.dates = [];
 
             this.seriesData = [];
-            for (var i=0; i<lines.length; i++) {
+            for (let i=0; i<lines.length; i++) {
                 this.seriesData.push({
                     name: lines[i],
                     type: 'line',
@@ -42,9 +42,9 @@
                         animation: true
                     },
                     formatter: function (params) {
-                        if (!!params && params.length > 0 && !!params[0].value) {
+                        if (!!params && params.length > 0 && !!params[0].name) {
                             let protomatch = /^(https?|http):\/\//;
-                            let str = params[0].name;                            
+                            let str = params[0].name;
                             for (let i = 0; i < params.length; i++) {
                                 let param = params[i];
                                 let seriesNameFiltered = param.seriesName.substring(0, 64).replace(protomatch, "");
@@ -130,12 +130,11 @@
 
         addValue(values) {
             this.dates.push(new Date().toLocaleTimeString());
-            this.seriesData = [];
-            var pointX = this.data[0].length;
-            for (var i=0; i<values.length; i++) {
-                var value = Math.round(values[i] * 100) / 100;
-                this.data[i][pointX] = value;
-                this.seriesData.push({data: this.data[i]});
+            var pointX = (typeof(this.data[0]) != "undefined") ? this.data[0].length : 0;
+            for(let i=0; i<values.length; i++) {
+              let value = Math.round(values[i] * 100) / 100;
+              this.data[i][pointX] = value;
+              this.seriesData[i].data = this.data[i];
             }
             this.chart.setOption({
                 xAxis: {
@@ -145,10 +144,10 @@
             });
         }
 
-        addLine(key) {
+        addLine(key, name) {
           this.lines.push(key)
           this.seriesData.push({
-              name: key,
+              name: name,
               type: 'line',
               showSymbol: true,
               hoverAnimation: false,
@@ -161,7 +160,7 @@
         }
 
         isLineExist(value) {
-          for(i=0; i < this.lines.length; i++) {
+          for(let i=0; i < this.lines.length; i++) {
             if ( value == this.lines[i]) return true;
           }
           return false;
