@@ -6,10 +6,10 @@ from .testcases import LocustTestCase
 
 class TestTaskSet(LocustTestCase):
     def test_is_locust(self):
-        self.assertFalse(main.is_locust(("Locust", Locust)))
-        self.assertFalse(main.is_locust(("HttpLocust", HttpLocust)))
-        self.assertFalse(main.is_locust(("random_dict", {})))
-        self.assertFalse(main.is_locust(("random_list", [])))
+        assert not main.is_locust(("Locust", Locust))
+        assert not main.is_locust(("HttpLocust", HttpLocust))
+        assert not main.is_locust(("random_dict", {}))
+        assert not main.is_locust(("random_list", []))
         
         class MyTaskSet(TaskSet):
             pass
@@ -20,10 +20,10 @@ class TestTaskSet(LocustTestCase):
         class MyLocust(Locust):
             task_set = MyTaskSet
         
-        self.assertTrue(main.is_locust(("MyHttpLocust", MyHttpLocust)))
-        self.assertTrue(main.is_locust(("MyLocust", MyLocust)))
+        assert main.is_locust(("MyHttpLocust", MyHttpLocust))
+        assert main.is_locust(("MyLocust", MyLocust))
         
         class ThriftLocust(Locust):
             pass
         
-        self.assertFalse(main.is_locust(("ThriftLocust", ThriftLocust)))
+        assert not main.is_locust(("ThriftLocust", ThriftLocust))
