@@ -11,9 +11,11 @@ from requests.exceptions import (RequestException, MissingSchema,
 
 from . import events
 from .exception import CatchResponseError, ResponseError
+import pybreaker
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
+time_breaker = pybreaker.CircuitBreaker(fail_max=5, reset_timeout=10)
 
 class LocustResponse(Response):
 
@@ -111,12 +113,14 @@ class HttpSession(requests.Session):
         request_meta["start_time"] = time.time()
         
         response = self._send_request_safe_mode(method, url, **kwargs)
+        print(response.status_code)
         
         # record the consumed time
         request_meta["response_time"] = int((time.time() - request_meta["start_time"]) * 1000)
         
     
         request_meta["name"] = name or (response.history and response.history[0] or response).request.path_url
+        print("metaname : " + request_meta["name"])
         
         # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body
@@ -153,13 +157,14 @@ class HttpSession(requests.Session):
         
         Safe mode has been removed from requests 1.x.
         """
+        print(url)
         try:
             return requests.Session.request(self, method, url, **kwargs)
         except (MissingSchema, InvalidSchema, InvalidURL):
             raise
         except RequestException as e:
-            r = LocustResponse()
             r.error = e
+            r = LocustResponse()
             r.status_code = 0  # with this status_code, content returns None
             r.request = Request(method, url).prepare() 
             return r
