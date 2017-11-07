@@ -55,6 +55,7 @@ $('#ramp_form').submit(function(event) {
                 $("a.new_test").fadeOut();
                 $("a.edit_test").fadeIn();
                 $(".user_count").fadeIn();
+                resetCharts();
             }
         }
     );
@@ -65,14 +66,16 @@ var alternate = false;
 $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
     if (event.target == $(".chart-tab-link")[0]) {
         // trigger resizing of charts
-        rpsChart.resize();
-        responseTimeChart.resize();
-        usersChart.resize();
-        failureChart.resize();
-        for (var chartKey in endpointResponseTimeCharts) {
-          endpointResponseTimeCharts[chartKey].resize();
-          endpointRpsCharts[chartKey].resize();
-          endpointFailureCharts[chartKey].resize();
+        if (!!rpsChart) rpsChart.resize()
+        if (!!responseTimeChart) responseTimeChart.resize()
+        if (!!usersChart) usersChart.resize()
+        if (!!failureChart) failureChart.resize()
+        if (!!endpointResponseTimeCharts) {
+          for (var chartKey in endpointResponseTimeCharts) {
+            endpointResponseTimeCharts[chartKey].resize()
+            endpointRpsCharts[chartKey].resize()
+            endpointFailureCharts[chartKey].resize()
+          }
         }
     }
 });
@@ -93,6 +96,7 @@ $('#swarm_form').submit(function(event) {
                 $("a.new_test").fadeOut();
                 $("a.edit_test").fadeIn();
                 $(".user_count").fadeIn();
+                resetCharts();
             }
         }
     );
@@ -146,15 +150,8 @@ $(".stats_label").click(function(event) {
 });
 
 // init charts
-var rpsChart = new LocustLineChart($(".charts-container"), "Requests per Second", "", [], "reqs/s", "100%");
-var responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", "", [], "ms", "100%");
-var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", "", ["Total"], "users", "100%");
-var failureChart = new LocustLineChart($(".charts-container"), "Number of Failures", "", [], "failures", "100%");
-var endpointResponseTimeCharts = []
-var endpointRpsCharts = []
-var endpointFailureCharts = []
+var rpsChart, responseTimeChart, usersChart, failureChart, endpointResponseTimeCharts, endpointRpsCharts, endpointFailureCharts;
 const totalKey = "total"
-initTotalCharts()
 
 function updateStats() {
     $.get('/stats/requests', function (data) {
@@ -193,22 +190,27 @@ function updateStats() {
             rpsValues = []
             responseTimeValues = []
             failureValues = []
-
-            for (let i=0; i < report.stats.length; i++) {
-              chartKey = report.stats[i].name
-              if (total != report.stats[i]) {
-                chartKey = chartKey + i
-                createEndpointLines(chartKey, report.stats[i].name, (chartKey) => {
-                  rpsValues.push(report.stats[i].current_rps)
-                  responseTimeValues.push(report.stats[i].avg_response_time)
-                  failureValues.push(report.stats[i].num_failures)
-                })
-              } else {
-                endpointResponseTimeCharts[totalKey].addValue([report.stats[i].avg_response_time]);
-                endpointRpsCharts[totalKey].addValue([report.stats[i].current_rps]);
-                endpointFailureCharts[totalKey].addValue([report.stats[i].num_failures]);
-              }
+            let statsNoTotal = report.stats.splice(0,endpointChartSize)
+            if(statsNoTotal.length > 1) {
+              statsNoTotal = statsNoTotal.sort(function(a, b) {
+                let keyA = a.name.toUpperCase() + a.method.toUpperCase(); // ignore upper and lowercase
+                let keyB = b.name.toUpperCase() + b.method.toUpperCase(); // ignore upper and lowercase
+                if (keyA < keyB) return -1;
+                if (keyA > keyB) return 1;
+                return 0;
+              })
             }
+            for (let i=0; i < statsNoTotal.length; i++) {
+              chartKey = statsNoTotal[i].name.toUpperCase() + statsNoTotal[i].method.toUpperCase()
+              createEndpointLines(chartKey, statsNoTotal[i].name, (chartKey) => {
+                rpsValues.push(statsNoTotal[i].current_rps)
+                responseTimeValues.push(statsNoTotal[i].avg_response_time)
+                failureValues.push(statsNoTotal[i].num_failures)
+              })
+            }
+            endpointResponseTimeCharts[totalKey].addValue([total.avg_response_time]);
+            endpointRpsCharts[totalKey].addValue([total.current_rps]);
+            endpointFailureCharts[totalKey].addValue([total.num_failures]);
             failureChart.addValue(failureValues);
             rpsChart.addValue(rpsValues);
             responseTimeChart.addValue(responseTimeValues);
@@ -229,12 +231,36 @@ function updateExceptions() {
 }
 updateExceptions();
 
-function createEndpointLines(chartKey, endpointName, callback) {
-    if(!rpsChart.isLineExist(chartKey)) rpsChart.addLine(chartKey, endpointName);
-    if(!responseTimeChart.isLineExist(chartKey)) responseTimeChart.addLine(chartKey, endpointName);
-    if(!failureChart.isLineExist(chartKey)) failureChart.addLine(chartKey, endpointName);
+function createEndpointLines(chartKey, name, callback) {
+    if(!rpsChart.isLineExist(chartKey)) rpsChart.addLine(chartKey, name);
+    if(!responseTimeChart.isLineExist(chartKey)) responseTimeChart.addLine(chartKey , name);
+    if(!failureChart.isLineExist(chartKey)) failureChart.addLine(chartKey, name);
     callback(chartKey)
 }
+
+function resetCharts() {
+  if (!!rpsChart) rpsChart.dispose()
+  if (!!responseTimeChart) responseTimeChart.dispose()
+  if (!!usersChart) usersChart.dispose()
+  if (!!failureChart) failureChart.dispose()
+  if (!!endpointResponseTimeCharts) {
+    for (var chartKey in endpointResponseTimeCharts) {
+      endpointResponseTimeCharts[chartKey].dispose()
+      endpointRpsCharts[chartKey].dispose()
+      endpointFailureCharts[chartKey].dispose()
+    }
+  }
+  $('.charts-container').empty()
+  rpsChart = new LocustLineChart($(".charts-container"), "Requests per Second", "", [], "reqs/s", "100%");
+  responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", "", [], "ms", "100%");
+  usersChart = new LocustLineChart($(".charts-container"), "Number of Users", "", ["Total"], "users", "100%");
+  failureChart = new LocustLineChart($(".charts-container"), "Number of Failures", "", [], "failures", "100%");
+  endpointResponseTimeCharts = []
+  endpointRpsCharts = []
+  endpointFailureCharts = []
+  initTotalCharts()
+}
+resetCharts()
 
 function initTotalCharts() {
   endpointResponseTimeCharts[totalKey] = new LocustLineChart($(".charts-container"), "Average Responses Time", totalKey.toUpperCase(), ["Average Responses Time"], "ms", "33.3%");
