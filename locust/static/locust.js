@@ -193,7 +193,7 @@ function updateStats() {
 
             for (let i=0; i < report.stats.length; i++) {
               chartKey = report.stats[i].name
-              if (total != report.stats[i]) {
+              if (total.name != report.stats[i].name) {
                 createEndpointLines(chartKey, (chartKey) => {
                   rpsValues.push(report.stats[i].current_rps)
                   responseTimeValues.push(report.stats[i].avg_response_time)
@@ -254,6 +254,7 @@ function resetCharts() {
   endpointFailureCharts = []
   initTotalCharts()
 }
+resetCharts()
 
 function initTotalCharts() {
   endpointResponseTimeCharts[totalKey] = new LocustLineChart($(".charts-container"), "Average Responses Time", totalKey.toUpperCase(), ["Average Responses Time"], "ms", "33.3%");
