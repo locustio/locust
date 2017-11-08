@@ -9,7 +9,6 @@
             this.subtitle = subtitle;
             this.lines = lines;
             this.width = width;
-            this.xIndex = 0;
 
             this.element = $('<div class="chart"></div>').css("width", width).css("float","left").appendTo(container);
             this.data = [];
@@ -17,17 +16,14 @@
 
             this.seriesData = [];
             for (let i=0; i<lines.length; i++) {
-                this.data.push({
-                  name : lines[i],
-                  values : []
-                });
                 this.seriesData.push({
                     name: lines[i],
                     type: 'line',
                     showSymbol: true,
                     hoverAnimation: false,
-                    data: this.data[i].values,
+                    data: [],
                 });
+                this.data.push([]);
             }
 
             this.chart = echarts.init(this.element[0], 'vintage');
@@ -134,12 +130,12 @@
 
         addValue(values) {
             this.dates.push(new Date().toLocaleTimeString());
+            var pointX = (typeof(this.data[0]) != "undefined") ? this.data[0].length : 0;
             for(let i=0; i<values.length; i++) {
               let value = Math.round(values[i] * 100) / 100;
-              this.data[i].values[this.xIndex] = value;
-              this.seriesData[i].data = this.data[i].values;
+              this.data[i][pointX] = value;
+              this.seriesData[i].data = this.data[i];
             }
-            this.xIndex++;
             this.chart.setOption({
                 xAxis: {
                     data: this.dates,
@@ -148,21 +144,8 @@
             });
         }
 
-        addLine(name) {
-          this.lines.push(name)
-          this.data.push({
-            name : name,
-            values : []
-          })
-          if(this.data.length > 1) {
-            this.data = this.data.sort(function(a, b) {
-              let nameA = a.name.toUpperCase(); // ignore upper and lowercase
-              let nameB = b.name.toUpperCase(); // ignore upper and lowercase
-              if (nameA < nameB) return -1;
-              if (nameA > nameB) return 1;
-              return 0;
-            })
-          }
+        addLine(key, name) {
+          this.lines.push(key)
           this.seriesData.push({
               name: name,
               type: 'line',
@@ -170,15 +153,7 @@
               hoverAnimation: false,
               data: [],
           });
-          if(this.data.length > 1) {
-            this.seriesData = this.seriesData.sort(function(a, b) {
-              let nameA = a.name.toUpperCase(); // ignore upper and lowercase
-              let nameB = b.name.toUpperCase(); // ignore upper and lowercase
-              if (nameA < nameB) return -1;
-              if (nameA > nameB) return 1;
-              return 0;
-            })
-          }
+          this.data.push([]);
           this.chart.setOption({
               series: this.seriesData
           });
@@ -193,10 +168,6 @@
 
         resize() {
             this.chart.resize();
-        }
-
-        dispose() {
-            this.chart.dispose();
         }
     }
     window.LocustLineChart = LocustLineChart;
