@@ -6,14 +6,51 @@ import logging
 from collections import deque
 from contextlib import contextmanager
 from pprint import pformat
+from socket import error as SocketError
 
+import six
 import gevent
 from socketIO_client import SocketIO, BaseNamespace
+from socketIO_client.transports import WebsocketTransport, XHR_PollingTransport
+from socketIO_client.exceptions import TimeoutError, PacketError
+from socketIO_client.symmetries import SSLError
+from socketIO_client.parsers import parse_packet_text
+try:
+    from websocket import (
+        WebSocketConnectionClosedException, WebSocketTimeoutException,
+        create_connection)
+except ImportError:
+    exit("""\
+An incompatible websocket library is conflicting with the one we need.
+You can remove the incompatible library and install the correct one
+by running the following commands:
+
+yes | pip uninstall websocket websocket-client
+pip install -U websocket-client""")
+
 from locust import events as LocustEventHandler
 from locust.exception import RescheduleTask
 from locust.log import LazyLog
 
 logger = logging.getLogger(__name__)
+
+
+class SocketIOTimeoutError(Exception):
+    """Timeout waiting for response from MMQueue."""
+    pass
+
+
+class SocketIODisconnectedError(Exception):
+    """SocketIO connection lost"""
+    pass
+
+
+class SocketIOConnectionError(Exception):
+    """Unable to set SocketIO connection"""
+    def __init__(self, message, errno=-1):
+        self.message = message
+        self.errno = errno
+
 
 class SocketIOMSG(object):
     """Struct for SocketIO message description"""
@@ -28,6 +65,7 @@ class SocketIOMSG(object):
                 "  Message type: {}\n".format(self.type) +\
                 "  Timestamp: {}\n".format(self.timestamp) +\
                 "  Payload:\n{}\n".format(pformat(self.payload))
+
 
 class SocketIOAbstractListener(object):
     """Abstract class for socketIO sync listeners"""
@@ -57,9 +95,80 @@ class SocketIOAbstractListener(object):
         self._exec_time = int((time.time() - self._start_time) * 1000)
 
 
-class SocketIOTimeoutError(Exception):
-    """Timeout waiting for response from MMQueue."""
-    pass
+class ExtendedWebsocketTransport(WebsocketTransport):
+    """
+    Extension for WebsocketTransport with redefined exception
+    Exception will translate TCP socket errno if such exist
+    """
+    def recv_packet(self):
+        try:
+            packet_text = self._connection.recv()
+        except WebSocketTimeoutException as e:
+            raise TimeoutError('recv timed out (%s)' % e)
+        except SSLError as e:
+            raise SocketIOConnectionError('recv disconnected by SSL (%s)' % e)
+        except WebSocketConnectionClosedException as e:
+            raise SocketIOConnectionError('WebSocket :: recv disconnected (%s)' % e)
+        except SocketError as e:
+            raise SocketIOConnectionError('Socket :: recv disconnected (%s)' % e, e.errno)
+        if not isinstance(packet_text, six.binary_type):
+            packet_text = packet_text.encode('utf-8')
+        engineIO_packet_type, engineIO_packet_data = parse_packet_text(
+            packet_text)
+        yield engineIO_packet_type, engineIO_packet_data
+
+
+class ExtendedSocketIO(SocketIO):
+    """
+    Extension for SocketIO with redefined rection for SocketExceptions
+    """
+
+    def _get_transport(self, transport_name):
+        SelectedTransport = {
+            'xhr-polling': XHR_PollingTransport,
+            'websocket': ExtendedWebsocketTransport,
+        }[transport_name]
+        return SelectedTransport(
+            self._http_session, self._is_secure, self._url,
+            self._engineIO_session)
+
+    def wait(self, seconds=None, **kw):
+        'Wait in a loop and react to events as defined in the namespaces'
+        # Use ping/pong to unblock recv for polling transport
+        self._heartbeat_thread.hurry()
+        # Use timeout to unblock recv for websocket transport
+        self._transport.set_timeout(seconds=1)
+        # Listen
+        warning_screen = self._yield_warning_screen(seconds)
+        for elapsed_time in warning_screen:
+            if self._should_stop_waiting(**kw):
+                break
+            try:
+                try:
+                    self._process_packets()
+                except TimeoutError:
+                    pass
+                except KeyboardInterrupt:
+                    self._close()
+                    raise
+            except SocketIOConnectionError as e:
+                if e.errno == 35:
+                    # EAGAIN error, no data for tcp connection for now
+                    continue
+
+                self._opened = False
+                try:
+                    warning = Exception('[connection error] %s' % e)
+                    warning_screen.throw(warning)
+                except StopIteration:
+                    self._warn(warning)
+                try:
+                    namespace = self.get_namespace()
+                    namespace._find_packet_callback('disconnect')(e.message)
+                except PacketError:
+                    pass
+        self._heartbeat_thread.relax()
+        self._transport.set_timeout()
 
 
 class SocketIOClient(object):
@@ -73,8 +182,9 @@ class SocketIOClient(object):
         self.client_id = str(uuid.uuid4())
         self._messages = deque([], self.MSG_CACHE)
         self._listener = None
-        self._graceful_close = False
         self._namespace = namespace
+        self._is_active = True
+        self.__socket = None
         self._connect(host, resource, namespace)
 
     def _connect(self, host, resource, namespace):
@@ -88,22 +198,19 @@ class SocketIOClient(object):
             def on_reconnect(self):
                 pass
 
-            def on_disconnect(self):
-                self._io._opened = False
-                client_wrapper._handle_disconnect(self)
+            def on_disconnect(self, reason):
+                raise SocketIODisconnectedError(reason)
 
             def on_event(self, event, *args):
                 msg = SocketIOMSG(event, args[0] if args else None)
                 client_wrapper._receive(msg)
 
-            def reconnect(self):
-                for path in self._io._namespace_by_path.keys():
-                    self._io.connect(path)
-
-        self._socket = SocketIO(host,
-                                verify=True,
-                                wait_for_connection=True,
-                                resource=resource)
+        self.__socket = ExtendedSocketIO(
+            host,
+            verify=True,
+            wait_for_connection=True,
+            resource=resource
+        )
         gevent.sleep(0.5)
         self._socket.define(Namespace)
         self._socket.define(Namespace, path=namespace)
@@ -112,21 +219,31 @@ class SocketIOClient(object):
 
         atexit.register(self.close)
 
+    @property
+    def _socket(self):
+        if not self.__socket.connected:
+            attempt = 0
+            while not self.__socket.connected and attempt < 4:
+                for path in self.__socket._namespace_by_path.keys():
+                    self.__socket.connect(path)
+                gevent.sleep(0.5)
+            if not self.__socket.connected:
+                self._is_active = False
+                self.close()
+                raise SocketIOConnectionError('Unable to restore socket connection')
+        return self.__socket
+
+    def __bool__(self):
+        return self._is_active
+
+    def __nonzero__(self):
+        return self.__bool__()
+
     def close(self):
         """Close socketIO connection"""
-        self._graceful_close = True
         self._socket.disconnect()
         self._socket.disconnect(self._namespace)
         logger.debug("Closed socketIO connection. Client id: %s", self.client_id)
-
-    def _handle_disconnect(self, namespace):
-        attempt = 0
-        if not self._graceful_close:
-            while not self._socket.connected and attempt < 4:
-                self._socket.wait(0.5)
-                logger.debug('Connection lost. Trying to reconnect...')
-                namespace.reconnect()
-                attempt += 1
 
     def _receive(self, msg):
         self._messages.append(msg)
