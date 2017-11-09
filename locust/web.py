@@ -49,8 +49,6 @@ def index():
         edit_label = "Edit"
     else:
         edit_label = ""
-    
-    print(edit_label)
 
     return render_template("index.html",
         state=runners.locust_runner.state,

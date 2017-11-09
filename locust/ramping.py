@@ -159,6 +159,5 @@ def start_ramping(hatch_rate=None, max_locusts=1000, hatch_stride=100,
         locust_runner.hatch_rate = hatch_rate
     if start_count > 0:
         locust_runner.start_hatching(start_count, hatch_rate)
-    logger.info(locust_runner.running_type)
     logger.info("RAMPING STARTED")
     ramp_up(start_count, hatch_stride)
