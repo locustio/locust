@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 import csv
+import io
 import json
 import os.path
 from time import time
@@ -255,6 +256,32 @@ def ramp():
     response.headers["Content-type"] = "application/json"
     return response
 
+@app.route("/inputCSV", methods=["POST"])
+def inputCSV():
+    print(request.method)
+    assert request.method == "POST"
+        
+    print("asd")
+    csvfile = request.files['csv_file']
+    if not csvfile:
+        return "No file"
+
+    stream = io.StringIO(csvfile.stream.read().decode("UTF8"), newline=None)
+    csv_input = csv.reader(stream)
+    print(csv_input)
+    for row in csv_input:
+        print(row)
+    
+    #logic for convert goes here...
+
+    stream.seek(0)
+    result = transform(stream.read())
+
+    response = make_response(result)
+    response.headers["Content-Disposition"] = "attachment; filename=result.csv"
+    return response
+
+
 def start(locust, options):
     global _ramp
     _ramp = options.ramp
@@ -262,3 +289,6 @@ def start(locust, options):
 
 def _sort_stats(stats):
     return [stats[key] for key in sorted(six.iterkeys(stats))]
+
+def transform(text_file_contents):
+    return text_file_contents.replace("=", ",")

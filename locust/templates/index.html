@@ -149,8 +149,13 @@
             </div>
             <div class="padder">
                 <h2>Edit Config.json</h2>
+                <label>Input CSV</label>
+                <form action="/inputCSV" method="POST" enctype="multipart/form-data">
+                    <input type="file" name="csv_file" />
+                    <input type="submit" value="Upload" />
+                </form>
+                <label>Config JSON</label>
                 <form action="/config" method="POST" id="edit_config_form">
-                    <label for="locust_count">Number of users to simulate</label>
                     <textarea name="config_json" id="config_json"></textarea>
                     <button type="submit">Save</button>
                 </form>
