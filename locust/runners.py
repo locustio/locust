@@ -43,6 +43,8 @@ class LocustRunner(object):
         self.stats = global_stats
         self.running_type = NORMAL
 
+        print("normal")
+
         # register listener that resets stats when hatching is complete
         def on_hatch_complete(user_count):
             self.state = STATE_RUNNING

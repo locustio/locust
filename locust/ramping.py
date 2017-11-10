@@ -94,6 +94,7 @@ def start_ramping(hatch_rate=None, max_locusts=1000, hatch_stride=100,
           precision=200, start_count=0, calibration_time=15):
     
     locust_runner.running_type = runners.RAMP
+
     register_listeners()
     
     def ramp_up(clients, hatch_stride, boundery_found=False):

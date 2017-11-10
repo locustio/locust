@@ -13,7 +13,7 @@ import six
 from gevent import wsgi
 from flask import Flask, make_response, request, render_template
 
-from . import runners
+from . import runners, dextools
 from .cache import memoize
 from .runners import MasterLocustRunner
 from locust.stats import median_from_dict
@@ -30,6 +30,7 @@ app.debug = True
 app.root_path = os.path.dirname(os.path.abspath(__file__))
 _ramp = False
 greenlet_spawner = None
+load_config=""
 
 @app.route('/')
 def index():
@@ -51,6 +52,9 @@ def index():
     else:
         edit_label = ""
 
+    print("hi")
+    load_config = dextools.read_file()
+
     return render_template("index.html",
         state=runners.locust_runner.state,
         is_distributed=is_distributed,
@@ -59,7 +63,11 @@ def index():
         version=version,
         ramp = _ramp,
         host=host,
+<<<<<<< 25890ddfc1b544624bd73c536be2bfcea91e05dc
         running_type = runners.locust_runner.running_type
+=======
+        json=load_config,
+>>>>>>> save json
     )
 
 @app.route('/swarm', methods=["POST"])
@@ -260,8 +268,7 @@ def ramp():
 def inputCSV():
     print(request.method)
     assert request.method == "POST"
-        
-    print("asd")
+
     csvfile = request.files['csv_file']
     if not csvfile:
         return "No file"
@@ -281,6 +288,41 @@ def inputCSV():
     response.headers["Content-Disposition"] = "attachment; filename=result.csv"
     return response
 
+@app.route("/saveJSON", methods=["POST"])
+def saveJSON():
+    print("saveJSON")
+    assert request.method == "POST"
+
+    config_json = str(request.form["config_json"])
+    if dextools.write_file(config_json):
+        is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
+        if is_distributed:
+            slave_count = runners.locust_runner.slave_count
+        else:
+            slave_count = 0
+
+        if runners.locust_runner.host:
+            host = runners.locust_runner.host
+        elif len(runners.locust_runner.locust_classes) > 0:
+            host = runners.locust_runner.locust_classes[0].host
+        else:
+            host = None
+
+        print("hi")
+        load_config = dextools.read_file()
+
+        return render_template("index.html",
+            state=runners.locust_runner.state,
+            is_distributed=is_distributed,
+            slave_count=slave_count,
+            user_count=runners.locust_runner.user_count,
+            version=version,
+            ramp = _ramp,
+            host=host,
+            json=load_config,
+        )
+    else:
+        return "wrong JSON"
 
 def start(locust, options):
     global _ramp
