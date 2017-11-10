@@ -199,7 +199,7 @@ a:hover {
 .edit_config textarea {
     display: block;
     resize: none;
-    width: 800px;
+    width:  750px;
     height: 400px;
     margin-bottom: 10px;
     margin-top: 20px;
@@ -244,7 +244,17 @@ a:hover {
 }
 
 .stopped .edit, .stopped .edit_config {display: none;}
-.running .edit, .hatching .edit {
+.running .edit, .hatching .edit{
+    display: none;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radisu: 5px;
+    border: 3px solid #eee;
+    background: #132b21;
+    box-shadow: 0 0 60px rgba(0,0,0,0.3);
+}
+
+.edit_config {
     display: none;
     border-radius: 5px;
     -moz-border-radius: 5px;
@@ -269,11 +279,18 @@ a:hover {
 .running a.new_test {display: none;}
 .stopped a.new_test {display: block;}
 
-.start a.close_link, .edit a.close_link{
+.start a.close_link, .edit a.close_link, .edit_config a.ramp_test{
     position: absolute;
     right: 10px;
     top: 10px;
 }
+
+.edit_config a.back_new_test{
+    position: absolute;
+    left: 10px;
+    top: 10px;
+}
+
 .stopped .start a.close_link {display: inline;}
 .running .start a.close_link, .ready .start a.close_link, .hatching .start a.close_link  {display: none;}
 

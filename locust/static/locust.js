@@ -81,6 +81,20 @@ $('#ramp_form').submit(function(event) {
     );
 });
 
+$('#edit_config_form').submit(function(event) {
+    event.preventDefault();
+    $.post($(this).attr("action"), $(this).serialize(),
+        function(response) {
+            if (response.success) {
+                $("#ramp").hide();
+                $("#edit_config").hide();
+                $("#start").show();
+                $("#locust_count").focus().select();
+            }
+        }
+    );
+});
+
 var alternate = false;
 
 $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
