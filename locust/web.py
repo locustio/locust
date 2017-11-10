@@ -44,6 +44,11 @@ def index():
         host = runners.locust_runner.locust_classes[0].host
     else:
         host = None
+    
+    if runners.locust_runner.running_type == runners.NORMAL:
+        edit_label = "Edit"
+    else:
+        edit_label = ""
 
     return render_template("index.html",
         state=runners.locust_runner.state,
@@ -52,7 +57,8 @@ def index():
         user_count=runners.locust_runner.user_count,
         version=version,
         ramp = _ramp,
-        host=host
+        host=host,
+        running_type = runners.locust_runner.running_type
     )
 
 @app.route('/swarm', methods=["POST"])
@@ -195,6 +201,7 @@ def request_stats():
 
     report["state"] = runners.locust_runner.state
     report["user_count"] = runners.locust_runner.user_count
+    report["running_type"] = runners.locust_runner.running_type
     return json.dumps(report)
 
 @app.route("/exceptions")

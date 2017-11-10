@@ -458,3 +458,7 @@ ul.tabs li a.current:after {
     margin-right: 10px;
     color: #48a584;
 }
+
+.none {
+    display:none;
+}

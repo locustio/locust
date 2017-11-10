@@ -160,9 +160,17 @@ function updateStats() {
         $("#fail_ratio").html(Math.round(report.fail_ratio*100));
         $("#status_text").html(report.state);
         $("#userCount").html(report.user_count);
+        $("#running_type").html(report.running_type);
 
         if (typeof report.slave_count !== "undefined")
             $("#slaveCount").html(report.slave_count)
+
+        RAMP = "Auto"
+        if (report.running_type == RAMP) {
+            $(".edit_test").addClass("none")
+        } else {
+            $(".edit_test").removeClass("none")
+        }
 
         $('#stats tbody').empty();
         $('#errors tbody').empty();
