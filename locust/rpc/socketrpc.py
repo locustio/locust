@@ -2,6 +2,7 @@ import logging
 import struct
 
 import gevent
+import gevent.queue
 from gevent import socket
 
 from locust.exception import LocustError
