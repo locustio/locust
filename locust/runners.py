@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+import collections
+import itertools
 import logging
+import numbers
 import random
 import socket
 import traceback
@@ -12,7 +15,7 @@ import six
 from gevent import GreenletExit
 from gevent.pool import Group
 
-from six.moves import xrange
+from six.moves import filter, map, xrange, zip
 
 from . import events
 from .rpc import Message, rpc
@@ -30,13 +33,17 @@ SLAVE_REPORT_INTERVAL = 3.0
 class LocustRunner(object):
     def __init__(self, locust_classes, options):
         self.options = options
-        self.locust_classes = locust_classes
+        self.locust_classes_by_name = {
+            locust.__name__: locust for locust in locust_classes
+        }
+
         self.hatch_rate = options.hatch_rate
-        self.num_clients = options.num_clients
+        self.num_clients_by_class = collections.defaultdict(int)
         self.host = options.host
         self.locusts = Group()
         self.greenlet = self.locusts
         self.state = STATE_INIT
+        self.locust_hatchers = Group()
         self.hatching_greenlet = None
         self.exceptions = {}
         self.stats = global_stats
@@ -61,65 +68,179 @@ class LocustRunner(object):
     def user_count(self):
         return len(self.locusts)
 
-    def weight_locusts(self, amount, stop_timeout = None):
+    @property
+    def num_clients(self):
+        return sum(six.itervalues(self.num_clients_by_class))
+
+    @num_clients.setter
+    def num_clients(self, new_num_clients):
+        orig = self.num_clients
+
+        if new_num_clients == orig:
+            return
+
+        self.num_clients_by_class.update(
+            self.weight_locusts_value(
+                new_num_clients,
+                self.num_clients_by_class if orig else None
+            )
+        )
+
+    @property
+    def hatch_rate(self):
+        return sum(self.hatch_rates.values())
+
+    @hatch_rate.setter
+    def hatch_rate(self, value):
+        self.hatch_rates = self.weight_locusts_value(float(value))
+
+    @property
+    def locust_classes(self):
+        return list(self.locust_classes_by_name.values())
+
+    def weight_locusts(self, amount, stop_timeout=None):
         """
         Distributes the amount of locusts for each WebLocust-class according to it's weight
         returns a list "bucket" with the weighted locusts
         """
-        bucket = []
-        weight_sum = sum((locust.weight for locust in self.locust_classes if locust.task_set))
-        for locust in self.locust_classes:
-            if not locust.task_set:
-                warnings.warn("Notice: Found Locust class (%s) got no task_set. Skipping..." % locust.__name__)
-                continue
 
-            if self.host is not None:
-                locust.host = self.host
-            if stop_timeout is not None:
-                locust.stop_timeout = stop_timeout
+        if not isinstance(amount, dict):
+            locust_counts = self.weight_locusts_value(int(amount))
 
-            # create locusts depending on weight
-            percent = locust.weight / float(weight_sum)
-            num_locusts = int(round(amount * percent))
-            bucket.extend([locust for x in xrange(0, num_locusts)])
-        return bucket
+        def gen():
+            for locust, count in six.iteritems(locust_counts):
+                if not locust.task_set:
+                    warnings.warn("Notice: Found Locust class (%s) got no task_set. Skipping..." % locust.__name__)
+                    continue
+
+                if self.host is not None:
+                    locust.host = self.host
+                if stop_timeout is not None:
+                    locust.stop_timeout = stop_timeout
+
+                for _ in xrange(count):
+                    yield locust
+
+        return list(gen())
+
+    def weight_locusts_value(self, value, weights=None):
+        """
+        Distribute value by locust weights
+
+        :param value: Value to distribute by weight (int or float). If value is
+                      int, the result will be rounded
+        :type value: int, float
+        :param weights: Dictionary of weights to use instead of locust.weight
+        :type weights: dict or None
+        :return: dict of locust_class -> int or locust_class -> float
+                 depending on the type of `value`
+        """
+        fractional = isinstance(value, float)
+        locust_classes = self.locust_classes
+
+        if weights is None:
+            def get_weight(locust):
+                return locust.weight
+
+        else:
+            def get_weight(locust):
+                return weights.get(locust, 0)
+
+        weight_sum = float(sum(map(get_weight, locust_classes)))
+        ret = {
+            locust: get_weight(locust) / weight_sum * value
+            for locust in locust_classes
+        }
+
+        if fractional:
+            return ret
+
+        # round all the things
+        for k in ret:
+            ret[k] = int(round(ret[k]))
+
+        # compensate for rounding error by distributing it over locusts
+        remainder = value - sum(six.itervalues(ret))
+        inc = 1 if remainder > 0 else -1
+        while remainder != 0:
+            for _, (locust, __) in zip(
+                    xrange(remainder), filter(lambda _, v: v, six.iteritems(ret))):
+                ret[locust] += inc
+                remainder -= inc
+
+        return ret
+
+    def _preprocess_locust_count(self, locust_count):
+        if locust_count is None:
+            return None
+
+        if isinstance(locust_count, numbers.Number):
+            weights = self.num_clients_by_class if self.num_clients else None
+            return self.weight_locusts_value(int(locust_count), weights)
+
+        if isinstance(locust_count, dict):
+            return locust_count
+
+        raise TypeError("Invalid type for locust count")
+
+    def _preprocess_hatch_rate(self, hatch_rate):
+        if hatch_rate is None:
+            return None
+
+        if isinstance(hatch_rate, numbers.Number):
+            return self.weight_locusts_value(float(hatch_rate))
+
+        if isinstance(hatch_rate, dict):
+            return hatch_rate
+
+        raise TypeError("Invalid type for hatch rate")
 
     def spawn_locusts(self, spawn_count=None, stop_timeout=None, wait=False):
-        if spawn_count is None:
-            spawn_count = self.num_clients
+        spawn_count = (
+            self._preprocess_locust_count(spawn_count) or
+            self.num_clients_by_class
+        )
 
-        bucket = self.weight_locusts(spawn_count, stop_timeout)
-        spawn_count = len(bucket)
+        # at this point, spawn_count is a dict of locust -> count
+        # begin hatching
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
             self.state = STATE_HATCHING
-            self.num_clients = spawn_count
-        else:
-            self.num_clients += spawn_count
+            self.num_clients_by_class.clear()
 
-        logger.info("Hatching and swarming %i clients at the rate %g clients/s..." % (spawn_count, self.hatch_rate))
-        occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
-        
-        def hatch():
-            sleep_time = 1.0 / self.hatch_rate
-            while True:
-                if not bucket:
-                    logger.info("All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in six.iteritems(occurence_count)]))
-                    events.hatch_complete.fire(user_count=self.num_clients)
-                    return
+        for locust in spawn_count:
+            self.num_clients_by_class[locust] += spawn_count[locust]
 
-                locust = bucket.pop(random.randint(0, len(bucket)-1))
-                occurence_count[locust.__name__] += 1
-                def start_locust(_):
-                    try:
-                        locust().run()
-                    except GreenletExit:
-                        pass
-                new_locust = self.locusts.spawn(start_locust, locust)
-                if len(self.locusts) % 10 == 0:
-                    logger.debug("%i locusts hatched" % len(self.locusts))
+        def start_locust(locust):
+            try:
+                locust().run()
+            except GreenletExit:
+                pass
+
+        def hatch(locust_class, hatch_rate, amount):
+            sleep_time = 1.0 / hatch_rate
+
+            logger.info(
+                "Hatching and swarming %i %s clients at the rate of %g clients/s",
+                amount, locust_class.__name__, hatch_rate)
+
+            while amount > 0:
+                self.locusts.spawn(start_locust, locust_class)
+                amount -= 1
                 gevent.sleep(sleep_time)
-        
-        hatch()
+
+        for locust, count in six.iteritems(spawn_count):
+            self.locust_hatchers.spawn(
+                hatch, locust, self.hatch_rates[locust], count)
+
+        self.locust_hatchers.join()
+        events.hatch_complete.fire(user_count=self.num_clients)
+        logger.info(
+            "All locusts hatched: %s",
+            ', '.join(
+                '{}: {}'.format(locust_class.__name__, count)
+                for locust_class, count
+                in six.iteritems(self.num_clients_by_class)))
+
         if wait:
             self.locusts.join()
             logger.info("All locusts dead\n")
@@ -177,6 +298,10 @@ class LocustRunner(object):
         # if we are currently hatching locusts we need to kill the hatching greenlet first
         if self.hatching_greenlet and not self.hatching_greenlet.ready():
             self.hatching_greenlet.kill(block=True)
+
+        if self.locust_hatchers:
+            self.locust_hatchers.kill(block=True)
+
         self.locusts.kill(block=True)
         self.state = STATE_STOPPED
         events.locust_stop_hatching.fire()
