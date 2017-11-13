@@ -24,7 +24,7 @@ $(".ramp_test").click(function(event) {
     $("#start").hide();
     $("#edit_config").hide();
     $("#ramp").show();
-    
+    $(".status").removeClass("none");
 });
 
 $("#new_test").click(function(event) {
@@ -33,6 +33,7 @@ $("#new_test").click(function(event) {
     $("#edit_config").hide();
     $("#start").show();
     $("#locust_count").focus().select();
+    $(".status").removeClass("none");
 });
 
 $(".edit_test").click(function(event) {
@@ -47,6 +48,7 @@ $(".edit_config_json").click(function(event) {
     $("#ramp").hide();
     $("#edit_config").show();
     $("#config_json").focus().select();
+    $(".status").addClass("none");
 });
 
 $(".back_new_test").click(function(event) {
@@ -55,6 +57,7 @@ $(".back_new_test").click(function(event) {
     $("#ramp").hide();
     $("#edit_config").hide();
     $("#locust_count").focus().select();
+    $(".status").removeClass("none");
 });
 
 $(".close_link").click(function(event) {
@@ -72,7 +75,6 @@ $('#ramp_form').submit(function(event) {
                 $("#status").fadeIn();
                 $(".box_running").fadeIn();
                 $("a.new_test").fadeOut();
-                $("a.edit_config_json").fadeOut();
                 $("a.edit_test").fadeIn();
                 $(".user_count").fadeIn();
                 resetCharts();
@@ -90,6 +92,7 @@ $('#edit_config_form').submit(function(event) {
                 $("#edit_config").hide();
                 $("#start").show();
                 $("#locust_count").focus().select();
+                $(".status").removeClass("none");
             }
         }
     );
@@ -98,6 +101,7 @@ $('#edit_config_form').submit(function(event) {
 var alternate = false;
 
 $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
+    console.log(event)
     if (event.target == $(".chart-tab-link")[0]) {
         // trigger resizing of charts
         if (!!rpsChart) rpsChart.resize()
@@ -114,6 +118,10 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
     }
 });
 
+$("ul.tabs_json").tabs("div.panes_json > div").on("onClick", function(event) {
+    
+});
+
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');
 var exceptions_tpl = $('#exceptions-template');
@@ -128,7 +136,6 @@ $('#swarm_form').submit(function(event) {
                 $("#status").fadeIn();
                 $(".box_running").fadeIn();
                 $("a.new_test").fadeOut();
-                $("a.edit_config_json").fadeOut();
                 $("a.edit_test").fadeIn();
                 $(".user_count").fadeIn();
                 resetCharts();
@@ -144,7 +151,6 @@ $('#edit_form').submit(function(event) {
             if (response.success) {
                 $("body").attr("class", "hatching");
                 $("#edit").fadeOut();
-                $(".edit_config_json").hide();
             }
         }
     );

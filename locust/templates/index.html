@@ -68,7 +68,7 @@
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br><br>
-                    <a href="#" class="edit_config_json" style="display:inline">Edit Config</a>
+                    <a href="#" class="edit_config_json" style="display:block">Edit Config</a>
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -140,30 +140,45 @@
         {% endif %}
 
         <div class="edit_config" id="edit_config" style="display:none;">
+             <nav id="menu_json" class="menu_json">
+                <ul class="tabs_json container">
+                    <li><a href="#">JSON Editor</a></li>
+                    <li><a href="#">JSON Creator</a></li>
+                </ul>
+            </nav>
             <div style="position:relative;">
                 <a href="#" class="back_new_test">Back to New Test</a><br>
                 {% if ramp %}
                 <a href="#" class="ramp_test">Back to New Ramp</a>
                 {% endif %}
             </div>
-            <div class="padder">
-                <h2>Edit Config.json</h2>
-                <label>Input CSV</label>
-                <form action="/inputCSV" method="POST" enctype="multipart/form-data">
-                    <input type="file" name="csv_file" />
-                    <input type="submit" value="Upload" />
-                </form>
-                <label>Config JSON</label>
-                <form action="/saveJSON" method="POST" id="edit_config_form">
-                    <textarea name="config_json" id="config_json">{{json}}</textarea>
-                    <button type="submit" onClick="window.location.reload()">Save</button>
-                </form>
-                <div style="clear:right;"></div>
-            </div>
+            <div id="panes_json" class="panes_json container_json">
+                <div id="json_editor" style="display:none;">
+                    <div class="custom_padder">
+                        <div class="padder">
+                            <h2>Edit Config.json</h2>
+                            <label>Input CSV</label>
+                            <form action="/inputCSV" method="POST" enctype="multipart/form-data">
+                                <input type="file" name="csv_file" />
+                                <input type="submit" value="Upload" />
+                            </form>
+                            <label>Config JSON</label>
+                            <form action="/saveJSON" method="POST" id="edit_config_form">
+                                <textarea name="config_json" id="config_json">{{json}}</textarea>
+                                <button type="submit" onClick="window.location.reload()">Save</button>
+                            </form>
+                            <div style="clear:right;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="json_creator" style="display:none;">
+                    hello
+                </div>
+            </div> 
         </div>
 
         <div class="status" id="status">
-            <nav class="menu">
+            <nav id="menu" class="menu">
                 <ul class="tabs container">
                     <li><a href="#">Statistics</a></li>
                     <li><a href="#" class="chart-tab-link">Charts</a></li>
