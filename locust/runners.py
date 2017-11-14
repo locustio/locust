@@ -30,6 +30,7 @@ SLAVE_REPORT_INTERVAL = 3.0
 class LocustRunner(object):
     def __init__(self, locust_classes, options):
         self.options = options
+        self.locust_args = options.locust_args
         self.locust_classes = locust_classes
         self.hatch_rate = options.hatch_rate
         self.num_clients = options.num_clients
@@ -111,7 +112,7 @@ class LocustRunner(object):
                 occurence_count[locust.__name__] += 1
                 def start_locust(_):
                     try:
-                        locust().run()
+                        locust(*self.locust_args).run()
                     except GreenletExit:
                         pass
                 new_locust = self.locusts.spawn(start_locust, locust)
