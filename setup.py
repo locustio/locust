@@ -1,8 +1,9 @@
-# encoding: utf-8
+# -*- coding: utf-8 -*-
+import ast
+import os
+import re
 
-from setuptools import setup, find_packages, Command
-import sys, os, re, ast
-
+from setuptools import find_packages, setup
 
 # parse version from locust/__init__.py
 _version_re = re.compile(r'__version__\s+=\s+(.*)')
@@ -28,6 +29,7 @@ setup(
         "Programming Language :: Python :: 3.3",
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
         "Intended Audience :: Developers",
         "Intended Audience :: System Administrators",
     ],
@@ -39,7 +41,8 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
-    install_requires=["gevent>=1.1.2", "flask>=0.10.1", "requests>=2.9.1", "msgpack-python>=0.4.2", "six>=1.10.0", "pyzmq==15.2.0"],
+    install_requires=["gevent>=1.2.2", "flask>=0.10.1", "requests>=2.9.1", "msgpack-python>=0.4.2", "six>=1.10.0", "pyzmq>=16.0.2"],
+    test_suite="locust.test",
     tests_require=['unittest2', 'mock'],
     entry_points={
         'console_scripts': [
