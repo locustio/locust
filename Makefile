@@ -1,3 +1,6 @@
+coverage:
+	coverage run -m unittest2 discover
+
 test:
 	unit2 discover
 
