@@ -117,9 +117,7 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
     }
 });
 
-$("ul.tabs_json").tabs("div.panes_json > div").on("onClick", function(event) {
-    
-});
+$("ul.tabs_json").tabs("div.panes_json > div");
 
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');
