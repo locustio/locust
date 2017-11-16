@@ -12,7 +12,6 @@ import time
 from optparse import OptionParser
 
 from . import web
-from . import tools
 from .log import setup_logging, console_logger
 from .stats import stats_printer, print_percentile_stats, print_error_report, print_stats
 from .inspectlocust import print_task_ratio, get_task_ratio_dict

@@ -68,7 +68,7 @@
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br><br>
-                    <a href="#" class="edit_config_json" style="display:block">Edit Config</a>
+                    <a href="#" class="edit_config_json">Edit Config</a>
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -158,13 +158,13 @@
                         <div class="padder">
                             <h2>Edit Config.json</h2>
                             <label>Input CSV</label>
-                            <form action="/inputCSV" method="POST" enctype="multipart/form-data">
+                            <form action="/config/csv" method="POST" enctype="multipart/form-data">
                                 <input type="file" name="csv_file" />
                                 <input type="submit" value="Upload" />
                             </form>
                             <label>Config JSON</label>
-                            <form action="/saveJSON" method="POST" id="edit_config_form">
-                                <textarea name="config_json" id="config_json">{{json}}</textarea>
+                            <form action="/config/json" method="POST" id="edit_config_form">
+                                <textarea name="config_json" id="config_json">{{json_config}}</textarea>
                                 <button type="submit" onClick="window.location.reload()">Save</button>
                             </form>
                             <div style="clear:right;"></div>

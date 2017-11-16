@@ -22,16 +22,16 @@ $("#box_stop a.reset-button").click(function(event) {
 $(".ramp_test").click(function(event) {
     event.preventDefault();
     $("#start").hide();
-    $("#edit_config").hide();
     $("#ramp").show();
+    $("#edit_config").hide();
     $(".status").removeClass("none");
 });
 
 $("#new_test").click(function(event) {
     event.preventDefault();
+    $("#start").show();
     $("#ramp").hide();
     $("#edit_config").hide();
-    $("#start").show();
     $("#locust_count").focus().select();
     $(".status").removeClass("none");
 });

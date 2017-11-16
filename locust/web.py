@@ -52,7 +52,6 @@ def index():
     else:
         edit_label = ""
 
-    print("hi")
     load_config = dextools.read_file()
 
     return render_template("index.html",
@@ -63,7 +62,7 @@ def index():
         version=version,
         ramp = _ramp,
         host=host,
-        json=load_config,
+        json_config=load_config,
     )
 
 @app.route('/swarm', methods=["POST"])
@@ -260,9 +259,8 @@ def ramp():
     response.headers["Content-type"] = "application/json"
     return response
 
-@app.route("/inputCSV", methods=["POST"])
-def inputCSV():
-    print(request.method)
+@app.route("/config/csv", methods=["POST"])
+def config_csv():
     assert request.method == "POST"
 
     csvfile = request.files['csv_file']
@@ -271,7 +269,6 @@ def inputCSV():
 
     stream = io.StringIO(csvfile.stream.read().decode("UTF8"), newline=None)
     csv_input = csv.reader(stream)
-    print(csv_input)
     for row in csv_input:
         print(row)
     
@@ -284,16 +281,17 @@ def inputCSV():
     response.headers["Content-Disposition"] = "attachment; filename=result.csv"
     return response
 
-@app.route("/saveJSON", methods=["POST"])
-def saveJSON():
-    print("saveJSON")
+@app.route("/config/json", methods=["POST"])
+def config_json():
     assert request.method == "POST"
 
     config_json = str(request.form["config_json"])
-    if dextools.write_file(config_json):
-        response = make_response(json.dumps({'success':True, 'message': 'JSON saved'}))
-    else:
-        response = make_response(json.dumps({'success':False, 'message': 'JSON not saved'}))
+    try:
+        success, message = dextools.write_file(config_json)
+        response = make_response(json.dumps({'success':success, 'message': message}))
+    except Exception as err:
+        response = make_response(json.dumps({'success':success, 'message': message}))
+
     response.headers["Content-type"] = "application/json"
     return response
 
