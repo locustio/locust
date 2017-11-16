@@ -101,7 +101,6 @@ $('#edit_config_form').submit(function(event) {
 var alternate = false;
 
 $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
-    console.log(event)
     if (event.target == $(".chart-tab-link")[0]) {
         // trigger resizing of charts
         if (!!rpsChart) rpsChart.resize()
