@@ -182,7 +182,7 @@ class LocustRunner(object):
             if self.num_clients > locust_count:
                 # Kill some locusts
                 kill_count = self.num_clients - locust_count
-                self.kill_locusts(kill_count, locust_class=locust_class)
+                self.kill_locusts(kill_count)
             elif self.num_clients < locust_count:
                 # Spawn some locusts
                 if hatch_rate:

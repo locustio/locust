@@ -180,7 +180,7 @@ a:hover {
     margin-top: 20px;
     font-size: 16px;
 }
-.start input.val, .edit input.val {
+.start input.val, .edit input.val, select.val {
     border: none;
     background: #fff;
     height: 52px;
@@ -188,6 +188,11 @@ a:hover {
     font-size: 24px;
     padding-left: 10px;
 }
+
+select.val {
+    width: 338px;
+}
+
 .start button,
 .edit button {
     margin-top: 20px;
