@@ -90,6 +90,13 @@ class TestBaseLocustRunner(LocustTestCase):
         runner = LocustRunner(None, self.options)
         self.assertEqual({}, runner.locust_classes_by_name)
 
+    def test_filter_locusts_by_name(self):
+        """ Assert that filter_locusts_by_name functions correctly"""
+        runner = LocustRunner(self.locust_classes, self.options)
+        self.assertEqual(self.locust_classes, runner.filter_locusts_by_name(None))
+        self.assertEqual([self.locust_classes[0]], runner.filter_locusts_by_name(self.locust_classes[0].__name__))
+        self.assertEqual(self.locust_classes, runner.filter_locusts_by_name('foo'))
+
 
 class TestMasterRunner(LocustTestCase):
     def setUp(self):
@@ -226,7 +233,26 @@ class TestMasterRunner(LocustTestCase):
                 }, "fake_client"))
                 self.assertEqual(30, master.stats.total.get_current_response_time_percentile(0.5))
                 self.assertEqual(3000, master.stats.total.get_current_response_time_percentile(0.95))
-    
+
+    def test_spawn_with_locust_class(self):
+        """
+        Tests that passing locust class to slaves works correctly
+        """
+        import mock
+
+        class MyTestLocust(Locust):
+            pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
+            master = MasterLocustRunner(MyTestLocust, self.options)
+            for i in range(10):
+                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+
+            master.start_hatching(10, 10, locust_class=MyTestLocust.__name__)
+
+            for msg in server.outbox:
+                self.assertEqual(MyTestLocust.__name__, Message.unserialize(msg).data["locust_class"])
+
     def test_spawn_zero_locusts(self):
         class MyTaskSet(TaskSet):
             @task
