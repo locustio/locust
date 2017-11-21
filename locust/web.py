@@ -59,7 +59,7 @@ def swarm():
 
     locust_count = int(request.form["locust_count"])
     hatch_rate = float(request.form["hatch_rate"])
-    locust_class = request.form["locust_class"]
+    locust_class = request.form.get("locust_class", 'all')
     if locust_class == 'all':
         locust_class = None
 
