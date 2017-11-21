@@ -343,8 +343,8 @@ a:hover {
     width: 100%;
 }
 #charts .chart {
-    height: 350px;
-    margin-bottom: 30px;
+    height: 260px;
+    margin-bottom: 10px;
     box-sizing: border-box;
     border: 1px solid #11271e;
     border-radius: 3px;

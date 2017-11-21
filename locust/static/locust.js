@@ -43,6 +43,7 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
         // trigger resizing of charts
         rpsChart.resize();
         responseTimeChart.resize();
+        errorCountChart.resize();
         usersChart.resize();
     }
 });
@@ -120,6 +121,7 @@ $(".stats_label").click(function(event) {
 // init charts
 var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS"], "reqs/s");
 var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times", ["Median Response Time", "95% percentile"], "ms");
+var errorCountChart = new LocustLineChart($(".charts-container"), "Error Count", ["Error Count"], "errors");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 
 function updateStats() {
@@ -156,6 +158,7 @@ function updateStats() {
             // update charts
             rpsChart.addValue([total.current_rps]);
             responseTimeChart.addValue([report.current_response_time_percentile_50, report.current_response_time_percentile_95]);
+            errorCountChart.addValue([total.num_failures]);
             usersChart.addValue([report.user_count]);
         }
 
@@ -172,3 +175,53 @@ function updateExceptions() {
     });
 }
 updateExceptions();
+
+function reduceChartData(chart) {
+    return chart.dates.reduce(function(acc, date, i) {
+        acc.push([date, chart.data[0][i]]);
+        return acc
+    }, []);
+}
+
+function buildChartCSV(header, data) {
+    return data.reduce(function(str, point) {
+        return str + point[0] + "," + point[1] + "\n";
+    }, header);
+}
+
+// download chart data
+$('#download_rps_chart').click(function() {
+    var data = reduceChartData(rpsChart);
+    var csv = buildChartCSV("timestamp,RPS\n", data);
+    var octetStream = encodeURIComponent(csv);
+    var toDownload = "data:application/octet-stream;filename=rps.csv," + octetStream;
+
+    $('#download_rps_chart').attr('href', toDownload);
+});
+
+$('#download_response_chart').click(function() {
+    var data = reduceChartData(responseTimeChart);
+    var csv = buildChartCSV("timestamp,time(ms)\n", data);
+    var octetStream = encodeURIComponent(csv);
+    var toDownload = "data:application/octet-stream;filename=responseTimes.csv," + octetStream;
+
+    $('#download_response_chart').attr('href', toDownload);
+});
+
+$('#download_error_chart').click(function() {
+    var data = reduceChartData(errorCountChart);
+    var csv = buildChartCSV("timestamp,errors\n", data);
+    var octetStream = encodeURIComponent(csv);
+    var toDownload = "data:application/octet-stream;filename=errors.csv," + octetStream;
+
+    $('#download_error_chart').attr('href', toDownload);
+});
+
+$('#download_user_chart').click(function() {
+    var data = reduceChartData(usersChart);
+    var csv = buildChartCSV("timestamp,users\n", data);
+    var octetStream = encodeURIComponent(csv);
+    var toDownload = "data:application/octet-stream;filename=users.csv," + octetStream;
+
+    $('#download_user_chart').attr('href', toDownload);
+});
