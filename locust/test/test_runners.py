@@ -10,7 +10,7 @@ from locust.core import Locust, TaskSet, task
 from locust.exception import LocustError
 from locust.main import parse_options
 from locust.rpc import Message
-from locust.runners import LocalLocustRunner, MasterLocustRunner
+from locust.runners import LocustRunner, LocalLocustRunner, MasterLocustRunner
 from locust.stats import global_stats, RequestStats
 from locust.test.testcases import LocustTestCase
 
@@ -36,6 +36,59 @@ def mocked_rpc_server():
             self.outbox.append(message.serialize())
     
     return MockedRpcServer
+
+
+class TestBaseLocustRunner(LocustTestCase):
+    locust_classes = []
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestBaseLocustRunner, cls).setUpClass()
+
+        class MyTestLocust(Locust):
+            pass
+
+        class MyTestLocustTwo(Locust):
+            pass
+
+        cls.locust_classes = [MyTestLocust, MyTestLocustTwo]
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestBaseLocustRunner, cls).tearDownClass()
+        cls.locust_classes = []
+
+    def setUp(self):
+        global_stats.reset_all()
+        self._slave_report_event_handlers = [h for h in events.slave_report._handlers]
+
+        parser, _, _ = parse_options()
+        args = [
+            "--clients", "10",
+            "--hatch-rate", "10"
+        ]
+        opts, _ = parser.parse_args(args)
+        self.options = opts
+
+    def tearDown(self):
+        events.slave_report._handlers = self._slave_report_event_handlers
+
+    def test_locust_classes_by_name_single(self):
+        """ Assert that locust_classes_by_name functions with a single type """
+        runner = LocustRunner(self.locust_classes[0], self.options)
+        self.assertEqual({self.locust_classes[0].__name__: self.locust_classes[0]}, runner.locust_classes_by_name)
+
+    def test_locust_classes_by_name_iterable(self):
+        """ Assert that locust_classes_by_name functions with multiple types """
+        runner = LocustRunner(self.locust_classes, self.options)
+        self.assertEqual({self.locust_classes[0].__name__: self.locust_classes[0],
+                          self.locust_classes[1].__name__: self.locust_classes[1]},
+                         runner.locust_classes_by_name)
+
+    def test_locust_classes_by_name_not_a_type(self):
+        """ Assert that locust_classes_by_name functions with None """
+        runner = LocustRunner(None, self.options)
+        self.assertEqual({}, runner.locust_classes_by_name)
 
 
 class TestMasterRunner(LocustTestCase):

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import collections
 import logging
 import random
 import socket
@@ -31,6 +32,7 @@ class LocustRunner(object):
     def __init__(self, locust_classes, options):
         self.options = options
         self.locust_classes = locust_classes
+        self.locust_classes_by_name = self.build_locust_classes_by_name(self.locust_classes)
         self.hatch_rate = options.hatch_rate
         self.num_clients = options.num_clients
         self.host = options.host
@@ -49,6 +51,18 @@ class LocustRunner(object):
                 self.stats.reset_all()
         events.hatch_complete += on_hatch_complete
 
+    @staticmethod
+    def build_locust_classes_by_name(locust_classes):
+        """
+        Returns a dictionary of the form {locust_class_name: locust_class}
+        """
+        if isinstance(locust_classes, type):
+            return {locust_classes.__name__: locust_classes}
+        elif isinstance(locust_classes, collections.Iterable):
+            return {locust.__name__: locust for locust in locust_classes}
+        else:
+            return {}
+
     @property
     def request_stats(self):
         return self.stats.entries
@@ -61,7 +75,7 @@ class LocustRunner(object):
     def user_count(self):
         return len(self.locusts)
 
-    def weight_locusts(self, amount, stop_timeout = None):
+    def weight_locusts(self, amount, stop_timeout=None):
         """
         Distributes the amount of locusts for each WebLocust-class according to it's weight
         returns a list "bucket" with the weighted locusts
