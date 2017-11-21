@@ -57,6 +57,13 @@
             <div class="padder">
                 <h2>Start new Locust swarm</h2>
                 <form action="/swarm" method="POST" id="swarm_form">
+                    <label for="locust_class">Locust to run</label>
+                    <select name="locust_class" id="locust_class" class="val">
+                        <option value="all" selected>All</option>
+                        {% for class in locust_class_names %}
+                            <option value="{{ class }}">{{ class }}</option>
+                        {% endfor %}
+                    </select>
                     <label for="locust_count">Number of users to simulate</label>
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
@@ -74,6 +81,13 @@
             <div class="padder">
                 <h2>Change the locust count</h2>
                 <form action="/swarm" method="POST" id="edit_form">
+                    <label for="locust_class">Locust to run</label>
+                    <select name="locust_class" id="locust_class" class="val">
+                        <option value="all" selected>All</option>
+                        {% for class in locust_class_names %}
+                        <option value="{{ class }}">{{ class }}</option>
+                        {% endfor %}
+                    </select>
                     <label for="locust_count">Number of users to simulate</label>
                     <input type="text" name="locust_count" id="new_locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
