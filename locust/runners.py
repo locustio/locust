@@ -279,34 +279,59 @@ class LocustRunner(object):
         events.hatch_complete.fire(user_count=self.num_clients)
 
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
-        if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
+        if self.state not in (STATE_RUNNING, STATE_HATCHING):
             self.stats.clear_all()
             self.stats.start_time = time()
             self.exceptions = {}
             events.locust_start_hatching.fire()
 
-        # Dynamically changing the locust count
-        if self.state != STATE_INIT and self.state != STATE_STOPPED:
-            self.state = STATE_HATCHING
-            if self.num_clients > locust_count:
-                # Kill some locusts
-                kill_count = self.num_clients - locust_count
-                self.kill_locusts(kill_count)
-            elif self.num_clients < locust_count:
-                # Spawn some locusts
-                if hatch_rate:
-                    self.hatch_rate = hatch_rate
-                spawn_count = locust_count - self.num_clients
-                self.spawn_locusts(spawn_count=spawn_count)
-            else:
-                events.hatch_complete.fire(user_count=self.num_clients)
+        locust_count = self._preprocess_locust_count(locust_count)
+        hatch_rate = self._preprocess_hatch_rate(hatch_rate)
+
+        if self.state in (STATE_INIT, STATE_STOPPED):
+            self.hatch_rates = hatch_rate
+            self.spawn_locusts(locust_count, wait=wait)
+
         else:
+            # dynamically changing locust count
+            self.state = STATE_HATCHING
+
             if hatch_rate:
-                self.hatch_rate = hatch_rate
-            if locust_count is not None:
-                self.spawn_locusts(locust_count, wait=wait)
-            else:
-                self.spawn_locusts(wait=wait)
+                self.hatch_rates = hatch_rate
+
+            if locust_count is None:
+                return
+
+            locust_count = self._preprocess_locust_count(locust_count)
+
+            # compute kill/spawn counts
+            all_locusts = set(self.num_clients_by_class) + set(locust_count)
+            kill_count = {}
+            spawn_count = {}
+            for locust in all_locusts:
+                delta = (
+                    locust_count.get(locust, 0) -
+                    self.num_clients_by_class.get(locust, 0)
+                )
+
+                if delta > 0:
+                    spawn_count[locust] = delta
+                elif delta < 0:
+                    kill_count[locust] = -delta
+
+            # target achieved, nothing to do
+            if not (kill_count or spawn_count):
+                events.hatch_complete.fire(user_count=self.num_clients)
+                return
+
+            # kill some
+            if kill_count:
+                self.kill_locusts(kill_count)
+
+            # spawn some
+            if spawn_count:
+                self.hatch_rates = hatch_rate
+                self.spawn_locusts(spawn_count)
 
     def stop(self):
         # if we are currently hatching locusts we need to kill the hatching greenlet first
