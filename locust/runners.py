@@ -247,21 +247,35 @@ class LocustRunner(object):
 
     def kill_locusts(self, kill_count):
         """
-        Kill a kill_count of weighted locusts from the Group() object in self.locusts
+        Kill some locusts
+
+        :param kill_count: Dict of locust class -> int or int of locusts to
+                           kill
         """
-        bucket = self.weight_locusts(kill_count)
-        kill_count = len(bucket)
-        self.num_clients -= kill_count
-        logger.info("Killing %i locusts" % kill_count)
-        dying = []
-        for g in self.locusts:
-            for l in bucket:
-                if l == g.args[0]:
-                    dying.append(g)
-                    bucket.remove(l)
-                    break
-        for g in dying:
-            self.locusts.killone(g)
+        kill_count = self._preprocess_locust_count(kill_count)
+
+        grouped_running_locusts = itertools.groupby(
+            sorted(
+                (locust.args[0], locust)
+                for locust in self.locusts
+            )
+        )
+        running_locusts = {
+            locust_class: list(locusts_iterable)
+            for locust_class, locusts_iterable in grouped_running_locusts
+        }
+
+        for locust_class, locusts_to_kill in six.iteritems(kill_count):
+            locust_instances = running_locusts.get(locust_class, [])
+            locusts_to_kill = max(0, locusts_to_kill)
+            locusts_to_kill = min(len(locust_instances), locusts_to_kill)
+
+            if not locust_instances:
+                continue
+
+            for locust in random.sample(locust_instances, locusts_to_kill):
+                self.locusts.killone(locust)
+
         events.hatch_complete.fire(user_count=self.num_clients)
 
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
