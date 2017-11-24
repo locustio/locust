@@ -203,7 +203,7 @@ a:hover {
 .edit_config textarea {
     display: block;
     resize: none;
-    width:  750px;
+    width:  100%;
     height: 400px;
     margin-bottom: 10px;
     margin-top: 20px;
@@ -501,6 +501,7 @@ ul.tabs li a.current:after, ul.tabs_json li a.current:after {
 
 .custom_padder {
     position:absolute;
-    left:30%;
+    left: 20%;
+    width: 60%;
     background: #173529;
 }
