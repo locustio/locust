@@ -28,7 +28,7 @@
                     <a href="#" class="edit_test">Edit</a>
                 </div>
                 {% if is_distributed %}
-                    <div class="top_box box_slaves" id="box_rps">
+                    <div class="top_box box_slaves" id="box_slaves">
                         <div class="label">SLAVES</div>
                         <div class="value" id="slaveCount">0</div>
                     </div>
@@ -194,9 +194,9 @@
                 <h1>License</h1>
                 Open source licensed under the MIT license.
 
-                <h1>Version</h1>
-                {{version}}<br>
-                <a href="http://locust.io/">http://locust.io</a>
+                <h2>Version <a href="https://github.com/locustio/locust/releases/tag/v{{version}}">{{version}}</a></h2>
+                <br>
+                <a href="https://locust.io/">https://locust.io</a>
             </div>
         </div>
     </div>

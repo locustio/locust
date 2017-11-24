@@ -308,7 +308,7 @@ a:hover {
 .status td {
     max-width: 450px;
     overflow: hidden;
-    whitespace: no-wrap;
+    white-space: no-wrap;
     text-overflow: ellipsis;
 }
 @media (max-width: 1100px) {
@@ -414,14 +414,15 @@ ul.tabs li a.current:after {
     width: 398px;
     position: absolute;
     left: 50%;
-    top: 30px;
+    top: 5px;
     margin-left: -169px;
     border-radius: 5px;
     -moz-border-radius: 5px;
-    -webkit-border-radisu: 5px;
+    -webkit-border-radius: 5px;
     border: 3px solid #eee;
     background: #132b21;
     box-shadow: 0 0 60px rgba(0,0,0,0.3);
+    z-index: 1;
 }
 .about a.close_link {
     position: absolute;
