@@ -152,6 +152,14 @@ a:hover {
     padding-right: 10px;
 }
 
+container_title {
+    max-width: 1200px;
+    min-width: 1000px;
+    box-sizing: border-box;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
 .main {
     position: relative;
 }
@@ -188,7 +196,15 @@ a:hover {
     padding-top: 0px;
 }
 
-.start h2, .edit h2, .edit_config h2 {
+.title_header {
+    color: #addf82;
+    font-size: 26px;
+    font-weight: bold;
+    background: #132b21;
+    padding-top: 10px;
+}
+
+.start h2, .edit h2, .edit_config h2, .title_header {
     color: #addf82;
     font-size: 26px;
     font-weight: bold;
@@ -411,6 +427,11 @@ em {
     font-family: Palatino, Times New Roman, serif;
 }
 
+title_header {
+    background: #132b21;
+    display: block
+}
+
 nav.menu, nav.menu_json {
     background: #132b21;
     display: block
@@ -503,5 +524,6 @@ ul.tabs li a.current:after, ul.tabs_json li a.current:after {
     position:absolute;
     left: 20%;
     width: 60%;
+    height: 100%;
     background: #173529;
 }

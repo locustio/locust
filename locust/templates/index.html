@@ -140,23 +140,25 @@
         {% endif %}
 
         <div class="edit_config" id="edit_config" style="display:none;">
-             <nav id="menu_json" class="menu_json">
+            <div class="title_header">
+                <div class="container">JSON Configuration</div>
+            </div>
+            <nav id="menu_json" class="menu_json">
                 <ul class="tabs_json container">
                     <li><a href="#">Simple</a></li>
                     <!-- <li><a href="#">Advance</a></li> -->
                 </ul>
             </nav>
-            <div style="position:relative;">
-                <a href="#" class="back_new_test">Back to New Test</a><br>
-                {% if ramp %}
-                <a href="#" class="ramp_test">Back to New Ramp</a>
-                {% endif %}
-            </div>
             <div id="panes_json" class="panes_json container_json">
                 <div id="json_editor" style="display:none;">
+                    <div style="position:relative; height: 30px;">
+                        <a href="#" class="back_new_test">Back to New Test</a><br>
+                        {% if ramp %}
+                        <a href="#" class="ramp_test">Back to New Ramp</a>
+                        {% endif %}
+                    </div>
                     <div class="custom_padder">
                         <div class="padder">
-                            <h2>JSON Configuration</h2>
                             <label>Input CSV</label>
                             <form action="/config/csv" method="POST" enctype="multipart/form-data">
                                 <input type="file" name="csv_file" />
