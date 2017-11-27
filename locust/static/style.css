@@ -290,16 +290,20 @@ container_title {
 .running a.new_test {display: none;}
 .stopped a.new_test {display: block;}
 
-.start a.close_link, .edit a.close_link, .edit_config a.ramp_test{
+.start a.close_link, .edit a.close_link {
     position: absolute;
     right: 10px;
     top: 10px;
 }
 
-.edit_config a.back_new_test{
+.edit_config {
     position: absolute;
     left: 10px;
     top: 10px;
+}
+
+a.back_new_test, a.ramp_test {
+    float: right;
 }
 
 .stopped .start a.close_link {display: inline;}
@@ -441,7 +445,6 @@ ul.tabs, ul.tabs_json {
     overflow: hidden
 }
 ul.tabs li, ul.tabs_json li {
-    display: block; 
     float: left;
     font-size: 16px;
 }
@@ -521,9 +524,8 @@ ul.tabs li a.current:after, ul.tabs_json li a.current:after {
 }
 
 .custom_padder {
-    position:absolute;
-    left: 20%;
-    width: 60%;
+    position:relative;
+    width: 100%;
     height: 100%;
     background: #173529;
 }

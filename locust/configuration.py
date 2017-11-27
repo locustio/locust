@@ -1,4 +1,6 @@
-import os, json
+import os, json, logging
+
+logger = logging.getLogger(__name__)
 
 def read_file():
     try:
@@ -7,8 +9,8 @@ def read_file():
             data_file.close()
             return datas
     except Exception as err:
-        print(err)
-        return False
+        logger.info(err)
+        return "{}"
 
 def write_file(stringJSON):
     try:

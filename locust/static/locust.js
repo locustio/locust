@@ -49,6 +49,8 @@ $(".edit_config_json").click(function(event) {
     $("#edit_config").show();
     $("#config_json").focus().select();
     $(".status").addClass("none");
+    json_tab.click(0);
+    
 });
 
 $(".back_new_test").click(function(event) {
@@ -117,7 +119,7 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
     }
 });
 
-$("ul.tabs_json").tabs("div.panes_json > div");
+var json_tab = $("ul.tabs_json").tabs("div.panes_json > div");
 
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');

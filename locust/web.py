@@ -13,7 +13,7 @@ import six
 from gevent import wsgi
 from flask import Flask, make_response, request, render_template
 
-from . import runners, dextools
+from . import runners, configuration
 from .cache import memoize
 from .runners import MasterLocustRunner
 from locust.stats import median_from_dict
@@ -52,7 +52,7 @@ def index():
     else:
         edit_label = ""
 
-    load_config = dextools.read_file()
+    load_config = configuration.read_file()
 
     return render_template("index.html",
         state=runners.locust_runner.state,
@@ -287,7 +287,7 @@ def config_json():
 
     config_json = str(request.form["config_json"])
     try:
-        success, message = dextools.write_file(config_json)
+        success, message = configuration.write_file(config_json)
         response = make_response(json.dumps({'success':success, 'message': message}))
     except Exception as err:
         response = make_response(json.dumps({'success':success, 'message': message}))
