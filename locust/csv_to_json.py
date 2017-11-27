@@ -12,15 +12,15 @@ class csvToJson:
         self.file_path = file_path
         self.df = pd.read_csv(file_path)
 
-    def get_column_name(self):
+    def get_columns_name(self):
         """
         Return column's name which exist in the file
 
-        :returns: iterator object type
+        :returns: column's name in list object type
         """
-        return self.df.keys()
+        return self.df.keys().tolist()
 
-    def get_nested_record(self, grouped_data_key, grouped_data, array_column, regular_column):
+    def _get_nested_record(self, grouped_data_key, grouped_data, array_column, regular_column):
         """
         Set a record which is consist of regular column and column which has array type value.
 
@@ -46,7 +46,7 @@ class csvToJson:
 
         return record
 
-    def get_array_record(self, array_column):
+    def _get_array_record(self, array_column):
         """
         Set a record which is consist of column and its value data type is array.
 
@@ -57,11 +57,11 @@ class csvToJson:
 
         record = {}
         for field in array_column:
-            record[field] = list(df[field].unique())
+            record[field] = list(self.df[field].unique())
 
         return record
 
-    def convert_csv_to_json(self, array_column):
+    def convert(self, array_column):
         """
         Convert csv data into json data with only 1 depth level.
 
@@ -72,19 +72,23 @@ class csvToJson:
 
         # collect column's name which is not having array as its value
         regular_column = []
-        for column in self.df.keys():
+        for column in self.get_columns_name():
             if column not in array_column: regular_column.append(column)
 
         records = None
-        # if csv contains only one column and the column act as array
-        if len(self.df.columns)==1 or not regular_column:
+        # if csv contains only one column and the column definitely acts as array
+        if len(self.df.columns)==1:
             records = {}
-            records= self.get_array_record(array_column, df)
+            records= self._get_array_record(self.get_columns_name())
+        # if csv contains more than one columns and all of it act as array
+        elif not regular_column:
+            records = {}
+            records= self._get_array_record(array_column)
         # group csv data by regular column data
         else:
             records = []
             for grouped_data_key, grouped_data in self.df.groupby(regular_column):
-                record = self.get_nested_record(grouped_data_key, grouped_data, array_column, regular_column)
+                record = self._get_nested_record(grouped_data_key, grouped_data, array_column, regular_column)
                 records.append(record)
 
         return records
