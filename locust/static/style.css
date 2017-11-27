@@ -142,11 +142,19 @@ a:hover {
 .stopped .boxes .box_running {display: block;}
 .stopped .boxes .box_stop {display: none;}
 
-.container {
+.container, .container_json {
     max-width: 1200px;
     min-width: 1000px;
     margin-left: auto;
     margin-right: auto;
+    box-sizing: border-box;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+container_title {
+    max-width: 1200px;
+    min-width: 1000px;
     box-sizing: border-box;
     padding-left: 10px;
     padding-right: 10px;
@@ -170,21 +178,54 @@ a:hover {
     margin-left: -370px;
 }
 
-.start .padder, .edit .padder {
+.edit_config {
+    position: fixed;
+    display: block;
+    width:100%;
+    height: 100%;
+    align-content: center;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radisu: 5px;
+    background: #173529;
+    box-shadow: 0 0 60px rgba(0,0,0,0.3);
+}
+
+.start .padder, .edit .padder, .edit_config .padder {
     padding: 30px;
     padding-top: 0px;
 }
-.start h2, .edit h2 {
+
+.title_header {
+    color: #addf82;
+    font-size: 26px;
+    font-weight: bold;
+    background: #132b21;
+    padding-top: 10px;
+}
+
+.start h2, .edit h2, .edit_config h2, .title_header {
     color: #addf82;
     font-size: 26px;
     font-weight: bold;
 }
-.start label, .edit label {
+.start label, .edit label, .edit_config label {
     display: block;
     margin-bottom: 10px;
     margin-top: 20px;
     font-size: 16px;
 }
+
+.edit_config textarea {
+    display: block;
+    resize: none;
+    width:  100%;
+    height: 400px;
+    margin-bottom: 10px;
+    margin-top: 20px;
+    font-size: 16px;
+}
+
 .start input.val, .edit input.val {
     border: none;
     background: #fff;
@@ -194,7 +235,7 @@ a:hover {
     padding-left: 10px;
 }
 .start button,
-.edit button {
+.edit button, .edit_config button {
     margin-top: 20px;
     float: right;
     font-size: 16px;
@@ -206,7 +247,8 @@ a:hover {
     cursor: pointer;
 }
 .start button:hover,
-.edit button:hover {
+.edit button:hover,
+.edit_config button:hover {
     background: #74b99d;
 }
 
@@ -222,7 +264,7 @@ a:hover {
 }
 
 .stopped .edit {display: none;}
-.running .edit, .hatching .edit {
+.running .edit, .hatching .edit{
     display: none;
     border-radius: 5px;
     -moz-border-radius: 5px;
@@ -231,13 +273,14 @@ a:hover {
     background: #132b21;
     box-shadow: 0 0 60px rgba(0,0,0,0.3);
 }
+
 .running .start, .hatching .start {display: none;}
 
 .ready .edit {display: none;}
 .ready .start {display: inline;}
 
 .running .status, .hatching .status {display: block;}
-.stopped .status {display: block;}
+/* .stopped .status {display: block;} */
 .ready .status {display: none;}
 
 .stopped .boxes .edit_test, .ready .boxes .edit_test {display: none;}
@@ -247,11 +290,13 @@ a:hover {
 .running a.new_test {display: none;}
 .stopped a.new_test {display: block;}
 
-.start a.close_link, .edit a.close_link{
+
+.start a.close_link, .edit a.close_link {
     position: absolute;
     right: 10px;
     top: 10px;
 }
+
 .stopped .start a.close_link {display: inline;}
 .running .start a.close_link, .ready .start a.close_link, .hatching .start a.close_link  {display: none;}
 
@@ -377,34 +422,40 @@ em {
     font-family: Palatino, Times New Roman, serif;
 }
 
-nav.menu {
+title_header {
     background: #132b21;
+    display: block
 }
-ul.tabs {
+
+nav.menu, nav.menu_json {
+    background: #132b21;
+    display: block
+}
+
+ul.tabs, ul.tabs_json {
     overflow: hidden
 }
-ul.tabs li {
-    display: block;
+ul.tabs li, ul.tabs_json li {
     float: left;
     font-size: 16px;
 }
-ul.tabs li a {
+ul.tabs li a, ul.tabs_json li a {
     padding: 14px 10px;
-    display: inline-block;
+    display: inline-block; 
     color: #b3c3bc;
     position: relative;
     font-weight: 600;
     font-size: 14px;
 }
-ul.tabs li a:hover {
+ul.tabs li a:hover, ul.tabs_json li a:hover {
     background: #10211a;
 }
-ul.tabs li a.current {
+ul.tabs li a.current, ul.tabs_json li a.current {
     color: #fff;
 }
-ul.tabs li a.current:after {
+ul.tabs li a.current:after, ul.tabs_json li a.current:after {
     content: "";
-    display: block;
+    display: block; 
     position: absolute;
     left: 0;
     bottom: 0;
@@ -413,10 +464,10 @@ ul.tabs li a.current:after {
     background: #fff;
 }
 
-.panes {
+.panes, .panes_json {
     margin-top: 30px;
 }
-.panes > div {
+.panes > div, .panes_json > div {
     overflow: hidden;
 }
 
@@ -461,4 +512,11 @@ ul.tabs li a.current:after {
 
 .none {
     display:none;
+}
+
+.custom_padder {
+    position:relative;
+    width: 100%;
+    height: 100%;
+    background: #173529;
 }
