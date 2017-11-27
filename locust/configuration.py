@@ -18,5 +18,5 @@ def write_file(stringJSON):
             datas = data_file.write(stringJSON)
             return True, 'JSON saved'
     except Exception as err:
-        print(err)
+        logger.info(err)
         return False, err

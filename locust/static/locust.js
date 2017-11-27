@@ -9,7 +9,7 @@ $("#box_stop a.stop-button").click(function(event) {
     $.get($(this).attr("href"));
     $("body").attr("class", "stopped");
     $(".box_stop").hide();
-    $("div.new_test").show();
+    $("a.new_test").show();
     $("a.edit_test").hide();
     $(".user_count").hide();
 });
@@ -76,7 +76,7 @@ $('#ramp_form').submit(function(event) {
                 $("#ramp").fadeOut();
                 $("#status").fadeIn();
                 $(".box_running").fadeIn();
-                $("div.new_test").fadeOut();
+                $("a.new_test").fadeOut();
                 $("a.edit_test").fadeIn();
                 $(".user_count").fadeIn();
                 resetCharts();
@@ -134,7 +134,7 @@ $('#swarm_form').submit(function(event) {
                 $("#start").fadeOut();
                 $("#status").fadeIn();
                 $(".box_running").fadeIn();
-                $("div.new_test").fadeOut();
+                $("a.new_test").fadeOut();
                 $("a.edit_test").fadeIn();
                 $(".user_count").fadeIn();
                 resetCharts();
