@@ -78,11 +78,9 @@ class csvToJson:
         records = None
         # if csv contains only one column and the column definitely acts as array
         if len(self.df.columns)==1:
-            records = {}
             records= self._get_array_record(self.get_columns_name())
         # if csv contains more than one columns and all of it act as array
         elif not regular_column:
-            records = {}
             records= self._get_array_record(array_column)
         # group csv data by regular column data
         else:
