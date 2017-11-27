@@ -9,7 +9,7 @@ $("#box_stop a.stop-button").click(function(event) {
     $.get($(this).attr("href"));
     $("body").attr("class", "stopped");
     $(".box_stop").hide();
-    $("a.new_test").show();
+    $("div.new_test").show();
     $("a.edit_test").hide();
     $(".user_count").hide();
 });
@@ -49,7 +49,7 @@ $(".edit_config_json").click(function(event) {
     $("#edit_config").show();
     $("#config_json").focus().select();
     $(".status").addClass("none");
-    json_tab.click(0);
+    $("ul.tabs_json").tabs("tabs_json").click(0);
     
 });
 
@@ -76,7 +76,7 @@ $('#ramp_form').submit(function(event) {
                 $("#ramp").fadeOut();
                 $("#status").fadeIn();
                 $(".box_running").fadeIn();
-                $("a.new_test").fadeOut();
+                $("div.new_test").fadeOut();
                 $("a.edit_test").fadeIn();
                 $(".user_count").fadeIn();
                 resetCharts();
@@ -119,7 +119,7 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
     }
 });
 
-var json_tab = $("ul.tabs_json").tabs("div.panes_json > div");
+$("ul.tabs_json").tabs("div.panes_json > div");
 
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');
@@ -134,7 +134,7 @@ $('#swarm_form').submit(function(event) {
                 $("#start").fadeOut();
                 $("#status").fadeIn();
                 $(".box_running").fadeIn();
-                $("a.new_test").fadeOut();
+                $("div.new_test").fadeOut();
                 $("a.edit_test").fadeIn();
                 $(".user_count").fadeIn();
                 resetCharts();
