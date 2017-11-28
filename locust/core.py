@@ -354,7 +354,7 @@ class TaskSet(object):
         return self.locust.client
 
     @property
-    def read_configuration(self):
+    def configuration(self):
         """
         Reference to configuration.py
         """
