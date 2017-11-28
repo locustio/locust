@@ -12,7 +12,7 @@ import traceback
 import logging
 
 from .clients import HttpSession
-from . import events
+from . import events, configuration
 
 from .exception import LocustError, InterruptTaskSet, RescheduleTask, RescheduleTaskImmediately, StopLocust
 
@@ -350,6 +350,13 @@ class TaskSet(object):
         """
         Reference to the :py:attr:`client <locust.core.Locust.client>` attribute of the root 
         Locust instance.
-        """
+        """ 
         return self.locust.client
+
+    @property
+    def configuration(self):
+        """
+        Reference to configuration.py
+        """
+        return configuration.read_JSON()
 
