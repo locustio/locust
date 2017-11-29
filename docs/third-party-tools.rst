@@ -16,5 +16,6 @@ Boomer (Golang)
 `Boomer <https://github.com/myzhan/boomer/>`_ is a Locust slave runner written in golang.
 
 Locust4j (Java)
+---------------
 
 `Locust4j <https://github.com/myzhan/locust4j>`_ is a Locust slave runner written in Java.
