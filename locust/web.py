@@ -30,7 +30,6 @@ app.debug = True
 app.root_path = os.path.dirname(os.path.abspath(__file__))
 _ramp = False
 greenlet_spawner = None
-load_config=""
 
 @app.route('/')
 def index():
