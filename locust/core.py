@@ -12,7 +12,8 @@ import traceback
 import logging
 
 from .clients import HttpSession
-from . import events, configuration
+from . import events
+from .configuration import ClientConfiguration
 
 from .exception import LocustError, InterruptTaskSet, RescheduleTask, RescheduleTaskImmediately, StopLocust
 
@@ -223,6 +224,9 @@ class TaskSet(object):
     instantiated. Useful for nested TaskSet classes.
     """
 
+    config = None
+    """Will refer to the ClientConfiguration class instance when the TaskSet has been instantiated"""
+
     def __init__(self, parent):
         self._task_queue = []
         self._time_start = time()
@@ -235,7 +239,8 @@ class TaskSet(object):
             raise LocustError("TaskSet should be called with Locust instance or TaskSet instance as first argument")
 
         self.parent = parent
-        
+        self.config = ClientConfiguration()
+
         # if this class doesn't have a min_wait or max_wait defined, copy it from Locust
         if not self.min_wait:
             self.min_wait = self.locust.min_wait
@@ -358,5 +363,5 @@ class TaskSet(object):
         """
         Reference to configuration.py
         """
-        return configuration.read_JSON()
+        return self.config.read_json()
 
