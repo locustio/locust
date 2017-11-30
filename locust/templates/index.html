@@ -15,6 +15,11 @@
                     <div class="value" id="host_url">
                         {{host}}
                     </div>
+                    <a href="#" class="edit_test">Edit</a>
+                    <a href="#" class="new_test" id="new_test">New Test</a>
+                    {% if ramp %}
+                        <a href="#" class="new_test ramp_test">New Ramp</a>
+                    {% endif %}
                 </div>
                 <div class="top_box box_status">
                     <div class="label">STATUS</div>
@@ -24,11 +29,6 @@
                     <div class="user_count">
                         <span id="userCount">{{user_count}}</span> users
                     </div>
-                    <a href="#" class="new_test" id="new_test">New test</a>
-                    <a href="#" class="edit_test">Edit</a>
-                    {% if ramp %}
-                        <a href="#" class="new_test ramp_test">Ramp</a>
-                    {% endif %}
                 </div>
                 {% if is_distributed %}
                     <div class="top_box box_slaves" id="box_rps">
@@ -67,7 +67,8 @@
                     <label for="locust_count">Number of users to simulate</label>
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
+                    <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br><br>
+                    <a href="#" class="edit_config_json">Edit Config</a>
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -91,7 +92,7 @@
                     <label for="locust_count">Number of users to simulate</label>
                     <input type="text" name="locust_count" id="new_locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="hatch_rate" id="new_hatch_rate" class="val" /><br>
+                    <input type="text" name="hatch_rate" id="new_hatch_rate" class="val" /><br><br>
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -127,7 +128,9 @@
                         <input type="text" name="response_time" id="response_time" class="val" value="2000" /><br>
                         <label for="fail_rate" title="This threshold is the highest ratio in percent of all requests that are allowed to fail.">Accepted fail ratio (%)</label>
                         <input type="text" name="fail_rate" id="fail_rate" class="val" value="5" /><br>
-                        <br><br>
+                        <br>
+                        <a href="#" class="edit_config_json">Edit Config</a>
+                        <br><br><br>
                         <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button">
                         </div>
 
@@ -136,6 +139,49 @@
                 </div>
             </div>
         {% endif %}
+
+        <div class="edit_config" id="edit_config" style="display:none;">
+            <div class="title_header">
+                <div class="container">JSON Configuration</div>
+            </div>
+            <nav id="menu_json" class="menu_json">
+                <ul class="tabs_json container">
+                    <li id="simple_tab" class="simple_tab"><a href="#">Simple</a></li>
+                    <!-- <li><a href="#">Advance</a></li> -->
+                    <li class="back_new_test" style="float:right"><a href="#">New Test</a></li>
+                    {% if ramp %}
+                    <li class="ramp_test" style="float:right"><a href="#">New Ramp</a></li>
+                    {%endif%}
+                </ul>
+            </nav>
+            <div id="panes_json" class="panes_json container_json">
+                <div id="json_editor" style="display:none;">
+                    <!-- <div style="position:relative; height: 30px;">
+                        <a href="#" class="back_new_test">Back to New Test</a><br>
+                        {% if ramp %}
+                        <a href="#" class="ramp_test">Back to New Ramp</a>
+                        {% endif %}
+                    </div> -->
+                    <div class="custom_padder">
+                        <label>Import CSV</label>
+                        <form action="/config/csv" method="POST" enctype="multipart/form-data">
+                            <input type="file" name="csv_file" />
+                            <input type="submit" value="Upload" />
+                        </form>
+                        <br>
+                        <label>Configuration</label>
+                        <form action="/config/json" method="POST" id="edit_config_form">
+                            <textarea name="config_json" id="config_json">{{json_config}}</textarea>
+                            <button type="submit" onClick="window.location.reload()">Save</button>
+                        </form>
+                        <div style="clear:right;"></div>
+                    </div>
+                </div>
+                <div id="json_creator" style="display:none;">
+                    hello
+                </div>
+            </div> 
+        </div>
 
         <div class="status" id="status">
             <nav class="menu">

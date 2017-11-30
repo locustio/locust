@@ -23,19 +23,43 @@ $(".ramp_test").click(function(event) {
     event.preventDefault();
     $("#start").hide();
     $("#ramp").show();
+    $("#edit_config").hide();
+    $(".status").removeClass("none");
 });
 
 $("#new_test").click(function(event) {
     event.preventDefault();
-    $("#ramp").hide();
     $("#start").show();
+    $("#ramp").hide();
+    $("#edit_config").hide();
     $("#locust_count").focus().select();
+    $(".status").removeClass("none");
 });
 
 $(".edit_test").click(function(event) {
     event.preventDefault();
     $("#edit").show();
     $("#new_locust_count").focus().select();
+});
+
+$(".edit_config_json").click(function(event) {
+    event.preventDefault();
+    $("#start").hide();
+    $("#ramp").hide();
+    $("#edit_config").show();
+    $("#config_json").focus().select();
+    $(".status").addClass("none");
+    $("ul.tabs_json").tabs("tabs_json").click(0);
+    
+});
+
+$(".back_new_test").click(function(event) {
+    event.preventDefault();
+    $("#start").show();
+    $("#ramp").hide();
+    $("#edit_config").hide();
+    $("#locust_count").focus().select();
+    $(".status").removeClass("none");
 });
 
 $(".close_link").click(function(event) {
@@ -61,6 +85,21 @@ $('#ramp_form').submit(function(event) {
     );
 });
 
+$('#edit_config_form').submit(function(event) {
+    event.preventDefault();
+    $.post($(this).attr("action"), $(this).serialize(),
+        function(response) {
+            if (response.success) {
+                $("#ramp").hide();
+                $("#edit_config").hide();
+                $("#start").show();
+                $("#locust_count").focus().select();
+                $(".status").removeClass("none");
+            }
+        }
+    );
+});
+
 var alternate = false;
 
 $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
@@ -79,6 +118,8 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
         }
     }
 });
+
+$("ul.tabs_json").tabs("div.panes_json > div");
 
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');
@@ -160,9 +201,17 @@ function updateStats() {
         $("#fail_ratio").html(Math.round(report.fail_ratio*100));
         $("#status_text").html(report.state);
         $("#userCount").html(report.user_count);
+        $("#running_type").html(report.running_type);
 
         if (typeof report.slave_count !== "undefined")
             $("#slaveCount").html(report.slave_count)
+
+        RAMP = "Auto"
+        if (report.running_type == RAMP) {
+            $(".edit_test").addClass("none")
+        } else {
+            $(".edit_test").removeClass("none")
+        }
 
         $('#stats tbody').empty();
         $('#errors tbody').empty();

@@ -14,7 +14,6 @@ from .exception import CatchResponseError, ResponseError
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
-
 class LocustResponse(Response):
 
     def raise_for_status(self):

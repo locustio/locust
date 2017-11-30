@@ -25,6 +25,7 @@ locust_runner = None
 
 STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_STOPPED = ["ready", "hatching", "running", "stopped"]
 SLAVE_REPORT_INTERVAL = 3.0
+NORMAL, RAMP = ["Normal", "Auto"]
 
 
 class LocustRunner(object):
@@ -40,6 +41,7 @@ class LocustRunner(object):
         self.hatching_greenlet = None
         self.exceptions = {}
         self.stats = global_stats
+        self.running_type = NORMAL
 
         # register listener that resets stats when hatching is complete
         def on_hatch_complete(user_count):

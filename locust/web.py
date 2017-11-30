@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 import csv
+import io
 import json
 import os.path
 from time import time
@@ -12,7 +13,7 @@ import six
 from gevent import wsgi
 from flask import Flask, make_response, request, render_template
 
-from . import runners
+from . import runners, configuration
 from .cache import memoize
 from .runners import MasterLocustRunner
 from locust.stats import median_from_dict
@@ -44,6 +45,13 @@ def index():
         host = runners.locust_runner.locust_classes[0].host
     else:
         host = None
+    
+    if runners.locust_runner.running_type == runners.NORMAL:
+        edit_label = "Edit"
+    else:
+        edit_label = ""
+
+    load_config = configuration.read_file()
 
     return render_template("index.html",
         state=runners.locust_runner.state,
@@ -52,7 +60,8 @@ def index():
         user_count=runners.locust_runner.user_count,
         version=version,
         ramp = _ramp,
-        host=host
+        host=host,
+        json_config=load_config,
     )
 
 @app.route('/swarm', methods=["POST"])
@@ -195,6 +204,7 @@ def request_stats():
 
     report["state"] = runners.locust_runner.state
     report["user_count"] = runners.locust_runner.user_count
+    report["running_type"] = runners.locust_runner.running_type
     return json.dumps(report)
 
 @app.route("/exceptions")
@@ -248,6 +258,42 @@ def ramp():
     response.headers["Content-type"] = "application/json"
     return response
 
+@app.route("/config/csv", methods=["POST"])
+def config_csv():
+    assert request.method == "POST"
+
+    csvfile = request.files['csv_file']
+    if not csvfile:
+        return "No file"
+
+    stream = io.StringIO(csvfile.stream.read().decode("UTF8"), newline=None)
+    csv_input = csv.reader(stream)
+    for row in csv_input:
+        print(row)
+    
+    #logic for convert goes here...
+
+    stream.seek(0)
+    result = transform(stream.read())
+
+    response = make_response(result)
+    response.headers["Content-Disposition"] = "attachment; filename=result.csv"
+    return response
+
+@app.route("/config/json", methods=["POST"])
+def config_json():
+    assert request.method == "POST"
+
+    config_json = str(request.form["config_json"])
+    try:
+        success, message = configuration.write_file(config_json)
+        response = make_response(json.dumps({'success':success, 'message': message}))
+    except Exception as err:
+        response = make_response(json.dumps({'success':success, 'message': message}))
+
+    response.headers["Content-type"] = "application/json"
+    return response
+
 def start(locust, options):
     global _ramp
     _ramp = options.ramp
@@ -255,3 +301,6 @@ def start(locust, options):
 
 def _sort_stats(stats):
     return [stats[key] for key in sorted(six.iterkeys(stats))]
+
+def transform(text_file_contents):
+    return text_file_contents.replace("=", ",")
