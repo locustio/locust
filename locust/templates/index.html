@@ -165,17 +165,11 @@
             </nav>
             <div id="panes_json" class="panes_json container_json">
                 <div id="json_editor" style="display:none;">
-                    <!-- <div style="position:relative; height: 30px;">
-                        <a href="#" class="back_new_test">Back to New Test</a><br>
-                        {% if ramp %}
-                        <a href="#" class="ramp_test">Back to New Ramp</a>
-                        {% endif %}
-                    </div> -->
                     <div class="custom_padder">
                         <label>Import CSV</label>
-                        <form action="/config/csv" method="POST" enctype="multipart/form-data">
-                            <input type="file" name="csv_file" />
-                            <input type="submit" value="Upload" />
+                        <form method="POST" enctype="multipart/form-data" id="upload_csv">
+                            <input type="file" name="csv_file" id="csv_file"/>
+                            <input type="submit" value="Upload" id="btnSubmit" />
                         </form>
                         <br>
                         <label>Configuration</label>
@@ -191,6 +185,25 @@
                 </div>
             </div> 
         </div>
+
+        <div class="multiple_column" id="multiple_column">
+            <div style="position:relative;">
+                <a href="#" class="close_link_headers">Close</a>
+            </div>
+            <br>
+            <div class="padder">
+                <h2>Pick the multiple data from header list</h2>
+                <form action="/config/convert" method="POST" id="multiple_column_form">
+                    <div class="modal_multiple_column">
+                        <ul id="column_header" class="column_header"></ul>
+                    </div>
+                    <input type="text" name="jsonpath" id="jsonpath" class="jsonpath" /><br>
+                    <button type="submit">Convert</button>
+                </form>
+                <div style="clear:right;"></div>
+            </div>
+        </div>
+        
 
         <div class="status" id="status">
             <nav class="menu">

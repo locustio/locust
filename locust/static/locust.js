@@ -101,6 +101,60 @@ $('#edit_config_form').submit(function(event) {
     );
 });
 
+$('#btnSubmit').click(function(event) {
+    event.preventDefault();
+    var form = $('#upload_csv')[0];
+    var form_data = new FormData(form);
+    console.log(form_data)
+    $.ajax({
+        type: 'POST',
+        url: "/config/csv",
+        enctype: 'multipart/form-data',
+        data: form_data,
+        contentType: false,
+        cache: false,
+        processData: false,
+        success: function (response) {
+            console.log('success',response)
+            if (response.success) {
+                $(".multiple_column").show();
+                $(this).parent().remove();
+                var rownum = 0;
+                $.each(response.columns, function (key, value) {
+                    rownum++;
+                    var li = $('<li><label><input type="checkbox" id="headers_checkbox'+rownum+'" name="headers_checkbox" value="' + value + '">'+value+'</label>');
+                    $('#column_header').append(li);
+                    $('#headers_checkbox'+rownum).on('click', function(){
+                        if($(this).is(":checked")) {
+                            $(this).prop("checked",true);
+                        }
+                        else {
+                            $(this).prop("checked",false);
+                        }
+                    });
+
+                });
+            }
+        },
+        error: function (error) {
+            console.log('error',error)
+        }
+    })
+});
+
+$('.close_link_headers').click(function(event) {
+    event.preventDefault();
+    $("#column_header").empty();
+    $(this).parent().parent().hide();
+});
+
+// $('#multiple_column_form').submit(function(event) {
+//     var val = [];
+//     $(':checkbox:checked').each(function(i){
+//         val[i] = $(this).val();
+//     });
+// });
+
 var alternate = false;
 
 $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {

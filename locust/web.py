@@ -23,6 +23,8 @@ import gevent
 import logging
 logger = logging.getLogger(__name__)
 
+from csv_to_json import csvToJson
+
 DEFAULT_CACHE_TIME = 2.0
 
 app = Flask(__name__)
@@ -30,6 +32,11 @@ app.debug = True
 app.root_path = os.path.dirname(os.path.abspath(__file__))
 _ramp = False
 greenlet_spawner = None
+<<<<<<< bba14e65f4bb233093a7523e5ed97962e9f10f27
+=======
+load_config=""
+csv_stream = None
+>>>>>>> locust UI and handling
 
 @app.route('/')
 def index():
@@ -264,27 +271,40 @@ def ramp():
     response.headers["Content-type"] = "application/json"
     return response
 
-@app.route("/config/csv", methods=["POST"])
+@app.route("/config/csv", methods=['POST'])
 def config_csv():
-    assert request.method == "POST"
-
     csvfile = request.files['csv_file']
     if not csvfile:
         return "No file"
 
     stream = io.StringIO(csvfile.stream.read().decode("UTF8"), newline=None)
-    csv_input = csv.reader(stream)
-    for row in csv_input:
-        print(row)
+
+    global csv_stream
+    csv_stream = None
+    csv_stream = csvToJson(stream)
     
-    #logic for convert goes here...
-
-    stream.seek(0)
-    result = transform(stream.read())
-
-    response = make_response(result)
-    response.headers["Content-Disposition"] = "attachment; filename=result.csv"
+    report = {}
+    report['success'] = True
+    report['columns'] = csv_stream.get_columns_name()
+    print(report['columns'])
+    response = make_response(json.dumps(report))
+    response.headers["Content-type"] = "application/json"
     return response
+
+@app.route("/config/convert", methods=['POST'])
+def convert_csv_to_json():
+    multiple_data_headers = request.form.getlist('headers_checkbox')
+    jsonpath = str(request.form['jsonpath'])
+    print(multiple_data_headers)
+    global csv_stream
+    report = {}
+    report['success'] = True
+    report['data'] = csv_stream.convert(multiple_data_headers)
+    print(report['data'])
+    response = make_response(json.dumps(report))
+    response.headers["Content-type"] = "application/json"
+    return response
+    
 
 @app.route("/config/json", methods=["POST"])
 def config_json():
@@ -310,3 +330,10 @@ def _sort_stats(stats):
 
 def transform(text_file_contents):
     return text_file_contents.replace("=", ",")
+
+def convert():
+    x = csvToJson("file.csv")
+    print(x.get_columns_name())
+    print(x.convert(['nama']))
+
+
