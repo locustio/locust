@@ -72,6 +72,16 @@ def parse_options():
         help="Store current request stats to files in CSV format.",
     )
 
+    # A file that contains every requests stats.
+    parser.add_option(
+        '--reqfile', '--requests-file-name',
+        action='store',
+        type='str',
+        dest='requestsfile',
+        default=None,
+        help="Store every requests stats to a specific log file",
+    )
+
     # if locust should be run in distributed mode as master
     parser.add_option(
         '--master',

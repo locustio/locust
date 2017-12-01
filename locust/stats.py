@@ -12,6 +12,8 @@ from . import events
 from .exception import StopLocust
 from .log import console_logger
 
+import logging
+
 STATS_NAME_WIDTH = 60
 
 """Default interval for how frequently the CSV file is written if this option
@@ -554,8 +556,15 @@ global_stats = RequestStats()
 A global instance for holding the statistics. Should be removed eventually.
 """
 
-def on_request_success(request_type, name, response_time, response_length):
+# setup logging
+reqlogger = logging.getLogger("stdout")
+reqlogger_fh = logging.FileHandler('/var/tmp/locust-reqs.log')
+reqlogger_fh.setLevel(logging.DEBUG)
+reqlogger.addHandler(reqlogger_fh)
+
+def on_request_success(start_time, request_type, name,  response_time, response_length):
     global_stats.log_request(request_type, name, response_time, response_length)
+    reqlogger.info("  ########### INFO : {},{},{},{},{}".format(start_time, request_type, name, response_time, response_length))
 
 def on_request_failure(request_type, name, response_time, exception):
     global_stats.log_error(request_type, name, exception)

@@ -134,7 +134,8 @@ class HttpSession(requests.Session):
                 response.raise_for_status()
             except RequestException as e:
                 events.request_failure.fire(
-                    request_type=request_meta["method"], 
+                    request_type=request_meta["method"],
+                    #start_time=request_meta["start_time"],
                     name=request_meta["name"], 
                     response_time=request_meta["response_time"], 
                     exception=e, 
@@ -142,7 +143,9 @@ class HttpSession(requests.Session):
             else:
                 events.request_success.fire(
                     request_type=request_meta["method"],
+                    start_time=request_meta["start_time"],
                     name=request_meta["name"],
+                    #request_url=request_meta["name"],
                     response_time=request_meta["response_time"],
                     response_length=request_meta["content_size"],
                 )
