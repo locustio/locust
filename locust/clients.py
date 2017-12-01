@@ -110,6 +110,7 @@ class HttpSession(requests.Session):
         # set up pre_request hook for attaching meta data to the request object
         request_meta["method"] = method
         request_meta["start_time"] = time.time()
+        request_meta["url"] = url
         
         response = self._send_request_safe_mode(method, url, **kwargs)
         
@@ -134,18 +135,19 @@ class HttpSession(requests.Session):
                 response.raise_for_status()
             except RequestException as e:
                 events.request_failure.fire(
+                    start_time=request_meta["start_time"],
                     request_type=request_meta["method"],
-                    #start_time=request_meta["start_time"],
-                    name=request_meta["name"], 
-                    response_time=request_meta["response_time"], 
-                    exception=e, 
+                    name=request_meta["name"],
+                    #response_time=request_meta["response_time"],
+                    #response_length=request_meta["content_size"],
+                    exception=e,
                 )
             else:
                 events.request_success.fire(
-                    request_type=request_meta["method"],
                     start_time=request_meta["start_time"],
+                    request_type=request_meta["method"],
                     name=request_meta["name"],
-                    #request_url=request_meta["name"],
+                    url=request_meta["url"],
                     response_time=request_meta["response_time"],
                     response_length=request_meta["content_size"],
                 )
