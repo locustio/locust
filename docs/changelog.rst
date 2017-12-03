@@ -2,6 +2,13 @@
 Changelog
 ##########
 
+0.8.1
+=====
+
+* Updated pyzmq version, and changed so that we don't pin a specific version.
+  This makes it easier to install Locust on Windows.
+
+
 0.8
 ===
 
