@@ -197,7 +197,13 @@
                     <div class="modal_multiple_column">
                         <ul id="column_header" class="column_header"></ul>
                     </div>
-                    <input type="text" name="jsonpath" id="jsonpath" class="jsonpath" /><br>
+                    <br>
+                    <label for="JSON Path" title="This is JSON Path input">JSON Path</label>
+                    <br>
+                    <input type="text" name="jsonpath" id="jsonpath" class="val" /><br>
+                    <br>
+                    <input type="radio" name="json_option" id="json_option" value="replace">Replace<br>
+                    <input type="radio" name="json_option" id="json_option" value="write_below">Write Below<br>
                     <button type="submit">Convert</button>
                 </form>
                 <div style="clear:right;"></div>
