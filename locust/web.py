@@ -32,11 +32,8 @@ app.debug = True
 app.root_path = os.path.dirname(os.path.abspath(__file__))
 _ramp = False
 greenlet_spawner = None
-<<<<<<< bba14e65f4bb233093a7523e5ed97962e9f10f27
-=======
 load_config=""
 csv_stream = None
->>>>>>> locust UI and handling
 
 @app.route('/')
 def index():
@@ -338,5 +335,10 @@ def convert():
     x = csvToJson("file.csv")
     print(x.get_columns_name())
     print(x.convert(['nama']))
+
+def append_json_element(json_added, json_path):
+    data = configuration.ClientConfiguration.read_json()
+    
+
 
 
