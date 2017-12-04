@@ -1,4 +1,5 @@
 import gevent
+from . import runners
 from gevent import monkey, GreenletExit
 import six
 from six.moves import xrange
@@ -364,4 +365,11 @@ class TaskSet(object):
         Reference to configuration.py
         """
         return self.config.read_json()
+
+    @property
+    def runners(self):
+        """
+        Reference to runners.py
+        """
+        return runners.locust_runner
 
