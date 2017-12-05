@@ -56,8 +56,24 @@ def index():
 def swarm():
     assert request.method == "POST"
 
-    locust_count = int(request.form["locust_count"])
-    hatch_rate = float(request.form["hatch_rate"])
+    try:
+        if request.headers['Content-Type'].startswith('application/json'):
+            locust_count = {}
+            hatch_rate = {}
+
+            locust_classes_by_name = runners.locust_runner.locust_classes_by_name
+            for locust_classname, params in six.iteritems(request.get_json()):
+                locust_class = locust_classes_by_name[locust_classname]
+                locust_count[locust_class] = int(params['locust_count'])
+                hatch_rate[locust_class] = float(params['hatch_rate'])
+
+        else:
+            locust_count = int(request.form['locust_count'])
+            hatch_rate = float(request.form['hatch_rate'])
+
+    except (KeyError, ValueError):
+        return "Invalid format for swarm parameters", 400
+
     runners.locust_runner.start_hatching(locust_count, hatch_rate)
     response = make_response(json.dumps({'success':True, 'message': 'Swarming started'}))
     response.headers["Content-type"] = "application/json"
