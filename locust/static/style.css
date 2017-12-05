@@ -234,13 +234,22 @@ container_title {
     font-size: 24px;
     padding-left: 10px;
 }
-.start select.val{
-    border: none;
-    background: #fff;
-    height: 40px;
-    width: 338px;
-    font-size: 18px;
+
+.select2-container {
+    color:black;
+    font-size: 16px;
 }
+
+.select2-container .select2-selection--single {
+    height: 36px !important;
+    width: 340px;
+    font-size: 16px !important;
+}
+
+.select2-container--bootstrap .select2-selection--single .select2-selection__arrow {
+    width: 15px !important;
+}
+
 .start button,
 .edit button, .edit_config button {
     margin-top: 20px;
