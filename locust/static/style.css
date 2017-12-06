@@ -244,10 +244,11 @@ container_title {
     height: 36px !important;
     width: 340px;
     font-size: 16px !important;
+    padding: 6px 8px 6px 0px !important;
 }
 
 .select2-container--bootstrap .select2-selection--single .select2-selection__arrow {
-    width: 15px !important;
+    right: -3px !important;
 }
 
 .start button,

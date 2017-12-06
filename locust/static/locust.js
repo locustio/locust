@@ -203,6 +203,7 @@ function updateStats() {
         $("#status_text").html(report.state);
         $("#userCount").html(report.user_count);
         $("#running_type").html(report.running_type);
+        $("#host_url").html(report.host)
 
         if (typeof report.slave_count !== "undefined")
             $("#slaveCount").html(report.slave_count)

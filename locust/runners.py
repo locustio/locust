@@ -27,7 +27,6 @@ STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_STOPPED = ["ready", "hatching",
 SLAVE_REPORT_INTERVAL = 3.0
 NORMAL, RAMP = ["Normal", "Auto"]
 
-
 class LocustRunner(object):
     def __init__(self, locust_classes, options, available_locustfiles=None):
         self.options = options
@@ -155,7 +154,6 @@ class LocustRunner(object):
         """
         try:
             self.locust_classes = self.available_locustfiles[key].values()
-            print("SELECTED FILE VALUE ", self.locust_classes)
         except KeyError:
             logger.error("No available locust classes found with key: {}".format(key))
             self.locust_classes = []

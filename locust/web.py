@@ -38,14 +38,14 @@ def index():
         slave_count = runners.locust_runner.slave_count
     else:
         slave_count = 0
-
+    
     if runners.locust_runner.host:
         host = runners.locust_runner.host
     elif len(runners.locust_runner.locust_classes) > 0:
         host = runners.locust_runner.locust_classes[0].host
     else:
         host = None
-    
+
     if runners.locust_runner.running_type == runners.NORMAL:
         edit_label = "Edit"
     else:
@@ -210,6 +210,7 @@ def request_stats():
     report["state"] = runners.locust_runner.state
     report["user_count"] = runners.locust_runner.user_count
     report["running_type"] = runners.locust_runner.running_type
+    report["host"] = runners.locust_runner.locust_classes[0].host
     return json.dumps(report)
 
 @app.route("/exceptions")
