@@ -6,6 +6,8 @@
     <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon"/>
     <link rel="stylesheet" href="/static/select2-bootstrap.min.css"/>
     <link rel="stylesheet" href="/static/select2.css"/>
+    <link href="/static/jsoneditor.min.css" rel="stylesheet" type="text/css">
+    <script src="/static/jsoneditor.min.js"></script>
 </head>
 <body class="{{state}}">
     <div class="top">
@@ -138,7 +140,7 @@
                         <label for="fail_rate" title="This threshold is the highest ratio in percent of all requests that are allowed to fail.">Accepted fail ratio (%)</label>
                         <input type="text" name="fail_rate" id="fail_rate" class="val" value="5" /><br>
                         <br>
-                        <a href="#" class="edit_config_json">Edit Config</a>
+                        <a href="#" class="edit_config_link">Edit Config</a>
                         <br><br><br>
                         <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button">
                         </div>
@@ -155,16 +157,23 @@
             </div>
             <nav id="menu_json" class="menu_json">
                 <ul class="tabs_json container">
-                    <li id="simple_tab" class="simple_tab"><a href="#">Simple</a></li>
-                    <!-- <li><a href="#">Advance</a></li> -->
+                    <li><a href="#">Simple</a></li>
+                    <li><a href="#">Advance</a></li>
                     <li class="back_new_test" style="float:right"><a href="#">New Test</a></li>
                     {% if ramp %}
                     <li class="ramp_test" style="float:right"><a href="#">New Ramp</a></li>
                     {%endif%}
                 </ul>
             </nav>
-            <div id="panes_json" class="panes_json container_json">
-                <div id="json_editor" style="display:none;">
+            <div id="panes_json" class="panes_json container">
+                <div id="simple_tab_content" style="display:none;">
+                    <form action="/config/json" method="POST" id="simple_config_form">
+                        <div id="simple_json_editor" name="simple_json_editor"></div>
+                        <input type="hidden" id="final_json"  name="final_json" />
+                        <button type="submit" id="submit_json_btn">Save</button>
+                    </form>
+                </div>
+                <div id="advance_tab_content" style="display:none;">
                     <!-- <div style="position:relative; height: 30px;">
                         <a href="#" class="back_new_test">Back to New Test</a><br>
                         {% if ramp %}
@@ -185,9 +194,6 @@
                         </form>
                         <div style="clear:right;"></div>
                     </div>
-                </div>
-                <div id="json_creator" style="display:none;">
-                    hello
                 </div>
             </div> 
         </div>
@@ -297,7 +303,7 @@
             <a href="#" onclick="$('.about').fadeIn();">About</a>
         </div>
     </nav>
-
+    
 
     <script type="text/javascript" src="/static/jquery-3.2.1.min.js"></script>
     <script type="text/javascript" src="/static/jquery.jqote2.min.js"></script>

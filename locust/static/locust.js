@@ -43,15 +43,13 @@ $(".edit_test").click(function(event) {
     $("#new_locust_count").focus().select();
 });
 
-$(".edit_config_json").click(function(event) {
+$(".edit_config_link").click(function(event) {
     event.preventDefault();
     $("#start").hide();
     $("#ramp").hide();
     $("#edit_config").show();
     $("#config_json").focus().select();
     $(".status").addClass("none");
-    $("ul.tabs_json").tabs("tabs_json").click(0);
-    
 });
 
 $(".back_new_test").click(function(event) {
@@ -121,6 +119,32 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
 });
 
 $("ul.tabs_json").tabs("div.panes_json > div");
+
+/*** start of simple json editor/configuration ***/
+var simple_json_container = document.getElementById("simple_json_editor");
+var options = {
+    mode: 'tree',
+    modes: ['code', 'tree'],
+    onChange: function(element,event){
+        $("#config_json").val(JSON.stringify(simple_json_editor.get(), null , 4));
+    },
+    onError: function (err) {
+        alert(err.toString());
+      }
+}
+var simple_json_editor = new JSONEditor(simple_json_container, options);
+simple_json_editor.set(JSON.parse($("#config_json").val()));
+$("#config_json").change(function() {
+    simple_json_editor.set(JSON.parse($("#config_json").val()));
+});
+
+$("#submit_json_btn").on('click', function(event){
+    $("#final_json").val(JSON.stringify(simple_json_editor.get(), null , 4));
+    $("#simple_config_form").submit();
+    setTimeout(function(){window.location.reload();},10)
+});
+
+/*** end of simple json editor/configuration ***/
 
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');

@@ -289,8 +289,11 @@ def config_csv():
 @app.route("/config/json", methods=["POST"])
 def config_json():
     assert request.method == "POST"
+    if request.form["final_json"]:
+        config_json = str(request.form["final_json"])
+    else:
+        config_json = str(request.form["config_json"])
 
-    config_json = str(request.form["config_json"])
     try:
         success, message = configuration.write_file(config_json)
         response = make_response(json.dumps({'success':success, 'message': message}))
