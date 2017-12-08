@@ -1,4 +1,5 @@
 $(window).ready(function() {
+    $('.select2').select2({theme: 'bootstrap'});
     if($("#locust_count").length > 0) {
         $("#locust_count").focus().select();
     }
@@ -202,6 +203,7 @@ function updateStats() {
         $("#status_text").html(report.state);
         $("#userCount").html(report.user_count);
         $("#running_type").html(report.running_type);
+        $("#host_url").html(report.host)
 
         if (typeof report.slave_count !== "undefined")
             $("#slaveCount").html(report.slave_count)
