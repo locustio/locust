@@ -37,7 +37,7 @@ $(".close_link").click(function(event) {
 });
 
 var alternate = false;
-
+var stoped = false;
 $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
     if (event.target == $(".chart-tab-link")[0]) {
         // trigger resizing of charts
@@ -64,6 +64,10 @@ $('#swarm_form').submit(function(event) {
                 $("a.new_test").fadeOut();
                 $("a.edit_test").fadeIn();
                 $(".user_count").fadeIn();
+                if(response.autostop){
+                    $(".box_stop").hide();
+                    $("a.edit_test").hide();
+                }
             }
         }
     );
@@ -157,6 +161,15 @@ function updateStats() {
             rpsChart.addValue([total.current_rps]);
             responseTimeChart.addValue([report.current_response_time_percentile_50, report.current_response_time_percentile_95]);
             usersChart.addValue([report.user_count]);
+        }
+        if (report.state == 'stopped' && !stoped){
+            console.log("stop test");
+            $("body").attr("class", "stopped");
+            $(".box_stop").hide();
+            $("a.new_test").show();
+            $("a.edit_test").hide();
+            $(".user_count").hide();
+            stoped = true;
         }
 
         setTimeout(updateStats, 2000);

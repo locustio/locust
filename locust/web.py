@@ -10,7 +10,7 @@ from time import time
 
 import six
 from flask import Flask, make_response, render_template, request
-from gevent import pywsgi
+from gevent import pywsgi,spawn_later
 
 from locust import __version__ as version
 from six.moves import StringIO, xrange
@@ -19,6 +19,7 @@ from . import runners
 from .runners import MasterLocustRunner
 from .stats import distribution_csv, median_from_dict, requests_csv, sort_stats
 from .util.cache import memoize
+from .util.time import parse_timespan
 
 logger = logging.getLogger(__name__)
 
@@ -58,8 +59,21 @@ def swarm():
 
     locust_count = int(request.form["locust_count"])
     hatch_rate = float(request.form["hatch_rate"])
+    run_time = str(request.form["run_time"])
+    if run_time != "":
+        try:
+            rtime = parse_timespan(run_time)
+        except:
+            rtime = 0
+    else:
+        rtime = 0
+    if rtime >= 60:
+        autostop = True
+        spawn_later(rtime, timelimit_stop)
+    else:
+        autostop = False
     runners.locust_runner.start_hatching(locust_count, hatch_rate)
-    response = make_response(json.dumps({'success':True, 'message': 'Swarming started'}))
+    response = make_response(json.dumps({'success':True, 'message': 'Swarming started', 'autostop': autostop}))
     response.headers["Content-type"] = "application/json"
     return response
 
@@ -172,3 +186,5 @@ def exceptions_csv():
 def start(locust, options):
     pywsgi.WSGIServer((options.web_host, options.port),
                       app, log=None).serve_forever()
+def timelimit_stop():
+    runners.locust_runner.stop()
