@@ -31,6 +31,16 @@
                     x: 10,
                     y: 10,
                 },
+                toolbox:{
+                	show:true,
+                	feature:{
+                		saveAsImage:{
+                			type:'png',
+                			title:"download",
+                			pixelRatio:1
+                		}
+                	}
+                },
                 tooltip: {
                     trigger: 'axis',
                     formatter: function (params) {
