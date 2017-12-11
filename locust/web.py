@@ -289,7 +289,7 @@ def config_csv():
 @app.route("/config/json", methods=["POST"])
 def config_json():
     assert request.method == "POST"
-    if request.form["final_json"]:
+    if "final_json" in request.form:
         config_json = str(request.form["final_json"])
     else:
         config_json = str(request.form["config_json"])
