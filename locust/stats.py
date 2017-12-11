@@ -10,8 +10,9 @@ from six.moves import xrange
 
 from . import events
 from .exception import StopLocust
-from .log import console_logger
+from .log import console_logger, resp_logger
 
+from datetime import datetime as dt
 import logging
 
 STATS_NAME_WIDTH = 60
@@ -557,18 +558,24 @@ A global instance for holding the statistics. Should be removed eventually.
 """
 
 # setup logging
-reqlogger = logging.getLogger("stdout")
-reqlogger_fh = logging.FileHandler('/var/tmp/locust-reqs.log')
-reqlogger_fh.setLevel(logging.INFO)
-reqlogger.addHandler(reqlogger_fh)
+#reqlogger = logging.getLogger("stdout")
+#resplogger = logging.getLogger("responses")
+#reqlogger_fh = logging.FileHandler('/var/tmp/locust-reqs.log')
+#reqlogger_fh.setLevel(logging.INFO)
+#reqlogger.addHandler(reqlogger_fh)
+#requests_log.addHandler(reqlogger_fh)
 
-def on_request_success(start_time, request_type, name, url, response_time, response_length):
+def on_request_success(start_time, request_type, status_code, name, url, response_time, response_length):
     global_stats.log_request(request_type, name, response_time, response_length)
-    reqlogger.info("########### INFO : {},{},{},{},{},{}".format(start_time, request_type, name, url, response_time, response_length))
+    resp_logger.info("{}\t{}\t{}\t{}\t{}\t{}".format(name, request_type, status_code, url, response_time, response_length))
 
 def on_request_failure(start_time, request_type, name, exception):
     global_stats.log_error(request_type, name, exception)
-    reqlogger.error("########### ERROR : {},{},{},{}".format(start_time, request_type, name, exception))
+    resp_logger.error("{}\t{}\t{}".format(name, request_type, exception))
+
+#def on_request_failure(start_time, request_type, status_code, name, url, response_time, response_length):
+#    global_stats.log_request(request_type, name, response_time, response_length)
+#    resp_logger.error("{}\t{}\t{}\t{}\t{}\t{}".format(name, request_type, status_code, url, response_time, response_length))
 
 def on_report_to_master(client_id, data):
     data["stats"] = global_stats.serialize_stats()

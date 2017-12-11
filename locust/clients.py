@@ -146,6 +146,7 @@ class HttpSession(requests.Session):
                 events.request_success.fire(
                     start_time=request_meta["start_time"],
                     request_type=request_meta["method"],
+                    status_code=response.status_code,
                     name=request_meta["name"],
                     url=request_meta["url"],
                     response_time=request_meta["response_time"],

@@ -14,7 +14,7 @@ import locust
 from . import events, runners, web
 from .core import HttpLocust, Locust
 from .inspectlocust import get_task_ratio_dict, print_task_ratio
-from .log import console_logger, setup_logging
+from .log import console_logger, setup_logging, setup_resplogging
 from .runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner
 from .stats import (print_error_report, print_percentile_stats, print_stats,
                     stats_printer, stats_writer, write_stat_csvs)
@@ -72,14 +72,27 @@ def parse_options():
         help="Store current request stats to files in CSV format.",
     )
 
-    # A file that contains every requests stats.
+    # A file that contains response's
+    #   timestamp, name, status code, url,
+    #   response time and content_size
+    # for every request sent
     parser.add_option(
-        '--reqfile', '--requests-file-name',
+        '--resplogfile',
         action='store',
         type='str',
-        dest='requestsfile',
+        dest='resplogfile',
         default=None,
-        help="Store every requests stats to a specific log file",
+        help="Store response's ts, req_name, http_code, url, resp_time, content_size for every request to a specific log file",
+    )
+
+    # Log level for --resplogfile 
+    parser.add_option(
+        '--resploglevel',
+        action='store',
+        type='str',
+        dest='resploglevel',
+        default='INFO',
+        help="Log level for --respfile option (default=INFO)",
     )
 
     # if locust should be run in distributed mode as master
@@ -382,6 +395,7 @@ def main():
 
     # setup logging
     setup_logging(options.loglevel, options.logfile)
+    setup_resplogging(options.resploglevel, options.resplogfile)
     logger = logging.getLogger(__name__)
     
     if options.show_version:
