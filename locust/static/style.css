@@ -267,7 +267,7 @@ container_title {
 }
 
 .start button,
-.edit button, .edit_config button[type=submit] {
+.edit button, .edit_config button[type=submit], .multiple_column button {
     margin: 20px 0px 20px 0px;
     float: right;
     font-size: 16px;
@@ -280,7 +280,8 @@ container_title {
 }
 .start button:hover,
 .edit button:hover,
-.edit_config button:hover {
+.edit_config button:hover,
+.multiple_column button:hover {
     background: #74b99d;
 }
 
