@@ -1,9 +1,6 @@
 # encoding: utf-8
 
-import csv
-import io
-import json
-import os.path
+import csv, re, io, json, os.path
 from time import time
 from itertools import chain
 from collections import defaultdict
@@ -18,7 +15,9 @@ from .cache import memoize
 from .runners import MasterLocustRunner
 from locust.stats import median_from_dict
 from locust import __version__ as version
-import gevent
+import gevent, itertools
+
+import jsonpath_rw_ext
 
 import logging
 logger = logging.getLogger(__name__)
@@ -283,7 +282,6 @@ def config_csv():
     report = {}
     report['success'] = True
     report['columns'] = csv_stream.get_columns_name()
-    print(report['columns'])
     response = make_response(json.dumps(report))
     response.headers["Content-type"] = "application/json"
     return response
@@ -292,13 +290,27 @@ def config_csv():
 def convert_csv_to_json():
     multiple_data_headers = request.form.getlist('headers_checkbox')
     jsonpath = str(request.form['jsonpath'])
-    print(multiple_data_headers)
+    options = request.form['json_option']
+
     global csv_stream
     report = {}
     report['success'] = True
-    report['data'] = csv_stream.convert(multiple_data_headers)
-    print(report['data'])
-    response = make_response(json.dumps(report))
+    tempStr = csv_stream.convert(multiple_data_headers)
+
+    if(len(multiple_data_headers) > 0):
+        report['data'] = tempStr
+    else:
+        report['data'] = tempStr.get(csv_stream.get_columns_name()[0])
+
+    cc = configuration.ClientConfiguration()
+    data = cc.update_json_config(report['data'], jsonpath, options)
+
+    try:
+        success, message = configuration.write_file(data)
+        response = make_response(json.dumps({'success':success, 'message': message}))
+    except Exception as err:
+        response = make_response(json.dumps({'success':success, 'message': message}))
+
     response.headers["Content-type"] = "application/json"
     return response
     
@@ -327,15 +339,5 @@ def _sort_stats(stats):
 
 def transform(text_file_contents):
     return text_file_contents.replace("=", ",")
-
-def convert():
-    x = csvToJson("file.csv")
-    print(x.get_columns_name())
-    print(x.convert(['nama']))
-
-def append_json_element(json_added, json_path):
-    data = configuration.ClientConfiguration.read_json()
-    
-
 
 
