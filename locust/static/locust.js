@@ -100,11 +100,27 @@ $('#edit_config_form').submit(function(event) {
     );
 });
 
+$('#multiple_column_form').submit(function(event) {
+    event.preventDefault();
+    $.post($(this).attr("action"), $(this).serialize(),
+        function(response) {
+            if (response.success) {
+                $("#ramp").hide();
+                $("#edit_config").hide();
+                $("#multiple_column").hide();
+                $("#start").show();
+                $("#locust_count").focus().select();
+                $(".status").removeClass("none");
+                location.reload(true);
+            }
+        }
+    );
+});
+
 $('#btnSubmit').click(function(event) {
     event.preventDefault();
     var form = $('#upload_csv')[0];
     var form_data = new FormData(form);
-    console.log(form_data)
     $.ajax({
         type: 'POST',
         url: "/config/csv",
@@ -114,29 +130,30 @@ $('#btnSubmit').click(function(event) {
         cache: false,
         processData: false,
         success: function (response) {
-            console.log('success',response)
             if (response.success) {
                 $(".multiple_column").show();
                 $(this).parent().remove();
                 var rownum = 0;
-                $.each(response.columns, function (key, value) {
-                    rownum++;
-                    var li = $('<li><label><input type="checkbox" id="headers_checkbox'+rownum+'" name="headers_checkbox" value="' + value + '">'+value+'</label>');
-                    $('#column_header').append(li);
-                    $('#headers_checkbox'+rownum).on('click', function(){
-                        if($(this).is(":checked")) {
-                            $(this).prop("checked",true);
-                        }
-                        else {
-                            $(this).prop("checked",false);
-                        }
-                    });
+                if(response.columns.length > 1)
+                {
+                    $.each(response.columns, function (key, value) {
+                        rownum++;
+                        var li = $('<li><label><input type="checkbox" id="headers_checkbox'+rownum+'" name="headers_checkbox" value="' + value + '">'+value+'</label>');
+                        $('#column_header').append(li);
+                        $('#headers_checkbox'+rownum).on('click', function(){
+                            if($(this).is(":checked")) {
+                                $(this).prop("checked",true);
+                            }
+                            else {
+                                $(this).prop("checked",false);
+                            }
+                        });
 
-                });
+                    });
+                }
             }
         },
         error: function (error) {
-            console.log('error',error)
         }
     })
 });

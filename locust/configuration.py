@@ -1,4 +1,5 @@
-import os, json, logging
+import os, json, logging, jsonpath_rw_ext, jsonpath_rw
+from jsonpath_rw import jsonpath, parse
 
 logger = logging.getLogger(__name__)
 config_path = '/tests/settings/config.json'
@@ -54,4 +55,52 @@ class ClientConfiguration:
                 logger.info(err)
                 self.config_data = json.load({})
         return self.config_data
+
+    def update_json_config(self, json_added, json_path, options):
+        """
+        Write JSON file configuration
+        """
+        data = ClientConfiguration.read_json(self)
+        if(options != "replace"):
+            json_target = jsonpath_rw_ext.match(json_path, data)
+            for json_target_value in json_target[0]:
+                json_added.append(json_target_value)
+
+        jsonpath_expr = parse(json_path)
+        matches = jsonpath_expr.find(data)
+        
+        for match in matches:
+            data = ClientConfiguration.update_json(data, ClientConfiguration.get_path(match), json_added)
+        
+        return json.dumps(data, indent=4)
+        
+    @classmethod    
+    def get_path(self, match):
+        """
+        Return an iterator based upon MATCH.PATH. Each item is a path component,
+        start from outer most item.
+        """
+        if match.context is not None:
+            for path_element in ClientConfiguration.get_path(match.context):
+                yield path_element
+            yield str(match.path)
+
+    @classmethod
+    def update_json(self, json, path, value):
+        """
+        Update JSON dictionary PATH with VALUE. Return updated JSON
+        """
+        try:
+            first = next(path)
+
+            # check if item is an array
+            if first.startswith('[') and first.endswith(']'):
+                try:
+                    first = int(first[1:-1])
+                except ValueError:
+                    pass
+            json[first] = ClientConfiguration.update_json(json[first], path, value)
+            return json
+        except StopIteration:
+            return value
 
