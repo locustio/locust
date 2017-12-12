@@ -1,5 +1,5 @@
 $(window).ready(function() {
-    $('.select2').select2({theme: 'bootstrap'});
+    $('.select2').select2({theme: 'bootstrap', width: "100%"});
     if($("#locust_count").length > 0) {
         $("#locust_count").focus().select();
     }
