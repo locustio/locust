@@ -38,14 +38,14 @@ def index():
         slave_count = runners.locust_runner.slave_count
     else:
         slave_count = 0
-    
+
     if runners.locust_runner.host:
         host = runners.locust_runner.host
     elif len(runners.locust_runner.locust_classes) > 0:
         host = runners.locust_runner.locust_classes[0].host
     else:
         host = None
-
+    
     if runners.locust_runner.running_type == runners.NORMAL:
         edit_label = "Edit"
     else:
@@ -58,7 +58,6 @@ def index():
         is_distributed=is_distributed,
         slave_count=slave_count,
         user_count=runners.locust_runner.user_count,
-        available_locustfiles = sorted(runners.locust_runner.available_locustfiles.keys()),
         version=version,
         ramp = _ramp,
         host=host,
@@ -71,10 +70,6 @@ def swarm():
 
     locust_count = int(request.form["locust_count"])
     hatch_rate = float(request.form["hatch_rate"])
-    locustfile = request.form["locustfile"]
-    assert locustfile in runners.locust_runner.available_locustfiles
-    runners.locust_runner.select_file(locustfile)
-
     runners.locust_runner.start_hatching(locust_count, hatch_rate)
     response = make_response(json.dumps({'success':True, 'message': 'Swarming started'}))
     response.headers["Content-type"] = "application/json"
@@ -210,7 +205,6 @@ def request_stats():
     report["state"] = runners.locust_runner.state
     report["user_count"] = runners.locust_runner.user_count
     report["running_type"] = runners.locust_runner.running_type
-    report["host"] = runners.locust_runner.locust_classes[0].host
     return json.dumps(report)
 
 @app.route("/exceptions")
@@ -248,7 +242,7 @@ def exceptions_csv():
 @app.route("/ramp", methods=["POST"])
 def ramp():
     from locust.ramping import start_ramping
-
+    
     init_clients = int(request.form["init_count"])
     hatch_rate = int(request.form["hatch_rate"])
     hatch_stride = int(request.form["hatch_stride"])
