@@ -11,7 +11,6 @@ def read_file():
     try:
         with open((os.environ['PYTHONPATH'].split(os.pathsep))[-1] + config_path, "r") as data_file:
             data = data_file.read()
-            data_file.close()
     except Exception as err:
         logger.info(err)
         data = "{}"
@@ -50,7 +49,6 @@ class ClientConfiguration:
             try:
                 with open((os.environ['PYTHONPATH'].split(os.pathsep))[-1] + config_path, "r") as data_file:
                     self.config_data = json.load(data_file)
-                    data_file.close()
             except Exception as err:
                 logger.info(err)
                 self.config_data = json.load({})
@@ -63,14 +61,18 @@ class ClientConfiguration:
         data = ClientConfiguration.read_json(self)
         if(options != "replace"):
             json_target = jsonpath_rw_ext.match(json_path, data)
+            print("target : "+ str(json_target))
             for json_target_value in json_target[0]:
                 json_added.append(json_target_value)
+            print("added final : "+ str(json_target))
 
         jsonpath_expr = parse(json_path)
         matches = jsonpath_expr.find(data)
         
         for match in matches:
             data = ClientConfiguration.update_json(data, ClientConfiguration.get_path(match), json_added)
+
+        print("data final : "+str(data))
         
         return json.dumps(data, indent=4)
         

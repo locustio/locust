@@ -113,6 +113,9 @@ $('#multiple_column_form').submit(function(event) {
                 $(".status").removeClass("none");
                 location.reload(true);
             }
+            else {
+                alert("Convert error : " + response.message);
+            }
         }
     );
 });
@@ -163,13 +166,6 @@ $('.close_link_headers').click(function(event) {
     $("#column_header").empty();
     $(this).parent().parent().hide();
 });
-
-// $('#multiple_column_form').submit(function(event) {
-//     var val = [];
-//     $(':checkbox:checked').each(function(i){
-//         val[i] = $(this).val();
-//     });
-// });
 
 var alternate = false;
 

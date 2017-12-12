@@ -288,31 +288,37 @@ def config_csv():
 
 @app.route("/config/convert", methods=['POST'])
 def convert_csv_to_json():
-    multiple_data_headers = request.form.getlist('headers_checkbox')
-    jsonpath = str(request.form['jsonpath'])
-    options = request.form['json_option']
-
-    global csv_stream
-    report = {}
-    report['success'] = True
-    tempStr = csv_stream.convert(multiple_data_headers)
-
-    if(len(multiple_data_headers) > 0):
-        report['data'] = tempStr
-    else:
-        report['data'] = tempStr.get(csv_stream.get_columns_name()[0])
-
-    cc = configuration.ClientConfiguration()
-    data = cc.update_json_config(report['data'], jsonpath, options)
-
     try:
+        multiple_data_headers = request.form.getlist('headers_checkbox')
+        jsonpath = str(request.form['jsonpath'])
+        options = request.form['json_option']
+
+        global csv_stream
+        report = {}
+        report['success'] = True
+
+        if(len(multiple_data_headers) > 0):
+            tempStr = csv_stream.convert(multiple_data_headers)
+            report['data'] = tempStr
+        else:
+            tempStr = csv_stream.convert([])
+            if len(csv_stream.get_columns_name()) > 1:
+                report['data'] = tempStr
+            else:
+                report['data'] = tempStr.get(csv_stream.get_columns_name()[0])
+
+        cc = configuration.ClientConfiguration()
+        data = cc.update_json_config(report['data'], jsonpath, options)
+
         success, message = configuration.write_file(data)
         response = make_response(json.dumps({'success':success, 'message': message}))
-    except Exception as err:
-        response = make_response(json.dumps({'success':success, 'message': message}))
 
-    response.headers["Content-type"] = "application/json"
-    return response
+        response.headers["Content-type"] = "application/json"
+        return response
+    except Exception, e:
+        response = make_response(json.dumps({'success':False, 'message': str(e)}))
+        response.headers["Content-type"] = "application/json"
+        return response
     
 
 @app.route("/config/json", methods=["POST"])
