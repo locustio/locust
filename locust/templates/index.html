@@ -192,7 +192,7 @@
             </div>
             <br>
             <div class="padder">
-                <h2>Pick the multiple data from header list</h2>
+                <h2>Pick column name which has multiple data</h2>
                 <form action="/config/convert" method="POST" id="multiple_column_form">
                     <div class="modal_multiple_column">
                         <ul id="column_header" class="column_header"></ul>
@@ -200,7 +200,9 @@
                     <br>
                     <label for="JSON Path" title="This is JSON Path input">JSON Path</label>
                     <br>
-                    <input type="text" name="jsonpath" id="jsonpath" class="val" /><br>
+                    <input type="text" name="jsonpath" id="jsonpath" class="val" />
+                    <a>Example : $.production.accounts (update json in production.accounts section)</a>
+                    <br>
                     <br>
                     <input type="radio" name="json_option" id="json_option" value="replace">Replace<br>
                     <input type="radio" name="json_option" id="json_option" value="write_below">Write Below<br>
