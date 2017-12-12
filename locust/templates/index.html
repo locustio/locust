@@ -4,8 +4,6 @@
     <title>Locust</title>
     <link rel="stylesheet" type="text/css" href="/static/style.css?v={{ version }}" media="screen">
     <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon"/>
-    <link rel="stylesheet" href="/static/select2-bootstrap.min.css"/>
-    <link rel="stylesheet" href="/static/select2.css"/>
 </head>
 <body class="{{state}}">
     <div class="top">
@@ -69,14 +67,7 @@
                     <label for="locust_count">Number of users to simulate</label>
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
-                    <label for="locustfile">Locust file to execute</label>
-                    <select name="locustfile" id="locustfile" class="select2">
-                        {% for name in available_locustfiles %}
-                            <option value="{{name}}">{{name}}</option>
-                        {% endfor %}
-                    </select>
-                    <br><br>
+                    <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br><br>
                     <a href="#" class="edit_config_json">Edit Config</a>
                     <button type="submit">Start swarming</button>
                 </form>
@@ -101,7 +92,7 @@
                     <label for="locust_count">Number of users to simulate</label>
                     <input type="text" name="locust_count" id="new_locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="hatch_rate" id="new_hatch_rate" class="val" /><br>
+                    <input type="text" name="hatch_rate" id="new_hatch_rate" class="val" /><br><br>
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -299,7 +290,7 @@
     </nav>
 
 
-    <script type="text/javascript" src="/static/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="/static/jquery-1.11.3.min.js"></script>
     <script type="text/javascript" src="/static/jquery.jqote2.min.js"></script>
     <script type="text/javascript" src="/static/jquery.tools.min.js"></script>
     <!-- echarts from https://github.com/ecomfe/echarts -->
@@ -347,8 +338,8 @@
         ]]>
     </script>
     <script type="text/javascript" src="/static/chart.js?v={{ version }}"></script>
-    <script type="text/javascript" src="/static/select2.js"></script>
     <script type="text/javascript" src="/static/timer.js"></script>
     <script type="text/javascript" src="/static/locust.js?v={{ version }}"></script>
+
 </body>
 </html>

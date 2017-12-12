@@ -27,11 +27,11 @@ STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_STOPPED = ["ready", "hatching",
 SLAVE_REPORT_INTERVAL = 3.0
 NORMAL, RAMP = ["Normal", "Auto"]
 
+
 class LocustRunner(object):
-    def __init__(self, locust_classes, options, available_locustfiles=None):
+    def __init__(self, locust_classes, options):
         self.options = options
         self.locust_classes = locust_classes
-        self.available_locustfiles = available_locustfiles or {}
         self.hatch_rate = options.hatch_rate
         self.num_clients = options.num_clients
         self.num_requests = options.num_requests
@@ -148,16 +148,6 @@ class LocustRunner(object):
             self.locusts.killone(g)
         events.hatch_complete.fire(user_count=self.num_clients)
 
-    def select_file(self, key):
-        """
-            Set the active locust classes to the executeables described by the key
-        """
-        try:
-            self.locust_classes = self.available_locustfiles[key].values()
-        except KeyError:
-            logger.error("No available locust classes found with key: {}".format(key))
-            self.locust_classes = []
-
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
@@ -204,8 +194,9 @@ class LocustRunner(object):
         self.exceptions[key] = row
 
 class LocalLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, options, available_locustfiles=None):
-        super(LocalLocustRunner, self).__init__(locust_classes, options, available_locustfiles)
+    def __init__(self, locust_classes, options):
+        super(LocalLocustRunner, self).__init__(locust_classes, options)
+
         # register listener thats logs the exception for the local runner
         def on_locust_error(locust_instance, exception, tb):
             formatted_tb = "".join(traceback.format_tb(tb))
@@ -217,8 +208,8 @@ class LocalLocustRunner(LocustRunner):
         self.greenlet = self.hatching_greenlet
 
 class DistributedLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, options, available_locustfiles=None):
-        super(DistributedLocustRunner, self).__init__(locust_classes, options, available_locustfiles)
+    def __init__(self, locust_classes, options):
+        super(DistributedLocustRunner, self).__init__(locust_classes, options)
         self.master_host = options.master_host
         self.master_port = options.master_port
         self.master_bind_host = options.master_bind_host
