@@ -79,6 +79,7 @@ def swarm():
     runners.locust_runner.select_file(locustfile)
 
     runners.locust_runner.start_hatching(locust_count, hatch_rate)
+    print("a")
     response = make_response(json.dumps({'success':True, 'message': 'Swarming started'}))
     response.headers["Content-type"] = "application/json"
     return response
