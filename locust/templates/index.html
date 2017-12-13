@@ -79,7 +79,7 @@
                         {% endfor %}
                     </select>
                     <br><br>
-                    <a href="#" class="edit_config_json">Edit Config</a>
+                    <a href="#" class="edit_config_link">Edit Config</a>
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -157,8 +157,8 @@
             </div>
             <nav id="menu_json" class="menu_json">
                 <ul class="tabs_json container">
-                    <li><a href="#">Simple</a></li>
-                    <li><a href="#">Advance</a></li>
+                    <li><a id="simple_config_tab" href="#">Simple</a></li>
+                    <li><a id="advance_config_tab" href="#">Advance</a></li>
                     <li class="back_new_test" style="float:right"><a href="#">New Test</a></li>
                     {% if ramp %}
                     <li class="ramp_test" style="float:right"><a href="#">New Ramp</a></li>

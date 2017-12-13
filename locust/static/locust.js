@@ -50,6 +50,7 @@ $(".edit_config_link").click(function(event) {
     $("#edit_config").show();
     $("#config_json").focus().select();
     $(".status").addClass("none");
+    $("#simple_config_tab").trigger("click");
 });
 
 $(".back_new_test").click(function(event) {
@@ -141,7 +142,7 @@ $("#config_json").change(function() {
 $("#submit_json_btn").on('click', function(event){
     $("#final_json").val(JSON.stringify(simple_json_editor.get(), null , 4));
     $("#simple_config_form").submit();
-    setTimeout(function(){window.location.reload();},10)
+    setTimeout(function(){window.location.reload();});
 });
 
 /*** end of simple json editor/configuration ***/
