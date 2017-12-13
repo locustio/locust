@@ -62,10 +62,13 @@ class ClientConfiguration:
         if(options != "replace"):
             json_target = jsonpath_rw_ext.match(json_path, data)
             print("target : "+ str(json_target))
-            if isinstance(json_target[0], dict) and len(list_column)==1:
-                print("a")
-                json_target[0][list_column[0]] = json_added
-                json_final = json_target[0]
+            if isinstance(json_target[0], dict):
+                if len(list_column)==1:
+                    print("a")
+                    json_target[0][list_column[0]] = json_added
+                    json_final = json_target[0]
+                else:
+                    return json.dumps(data, indent=4)
             else:
                 for json_target_value in json_target[0]:
                     json_added.append(json_target_value)
