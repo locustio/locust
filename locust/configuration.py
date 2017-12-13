@@ -68,7 +68,7 @@ class ClientConfiguration:
                     json_target[0][list_column[0]] = json_added
                     json_final = json_target[0]
                 else:
-                    return json.dumps(data, indent=4)
+                    return False, json.dumps(data, indent=4)
             else:
                 for json_target_value in json_target[0]:
                     json_added.append(json_target_value)
@@ -84,7 +84,7 @@ class ClientConfiguration:
 
         print("data final : "+str(data))
         
-        return json.dumps(data, indent=4)
+        return True, json.dumps(data, indent=4)
         
     @classmethod    
     def get_path(self, match):
