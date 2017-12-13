@@ -308,7 +308,7 @@ def convert_csv_to_json():
                 report['data'] = tempStr.get(csv_stream.get_columns_name()[0])
 
         cc = configuration.ClientConfiguration()
-        data = cc.update_json_config(report['data'], jsonpath, options)
+        data = cc.update_json_config(report['data'], jsonpath, options, csv_stream.get_columns_name())
 
         success, message = configuration.write_file(data)
         response = make_response(json.dumps({'success':success, 'message': message}))

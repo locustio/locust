@@ -54,7 +54,7 @@ class ClientConfiguration:
                 self.config_data = json.load({})
         return self.config_data
 
-    def update_json_config(self, json_added, json_path, options):
+    def update_json_config(self, json_added, json_path, options, list_column):
         """
         Write JSON file configuration
         """
@@ -62,15 +62,22 @@ class ClientConfiguration:
         if(options != "replace"):
             json_target = jsonpath_rw_ext.match(json_path, data)
             print("target : "+ str(json_target))
-            for json_target_value in json_target[0]:
-                json_added.append(json_target_value)
-            print("added final : "+ str(json_target))
+            if isinstance(json_target[0], dict) and len(list_column)==1:
+                print("a")
+                json_target[0][list_column[0]] = json_added
+                json_final = json_target[0]
+            else:
+                for json_target_value in json_target[0]:
+                    json_added.append(json_target_value)
+                json_final = json_added
+            
+            print("added final : "+ str(json_final))
 
         jsonpath_expr = parse(json_path)
         matches = jsonpath_expr.find(data)
         
         for match in matches:
-            data = ClientConfiguration.update_json(data, ClientConfiguration.get_path(match), json_added)
+            data = ClientConfiguration.update_json(data, ClientConfiguration.get_path(match), json_final)
 
         print("data final : "+str(data))
         
@@ -96,7 +103,7 @@ class ClientConfiguration:
             first = next(path)
 
             # check if item is an array
-            if first.startswith('[') and first.endswith(']'):
+            if (first.startswith('[') and first.endswith(']')) or (first.startswith('{') and first.endswith('}')):
                 try:
                     first = int(first[1:-1])
                 except ValueError:
