@@ -43,16 +43,6 @@ $(".edit_test").click(function(event) {
     $("#new_locust_count").focus().select();
 });
 
-$(".edit_config_link").click(function(event) {
-    event.preventDefault();
-    $("#start").hide();
-    $("#ramp").hide();
-    $("#edit_config").show();
-    $("#config_json").focus().select();
-    $(".status").addClass("none");
-    $("#simple_config_tab").trigger("click");
-});
-
 $(".back_new_test").click(function(event) {
     event.preventDefault();
     $("#start").show();
@@ -105,48 +95,80 @@ $('#ramp_form').submit(function(event) {
     );
 });
 
-$('#edit_config_form').submit(function(event) {
+$('.close_link_headers').click(function(event) {
     event.preventDefault();
-    $.post($(this).attr("action"), $(this).serialize(),
-        function(response) {
-            if (response.success) {
-                $("#ramp").hide();
-                $("#edit_config").hide();
-                $("#start").show();
-                $("#locust_count").focus().select();
-                $(".status").removeClass("none");
-            }
-        }
-    );
+    $("#column_header").empty();
+    $(this).parent().parent().hide();
 });
 
-$('#multiple_column_form').submit(function(event) {
+var alternate = false;
+
+$("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
+    if (event.target == $(".chart-tab-link")[0]) {
+        // trigger resizing of charts
+        if (!!rpsChart) rpsChart.resize()
+        if (!!responseTimeChart) responseTimeChart.resize()
+        if (!!usersChart) usersChart.resize()
+        if (!!failureChart) failureChart.resize()
+        if (!!endpointResponseTimeCharts) {
+          for (var chartKey in endpointResponseTimeCharts) {
+            endpointResponseTimeCharts[chartKey].resize()
+            endpointRpsCharts[chartKey].resize()
+            endpointFailureCharts[chartKey].resize()
+          }
+        }
+    }
+});
+
+$("ul.tabs_json").tabs("div.panes_json > div");
+
+
+/*** START OF JSON EDITOR'S ***/
+
+$(".edit_config_link").click(function(event) {
+    event.preventDefault();
+
+    var simple_json_container = document.getElementById("simple_json_editor");
+    var options = {
+        mode: 'tree',
+        modes: ['code', 'tree'],
+        onChange: function(element,event){
+            $("#hidden_config_json").val(JSON.stringify(simple_json_editor.get(), null , 4));
+            $("#multiple_hidden_config_json").val(JSON.stringify(simple_json_editor.get(), null , 4));
+        },
+        onError: function (err) {
+            alert(err.toString());
+          }
+    }
+    var simple_json_editor = new JSONEditor(simple_json_container, options);
+    simple_json_editor.set(JSON.parse($("#hidden_config_json").val()));
+    
+
+    $("#start").hide();
+    $("#ramp").hide();
+    $("#edit_config").show();
+    $(".status").addClass("none");
+    $("#config_tab").trigger("click");
+});
+
+$('#simple_config_form').submit(function(event) {
     event.preventDefault();
     $.post($(this).attr("action"), $(this).serialize(),
         function(response) {
             if (response.success) {
-                $("#ramp").hide();
-                $("#edit_config").hide();
-                $("#multiple_column").hide();
-                $("#start").show();
-                $("#locust_count").focus().select();
-                $(".status").removeClass("none");
                 location.reload(true);
             }
-            else {
-                alert("Convert error : " + response.message);
-            }
         }
     );
 });
 
-$('#btnSubmit').click(function(event) {
+$('#upload_csv_btn').click(function(event) {
     event.preventDefault();
     var form = $('#upload_csv')[0];
     var form_data = new FormData(form);
     $.ajax({
         type: 'POST',
-        url: "/config/csv",
+        url: "/config/get_csv_column",
         enctype: 'multipart/form-data',
         data: form_data,
         contentType: false,
@@ -181,59 +203,21 @@ $('#btnSubmit').click(function(event) {
     })
 });
 
-$('.close_link_headers').click(function(event) {
+$('#multiple_column_form').submit(function(event) {
     event.preventDefault();
-    $("#column_header").empty();
-    $(this).parent().parent().hide();
-});
-
-var alternate = false;
-
-$("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
-    if (event.target == $(".chart-tab-link")[0]) {
-        // trigger resizing of charts
-        if (!!rpsChart) rpsChart.resize()
-        if (!!responseTimeChart) responseTimeChart.resize()
-        if (!!usersChart) usersChart.resize()
-        if (!!failureChart) failureChart.resize()
-        if (!!advanceChart) advanceChart.resize()
-        if (!!endpointResponseTimeCharts) {
-          for (var chartKey in endpointResponseTimeCharts) {
-            endpointResponseTimeCharts[chartKey].resize()
-            endpointRpsCharts[chartKey].resize()
-            endpointFailureCharts[chartKey].resize()
-          }
+    $.post($(this).attr("action"), $(this).serialize(),
+        function(response) {
+            if (response.success) {
+                location.reload(true);
+            }
+            else {
+                alert("Convert error : " + response.message);
+            }
         }
-    }
+    );
 });
 
-$("ul.tabs_json").tabs("div.panes_json > div");
-
-/*** start of simple json editor/configuration ***/
-var simple_json_container = document.getElementById("simple_json_editor");
-var options = {
-    mode: 'tree',
-    modes: ['code', 'tree'],
-    onChange: function(element,event){
-        $("#config_json").val(JSON.stringify(simple_json_editor.get(), null , 4));
-    },
-    onError: function (err) {
-        alert(err.toString());
-      }
-}
-var simple_json_editor = new JSONEditor(simple_json_container, options);
-simple_json_editor.set(JSON.parse($("#config_json").val()));
-$("#config_json").change(function() {
-    simple_json_editor.set(JSON.parse($("#config_json").val()));
-});
-
-$("#submit_json_btn").on('click', function(event){
-    $("#final_json").val(JSON.stringify(simple_json_editor.get(), null , 4));
-    $("#simple_config_form").submit();
-    setTimeout(function(){window.location.reload();});
-});
-
-/*** end of simple json editor/configuration ***/
+/* END OF JSON EDITOR'S */
 
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');

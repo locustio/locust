@@ -274,7 +274,7 @@ def ramp():
     response.headers["Content-type"] = "application/json"
     return response
 
-@app.route("/config/csv", methods=['POST'])
+@app.route("/config/get_csv_column", methods=['POST'])
 def config_csv():
     csvfile = request.files['csv_file']
     if not csvfile:
@@ -293,12 +293,13 @@ def config_csv():
     response.headers["Content-type"] = "application/json"
     return response
 
-@app.route("/config/convert", methods=['POST'])
+@app.route("/config/convert_csv", methods=['POST'])
 def convert_csv_to_json():
     try:
         multiple_data_headers = request.form.getlist('headers_checkbox')
         jsonpath = str(request.form['jsonpath'])
         options = request.form['json_option']
+        config_text = request.form["multiple_form_final_json"]
 
         global csv_stream
         report = {}
@@ -315,7 +316,7 @@ def convert_csv_to_json():
                 report['data'] = tempStr.get(csv_stream.get_columns_name()[0])
 
         cc = configuration.ClientConfiguration()
-        status, data = cc.update_json_config(report['data'], jsonpath, options, csv_stream.get_columns_name())
+        status, data = cc.update_json_config(report['data'], jsonpath, options, csv_stream.get_columns_name(), config_text)
 
         if status:
             success, message = configuration.write_file(data)
@@ -331,13 +332,10 @@ def convert_csv_to_json():
         return response
     
 
-@app.route("/config/json", methods=["POST"])
-def config_json():
+@app.route("/config/save_json", methods=["POST"])
+def save_json():
     assert request.method == "POST"
-    if "final_json" in request.form:
-        config_json = str(request.form["final_json"])
-    else:
-        config_json = str(request.form["config_json"])
+    config_json = str(request.form["final_json"])
 
     try:
         success, message = configuration.write_file(config_json)

@@ -494,7 +494,7 @@ ul.tabs li a.current:after, ul.tabs_json li a.current:after {
     background: #fff;
 }
 
-.panes, .panes_json {
+.panes{
     margin-top: 30px;
 }
 .panes > div, .panes_json > div {

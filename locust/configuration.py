@@ -1,6 +1,7 @@
 import os, json, logging, jsonpath_rw_ext, jsonpath_rw
 from jsonpath_rw import jsonpath, parse
 from . import events
+from ast import literal_eval
 
 logger = logging.getLogger(__name__)
 config_path = '/tests/settings/config.json'
@@ -56,11 +57,12 @@ class ClientConfiguration:
                 self.config_data = json.load({})
         return self.config_data
 
-    def update_json_config(self, json_added, json_path, options, list_column):
+    def update_json_config(self, json_added, json_path, options, list_column, config_text):
         """
         Write JSON file configuration
         """
-        data = ClientConfiguration.read_json(self)
+        data = literal_eval(config_text)
+
         if(options != "replace"):
             json_target = jsonpath_rw_ext.match(json_path, data)
             if isinstance(json_target[0], dict):
