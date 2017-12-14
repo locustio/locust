@@ -262,10 +262,6 @@ container_title {
     padding: 6px 8px 6px 0px !important;
 }
 
-.select2-container--bootstrap .select2-selection--single .select2-selection__arrow {
-    right: -3px !important;
-}
-
 .start button,
 .edit button, .edit_config button[type=submit], .multiple_column button {
     margin: 20px 0px 20px 0px;
