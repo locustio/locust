@@ -1,9 +1,6 @@
 # encoding: utf-8
 
-import csv
-import io
-import json
-import os.path
+import csv, re, io, json, os.path
 from time import time
 from itertools import chain
 from collections import defaultdict
@@ -18,10 +15,14 @@ from .cache import memoize
 from .runners import MasterLocustRunner
 from locust.stats import median_from_dict
 from locust import __version__ as version
-import gevent
+import gevent, itertools
+
+import jsonpath_rw_ext
 
 import logging
 logger = logging.getLogger(__name__)
+
+from csv_to_json import csvToJson
 
 DEFAULT_CACHE_TIME = 2.0
 
@@ -30,6 +31,8 @@ app.debug = True
 app.root_path = os.path.dirname(os.path.abspath(__file__))
 _ramp = False
 greenlet_spawner = None
+load_config=""
+csv_stream = None
 
 @app.route('/')
 def index():
@@ -264,27 +267,62 @@ def ramp():
     response.headers["Content-type"] = "application/json"
     return response
 
-@app.route("/config/csv", methods=["POST"])
+@app.route("/config/csv", methods=['POST'])
 def config_csv():
-    assert request.method == "POST"
-
     csvfile = request.files['csv_file']
     if not csvfile:
         return "No file"
 
     stream = io.StringIO(csvfile.stream.read().decode("UTF8"), newline=None)
-    csv_input = csv.reader(stream)
-    for row in csv_input:
-        print(row)
+
+    global csv_stream
+    csv_stream = None
+    csv_stream = csvToJson(stream)
     
-    #logic for convert goes here...
-
-    stream.seek(0)
-    result = transform(stream.read())
-
-    response = make_response(result)
-    response.headers["Content-Disposition"] = "attachment; filename=result.csv"
+    report = {}
+    report['success'] = True
+    report['columns'] = csv_stream.get_columns_name()
+    response = make_response(json.dumps(report))
+    response.headers["Content-type"] = "application/json"
     return response
+
+@app.route("/config/convert", methods=['POST'])
+def convert_csv_to_json():
+    try:
+        multiple_data_headers = request.form.getlist('headers_checkbox')
+        jsonpath = str(request.form['jsonpath'])
+        options = request.form['json_option']
+
+        global csv_stream
+        report = {}
+        report['success'] = True
+
+        if(len(multiple_data_headers) > 0):
+            tempStr = csv_stream.convert(multiple_data_headers)
+            report['data'] = tempStr
+        else:
+            tempStr = csv_stream.convert([])
+            if len(csv_stream.get_columns_name()) > 1:
+                report['data'] = tempStr
+            else:
+                report['data'] = tempStr.get(csv_stream.get_columns_name()[0])
+
+        cc = configuration.ClientConfiguration()
+        status, data = cc.update_json_config(report['data'], jsonpath, options, csv_stream.get_columns_name())
+
+        if status:
+            success, message = configuration.write_file(data)
+            response = make_response(json.dumps({'success':success, 'message': message}))
+        else:
+            response = make_response(json.dumps({'success':False, 'message':'Please check your jsonpath or file again.'}))
+
+        response.headers["Content-type"] = "application/json"
+        return response
+    except Exception, e:
+        response = make_response(json.dumps({'success':False, 'message': str(e)}))
+        response.headers["Content-type"] = "application/json"
+        return response
+    
 
 @app.route("/config/json", methods=["POST"])
 def config_json():
@@ -313,3 +351,5 @@ def _sort_stats(stats):
 
 def transform(text_file_contents):
     return text_file_contents.replace("=", ",")
+
+

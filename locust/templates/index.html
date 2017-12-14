@@ -174,17 +174,11 @@
                     </form>
                 </div>
                 <div id="advance_tab_content" style="display:none;">
-                    <!-- <div style="position:relative; height: 30px;">
-                        <a href="#" class="back_new_test">Back to New Test</a><br>
-                        {% if ramp %}
-                        <a href="#" class="ramp_test">Back to New Ramp</a>
-                        {% endif %}
-                    </div> -->
                     <div class="custom_padder">
                         <label>Import CSV</label>
-                        <form action="/config/csv" method="POST" enctype="multipart/form-data">
-                            <input type="file" name="csv_file" />
-                            <input type="submit" value="Upload" />
+                        <form method="POST" enctype="multipart/form-data" id="upload_csv">
+                            <input type="file" name="csv_file" id="csv_file"/>
+                            <input type="submit" value="Upload" id="btnSubmit" />
                         </form>
                         <br>
                         <label>Configuration</label>
@@ -197,6 +191,33 @@
                 </div>
             </div> 
         </div>
+
+        <div class="multiple_column" id="multiple_column"  style="display:none;">
+            <div style="position:relative;">
+                <a href="#" class="close_link_headers">Close</a>
+            </div>
+            <br>
+            <div class="padder">
+                <h2>Pick column name which has multiple data</h2>
+                <form action="/config/convert" method="POST" id="multiple_column_form">
+                    <div class="modal_multiple_column">
+                        <ul id="column_header" class="column_header"></ul>
+                    </div>
+                    <br>
+                    <label for="JSON Path" title="This is JSON Path input">JSON Path</label>
+                    <br>
+                    <input type="text" name="jsonpath" id="jsonpath" class="val" />
+                    <label>Example : $.production.accounts (update json in production.accounts section)</label>
+                    <br>
+                    <br>
+                    <input type="radio" name="json_option" id="json_option" value="replace">Replace<br>
+                    <input type="radio" name="json_option" id="json_option" value="write_below">Write Below<br>
+                    <button type="submit">Convert</button>
+                </form>
+                <div style="clear:right;"></div>
+            </div>
+        </div>
+        
 
         <div class="status" id="status">
             <nav class="menu">

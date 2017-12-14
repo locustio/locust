@@ -100,6 +100,73 @@ $('#edit_config_form').submit(function(event) {
     );
 });
 
+$('#multiple_column_form').submit(function(event) {
+    event.preventDefault();
+    $.post($(this).attr("action"), $(this).serialize(),
+        function(response) {
+            if (response.success) {
+                $("#ramp").hide();
+                $("#edit_config").hide();
+                $("#multiple_column").hide();
+                $("#start").show();
+                $("#locust_count").focus().select();
+                $(".status").removeClass("none");
+                location.reload(true);
+            }
+            else {
+                alert("Convert error : " + response.message);
+            }
+        }
+    );
+});
+
+$('#btnSubmit').click(function(event) {
+    event.preventDefault();
+    var form = $('#upload_csv')[0];
+    var form_data = new FormData(form);
+    $.ajax({
+        type: 'POST',
+        url: "/config/csv",
+        enctype: 'multipart/form-data',
+        data: form_data,
+        contentType: false,
+        cache: false,
+        processData: false,
+        success: function (response) {
+            if (response.success) {
+                $(".multiple_column").show();
+                $(this).parent().remove();
+                var rownum = 0;
+                if(response.columns.length > 1)
+                {
+                    $.each(response.columns, function (key, value) {
+                        rownum++;
+                        var li = $('<li><label><input type="checkbox" id="headers_checkbox'+rownum+'" name="headers_checkbox" value="' + value + '">'+value+'</label>');
+                        $('#column_header').append(li);
+                        $('#headers_checkbox'+rownum).on('click', function(){
+                            if($(this).is(":checked")) {
+                                $(this).prop("checked",true);
+                            }
+                            else {
+                                $(this).prop("checked",false);
+                            }
+                        });
+
+                    });
+                }
+            }
+        },
+        error: function (error) {
+        }
+    })
+});
+
+$('.close_link_headers').click(function(event) {
+    event.preventDefault();
+    $("#column_header").empty();
+    $(this).parent().parent().hide();
+});
+
 var alternate = false;
 
 $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
