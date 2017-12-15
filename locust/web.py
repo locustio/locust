@@ -300,11 +300,10 @@ def convert_csv_to_json():
         jsonpath = str(request.form['jsonpath'])
         options = request.form['json_option']
         config_text = request.form["multiple_form_final_json"]
-
+        
         global csv_stream
         report = {}
         report['success'] = True
-
         if(len(multiple_data_headers) > 0):
             tempStr = csv_stream.convert(multiple_data_headers)
             report['data'] = tempStr
@@ -319,13 +318,13 @@ def convert_csv_to_json():
         status, data = cc.update_json_config(report['data'], jsonpath, options, csv_stream.get_columns_name(), config_text)
 
         if status:
-            success, message = configuration.write_file(data)
-            response = make_response(json.dumps({'success':success, 'message': message}))
+            response = make_response(json.dumps({'success':True, 'data':data}))
         else:
             response = make_response(json.dumps({'success':False, 'message':'Please check your jsonpath or file again.'}))
 
         response.headers["Content-type"] = "application/json"
         return response
+    
     except Exception, e:
         response = make_response(json.dumps({'success':False, 'message': str(e)}))
         response.headers["Content-type"] = "application/json"

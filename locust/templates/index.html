@@ -171,12 +171,12 @@
                 <div id="simple_tab_content" style="display:none;">
                     <div class="custom_padder">
                         <label>Import CSV</label>
-                        <form method="POST" enctype="multipart/form-data" id="upload_csv">
+                        <form method="POST" enctype="multipart/form-data" id="upload_csv_form">
                             <input type="file" name="csv_file" id="csv_file"/>
-                            <input type="submit" value="Upload" id="upload_csv_btn" />
+                            <input type="submit" value="Upload" id="upload_csv_btn"/>
                         </form>
                         <br>
-                        <form action="/config/save_json" method="POST" id="simple_config_form">
+                        <form action="/config/save_json" method="POST" id="json_config_form">
                             <div id="simple_json_editor" name="simple_json_editor"></div>
                             <input type="hidden" id="hidden_config_json" name="final_json" value="{{json_config}}">
                             <button type="submit" id="submit_json_btn">Save</button>
@@ -207,7 +207,7 @@
                     <br>
                     <input type="radio" name="json_option" id="json_option" value="replace">Replace<br>
                     <input type="radio" name="json_option" id="json_option" value="write_below">Write Below<br>
-                    <button type="submit">Convert</button>
+                    <button id="convert_csv_btn">Convert</button>
                 </form>
                 <div style="clear:right;"></div>
             </div>

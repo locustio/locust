@@ -78,12 +78,14 @@ class ClientConfiguration:
         else:
             json_final = json_added
         jsonpath_expr = parse(json_path)
+
         matches = jsonpath_expr.find(data)
+        
+        if len(matches)==0:
+            return False, json.dumps(data, indent=4)
         
         for match in matches:
             data = ClientConfiguration.update_json(data, ClientConfiguration.get_path(match), json_final)
-
-        print("data final : "+str(data))
         
         return True, json.dumps(data, indent=4)
         
