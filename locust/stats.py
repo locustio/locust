@@ -642,7 +642,7 @@ def print_error_report():
     if not len(global_stats.errors):
         return
     console_logger.info("Error report")
-    console_logger.info(" %-18s %-100s" % ("# occurences", "Error"))
+    console_logger.info(" %-18s %-100s" % ("# occurrences", "Error"))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     for error in six.itervalues(global_stats.errors):
         console_logger.info(" %-18i %-100s" % (error.occurences, error.to_name()))
