@@ -34,6 +34,9 @@ greenlet_spawner = None
 load_config=""
 csv_stream = None
 
+locustfile = None
+
+
 @app.route('/')
 def index():
     is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
@@ -74,12 +77,17 @@ def swarm():
 
     locust_count = int(request.form["locust_count"])
     hatch_rate = float(request.form["hatch_rate"])
-    locustfile = request.form["locustfile"]
+    type_swarm = str(request.form["type_swarm"])
+    global locustfile
+    
+    if type_swarm == "start":
+        locustfile = request.form["locustfile"]
+    
     assert locustfile in runners.locust_runner.available_locustfiles
     runners.locust_runner.select_file(locustfile)
 
     runners.locust_runner.start_hatching(locust_count, hatch_rate)
-    print("a")
+
     response = make_response(json.dumps({'success':True, 'message': 'Swarming started'}))
     response.headers["Content-type"] = "application/json"
     return response

@@ -29,7 +29,6 @@ NORMAL, RAMP = ["Normal", "Auto"]
 
 class LocustRunner(object):
     def __init__(self, locust_classes, options, available_locustfiles=None):
-        print("inside init Locust Runner")
         self.options = options
         self.locust_classes = locust_classes
         self.available_locustfiles = available_locustfiles or {}
@@ -205,7 +204,6 @@ class LocustRunner(object):
         self.exceptions[key] = row
 
 class LocalLocustRunner(LocustRunner):
-    print("inside init Locust Runner")
     def __init__(self, locust_classes, options, available_locustfiles=None):
         super(LocalLocustRunner, self).__init__(locust_classes, options, available_locustfiles)
         # register listener thats logs the exception for the local runner
@@ -219,7 +217,6 @@ class LocalLocustRunner(LocustRunner):
         self.greenlet = self.hatching_greenlet
 
 class DistributedLocustRunner(LocustRunner):
-    print("inside init Locust Runner")
     def __init__(self, locust_classes, options, available_locustfiles=None):
         super(DistributedLocustRunner, self).__init__(locust_classes, options, available_locustfiles)
         self.master_host = options.master_host
@@ -232,14 +229,12 @@ class DistributedLocustRunner(LocustRunner):
         pass
 
 class SlaveNode(object):
-    print("inside init Locust Runner")
     def __init__(self, id, state=STATE_INIT):
         self.id = id
         self.state = state
         self.user_count = 0
 
 class MasterLocustRunner(DistributedLocustRunner):
-    print("inside init Locust Runner")
     def __init__(self, *args, **kwargs):
         super(MasterLocustRunner, self).__init__(*args, **kwargs)
 
@@ -366,7 +361,6 @@ class MasterLocustRunner(DistributedLocustRunner):
         return len(self.clients.ready) + len(self.clients.hatching) + len(self.clients.running)
 
 class SlaveLocustRunner(DistributedLocustRunner):
-    print("inside init Locust Runner")
     def __init__(self, *args, **kwargs):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + md5(str(time() + random.randint(0,10000)).encode('utf-8')).hexdigest()
