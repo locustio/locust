@@ -222,7 +222,7 @@
             this.activeFilter = []
             this.activeLegend = []
 
-            this.element = $('<div class="chart"></div>').css("width", width).css("float","left").css("height", "600px").appendTo(container);
+            this.element = $('<div class="chart"></div>').css("width", width).css("float","left").css("height", "430px").appendTo(container);
             this.multiData = [];
             this.dates = [];
             this.seriesData = [];
@@ -301,6 +301,46 @@
                 },
                 dataZoom: [
                     {
+                        orient: 'vertical',
+                        type: 'slider',
+                        show: false,
+                        filterMode: 'none',
+                        width: 10,
+                        left: 10,
+                        showDetail: false,
+                        borderColor : '#5b6f66',
+                        fillerColor: 'rgba(255, 255, 255, 0.4)',
+                        handleIcon: 'M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
+                        handleSize: '175%',
+                        handleStyle: {
+                            color: '#fff',
+                            shadowBlur: 3,
+                            shadowColor: 'rgba(0, 0, 0, 0.6)',
+                            shadowOffsetX: 2,
+                            shadowOffsetY: 2
+                        }
+                    },
+                    {
+                        orient: 'vertical',
+                        type: 'slider',
+                        show: false,
+                        filterMode: 'none',
+                        width: 10,
+                        right: 20,
+                        showDetail: false,
+                        borderColor : '#5b6f66',
+                        fillerColor: 'rgba(255, 255, 255, 0.4)',
+                        handleIcon: 'M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
+                        handleSize: '175%',
+                        handleStyle: {
+                            color: '#fff',
+                            shadowBlur: 3,
+                            shadowColor: 'rgba(0, 0, 0, 0.6)',
+                            shadowOffsetX: 2,
+                            shadowOffsetY: 2
+                        }
+                    },
+                    {
                         orient: 'horizontal',
                         type: 'slider',
                         show: true,
@@ -320,31 +360,10 @@
                             shadowOffsetX: 2,
                             shadowOffsetY: 2
                         }
-                    },
-                    {
-                        orient: 'vertical',
-                        type: 'slider',
-                        show: true,
-                        filterMode: 'none',
-                        width: 10,
-                        yAxisIndex: [0],
-                        right: 20,
-                        showDetail: false,
-                        borderColor : '#5b6f66',
-                        fillerColor: 'rgba(255, 255, 255, 0.4)',
-                        handleIcon: 'M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
-                        handleSize: '175%',
-                        handleStyle: {
-                            color: '#fff',
-                            shadowBlur: 3,
-                            shadowColor: 'rgba(0, 0, 0, 0.6)',
-                            shadowOffsetX: 2,
-                            shadowOffsetY: 2
-                        }
                     }
                 ],
                 grid: {x:60, y:120, x2:80, y2:70},
-                color: ['#e6194b','#3cb44b','#ffe119','#0082c8','#f58231','#911eb4','#46f0f0','#f032e6','#d2f53c','#fabebe','#008080','#aa6e28','#fffac8','#800000','#aaffc3','#808000','#ffd8b1','#000080','#808080','#FFFFFF','#000000']
+                color: ['#e6194b','#3cb44b','#ffe119','#0082c8','#f58231','#911eb4','#46f0f0','#f032e6','#d2f53c','#fabebe','#008080','#aa6e28','#fffac8','#800000','#aaffc3','#808000','#ffd8b1','#a199ff','#808080','#FFFFFF','#fc6c6c']
             }
 
             this.yAxesFormat = []
@@ -461,6 +480,10 @@
                 }
                 else this.yAxesFormat[i].show = false
             }
+            for(let i=0; i< this.activeFilter.length; i++) {
+                this.chartOption.dataZoom[i].show = true
+                this.chartOption.dataZoom[i].yAxisIndex = this.activeFilter[i]
+            }
             this.chart.clear()
             this._refreshChart()
         }
@@ -469,6 +492,8 @@
             this.activeFilter.push(yAxisIndex)
             this.yAxesFormat[yAxisIndex].show = true
             this.yAxesFormat[yAxisIndex].position = (this.activeFilter.length > 1) ? 'right' : 'left'
+            this.chartOption.dataZoom[this.activeFilter.length-1].show = true
+            this.chartOption.dataZoom[this.activeFilter.length-1].yAxisIndex = yAxisIndex
             for (let i=0; i<this.activeFilter.length; i++){
                 for (let j=0; j<this.seriesData[this.activeFilter[i]].length; j++){
                     this.activeLegend.push(this.lines[this.activeFilter[i]][j].name)
@@ -479,14 +504,19 @@
         }
 
         removeFilter(yAxisIndex) {
-            let i = this.activeFilter.indexOf(yAxisIndex)
-            if(i != -1) this.activeFilter.splice(i, 1)
+            let deleted_index = this.activeFilter.indexOf(yAxisIndex)
+            if(deleted_index != -1) this.activeFilter.splice(deleted_index, 1)
             this.yAxesFormat[yAxisIndex].show = false
             this.yAxesFormat[this.activeFilter[0]].position = 'left'
+            this.chartOption.dataZoom[1].show = false
             for (let i=0; i<this.activeFilter.length; i++){
                 for (let j=0; j<this.seriesData[this.activeFilter[i]].length; j++){
                     this.activeLegend.push(this.lines[this.activeFilter[i]][j].name)
                 }
+            }
+            for(let i=0; i<this.activeFilter.length; i++) {
+                this.chartOption.dataZoom[i].show = true
+                this.chartOption.dataZoom[i].yAxisIndex = this.activeFilter[i]
             }
             this.chart.clear()
             this._refreshChart()
