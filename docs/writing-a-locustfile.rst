@@ -305,7 +305,7 @@ instance's TaskSet instances so that it's easy to retrieve the client and make H
 tasks.
 
 Here's a simple example that makes a GET request to the */about* path (in this case we assume *self* 
-is an instance of a :py:class:`TaskSet <locust.core.TaskSet>` or :py:class:`HttpLocust <locust.core.Locust>` 
+is an instance of a :py:class:`TaskSet <locust.core.TaskSet>` or :py:class:`HttpLocust <locust.core.HttpLocust>` 
 class::
 
     response = self.client.get("/about")
