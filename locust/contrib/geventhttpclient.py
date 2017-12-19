@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
-import errno
+import chardet
+import re
 import six
 import socket
 from timeit import default_timer
@@ -11,6 +12,7 @@ if six.PY2:
         # ConnectionRefusedError doesn't exist in python 2, so we'll 
         # define a dummy class to avoid a NameError
         pass
+    str = unicode
 else:
     from http.cookiejar import CookieJar
 
@@ -23,6 +25,9 @@ from locust.core import Locust
 # Monkey patch geventhttpclient.useragent.CompatRequest so that Cookiejar works with Python >= 3.3
 # More info: https://github.com/requests/requests/pull/871
 CompatRequest.unverifiable = False
+
+
+absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
 
 class GeventHttpLocust(Locust):
@@ -61,10 +66,18 @@ class GeventHttpSession(object):
     def __init__(self, base_url):
         self.base_url = base_url
         self.cookiejar = CookieJar()
-        self.client = UserAgent(max_retries=1, cookiejar=self.cookiejar)
-        
+        self.client = LocustUserAgent(max_retries=1, cookiejar=self.cookiejar)
+    
+    def _build_url(self, path):
+        """ prepend url with hostname unless it's already an absolute URL """
+        if absolute_http_url_regexp.match(path):
+            return path
+        else:
+            return "%s%s" % (self.base_url, path)
+    
     def request(self, method, path, name=None, **kwargs):
-        url = self.base_url + path
+        # prepend url with hostname unless it's already an absolute URL
+        url = self._build_url(path)
         
         # store meta data that is used when reporting the request to locust's statistics
         request_meta = {}
@@ -123,3 +136,36 @@ class GeventHttpSession(object):
     
     def put(self, path, data=None, **kwargs):
         return self.request("PUT", path, payload=data, **kwargs)
+
+
+class LocustCompatResponse(CompatResponse):
+    @property
+    def text(self):
+        # Decode unicode from detected encoding.
+        try:
+            content = str(self.content, self.apparent_encoding, errors='replace')
+        except (LookupError, TypeError):
+            # A LookupError is raised if the encoding was not found which could
+            # indicate a misspelling or similar mistake.
+            #
+            # A TypeError can be raised if encoding is None
+            #
+            # Fallback to decode without specifying encoding
+            content = str(self.content, errors='replace')
+        return content
+    
+    @property
+    def apparent_encoding(self):
+        """The apparent encoding, provided by the chardet library."""
+        return chardet.detect(self.content)['encoding']
+
+
+class LocustUserAgent(UserAgent):
+    response_type = LocustCompatResponse
+    
+    def _urlopen(self, request):
+        """Override _urlopen() in order to make it use the response_type attribute"""
+        client = self.clientpool.get_client(request.url_split)
+        resp = client.request(request.method, request.url_split.request_uri,
+                              body=request.payload, headers=request.headers)
+        return self.response_type(resp, request=request, sent_request=resp._sent_request)

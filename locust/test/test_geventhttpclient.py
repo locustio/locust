@@ -1,6 +1,8 @@
 import six
 import socket
 
+from locust import TaskSet, task
+from locust.core import LocustError
 from locust.contrib.geventhttpclient import GeventHttpSession, GeventHttpLocust
 from locust.stats import global_stats
 
@@ -161,3 +163,99 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         self.assertEqual(response.status_code, 0)
         self.assertEqual(1, global_stats.get("/", "GET").num_failures)
         self.assertEqual(0, global_stats.get("/", "GET").num_requests)
+
+
+class TestGeventHttpLocustClass(WebserverTestCase):
+    def test_get_request(self):
+        self.response = ""
+        def t1(l):
+            self.response = l.client.get("/ultra_fast")
+        class MyLocust(GeventHttpLocust):
+            tasks = [t1]
+            host = "http://127.0.0.1:%i" % self.port
+
+        my_locust = MyLocust()
+        t1(my_locust)
+        self.assertEqual(self.response.text, "This is an ultra fast response")
+
+    def test_client_request_headers(self):
+        class MyLocust(GeventHttpLocust):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyLocust()
+        self.assertEqual("hello", locust.client.get("/request_header_test", headers={"X-Header-Test":"hello"}).text)
+
+    def test_client_get(self):
+        class MyLocust(GeventHttpLocust):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyLocust()
+        self.assertEqual("GET", locust.client.get("/request_method").text)
+    
+    def test_client_get_absolute_url(self):
+        class MyLocust(GeventHttpLocust):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyLocust()
+        self.assertEqual("GET", locust.client.get("http://127.0.0.1:%i/request_method" % self.port).text)
+
+    def test_client_post(self):
+        class MyLocust(GeventHttpLocust):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyLocust()
+        self.assertEqual("POST", locust.client.post("/request_method", {"arg":"hello world"}).text)
+        self.assertEqual("hello world", locust.client.post("/post", {"arg":"hello world"}).text)
+
+    def test_client_put(self):
+        class MyLocust(GeventHttpLocust):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyLocust()
+        self.assertEqual("PUT", locust.client.put("/request_method", {"arg":"hello world"}).text)
+        self.assertEqual("hello world", locust.client.put("/put", {"arg":"hello world"}).text)
+
+    def test_client_delete(self):
+        class MyLocust(GeventHttpLocust):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyLocust()
+        self.assertEqual("DELETE", locust.client.delete("/request_method").text)
+        self.assertEqual(200, locust.client.delete("/request_method").status_code)
+
+    def test_client_head(self):
+        class MyLocust(GeventHttpLocust):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyLocust()
+        self.assertEqual(200, locust.client.head("/request_method").status_code)
+    
+    def test_log_request_name_argument(self):
+        from locust.stats import global_stats
+        self.response = ""
+        
+        class MyLocust(GeventHttpLocust):
+            tasks = []
+            host = "http://127.0.0.1:%i" % self.port
+            
+            @task()
+            def t1(l):
+                self.response = l.client.get("/ultra_fast", name="new name!")
+
+        my_locust = MyLocust()
+        my_locust.t1()
+        
+        self.assertEqual(1, global_stats.get("new name!", "GET").num_requests)
+        self.assertEqual(0, global_stats.get("/ultra_fast", "GET").num_requests)
+    
+    def test_redirect_url_original_path_as_name(self):
+        class MyLocust(GeventHttpLocust):
+            host = "http://127.0.0.1:%i" % self.port
+
+        l = MyLocust()
+        l.client.get("/redirect")
+        
+        from locust.stats import global_stats
+        self.assertEqual(1, len(global_stats.entries))
+        self.assertEqual(1, global_stats.get("/redirect", "GET").num_requests)
+        self.assertEqual(0, global_stats.get("/ultra_fast", "GET").num_requests)
