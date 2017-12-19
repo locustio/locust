@@ -92,13 +92,19 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(200, r.status_code)
         self.assertEqual("DELETE", r.content.decode())
     
+    def test_patch(self):
+        s = FastHttpSession("http://127.0.0.1:%i" % self.port)
+        r = s.patch("/request_method")
+        self.assertEqual(200, r.status_code)
+        self.assertEqual("PATCH", r.content.decode())
+    
     def test_options(self):
         s = FastHttpSession("http://127.0.0.1:%i" % self.port)
         r = s.options("/request_method")
         self.assertEqual(200, r.status_code)
         self.assertEqual("", r.content.decode())
         self.assertEqual(
-            set(["OPTIONS", "DELETE", "PUT", "GET", "POST", "HEAD"]),
+            set(["OPTIONS", "DELETE", "PUT", "GET", "POST", "HEAD", "PATCH"]),
             set(r.headers["allow"].split(", ")),
         )
 

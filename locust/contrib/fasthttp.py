@@ -131,6 +131,10 @@ class FastHttpSession(object):
     def options(self, path, **kwargs):
         return self.request("OPTIONS", path, **kwargs)
     
+    def patch(self, path, data=None, **kwargs):
+        """Sends a POST request"""
+        return self.request("PATCH", path, payload=data, **kwargs)
+    
     def post(self, path, data=None, **kwargs):
         return self.request("POST", path, payload=data, **kwargs)
     
