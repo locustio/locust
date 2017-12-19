@@ -85,3 +85,10 @@ Running Locust distributed without the web UI
 =============================================
 
 See :ref:`running-locust-distributed-without-web-ui`
+
+
+Increase Locust's performance
+=============================
+
+If your planning to run large-scale load tests you might be interested to use the alternative 
+HTTP client that's shipped with Locust. You can read more about it here: :ref:`increase-performance`

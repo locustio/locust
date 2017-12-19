@@ -123,12 +123,15 @@ class FastHttpSession(object):
         return self.request("DELETE", path, **kwargs)
     
     def get(self, path, **kwargs):
+        """Sends a GET request"""
         return self.request("GET", path, **kwargs)
     
     def head(self, path, **kwargs):
+        """Sends a HEAD request"""
         return self.request("HEAD", path, **kwargs)
     
     def options(self, path, **kwargs):
+        """Sends a OPTIONS request"""
         return self.request("OPTIONS", path, **kwargs)
     
     def patch(self, path, data=None, **kwargs):
@@ -136,15 +139,24 @@ class FastHttpSession(object):
         return self.request("PATCH", path, payload=data, **kwargs)
     
     def post(self, path, data=None, **kwargs):
+        """Sends a POST request"""
         return self.request("POST", path, payload=data, **kwargs)
     
     def put(self, path, data=None, **kwargs):
+        """Sends a PUT request"""
         return self.request("PUT", path, payload=data, **kwargs)
 
 
 class FastResponse(CompatResponse):
+    headers = None
+    """Dict like object containing the response headers"""
+    
     @property
     def text(self):
+        """
+        Returns the text content of the response as a decoded string
+        (unicode on python2)
+        """
         # Decode unicode from detected encoding.
         try:
             content = str(self.content, self.apparent_encoding, errors='replace')

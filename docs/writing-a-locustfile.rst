@@ -324,6 +324,8 @@ Response object. The request will be reported as a failure in Locust's statistic
 Response's *content* attribute will be set to None, and its *status_code* will be 0.
 
 
+.. _catch-response:
+
 Manually controlling if a request should be considered successful or a failure
 ------------------------------------------------------------------------------
 
