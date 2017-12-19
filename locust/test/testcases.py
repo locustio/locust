@@ -113,6 +113,16 @@ def streaming_response(iterations):
         yield "</body></html>"
     return Response(stream_with_context(generate()), mimetype="text/html")
 
+@app.route("/set_cookie", methods=["POST"])
+def set_cookie():
+    response = make_response("ok")
+    response.set_cookie(request.args.get("name"), request.args.get("value"))
+    return response
+
+@app.route("/get_cookie")
+def get_cookie():
+    return make_response(request.cookies.get(request.args.get("name"), ""))
+
 
 class LocustTestCase(unittest.TestCase):
     """
