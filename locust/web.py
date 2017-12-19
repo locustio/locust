@@ -300,37 +300,41 @@ def convert_csv_to_json():
         jsonpath = str(request.form['jsonpath'])
         options = request.form['json_option']
         config_text = request.form["multiple_form_final_json"]
-        
-        global csv_stream
-        report = {}
-        report['success'] = True
-        if(len(multiple_data_headers) > 0):
-            tempStr = csv_stream.convert(multiple_data_headers)
-            report['data'] = tempStr
-        else:
-            tempStr = csv_stream.convert([])
-            if len(csv_stream.get_columns_name()) > 1:
+
+        if jsonpath.strip() and options:
+            global csv_stream
+            report = {}
+            report['success'] = True
+            if(len(multiple_data_headers) > 0):
+                tempStr = csv_stream.convert(multiple_data_headers)
                 report['data'] = tempStr
             else:
-                report['data'] = tempStr.get(csv_stream.get_columns_name()[0])
+                tempStr = csv_stream.convert([])
+                if len(csv_stream.get_columns_name()) > 1:
+                    report['data'] = tempStr
+                else:
+                    report['data'] = tempStr.get(csv_stream.get_columns_name()[0])
 
-        cc = configuration.ClientConfiguration()
-        status, data = cc.update_json_config(report['data'], jsonpath, options, csv_stream.get_columns_name(), config_text)
-
-        if status:
-            response = make_response(json.dumps({'success':True, 'data':data}))
+            cc = configuration.ClientConfiguration()
+            response = cc.update_json_config(report['data'], jsonpath, options, csv_stream.get_columns_name(), config_text)
+            response.headers["Content-type"] = "application/json"
+            
+            return response
         else:
-            response = make_response(json.dumps({'success':False, 'message':'Please check your jsonpath or file again.'}))
-
+            response = make_response(json.dumps({'success':False, 'message':'Please fill in or select required field.'}))
+            response.headers["Content-type"] = "application/json"
+            
+            return response
+    
+    except Exception,e:
+        if type(e).__name__ == 'BadRequestKeyError':
+            response = make_response(json.dumps({'success':False, 'message':'Please fill in or select required field.'}))
+        else:
+            response = make_response(json.dumps({'success':False, 'message': str(e)}))
         response.headers["Content-type"] = "application/json"
+       
         return response
     
-    except Exception, e:
-        response = make_response(json.dumps({'success':False, 'message': str(e)}))
-        response.headers["Content-type"] = "application/json"
-        return response
-    
-
 @app.route("/config/save_json", methods=["POST"])
 def save_json():
     assert request.method == "POST"

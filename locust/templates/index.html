@@ -171,9 +171,9 @@
                 <div id="simple_tab_content" style="display:none;">
                     <div class="custom_padder">
                         <label>Import CSV</label>
-                        <form method="POST" enctype="multipart/form-data" id="upload_csv_form">
+                        <form method="POST" enctype="multipart/form-data" id="import_csv_form">
                             <input type="file" name="csv_file" id="csv_file"/>
-                            <input type="submit" value="Upload" id="upload_csv_btn"/>
+                            <input type="submit" value="Import" id="import_csv_btn"/>
                         </form>
                         <br>
                         <form action="/config/save_json" method="POST" id="json_config_form">
@@ -192,21 +192,26 @@
             </div>
             <br>
             <div class="padder">
-                <h2>Pick column name which has multiple data</h2>
+                <h2>Import CSV</h2>
                 <form action="/config/convert_csv" method="POST" id="multiple_column_form">
                     <input type="hidden" id="multiple_hidden_config_json" name="multiple_form_final_json" value="{{json_config}}"/>
-                    <div class="modal_multiple_column">
-                        <ul id="column_header" class="column_header"></ul>
+                    <div class="required_field">
+                        <label for="jsonpath" title="JSON path input">JSON Path</label>
+                        <input type="text" name="jsonpath" id="jsonpath" class="val" required/>
+                        <small>Example : $.production.accounts (data belongs to accounts section, where accounts belongs to production section)</small>
                     </div>
                     <br>
-                    <label for="JSON Path" title="This is JSON Path input">JSON Path</label>
+                    <div class="required_field">
+                        <label ="json_option" fortitle="Choose desired action for current data">Action</label>
+                        <br>
+                        <input type="radio" name="json_option" id="json_option" value="replace"> replace<br>
+                        <input type="radio" name="json_option" id="json_option" value="append"> append<br>
+                    </div>
                     <br>
-                    <input type="text" name="jsonpath" id="jsonpath" class="val" />
-                    <label>Example : $.production.accounts (update json in production.accounts section)</label>
-                    <br>
-                    <br>
-                    <input type="radio" name="json_option" id="json_option" value="replace">Replace<br>
-                    <input type="radio" name="json_option" id="json_option" value="write_below">Write Below<br>
+                    <div id="column_name_container">
+                        <label for="column_name">Choose column name which has multiple data</label>
+                        <ul id="column_name" class="column_name"></ul>
+                    </div>
                     <button id="convert_csv_btn">Convert</button>
                 </form>
                 <div style="clear:right;"></div>

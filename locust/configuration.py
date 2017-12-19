@@ -2,6 +2,7 @@ import os, json, logging, jsonpath_rw_ext, jsonpath_rw
 from jsonpath_rw import jsonpath, parse
 from . import events
 from ast import literal_eval
+from flask import make_response
 
 logger = logging.getLogger(__name__)
 config_path = '/tests/settings/config.json'
@@ -82,12 +83,12 @@ class ClientConfiguration:
         matches = jsonpath_expr.find(data)
         
         if len(matches)==0:
-            return False, json.dumps(data, indent=4)
+            return make_response(json.dumps({'success':False, 'message':'JSON path not found.'}))
         
         for match in matches:
             data = ClientConfiguration.update_json(data, ClientConfiguration.get_path(match), json_final)
         
-        return True, json.dumps(data, indent=4)
+        return make_response(json.dumps({'success':True, 'data':json.dumps(data, indent=4)}))
         
     @classmethod    
     def get_path(self, match):

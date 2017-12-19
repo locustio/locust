@@ -181,6 +181,7 @@ container_title {
     margin-left: -169px;
     background: #173529;
     border-radius: 5px;
+    z-index: 1;
 }
 
 .ramp {
@@ -209,6 +210,22 @@ container_title {
 #simple_json_editor{
     height: 400px;
     background-color: #fff;
+}
+
+#column_name {
+    list-style-type: none;
+    padding: 0;
+}
+
+.required_field label::after { 
+    content: "*";
+    font-size: 18px;
+    color: red;
+}
+
+.multiple_column label{
+    font-weight: bold;
+    font-size: 15px;
 }
 
 .title_header {
@@ -244,9 +261,9 @@ container_title {
 .start input.val, .edit input.val, .multiple_column input.val {
     border: none;
     background: #fff;
-    height: 52px;
+    height: 40px;
     width: 328px;
-    font-size: 24px;
+    font-size: 20px;
     padding-left: 10px;
 }
 
@@ -550,12 +567,6 @@ ul.tabs li a.current:after, ul.tabs_json li a.current:after {
     height: 100%;
     background: #173529;
 }
-
-#column_header {
-    list-style-type: none;
-    padding: 0;
-}
-
 .chart-filter {
     top:90px;
     position: relative;

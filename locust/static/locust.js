@@ -97,7 +97,7 @@ $('#ramp_form').submit(function(event) {
 
 $('.close_link_headers').click(function(event) {
     event.preventDefault();
-    $("#column_header").empty();
+    $("#column_name").empty();
     $(this).parent().parent().hide();
 });
 
@@ -126,14 +126,14 @@ $("ul.tabs_json").tabs("div.panes_json > div");
 /*** START OF JSON EDITOR'S ***/
 
 var simple_json_container = document.getElementById("simple_json_editor");
-var options = {
+var json_editor_options = {
     mode: 'tree',
     modes: ['code', 'tree'],
     onError: function (err) {
         alert(err.toString());
       }
 }
-var simple_json_editor = new JSONEditor(simple_json_container, options);
+var simple_json_editor = new JSONEditor(simple_json_container, json_editor_options);
 
 $(".edit_config_link").click(function(event) {
     event.preventDefault();
@@ -162,9 +162,9 @@ $('#json_config_form').submit(function(event) {
     );
 });
 
-$('#upload_csv_btn').click(function(event) {
+$('#import_csv_btn').click(function(event) {
     event.preventDefault();
-    var form = $('#upload_csv_form')[0];
+    var form = $('#import_csv_form')[0];
     var form_data = new FormData(form);
     $.ajax({
         type: 'POST',
@@ -176,6 +176,7 @@ $('#upload_csv_btn').click(function(event) {
         processData: false,
         success: function (response) {
             if (response.success) {
+                $("#column_name").empty();
                 $(".multiple_column").show();
                 $(this).parent().remove();
                 var rownum = 0;
@@ -183,8 +184,8 @@ $('#upload_csv_btn').click(function(event) {
                 {
                     $.each(response.columns, function (key, value) {
                         rownum++;
-                        var li = $('<li><label><input type="checkbox" id="headers_checkbox'+rownum+'" name="headers_checkbox" value="' + value + '">'+value+'</label>');
-                        $('#column_header').append(li);
+                        var li = $('<li><span><input type="checkbox" id="headers_checkbox'+rownum+'" name="headers_checkbox" value="' + value + '"> '+value+'</span>');
+                        $('#column_name').append(li);
                         $('#headers_checkbox'+rownum).on('click', function(){
                             if($(this).is(":checked")) {
                                 $(this).prop("checked",true);
@@ -195,10 +196,12 @@ $('#upload_csv_btn').click(function(event) {
                         });
 
                     });
+                    $("#column_name_container").show();
+                }
+                else{
+                    $("#column_name_container").hide();
                 }
             }
-        },
-        error: function (error) {
         }
     })
 });
@@ -219,29 +222,40 @@ $('#multiple_column_form').submit(function(event) {
 
 $('#convert_csv_btn').click(function(){
     event.preventDefault();
-    $("#multiple_hidden_config_json").val(JSON.stringify(simple_json_editor.get(), null , 4));
-    var form = $('#multiple_column_form')[0];
-    var form_data = new FormData(form);
-    $.ajax({
-        type:'POST',
-        url: '/config/convert_csv',
-        enctype: 'multipart/form-data',
-        data: form_data,
-        cache: false,
-        contentType: false,
-        processData: false,
-        success: function(response){
-            if (response.success) {
-                simple_json_editor.set(JSON.parse(response.data));
-                $(".multiple_column").hide();
+    try{
+        $("#multiple_hidden_config_json").val(JSON.stringify(simple_json_editor.get(), null , 4));
+        var form = $('#multiple_column_form')[0];
+        var form_data = new FormData(form);
+        $.ajax({
+            type:'POST',
+            url: '/config/convert_csv',
+            enctype: 'multipart/form-data',
+            data: form_data,
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function(response){
+                if (response.success) {
+                    try{
+                        simple_json_editor.set(JSON.parse(response.data));
+                        $(".multiple_column").hide();
+                        $("#column_name").empty();
+                        document.getElementById("import_csv_form").reset();
+                    }
+                    catch(err){
+                        alert(err.message);
+                    }
+                }
+                else {
+                    alert("Convert error : " + response.message);
+                }
             }
-            else {
-                alert("Convert error : " + response.message);
-            }
-        },
-        error: function (error) {
-        }
-    });
+        });
+    }
+    catch(err){
+        alert("Something wrong with the data in editor. Please check it.");
+    }
+   
 });
 
 /* END OF JSON EDITOR'S */
