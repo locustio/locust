@@ -444,10 +444,25 @@ class MasterLocustRunner(DistributedLocustRunner):
                            "Please connect slaves prior to swarming.")
             return
 
-        self.num_clients = locust_count
-        slave_num_clients = locust_count // (num_slaves or 1)
-        slave_hatch_rate = float(hatch_rate) / (num_slaves or 1)
-        remaining = locust_count % num_slaves
+        locust_count = self._preprocess_locust_count(locust_count)
+        hatch_rate = self._preprocess_hatch_rate(hatch_rate)
+
+        if set(six.iterkeys(locust_count)) != set(six.iterkeys(hatch_rate)):
+            raise ValueError("locust_count and hatch_rate do not have matching"
+                             " locust classes")
+
+        self.num_clients_by_class.clear()
+        self.num_clients_by_class.update(locust_count)
+
+        slave_num_clients = {}
+        slave_hatch_rate = {}
+        remaining = {}
+        for cls, count in six.iteritems(locust_count):
+            slave_num_clients[count] = count // num_slaves
+            remaining[cls] = count % num_slaves
+
+        for cls, rate in six.iteritems(hatch_rate):
+            slave_hatch_rate[cls] = rate / num_slaves
 
         logger.info("Sending hatch jobs to %d ready clients", num_slaves)
 
@@ -455,21 +470,24 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.stats.clear_all()
             self.exceptions = {}
             events.master_start_hatching.fire()
-        
+
         for client in six.itervalues(self.clients):
             data = {
-                "hatch_rate":slave_hatch_rate,
-                "num_clients":slave_num_clients,
-                "host":self.host,
-                "stop_timeout":None
+                "hatch_rate": slave_hatch_rate.copy(),
+                "num_clients": slave_num_clients.copy(),
+                "host": self.host,
+                "stop_timeout": None
             }
 
-            if remaining > 0:
-                data["num_clients"] += 1
-                remaining -= 1
+            for cls, rem in six.iteritems(remaining):
+                if not rem:
+                    continue
+
+                data['num_clients'][cls] += 1
+                remaining[cls] -= 1
 
             self.server.send(Message("hatch", data, None))
-        
+
         self.stats.start_time = time()
         self.state = STATE_HATCHING
 
