@@ -222,7 +222,44 @@ class TestMasterRunner(LocustTestCase):
                 num_clients += sum(six.itervalues(Message.unserialize(msg).data["num_clients"]))
             
             self.assertEqual(7, num_clients, "Total number of locusts that would have been spawned is not 7")
-    
+
+    def test_spawn_per_locust_count(self):
+        class MyTestLocust(Locust):
+            pass
+
+        class MyTestLocust2(Locust):
+            pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
+            master = MasterLocustRunner([MyTestLocust, MyTestLocust2], self.options)
+            for i in range(5):
+                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+
+            locust_count = {MyTestLocust: 11, MyTestLocust2: 20}
+            hatch_rate = {MyTestLocust: 1.0, MyTestLocust2: 10.0}
+            master.start_hatching(locust_count=locust_count, hatch_rate=hatch_rate)
+
+            self.assertEqual(5, len(server.outbox))
+
+            num_clients = {}
+            sent_hatch_rate = {}
+            for msg in server.outbox:
+                for k, v in six.iteritems(Message.unserialize(msg).data['num_clients']):
+                    k = master.locust_classes_by_name[k]
+                    num_clients.setdefault(k, 0)
+                    num_clients[k] += v
+
+                for k, v in six.iteritems(Message.unserialize(msg).data['hatch_rate']):
+                    k = master.locust_classes_by_name[k]
+                    sent_hatch_rate.setdefault(k, 0.0)
+                    sent_hatch_rate[k] += v
+
+            self.assertEqual(num_clients, locust_count)
+            self.assertEqual(set(hatch_rate.keys()), set(sent_hatch_rate.keys()))
+
+            for cls in hatch_rate:
+                self.assertAlmostEqual(hatch_rate[k], sent_hatch_rate[k])
+
     def test_spawn_fewer_locusts_than_slaves(self):
         import mock
         
