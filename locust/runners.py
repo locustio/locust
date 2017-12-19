@@ -104,6 +104,15 @@ class LocustRunner(object):
     def locust_classes(self):
         return list(self.locust_classes_by_name.values())
 
+    def translate_locust_dict(self, d):
+        """
+        Translates keys in dict from locust class names to locust classes
+        """
+        return {
+            self.locust_classes_by_name[clsname]: value
+            for clsname, value in six.iteritems(d)
+        }
+
     def weight_locusts(self, amount, stop_timeout=None):
         """
         Distributes the amount of locusts for each WebLocust-class according to it's weight
@@ -458,11 +467,11 @@ class MasterLocustRunner(DistributedLocustRunner):
         slave_hatch_rate = {}
         remaining = {}
         for cls, count in six.iteritems(locust_count):
-            slave_num_clients[count] = count // num_slaves
-            remaining[cls] = count % num_slaves
+            slave_num_clients[cls.__name__] = count // num_slaves
+            remaining[cls.__name__] = count % num_slaves
 
         for cls, rate in six.iteritems(hatch_rate):
-            slave_hatch_rate[cls] = rate / num_slaves
+            slave_hatch_rate[cls.__name__] = rate / num_slaves
 
         logger.info("Sending hatch jobs to %d ready clients", num_slaves)
 
@@ -479,12 +488,12 @@ class MasterLocustRunner(DistributedLocustRunner):
                 "stop_timeout": None
             }
 
-            for cls, rem in six.iteritems(remaining):
+            for clsname, rem in six.iteritems(remaining):
                 if not rem:
                     continue
 
-                data['num_clients'][cls] += 1
-                remaining[cls] -= 1
+                data['num_clients'][clsname] += 1
+                remaining[clsname] -= 1
 
             self.server.send(Message("hatch", data, None))
 
@@ -576,10 +585,21 @@ class SlaveLocustRunner(DistributedLocustRunner):
             if msg.type == "hatch":
                 self.client.send(Message("hatching", None, self.client_id))
                 job = msg.data
-                self.hatch_rate = job["hatch_rate"]
+
+                hatch_rate = job["hatch_rate"]
+                locust_count = job["num_clients"]
+
+                if isinstance(hatch_rate, dict):
+                    hatch_rate = self.translate_locust_dict(hatch_rate)
+
+                if isinstance(locust_count, dict):
+                    locust_count = self.translate_locust_dict(locust_count)
+
                 #self.num_clients = job["num_clients"]
                 self.host = job["host"]
-                self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
+                self.hatching_greenlet = gevent.spawn(
+                    lambda: self.start_hatching(
+                        locust_count=locust_count, hatch_rate=hatch_rate))
             elif msg.type == "stop":
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))

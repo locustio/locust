@@ -3,6 +3,7 @@ import unittest
 import gevent
 from gevent import sleep
 from gevent.queue import Queue
+import six
 
 import mock
 from locust import events
@@ -218,7 +219,7 @@ class TestMasterRunner(LocustTestCase):
             
             num_clients = 0
             for msg in server.outbox:
-                num_clients += Message.unserialize(msg).data["num_clients"]
+                num_clients += sum(six.itervalues(Message.unserialize(msg).data["num_clients"]))
             
             self.assertEqual(7, num_clients, "Total number of locusts that would have been spawned is not 7")
     
@@ -238,7 +239,7 @@ class TestMasterRunner(LocustTestCase):
             
             num_clients = 0
             for msg in server.outbox:
-                num_clients += Message.unserialize(msg).data["num_clients"]
+                num_clients += sum(six.itervalues(Message.unserialize(msg).data["num_clients"]))
             
             self.assertEqual(2, num_clients, "Total number of locusts that would have been spawned is not 2")
     
