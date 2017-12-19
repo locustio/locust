@@ -30,7 +30,7 @@ CompatRequest.unverifiable = False
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
 
-class GeventHttpLocust(Locust):
+class FastHttpLocust(Locust):
     """
     Represents an HTTP "user" which is to be hatched and attack the system that is to be load tested.
     
@@ -48,11 +48,11 @@ class GeventHttpLocust(Locust):
     """
     
     def __init__(self):
-        super(GeventHttpLocust, self).__init__()
+        super(FastHttpLocust, self).__init__()
         if self.host is None:
             raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
         
-        self.client = GeventHttpSession(base_url=self.host)
+        self.client = FastHttpSession(base_url=self.host)
 
 
 class LocustErrorResponse(object):
@@ -62,7 +62,7 @@ class LocustErrorResponse(object):
         self.status_code = 0
 
 
-class GeventHttpSession(object):
+class FastHttpSession(object):
     def __init__(self, base_url):
         self.base_url = base_url
         self.cookiejar = CookieJar()
