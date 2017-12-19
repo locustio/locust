@@ -154,6 +154,7 @@ class LocustRunner(object):
         """
         try:
             self.locust_classes = self.available_locustfiles[key].values()
+            events.locust_switch_file.fire(locust_classes_key=key)
         except KeyError:
             logger.error("No available locust classes found with key: {}".format(key))
             self.locust_classes = []
@@ -272,6 +273,11 @@ class MasterLocustRunner(DistributedLocustRunner):
         def on_quitting():
             self.quit()
         events.quitting += on_quitting
+
+        def on_locust_switch_file(locust_classes_key):
+            for client in six.itervalues(self.clients):
+                self.server.send(Message("switch", locust_classes_key, None))
+        events.locust_switch_file += on_locust_switch_file
 
     @property
     def user_count(self):
@@ -412,6 +418,9 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 logger.info("Got quit message from master, shutting down...")
                 self.stop()
                 self.greenlet.kill(block=True)
+            elif msg.type == "switch":
+                logger.info("Test file switch to %s", self.available_locustfiles[msg.data].values())
+                self.locust_classes = self.available_locustfiles[msg.data].values()
 
     def stats_reporter(self):
         while True:
