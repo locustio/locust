@@ -138,7 +138,7 @@ class FastHttpSession(object):
         return self.request("PUT", path, payload=data, **kwargs)
 
 
-class LocustCompatResponse(CompatResponse):
+class FastResponse(CompatResponse):
     @property
     def text(self):
         # Decode unicode from detected encoding.
@@ -161,7 +161,7 @@ class LocustCompatResponse(CompatResponse):
 
 
 class LocustUserAgent(UserAgent):
-    response_type = LocustCompatResponse
+    response_type = FastResponse
     
     def _urlopen(self, request):
         """Override _urlopen() in order to make it use the response_type attribute"""
