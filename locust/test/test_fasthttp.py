@@ -3,7 +3,7 @@ import socket
 
 from locust import TaskSet, task
 from locust.core import LocustError
-from locust.contrib.geventhttpclient import FastHttpSession, FastHttpLocust
+from locust.contrib.fasthttp import FastHttpSession, FastHttpLocust
 from locust.stats import global_stats
 
 from .testcases import WebserverTestCase
