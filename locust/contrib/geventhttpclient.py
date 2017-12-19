@@ -1,5 +1,18 @@
+from __future__ import absolute_import
+
+import errno
+import six
+import socket
 from time import time
-from http.cookiejar import CookieJar
+
+if six.PY2:
+    from cookielib import CookieJar
+    class ConnectionRefusedError(Exception):
+        # ConnectionRefusedError doesn't exist in python 2, so we'll 
+        # define a dummy class to avoid a NameError
+        pass
+else:
+    from http.cookiejar import CookieJar
 
 from geventhttpclient.useragent import UserAgent, CompatRequest, CompatResponse, ConnectionError
 
@@ -62,7 +75,7 @@ class GeventHttpSession(object):
         
         try:
             response = self.client.urlopen(url, method=method, **kwargs)
-        except (ConnectionError, ConnectionRefusedError) as e:
+        except (ConnectionError, ConnectionRefusedError, socket.error) as e:
             # record the consumed time
             request_meta["response_time"] = int((time() - request_meta["start_time"]) * 1000)
             events.request_failure.fire(

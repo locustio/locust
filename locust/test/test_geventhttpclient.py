@@ -1,4 +1,5 @@
 import six
+import socket
 
 from locust.contrib.geventhttpclient import GeventHttpSession, GeventHttpLocust
 from locust.stats import global_stats
@@ -18,9 +19,13 @@ class TestGeventHttpSession(WebserverTestCase):
         r = s.get("/", timeout=0.1)
         self.assertEqual(r.status_code, 0)
         self.assertEqual(None, r.content)
-        self.assertTrue(isinstance(r.error, ConnectionRefusedError))
         self.assertEqual(1, len(global_stats.errors))
-        self.assertTrue(isinstance(six.next(six.itervalues(global_stats.errors)).error, ConnectionRefusedError))
+        if six.PY2:
+            self.assertTrue(isinstance(r.error, socket.error))
+            self.assertTrue(isinstance(six.next(six.itervalues(global_stats.errors)).error, socket.error))
+        else:
+            self.assertTrue(isinstance(r.error, ConnectionRefusedError))
+            self.assertTrue(isinstance(six.next(six.itervalues(global_stats.errors)).error, ConnectionRefusedError))
     
     def test_404(self):
         global_stats.clear_all()
