@@ -7,8 +7,10 @@ import traceback
 import gevent
 import requests
 from gevent import wsgi
+import mock
 
 from locust import events, runners, stats, web
+from locust.core import Locust
 from locust.main import parse_options
 from locust.runners import LocustRunner
 from six.moves import StringIO
@@ -17,13 +19,27 @@ from .testcases import LocustTestCase
 
 
 class TestWebUI(LocustTestCase):
+    class Locust1(Locust):
+        weight = 1
+
+    class Locust2(Locust):
+        weight = 2
+
     def setUp(self):
         super(TestWebUI, self).setUp()
         
         stats.global_stats.clear_all()
         parser = parse_options()[0]
         options = parser.parse_args([])[0]
-        runners.locust_runner = LocustRunner([], options)
+
+        class Locust1(Locust):
+            weight = 1
+
+        class Locust2(Locust):
+            weight = 2
+
+        runners.locust_runner = LocustRunner(
+            [self.Locust1, self.Locust2], options)
         
         web.request_stats.clear_cache()
         
@@ -136,3 +152,93 @@ class TestWebUI(LocustTestCase):
         self.assertEqual(2, len(rows))
         self.assertEqual("Test exception", rows[1][1])
         self.assertEqual(2, int(rows[1][0]), "Exception count should be 2")
+
+    def test_swarm_oldstyle(self):
+        locust_count = 10
+        hatch_rate = 20
+        with mock.patch("locust.runners.LocustRunner.start_hatching") as start_hatching:
+            response = requests.post(
+                "http://127.0.0.1:%i/swarm" % self.web_port,
+                data={
+                    'locust_count': locust_count,
+                    'hatch_rate': hatch_rate
+                }
+            )
+
+        self.assertEqual(response.status_code, 200)
+        start_hatching.assert_called_once_with(locust_count, hatch_rate)
+
+    def test_swarm_json(self):
+        with mock.patch("locust.runners.LocustRunner.start_hatching") as start_hatching:
+            response = requests.post(
+                "http://127.0.0.1:%i/swarm" % self.web_port,
+                json={
+                    'Locust1': {
+                        'locust_count': 10,
+                        'hatch_rate': 2
+                    },
+                    'Locust2': {
+                        'locust_count': 20,
+                        'hatch_rate': 1
+                    }
+                }
+            )
+
+        self.assertEqual(response.status_code, 200)
+        start_hatching.assert_called_once_with(
+            {self.Locust1: 10, self.Locust2: 20},
+            {self.Locust1: 2.0, self.Locust2: 1.0}
+        )
+
+    def test_swarm_json_unknown_class(self):
+        with mock.patch("locust.runners.LocustRunner.start_hatching") as start_hatching:
+            response = requests.post(
+                "http://127.0.0.1:%i/swarm" % self.web_port,
+                json={
+                    'Locust1': {
+                        'locust_count': 10,
+                        'hatch_rate': 2
+                    },
+                    'Locust2': {
+                        'locust_count': 20,
+                        'hatch_rate': 1
+                    },
+                    'NonExistentLocust': {
+                        'locust_count': 20,
+                        'hatch_rate': 1
+                    }
+                }
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(start_hatching.call_count, 0)
+
+    def test_swarm_json_invalid_locust_count(self):
+        with mock.patch("locust.runners.LocustRunner.start_hatching") as start_hatching:
+            response = requests.post(
+                "http://127.0.0.1:%i/swarm" % self.web_port,
+                json={
+                    'Locust1': {
+                        'locust_count': "abc",
+                        'hatch_rate': 2
+                    }
+                }
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(start_hatching.call_count, 0)
+
+    def test_swarm_json_invalid_hatch_rate(self):
+        with mock.patch("locust.runners.LocustRunner.start_hatching") as start_hatching:
+            response = requests.post(
+                "http://127.0.0.1:%i/swarm" % self.web_port,
+                json={
+                    'Locust1': {
+                        'locust_count': 20,
+                        'hatch_rate': "abc"
+                    }
+                }
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(start_hatching.call_count, 0)

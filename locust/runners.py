@@ -270,11 +270,10 @@ class LocustRunner(object):
         kill_count = self._preprocess_locust_count(kill_count)
 
         grouped_running_locusts = itertools.groupby(
-            sorted(
-                (locust.args[0], locust)
-                for locust in self.locusts
-            )
+            sorted(self.locusts, key=lambda locust: locust.args[0].__name__),
+            lambda locust: locust.args[0]
         )
+
         running_locusts = {
             locust_class: list(locusts_iterable)
             for locust_class, locusts_iterable in grouped_running_locusts
@@ -289,7 +288,9 @@ class LocustRunner(object):
                 continue
 
             for locust in random.sample(locust_instances, locusts_to_kill):
+                cls = locust.args[0]
                 self.locusts.killone(locust)
+                self.num_clients_by_class[cls] -= 1
 
         events.hatch_complete.fire(user_count=self.num_clients)
 
@@ -320,7 +321,7 @@ class LocustRunner(object):
             locust_count = self._preprocess_locust_count(locust_count)
 
             # compute kill/spawn counts
-            all_locusts = set(self.num_clients_by_class) + set(locust_count)
+            all_locusts = set(self.num_clients_by_class) | set(locust_count)
             kill_count = {}
             spawn_count = {}
             for locust in all_locusts:

@@ -1,3 +1,4 @@
+import itertools
 import unittest
 
 import gevent
@@ -347,6 +348,108 @@ class TestMasterRunner(LocustTestCase):
         self.assertTrue("traceback" in exception)
         self.assertTrue("HeyAnException" in exception["traceback"])
         self.assertEqual(2, exception["count"])
+
+
+class TestLocustRunnerCalculations(LocustTestCase):
+    class MyTestLocust1(Locust):
+        weight = 1
+        class task_set(TaskSet):
+            @task
+            def foo(self): pass
+
+    class MyTestLocust2(Locust):
+        weight = 1
+        class task_set(TaskSet):
+            @task
+            def foo(self): pass
+
+    def setUp(self):
+        super(TestLocustRunnerCalculations, self).setUp()
+        global_stats.reset_all()
+
+        parser, _, _ = parse_options()
+        args = [
+            "--clients", "10",
+            "--hatch-rate", "10"
+        ]
+        opts, _ = parser.parse_args(args)
+        self.options = opts
+        self.runner = LocalLocustRunner([self.MyTestLocust1, self.MyTestLocust2], opts)
+
+    def test_locust_classes_by_name(self):
+        self.assertEqual(
+            self.runner.locust_classes_by_name,
+            {'MyTestLocust1': self.MyTestLocust1, 'MyTestLocust2': self.MyTestLocust2})
+
+    def test_num_clients_getter(self):
+        self.runner.num_clients_by_class.update({self.MyTestLocust1: 10, self.MyTestLocust2: 20})
+        self.assertEqual(self.runner.num_clients, 30)
+
+    def test_num_clients_setter(self):
+        self.runner.num_clients = 30
+        self.assertEqual(
+            self.runner.num_clients_by_class, {self.MyTestLocust1: 15, self.MyTestLocust2: 15})
+
+    def test_num_clients_setter_scaling(self):
+        self.runner.num_clients_by_class[self.MyTestLocust1] = 1
+        self.runner.num_clients_by_class[self.MyTestLocust2] = 2
+
+        self.runner.num_clients = 30
+        self.assertEqual(
+            self.runner.num_clients_by_class, {self.MyTestLocust1: 10, self.MyTestLocust2: 20})
+
+    def test_hatch_rate(self):
+        self.runner.hatch_rate = 100.5
+        self.assertAlmostEqual(self.runner.hatch_rate, 100.5)
+        self.assertAlmostEqual(self.runner.hatch_rates[self.MyTestLocust1], 50.25)
+        self.assertAlmostEqual(self.runner.hatch_rates[self.MyTestLocust2], 50.25)
+
+    def test_weight_locusts(self):
+        buckets = self.runner.weight_locusts(100)
+        counted_buckets = {
+            cls: len(list(items))
+            for cls, items in itertools.groupby(sorted(buckets, key=lambda t: t.__name__))
+        }
+        self.assertEqual(counted_buckets, {self.MyTestLocust1: 50, self.MyTestLocust2: 50})
+
+    def test_spawn_locust(self):
+        slept_time = {}
+        spawned_locusts = {}
+        def sleep_collector(seconds):
+            slept_time.setdefault(seconds, 0)
+            slept_time[seconds] += 1
+
+        def spawn_collector(_, locust_class):
+            spawned_locusts.setdefault(locust_class, 0)
+            spawned_locusts[locust_class] += 1
+
+        locust_count = {self.MyTestLocust1: 10, self.MyTestLocust2: 20}
+        hatch_rate = {self.MyTestLocust1: 20.0, self.MyTestLocust2: 30.0}
+
+        with mock.patch("gevent.sleep", side_effect=sleep_collector):
+            self.runner.locusts = mock.MagicMock(spawn=spawn_collector)
+            self.runner.start_hatching(locust_count=locust_count, hatch_rate=hatch_rate)
+            self.runner.hatching_greenlet.join()
+
+        self.assertEqual(len(slept_time), 2)
+        self.assertAlmostEqual(sorted(slept_time.keys())[0], 1/30.0)
+        self.assertAlmostEqual(sorted(slept_time.keys())[1], 1/20.0)
+
+        self.assertEqual(spawned_locusts, locust_count)
+
+    def test_downscale_locusts(self):
+        locust_count = {self.MyTestLocust1: 10, self.MyTestLocust2: 20}
+        hatch_rate = {self.MyTestLocust1: 999, self.MyTestLocust2: 999}
+
+        self.runner.start_hatching(locust_count, hatch_rate)
+        self.runner.hatching_greenlet.join()
+
+        self.assertEqual(self.runner.user_count, 30)
+        self.runner.start_hatching({self.MyTestLocust1: 6, self.MyTestLocust2: 12})
+        self.runner.hatching_greenlet.join()
+        # self.assertEqual(self.runner.user_count, 18)
+        self.assertEqual(self.runner.num_clients_by_class,
+                         {self.MyTestLocust1: 6, self.MyTestLocust2: 12})
 
 
 class TestMessageSerializing(unittest.TestCase):
