@@ -32,6 +32,12 @@ SLAVE_REPORT_INTERVAL = 3.0
 
 class LocustRunner(object):
     def __init__(self, locust_classes, options):
+        # handle case of single locust class
+        try:
+            iter(locust_classes)
+        except TypeError:
+            locust_classes = [locust_classes]
+
         self.options = options
         self.locust_classes_by_name = {
             locust.__name__: locust for locust in locust_classes
