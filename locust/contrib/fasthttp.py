@@ -20,6 +20,7 @@ from geventhttpclient.useragent import UserAgent, CompatRequest, CompatResponse,
 
 from locust import events
 from locust.core import Locust
+from locust.exception import LocustError
 
 
 # Monkey patch geventhttpclient.useragent.CompatRequest so that Cookiejar works with Python >= 3.3
@@ -51,6 +52,8 @@ class FastHttpLocust(Locust):
         super(FastHttpLocust, self).__init__()
         if self.host is None:
             raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
+        if not re.match(r"^https?://[^/]+$", self.host, re.I):
+            raise LocustError("Invalid host (`%s`). The specified host string must be a base URL without a trailing slash. E.g. http://example.org" % self.host)
         
         self.client = FastHttpSession(base_url=self.host)
 
