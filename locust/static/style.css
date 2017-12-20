@@ -555,3 +555,15 @@ ul.tabs li a.current:after, ul.tabs_json li a.current:after {
     list-style-type: none;
     padding: 0;
 }
+
+.chart-filter {
+    top:90px;
+    position: relative;
+    z-index: 1;
+    float: right;
+    margin-right: 70px;
+}
+
+.chart-filter > button {
+    margin: 0px 2px;
+}

@@ -67,6 +67,26 @@ $(".close_link").click(function(event) {
     $(this).parent().parent().hide();
 });
 
+var chartFilters = ['users','rps','response time','failures']
+$(".chart-filter > button").click(function(event) {
+    let activeFilters = advanceChart.getActiveFilter()
+    if(!!advanceChart) {
+        if(!activeFilters.includes($(this).index())) {
+            if(activeFilters.length < 2) {
+                advanceChart.addFilter($(this).index())
+                $(this).removeClass("btn-outline-secondary")
+                $(this).addClass("btn-secondary")
+            }
+        } else {
+            if(activeFilters.length > 1) {
+                advanceChart.removeFilter($(this).index())
+                $(this).removeClass("btn-secondary")
+                $(this).addClass("btn-outline-secondary")
+            }
+        }
+    }
+})
+
 $('#ramp_form').submit(function(event) {
     event.preventDefault();
     $.post($(this).attr("action"), $(this).serialize(),
@@ -176,6 +196,7 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
         if (!!responseTimeChart) responseTimeChart.resize()
         if (!!usersChart) usersChart.resize()
         if (!!failureChart) failureChart.resize()
+        if (!!advanceChart) advanceChart.resize()
         if (!!endpointResponseTimeCharts) {
           for (var chartKey in endpointResponseTimeCharts) {
             endpointResponseTimeCharts[chartKey].resize()
@@ -284,7 +305,7 @@ $(".stats_label").click(function(event) {
 });
 
 // init charts
-var rpsChart, responseTimeChart, usersChart, failureChart, endpointResponseTimeCharts, endpointRpsCharts, endpointFailureCharts;
+var rpsChart, responseTimeChart, usersChart, failureChart, endpointResponseTimeCharts, endpointRpsCharts, endpointFailureCharts, advanceChart;
 const totalKey = "total"
 
 function updateStats() {
@@ -357,6 +378,7 @@ function updateStats() {
             failureChart.addValue(failureValues);
             rpsChart.addValue(rpsValues);
             responseTimeChart.addValue(responseTimeValues);
+            advanceChart.addValue([[report.user_count],rpsValues,responseTimeValues,failureValues])
             usersChart.addValue([report.user_count]);
         }
 
@@ -378,6 +400,11 @@ function createEndpointLines(chartKey, name, callback) {
     if(!rpsChart.isLineExist(chartKey)) rpsChart.addLine(chartKey, name);
     if(!responseTimeChart.isLineExist(chartKey)) responseTimeChart.addLine(chartKey , name);
     if(!failureChart.isLineExist(chartKey)) failureChart.addLine(chartKey, name);
+    if(!advanceChart.isLineExist(1,chartKey)) {
+        for(let l=1; l < chartFilters.length; l++) {
+            advanceChart.addLine(l,chartKey,name)
+        }
+    }
     callback(chartKey)
 }
 
@@ -386,6 +413,7 @@ function resetCharts() {
   if (!!responseTimeChart) responseTimeChart.dispose()
   if (!!usersChart) usersChart.dispose()
   if (!!failureChart) failureChart.dispose()
+  if (!!advanceChart) advanceChart.dispose()
   if (!!endpointResponseTimeCharts) {
     for (var chartKey in endpointResponseTimeCharts) {
       endpointResponseTimeCharts[chartKey].dispose()
@@ -394,10 +422,13 @@ function resetCharts() {
     }
   }
   $('.charts-container').empty()
+  advanceChart = new LocustAdvanceLineChart($(".charts-container"), "Advance Chart", "", chartFilters, ['users','reqs/s','ms','failures'], "100%");
   rpsChart = new LocustLineChart($(".charts-container"), "Requests per Second", "", [], "reqs/s", "100%");
   responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", "", [], "ms", "100%");
   usersChart = new LocustLineChart($(".charts-container"), "Number of Users", "", ["Total"], "users", "100%");
   failureChart = new LocustLineChart($(".charts-container"), "Number of Failures", "", [], "failures", "100%");
+  advanceChart.addLine(0,"Total","Total")
+  $(".chart-filter > button")[chartFilters.indexOf('response time')].click()
   endpointResponseTimeCharts = []
   endpointRpsCharts = []
   endpointFailureCharts = []

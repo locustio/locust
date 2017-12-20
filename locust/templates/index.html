@@ -2,9 +2,10 @@
 <html>
 <head>
     <title>Locust</title>
+    <link rel="stylesheet" href="/static/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/static/select2-bootstrap.min.css"/>
     <link rel="stylesheet" type="text/css" href="/static/style.css?v={{ version }}" media="screen">
     <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon"/>
-    <link rel="stylesheet" href="/static/select2-bootstrap.min.css"/>
     <link rel="stylesheet" href="/static/select2.css"/>
     <link href="/static/jsoneditor.min.css" rel="stylesheet" type="text/css">
     <script src="/static/jsoneditor.min.js"></script>
@@ -254,6 +255,12 @@
                 </div>
                 <div id="charts" style="display:none;">
                     <p class="note">Note: There is no persistence of these charts, if you refresh this page, new charts will be created.</p>
+                    <div class="chart-filter">
+                        <button type="button" class="btn btn-outline-secondary btn-sm">User</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm">RPS</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm">Response Time</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm">Failure</button>
+                    </div>
                     <div class="charts-container"></div>
                 </div>
                 <div style="display:none;">
