@@ -1,5 +1,5 @@
 $(window).ready(function() {
-    $('.select2').select2({theme: 'bootstrap', width: "100%"});
+    $('.select2').select2({theme: 'bootstrap', width: "97.3%"});
     if($("#locust_count").length > 0) {
         $("#locust_count").focus().select();
     }
@@ -20,11 +20,23 @@ $("#box_stop a.reset-button").click(function(event) {
     $.get($(this).attr("href"));
 });
 
+$(".manual_ramp_link").click(function(event) {
+    event.preventDefault();
+
+    $("#ramp").hide();
+    $("#start").show();
+    $("#edit_config").hide();
+    $("#locust_count").focus().select();
+    $(".status").removeClass("none");
+});
+
 $(".ramp_test").click(function(event) {
     event.preventDefault();
+
     $("#start").hide();
     $("#ramp").show();
     $("#edit_config").hide();
+    $("#init_count").focus().select();
     $(".status").removeClass("none");
 });
 
@@ -41,15 +53,6 @@ $(".edit_test").click(function(event) {
     event.preventDefault();
     $("#edit").show();
     $("#new_locust_count").focus().select();
-});
-
-$(".back_new_test").click(function(event) {
-    event.preventDefault();
-    $("#start").show();
-    $("#ramp").hide();
-    $("#edit_config").hide();
-    $("#locust_count").focus().select();
-    $(".status").removeClass("none");
 });
 
 $(".close_link").click(function(event) {
@@ -110,6 +113,7 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
         if (!!responseTimeChart) responseTimeChart.resize()
         if (!!usersChart) usersChart.resize()
         if (!!failureChart) failureChart.resize()
+        if (!!advanceChart) advanceChart.resize()
         if (!!endpointResponseTimeCharts) {
           for (var chartKey in endpointResponseTimeCharts) {
             endpointResponseTimeCharts[chartKey].resize()
@@ -123,9 +127,9 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
 $("ul.tabs_json").tabs("div.panes_json > div");
 
 
-/*** START OF JSON EDITOR'S ***/
+/*** START OF CONFIGURATION SECTION ***/
 
-var simple_json_container = document.getElementById("simple_json_editor");
+var simple_json_container = document.getElementById("json_editor");
 var json_editor_options = {
     mode: 'tree',
     modes: ['code', 'tree'],
@@ -133,21 +137,36 @@ var json_editor_options = {
         alert(err.toString());
       }
 }
-var simple_json_editor = new JSONEditor(simple_json_container, json_editor_options);
+var json_editor = new JSONEditor(simple_json_container, json_editor_options);
+var old_config;
 
 $(".edit_config_link").click(function(event) {
     event.preventDefault();
-    simple_json_editor.set(JSON.parse($("#hidden_config_json").val()));
-    $("#start").hide();
-    $("#ramp").hide();
-    $("#edit_config").show();
-    $(".status").addClass("none");
-    $("#config_tab").trigger("click");
+    try{
+        $.ajax({
+            type: "GET",
+            url: "/config/get_config_content",
+            success: function(response){
+                old_config = JSON.parse(response.data)
+                json_editor.set(old_config);
+                $("#hidden_config_json").val(response.data);
+                $("#start").hide();
+                $("#ramp").hide();
+                $("#edit_config").show();
+                $(".status").addClass("none");
+                $("#config_tab").trigger("click");
+            }
+        }); 
+    }
+    catch(err){
+        alert("Failed to load configuration data.\n\nOriginal error message:\n" + err);
+    }
+    
 });
 
 $('#submit_json_btn').click(function(){
     event.preventDefault();
-    $('#hidden_config_json').val(JSON.stringify(simple_json_editor.get(), null , 4));
+    $('#hidden_config_json').val(JSON.stringify(json_editor.get(), null , 4));
     $('#json_config_form').submit();
 });
 
@@ -223,7 +242,7 @@ $('#multiple_column_form').submit(function(event) {
 $('#convert_csv_btn').click(function(){
     event.preventDefault();
     try{
-        $("#multiple_hidden_config_json").val(JSON.stringify(simple_json_editor.get(), null , 4));
+        $("#multiple_hidden_config_json").val(JSON.stringify(json_editor.get(), null , 4));
         var form = $('#multiple_column_form')[0];
         var form_data = new FormData(form);
         $.ajax({
@@ -237,7 +256,7 @@ $('#convert_csv_btn').click(function(){
             success: function(response){
                 if (response.success) {
                     try{
-                        simple_json_editor.set(JSON.parse(response.data));
+                        json_editor.set(JSON.parse(response.data));
                         $(".multiple_column").hide();
                         $("#column_name").empty();
                         document.getElementById("import_csv_form").reset();
@@ -253,12 +272,62 @@ $('#convert_csv_btn').click(function(){
         });
     }
     catch(err){
-        alert("Something wrong with the data in editor. Please check it.");
+        alert("Something wrong with the data in editor. Please check it.\n\nOriginal error message:\n" + err);
     }
-   
 });
 
-/* END OF JSON EDITOR'S */
+$(".config_new_test").click(function(event) {
+    event.preventDefault();
+    if(JSON.stringify(old_config,null,4) != JSON.stringify(json_editor.get(),null,4)) {
+        $("#not_save_json_btn").attr("data-origin-link", "new test");
+        $("#modal_confirm_save_json").modal();
+    }
+    else {
+        $("#start").show();
+        $("#ramp").hide();
+        $("#edit_config").hide();
+        $("#locust_count").focus().select();
+        $(".status").removeClass("none");
+    }
+});
+
+$(".config_ramp_test").click(function(event) {
+    event.preventDefault();
+    if(JSON.stringify(old_config,null,4) != JSON.stringify(json_editor.get(),null,4)) {
+        $("#not_save_json_btn").attr("data-origin-link", "new ramp");
+        $("#modal_confirm_save_json").modal();
+    }
+    else {
+        $("#start").hide();
+        $("#ramp").show();
+        $("#edit_config").hide();
+        $("#init_count").focus().select();
+        $(".status").removeClass("none");
+    }
+});
+
+
+$("#save_json_btn").click(function(event) {
+    $("#submit_json_btn").trigger("click");
+});
+
+$("#not_save_json_btn").click(function(event) {
+    $("#modal_confirm_save_json").modal("hide");
+    if($("#not_save_json_btn").attr("data-origin-link") == "new test") {
+        $("#start").show();
+        $("#ramp").hide();
+    }
+    else if($("#not_save_json_btn").attr("data-origin-link") == "new ramp") {
+        $("#ramp").show();
+        $("#start").hide();
+    }
+    $("#edit_config").hide();
+    $("#locust_count").focus().select();
+    $(".status").removeClass("none");
+});
+
+
+/* END OF CONFIGURATION SECTION */
 
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');

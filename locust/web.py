@@ -56,8 +56,6 @@ def index():
     else:
         edit_label = ""
 
-    load_config = configuration.read_file()
-
     return render_template("index.html",
         state=runners.locust_runner.state,
         is_distributed=is_distributed,
@@ -66,8 +64,7 @@ def index():
         available_locustfiles = sorted(runners.locust_runner.available_locustfiles.keys()),
         version=version,
         ramp = _ramp,
-        host=host,
-        json_config=load_config,
+        host=host
     )
 
 @app.route('/swarm', methods=["POST"])
@@ -271,6 +268,13 @@ def ramp():
     global greenlet_spawner
     greenlet_spawner = gevent.spawn(start_ramping, hatch_rate, max_clients, hatch_stride, percentile, response_time, fail_rate, precision, init_clients, calibration_time)
     response = make_response(json.dumps({'success':True, 'message': 'Ramping started'}))
+    response.headers["Content-type"] = "application/json"
+    return response
+
+@app.route("/config/get_config_content", methods=["GET"])
+def get_config_content():
+    load_config = configuration.read_file()
+    response = make_response(json.dumps({'data':load_config}))
     response.headers["Content-type"] = "application/json"
     return response
 
