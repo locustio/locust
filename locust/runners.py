@@ -13,7 +13,7 @@ from gevent.pool import Group
 import six
 from six.moves import xrange
 
-from . import events
+from . import events, configuration
 from .stats import global_stats
 
 from .rpc import rpc, Message
@@ -279,6 +279,15 @@ class MasterLocustRunner(DistributedLocustRunner):
                 self.server.send(Message("switch", locust_classes_key, None))
         events.locust_switch_file += on_locust_switch_file
 
+        def on_master_new_configuration(new_config):
+            logger.info("report slaves to update their config")
+            data =  {
+                        'config':new_config
+                    }
+            for client in six.itervalues(self.clients):
+                self.server.send(Message("config", data, None))
+        events.master_new_configuration += on_master_new_configuration
+
     @property
     def user_count(self):
         return sum([c.user_count for c in six.itervalues(self.clients)])
@@ -421,6 +430,10 @@ class SlaveLocustRunner(DistributedLocustRunner):
             elif msg.type == "switch":
                 logger.info("Test file switch to %s", self.available_locustfiles[msg.data].values())
                 self.locust_classes = self.available_locustfiles[msg.data].values()
+            elif msg.type == "config":
+                logger.info("Got new config from master, updating this slave config")
+                configuration.write_file(msg.data['config'])
+
 
     def stats_reporter(self):
         while True:

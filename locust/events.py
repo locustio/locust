@@ -130,3 +130,8 @@ locust_switch_file = EventHook()
 """
 *locust_select_file* is fired when switch file test on any locust worker.
 """
+
+master_new_configuration = EventHook()
+"""
+*master_new_configuration* is fired when new configuration saved from master
+"""

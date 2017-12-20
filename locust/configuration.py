@@ -1,5 +1,6 @@
 import os, json, logging, jsonpath_rw_ext, jsonpath_rw
 from jsonpath_rw import jsonpath, parse
+from . import events
 
 logger = logging.getLogger(__name__)
 config_path = '/tests/settings/config.json'
@@ -27,6 +28,7 @@ def write_file(string_json):
             data_file.write(string_json)
             status = True
             message = 'Configuration has been saved'
+            events.master_new_configuration.fire(new_config=string_json)
     except Exception as err:
         logger.info(err)
         status = False
