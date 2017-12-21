@@ -1,9 +1,10 @@
 import six
 import socket
 
-from locust import TaskSet, task
+from locust import TaskSet, task, events
 from locust.core import LocustError
 from locust.contrib.fasthttp import FastHttpSession, FastHttpLocust
+from locust.exception import CatchResponseError, InterruptTaskSet, ResponseError
 from locust.stats import global_stats
 
 from .testcases import WebserverTestCase
@@ -265,3 +266,105 @@ class TestFastHttpLocustClass(WebserverTestCase):
         self.assertEqual(1, len(global_stats.entries))
         self.assertEqual(1, global_stats.get("/redirect", "GET").num_requests)
         self.assertEqual(0, global_stats.get("/ultra_fast", "GET").num_requests)
+
+
+class TestFastHttpCatchResponse(WebserverTestCase):
+    def setUp(self):
+        super(TestFastHttpCatchResponse, self).setUp()
+        
+        class MyLocust(FastHttpLocust):
+            host = "http://127.0.0.1:%i" % self.port
+
+        self.locust = MyLocust()
+        
+        self.num_failures = 0
+        self.num_success = 0
+        def on_failure(request_type, name, response_time, exception):
+            self.num_failures += 1
+            self.last_failure_exception = exception
+        def on_success(**kwargs):
+            self.num_success += 1
+        events.request_failure += on_failure
+        events.request_success += on_success
+        
+    def test_catch_response(self):
+        self.assertEqual(500, self.locust.client.get("/fail").status_code)
+        self.assertEqual(1, self.num_failures)
+        self.assertEqual(0, self.num_success)
+        
+        with self.locust.client.get("/ultra_fast", catch_response=True) as response: pass
+        self.assertEqual(1, self.num_failures)
+        self.assertEqual(1, self.num_success)
+        
+        with self.locust.client.get("/ultra_fast", catch_response=True) as response:
+            raise ResponseError("Not working")
+        
+        self.assertEqual(2, self.num_failures)
+        self.assertEqual(1, self.num_success)
+    
+    def test_catch_response_http_fail(self):
+        with self.locust.client.get("/fail", catch_response=True) as response: pass
+        self.assertEqual(1, self.num_failures)
+        self.assertEqual(0, self.num_success)
+    
+    def test_catch_response_http_manual_fail(self):
+        with self.locust.client.get("/ultra_fast", catch_response=True) as response:
+            response.failure("Haha!")
+        self.assertEqual(1, self.num_failures)
+        self.assertEqual(0, self.num_success)
+        self.assertTrue(
+            isinstance(self.last_failure_exception, CatchResponseError),
+            "Failure event handler should have been passed a CatchResponseError instance"
+        )
+    
+    def test_catch_response_http_manual_success(self):
+        with self.locust.client.get("/fail", catch_response=True) as response:
+            response.success()
+        self.assertEqual(0, self.num_failures)
+        self.assertEqual(1, self.num_success)
+    
+    def test_catch_response_allow_404(self):
+        with self.locust.client.get("/does/not/exist", catch_response=True) as response:
+            self.assertEqual(404, response.status_code)
+            if response.status_code == 404:
+                response.success()
+        self.assertEqual(0, self.num_failures)
+        self.assertEqual(1, self.num_success)
+    
+    def test_interrupt_taskset_with_catch_response(self):
+        class MyTaskSet(TaskSet):
+            @task
+            def interrupted_task(self):
+                with self.client.get("/ultra_fast", catch_response=True) as r:
+                    raise InterruptTaskSet()
+        class MyLocust(FastHttpLocust):
+            host = "http://127.0.0.1:%i" % self.port
+            task_set = MyTaskSet
+        
+        l = MyLocust()
+        ts = MyTaskSet(l)
+        self.assertRaises(InterruptTaskSet, lambda: ts.interrupted_task())
+        self.assertEqual(0, self.num_failures)
+        self.assertEqual(0, self.num_success)
+    
+    def test_catch_response_connection_error_success(self):
+        class MyLocust(FastHttpLocust):
+            host = "http://127.0.0.1:1"
+        l = MyLocust()
+        with l.client.get("/", catch_response=True) as r:
+            self.assertEqual(r.status_code, 0)
+            self.assertEqual(None, r.content)
+            r.success()
+        self.assertEqual(1, self.num_success)
+        self.assertEqual(0, self.num_failures)
+    
+    def test_catch_response_connection_error_fail(self):
+        class MyLocust(FastHttpLocust):
+            host = "http://127.0.0.1:1"
+        l = MyLocust()
+        with l.client.get("/", catch_response=True) as r:
+            self.assertEqual(r.status_code, 0)
+            self.assertEqual(None, r.content)
+            r.success()
+        self.assertEqual(1, self.num_success)
+        self.assertEqual(0, self.num_failures)

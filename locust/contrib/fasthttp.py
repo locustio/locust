@@ -4,6 +4,7 @@ import chardet
 import re
 import six
 import socket
+from ssl import SSLError
 from timeit import default_timer
 
 if six.PY2:
@@ -16,19 +17,25 @@ if six.PY2:
 else:
     from http.cookiejar import CookieJar
 
+from gevent.timeout import Timeout
 from geventhttpclient.useragent import UserAgent, CompatRequest, CompatResponse, ConnectionError
 
 from locust import events
 from locust.core import Locust
-from locust.exception import LocustError
+from locust.exception import LocustError, CatchResponseError, ResponseError
 
 
 # Monkey patch geventhttpclient.useragent.CompatRequest so that Cookiejar works with Python >= 3.3
 # More info: https://github.com/requests/requests/pull/871
 CompatRequest.unverifiable = False
 
-
+# Regexp for checking if an absolute URL was specified
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
+
+# List of exceptions that can be raised by geventhttpclient when sending an HTTP request, 
+# and that should result in a Locust failure
+FAILURE_EXCEPTIONS = (ConnectionError, ConnectionRefusedError, socket.error, \
+                      SSLError, Timeout)
 
 
 class FastHttpLocust(Locust):
@@ -58,13 +65,6 @@ class FastHttpLocust(Locust):
         self.client = FastHttpSession(base_url=self.host)
 
 
-class LocustErrorResponse(object):
-    content = None
-    def __init__(self, error):
-        self.error = error
-        self.status_code = 0
-
-
 class FastHttpSession(object):
     def __init__(self, base_url):
         self.base_url = base_url
@@ -78,7 +78,22 @@ class FastHttpSession(object):
         else:
             return "%s%s" % (self.base_url, path)
     
-    def request(self, method, path, name=None, **kwargs):
+    def _send_request_safe_mode(self, method, url, **kwargs):
+        """
+        Send an HTTP request, and catch any exception that might occur due to either 
+        connection problems, or invalid HTTP status codes
+        """
+        try:
+            return self.client.urlopen(url, method=method, **kwargs)
+        except FAILURE_EXCEPTIONS as e:
+            if hasattr(e, "response"):
+                r = e.response
+            else:
+                r = ErrorResponse()
+            r.error = e
+            return r
+    
+    def request(self, method, path, name=None, catch_response=False, **kwargs):
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(path)
         
@@ -89,38 +104,42 @@ class FastHttpSession(object):
         request_meta["start_time"] = default_timer()
         request_meta["name"] = name or path
         
-        try:
-            response = self.client.urlopen(url, method=method, **kwargs)
-        except (ConnectionError, ConnectionRefusedError, socket.error) as e:
-            # record the consumed time
-            request_meta["response_time"] = int((default_timer() - request_meta["start_time"]) * 1000)
-            events.request_failure.fire(
-                request_type=request_meta["method"], 
-                name=request_meta["name"], 
-                response_time=request_meta["response_time"], 
-                exception=e, 
-            )
-            if hasattr(e, "response"):
-                return e.response
-            else:
-                return LocustErrorResponse(e)
+        # send request, and catch any exceptions
+        response = self._send_request_safe_mode(method, url, **kwargs)
+        
+        # get the length of the content, but if the argument stream is set to True, we take
+        # the size from the content-length header, in order to not trigger fetching of the body
+        if kwargs.get("stream", False):
+            request_meta["content_size"] = int(response.headers.get("content-length") or 0)
         else:
-            # get the length of the content, but if the argument stream is set to True, we take
-            # the size from the content-length header, in order to not trigger fetching of the body
-            if kwargs.get("stream", False):
-                request_meta["content_size"] = int(response.headers.get("content-length") or 0)
+            request_meta["content_size"] = len(response.content or "")
+        
+        # Record the consumed time
+        # Note: This is intentionally placed after we record the content_size above, since 
+        # we'll then trigger fetching of the body (unless stream=True)
+        request_meta["response_time"] = int((default_timer() - request_meta["start_time"]) * 1000)
+        
+        if catch_response:
+            response.locust_request_meta = request_meta
+            return ResponseContextManager(response)
+        else:
+            try:
+                response.raise_for_status()
+            except FAILURE_EXCEPTIONS as e:
+                events.request_failure.fire(
+                    request_type=request_meta["method"], 
+                    name=request_meta["name"], 
+                    response_time=request_meta["response_time"], 
+                    exception=e, 
+                )
             else:
-                request_meta["content_size"] = len(response.content or "")
-            
-            # record the consumed time
-            request_meta["response_time"] = int((default_timer() - request_meta["start_time"]) * 1000)
-            events.request_success.fire(
-                request_type=request_meta["method"],
-                name=request_meta["name"],
-                response_time=request_meta["response_time"],
-                response_length=request_meta["content_size"],
-            )
-        return response
+                events.request_success.fire(
+                    request_type=request_meta["method"],
+                    name=request_meta["name"],
+                    response_time=request_meta["response_time"],
+                    response_length=request_meta["content_size"],
+                )
+            return response
     
     def delete(self, path, **kwargs):
         return self.request("DELETE", path, **kwargs)
@@ -154,6 +173,8 @@ class FastResponse(CompatResponse):
     headers = None
     """Dict like object containing the response headers"""
     
+    _response = None
+    
     @property
     def text(self):
         """
@@ -177,6 +198,38 @@ class FastResponse(CompatResponse):
     def apparent_encoding(self):
         """The apparent encoding, provided by the chardet library."""
         return chardet.detect(self.content)['encoding']
+    
+    def raise_for_status(self):
+        """Raise any connection errors that occured during the request"""
+        if hasattr(self, 'error') and self.error:
+            raise self.error
+    
+    @property
+    def status_code(self):
+        """
+        We override status_code in order to return None if bo valid response was 
+        returned. E.g. in the case of connection errors
+        """
+        return self._response is not None and self._response.get_code() or 0
+    
+    def _content(self):
+        if self.headers is None:
+            return None
+        return super(FastResponse, self)._content()
+
+
+class ErrorResponse(object):
+    """
+    This is used as a dummy response object when geventhttpclient raises an error 
+    that doesn't have a real Response object attached. E.g. a socket error or similar
+    """
+    headers = None
+    content = None
+    status_code = 0
+    error = None
+    text = None
+    def raise_for_status(self):
+        raise self.error
 
 
 class LocustUserAgent(UserAgent):
@@ -188,3 +241,85 @@ class LocustUserAgent(UserAgent):
         resp = client.request(request.method, request.url_split.request_uri,
                               body=request.payload, headers=request.headers)
         return self.response_type(resp, request=request, sent_request=resp._sent_request)
+
+
+class ResponseContextManager(FastResponse):
+    """
+    A Response class that also acts as a context manager that provides the ability to manually 
+    control if an HTTP request should be marked as successful or a failure in Locust's statistics
+    
+    This class is a subclass of :py:class:`FastResponse <locust.contrib.fasthttp.FastResponse>` 
+    with two additional methods: :py:meth:`success <locust.contrib.fasthttp.ResponseContextManager.success>`
+    and :py:meth:`failure <locust.contrib.fasthttp.ResponseContextManager.failure>`.
+    """
+    
+    _is_reported = False
+    
+    def __init__(self, response):
+        # copy data from response to this object
+        self.__dict__ = response.__dict__
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc, value, traceback):
+        if self._is_reported:
+            # if the user has already manually marked this response as failure or success
+            # we can ignore the default haviour of letting the response code determine the outcome
+            return exc is None
+        
+        if exc:
+            if isinstance(value, ResponseError):
+                self.failure(value)
+            else:
+                return False
+        else:
+            try:
+                self.raise_for_status()
+            except FAILURE_EXCEPTIONS as e:
+                self.failure(e)
+            else:
+                self.success()
+        return True
+    
+    def success(self):
+        """
+        Report the response as successful
+        
+        Example::
+        
+            with self.client.get("/does/not/exist", catch_response=True) as response:
+                if response.status_code == 404:
+                    response.success()
+        """
+        events.request_success.fire(
+            request_type=self.locust_request_meta["method"],
+            name=self.locust_request_meta["name"],
+            response_time=self.locust_request_meta["response_time"],
+            response_length=self.locust_request_meta["content_size"],
+        )
+        self._is_reported = True
+    
+    def failure(self, exc):
+        """
+        Report the response as a failure.
+        
+        exc can be either a python exception, or a string in which case it will
+        be wrapped inside a CatchResponseError. 
+        
+        Example::
+        
+            with self.client.get("/", catch_response=True) as response:
+                if response.content == "":
+                    response.failure("No data")
+        """
+        if isinstance(exc, six.string_types):
+            exc = CatchResponseError(exc)
+        
+        events.request_failure.fire(
+            request_type=self.locust_request_meta["method"],
+            name=self.locust_request_meta["name"],
+            response_time=self.locust_request_meta["response_time"],
+            exception=exc,
+        )
+        self._is_reported = True
