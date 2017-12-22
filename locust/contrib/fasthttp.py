@@ -265,7 +265,7 @@ class FastResponse(CompatResponse):
     @property
     def status_code(self):
         """
-        We override status_code in order to return None if bo valid response was 
+        We override status_code in order to return None if no valid response was 
         returned. E.g. in the case of connection errors
         """
         return self._response is not None and self._response.get_code() or 0
