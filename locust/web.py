@@ -17,7 +17,6 @@ from locust.stats import median_from_dict
 from locust import __version__ as version
 import gevent, itertools
 
-import jsonpath_rw_ext
 
 import logging
 logger = logging.getLogger(__name__)
