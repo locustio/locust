@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Locust</title>
-    <link rel="stylesheet" href="/static/bootstrap.min.css"/>
-    <link rel="stylesheet" href="/static/select2-bootstrap.min.css"/>
+    <link rel="stylesheet" href="/static/bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/select2-bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="/static/style.css?v={{ version }}" media="screen">
-    <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon"/>
-    <link rel="stylesheet" href="/static/select2.css"/>
-    <link href="/static/jsoneditor.min.css" rel="stylesheet" type="text/css">
-    <script src="/static/jsoneditor.min.js"></script>
+    <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/static/select2.css" />
+    <link rel="stylesheet" href="/static/jsoneditor.min.css" type="text/css">
 </head>
+
 <body class="{{state}}">
     <div class="top">
         <div class="top-content container">
@@ -20,11 +21,6 @@
                     <div class="value" id="host_url">
                         {{host}}
                     </div>
-                    <a href="#" class="edit_test">Edit</a>
-                    <a href="#" class="new_test" id="new_test">New Test</a>
-                    {% if ramp %}
-                        <a href="#" class="new_test ramp_test">New Ramp</a>
-                    {% endif %}
                 </div>
                 <div class="top_box box_status">
                     <div class="label">STATUS</div>
@@ -34,6 +30,13 @@
                     <div class="user_count">
                         <span id="userCount">{{user_count}}</span> users
                     </div>
+                    <ul>
+                        <li><a href="#" class="edit_test">Edit</a></li>
+                        <li><a href="#" class="new_test" id="new_test">New Test</a></li>
+                        {% if ramp %}
+                            <li><a href="#" class="new_test ramp_test">New Ramp</a></li>
+                        {% endif %}
+                    </ul>
                 </div>
                 {% if is_distributed %}
                     <div class="top_box box_slaves" id="box_rps">
@@ -49,7 +52,7 @@
                     <div class="label">FAILURES</div>
                     <div class="value"><span id="fail_ratio"></span>%</div>
                 </div>
-                 <div class="top_box box_run_time box_running" id="box_run_time">
+                <div class="top_box box_run_time box_running" id="box_run_time">
                     <div class="label">RUN TIME</div>
                     <div class="value"><span id="run_time"></span>{{ run_time }}</div>
                 </div>
@@ -70,9 +73,11 @@
                 <h2>Start new Locust swarm</h2>
                 <form action="/swarm" method="POST" id="swarm_form" class="start-timer">
                     <label for="locust_count">Number of users to simulate</label>
-                    <input type="text" name="locust_count" id="locust_count" class="val" /><br>
+                    <input type="text" name="locust_count" id="locust_count" class="val" />
+                    <br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
+                    <input type="text" name="hatch_rate" id="hatch_rate" class="val" />
+                    <br>
                     <input type="hidden" name="type_swarm" value="start">
                     <label for="locustfile">Locust file to execute</label>
                     <select name="locustfile" id="locustfile" class="select2">
@@ -80,18 +85,18 @@
                             <option value="{{name}}">{{name}}</option>
                         {% endfor %}
                     </select>
-                    <br><br>
+                    <br>
+                    <br>
                     <a href="#" class="edit_config_link">Edit Config</a>
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
             </div>
             <br>
-            <div class="ramp_text">
-            {% if ramp %}
-
-                ...or let locust <a href="#" class="ramp_test">ramp</a> find the highest stable locust count for you
-            {% endif %}
+            <div class="auto_ramp_text">
+                {% if ramp %} ...or do
+                    <a href="#" class="ramp_test">auto ramp</a> to automatically find the best user count
+                {% endif %}
             </div>
         </div>
 
@@ -103,9 +108,11 @@
                 <h2>Change the locust count</h2>
                 <form action="/swarm" method="POST" id="edit_form">
                     <label for="locust_count">Number of users to simulate</label>
-                    <input type="text" name="locust_count" id="new_locust_count" class="val" /><br>
+                    <input type="text" name="locust_count" id="new_locust_count" class="val" />
+                    <br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="hatch_rate" id="new_hatch_rate" class="val" /><br>
+                    <input type="text" name="hatch_rate" id="new_hatch_rate" class="val" />
+                    <br>
                     <input type="hidden" name="type_swarm" value="edit">
                     <button type="submit">Start swarming</button>
                 </form>
@@ -114,113 +121,141 @@
         </div>
 
         {% if ramp %}
-            <div class="start ramp" id="ramp">
-                <div style="position:relative;">
-                    <a href="#" class="close_link">Close</a>
-                </div>
-                <div class="padder">
-                    <h2>Ramping</h2>
-                    <form action="/ramp" method="POST" id="ramp_form" class="start-timer">
-                        <div style="float:left;">
+        <div class="start ramp" id="ramp">
+            <div style="position:relative;">
+                <a href="#" class="close_link">Close</a>
+            </div>
+            <div class="padder">
+                <h2>Ramping</h2>
+                <form action="/ramp" method="POST" id="ramp_form" class="start-timer">
+                    <div style="float:left;">
                         <label for="init_count" title="This is the number of initial number of locusts that will be spawned. Pick a number you know can be handled.">Initial number of clients</label>
-                        <input type="text" name="init_count" id="init_count" class="val" /><br>
-                        <label for="hatch_rate" title="This is the rate locusts/second at which all slaves together will spawn additional locusts">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                        <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
+                        <input type="text" name="init_count" id="init_count" class="val" />
+                        <br>
+                        <label for="hatch_rate" title="This is the rate locusts/second at which all slaves together will spawn additional locusts">Hatch rate<span style="color:#8a8a8a;">(users spawned/second)</span></label>
+                        <input type="text" name="hatch_rate" id="hatch_rate" class="val" />
+                        <br>
                         <label for="hatch_stride" title="This is the amount of locusts that will be spawned in between each sleep (calibration)">Hatch stride</label>
-                        <input type="text" name="hatch_stride" id="hatch_stride" class="val" /><br>
+                        <input type="text" name="hatch_stride" id="hatch_stride" class="val" />
+                        <br>
                         <label for="precision" title="Hatchstride will lower when a threshold has been reached and when hachstride <= precision; the sweet spot has been found">Precision (min value of hatch stride)</label>
-                        <input type="text" name="precision" id="precision" class="val" /><br>
+                        <input type="text" name="precision" id="precision" class="val" />
+                        <br>
                         <label for="wait_time" title="The amount of time to sleep to gather enough statistics before checking for thresholds">Calibration time (seconds)</label>
-                        <input type="text" name="wait_time" id="wait_time" class="val" value="20" /><br>
-                        </div>
-                        <div style="float:right;">
+                        <input type="text" name="wait_time" id="wait_time" class="val" value="20" />
+                        <br>
+                    </div>
+                    <div style="float:right;">
                         <label for="max_count" title="This is a threshold, if exceeded we start ramping down">Max number of clients</label>
-                        <input type="text" name="max_count" id="max_count" class="val" /><br>
+                        <input type="text" name="max_count" id="max_count" class="val" />
+                        <br>
                         <label for="percentile" title="Threshold - The percentage of all responses that has to be have response times lower than a set limit.">Percentile (%)</label>
-                        <input type="text" name="percentile" id="percentile" class="val" value="95" /><br>
+                        <input type="text" name="percentile" id="percentile" class="val" value="95" />
+                        <br>
                         <label for="response_time" title="Threshold - The highest response time that a percentage of all responses must not exceed.">Max percentile response time (ms)</label>
-                        <input type="text" name="response_time" id="response_time" class="val" value="2000" /><br>
+                        <input type="text" name="response_time" id="response_time" class="val" value="2000" />
+                        <br>
                         <label for="fail_rate" title="This threshold is the highest ratio in percent of all requests that are allowed to fail.">Accepted fail ratio (%)</label>
-                        <input type="text" name="fail_rate" id="fail_rate" class="val" value="5" /><br>
+                        <input type="text" name="fail_rate" id="fail_rate" class="val" value="5" />
+                        <br>
                         <br>
                         <a href="#" class="edit_config_link">Edit Config</a>
-                        <br><br><br>
-                        <input type="image" src="/static/img/start_button.png" value="Start swarming" class="start_button">
+                        <br>
+                        <br>
+                        <br>
+                        <button type="submit">Start swarming</button>
+                        <div class="manual_ramp_text">
+                            {% if ramp %} ...or do
+                                <a href="#" class="manual_ramp_link"> manual ramp</a> to test on your own
+                            {% endif %}
                         </div>
-
-                    </form>
-                    <div style="clear:right;"></div>
-                </div>
+                    </div>
+                </form>
+                <div style="clear:right;"></div>
             </div>
+        </div>
         {% endif %}
 
         <div class="edit_config" id="edit_config" style="display:none;">
-            <div class="title_header">
-                <div class="container">JSON Configuration</div>
-            </div>
-            <nav id="menu_json" class="menu_json">
-                <ul class="tabs_json container">
-                    <li><a id="simple_config_tab" href="#">Simple</a></li>
-                    <li><a id="advance_config_tab" href="#">Advance</a></li>
-                    <li class="back_new_test" style="float:right"><a href="#">New Test</a></li>
-                    {% if ramp %}
-                    <li class="ramp_test" style="float:right"><a href="#">New Ramp</a></li>
-                    {%endif%}
-                </ul>
-            </nav>
-            <div id="panes_json" class="panes_json container">
-                <div id="simple_tab_content" style="display:none;">
-                    <form action="/config/json" method="POST" id="simple_config_form">
-                        <div id="simple_json_editor" name="simple_json_editor"></div>
-                        <input type="hidden" id="final_json"  name="final_json" />
-                        <button type="submit" id="submit_json_btn">Save</button>
-                    </form>
+            <div class="head_section">
+                <div class="container">
+                    <div class="title_header">Configuration</div>
+                    <ul id="link_navigation">
+                        <li><a href="#" class="config_new_test">New Test</a></li>
+                        {% if ramp %}
+                            <li><a href="#" class="config_ramp_test">New Ramp</a></li>
+                        {% endif %}
+                    </ul>
                 </div>
-                <div id="advance_tab_content" style="display:none;">
-                    <div class="custom_padder">
-                        <label>Import CSV</label>
-                        <form method="POST" enctype="multipart/form-data" id="upload_csv">
-                            <input type="file" name="csv_file" id="csv_file"/>
-                            <input type="submit" value="Upload" id="btnSubmit" />
-                        </form>
-                        <br>
-                        <label>Configuration</label>
-                        <form action="/config/json" method="POST" id="edit_config_form">
-                            <textarea name="config_json" id="config_json">{{json_config}}</textarea>
-                            <button type="submit" onClick="window.location.reload()">Save</button>
-                        </form>
-                        <div style="clear:right;"></div>
+            </div>
+            <div class="custom_padder container body_section">
+                <label>Import CSV</label>
+                <form method="POST" enctype="multipart/form-data" id="import_csv_form">
+                    <input type="file" accept=".csv" name="csv_file" id="csv_file" />
+                    <input type="submit" value="Import" id="import_csv_btn" />
+                </form>
+                <br>
+                <form action="/config/save_json" method="POST" id="json_config_form">
+                    <div id="json_editor" name="json_editor"></div>
+                    <input type="hidden" id="hidden_config_json" name="final_json" value="{{json_config}}">
+                    <button type="submit" id="submit_json_btn">Save</button>
+                </form>
+            </div>
+            <div class="modal fade" id="modal_confirm_save_json" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <h5 class="modal-title" id="myModalLabel">Unsaved Configuration</h5>
+                        </div>
+                        <div class="modal-body">
+                            You have unsaved configuration. Do you want to save it?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-default" id="not_save_json_btn" data-origin-link="">Don't Save</button>
+                            <button type="button" class="btn btn-primary" id="save_json_btn">Save</button>
+                        </div>
                     </div>
                 </div>
-            </div> 
+            </div>
         </div>
 
-        <div class="multiple_column" id="multiple_column"  style="display:none;">
+        <div class="multiple_column" id="multiple_column" style="display:none;">
             <div style="position:relative;">
                 <a href="#" class="close_link_headers">Close</a>
             </div>
             <br>
             <div class="padder">
-                <h2>Pick column name which has multiple data</h2>
-                <form action="/config/convert" method="POST" id="multiple_column_form">
-                    <div class="modal_multiple_column">
-                        <ul id="column_header" class="column_header"></ul>
+                <h2>Import CSV</h2>
+                <form action="/config/convert_csv" method="POST" id="multiple_column_form">
+                    <input type="hidden" id="multiple_hidden_config_json" name="multiple_form_final_json" />
+                    <div class="required_field">
+                        <label for="jsonpath" title="JSON path input">JSON Path</label>
+                        <input type="text" name="jsonpath" id="jsonpath" class="val" required/>
+                        <small>Example : $.production.accounts (data belongs to accounts section, where accounts belongs to production section)</small>
                     </div>
                     <br>
-                    <label for="JSON Path" title="This is JSON Path input">JSON Path</label>
+                    <div class="required_field">
+                        <label for="json_option" title="Choose desired action for current data">Action</label>
+                        <div>
+                            <input type="radio" name="json_option" id="json_option" value="replace"> replace<br>
+                            <input type="radio" name="json_option" id="json_option" value="append"> append<br>
+                        </div>
+                    </div>
                     <br>
-                    <input type="text" name="jsonpath" id="jsonpath" class="val" />
-                    <label>Example : $.production.accounts (update json in production.accounts section)</label>
-                    <br>
-                    <br>
-                    <input type="radio" name="json_option" id="json_option" value="replace">Replace<br>
-                    <input type="radio" name="json_option" id="json_option" value="write_below">Write Below<br>
-                    <button type="submit">Convert</button>
+                    <div id="column_name_container">
+                        <label for="column_name">Choose column name which has multiple data</label>
+                        <ul id="column_name" class="column_name"></ul>
+                    </div>
+                    <button id="convert_csv_btn">Convert</button>
                 </form>
                 <div style="clear:right;"></div>
             </div>
         </div>
-        
+
 
         <div class="status" id="status">
             <nav class="menu">
@@ -287,8 +322,10 @@
                 </div>
                 <div style="display:none;">
                     <div style="margin-top:20px;">
-                        <a href="/stats/requests/csv">Download request statistics CSV</a><br>
-                        <a href="/stats/distribution/csv">Download response time distribution CSV</a><br>
+                        <a href="/stats/requests/csv">Download request statistics CSV</a>
+                        <br>
+                        <a href="/stats/distribution/csv">Download response time distribution CSV</a>
+                        <br>
                         <a href="/exceptions/csv">Download exceptions CSV</a>
                     </div>
                 </div>
@@ -302,28 +339,36 @@
             <div class="padder">
                 <h1>About</h1>
                 <p>
-                    The original idea for Locust was Carl Byström's who made a first proof of concept in June 2010.
-                    Jonatan Heyman picked up Locust in January 2011, implemented the current concept of Locust classes
-                    and made it work distributed across multiple machines.
+                    The original idea for Locust was Carl Byström's who made a first proof of concept in June 2010. Jonatan Heyman picked up
+                    Locust in January 2011, implemented the current concept of Locust classes and made it work distributed
+                    across multiple machines.
                 </p>
                 <p>
-                    Jonatan, Carl and Joakim Hamrén has continued the development of Locust at their job,
-                    ESN Social Software, who have adopted Locust as an inhouse Open Source project.
+                    Jonatan, Carl and Joakim Hamrén has continued the development of Locust at their job, ESN Social Software, who have adopted
+                    Locust as an inhouse Open Source project.
                 </p>
 
                 <h1>Authors and Copyright</h1>
-                <a href="http://cgbystrom.com/">Carl Byström</a> (<a href="http://twitter.com/cgbystrom/">@cgbystrom</a>)<br>
-                <a href="http://heyman.info/">Jonatan Heyman</a> (<a href="http://twitter.com/jonatanheyman/">@jonatanheyman</a>)<br>
-                Joakim Hamrén (<a href="http://twitter.com/Jahaaja/">@jahaaja</a>)<br>
-                <a href="http://esn.me/">ESN Social Software</a> (<a href="http://twitter.com/uprise_ea/">@uprise_ea</a>)<br>
-                Hugo Heyman (<a href="http://twitter.com/hugoheyman/">@hugoheyman</a>)
+                <a href="http://cgbystrom.com/">Carl Byström</a> (
+                <a href="http://twitter.com/cgbystrom/">@cgbystrom</a>)
+                <br>
+                <a href="http://heyman.info/">Jonatan Heyman</a> (
+                <a href="http://twitter.com/jonatanheyman/">@jonatanheyman</a>)
+                <br> Joakim Hamrén (
+                <a href="http://twitter.com/Jahaaja/">@jahaaja</a>)
+                <br>
+                <a href="http://esn.me/">ESN Social Software</a> (
+                <a href="http://twitter.com/uprise_ea/">@uprise_ea</a>)
+                <br> Hugo Heyman (
+                <a href="http://twitter.com/hugoheyman/">@hugoheyman</a>)
 
 
                 <h1>License</h1>
                 Open source licensed under the MIT license.
 
                 <h1>Version</h1>
-                {{version}}<br>
+                {{version}}
+                <br>
                 <a href="http://locust.io/">http://locust.io</a>
             </div>
         </div>
@@ -333,11 +378,13 @@
             <a href="#" onclick="$('.about').fadeIn();">About</a>
         </div>
     </nav>
-    
 
     <script type="text/javascript" src="/static/jquery-3.2.1.min.js"></script>
     <script type="text/javascript" src="/static/jquery.jqote2.min.js"></script>
     <script type="text/javascript" src="/static/jquery.tools.min.js"></script>
+    <script type="text/javascript" src="/static/bootstrap.bundle.min.js"></script>
+    <!-- json editor from https://github.com/josdejong/jsoneditor -->
+    <script src="/static/jsoneditor.min.js"></script>
     <!-- echarts from https://github.com/ecomfe/echarts -->
     <script type="text/javascript" src="/static/echarts.common.min.js"></script>
     <!-- vintage theme of echarts -->
@@ -387,4 +434,5 @@
     <script type="text/javascript" src="/static/timer.js"></script>
     <script type="text/javascript" src="/static/locust.js?v={{ version }}"></script>
 </body>
+
 </html>

@@ -75,7 +75,7 @@ a:hover {
 }
 .top_box .value {
     color: #000;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: bold;
     max-width: 165px;
     word-wrap: break-word;
@@ -95,7 +95,7 @@ a:hover {
     background: #d81212;
     border-radius: 5px;
     color: #fff;
-    padding: 9px 18px;
+    padding: 7px 18px;
     text-align: center;
     font-size: 11px;
     font-weight: bold;
@@ -131,8 +131,9 @@ a:hover {
 }
 
 #host_url {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: normal;
+    display: inline-flex;
 }
 .boxes .box_running {
     display: none;
@@ -142,7 +143,7 @@ a:hover {
 .stopped .boxes .box_running {display: block;}
 .stopped .boxes .box_stop {display: none;}
 
-.container, .container_json {
+.container {
     max-width: 1200px;
     min-width: 1000px;
     margin-left: auto;
@@ -164,12 +165,22 @@ container_title {
     position: relative;
 }
 
-.start, .edit {
-    width: 398px;
+.start {
+    width: 389px;
     position: absolute;
     left: 50%;
     top: 100px;
     margin-left: -169px;
+    z-index: 1;
+}
+
+.edit {
+    width: 395px;
+    position: absolute;
+    left: 50%;
+    top: 100px;
+    margin-left: -169px;
+    z-index: 2; 
 }
 
 .multiple_column {
@@ -181,6 +192,7 @@ container_title {
     margin-left: -169px;
     background: #173529;
     border-radius: 5px;
+    z-index: 1;
 }
 
 .ramp {
@@ -197,26 +209,54 @@ container_title {
     border-radius: 5px;
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
-    background: #173529;
+    background: #172D24;
     box-shadow: 0 0 60px rgba(0,0,0,0.3);
 }
 
 .start .padder, .edit .padder, .edit_config .padder, .multiple_column .padder {
     padding: 30px;
-    padding-top: 0px;
+    /* padding-top: 0px; */
 }
 
-#simple_json_editor{
+#json_editor{
     height: 400px;
     background-color: #fff;
+    margin-bottom: 40px;
+}
+
+label[for="json_option"]+div{
+    margin-top: 5px;
+}
+
+#column_name {
+    list-style-type: none;
+    padding: 0;
+    overflow-y: auto;
+    margin-top: 5px;
+    height: 65px;
+}
+
+.required_field label::after { 
+    content: "*";
+    font-size: 18px;
+    color: red;
+}
+
+.multiple_column label{
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.head_section {
+    background: #132b21;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 .title_header {
     color: #addf82;
     font-size: 26px;
     font-weight: bold;
-    background: #132b21;
-    padding-top: 10px;
 }
 
 .start h2, .edit h2, .edit_config h2, .title_header, .multiple_column h2 {
@@ -226,7 +266,7 @@ container_title {
 }
 .start label, .edit label, .edit_config label {
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     margin-top: 20px;
     font-size: 16px;
 }
@@ -244,36 +284,48 @@ container_title {
 .start input.val, .edit input.val, .multiple_column input.val {
     border: none;
     background: #fff;
-    height: 52px;
+    height: 40px;
     width: 328px;
-    font-size: 24px;
+    font-size: 20px;
     padding-left: 10px;
 }
 
 .select2-container {
     color:black;
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .select2-container .select2-selection--single {
     height: 36px !important;
-    width: 340px;
-    font-size: 16px !important;
-    padding: 6px 8px 6px 0px !important;
+    width: 328px;
+    font-size: 14px !important;
+    padding: 6px 15px 6px 0px !important;
 }
 
 .start button,
 .edit button, .edit_config button[type=submit], .multiple_column button {
     margin: 20px 0px 20px 0px;
     float: right;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
     background: #8adaba;
-    padding: 14px 30px;
+    padding: 8px 30px;
     border-style: none;
     border-radius: 5px;
     cursor: pointer;
 }
+
+.ramp button {
+    position: relative;
+    top: -53px;
+}
+
+#submit_json_btn{
+    position: absolute;
+    top: 8px;
+    right: 10px;
+}
+
 .start button:hover,
 .edit button:hover,
 .edit_config button:hover,
@@ -312,7 +364,7 @@ container_title {
 /* .stopped .status {display: block;} */
 .ready .status {display: none;}
 
-.stopped .boxes .edit_test, .ready .boxes .edit_test {display: none;}
+.stopped .boxes .edit_test, .ready .boxes .edit_test, .stopped .box_status > ul > li:nth-child(1), .ready .box_status > ul > li:nth-child(1) {display: none;}
 .stopped .boxes .user_count, .ready .boxes .user_count {display: none;}
 
 .running a.new_test, .ready a.new_test, .hatching a.new_test {display: none;}
@@ -334,8 +386,21 @@ container_title {
 
 .ready .ramp {display: none;}
 
-.ready .ramp_text {display: inline;}
-.hatching .ramp_text, .running .ramp_text, .stopped .ramp_text {display: none;}
+.ready .auto_ramp_text, .ready .manual_ramp_text {display: inline;}
+.hatching .auto_ramp_text, .running .auto_ramp_text, .stopped .auto_ramp_text, .hatching .manual_ramp_text, .running .manual_ramp_text, .stopped .manual_ramp_text {display: none;}
+
+
+.ready .auto_ramp_text {
+    position: relative;
+    top: -20px;
+    left: 15px;
+}
+
+.ramp .manual_ramp_text {
+    position: absolute;
+    bottom: 25px;
+    right: 75px;
+}
 
 .stats_label {
     cursor: pointer;
@@ -452,24 +517,19 @@ em {
     font-family: Palatino, Times New Roman, serif;
 }
 
-title_header {
+nav.menu {
     background: #132b21;
     display: block
 }
 
-nav.menu, nav.menu_json {
-    background: #132b21;
-    display: block
-}
-
-ul.tabs, ul.tabs_json {
+ul.tabs {
     overflow: hidden
 }
-ul.tabs li, ul.tabs_json li {
+ul.tabs li {
     float: left;
     font-size: 16px;
 }
-ul.tabs li a, ul.tabs_json li a {
+ul.tabs li a {
     padding: 14px 10px;
     display: inline-block; 
     color: #b3c3bc;
@@ -477,13 +537,13 @@ ul.tabs li a, ul.tabs_json li a {
     font-weight: 600;
     font-size: 14px;
 }
-ul.tabs li a:hover, ul.tabs_json li a:hover {
+ul.tabs li a:hover {
     background: #10211a;
 }
-ul.tabs li a.current, ul.tabs_json li a.current {
+ul.tabs li a.current {
     color: #fff;
 }
-ul.tabs li a.current:after, ul.tabs_json li a.current:after {
+ul.tabs li a.current:after {
     content: "";
     display: block; 
     position: absolute;
@@ -494,10 +554,10 @@ ul.tabs li a.current:after, ul.tabs_json li a.current:after {
     background: #fff;
 }
 
-.panes, .panes_json {
+.panes{
     margin-top: 30px;
 }
-.panes > div, .panes_json > div {
+.panes > div {
     overflow: hidden;
 }
 
@@ -548,14 +608,8 @@ ul.tabs li a.current:after, ul.tabs_json li a.current:after {
     position:relative;
     width: 100%;
     height: 100%;
-    background: #173529;
+    background: #172D24;
 }
-
-#column_header {
-    list-style-type: none;
-    padding: 0;
-}
-
 .chart-filter {
     top:90px;
     position: relative;
@@ -566,4 +620,71 @@ ul.tabs li a.current:after, ul.tabs_json li a.current:after {
 
 .chart-filter > button {
     margin: 0px 2px;
+}
+
+.modal-title {
+    color: #000;
+    font-weight: 600;
+    position: absolute;
+}
+
+.modal-body {
+    color: #000;
+    font-size: 14px;
+}
+
+.modal-footer > button{
+    border: 1px solid #E5E5E5;
+    font-size: 14px;
+}
+
+#link_navigation {
+    float: right;
+    position: relative;
+    top: -30px;
+}
+
+#link_navigation li, .top_box li {
+    display: inline-block;
+    padding: 0px 5px 0px 5px;
+}
+
+#link_navigation li {
+    border-left: 1px solid white;
+}
+
+#link_navigation li:first-child {
+    border: none;
+}
+
+.box_status ul {
+    margin-left: -5px;
+}
+
+.box_status li {
+    border-right: 1px solid #cecccc;
+    font-size: 13px;
+}
+
+.box_status li:last-child, .box_status li:first-child{
+    border: none;
+}
+
+.user_count {
+    font-size: 13px;
+    margin-top: -5px;
+}
+
+label {
+    margin: 0px 0px;
+}
+
+.start .edit_config_link {
+    position: relative;
+    top: 28px;
+}
+
+.ramp .edit_config_link {
+    position: relative;
+    top: 36px;
 }

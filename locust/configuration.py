@@ -1,6 +1,8 @@
 import os, json, logging, jsonpath_rw_ext, jsonpath_rw
 from jsonpath_rw import jsonpath, parse
 from . import events
+from ast import literal_eval
+from flask import make_response
 
 logger = logging.getLogger(__name__)
 config_path = '/tests/settings/config.json'
@@ -56,11 +58,12 @@ class ClientConfiguration:
                 self.config_data = json.load({})
         return self.config_data
 
-    def update_json_config(self, json_added, json_path, options, list_column):
+    def update_json_config(self, json_added, json_path, options, list_column, config_text):
         """
         Write JSON file configuration
         """
-        data = ClientConfiguration.read_json(self)
+        data = literal_eval(config_text)
+
         if(options != "replace"):
             json_target = jsonpath_rw_ext.match(json_path, data)
             if isinstance(json_target[0], dict):
@@ -76,14 +79,16 @@ class ClientConfiguration:
         else:
             json_final = json_added
         jsonpath_expr = parse(json_path)
+
         matches = jsonpath_expr.find(data)
+        
+        if len(matches)==0:
+            return make_response(json.dumps({'success':False, 'message':'JSON path not found.'}))
         
         for match in matches:
             data = ClientConfiguration.update_json(data, ClientConfiguration.get_path(match), json_final)
-
-        print("data final : "+str(data))
         
-        return True, json.dumps(data, indent=4)
+        return make_response(json.dumps({'success':True, 'data':json.dumps(data, indent=4)}))
         
     @classmethod    
     def get_path(self, match):

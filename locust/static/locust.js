@@ -1,5 +1,5 @@
 $(window).ready(function() {
-    $('.select2').select2({theme: 'bootstrap', width: "100%"});
+    $('.select2').select2({theme: 'bootstrap', width: "97.3%"});
     if($("#locust_count").length > 0) {
         $("#locust_count").focus().select();
     }
@@ -20,11 +20,23 @@ $("#box_stop a.reset-button").click(function(event) {
     $.get($(this).attr("href"));
 });
 
+$(".manual_ramp_link").click(function(event) {
+    event.preventDefault();
+
+    $("#ramp").hide();
+    $("#start").show();
+    $("#edit_config").hide();
+    $("#locust_count").focus().select();
+    $(".status").removeClass("none");
+});
+
 $(".ramp_test").click(function(event) {
     event.preventDefault();
+
     $("#start").hide();
     $("#ramp").show();
     $("#edit_config").hide();
+    $("#init_count").focus().select();
     $(".status").removeClass("none");
 });
 
@@ -41,25 +53,6 @@ $(".edit_test").click(function(event) {
     event.preventDefault();
     $("#edit").show();
     $("#new_locust_count").focus().select();
-});
-
-$(".edit_config_link").click(function(event) {
-    event.preventDefault();
-    $("#start").hide();
-    $("#ramp").hide();
-    $("#edit_config").show();
-    $("#config_json").focus().select();
-    $(".status").addClass("none");
-    $("#simple_config_tab").trigger("click");
-});
-
-$(".back_new_test").click(function(event) {
-    event.preventDefault();
-    $("#start").show();
-    $("#ramp").hide();
-    $("#edit_config").hide();
-    $("#locust_count").focus().select();
-    $(".status").removeClass("none");
 });
 
 $(".close_link").click(function(event) {
@@ -105,85 +98,9 @@ $('#ramp_form').submit(function(event) {
     );
 });
 
-$('#edit_config_form').submit(function(event) {
-    event.preventDefault();
-    $.post($(this).attr("action"), $(this).serialize(),
-        function(response) {
-            if (response.success) {
-                $("#ramp").hide();
-                $("#edit_config").hide();
-                $("#start").show();
-                $("#locust_count").focus().select();
-                $(".status").removeClass("none");
-            }
-        }
-    );
-});
-
-$('#multiple_column_form').submit(function(event) {
-    event.preventDefault();
-    $.post($(this).attr("action"), $(this).serialize(),
-        function(response) {
-            if (response.success) {
-                $("#ramp").hide();
-                $("#edit_config").hide();
-                $("#multiple_column").hide();
-                $("#start").show();
-                $("#locust_count").focus().select();
-                $(".status").removeClass("none");
-                location.reload(true);
-            }
-            else {
-                alert("Convert error : " + response.message);
-            }
-        }
-    );
-});
-
-$('#btnSubmit').click(function(event) {
-    event.preventDefault();
-    var form = $('#upload_csv')[0];
-    var form_data = new FormData(form);
-    $.ajax({
-        type: 'POST',
-        url: "/config/csv",
-        enctype: 'multipart/form-data',
-        data: form_data,
-        contentType: false,
-        cache: false,
-        processData: false,
-        success: function (response) {
-            if (response.success) {
-                $(".multiple_column").show();
-                $(this).parent().remove();
-                var rownum = 0;
-                if(response.columns.length > 1)
-                {
-                    $.each(response.columns, function (key, value) {
-                        rownum++;
-                        var li = $('<li><label><input type="checkbox" id="headers_checkbox'+rownum+'" name="headers_checkbox" value="' + value + '">'+value+'</label>');
-                        $('#column_header').append(li);
-                        $('#headers_checkbox'+rownum).on('click', function(){
-                            if($(this).is(":checked")) {
-                                $(this).prop("checked",true);
-                            }
-                            else {
-                                $(this).prop("checked",false);
-                            }
-                        });
-
-                    });
-                }
-            }
-        },
-        error: function (error) {
-        }
-    })
-});
-
 $('.close_link_headers').click(function(event) {
     event.preventDefault();
-    $("#column_header").empty();
+    $("#column_name").empty();
     $(this).parent().parent().hide();
 });
 
@@ -209,31 +126,208 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
 
 $("ul.tabs_json").tabs("div.panes_json > div");
 
-/*** start of simple json editor/configuration ***/
-var simple_json_container = document.getElementById("simple_json_editor");
-var options = {
+
+/*** START OF CONFIGURATION SECTION ***/
+
+var simple_json_container = document.getElementById("json_editor");
+var json_editor_options = {
     mode: 'tree',
     modes: ['code', 'tree'],
-    onChange: function(element,event){
-        $("#config_json").val(JSON.stringify(simple_json_editor.get(), null , 4));
-    },
     onError: function (err) {
         alert(err.toString());
       }
 }
-var simple_json_editor = new JSONEditor(simple_json_container, options);
-simple_json_editor.set(JSON.parse($("#config_json").val()));
-$("#config_json").change(function() {
-    simple_json_editor.set(JSON.parse($("#config_json").val()));
+var json_editor = new JSONEditor(simple_json_container, json_editor_options);
+var old_config;
+
+$(".edit_config_link").click(function(event) {
+    event.preventDefault();
+    try{
+        $.ajax({
+            type: "GET",
+            url: "/config/get_config_content",
+            success: function(response){
+                old_config = JSON.parse(response.data)
+                json_editor.set(old_config);
+                $("#hidden_config_json").val(response.data);
+                $("#start").hide();
+                $("#ramp").hide();
+                $("#edit_config").show();
+                $(".status").addClass("none");
+                $("#config_tab").trigger("click");
+            }
+        }); 
+    }
+    catch(err){
+        alert("Failed to load configuration data.\n\nOriginal error message:\n" + err);
+    }
+    
 });
 
-$("#submit_json_btn").on('click', function(event){
-    $("#final_json").val(JSON.stringify(simple_json_editor.get(), null , 4));
-    $("#simple_config_form").submit();
-    setTimeout(function(){window.location.reload();});
+$('#submit_json_btn').click(function(){
+    event.preventDefault();
+    $('#hidden_config_json').val(JSON.stringify(json_editor.get(), null , 4));
+    $('#json_config_form').submit();
 });
 
-/*** end of simple json editor/configuration ***/
+$('#json_config_form').submit(function(event) {
+    event.preventDefault();
+    $.post($(this).attr("action"), $(this).serialize(),
+        function(response) {
+            if (response.success) {
+                location.reload(true);
+            }
+        }
+    );
+});
+
+$('#import_csv_btn').click(function(event) {
+    event.preventDefault();
+    var form = $('#import_csv_form')[0];
+    var form_data = new FormData(form);
+    $.ajax({
+        type: 'POST',
+        url: "/config/get_csv_column",
+        enctype: 'multipart/form-data',
+        data: form_data,
+        contentType: false,
+        cache: false,
+        processData: false,
+        success: function (response) {
+            if (response.success) {
+                $("#column_name").empty();
+                $(".multiple_column").show();
+                $(this).parent().remove();
+                var rownum = 0;
+                if(response.columns.length > 1)
+                {
+                    $.each(response.columns, function (key, value) {
+                        rownum++;
+                        var li = $('<li><span><input type="checkbox" id="headers_checkbox'+rownum+'" name="headers_checkbox" value="' + value + '"> '+value+'</span>');
+                        $('#column_name').append(li);
+                        $('#headers_checkbox'+rownum).on('click', function(){
+                            if($(this).is(":checked")) {
+                                $(this).prop("checked",true);
+                            }
+                            else {
+                                $(this).prop("checked",false);
+                            }
+                        });
+
+                    });
+                    $("#column_name_container").show();
+                }
+                else{
+                    $("#column_name_container").hide();
+                }
+            }
+        }
+    })
+});
+
+$('#multiple_column_form').submit(function(event) {
+    event.preventDefault();
+    $.post($(this).attr("action"), $(this).serialize(),
+        function(response) {
+            if (response.success) {
+                location.reload(true);
+            }
+            else {
+                alert("Convert error : " + response.message);
+            }
+        }
+    );
+});
+
+$('#convert_csv_btn').click(function(){
+    event.preventDefault();
+    try{
+        $("#multiple_hidden_config_json").val(JSON.stringify(json_editor.get(), null , 4));
+        var form = $('#multiple_column_form')[0];
+        var form_data = new FormData(form);
+        $.ajax({
+            type:'POST',
+            url: '/config/convert_csv',
+            enctype: 'multipart/form-data',
+            data: form_data,
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function(response){
+                if (response.success) {
+                    try{
+                        json_editor.set(JSON.parse(response.data));
+                        $(".multiple_column").hide();
+                        $("#column_name").empty();
+                        document.getElementById("import_csv_form").reset();
+                    }
+                    catch(err){
+                        alert(err.message);
+                    }
+                }
+                else {
+                    alert("Convert error : " + response.message);
+                }
+            }
+        });
+    }
+    catch(err){
+        alert("Something wrong with the data in editor. Please check it.\n\nOriginal error message:\n" + err);
+    }
+});
+
+$(".config_new_test").click(function(event) {
+    event.preventDefault();
+    if(JSON.stringify(old_config,null,4) != JSON.stringify(json_editor.get(),null,4)) {
+        $("#not_save_json_btn").attr("data-origin-link", "new test");
+        $("#modal_confirm_save_json").modal();
+    }
+    else {
+        $("#start").show();
+        $("#ramp").hide();
+        $("#edit_config").hide();
+        $("#locust_count").focus().select();
+        $(".status").removeClass("none");
+    }
+});
+
+$(".config_ramp_test").click(function(event) {
+    event.preventDefault();
+    if(JSON.stringify(old_config,null,4) != JSON.stringify(json_editor.get(),null,4)) {
+        $("#not_save_json_btn").attr("data-origin-link", "new ramp");
+        $("#modal_confirm_save_json").modal();
+    }
+    else {
+        $("#start").hide();
+        $("#ramp").show();
+        $("#edit_config").hide();
+        $("#init_count").focus().select();
+        $(".status").removeClass("none");
+    }
+});
+
+
+$("#save_json_btn").click(function(event) {
+    $("#submit_json_btn").trigger("click");
+});
+
+$("#not_save_json_btn").click(function(event) {
+    $("#modal_confirm_save_json").modal("hide");
+    if($("#not_save_json_btn").attr("data-origin-link") == "new test") {
+        $("#start").show();
+        $("#ramp").hide();
+    }
+    else if($("#not_save_json_btn").attr("data-origin-link") == "new ramp") {
+        $("#ramp").show();
+        $("#start").hide();
+    }
+    $("#edit_config").hide();
+    $("#locust_count").focus().select();
+    $(".status").removeClass("none");
+});
+
+
+/* END OF CONFIGURATION SECTION */
 
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');

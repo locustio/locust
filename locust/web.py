@@ -56,8 +56,6 @@ def index():
     else:
         edit_label = ""
 
-    load_config = configuration.read_file()
-
     return render_template("index.html",
         state=runners.locust_runner.state,
         is_distributed=is_distributed,
@@ -66,8 +64,7 @@ def index():
         available_locustfiles = sorted(runners.locust_runner.available_locustfiles.keys()),
         version=version,
         ramp = _ramp,
-        host=host,
-        json_config=load_config,
+        host=host
     )
 
 @app.route('/swarm', methods=["POST"])
@@ -274,7 +271,14 @@ def ramp():
     response.headers["Content-type"] = "application/json"
     return response
 
-@app.route("/config/csv", methods=['POST'])
+@app.route("/config/get_config_content", methods=["GET"])
+def get_config_content():
+    load_config = configuration.read_file()
+    response = make_response(json.dumps({'data':load_config}))
+    response.headers["Content-type"] = "application/json"
+    return response
+
+@app.route("/config/get_csv_column", methods=['POST'])
 def config_csv():
     csvfile = request.files['csv_file']
     if not csvfile:
@@ -293,51 +297,52 @@ def config_csv():
     response.headers["Content-type"] = "application/json"
     return response
 
-@app.route("/config/convert", methods=['POST'])
+@app.route("/config/convert_csv", methods=['POST'])
 def convert_csv_to_json():
     try:
         multiple_data_headers = request.form.getlist('headers_checkbox')
         jsonpath = str(request.form['jsonpath'])
         options = request.form['json_option']
+        config_text = request.form["multiple_form_final_json"]
 
-        global csv_stream
-        report = {}
-        report['success'] = True
-
-        if(len(multiple_data_headers) > 0):
-            tempStr = csv_stream.convert(multiple_data_headers)
-            report['data'] = tempStr
-        else:
-            tempStr = csv_stream.convert([])
-            if len(csv_stream.get_columns_name()) > 1:
+        if jsonpath.strip() and options:
+            global csv_stream
+            report = {}
+            report['success'] = True
+            if(len(multiple_data_headers) > 0):
+                tempStr = csv_stream.convert(multiple_data_headers)
                 report['data'] = tempStr
             else:
-                report['data'] = tempStr.get(csv_stream.get_columns_name()[0])
+                tempStr = csv_stream.convert([])
+                if len(csv_stream.get_columns_name()) > 1:
+                    report['data'] = tempStr
+                else:
+                    report['data'] = tempStr.get(csv_stream.get_columns_name()[0])
 
-        cc = configuration.ClientConfiguration()
-        status, data = cc.update_json_config(report['data'], jsonpath, options, csv_stream.get_columns_name())
-
-        if status:
-            success, message = configuration.write_file(data)
-            response = make_response(json.dumps({'success':success, 'message': message}))
+            cc = configuration.ClientConfiguration()
+            response = cc.update_json_config(report['data'], jsonpath, options, csv_stream.get_columns_name(), config_text)
+            response.headers["Content-type"] = "application/json"
+            
+            return response
         else:
-            response = make_response(json.dumps({'success':False, 'message':'Please check your jsonpath or file again.'}))
-
+            response = make_response(json.dumps({'success':False, 'message':'Please fill in or select required field.'}))
+            response.headers["Content-type"] = "application/json"
+            
+            return response
+    
+    except Exception,e:
+        if type(e).__name__ == 'BadRequestKeyError':
+            response = make_response(json.dumps({'success':False, 'message':'Please fill in or select required field.'}))
+        else:
+            response = make_response(json.dumps({'success':False, 'message': str(e)}))
         response.headers["Content-type"] = "application/json"
-        return response
-    except Exception, e:
-        response = make_response(json.dumps({'success':False, 'message': str(e)}))
-        response.headers["Content-type"] = "application/json"
+       
         return response
     
-
-@app.route("/config/json", methods=["POST"])
-def config_json():
+@app.route("/config/save_json", methods=["POST"])
+def save_json():
     assert request.method == "POST"
-    if "final_json" in request.form:
-        config_json = str(request.form["final_json"])
-    else:
-        config_json = str(request.form["config_json"])
+    config_json = str(request.form["final_json"])
 
     try:
         success, message = configuration.write_file(config_json)
