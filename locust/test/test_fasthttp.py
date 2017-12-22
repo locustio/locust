@@ -266,6 +266,25 @@ class TestFastHttpLocustClass(WebserverTestCase):
         self.assertEqual(1, len(global_stats.entries))
         self.assertEqual(1, global_stats.get("/redirect", "GET").num_requests)
         self.assertEqual(0, global_stats.get("/ultra_fast", "GET").num_requests)
+    
+    def test_client_basic_auth(self):
+        class MyLocust(FastHttpLocust):
+            host = "http://127.0.0.1:%i" % self.port
+
+        class MyAuthorizedLocust(FastHttpLocust):
+            host = "http://locust:menace@127.0.0.1:%i" % self.port
+
+        class MyUnauthorizedLocust(FastHttpLocust):
+            host = "http://locust:wrong@127.0.0.1:%i" % self.port
+
+        locust = MyLocust()
+        unauthorized = MyUnauthorizedLocust()
+        authorized = MyAuthorizedLocust()
+        response = authorized.client.get("/basic_auth")
+        self.assertEqual(200, response.status_code)
+        self.assertEqual("Authorized", response.text)
+        self.assertEqual(401, locust.client.get("/basic_auth").status_code)
+        self.assertEqual(401, unauthorized.client.get("/basic_auth").status_code)
 
 
 class TestFastHttpCatchResponse(WebserverTestCase):

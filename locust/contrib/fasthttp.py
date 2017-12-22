@@ -4,6 +4,8 @@ import chardet
 import re
 import six
 import socket
+from base64 import b64encode
+from six.moves.urllib.parse import urlparse, urlunparse
 from ssl import SSLError
 from timeit import default_timer
 
@@ -38,6 +40,15 @@ FAILURE_EXCEPTIONS = (ConnectionError, ConnectionRefusedError, socket.error, \
                       SSLError, Timeout)
 
 
+def _construct_basic_auth_str(username, password):
+    """Construct Authorization header value to be used in HTTP Basic Auth"""
+    if isinstance(username, str):
+        username = username.encode('latin1')
+    if isinstance(password, str):
+        password = password.encode('latin1')
+    return 'Basic ' + b64encode(b':'.join((username, password))).strip().decode("ascii")
+
+
 class FastHttpLocust(Locust):
     """
     Represents an HTTP "user" which is to be hatched and attack the system that is to be load tested.
@@ -66,10 +77,25 @@ class FastHttpLocust(Locust):
 
 
 class FastHttpSession(object):
+    auth_header = None
+    
     def __init__(self, base_url):
         self.base_url = base_url
         self.cookiejar = CookieJar()
         self.client = LocustUserAgent(max_retries=1, cookiejar=self.cookiejar)
+        
+        # Check for basic authentication
+        parsed_url = urlparse(self.base_url)
+        if parsed_url.username and parsed_url.password:
+            netloc = parsed_url.hostname
+            if parsed_url.port:
+                netloc += ":%d" % parsed_url.port
+            
+            # remove username and password from the base_url
+            self.base_url = urlunparse((parsed_url.scheme, netloc, parsed_url.path, parsed_url.params, parsed_url.query, parsed_url.fragment))
+            # store authentication header (we construct this by using _basic_auth_str() function from requests.auth)
+            self.auth_header = _construct_basic_auth_str(parsed_url.username, parsed_url.password)
+            #self.auth = HTTPBasicAuth(parsed_url.username, parsed_url.password)
     
     def _build_url(self, path):
         """ prepend url with hostname unless it's already an absolute URL """
@@ -93,7 +119,32 @@ class FastHttpSession(object):
             r.error = e
             return r
     
-    def request(self, method, path, name=None, catch_response=False, **kwargs):
+    def request(self, method, path, name=None, data=None, catch_response=False, stream=False, \
+                headers=None, auth=None, **kwargs):
+        """
+        Send and HTTP request
+        Returns :py:class:`locust.contrib.fasthttp.FastResponse` object.
+
+        :param method: method for the new :class:`Request` object.
+        :param path: Path that will be concatenated with the base host URL that has been specified.
+            Can also be a full URL, in which case the full URL will be requested, and the base host 
+            is ignored.
+        :param name: (optional) An argument that can be specified to use as label in Locust's 
+            statistics instead of the URL path. This can be used to group different URL's 
+            that are requested into a single entry in Locust's statistics.
+        :param catch_response: (optional) Boolean argument that, if set, can be used to make a request 
+            return a context manager to work as argument to a with statement. This will allow the 
+            request to be marked as a fail based on the content of the response, even if the response 
+            code is ok (2xx). The opposite also works, one can use catch_response to catch a request 
+            and then mark it as successful even if the response code was not (i.e 500 or 404).
+        :param data: (optional) Dictionary or bytes to send in the body of the request.
+        :param headers: (optional) Dictionary of HTTP Headers to send with the request.
+        :param auth: (optional) Auth (username, password) tuple to enable Basic HTTP Auth.
+        :param stream: (optional) If set to true the response body will not be consumed immediately 
+            and can instead be consumed by accessing the stream attribute on the Response object.
+            Another side effect of setting stream to True is that the time for downloading the response 
+            content will not be accounted for in the request time that is reported by Locust.
+        """
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(path)
         
@@ -104,12 +155,19 @@ class FastHttpSession(object):
         request_meta["start_time"] = default_timer()
         request_meta["name"] = name or path
         
+        if auth:
+            headers = headers or {}
+            headers['Authorization'] = _construct_basic_auth_str(auth[0], auth[1])
+        elif self.auth_header:
+            headers = headers or {}
+            headers['Authorization'] = self.auth_header
+        
         # send request, and catch any exceptions
-        response = self._send_request_safe_mode(method, url, **kwargs)
+        response = self._send_request_safe_mode(method, url, payload=data, headers=headers, **kwargs)
         
         # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body
-        if kwargs.get("stream", False):
+        if stream:
             request_meta["content_size"] = int(response.headers.get("content-length") or 0)
         else:
             request_meta["content_size"] = len(response.content or "")
@@ -158,15 +216,15 @@ class FastHttpSession(object):
     
     def patch(self, path, data=None, **kwargs):
         """Sends a POST request"""
-        return self.request("PATCH", path, payload=data, **kwargs)
+        return self.request("PATCH", path, data=data, **kwargs)
     
     def post(self, path, data=None, **kwargs):
         """Sends a POST request"""
-        return self.request("POST", path, payload=data, **kwargs)
+        return self.request("POST", path, data=data, **kwargs)
     
     def put(self, path, data=None, **kwargs):
         """Sends a PUT request"""
-        return self.request("PUT", path, payload=data, **kwargs)
+        return self.request("PUT", path, data=data, **kwargs)
 
 
 class FastResponse(CompatResponse):
