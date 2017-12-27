@@ -1,4 +1,5 @@
 $(window).ready(function() {
+    $('.select2').select2({theme: 'bootstrap', width: "97.3%"});
     if($("#locust_count").length > 0) {
         $("#locust_count").focus().select();
     }
@@ -19,11 +20,23 @@ $("#box_stop a.reset-button").click(function(event) {
     $.get($(this).attr("href"));
 });
 
+$(".manual_ramp_link").click(function(event) {
+    event.preventDefault();
+
+    $("#ramp").hide();
+    $("#start").show();
+    $("#edit_config").hide();
+    $("#locust_count").focus().select();
+    $(".status").removeClass("none");
+});
+
 $(".ramp_test").click(function(event) {
     event.preventDefault();
+
     $("#start").hide();
     $("#ramp").show();
     $("#edit_config").hide();
+    $("#init_count").focus().select();
     $(".status").removeClass("none");
 });
 
@@ -42,30 +55,30 @@ $(".edit_test").click(function(event) {
     $("#new_locust_count").focus().select();
 });
 
-$(".edit_config_json").click(function(event) {
-    event.preventDefault();
-    $("#start").hide();
-    $("#ramp").hide();
-    $("#edit_config").show();
-    $("#config_json").focus().select();
-    $(".status").addClass("none");
-    $("ul.tabs_json").tabs("tabs_json").click(0);
-    
-});
-
-$(".back_new_test").click(function(event) {
-    event.preventDefault();
-    $("#start").show();
-    $("#ramp").hide();
-    $("#edit_config").hide();
-    $("#locust_count").focus().select();
-    $(".status").removeClass("none");
-});
-
 $(".close_link").click(function(event) {
     event.preventDefault();
     $(this).parent().parent().hide();
 });
+
+var chartFilters = ['users','rps','response time','failures']
+$(".chart-filter > button").click(function(event) {
+    let activeFilters = advanceChart.getActiveFilter()
+    if(!!advanceChart) {
+        if(!activeFilters.includes($(this).index())) {
+            if(activeFilters.length < 2) {
+                advanceChart.addFilter($(this).index())
+                $(this).removeClass("btn-outline-secondary")
+                $(this).addClass("btn-secondary")
+            }
+        } else {
+            if(activeFilters.length > 1) {
+                advanceChart.removeFilter($(this).index())
+                $(this).removeClass("btn-secondary")
+                $(this).addClass("btn-outline-secondary")
+            }
+        }
+    }
+})
 
 $('#ramp_form').submit(function(event) {
     event.preventDefault();
@@ -85,19 +98,10 @@ $('#ramp_form').submit(function(event) {
     );
 });
 
-$('#edit_config_form').submit(function(event) {
+$('.close_link_headers').click(function(event) {
     event.preventDefault();
-    $.post($(this).attr("action"), $(this).serialize(),
-        function(response) {
-            if (response.success) {
-                $("#ramp").hide();
-                $("#edit_config").hide();
-                $("#start").show();
-                $("#locust_count").focus().select();
-                $(".status").removeClass("none");
-            }
-        }
-    );
+    $("#column_name").empty();
+    $(this).parent().parent().hide();
 });
 
 var alternate = false;
@@ -109,6 +113,7 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
         if (!!responseTimeChart) responseTimeChart.resize()
         if (!!usersChart) usersChart.resize()
         if (!!failureChart) failureChart.resize()
+        if (!!advanceChart) advanceChart.resize()
         if (!!endpointResponseTimeCharts) {
           for (var chartKey in endpointResponseTimeCharts) {
             endpointResponseTimeCharts[chartKey].resize()
@@ -120,6 +125,209 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
 });
 
 $("ul.tabs_json").tabs("div.panes_json > div");
+
+
+/*** START OF CONFIGURATION SECTION ***/
+
+var simple_json_container = document.getElementById("json_editor");
+var json_editor_options = {
+    mode: 'tree',
+    modes: ['code', 'tree'],
+    onError: function (err) {
+        alert(err.toString());
+      }
+}
+var json_editor = new JSONEditor(simple_json_container, json_editor_options);
+var old_config;
+
+$(".edit_config_link").click(function(event) {
+    event.preventDefault();
+    try{
+        $.ajax({
+            type: "GET",
+            url: "/config/get_config_content",
+            success: function(response){
+                old_config = JSON.parse(response.data)
+                json_editor.set(old_config);
+                $("#hidden_config_json").val(response.data);
+                $("#start").hide();
+                $("#ramp").hide();
+                $("#edit_config").show();
+                $(".status").addClass("none");
+                $("#config_tab").trigger("click");
+            }
+        }); 
+    }
+    catch(err){
+        alert("Failed to load configuration data.\n\nOriginal error message:\n" + err);
+    }
+    
+});
+
+$('#submit_json_btn').click(function(){
+    event.preventDefault();
+    $('#hidden_config_json').val(JSON.stringify(json_editor.get(), null , 4));
+    $('#json_config_form').submit();
+});
+
+$('#json_config_form').submit(function(event) {
+    event.preventDefault();
+    $.post($(this).attr("action"), $(this).serialize(),
+        function(response) {
+            if (response.success) {
+                location.reload(true);
+            }
+        }
+    );
+});
+
+$('#import_csv_btn').click(function(event) {
+    event.preventDefault();
+    var form = $('#import_csv_form')[0];
+    var form_data = new FormData(form);
+    $.ajax({
+        type: 'POST',
+        url: "/config/get_csv_column",
+        enctype: 'multipart/form-data',
+        data: form_data,
+        contentType: false,
+        cache: false,
+        processData: false,
+        success: function (response) {
+            if (response.success) {
+                $("#column_name").empty();
+                $(".multiple_column").show();
+                $(this).parent().remove();
+                var rownum = 0;
+                if(response.columns.length > 1)
+                {
+                    $.each(response.columns, function (key, value) {
+                        rownum++;
+                        var li = $('<li><span><input type="checkbox" id="headers_checkbox'+rownum+'" name="headers_checkbox" value="' + value + '"> '+value+'</span>');
+                        $('#column_name').append(li);
+                        $('#headers_checkbox'+rownum).on('click', function(){
+                            if($(this).is(":checked")) {
+                                $(this).prop("checked",true);
+                            }
+                            else {
+                                $(this).prop("checked",false);
+                            }
+                        });
+
+                    });
+                    $("#column_name_container").show();
+                }
+                else{
+                    $("#column_name_container").hide();
+                }
+            }
+        }
+    })
+});
+
+$('#multiple_column_form').submit(function(event) {
+    event.preventDefault();
+    $.post($(this).attr("action"), $(this).serialize(),
+        function(response) {
+            if (response.success) {
+                location.reload(true);
+            }
+            else {
+                alert("Convert error : " + response.message);
+            }
+        }
+    );
+});
+
+$('#convert_csv_btn').click(function(){
+    event.preventDefault();
+    try{
+        $("#multiple_hidden_config_json").val(JSON.stringify(json_editor.get(), null , 4));
+        var form = $('#multiple_column_form')[0];
+        var form_data = new FormData(form);
+        $.ajax({
+            type:'POST',
+            url: '/config/convert_csv',
+            enctype: 'multipart/form-data',
+            data: form_data,
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function(response){
+                if (response.success) {
+                    try{
+                        json_editor.set(JSON.parse(response.data));
+                        $(".multiple_column").hide();
+                        $("#column_name").empty();
+                        document.getElementById("import_csv_form").reset();
+                    }
+                    catch(err){
+                        alert(err.message);
+                    }
+                }
+                else {
+                    alert("Convert error : " + response.message);
+                }
+            }
+        });
+    }
+    catch(err){
+        alert("Something wrong with the data in editor. Please check it.\n\nOriginal error message:\n" + err);
+    }
+});
+
+$(".config_new_test").click(function(event) {
+    event.preventDefault();
+    if(JSON.stringify(old_config,null,4) != JSON.stringify(json_editor.get(),null,4)) {
+        $("#not_save_json_btn").attr("data-origin-link", "new test");
+        $("#modal_confirm_save_json").modal();
+    }
+    else {
+        $("#start").show();
+        $("#ramp").hide();
+        $("#edit_config").hide();
+        $("#locust_count").focus().select();
+        $(".status").removeClass("none");
+    }
+});
+
+$(".config_ramp_test").click(function(event) {
+    event.preventDefault();
+    if(JSON.stringify(old_config,null,4) != JSON.stringify(json_editor.get(),null,4)) {
+        $("#not_save_json_btn").attr("data-origin-link", "new ramp");
+        $("#modal_confirm_save_json").modal();
+    }
+    else {
+        $("#start").hide();
+        $("#ramp").show();
+        $("#edit_config").hide();
+        $("#init_count").focus().select();
+        $(".status").removeClass("none");
+    }
+});
+
+
+$("#save_json_btn").click(function(event) {
+    $("#submit_json_btn").trigger("click");
+});
+
+$("#not_save_json_btn").click(function(event) {
+    $("#modal_confirm_save_json").modal("hide");
+    if($("#not_save_json_btn").attr("data-origin-link") == "new test") {
+        $("#start").show();
+        $("#ramp").hide();
+    }
+    else if($("#not_save_json_btn").attr("data-origin-link") == "new ramp") {
+        $("#ramp").show();
+        $("#start").hide();
+    }
+    $("#edit_config").hide();
+    $("#locust_count").focus().select();
+    $(".status").removeClass("none");
+});
+
+
+/* END OF CONFIGURATION SECTION */
 
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');
@@ -191,7 +399,7 @@ $(".stats_label").click(function(event) {
 });
 
 // init charts
-var rpsChart, responseTimeChart, usersChart, failureChart, endpointResponseTimeCharts, endpointRpsCharts, endpointFailureCharts;
+var rpsChart, responseTimeChart, usersChart, failureChart, endpointResponseTimeCharts, endpointRpsCharts, endpointFailureCharts, advanceChart;
 const totalKey = "total"
 
 function updateStats() {
@@ -202,6 +410,7 @@ function updateStats() {
         $("#status_text").html(report.state);
         $("#userCount").html(report.user_count);
         $("#running_type").html(report.running_type);
+        $("#host_url").html(report.host)
 
         if (typeof report.slave_count !== "undefined")
             $("#slaveCount").html(report.slave_count)
@@ -263,6 +472,7 @@ function updateStats() {
             failureChart.addValue(failureValues);
             rpsChart.addValue(rpsValues);
             responseTimeChart.addValue(responseTimeValues);
+            advanceChart.addValue([[report.user_count],rpsValues,responseTimeValues,failureValues])
             usersChart.addValue([report.user_count]);
         }
 
@@ -284,6 +494,11 @@ function createEndpointLines(chartKey, name, callback) {
     if(!rpsChart.isLineExist(chartKey)) rpsChart.addLine(chartKey, name);
     if(!responseTimeChart.isLineExist(chartKey)) responseTimeChart.addLine(chartKey , name);
     if(!failureChart.isLineExist(chartKey)) failureChart.addLine(chartKey, name);
+    if(!advanceChart.isLineExist(1,chartKey)) {
+        for(let l=1; l < chartFilters.length; l++) {
+            advanceChart.addLine(l,chartKey,name)
+        }
+    }
     callback(chartKey)
 }
 
@@ -292,6 +507,7 @@ function resetCharts() {
   if (!!responseTimeChart) responseTimeChart.dispose()
   if (!!usersChart) usersChart.dispose()
   if (!!failureChart) failureChart.dispose()
+  if (!!advanceChart) advanceChart.dispose()
   if (!!endpointResponseTimeCharts) {
     for (var chartKey in endpointResponseTimeCharts) {
       endpointResponseTimeCharts[chartKey].dispose()
@@ -300,10 +516,13 @@ function resetCharts() {
     }
   }
   $('.charts-container').empty()
+  advanceChart = new LocustAdvanceLineChart($(".charts-container"), "Advance Chart", "", chartFilters, ['users','reqs/s','ms','failures'], "100%");
   rpsChart = new LocustLineChart($(".charts-container"), "Requests per Second", "", [], "reqs/s", "100%");
   responseTimeChart = new LocustLineChart($(".charts-container"), "Average Response Time", "", [], "ms", "100%");
   usersChart = new LocustLineChart($(".charts-container"), "Number of Users", "", ["Total"], "users", "100%");
   failureChart = new LocustLineChart($(".charts-container"), "Number of Failures", "", [], "failures", "100%");
+  advanceChart.addLine(0,"Total","Total")
+  $(".chart-filter > button")[chartFilters.indexOf('response time')].click()
   endpointResponseTimeCharts = []
   endpointRpsCharts = []
   endpointFailureCharts = []

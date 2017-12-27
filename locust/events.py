@@ -125,3 +125,13 @@ locust_stop_hatching = EventHook()
 """
 *locust_stop_hatching* is fired when terminate the hatching process on any locust worker.
 """
+
+locust_switch_file = EventHook()
+"""
+*locust_select_file* is fired when switch file test on any locust worker.
+"""
+
+master_new_configuration = EventHook()
+"""
+*master_new_configuration* is fired when new configuration saved from master
+"""

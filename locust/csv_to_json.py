@@ -33,7 +33,7 @@ class csvToJson:
 
         record = {}
         # check whether grouped_data_key tuple or not. if not (only exist one key), turn into tuple
-        if isinstance(grouped_data_key, int):
+        if not isinstance(grouped_data_key, tuple):
             grouped_data_key = (grouped_data_key,)
 
         # assign key and value which come from regular column

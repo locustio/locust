@@ -1,9 +1,6 @@
 # encoding: utf-8
 
-import csv
-import io
-import json
-import os.path
+import csv, re, io, json, os.path
 from time import time
 from itertools import chain
 from collections import defaultdict
@@ -18,10 +15,13 @@ from .cache import memoize
 from .runners import MasterLocustRunner
 from locust.stats import median_from_dict
 from locust import __version__ as version
-import gevent
+import gevent, itertools
+
 
 import logging
 logger = logging.getLogger(__name__)
+
+from csv_to_json import csvToJson
 
 DEFAULT_CACHE_TIME = 2.0
 
@@ -30,6 +30,10 @@ app.debug = True
 app.root_path = os.path.dirname(os.path.abspath(__file__))
 _ramp = False
 greenlet_spawner = None
+load_config=""
+csv_stream = None
+
+locustfile = None
 
 @app.route('/')
 def index():
@@ -38,30 +42,28 @@ def index():
         slave_count = runners.locust_runner.slave_count
     else:
         slave_count = 0
-
+    
     if runners.locust_runner.host:
         host = runners.locust_runner.host
     elif len(runners.locust_runner.locust_classes) > 0:
         host = runners.locust_runner.locust_classes[0].host
     else:
         host = None
-    
+
     if runners.locust_runner.running_type == runners.NORMAL:
         edit_label = "Edit"
     else:
         edit_label = ""
-
-    load_config = configuration.read_file()
 
     return render_template("index.html",
         state=runners.locust_runner.state,
         is_distributed=is_distributed,
         slave_count=slave_count,
         user_count=runners.locust_runner.user_count,
+        available_locustfiles = sorted(runners.locust_runner.available_locustfiles.keys()),
         version=version,
         ramp = _ramp,
-        host=host,
-        json_config=load_config,
+        host=host
     )
 
 @app.route('/swarm', methods=["POST"])
@@ -70,7 +72,16 @@ def swarm():
 
     locust_count = int(request.form["locust_count"])
     hatch_rate = float(request.form["hatch_rate"])
+    type_swarm = str(request.form["type_swarm"])
+    global locustfile
+    
+    if type_swarm == "start":
+        locustfile = request.form["locustfile"]
+    
+    assert locustfile in runners.locust_runner.available_locustfiles
+    runners.locust_runner.select_file(locustfile)
     runners.locust_runner.start_hatching(locust_count, hatch_rate)
+
     response = make_response(json.dumps({'success':True, 'message': 'Swarming started'}))
     response.headers["Content-type"] = "application/json"
     return response
@@ -205,6 +216,7 @@ def request_stats():
     report["state"] = runners.locust_runner.state
     report["user_count"] = runners.locust_runner.user_count
     report["running_type"] = runners.locust_runner.running_type
+    report["host"] = runners.locust_runner.locust_classes[0].host
     return json.dumps(report)
 
 @app.route("/exceptions")
@@ -242,7 +254,7 @@ def exceptions_csv():
 @app.route("/ramp", methods=["POST"])
 def ramp():
     from locust.ramping import start_ramping
-    
+
     init_clients = int(request.form["init_count"])
     hatch_rate = int(request.form["hatch_rate"])
     hatch_stride = int(request.form["hatch_stride"])
@@ -258,33 +270,79 @@ def ramp():
     response.headers["Content-type"] = "application/json"
     return response
 
-@app.route("/config/csv", methods=["POST"])
-def config_csv():
-    assert request.method == "POST"
+@app.route("/config/get_config_content", methods=["GET"])
+def get_config_content():
+    load_config = configuration.read_file()
+    response = make_response(json.dumps({'data':load_config}))
+    response.headers["Content-type"] = "application/json"
+    return response
 
+@app.route("/config/get_csv_column", methods=['POST'])
+def config_csv():
     csvfile = request.files['csv_file']
     if not csvfile:
         return "No file"
 
     stream = io.StringIO(csvfile.stream.read().decode("UTF8"), newline=None)
-    csv_input = csv.reader(stream)
-    for row in csv_input:
-        print(row)
+
+    global csv_stream
+    csv_stream = None
+    csv_stream = csvToJson(stream)
     
-    #logic for convert goes here...
-
-    stream.seek(0)
-    result = transform(stream.read())
-
-    response = make_response(result)
-    response.headers["Content-Disposition"] = "attachment; filename=result.csv"
+    report = {}
+    report['success'] = True
+    report['columns'] = csv_stream.get_columns_name()
+    response = make_response(json.dumps(report))
+    response.headers["Content-type"] = "application/json"
     return response
 
-@app.route("/config/json", methods=["POST"])
-def config_json():
-    assert request.method == "POST"
+@app.route("/config/convert_csv", methods=['POST'])
+def convert_csv_to_json():
+    try:
+        multiple_data_headers = request.form.getlist('headers_checkbox')
+        jsonpath = str(request.form['jsonpath'])
+        options = request.form['json_option']
+        config_text = request.form["multiple_form_final_json"]
 
-    config_json = str(request.form["config_json"])
+        if jsonpath.strip() and options:
+            global csv_stream
+            report = {}
+            report['success'] = True
+            if(len(multiple_data_headers) > 0):
+                tempStr = csv_stream.convert(multiple_data_headers)
+                report['data'] = tempStr
+            else:
+                tempStr = csv_stream.convert([])
+                if len(csv_stream.get_columns_name()) > 1:
+                    report['data'] = tempStr
+                else:
+                    report['data'] = tempStr.get(csv_stream.get_columns_name()[0])
+
+            cc = configuration.ClientConfiguration()
+            response = cc.update_json_config(report['data'], jsonpath, options, csv_stream.get_columns_name(), config_text)
+            response.headers["Content-type"] = "application/json"
+            
+            return response
+        else:
+            response = make_response(json.dumps({'success':False, 'message':'Please fill in or select required field.'}))
+            response.headers["Content-type"] = "application/json"
+            
+            return response
+    
+    except Exception,e:
+        if type(e).__name__ == 'BadRequestKeyError':
+            response = make_response(json.dumps({'success':False, 'message':'Please fill in or select required field.'}))
+        else:
+            response = make_response(json.dumps({'success':False, 'message': str(e)}))
+        response.headers["Content-type"] = "application/json"
+       
+        return response
+    
+@app.route("/config/save_json", methods=["POST"])
+def save_json():
+    assert request.method == "POST"
+    config_json = str(request.form["final_json"])
+
     try:
         success, message = configuration.write_file(config_json)
         response = make_response(json.dumps({'success':success, 'message': message}))
@@ -304,3 +362,5 @@ def _sort_stats(stats):
 
 def transform(text_file_contents):
     return text_file_contents.replace("=", ",")
+
+
