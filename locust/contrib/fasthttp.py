@@ -21,6 +21,7 @@ else:
 
 from gevent.timeout import Timeout
 from geventhttpclient.useragent import UserAgent, CompatRequest, CompatResponse, ConnectionError
+from geventhttpclient.response import HTTPConnectionClosed
 
 from locust import events
 from locust.core import Locust
@@ -37,7 +38,7 @@ absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 # List of exceptions that can be raised by geventhttpclient when sending an HTTP request, 
 # and that should result in a Locust failure
 FAILURE_EXCEPTIONS = (ConnectionError, ConnectionRefusedError, socket.error, \
-                      SSLError, Timeout)
+                      SSLError, Timeout, HTTPConnectionClosed)
 
 
 def _construct_basic_auth_str(username, password):
