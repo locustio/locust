@@ -12,8 +12,11 @@ which uses requests. However, if your're planning to run really large scale scal
 Locust comes with an alternative HTTP client, 
 :py:class:`FastHttpLocust <locust.contrib.fasthttp.FastHttpLocust>` which 
 uses `geventhttpclient <https://github.com/gwik/geventhttpclient/>`_ instead of requests.
-This client is significantly faster, and we've seen 5x-6x performance increases for 
-HTTP-requests.
+This client is significantly faster, and we've seen 5x-6x performance increases for making 
+HTTP-requests. This does not necessarily mean that the number of users one can simulate 
+per CPU core will automatically increase 5x-6x, since it also depends on what else 
+the load testing script does. However, if your locust scripts are spending most of their 
+CPU time in making HTTP-requests, you are likely to see signifant performance gains.
 
 
 Known limitations
