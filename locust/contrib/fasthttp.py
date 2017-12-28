@@ -95,7 +95,6 @@ class FastHttpSession(object):
             self.base_url = urlunparse((parsed_url.scheme, netloc, parsed_url.path, parsed_url.params, parsed_url.query, parsed_url.fragment))
             # store authentication header (we construct this by using _basic_auth_str() function from requests.auth)
             self.auth_header = _construct_basic_auth_str(parsed_url.username, parsed_url.password)
-            #self.auth = HTTPBasicAuth(parsed_url.username, parsed_url.password)
     
     def _build_url(self, path):
         """ prepend url with hostname unless it's already an absolute URL """
