@@ -26,7 +26,7 @@ Example
 
 To start locust in master mode::
 
-    locust -f my_locustfile.py --master
+    locust -f my_locustfile.py --master --host=http://example.com
 
 And then on each slave (replace ``192.168.0.14`` with IP of the master machine)::
 
