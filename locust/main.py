@@ -395,9 +395,12 @@ def main():
 
     # setup logging
     setup_logging(options.loglevel, options.logfile)
-    setup_resplogging(options.resploglevel, options.resplogfile)
+
+    if options.resplogfile:
+		setup_resplogging(options.resploglevel, options.resplogfile)
+
     logger = logging.getLogger(__name__)
-    
+
     if options.show_version:
         print("Locust %s" % (version,))
         sys.exit(0)
