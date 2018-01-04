@@ -43,6 +43,7 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
         // trigger resizing of charts
         rpsChart.resize();
         responseTimeChart.resize();
+        failuresChart.resize();
         usersChart.resize();
     }
 });
@@ -119,7 +120,8 @@ $(".stats_label").click(function(event) {
 
 // init charts
 var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS"], "reqs/s");
-var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times", ["Median Response Time", "95% percentile"], "ms");
+var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times", ["Median Response Time", "95th percentile"], "ms");
+var failuresChart = new LocustLineChart($(".charts-container"), "Failure rate", ["Failure Rate"], "%");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 
 function updateStats() {
@@ -156,6 +158,7 @@ function updateStats() {
             // update charts
             rpsChart.addValue([total.current_rps]);
             responseTimeChart.addValue([report.current_response_time_percentile_50, report.current_response_time_percentile_95]);
+            failuresChart.addValue([report.fail_ratio*100]);
             usersChart.addValue([report.user_count]);
         }
 
