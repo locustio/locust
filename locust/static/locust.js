@@ -121,7 +121,7 @@ $(".stats_label").click(function(event) {
 // init charts
 var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS"], "reqs/s");
 var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times", ["Median Response Time", "95th percentile"], "ms");
-var failuresChart = new LocustLineChart($(".charts-container"), "Failure rate", ["Failure Rate"], "%");
+var failuresChart = new LocustLineChart($(".charts-container"), "Failure rate", ["Failure Rate"], "%", 0, 100);
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 
 function updateStats() {

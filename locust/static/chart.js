@@ -3,10 +3,12 @@
         /**
          * lines should be an array of line names
          */
-        constructor(container, title, lines, unit) {
+        constructor(container, title, lines, unit, min, max) {
             this.container = $(container);
             this.title = title;
             this.lines = lines;
+            this.min = min || null;
+            this.max = max || null;
             
             this.element = $('<div class="chart"></div>').css("width", "100%").appendTo(container);
             this.data = [];
@@ -64,6 +66,8 @@
                 yAxis: {
                     type: 'value',
                     boundaryGap: [0, '100%'],
+                    min: this.min,
+                    max: this.max,
                     splitLine: {
                         show: false
                     },
