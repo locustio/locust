@@ -183,9 +183,9 @@ a:hover {
 .start input.val, .edit input.val {
     border: none;
     background: #fff;
-    height: 52px;
-    width: 328px;
-    font-size: 24px;
+    height: 38px;
+    width: 155px;
+    font-size: 12px;
     padding-left: 10px;
 }
 .start button,

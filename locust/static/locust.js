@@ -52,10 +52,40 @@ var errors_tpl = $('#errors-template');
 var exceptions_tpl = $('#exceptions-template');
 var slaves_tpl = $('#slave-template');
 
+function buildSwarmPostData(form) {
+    var postdata = {};
+
+    $(form).find("input.locust_count, input.hatch_rate").each(
+        function (idx, input) {
+            var locust = $(input).data("locust")
+            var value_str = $(input).val();
+
+            var value;
+            var param_type;
+
+            if ($(input).hasClass("locust_count")) {
+                param_type = "locust_count";
+                value = parseInt(value_str);
+            } else {
+                param_type = "hatch_rate";
+                value = parseFloat(value_str);
+            }
+
+            postdata[locust] = postdata[locust] || {};
+            postdata[locust][param_type] = value;
+        });
+
+    return JSON.stringify(postdata);
+}
+
 $('#swarm_form').submit(function(event) {
     event.preventDefault();
-    $.post($(this).attr("action"), $(this).serialize(),
-        function(response) {
+
+    $.ajax({
+        type: "post",
+        url: $(this).attr("action"),
+        data: buildSwarmPostData(this),
+        success: function(response) {
             if (response.success) {
                 $("body").attr("class", "hatching");
                 $("#start").fadeOut();
@@ -65,20 +95,25 @@ $('#swarm_form').submit(function(event) {
                 $("a.edit_test").fadeIn();
                 $(".user_count").fadeIn();
             }
-        }
-    );
+        },
+        contentType: "application/json"
+    });
 });
 
 $('#edit_form').submit(function(event) {
     event.preventDefault();
-    $.post($(this).attr("action"), $(this).serialize(),
-        function(response) {
+    $.ajax({
+        type: "post",
+        url: $(this).attr("action"),
+        data: buildSwarmPostData(this),
+        success: function(response) {
             if (response.success) {
                 $("body").attr("class", "hatching");
                 $("#edit").fadeOut();
             }
-        }
-    );
+        },
+        contentType: "application/json"
+    });
 });
 
 var sortBy = function(field, reverse, primer){

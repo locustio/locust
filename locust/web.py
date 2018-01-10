@@ -49,7 +49,9 @@ def index():
         is_distributed=is_distributed,
         user_count=runners.locust_runner.user_count,
         version=version,
-        host=host
+        host=host,
+        locust_classes=map(
+            lambda cls: cls.__name__, runners.locust_runner.locust_classes)
     )
 
 @app.route('/swarm', methods=["POST"])

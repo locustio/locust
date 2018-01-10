@@ -57,10 +57,15 @@
             <div class="padder">
                 <h2>Start new Locust swarm</h2>
                 <form action="/swarm" method="POST" id="swarm_form">
-                    <label for="locust_count">Number of users to simulate</label>
-                    <input type="text" name="locust_count" id="locust_count" class="val" /><br>
-                    <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
+                    {% for cls in locust_classes %}
+                        <label for="locust_count_{{cls}}">{{cls}}</label>
+                        <input type="text" class="val locust_count" placeholder="Number of users"
+                               name="locust_count__{{cls}}" id="locust_count__{{cls}}"
+                               data-locust="{{cls}}" />
+                        <input type="text" class="val hatch_rate" placeholder="Hatch rate (users/sec)"
+                               name="hatch_rate__{{cls}}" id="hatch_rate__{{cls}}"
+                               data-locust="{{cls}}" />
+                    {% endfor %}
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -74,10 +79,15 @@
             <div class="padder">
                 <h2>Change the locust count</h2>
                 <form action="/swarm" method="POST" id="edit_form">
-                    <label for="locust_count">Number of users to simulate</label>
-                    <input type="text" name="locust_count" id="new_locust_count" class="val" /><br>
-                    <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="hatch_rate" id="new_hatch_rate" class="val" /><br>
+                    {% for cls in locust_classes %}
+                        <label for="locust_count_{{cls}}">{{cls}}</label>
+                        <input type="text" class="val locust_count" placeholder="Number of users"
+                               name="locust_count__{{cls}}" id="new_locust_count__{{cls}}"
+                               data-locust="{{cls}}" />
+                        <input type="text" class="val hatch_rate" placeholder="Hatch rate (users/sec)"
+                               name="hatch_rate__{{cls}}" id="new_hatch_rate__{{cls}}"
+                               data-locust="{{cls}}" />
+                    {% endfor %}
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
