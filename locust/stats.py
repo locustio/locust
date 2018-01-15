@@ -569,13 +569,13 @@ def on_request_success(start_time, request_type, status_code, name, url, respons
     global_stats.log_request(request_type, name, response_time, response_length)
     resp_logger.info("{}\t{}\t{}\t{}\t{}\t{}".format(name, request_type, status_code, url, response_time, response_length))
 
-def on_request_failure(start_time, request_type, name, exception):
-    global_stats.log_error(request_type, name, exception)
-    resp_logger.error("{}\t{}\t{}".format(name, request_type, exception))
+#def on_request_failure(start_time, request_type, name, exception):
+#    global_stats.log_error(request_type, name, exception)
+#    resp_logger.error("{}\t{}\t{}".format(name, request_type, exception))
 
-#def on_request_failure(start_time, request_type, status_code, name, url, response_time, response_length):
-#    global_stats.log_request(request_type, name, response_time, response_length)
-#    resp_logger.error("{}\t{}\t{}\t{}\t{}\t{}".format(name, request_type, status_code, url, response_time, response_length))
+def on_request_failure(start_time, request_type, status_code, name, url, response_time, response_length):
+    global_stats.log_request(request_type, name, response_time, response_length)
+    resp_logger.error("{}\t{}\t{}\t{}\t{}\t{}".format(name, request_type, status_code, url, response_time, response_length))
 
 def on_report_to_master(client_id, data):
     data["stats"] = global_stats.serialize_stats()
