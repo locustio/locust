@@ -9,7 +9,7 @@ from itertools import chain
 from time import time
 
 import six
-from flask import Flask, make_response, render_template, request
+from flask import Flask, make_response, jsonify, render_template, request
 from gevent import pywsgi
 
 from locust import __version__ as version
@@ -77,16 +77,12 @@ def swarm():
         return "Invalid format for swarm parameters", 400
 
     runners.locust_runner.start_hatching(locust_count, hatch_rate)
-    response = make_response(json.dumps({'success':True, 'message': 'Swarming started'}))
-    response.headers["Content-type"] = "application/json"
-    return response
+    return jsonify({'success': True, 'message': 'Swarming started'})
 
 @app.route('/stop')
 def stop():
     runners.locust_runner.stop()
-    response = make_response(json.dumps({'success':True, 'message': 'Test stopped'}))
-    response.headers["Content-type"] = "application/json"
-    return response
+    return jsonify({'success':True, 'message': 'Test stopped'})
 
 @app.route("/stats/reset")
 def reset_stats():
@@ -153,22 +149,20 @@ def request_stats():
     report["state"] = runners.locust_runner.state
     report["user_count"] = runners.locust_runner.user_count
 
-    return json.dumps(report)
+    return jsonify(report)
 
 @app.route("/exceptions")
 def exceptions():
-    response = make_response(json.dumps({
+    return jsonify({
         'exceptions': [
             {
-                "count": row["count"], 
-                "msg": row["msg"], 
-                "traceback": row["traceback"], 
+                "count": row["count"],
+                "msg": row["msg"],
+                "traceback": row["traceback"],
                 "nodes" : ", ".join(row["nodes"])
             } for row in six.itervalues(runners.locust_runner.exceptions)
         ]
-    }))
-    response.headers["Content-type"] = "application/json"
-    return response
+    })
 
 @app.route("/exceptions/csv")
 def exceptions_csv():
