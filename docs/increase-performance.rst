@@ -19,14 +19,6 @@ the load testing script does. However, if your locust scripts are spending most 
 CPU time in making HTTP-requests, you are likely to see signifant performance gains.
 
 
-Known limitations
-=================
-
-* :py:class:`FastHttpLocust <locust.contrib.fasthttp.FastHttpLocust>` does not 
-  support the :ref:`catch-response <catch-response>` argument.
-* Basic auth is currently not supported.
-
-
 How to use FastHttpLocust
 ===========================
 
