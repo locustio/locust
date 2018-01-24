@@ -437,7 +437,7 @@ def main():
         try:
             options.run_time = parse_timespan(options.run_time)
         except ValueError:
-            logger.error("Valid --time-limit formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
+            logger.error("Valid --run-time formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
             sys.exit(1)
         def spawn_run_time_limit_greenlet():
             logger.info("Run time limit set to %s seconds" % options.run_time)
