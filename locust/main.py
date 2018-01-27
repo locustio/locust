@@ -4,8 +4,16 @@ import os
 import signal
 import socket
 import sys
+import tempfile
 import time
 from optparse import OptionParser
+
+try:
+    from urllib.request import urlretrieve
+    from urllib.parse import urlparse
+except ImportError:
+    from urllib import urlretrieve
+    from urlparse import urlparse
 
 import gevent
 
@@ -283,6 +291,12 @@ def find_locustfile(locustfile):
     """
     Attempt to locate a locustfile, either explicitly or by searching parent dirs.
     """
+    if urlparse(locustfile).scheme != "":
+        logger = logging.getLogger(__name__)
+        logger.info('argument --locustfile is URL, downloading to tmp dir...')
+        _, tmp_filename = tempfile.mkstemp(suffix='.py', text=True)
+        locustfile, _ = urlretrieve(locustfile, tmp_filename)
+        logger.info('locustfile stored at %s' % locustfile)
     # Obtain env value
     names = [locustfile]
     # Create .py version if necessary
