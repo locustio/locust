@@ -40,7 +40,7 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
-    install_requires=["chardet==3.0.4", "urllib3==1.22","pandas>=0.21.0","gevent>=1.2.2", "flask>=0.10.1", "requests>=2.9.1", "msgpack-python>=0.4.2", "six>=1.10.0", "pyzmq==15.2.0", "jsonpath-rw==1.4.0", "jsonpath-rw-ext==1.1.3"],
+    install_requires=["pandas>=0.21.0","gevent==1.2.2", "flask>=0.10.1", "requests>=2.9.1", "msgpack-python>=0.4.2", "six>=1.10.0", "pyzmq==16.0.4", "jsonpath-rw==1.4.0", "jsonpath-rw-ext==1.1.3", "chardet==3.0.4", "urllib3==1.22"],
     tests_require=['unittest2', 'mock'],
     entry_points={
         'console_scripts': [
