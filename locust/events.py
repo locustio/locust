@@ -99,7 +99,7 @@ Event is fire with the following arguments:
 
 quitting = EventHook()
 """
-*quitting* is fired when the locust process in exiting
+*quitting* is fired when the locust process is exiting
 """
 
 master_start_hatching = EventHook()
