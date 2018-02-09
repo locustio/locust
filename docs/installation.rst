@@ -46,7 +46,7 @@ Once you've done that you should be able to just ``pip install locustio``.
     Linux machines, since gevent's performance under Windows is poor.
 
 
-Installing Locust on OS X
+Installing Locust on MacOS
 -------------------------
 
 The following is currently the shortest path to installing gevent on OS X using Homebrew.
@@ -56,7 +56,9 @@ The following is currently the shortest path to installing gevent on OS X using 
 
     brew install libev
 
-#. Then follow the above instructions.
+#. Install Locust via pip (--user is required on MacOS)::
+
+    pip install --user locustio
 
 Increasing Maximum Number of Open Files Limit
 ---------------------------------------------
