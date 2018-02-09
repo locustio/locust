@@ -49,7 +49,7 @@ Once you've done that you should be able to just ``pip install locustio``.
 Installing Locust on MacOS
 -------------------------
 
-The following is currently the shortest path to installing gevent on OS X using Homebrew.
+The following is currently the shortest path to installing gevent on MacOS using Homebrew.
 
 #. Install `Homebrew <http://mxcl.github.com/homebrew/>`_.
 #. Install libev (dependency for gevent)::
