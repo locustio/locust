@@ -1,14 +1,17 @@
 # encoding: utf-8
 
-import csv, re, io, json, os.path
+import csv, re, io, json, os.path, events
 from time import time
 from itertools import chain
 from collections import defaultdict
 from six.moves import StringIO, xrange
 import six
+import main
+import tests_loader
 
 from gevent import wsgi
-from flask import Flask, make_response, request, render_template
+from flask import Flask, make_response, request, render_template, redirect, url_for
+from werkzeug.utils import secure_filename
 
 from . import runners, configuration
 from .cache import memoize
@@ -16,7 +19,8 @@ from .runners import MasterLocustRunner
 from locust.stats import median_from_dict
 from locust import __version__ as version
 import gevent, itertools
-
+import fileio
+import base64
 
 import logging
 logger = logging.getLogger(__name__)
@@ -55,16 +59,27 @@ def index():
     else:
         edit_label = ""
 
+    pages = tests_loader.populate_directories(fileio.os_path(),'tests/pages/')
+    modules = tests_loader.populate_directories(fileio.os_path(),'tests/modules/')
+    modules.update(pages)
+    directories = modules
+    
     return render_template("index.html",
         state=runners.locust_runner.state,
         is_distributed=is_distributed,
         slave_count=slave_count,
         user_count=runners.locust_runner.user_count,
         available_locustfiles = sorted(runners.locust_runner.available_locustfiles.keys()),
+        test_file_directories = sorted(directories),
         version=version,
         ramp = _ramp,
         host=host
     )
+
+@app.route('/new', methods=["POST"])
+def newtest():
+    runners.locust_runner.state = runners.STATE_INIT
+    return index()
 
 @app.route('/swarm', methods=["POST"])
 def swarm():
@@ -270,9 +285,10 @@ def ramp():
     response.headers["Content-type"] = "application/json"
     return response
 
+
 @app.route("/config/get_config_content", methods=["GET"])
 def get_config_content():
-    load_config = configuration.read_file()
+    load_config = fileio.read(configuration.CONFIG_PATH)
     response = make_response(json.dumps({'data':load_config}))
     response.headers["Content-type"] = "application/json"
     return response
@@ -338,13 +354,35 @@ def convert_csv_to_json():
        
         return response
     
+@app.route("/upload_file", methods=["POST"])
+def upload_file():
+    upload_directory = request.form.get('upload_directory')
+    python_file = request.files['python_file']
+    python_file_path = upload_directory + python_file.filename
+    python_file_extension = os.path.splitext(python_file.filename)[1]
+    python_file_content = python_file.read()
+    if not python_file and python_file_extension != ".py":
+        return expected_response({'success':False, 'message':"Can't upload this file. Please try again with python file with .py extension"})
+    upload_status,upload_message = fileio.write(python_file_path, python_file_content)
+    if upload_status is False :
+        return expected_response({'success':False, 'message':upload_message})
+    events.master_new_file_uploaded.fire(new_file={"full_path": python_file_path, "name": python_file.filename, "content":python_file_content})
+    runners.locust_runner.reload_tests()
+    return expected_response({'success':True, 'message':""})
+
+def expected_response(json_dumps):
+    response = make_response(json.dumps(json_dumps))
+    response.headers["Content-type"] = "application/json"
+    return response
+
 @app.route("/config/save_json", methods=["POST"])
 def save_json():
     assert request.method == "POST"
     config_json = str(request.form["final_json"])
 
     try:
-        success, message = configuration.write_file(config_json)
+        success, message =  fileio.write(configuration.CONFIG_PATH, config_json)
+        events.master_new_configuration.fire(new_config=config_json)
         response = make_response(json.dumps({'success':success, 'message': message}))
     except Exception as err:
         response = make_response(json.dumps({'success':success, 'message': message}))

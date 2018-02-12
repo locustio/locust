@@ -66,9 +66,6 @@
     </div>
     <div class="main">
         <div class="start" id="start">
-            <div style="position:relative;">
-                <a href="#" class="close_link">Close</a>
-            </div>
             <div class="padder">
                 <h2>Start new Locust swarm</h2>
                 <form action="/swarm" method="POST" id="swarm_form" class="start-timer">
@@ -80,12 +77,15 @@
                     <br>
                     <input type="hidden" name="type_swarm" value="start">
                     <label for="locustfile">Locust file to execute</label>
-                    <select name="locustfile" id="locustfile" class="select2">
+                    <div class="input-group">
+                    <select name="locustfile" id="locustfile" class="select2 select2-hidden-accessible select2-start-width" placeholder="Select type">
+                        <option value="" disabled selected>Select/Upload a test file</option>
+                        <option value="add_new_test_file">Upload test file</option>
                         {% for name in available_locustfiles %}
                             <option value="{{name}}">{{name}}</option>
                         {% endfor %}
                     </select>
-                    <br>
+                    </div>
                     <br>
                     <a href="#" class="edit_config_link">Edit Config</a>
                     <button type="submit">Start swarming</button>
@@ -99,7 +99,55 @@
                 {% endif %}
             </div>
         </div>
-
+        <div id="new-test-confirmation" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Are you sure?</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Creating new test will erase all current test result?</p>
+                </div>
+                <div class="modal-footer">
+                    <form action="/new" method="POST">
+                        <button type="submit" class="btn btn-default btn-newtest">Yes</button>
+                        <button type="button" class="btn btn-default btn-newtest" data-dismiss="modal">No</button>
+                    </form>
+                </div>
+                </div>
+            </div>
+        </div>
+        <div id="add-new-file-modal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+          
+              <!-- Modal content-->
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                  <h4 class="modal-title">Upload Test File</h4>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" id="upload_file_form" enctype="multipart/form-data" action="/upload_file">
+                        <label>Path :</label>
+                        <select name="upload_directory" id="directories" class="select2">
+                            {% for value in test_file_directories %}
+                                <option value="{{value}}">{{value}}</option>
+                            {% endfor %}
+                        </select>
+                        <br/>
+                        <br/>
+                        <label>File to upload :</label>
+                        <br/>
+                        <input type="file" accept=".py" name="python_file" id="python_file" />
+                        <br/>
+                        <input type="submit" value="Upload" id="upload_btn_submit" />
+                    </form>
+                </div>
+              </div>
+            </div>
+        </div>
         <div class="edit" id="edit">
             <div style="position:relative;">
                 <a href="#" class="close_link">Close</a>

@@ -18,6 +18,9 @@ from .stats import global_stats
 
 from .rpc import rpc, Message
 
+import fileio
+import tests_loader
+
 logger = logging.getLogger(__name__)
 
 # global locust runner singleton
@@ -203,6 +206,9 @@ class LocustRunner(object):
         row["count"] += 1
         row["nodes"].add(node_id)
         self.exceptions[key] = row
+    
+    def reload_tests(self):
+        self.available_locustfiles = tests_loader.load(self.options.locustfile)
 
 class LocalLocustRunner(LocustRunner):
     def __init__(self, locust_classes, options, available_locustfiles=None):
@@ -254,7 +260,6 @@ class MasterLocustRunner(DistributedLocustRunner):
             @property
             def running(self):
                 return self.get_by_state(STATE_RUNNING)
-
         self.clients = SlaveNodesDict()
         self.server = rpc.Server(self.master_bind_host, self.master_bind_port)
         self.greenlet = Group()
@@ -287,6 +292,13 @@ class MasterLocustRunner(DistributedLocustRunner):
             for client in six.itervalues(self.clients):
                 self.server.send(Message("config", data, None))
         events.master_new_configuration += on_master_new_configuration
+
+        def on_master_new_file_uploaded(new_file):
+            logger.info("master has been received a new test file, slaves should update theirs too")
+            self.reload_tests()
+            for client in six.itervalues(self.clients):
+                self.server.send(Message("python_file", new_file, None))
+        events.master_new_file_uploaded += on_master_new_file_uploaded
 
     @property
     def user_count(self):
@@ -432,7 +444,15 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 self.locust_classes = self.available_locustfiles[msg.data].values()
             elif msg.type == "config":
                 logger.info("Got new config from master, updating this slave config")
-                configuration.write_file(msg.data['config'])
+                fileio.write(configuration.CONFIG_PATH, msg.data['config'])
+                events.master_new_configuration.fire(new_config=msg.data['config'])
+            elif msg.type == "python_file":
+                logger.info("Uploaded test file from master detected, writing now")
+                new_file = msg.data
+                upload_status,upload_message = fileio.write(new_file['full_path'], new_file['content'])
+                if upload_status is False :
+                    logger.info("error while creating new file: " + upload_message)
+                self.reload_tests()
 
 
     def stats_reporter(self):
