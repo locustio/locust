@@ -13,6 +13,7 @@ $("#box_stop a.stop-button").click(function(event) {
     $("a.new_test").show();
     $("a.edit_test").hide();
     $(".user_count").hide();
+    $(".edit").hide();
 });
 
 $("#box_stop a.reset-button").click(function(event) {
