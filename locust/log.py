@@ -2,28 +2,26 @@ import logging
 import socket
 import sys
 
-host = socket.gethostname()
-
 def setup_logging(loglevel, logfile):
     numeric_level = getattr(logging, loglevel.upper(), None)
     if numeric_level is None:
         raise ValueError("Invalid log level: %s" % loglevel)
     
-    log_format = "[%(asctime)s] {0}/%(levelname)s/%(name)s: %(message)s".format(host)
+    log_format = "[%(asctime)s] {0}/%(levelname)s/%(name)s: %(message)s".format(socket.gethostname())
     logging.basicConfig(level=numeric_level, filename=logfile, format=log_format)
     
     sys.stderr = StdErrWrapper()
     sys.stdout = StdOutWrapper()
 
-stdout_logger = logging.getLogger("stdout")
-stderr_logger = logging.getLogger("stderr")
-
 class StdOutWrapper(object):
     """
     Wrapper for stdout
     """
+    def __init__(self):
+        self.logger = logging.getLogger("stdout")
+
     def write(self, s):
-        stdout_logger.info(s.strip())
+        self.logger.info(s.strip())
 
     def flush(self, *args, **kwargs):
         """No-op for wrapper"""
@@ -33,8 +31,11 @@ class StdErrWrapper(object):
     """
     Wrapper for stderr
     """
+    def __init__(self):
+        self.logger = logging.getLogger("stderr")
+
     def write(self, s):
-        stderr_logger.error(s.strip())
+        self.logger.error(s.strip())
 
     def flush(self, *args, **kwargs):
         """No-op for wrapper"""

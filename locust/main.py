@@ -174,7 +174,16 @@ def parse_options():
         default=None,
         help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --no-web"
     )
-    
+
+    # skip logging setup
+    parser.add_option(
+        '--skip-log-setup',
+        action='store_true',
+        dest='skip_log_setup',
+        default=False,
+        help="Disable Locust's logging setup. Instead, the configuration is provided by the Locust test or Python defaults."
+    )
+
     # log level
     parser.add_option(
         '--loglevel', '-L',
@@ -371,7 +380,9 @@ def main():
     parser, options, arguments = parse_options()
 
     # setup logging
-    setup_logging(options.loglevel, options.logfile)
+    if not options.skip_log_setup:
+        setup_logging(options.loglevel, options.logfile)
+
     logger = logging.getLogger(__name__)
     
     if options.show_version:
