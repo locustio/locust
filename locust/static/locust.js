@@ -265,6 +265,54 @@ $('#import_csv_btn').click(function(event) {
     })
 });
 
+$('#abort_validation').click(function(){
+    event.preventDefault();
+    $(".multiple_column").hide();
+    $(".json_validation").hide();
+    $("#column_name").empty();
+    document.getElementById("import_csv_form").reset(); 
+    document.getElementById("jsonpath").value = "";
+    document.getElementById("json_option").checked = false;
+});
+
+var multiple_data_headers;
+var jsonpath;
+var json_option;
+var config_text;
+
+$('#continue_validation').click(function(event) {
+    event.preventDefault();
+    var last_var_type = document.getElementById('last_var_type');
+    $.ajax({
+        type    : 'POST',
+        url     : '/config/validation/create_new_key',
+        enctype : 'multipart/form-data',
+        data    : JSON.stringify({'multiple_data_headers': multiple_data_headers ? multiple_data_headers.value : null, 
+                    'jsonpath': jsonpath ? jsonpath.value : null, 'options':json_option ? json_option.value : null, 
+                    'config_text':config_text ? config_text.value : null, 'last_var_type':last_var_type ? last_var_type.value : null}),
+        cache   : false,
+        contentType : 'application/json;charset=UTF-8',
+        processData : false,
+        success: function(response){
+            if (response.success) {
+                try{
+                    json_editor.set(JSON.parse(response.data));
+                    $(".multiple_column").hide();
+                    $('#json_validation').hide();
+                    $("#column_name").empty();
+                    document.getElementById("import_csv_form").reset();
+                }
+                catch(err){
+                    alert(err.message);
+                }
+            }
+            else {
+                alert("Convert error : " + response.message);
+            }
+        }
+    });
+});
+
 $('#multiple_column_form').submit(function(event) {
     event.preventDefault();
     $.post($(this).attr("action"), $(this).serialize(),
@@ -283,7 +331,7 @@ $('#convert_csv_btn').click(function(){
     event.preventDefault();
     try{
         $("#multiple_hidden_config_json").val(JSON.stringify(json_editor.get(), null , 4));
-        var form = $('#multiple_column_form')[0];
+        form = $('#multiple_column_form')[0];
         var form_data = new FormData(form);
         $.ajax({
             type:'POST',
@@ -306,7 +354,22 @@ $('#convert_csv_btn').click(function(){
                     }
                 }
                 else {
-                    alert("Convert error : " + response.message);
+                    switch(response.error_type) {
+                        case "JSON not found" :
+                            multiple_data_headers = document.getElementById('headers_checkbox');
+                            jsonpath = document.getElementById('jsonpath');
+                            json_option = document.querySelector('input[name="json_option"]:checked');
+                            config_text = document.getElementById('multiple_hidden_config_json');
+
+                            $('#multiple_column').hide();
+                            $('#json_validation').show();
+                            document.getElementById('key_not_found').innerHTML = response.data.missing_element
+                            document.getElementById('jsonpath_label').innerHTML = jsonpath.value
+                            document.getElementById('last_variable_1').innerHTML = document.getElementById('last_variable_2').innerHTML = response.data.last_variable
+                            break;
+                        default :
+                            alert("Convert error : " + response.message);
+                    }
                 }
             }
         });
