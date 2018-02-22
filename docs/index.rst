@@ -39,6 +39,7 @@ Locust Documentation
     testing-other-systems
     api
     extending-locust
+    logging
     changelog
 
 .. toctree ::
