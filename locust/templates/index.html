@@ -2,13 +2,13 @@
 <html>
 <head>
     <title>Locust</title>
-    <link rel="stylesheet" type="text/css" href="/static/style.css?v={{ version }}" media="screen">
-    <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" type="text/css" href="./static/style.css?v={{ version }}" media="screen">
+    <link rel="shortcut icon" href="./static/img/favicon.ico" type="image/x-icon"/>
 </head>
 <body class="{{state}}">
     <div class="top">
         <div class="top-content container">
-            <img src="/static/img/logo.png?v={{ version }}" class="logo" />
+            <img src="./static/img/logo.png?v={{ version }}" class="logo" />
             <div class="boxes">
                 <div class="top_box box_url">
                     <div class="label">HOST</div>
@@ -42,8 +42,8 @@
                     <div class="value"><span id="fail_ratio"></span>%</div>
                 </div>
                 <div class="top_box box_stop box_running" id="box_stop">
-                    <a href="/stop" class="stop-button"><i></i>STOP</a>
-                    <a href="/stats/reset" class="reset-button">Reset<br>Stats</a>
+                    <a href="./stop" class="stop-button"><i></i>STOP</a>
+                    <a href="./stats/reset" class="reset-button">Reset<br>Stats</a>
                 </div>
             </div>
             <div style="clear:both;"></div>
@@ -56,7 +56,7 @@
             </div>
             <div class="padder">
                 <h2>Start new Locust swarm</h2>
-                <form action="/swarm" method="POST" id="swarm_form">
+                <form action="./swarm" method="POST" id="swarm_form">
                     <label for="locust_count">Number of users to simulate</label>
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
@@ -73,7 +73,7 @@
             </div>
             <div class="padder">
                 <h2>Change the locust count</h2>
-                <form action="/swarm" method="POST" id="edit_form">
+                <form action="./swarm" method="POST" id="edit_form">
                     <label for="locust_count">Number of users to simulate</label>
                     <input type="text" name="locust_count" id="new_locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
@@ -146,9 +146,9 @@
                 </div>
                 <div style="display:none;">
                     <div style="margin-top:20px;">
-                        <a href="/stats/requests/csv">Download request statistics CSV</a><br>
-                        <a href="/stats/distribution/csv">Download response time distribution CSV</a><br>
-                        <a href="/exceptions/csv">Download exceptions CSV</a>
+                        <a href="./stats/requests/csv">Download request statistics CSV</a><br>
+                        <a href="./stats/distribution/csv">Download response time distribution CSV</a><br>
+                        <a href="./exceptions/csv">Download exceptions CSV</a>
                     </div>
                 </div>
                 <div style="display:none;">
@@ -207,13 +207,13 @@
     </nav>
 
 
-    <script type="text/javascript" src="/static/jquery-1.11.3.min.js"></script>
-    <script type="text/javascript" src="/static/jquery.jqote2.min.js"></script>
-    <script type="text/javascript" src="/static/jquery.tools.min.js"></script>
+    <script type="text/javascript" src="./static/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="./static/jquery.jqote2.min.js"></script>
+    <script type="text/javascript" src="./static/jquery.tools.min.js"></script>
     <!-- echarts from https://github.com/ecomfe/echarts -->
-    <script type="text/javascript" src="/static/echarts.common.min.js"></script>
+    <script type="text/javascript" src="./static/echarts.common.min.js"></script>
     <!-- vintage theme of echarts -->
-    <script type="text/javascript" src="/static/vintage.js"></script>
+    <script type="text/javascript" src="./static/vintage.js"></script>
     <script type="text/x-jqote-template" id="stats-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%> <%=(this.name == "Total" ? "total" : "")%>">
@@ -262,7 +262,7 @@
         <% alternate = !alternate; %>
         ]]>
     </script>
-    <script type="text/javascript" src="/static/chart.js?v={{ version }}"></script>
-    <script type="text/javascript" src="/static/locust.js?v={{ version }}"></script>
+    <script type="text/javascript" src="./static/chart.js?v={{ version }}"></script>
+    <script type="text/javascript" src="./static/locust.js?v={{ version }}"></script>
 </body>
 </html>
