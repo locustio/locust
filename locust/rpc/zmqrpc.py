@@ -17,9 +17,13 @@ class Server(BaseSocket):
     def __init__(self, host, port):
         context = zmq.Context()
         self.receiver = context.socket(zmq.PULL)
+        self.receiver.setsockopt(zmq.TCP_KEEPALIVE, 1)
+        self.receiver.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 30)
         self.receiver.bind("tcp://%s:%i" % (host, port))
         
         self.sender = context.socket(zmq.PUSH)
+        self.sender.setsockopt(zmq.TCP_KEEPALIVE, 1)
+        self.sender.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 30)
         self.sender.bind("tcp://%s:%i" % (host, port+1))
     
 
