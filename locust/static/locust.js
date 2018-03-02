@@ -1,5 +1,5 @@
 $(window).ready(function() {
-    if($("#locust_count").length > 0) {
+    if ($("#locust_count").length > 0) {
         $("#locust_count").focus().select();
     }
 });
@@ -81,18 +81,18 @@ $('#edit_form').submit(function(event) {
     );
 });
 
-var sortBy = function(field, reverse, primer){
+var sortBy = function(field, reverse, primer) {
     reverse = (reverse) ? -1 : 1;
-    return function(a,b){
+    return function(a, b) {
         a = a[field];
         b = b[field];
-       if (typeof(primer) != 'undefined'){
-           a = primer(a);
-           b = primer(b);
-       }
-       if (a<b) return reverse * -1;
-       if (a>b) return reverse * 1;
-       return 0;
+        if (typeof(primer) != 'undefined') {
+            a = primer(a);
+            b = primer(b);
+        }
+        if (a < b) return reverse * -1;
+        if (a > b) return reverse * 1;
+        return 0;
     }
 }
 
@@ -119,14 +119,14 @@ $(".stats_label").click(function(event) {
 
 // init charts
 var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS"], "reqs/s");
-var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times", ["Median Response Time", "95% percentile"], "ms");
+var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times (ms)", ["Median Response Time", "95% percentile"], "ms");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 
 function updateStats() {
-    $.get('/stats/requests', function (report) {
-        $("#total_rps").html(Math.round(report.total_rps*100)/100);
+    $.get('/stats/requests', function(report) {
+        $("#total_rps").html(Math.round(report.total_rps * 100) / 100);
         //$("#fail_ratio").html(Math.round(report.fail_ratio*10000)/100);
-        $("#fail_ratio").html(Math.round(report.fail_ratio*100));
+        $("#fail_ratio").html(Math.round(report.fail_ratio * 100));
         $("#status_text").html(report.state);
         $("#userCount").html(report.user_count);
 
@@ -149,9 +149,9 @@ function updateStats() {
         alternate = false;
         $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
 
-        if (report.state !== "stopped"){
+        if (report.state !== "stopped") {
             // get total stats row
-            var total = report.stats[report.stats.length-1];
+            var total = report.stats[report.stats.length - 1];
             // update charts
             rpsChart.addValue([total.current_rps]);
             responseTimeChart.addValue([report.current_response_time_percentile_50, report.current_response_time_percentile_95]);
@@ -164,7 +164,7 @@ function updateStats() {
 updateStats();
 
 function updateExceptions() {
-    $.get('/exceptions', function (data) {
+    $.get('/exceptions', function(data) {
         $('#exceptions tbody').empty();
         $('#exceptions tbody').jqoteapp(exceptions_tpl, data.exceptions);
         setTimeout(updateExceptions, 5000);
