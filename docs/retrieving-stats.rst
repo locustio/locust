@@ -16,14 +16,14 @@ or for v0.8 (where the ``-t`` option isn't available)::
     locust -f examples/basic.py --csv=example --no-web -n10 -c10
 
 
-The files will be named `example_distribution.csv` and `example_requests.csv` (when using `--csv=example`) and mirror Locust's built in stat pages.
+The files will be named ``example_distribution.csv`` and ``example_requests.csv`` (when using ``--csv=example``) and mirror Locust's built in stat pages.
 
 You can also customize how frequently this is written if you desire faster (or slower) writing::
 
     import locust.stats
     locust.stats.CSV_STATS_INTERVAL_SEC = 5 # default is 2 seconds
 
-This data will write two files with `_distribution.csv` and `_requests.csv` added to the name you give::
+This data will write two files with ``_distribution.csv`` and ``_requests.csv`` added to the name you give::
 
     $cat example_distribution.csv
     "Name","# requests","50%","66%","75%","80%","90%","95%","98%","99%","100%"
