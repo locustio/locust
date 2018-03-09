@@ -6,7 +6,7 @@ You may wish to consume your Locust results via a CSV file. In this case, there 
 
 First, when running Locust with the web UI, you can retrieve CSV files under the Download Data tab. 
 
-Secondly, you can run Locust with a flag which will periodically save the CSV file. This is particularly useful
+Secondly, you can run Locust with a flag which will periodically save two CSV files. This is particularly useful
 if you plan on running Locust in an automated way with the ``--no-web`` flag::
 
     locust -f examples/basic.py --csv=example --no-web -n10 -t10m
@@ -15,12 +15,15 @@ or for v0.8 (where the ``-t`` option isn't available)::
 
     locust -f examples/basic.py --csv=example --no-web -n10 -c10
 
+
+The files will be named `example_distribution.csv` and `example_requests.csv` (when using `--csv=example`) and mirror Locust's built in stat pages.
+
 You can also customize how frequently this is written if you desire faster (or slower) writing::
 
     import locust.stats
     locust.stats.CSV_STATS_INTERVAL_SEC = 5 # default is 2 seconds
 
-This data will look like::
+This data will write two files with `_distribution.csv` and `_requests.csv` added to the name you give::
 
     $cat example_distribution.csv
     "Name","# requests","50%","66%","75%","80%","90%","95%","98%","99%","100%"
