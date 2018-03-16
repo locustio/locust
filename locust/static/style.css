@@ -183,7 +183,7 @@ container_title {
     z-index: 2; 
 }
 
-.multiple_column, .json_validation {
+.multiple_column {
     display: none;
     width: 398px;
     position: absolute;
@@ -213,7 +213,7 @@ container_title {
     box-shadow: 0 0 60px rgba(0,0,0,0.3);
 }
 
-.start .padder, .edit .padder, .edit_config .padder, .multiple_column .padder, .json_validation .padder {
+.start .padder, .edit .padder, .edit_config .padder, .multiple_column .padder {
     padding: 30px;
     /* padding-top: 0px; */
 }
@@ -242,7 +242,7 @@ label[for="json_option"]+div{
     color: red;
 }
 
-.multiple_column label, .json_validation label{
+.multiple_column label{
     font-weight: bold;
     font-size: 15px;
 }
@@ -259,7 +259,7 @@ label[for="json_option"]+div{
     font-weight: bold;
 }
 
-.start h2, .edit h2, .edit_config h2, .title_header, .multiple_column h2, .json_validation h2 {
+.start h2, .edit h2, .edit_config h2, .title_header, .multiple_column h2 {
     color: #addf82;
     font-size: 26px;
     font-weight: bold;
@@ -281,7 +281,7 @@ label[for="json_option"]+div{
     font-size: 16px;
 }
 
-.start input.val, .edit input.val, .multiple_column input.val, .json_validation input.val {
+.start input.val, .edit input.val, .multiple_column input.val {
     border: none;
     background: #fff;
     height: 40px;
@@ -320,18 +320,6 @@ label[for="json_option"]+div{
     cursor: pointer;
 }
 
-.json_validation button {
-    margin: 20px 5px 20px 5px;
-    float: right;
-    font-size: 14px;
-    font-weight: bold;
-    background: #8adaba;
-    padding: 8px 30px;
-    border-style: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
 .ramp button {
     position: relative;
     top: -53px;
@@ -346,7 +334,7 @@ label[for="json_option"]+div{
 .start button:hover,
 .edit button:hover,
 .edit_config button:hover,
-.multiple_column button:hover, .json_validation button:hover {
+.multiple_column button:hover {
     background: #74b99d;
 }
 
@@ -362,7 +350,7 @@ label[for="json_option"]+div{
 }
 
 .stopped .edit {display: none;}
-.running .edit, .hatching .edit, .multiple_column, .json_validation {
+.running .edit, .hatching .edit, .multiple_column{
     display: none;
     border-radius: 5px;
     -moz-border-radius: 5px;
@@ -388,8 +376,7 @@ label[for="json_option"]+div{
 .running a.new_test {display: none;}
 .stopped a.new_test {display: block;}
 
-
-.start a.close_link, .edit a.close_link, .multiple_column a.close_link_headers, .json_validation a.close_link_headers {
+.start a.close_link, .edit a.close_link, .multiple_column a.close_link_headers {
     position: absolute;
     right: 10px;
     top: 10px;

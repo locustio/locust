@@ -284,10 +284,8 @@
                         <label for="jsonpath" title="JSON path input">JSON Path</label>
                         <input type="text" name="jsonpath" id="jsonpath" class="val" required/>
                         <small>Example : $.production.accounts (data belongs to accounts section, where accounts belongs to production section)</small>
-                        <br>
                     </div>
                     <br>
-
                     <div class="required_field">
                         <label for="json_option" title="Choose desired action for current data">Action</label>
                         <div>
@@ -306,32 +304,6 @@
             </div>
         </div>
 
-        <div class="json_validation" id="json_validation" style="display:none;">
-            <div class="padder">
-                <h2>JSON Path Validation</h2><br>
-                <form action="/config/validation/create_new_key" method="POST" id="json_validation_form">
-                    Key <label id="key_not_found" >lorem</label> not found in <label id="jsonpath_label">ipsum</label>. Select <label id="last_variable_1">dolor</label> type to create new key
-                    <br><br>
-                    <div id="type_variable" name="type_variable">
-                        <label for="new_column" title="JsonPath as new column">Select type of variable &nbsp;</label><label id="last_variable_2">amet</label><br>
-                        <div>
-                            <select id="last_var_type" name="last_var_type">
-                                <option value="object">Object</option>
-                                <option value="string">String</option>
-                                <option value="array">Array</option>
-                                <option value="number">Number</option>
-                            </select>
-                        </div>
-                        <br>
-                    </div>
-                    <div>
-                        <button id="continue_validation">Continue</button>
-                        <button id="abort_validation">Abort</button>
-                    </div>
-                </form>
-                <div style="clear:right;"></div>
-            </div>
-        </div>
 
         <div class="status" id="status">
             <nav class="menu">
