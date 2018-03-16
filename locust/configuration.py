@@ -5,37 +5,7 @@ from ast import literal_eval
 from flask import make_response
 
 logger = logging.getLogger(__name__)
-config_path = '/tests/settings/config.json'
-
-def read_file():
-    """
-    Will read the file and return it as a string with tree view.
-    """
-    try:
-        with open((os.environ['PYTHONPATH'].split(os.pathsep))[-1] + config_path, "r") as data_file:
-            data = data_file.read()
-    except Exception as err:
-        logger.info(err)
-        data = "{}"
-    return data
-
-def write_file(string_json):
-    """
-    The `string_json` will overwrite existing configuration. 
-    If the previous configuration doesn't exist, then it will create the file.
-    """
-    status, message = None, None
-    try:
-        with open((os.environ['PYTHONPATH'].split(os.pathsep))[-1] + config_path, "w") as data_file:
-            data_file.write(string_json)
-            status = True
-            message = 'Configuration has been saved'
-            events.master_new_configuration.fire(new_config=string_json)
-    except Exception as err:
-        logger.info(err)
-        status = False
-        message = "Can't save the configuration :" + err
-    return status, message
+CONFIG_PATH = '/tests/settings/config.json'
 
 class ClientConfiguration:
     """
@@ -51,7 +21,7 @@ class ClientConfiguration:
         """
         if self.config_data is None:
             try:
-                with open((os.environ['PYTHONPATH'].split(os.pathsep))[-1] + config_path, "r") as data_file:
+                with open((os.environ['PYTHONPATH'].split(os.pathsep))[-1] + CONFIG_PATH, "r") as data_file:
                     self.config_data = json.load(data_file)
             except Exception as err:
                 logger.info(err)

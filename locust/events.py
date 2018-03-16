@@ -135,3 +135,8 @@ master_new_configuration = EventHook()
 """
 *master_new_configuration* is fired when new configuration saved from master
 """
+
+master_new_file_uploaded = EventHook()
+"""
+*master_new_file_uploaded* is fired when user upload a new test file
+"""
