@@ -116,7 +116,9 @@ class HttpSession(requests.Session):
         
         # record the consumed time
         request_meta["response_time"] = int((time.time() - request_meta["start_time"]) * 1000)
-        
+       
+        # record the HTP status code
+        request_meta["status_code"]=response.status_code
     
         request_meta["name"] = name or (response.history and response.history[0] or response).request.path_url
         
@@ -138,15 +140,22 @@ class HttpSession(requests.Session):
                     start_time=request_meta["start_time"],
                     request_type=request_meta["method"],
                     name=request_meta["name"],
+                    exception=e,
+                    status_code=request_meta["status_code"],
+                    url=request_meta["url"],
+                    response_time=request_meta["response_time"],
+                    response_length=request_meta["content_size"],
+                    #start_time=request_meta["start_time"],
+                    #request_type=request_meta["method"],
+                    #name=request_meta["name"],
                     #response_time=request_meta["response_time"],
                     #response_length=request_meta["content_size"],
-                    exception=e,
                 )
             else:
                 events.request_success.fire(
                     start_time=request_meta["start_time"],
                     request_type=request_meta["method"],
-                    status_code=response.status_code,
+                    status_code=request_meta["status_code"],
                     name=request_meta["name"],
                     url=request_meta["url"],
                     response_time=request_meta["response_time"],
@@ -228,27 +237,31 @@ class ResponseContextManager(LocustResponse):
             response_length=self.locust_request_meta["content_size"],
         )
         self._is_reported = True
-    
+
     def failure(self, exc):
         """
         Report the response as a failure.
-        
+
         exc can be either a python exception, or a string in which case it will
-        be wrapped inside a CatchResponseError. 
-        
+        be wrapped inside a CatchResponseError.
+
         Example::
-        
+
             with self.client.get("/", catch_response=True) as response:
                 if response.content == "":
                     response.failure("No data")
         """
         if isinstance(exc, six.string_types):
             exc = CatchResponseError(exc)
-        
+
+
         events.request_failure.fire(
             request_type=self.locust_request_meta["method"],
             name=self.locust_request_meta["name"],
             response_time=self.locust_request_meta["response_time"],
             exception=exc,
+            status_code=self.locust_request_meta["status_code"],
+            url=self.locust_request_meta["url"],
+            response_length=self.locust_request_meta["content_size"],
         )
         self._is_reported = True

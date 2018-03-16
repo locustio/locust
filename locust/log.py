@@ -20,7 +20,7 @@ def setup_resplogging(resploglevel, resplogfile):
     if numeric_level is None:
         raise ValueError("Invalid log level: %s" % resploglevel)
 
-    resplog_format = "[%(asctime)s] {0}/%(levelname)s/%(name)s %(message)s".format(host)
+    resplog_format = "[%(asctime)s]\t{0}/%(levelname)s/%(name)s %(message)s".format(host)
     resplog_fh = logging.FileHandler(resplogfile)
     resplog_fh.setLevel(numeric_level)
     resplog_fh.setFormatter(logging.Formatter(resplog_format))
