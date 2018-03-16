@@ -449,7 +449,7 @@ def main():
     if not options.no_web and not options.slave:
         # spawn web greenlet
         logger.info("Starting web monitor at %s:%s" % (options.web_host or "*", options.port))
-        main_greenlet = gevent.spawn(web.start, locust_classes, options)
+        main_greenlet = gevent.spawn(web.start, options)
     
     if not options.master and not options.slave:
         runners.locust_runner = LocalLocustRunner(locust_classes, options)

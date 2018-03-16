@@ -163,6 +163,6 @@ def exceptions_csv():
     response.headers["Content-disposition"] = disposition
     return response
 
-def start(locust, options):
+def start(options):
     pywsgi.WSGIServer((options.web_host, options.port),
                       app, log=None).serve_forever()
