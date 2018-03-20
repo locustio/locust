@@ -249,19 +249,19 @@ and :py:class:`TaskSet <locust.core.TaskSet>` :py:meth:`on_start <locust.core.Ta
 Setups and Teardowns
 --------------------
 
-:py:meth:`setup <locust.core.Locust.setup>` and :py:meth:`teardown <locust.core.Locust.teardown>`, whether it's run on :py:class:`Locust <locust.core.Locust>` or :py:class:`TaskSet <locust.core.TaskSet>`, are functions that are run only once.
+:py:meth:`setup <locust.core.Locust.setup>` and :py:meth:`teardown <locust.core.Locust.teardown>`, whether it's run on :py:class:`Locust <locust.core.Locust>` or :py:class:`TaskSet <locust.core.TaskSet>`, are methods that are run only once.
 :py:meth:`setup <locust.core.Locust.setup>` is run before tasks start running, while :py:meth:`teardown <locust.core.Locust.teardown>` is run after all tasks have finished and Locust is exiting.
 This enables you to perform some preparation before tasks start running (like creating a database) and to clean up before the Locust quits (like deleting the database).
 
 To use, simply declare a :py:meth:`setup <locust.core.Locust.setup>` and/or :py:meth:`teardown <locust.core.Locust.teardown>` on the :py:class:`Locust <locust.core.Locust>` or :py:class:`TaskSet <locust.core.TaskSet>` class.
-These functions will be run for you.
+These methods will be run for you.
 
-The on_start and on_stop functions
+The on_start and on_stop methods
 ----------------------------------
 
-A TaskSet class can declare an :py:meth:`on_start <locust.core.TaskSet.on_start>` function or an :py:meth:`on_stop <locust.core.TaskSet.on_stop>` function.
-The :py:meth:`on_start <locust.core.TaskSet.on_start>` function is called when a simulated user starts executing that TaskSet class,
-while the :py:meth:`on_stop <locust.core.TaskSet.on_stop` function is called when the TaskSet is stopped.
+A TaskSet class can declare an :py:meth:`on_start <locust.core.TaskSet.on_start>` method or an :py:meth:`on_stop <locust.core.TaskSet.on_stop>` method.
+The :py:meth:`on_start <locust.core.TaskSet.on_start>` method is called when a simulated user starts executing that TaskSet class,
+while the :py:meth:`on_stop <locust.core.TaskSet.on_stop` method is called when the TaskSet is stopped.
 
 Order of events
 ---------------
