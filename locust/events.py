@@ -1,3 +1,5 @@
+import gevent
+
 class EventHook(object):
     """
     Simple event class used to provide hooks for different types of events in Locust.
@@ -9,6 +11,9 @@ class EventHook(object):
             print "Event was fired with arguments: %s, %s" % (a, b)
         my_event += on_my_event
         my_event.fire(a="foo", b="bar")
+
+    If reverse is True, then the handlers will run in the reverse order
+    that they were inserted
     """
 
     def __init__(self):
@@ -22,7 +27,9 @@ class EventHook(object):
         self._handlers.remove(handler)
         return self
 
-    def fire(self, **kwargs):
+    def fire(self, reverse=False, **kwargs):
+        if reverse:
+            self._handlers.reverse()
         for handler in self._handlers:
             handler(**kwargs)
 
