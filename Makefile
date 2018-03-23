@@ -1,5 +1,5 @@
 coverage:
-	coverage run -m unittest2 discover
+	coverage run -m unittest discover
 
 test:
 	unit2 discover
