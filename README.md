@@ -1,6 +1,7 @@
 # Locust
 
 [![Build Status](https://img.shields.io/travis/locustio/locust.svg)](https://travis-ci.org/locustio/locust)
+[![codecov](https://codecov.io/gh/locustio/locust/branch/master/graph/badge.svg)](https://codecov.io/gh/locustio/locust)
 [![license](https://img.shields.io/github/license/locustio/locust.svg)](https://github.com/locustio/locust/blob/master/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/locustio.svg)](https://pypi.python.org/pypi/locustio)
 [![PyPI](https://img.shields.io/pypi/pyversions/locustio.svg)](https://pypi.python.org/pypi/locustio)
@@ -8,8 +9,8 @@
 
 ## Links
 
-* Website: <a href="http://locust.io">locust.io</a>
-* Documentation: <a href="http://docs.locust.io">docs.locust.io</a>
+* Website: <a href="https://locust.io">locust.io</a>
+* Documentation: <a href="https://docs.locust.io">docs.locust.io</a>
 * Support/Questions: [Slack signup](https://slack.locust.io/)
 
 ## Description

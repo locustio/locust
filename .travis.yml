@@ -17,6 +17,8 @@ addons:
     packages:
       - libev-dev
 install:
-  - pip install tox
+  - pip install tox codecov
 script:
   - tox
+after_success:
+  - codecov -e TOXENV

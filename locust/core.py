@@ -5,6 +5,7 @@ import traceback
 from time import time
 
 import gevent
+import gevent.lock
 import six
 
 from gevent import GreenletExit, monkey
@@ -19,7 +20,7 @@ from . import events
 from .clients import HttpSession
 from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
                         RescheduleTaskImmediately, StopLocust)
-
+from .runners import STATE_CLEANUP
 logger = logging.getLogger(__name__)
 
 
@@ -98,17 +99,44 @@ class Locust(object):
         
     client = NoClientWarningRaiser()
     _catch_exceptions = True
+    _setup_has_run = False  # Internal state to see if we have already run
+    _teardown_is_set = False  # Internal state to see if we have already run
+    _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
     
     def __init__(self):
         super(Locust, self).__init__()
+        self._lock.acquire()
+        if hasattr(self, "setup") and self._setup_has_run is False:
+            self._set_setup_flag()
+            self.setup()
+        if hasattr(self, "teardown") and self._teardown_is_set is False:
+            self._set_teardown_flag()
+            events.quitting += self.teardown
+        self._lock.release()
+
+    @classmethod
+    def _set_setup_flag(cls):
+        cls._setup_has_run = True
+
+    @classmethod
+    def _set_teardown_flag(cls):
+        cls._teardown_is_set = True
     
-    def run(self):
+    def run(self, runner=None):
+        task_set_instance = self.task_set(self)
         try:
-            self.task_set(self).run()
+            task_set_instance.run()
         except StopLocust:
             pass
         except (RescheduleTask, RescheduleTaskImmediately) as e:
             six.reraise(LocustError, LocustError("A task inside a Locust class' main TaskSet (`%s.task_set` of type `%s`) seems to have called interrupt() or raised an InterruptTaskSet exception. The interrupt() function is used to hand over execution to a parent TaskSet, and should never be called in the main TaskSet which a Locust class' task_set attribute points to." % (type(self).__name__, self.task_set.__name__)), sys.exc_info()[2])
+        except GreenletExit as e:
+            if runner:
+                runner.state = STATE_CLEANUP
+            # Run the task_set on_stop method, if it has one
+            if hasattr(task_set_instance, "on_stop"):
+                task_set_instance.on_stop()
+            raise  # Maybe something relies on this except being raised?
 
 
 class HttpLocust(Locust):
@@ -227,6 +255,10 @@ class TaskSet(object):
     instantiated. Useful for nested TaskSet classes.
     """
 
+    _setup_has_run = False  # Internal state to see if we have already run
+    _teardown_is_set = False  # Internal state to see if we have already run
+    _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
+
     def __init__(self, parent):
         self._task_queue = []
         self._time_start = time()
@@ -245,6 +277,23 @@ class TaskSet(object):
             self.min_wait = self.locust.min_wait
         if not self.max_wait:
             self.max_wait = self.locust.max_wait
+
+        self._lock.acquire()
+        if hasattr(self, "setup") and self._setup_has_run is False:
+            self._set_setup_flag()
+            self.setup()
+        if hasattr(self, "teardown") and self._teardown_is_set is False:
+            self._set_teardown_flag()
+            events.quitting += self.teardown
+        self._lock.release()
+
+    @classmethod
+    def _set_setup_flag(cls):
+        cls._setup_has_run = True
+
+    @classmethod
+    def _set_teardown_flag(cls):
+        cls._teardown_is_set = True
 
     def run(self, *args, **kwargs):
         self.args = args

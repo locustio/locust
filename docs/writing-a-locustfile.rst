@@ -34,7 +34,7 @@ With the following locustfile, each user would wait between 5 and 15 seconds bet
     class MyTaskSet(TaskSet):
         @task
         def my_task(self):
-            print "executing my_task"
+            print("executing my_task")
     
     class MyLocust(Locust):
         task_set = MyTaskSet
@@ -100,7 +100,7 @@ Here is an example::
     class MyTaskSet(TaskSet):
         @task
         def my_task(self):
-            print "Locust instance (%r) executing my_task" % (self.locust)
+            print("Locust instance (%r) executing my_task" % (self.locust))
     
     class MyLocust(Locust):
         task_set = MyTaskSet
@@ -231,20 +231,52 @@ It's also possible to declare a nested TaskSet, inline in a class, using the
             def my_task(self):
                 pass
 
-
-The on_start function
----------------------
-
-A TaskSet class can optionally declare an :py:meth:`on_start <locust.core.TaskSet.on_start>` function. 
-If so, that function is called when a simulated user starts executing that TaskSet class.
-
-
 Referencing the Locust instance, or the parent TaskSet instance
 ---------------------------------------------------------------
 
 A TaskSet instance will have the attribute :py:attr:`locust <locust.core.TaskSet.locust>` point to 
 its Locust instance, and the attribute :py:attr:`parent <locust.core.TaskSet.parent>` point to its 
 parent TaskSet (it will point to the Locust instance, in the base TaskSet).
+
+
+Setups, Teardowns, on_start, and on_stop
+========================================
+
+Locust optionally supports :py:class:`Locust <locust.core.Locust>` level :py:meth:`setup <locust.core.Locust.setup>` and :py:meth:`teardown <locust.core.Locust.teardown>`,
+:py:class:`TaskSet <locust.core.TaskSet>` level :py:meth:`setup <locust.core.Locust.setup>` and :py:meth:`teardown <locust.core.Locust.teardown>`,
+and :py:class:`TaskSet <locust.core.TaskSet>` :py:meth:`on_start <locust.core.TaskSet.on_start>` and :py:meth:`on_stop <locust.core.TaskSet.on_stop>`
+
+Setups and Teardowns
+--------------------
+
+:py:meth:`setup <locust.core.Locust.setup>` and :py:meth:`teardown <locust.core.Locust.teardown>`, whether it's run on :py:class:`Locust <locust.core.Locust>` or :py:class:`TaskSet <locust.core.TaskSet>`, are methods that are run only once.
+:py:meth:`setup <locust.core.Locust.setup>` is run before tasks start running, while :py:meth:`teardown <locust.core.Locust.teardown>` is run after all tasks have finished and Locust is exiting.
+This enables you to perform some preparation before tasks start running (like creating a database) and to clean up before the Locust quits (like deleting the database).
+
+To use, simply declare a :py:meth:`setup <locust.core.Locust.setup>` and/or :py:meth:`teardown <locust.core.Locust.teardown>` on the :py:class:`Locust <locust.core.Locust>` or :py:class:`TaskSet <locust.core.TaskSet>` class.
+These methods will be run for you.
+
+The on_start and on_stop methods
+----------------------------------
+
+A TaskSet class can declare an :py:meth:`on_start <locust.core.TaskSet.on_start>` method or an :py:meth:`on_stop <locust.core.TaskSet.on_stop>` method.
+The :py:meth:`on_start <locust.core.TaskSet.on_start>` method is called when a simulated user starts executing that TaskSet class,
+while the :py:meth:`on_stop <locust.core.TaskSet.on_stop` method is called when the TaskSet is stopped.
+
+Order of events
+---------------
+
+Since many setup and cleanup operations are dependent on each other, here is the order which they are run:
+
+1. Locust setup
+2. TaskSet setup
+3. TaskSet on_start
+4. TaskSet tasks...
+5. TaskSet on_stop
+6. TaskSet teardown
+7. Locust teardown
+
+In general, the setup and teardown methods should be complementary.
 
 
 Making HTTP requests 
@@ -309,8 +341,8 @@ is an instance of a :py:class:`TaskSet <locust.core.TaskSet>` or :py:class:`Http
 class::
 
     response = self.client.get("/about")
-    print "Response status code:", response.status_code
-    print "Response content:", response.content
+    print("Response status code:", response.status_code)
+    print("Response content:", response.content)
 
 And here's an example making a POST request::
 
