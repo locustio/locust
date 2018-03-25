@@ -36,7 +36,7 @@ setup(
     keywords='',
     author='Jonatan Heyman, Carl Bystrom, Joakim Hamrén, Hugo Heyman',
     author_email='',
-    url='http://locust.io',
+    url='https://locust.io/',
     license='MIT',
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
