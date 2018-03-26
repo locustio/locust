@@ -124,7 +124,7 @@ class HttpSession(requests.Session):
         if kwargs.get("stream", False):
             request_meta["content_size"] = int(response.headers.get("content-length") or 0)
         else:
-            request_meta["content_size"] = len(response.content or "")
+            request_meta["content_size"] = len(response.content or b"")
         
         if catch_response:
             response.locust_request_meta = request_meta
@@ -233,7 +233,7 @@ class ResponseContextManager(LocustResponse):
         Example::
         
             with self.client.get("/", catch_response=True) as response:
-                if response.content == "":
+                if response.content == b"":
                     response.failure("No data")
         """
         if isinstance(exc, six.string_types):

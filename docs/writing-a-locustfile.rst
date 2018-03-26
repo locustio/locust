@@ -342,7 +342,7 @@ class::
 
     response = self.client.get("/about")
     print("Response status code:", response.status_code)
-    print("Response content:", response.content)
+    print("Response content:", response.text)
 
 And here's an example making a POST request::
 
@@ -369,7 +369,7 @@ One can mark requests as failed, even when the response code is OK, by using the
 *catch_response* argument and a with statement::
 
     with client.get("/", catch_response=True) as response:
-        if response.content != "Success":
+        if response.content != b"Success":
             response.failure("Got wrong response")
 
 Just as one can mark requests with OK response codes as failures, one can also use **catch_response** 

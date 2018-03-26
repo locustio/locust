@@ -85,7 +85,7 @@ class TestWebUI(LocustTestCase):
         stats.global_stats.log_request("GET", "/test2", 1200, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/distribution/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
-        rows = str(response.content.decode("utf-8")).split("\n")
+        rows = response.text.split("\n")
         # check that /test2 is present in stats
         row = rows[len(rows)-2].split(",")
         self.assertEqual('"GET /test2"', row[0])
@@ -100,7 +100,7 @@ class TestWebUI(LocustTestCase):
         stats.global_stats.log_error("GET", "/", Exception("Error1337"))
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
-        self.assertIn("Error1337", str(response.content))
+        self.assertIn("Error1337", response.text)
     
     def test_exceptions(self):
         try:
@@ -112,7 +112,7 @@ class TestWebUI(LocustTestCase):
         
         response = requests.get("http://127.0.0.1:%i/exceptions" % self.web_port)
         self.assertEqual(200, response.status_code)
-        self.assertIn("A cool test exception", str(response.content))
+        self.assertIn("A cool test exception", response.text)
         
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
