@@ -9,11 +9,8 @@ First, when running Locust with the web UI, you can retrieve CSV files under the
 Secondly, you can run Locust with a flag which will periodically save two CSV files. This is particularly useful
 if you plan on running Locust in an automated way with the ``--no-web`` flag::
 
-    locust -f examples/basic.py --csv=example --no-web -n10 -t10m
+    locust -f examples/basic.py --csv=example --no-web -t10m
 
-or for v0.8 (where the ``-t`` option isn't available)::
-
-    locust -f examples/basic.py --csv=example --no-web -n10 -c10
 
 
 The files will be named ``example_distribution.csv`` and ``example_requests.csv`` (when using ``--csv=example``) and mirror Locust's built in stat pages.
