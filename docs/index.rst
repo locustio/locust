@@ -15,26 +15,26 @@ Locust Documentation
 
 
 .. toctree ::
-    :maxdepth: 1
+    :maxdepth: 4
 
     what-is-locust
     installation
     quickstart
 
 .. toctree ::
-    :maxdepth: 2
+    :maxdepth: 4
 
     writing-a-locustfile
 
 .. toctree ::
-    :maxdepth: 1
+    :maxdepth: 4
 
     running-locust-distributed
     running-locust-without-web-ui
 
 .. toctree ::
-    :maxdepth: 1
-    
+    :maxdepth: 4
+
     retrieving-stats
     testing-other-systems
     api
@@ -42,6 +42,6 @@ Locust Documentation
     changelog
 
 .. toctree ::
-    :maxdepth: 3
-    
+    :maxdepth: 4
+
     third-party-tools
