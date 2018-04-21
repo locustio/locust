@@ -39,9 +39,13 @@ Locust Documentation
     testing-other-systems
     api
     extending-locust
-    changelog
 
 .. toctree ::
     :maxdepth: 4
 
     third-party-tools
+
+.. toctree ::
+    :maxdepth: 4
+
+    changelog
