@@ -333,7 +333,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                 "stop_timeout":None,
                 "client_index": client_index,
             }
-            logger.info("Client index number %s is ready." % (client_index)))
+            logger.info("Client index number %s is ready." % (client_index))
 
             if remaining > 0:
                 data["num_clients"] += 1
