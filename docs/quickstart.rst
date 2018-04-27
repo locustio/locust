@@ -82,8 +82,17 @@ Another way we could declare tasks, which is usually more convenient, is to use 
         max_wait = 9000
 
 The :py:class:`Locust <locust.core.Locust>` class (as well as :py:class:`HttpLocust <locust.core.HttpLocust>`
-since it's a subclass) also allows one to specify minimum and maximum wait time—per simulated
+since it's a subclass) also allows one to specify minimum and maximum wait time in milliseconds—per simulated
 user—between the execution of tasks (*min_wait* and *max_wait*) as well as other user behaviours.
+By default the time is randomly chosen uniformly between *min_wait* and *max_wait*, but any user-defined
+time distributions can be used by setting *wait_function* to any arbitrary function. 
+For example, for an exponentially distributed wait time with average of 1 second:
+
+    import random
+    
+    class WebsiteUser(HttpLocust):
+        task_set = UserBehaviour
+        wait_function = lambda self: random.expovariate(1)*1000
 
 
 Start Locust
