@@ -87,6 +87,9 @@ class Locust(object):
     
     max_wait = 1000
     """Maximum waiting time between the execution of locust tasks"""
+
+    wait_function = lambda self: random.randint(self.min_wait,self.max_wait) 
+    """Function used to calculate waiting time between the execution of locust tasks in milliseconds"""
     
     task_set = None
     """TaskSet class that defines the execution behaviour of this locust"""
@@ -204,9 +207,9 @@ class TaskSet(object):
     Class defining a set of tasks that a Locust user will execute. 
     
     When a TaskSet starts running, it will pick a task from the *tasks* attribute, 
-    execute it, call it's wait function which will sleep a random number between
-    *min_wait* and *max_wait* milliseconds. It will then schedule another task for 
-    execution and so on.
+    execute it, and call its *wait_function* which will define a time to sleep for. 
+    This defaults to a uniformly distributed random number between *min_wait* and 
+    *max_wait* milliseconds. It will then schedule another task for execution and so on.
     
     TaskSets can be nested, which means that a TaskSet's *tasks* attribute can contain 
     another TaskSet. If the nested TaskSet it scheduled to be executed, it will be 
@@ -246,6 +249,13 @@ class TaskSet(object):
     TaskSet.
     """
     
+    wait_function = None
+    """
+    Function used to calculate waiting time betwen the execution of locust tasks in milliseconds. 
+    Can be used to override the wait_function defined in the root Locust class, which will be used
+    if not set on the TaskSet.
+    """
+
     locust = None
     """Will refer to the root Locust class instance when the TaskSet has been instantiated"""
 
@@ -272,11 +282,13 @@ class TaskSet(object):
 
         self.parent = parent
         
-        # if this class doesn't have a min_wait or max_wait defined, copy it from Locust
+        # if this class doesn't have a min_wait, max_wait or wait_function defined, copy it from Locust
         if not self.min_wait:
             self.min_wait = self.locust.min_wait
         if not self.max_wait:
             self.max_wait = self.locust.max_wait
+        if not self.wait_function:
+            self.wait_function = self.locust.wait_function
 
         self._lock.acquire()
         if hasattr(self, "setup") and self._setup_has_run is False:
@@ -377,10 +389,12 @@ class TaskSet(object):
     def get_next_task(self):
         return random.choice(self.tasks)
     
+    def get_wait_secs(self):
+        millis = self.wait_function()
+        return millis / 1000.0
+
     def wait(self):
-        millis = random.randint(self.min_wait, self.max_wait)
-        seconds = millis / 1000.0
-        self._sleep(seconds)
+        self._sleep(self.get_wait_secs())
 
     def _sleep(self, seconds):
         gevent.sleep(seconds)
