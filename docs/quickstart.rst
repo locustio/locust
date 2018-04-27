@@ -88,6 +88,8 @@ By default the time is randomly chosen uniformly between *min_wait* and *max_wai
 time distributions can be used by setting *wait_function* to any arbitrary function. 
 For example, for an exponentially distributed wait time with average of 1 second:
 
+    import random
+    
     class WebsiteUser(HttpLocust):
         task_set = UserBehaviour
         wait_function = lambda self: random.expovariate(1)*1000
