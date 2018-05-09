@@ -2,12 +2,14 @@
 
 import csv, re, io, json, os.path, events
 from time import time
+from datetime import datetime, timedelta
 from itertools import chain
 from collections import defaultdict
 from six.moves import StringIO, xrange
 import six
 import main
 import tests_loader
+import requests
 
 from gevent import wsgi
 from flask import Flask, make_response, request, render_template, redirect, url_for
@@ -38,6 +40,7 @@ load_config=""
 csv_stream = None
 
 locustfile = None
+opsgenie_id = None
 
 @app.route('/')
 def index():
@@ -85,6 +88,14 @@ def newtest():
 def swarm():
     assert request.method == "POST"
 
+    global opsgenie_id
+    opsgenie = request.form.getlist('opsgenie')
+
+    if len(opsgenie) > 0:
+        send_opsgenie_request("for-1-hour")
+    else:
+        opsgenie_id = None
+
     locust_count = int(request.form["locust_count"])
     hatch_rate = float(request.form["hatch_rate"])
     type_swarm = str(request.form["type_swarm"])
@@ -103,6 +114,10 @@ def swarm():
 
 @app.route('/stop')
 def stop():
+    global opsgenie_id
+    if opsgenie_id is not None:
+        send_opsgenie_delete()
+        send_opsgenie_request("schedule")
     runners.locust_runner.stop()
     response = make_response(json.dumps({'success':True, 'message': 'Test stopped'}))
     response.headers["Content-type"] = "application/json"
@@ -401,4 +416,70 @@ def _sort_stats(stats):
 def transform(text_file_contents):
     return text_file_contents.replace("=", ",")
 
+def send_opsgenie_request(_message):
+    try:
+        s = requests.Session()
+        header =    {
+                        "Authorization": "GenieKey 517f286e-5d4e-4e3b-82d9-8e796e0ef4ba",
+                        "Content-type": "application/json"
+                    }
+        data = {
+                    "time": {
+                        "type" : str(_message)
+                    },
+                    "rules": [
+                        {
+                            "entity": {
+                                "id": "333016a8-71f3-444b-89c9-b170353162ba",
+                                "type": "integration"
+                            }
+                        },
+                        {
+                            "entity": {
+                                "id": "c3975c97-eea0-4816-9582-c7c6ffdbcd3a",
+                                "type": "integration"
+                            }
+                        },
+                        {
+                            "entity": {
+                                "id": "71f16a3c-0c4c-4404-b6b9-a787ede12885",
+                                "type": "integration"
+                            }
+                        }
+                    ]
+                }
 
+        message = ""
+        if _message != "for-1-hour":
+            startTime = datetime.utcnow()
+            endTime = startTime + timedelta(minutes = 15)
+            data['time']['startDate'] = startTime.strftime("%Y-%m-%dT%H:%M:%SZ")
+            data['time']['endDate'] = endTime.strftime("%Y-%m-%dT%H:%M:%SZ")
+            message = " for datadog alert"
+
+        url = "https://api.opsgenie.com/v1/maintenance"
+        r = s.post(url, headers=header, data=json.dumps(data))
+        
+        response = r.json()
+        if '"status":"active"' in r.content:
+            global opsgenie_id
+            opsgenie_id = response['data']['id']
+            logger.info("opsgenie request sent" + message)
+        else:
+            logger.info("failed to send opsgenie request : " + response['message'])
+
+    except Exception, e:
+        logger.info("failed to send opsgenie request : " + str(e))
+
+def send_opsgenie_delete():
+    try:
+        s = requests.Session()
+        header =    {
+                        "Authorization": "GenieKey 517f286e-5d4e-4e3b-82d9-8e796e0ef4ba",
+                        "Content-type": "application/json"
+                    }
+        url = "https://api.opsgenie.com/v1/maintenance/" + opsgenie_id + "/cancel"
+        r = s.post(url, headers=header)
+        logger.info("opsgenie delete request sent")
+    except Exception, e:
+        logger.info("failed to send delete opsgenie request" + str(e))
