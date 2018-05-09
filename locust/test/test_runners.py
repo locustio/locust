@@ -156,23 +156,31 @@ class TestMasterRunner(LocustTestCase):
                     "user_count": 2,
                 }, "fake_client"))
                 mocked_time.return_value += 4
+                self.assertEqual(100, master.stats.total.get_current_response_time_percentile(0.10))
+                self.assertEqual(100, master.stats.total.get_current_response_time_percentile(0.25))
                 self.assertEqual(400, master.stats.total.get_current_response_time_percentile(0.5))
+                self.assertEqual(800, master.stats.total.get_current_response_time_percentile(0.75))
                 self.assertEqual(800, master.stats.total.get_current_response_time_percentile(0.95))
                 
                 # let 10 second pass, do some more requests, send it to the master and make
                 # sure the current response time percentiles only accounts for these new requests
                 mocked_time.return_value += 10
+                stats.log_request("GET", "/1", 10, 1)
                 stats.log_request("GET", "/1", 20, 1)
                 stats.log_request("GET", "/1", 30, 1)
                 stats.log_request("GET", "/1", 3000, 1)
+                stats.log_request("GET", "/1", 5000, 1)
                 server.mocked_send(Message("stats", {
                     "stats":stats.serialize_stats(),
                     "stats_total": stats.total.get_stripped_report(),
                     "errors":stats.serialize_errors(),
                     "user_count": 2,
                 }, "fake_client"))
+                self.assertEqual(10, master.stats.total.get_current_response_time_percentile(0.10))
+                self.assertEqual(20, master.stats.total.get_current_response_time_percentile(0.25))
                 self.assertEqual(30, master.stats.total.get_current_response_time_percentile(0.5))
-                self.assertEqual(3000, master.stats.total.get_current_response_time_percentile(0.95))
+                self.assertEqual(3000, master.stats.total.get_current_response_time_percentile(0.75))
+                self.assertEqual(5000, master.stats.total.get_current_response_time_percentile(0.95))
     
     def test_spawn_zero_locusts(self):
         class MyTaskSet(TaskSet):

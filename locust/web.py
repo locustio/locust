@@ -118,7 +118,10 @@ def request_stats():
         report["total_rps"] = stats[len(stats)-1]["current_rps"]
         report["fail_ratio"] = runners.locust_runner.stats.total.fail_ratio
         report["current_response_time_percentile_95"] = runners.locust_runner.stats.total.get_current_response_time_percentile(0.95)
+        report["current_response_time_percentile_75"] = runners.locust_runner.stats.total.get_current_response_time_percentile(0.75)
         report["current_response_time_percentile_50"] = runners.locust_runner.stats.total.get_current_response_time_percentile(0.5)
+        report["current_response_time_percentile_25"] = runners.locust_runner.stats.total.get_current_response_time_percentile(0.25)
+        report["current_response_time_percentile_10"] = runners.locust_runner.stats.total.get_current_response_time_percentile(0.10)
     
     is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
     if is_distributed:
