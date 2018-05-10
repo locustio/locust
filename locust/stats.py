@@ -294,8 +294,12 @@ class StatsEntry(object):
     def median_response_time(self):
         if not self.response_times:
             return 0
-
-        return median_from_dict(self.num_requests, self.response_times)
+        median = median_from_dict(self.num_requests, self.response_times)
+        if median > self.max_response_time:
+            median = self.max_response_time
+        elif median < self.min_response_time:
+            median = self.min_response_time
+        return median
 
     @property
     def current_rps(self):
