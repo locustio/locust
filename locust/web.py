@@ -42,7 +42,7 @@ csv_stream = None
 locustfile = None
 opsgenie_id = None
 
-@app.route('/')
+@app.route('/', methods=["GET","POST"])
 def index():
     is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
     if is_distributed:
@@ -66,7 +66,10 @@ def index():
     modules = tests_loader.populate_directories(fileio.os_path(),'tests/modules/')
     modules.update(pages)
     directories = modules
-    
+
+    if request.method == 'POST':
+        runners.locust_runner.state = runners.STATE_INIT
+
     return render_template("index.html",
         state=runners.locust_runner.state,
         is_distributed=is_distributed,
@@ -78,11 +81,6 @@ def index():
         ramp = _ramp,
         host=host
     )
-
-@app.route('/new', methods=["POST"])
-def newtest():
-    runners.locust_runner.state = runners.STATE_INIT
-    return index()
 
 @app.route('/swarm', methods=["POST"])
 def swarm():
