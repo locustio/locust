@@ -5,14 +5,13 @@ import signal
 import socket
 import sys
 import time
-from optparse import OptionParser
 
 import gevent
 
 import locust
 
-from . import events, runners, web
-from .core import HttpLocust, Locust
+from . import events, runners, web, parser
+from .core import HttpLocust, Locust, TaskSet
 from .inspectlocust import get_task_ratio_dict, print_task_ratio
 from .log import console_logger, setup_logging
 from .runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner
@@ -22,252 +21,6 @@ from .util.time import parse_timespan
 
 _internals = [Locust, HttpLocust]
 version = locust.__version__
-
-def parse_options():
-    """
-    Handle command-line options with optparse.OptionParser.
-
-    Return list of arguments, largely for use in `parse_arguments`.
-    """
-
-    # Initialize
-    parser = OptionParser(usage="locust [options] [LocustClass [LocustClass2 ... ]]")
-
-    parser.add_option(
-        '-H', '--host',
-        dest="host",
-        default=None,
-        help="Host to load test in the following format: http://10.21.32.33"
-    )
-
-    parser.add_option(
-        '--web-host',
-        dest="web_host",
-        default="",
-        help="Host to bind the web interface to. Defaults to '' (all interfaces)"
-    )
-    
-    parser.add_option(
-        '-P', '--port', '--web-port',
-        type="int",
-        dest="port",
-        default=8089,
-        help="Port on which to run web host"
-    )
-    
-    parser.add_option(
-        '-f', '--locustfile',
-        dest='locustfile',
-        default='locustfile',
-        help="Python module file to import, e.g. '../other.py'. Default: locustfile"
-    )
-
-    # A file that contains the current request stats.
-    parser.add_option(
-        '--csv', '--csv-base-name',
-        action='store',
-        type='str',
-        dest='csvfilebase',
-        default=None,
-        help="Store current request stats to files in CSV format.",
-    )
-
-    # if locust should be run in distributed mode as master
-    parser.add_option(
-        '--master',
-        action='store_true',
-        dest='master',
-        default=False,
-        help="Set locust to run in distributed mode with this process as master"
-    )
-
-    # if locust should be run in distributed mode as slave
-    parser.add_option(
-        '--slave',
-        action='store_true',
-        dest='slave',
-        default=False,
-        help="Set locust to run in distributed mode with this process as slave"
-    )
-    
-    # master host options
-    parser.add_option(
-        '--master-host',
-        action='store',
-        type='str',
-        dest='master_host',
-        default="127.0.0.1",
-        help="Host or IP address of locust master for distributed load testing. Only used when running with --slave. Defaults to 127.0.0.1."
-    )
-    
-    parser.add_option(
-        '--master-port',
-        action='store',
-        type='int',
-        dest='master_port',
-        default=5557,
-        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --slave. Defaults to 5557. Note that slaves will also connect to the master node on this port + 1."
-    )
-
-    parser.add_option(
-        '--master-bind-host',
-        action='store',
-        type='str',
-        dest='master_bind_host',
-        default="*",
-        help="Interfaces (hostname, ip) that locust master should bind to. Only used when running with --master. Defaults to * (all available interfaces)."
-    )
-    
-    parser.add_option(
-        '--master-bind-port',
-        action='store',
-        type='int',
-        dest='master_bind_port',
-        default=5557,
-        help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557. Note that Locust will also use this port + 1, so by default the master node will bind to 5557 and 5558."
-    )
-
-    parser.add_option(
-        '--expect-slaves',
-        action='store',
-        type='int',
-        dest='expect_slaves',
-        default=1,
-        help="How many slaves master should expect to connect before starting the test (only when --no-web used)."
-    )
-
-    # if we should print stats in the console
-    parser.add_option(
-        '--no-web',
-        action='store_true',
-        dest='no_web',
-        default=False,
-        help="Disable the web interface, and instead start running the test immediately. Requires -c and -r to be specified."
-    )
-
-    # Number of clients
-    parser.add_option(
-        '-c', '--clients',
-        action='store',
-        type='int',
-        dest='num_clients',
-        default=1,
-        help="Number of concurrent Locust users. Only used together with --no-web"
-    )
-
-    # Client hatch rate
-    parser.add_option(
-        '-r', '--hatch-rate',
-        action='store',
-        type='float',
-        dest='hatch_rate',
-        default=1,
-        help="The rate per second in which clients are spawned. Only used together with --no-web"
-    )
-    
-    # Time limit of the test run
-    parser.add_option(
-        '-t', '--run-time',
-        action='store',
-        type='str',
-        dest='run_time',
-        default=None,
-        help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --no-web"
-    )
-    
-    # log level
-    parser.add_option(
-        '--loglevel', '-L',
-        action='store',
-        type='str',
-        dest='loglevel',
-        default='INFO',
-        help="Choose between DEBUG/INFO/WARNING/ERROR/CRITICAL. Default is INFO.",
-    )
-    
-    # log file
-    parser.add_option(
-        '--logfile',
-        action='store',
-        type='str',
-        dest='logfile',
-        default=None,
-        help="Path to log file. If not set, log will go to stdout/stderr",
-    )
-    
-    # if we should print stats in the console
-    parser.add_option(
-        '--print-stats',
-        action='store_true',
-        dest='print_stats',
-        default=False,
-        help="Print stats in the console"
-    )
-
-    # only print summary stats
-    parser.add_option(
-       '--only-summary',
-       action='store_true',
-       dest='only_summary',
-       default=False,
-       help='Only print the summary stats'
-    )
-
-    parser.add_option(
-        '--no-reset-stats',
-        action='store_true',
-        help="[DEPRECATED] Do not reset statistics once hatching has been completed. This is now the default behavior. See --reset-stats to disable",
-    )
-
-    parser.add_option(
-        '--reset-stats',
-        action='store_true',
-        dest='reset_stats',
-        default=False,
-        help="Reset statistics once hatching has been completed. Should be set on both master and slaves when running in distributed mode",
-    )
-    
-    # List locust commands found in loaded locust files/source files
-    parser.add_option(
-        '-l', '--list',
-        action='store_true',
-        dest='list_commands',
-        default=False,
-        help="Show list of possible locust classes and exit"
-    )
-    
-    # Display ratio table of all tasks
-    parser.add_option(
-        '--show-task-ratio',
-        action='store_true',
-        dest='show_task_ratio',
-        default=False,
-        help="print table of the locust classes' task execution ratio"
-    )
-    # Display ratio table of all tasks in JSON format
-    parser.add_option(
-        '--show-task-ratio-json',
-        action='store_true',
-        dest='show_task_ratio_json',
-        default=False,
-        help="print json data of the locust classes' task execution ratio"
-    )
-    
-    # Version number (optparse gives you --version but we have to do it
-    # ourselves to get -V too. sigh)
-    parser.add_option(
-        '-V', '--version',
-        action='store_true',
-        dest='show_version',
-        default=False,
-        help="show program's version number and exit"
-    )
-
-    # Finalize
-    # Return three-tuple of parser + the output from parse_args (opt obj, args)
-    opts, args = parser.parse_args()
-    return parser, opts, args
-
 
 def _is_package(path):
     """
@@ -313,7 +66,7 @@ def find_locustfile(locustfile):
     # Implicit 'return None' if nothing was found
 
 
-def is_locust(tup):
+def is_locust(tup, ignore_prefix='_'):
     """
     Takes (name, object) tuple, returns True if it's a public Locust subclass.
     """
@@ -323,20 +76,32 @@ def is_locust(tup):
         and issubclass(item, Locust)
         and hasattr(item, "task_set")
         and getattr(item, "task_set")
-        and not name.startswith('_')
+        and not name.startswith(ignore_prefix)
     )
 
 
-def load_locustfile(path):
-    """
-    Import given locustfile path and return (docstring, callables).
+def is_taskset(tup, ignore_prefix='_'):
+    """Takes (name, object) tuple, returns True if it's a public TaskSet subclass."""
+    name, item = tup
+    return bool(
+        inspect.isclass(item)
+        and issubclass(item, TaskSet)
+        and hasattr(item, "tasks")
+        and not name.startswith(ignore_prefix)
+        and name != 'TaskSet'
+    )
 
-    Specifically, the locustfile's ``__doc__`` attribute (a string) and a
+
+def load_filterfile(path, filter_function):
+    """
+    Import given path and return (docstring, callables) of all clases that pass the test.
+
+    Specifically, the classfile's ``__doc__`` attribute (a string) and a
     dictionary of ``{'name': callable}`` containing all callables which pass
-    the "is a Locust" test.
+    the `filter_function` test.
     """
     # Get directory and locustfile name
-    directory, locustfile = os.path.split(path)
+    directory, filterfile = os.path.split(path)
     # If the directory isn't in the PYTHONPATH, add it so our import will work
     added_to_path = False
     index = None
@@ -355,7 +120,7 @@ def load_locustfile(path):
             sys.path.insert(0, directory)
             del sys.path[i + 1]
     # Perform the import (trimming off the .py)
-    imported = __import__(os.path.splitext(locustfile)[0])
+    imported = __import__(os.path.splitext(filterfile)[0])
     # Remove directory from path if we added it ourselves (just to be neat)
     if added_to_path:
         del sys.path[0]
@@ -364,11 +129,42 @@ def load_locustfile(path):
         sys.path.insert(index + 1, directory)
         del sys.path[0]
     # Return our two-tuple
-    locusts = dict(filter(is_locust, vars(imported).items()))
-    return imported.__doc__, locusts
+    classes = dict(filter(filter_function, vars(imported).items()))
+    return imported.__doc__, classes
 
-def main():
-    parser, options, arguments = parse_options()
+
+def load_locustfile(path):
+    """
+    Import given locustfile path and return (docstring, callables).
+
+    Specifically, the locustfile's ``__doc__`` attribute (a string) and a
+    dictionary of ``{'name': callable}`` containing all callables which pass
+    the "is a Locust" test.
+    """
+    return load_filterfile(path, is_locust)
+
+
+def load_tasksetfile(path):
+    """
+    Import given tasksetfile path and return (docstring, callables).
+
+    Specifically, the tasksetfile's ``__doc__`` attribute (a string) and a
+    dictionary of ``{'name': callable}`` containing all callables which pass
+    the "is a TaskSet" test (`is_taskset`).
+    """
+    return load_filterfile(path, is_taskset)
+
+
+def run_locust(options=parser.create_settings(), cli_mode=False, *arguments):
+    """Run Locust programmatically.
+
+    A default set of options can be acquired using the `create_default_settings` function.
+    
+    Arguments:
+        options {OptionParser} -- OptionParser object for defining Locust options.
+        arguments {[Locust classes]} -- List of Locust classes to include from those found.
+    """
+    print('Running Locust with options: {}'.format(options))
 
     # setup logging
     setup_logging(options.loglevel, options.logfile)
@@ -381,14 +177,25 @@ def main():
     locustfile = find_locustfile(options.locustfile)
 
     if not locustfile:
-        logger.error("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.")
-        sys.exit(1)
+        if not cli_mode:
+            # Check whether locust classes are elsewhere
+            if options.locust_classes:
+                locusts = {}
+                for x in options.locust_classes:
+                    locusts[type(x).__name__] = x
+            else:
+                logger.error("No locust_classes included in options.locust_classes!")
+                sys.exit(1)
+        else:
+            logger.error("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.")
+            sys.exit(1)
 
     if locustfile == "locust.py":
         logger.error("The locustfile must not be named `locust.py`. Please rename the file and try again.")
         sys.exit(1)
 
-    docstring, locusts = load_locustfile(locustfile)
+    if locustfile:
+        docstring, locusts = load_locustfile(locustfile)
 
     if options.list_commands:
         console_logger.info("Available Locusts:")
@@ -489,7 +296,7 @@ def main():
     if options.csvfilebase:
         gevent.spawn(stats_writer, options.csvfilebase)
 
-    
+
     def shutdown(code=0):
         """
         Shut down locust by firing quitting event, printing/writing stats and exiting
@@ -523,6 +330,12 @@ def main():
         shutdown(code=code)
     except KeyboardInterrupt as e:
         shutdown(0)
+
+
+def main():
+    _, settings, arguments = parser.parse_options(sys.argv)
+    run_locust(True, settings, arguments)
+
 
 if __name__ == '__main__':
     main()
