@@ -6,7 +6,7 @@ import traceback
 
 import gevent
 import requests
-from gevent import wsgi
+from gevent import pywsgi
 
 from locust import events, runners, stats, web
 from locust.main import parse_options
@@ -27,7 +27,7 @@ class TestWebUI(LocustTestCase):
         
         web.request_stats.clear_cache()
         
-        self._web_ui_server = wsgi.WSGIServer(('127.0.0.1', 0), web.app, log=None)
+        self._web_ui_server = pywsgi.WSGIServer(('127.0.0.1', 0), web.app, log=None)
         gevent.spawn(lambda: self._web_ui_server.serve_forever())
         gevent.sleep(0.01)
         self.web_port = self._web_ui_server.server_port
