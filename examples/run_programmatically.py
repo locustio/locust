@@ -1,4 +1,4 @@
-from locust import HttpLocust, TaskSet, task, create_settings, run_locust
+from locust import HttpLocust, TaskSet, task, create_options, run_locust
 
 def index(l):
     l.client.get("/")
@@ -24,5 +24,5 @@ class WebsiteUser(HttpLocust):
     max_wait = 5000
     task_set = UserTasks
 
-settings = create_settings(locust_classes = [WebsiteUser])
-run_locust(settings)
+options = create_options(locust_classes = [WebsiteUser])
+run_locust(options)
