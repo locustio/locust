@@ -27,7 +27,9 @@ attributes. These are the minimum and maximum time respectively, in milliseconds
 between executing each task. *min_wait* and *max_wait* default to 1000, and therefore a locust will 
 always wait 1 second between each task if *min_wait* and *max_wait* are not declared.
 
-With the following locustfile, each user would wait between 5 and 15 seconds between tasks::
+With the following locustfile, each user would wait between 5 and 15 seconds between tasks:
+
+.. code-block:: python
 
     from locust import Locust, TaskSet, task
     
@@ -46,20 +48,24 @@ The *min_wait* and *max_wait* attributes can also be overridden in a TaskSet cla
 The *weight* attribute
 ----------------------
 
-You can run two locusts from the same file like so::
+You can run two locusts from the same file like so:
 
-    locust -f locust_file.py WebUserLocust MobileUserLocust
+.. code-block:: console
+
+    $ locust -f locust_file.py WebUserLocust MobileUserLocust
 
 If you wish to make one of these locusts execute more often you can set a weight attribute on those
-classes. Say for example, web users are three times more likely than mobile users::
+classes. Say for example, web users are three times more likely than mobile users:
+
+.. code-block:: python
 
     class WebUserLocust(Locust):
         weight = 3
-        ....
+        ...
 
     class MobileUserLocust(Locust):
         weight = 1
-        ....
+        ...
 
 
 The *host* attribute
@@ -93,7 +99,9 @@ Declaring tasks
 
 The typical way of declaring tasks for a TaskSet it to use the :py:meth:`task <locust.core.task>` decorator.
 
-Here is an example::
+Here is an example:
+
+.. code-block:: python
 
     from locust import Locust, TaskSet, task
     
@@ -106,7 +114,9 @@ Here is an example::
         task_set = MyTaskSet
 
 **@task** takes an optional weight argument that can be used to specify the task's execution ratio. In 
-the following example *task2* will be executed twice as much as *task1*::
+the following example *task2* will be executed twice as much as *task1*:
+
+.. code-block:: python
     
     from locust import Locust, TaskSet, task
     
@@ -136,7 +146,9 @@ just populate the *tasks* attribute).
 
 The *tasks* attribute is either a list of python callables, or a *<callable : int>* dict. 
 The tasks are python callables that receive one argument—the TaskSet class instance that is executing 
-the task. Here is an extremely simple example of a locustfile (this locustfile won't actually load test anything)::
+the task. Here is an extremely simple example of a locustfile (this locustfile won't actually load test anything):
+
+.. code-block:: python
 
     from locust import Locust, TaskSet
     
@@ -155,7 +167,7 @@ chosen from the *tasks* attribute. If however, *tasks* is a dict—with callable
 as values—the task that is to be executed will be chosen at random but with the int as ratio. So 
 with a tasks that looks like this::
 
-    {my_task: 3, another_task:1}
+    {my_task: 3, another_task: 1}
 
 *my_task* would be 3 times more likely to be executed than *another_task*.
 
@@ -187,7 +199,9 @@ we could define TaskSets with the following structure:
  * About page
 
 The way you nest TaskSets is just like when you specify a task using the **tasks** attribute, but 
-instead of referring to a python function, you refer to another TaskSet::
+instead of referring to a python function, you refer to another TaskSet:
+
+.. code-block:: python
 
     class ForumPage(TaskSet):
         @task(20)
@@ -222,7 +236,9 @@ But by having the interrupt function, we can—together with task weighting—de
 is that a simulated user leaves the forum.
 
 It's also possible to declare a nested TaskSet, inline in a class, using the 
-:py:meth:`@task <locust.core.task>` decorator, just like when declaring normal tasks::
+:py:meth:`@task <locust.core.task>` decorator, just like when declaring normal tasks:
+
+.. code-block:: python
 
     class MyTaskSet(TaskSet):
         @task
@@ -294,7 +310,9 @@ class exists. When using this class, each instance gets a
 
 When inheriting from the HttpLocust class, we can use its client attribute to make HTTP requests 
 against the server. Here is an example of a locust file that can be used to load test a site 
-with two URLs; **/** and **/about/**::
+with two URLs; **/** and **/about/**:
+
+.. code-block:: python
 
     from locust import HttpLocust, TaskSet, task
     
@@ -338,13 +356,17 @@ tasks.
 
 Here's a simple example that makes a GET request to the */about* path (in this case we assume *self* 
 is an instance of a :py:class:`TaskSet <locust.core.TaskSet>` or :py:class:`HttpLocust <locust.core.Locust>` 
-class::
+class:
+
+.. code-block:: python
 
     response = self.client.get("/about")
     print("Response status code:", response.status_code)
     print("Response content:", response.text)
 
-And here's an example making a POST request::
+And here's an example making a POST request:
+
+.. code-block:: python
 
     response = self.client.post("/login", {"username":"testuser", "password":"secret"})
 
@@ -366,7 +388,9 @@ return *200 OK* even though an error occurred—there's a need for manually cont
 locust should consider a request as a success or a failure.
 
 One can mark requests as failed, even when the response code is OK, by using the 
-*catch_response* argument and a with statement::
+*catch_response* argument and a with statement:
+
+.. code-block:: python
 
     with client.get("/", catch_response=True) as response:
         if response.content != b"Success":
@@ -374,7 +398,9 @@ One can mark requests as failed, even when the response code is OK, by using the
 
 Just as one can mark requests with OK response codes as failures, one can also use **catch_response** 
 argument together with a *with* statement to make requests that resulted in an HTTP error code still 
-be reported as a success in the statistics::
+be reported as a success in the statistics:
+
+.. code-block:: python
 
     with client.get("/does_not_exist/", catch_response=True) as response:
         if response.status_code == 404:
@@ -389,7 +415,9 @@ Often it makes sense to group these URLs together in Locust's statistics. This c
 by passing a *name* argument to the :py:class:`HttpSession's <locust.clients.HttpSession>` 
 different request methods. 
 
-Example::
+Example:
+
+.. code-block:: python
 
     # Statistics for these requests will be grouped under: /blog/?id=[id]
     for i in range(10):
@@ -447,7 +475,9 @@ working directory) importable.
 
     * ``ecommerce.py``
 
-With the above project structure, your locust files can import common libraries using::
+With the above project structure, your locust files can import common libraries using:
+
+.. code-block:: python
 
     sys.path.append(os.getcwd())
     import common.auth
