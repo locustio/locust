@@ -159,7 +159,7 @@ def load_tasksetfile(path):
 
 default_options = create_options()
 
-def run_locust(options, cli_mode=False, *arguments):
+def run_locust(options, arguments=[], cli_mode=False):
     """Run Locust programmatically.
 
     A default set of options can be acquired using the `create_options` function with no arguments.

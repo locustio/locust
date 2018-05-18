@@ -64,6 +64,7 @@ class TestTaskSet(LocustTestCase):
         self.assertEqual(set(main.run_locust(no_locustfile)), set(["MyLocust", "MyHttpLocust"]))
 
         # Test that arguments and locust_classes work correctly
-        # main.run_locust(no_locustfile, 'MyLocust')
+        self.assertEqual(set(main.run_locust(no_locustfile, arguments=["MyLocust"])),set(["MyLocust", "MyHttpLocust"]))
+
 
 
