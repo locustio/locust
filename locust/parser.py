@@ -243,7 +243,7 @@ def create_parser():
     return parser
 
 
-def create_settings(
+def create_options(
         locustfile='locustfile',
         host=None,
         locust_classes=[], 
@@ -269,8 +269,7 @@ def create_settings(
         logfile=None,
         loglevel='INFO',
         show_version=False,
-        list_commands=False
-        ):
+        list_commands=False):
     """
     Returns default settings for `run_locust(settings)`.
     """

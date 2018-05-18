@@ -10,7 +10,8 @@ import gevent
 
 import locust
 
-from . import events, runners, web, parser
+from . import events, runners, web
+from .parser import parse_options, create_options
 from .core import HttpLocust, Locust, TaskSet
 from .inspectlocust import get_task_ratio_dict, print_task_ratio
 from .log import console_logger, setup_logging
@@ -36,6 +37,8 @@ def find_locustfile(locustfile):
     """
     Attempt to locate a locustfile, either explicitly or by searching parent dirs.
     """
+    if locustfile is None:
+        return None
     # Obtain env value
     names = [locustfile]
     # Create .py version if necessary
@@ -155,7 +158,7 @@ def load_tasksetfile(path):
     return load_filterfile(path, is_taskset)
 
 
-def run_locust(options=parser.create_settings(), cli_mode=False, *arguments):
+def run_locust(options=create_options(), cli_mode=False, *arguments):
     """Run Locust programmatically.
 
     A default set of options can be acquired using the `create_default_settings` function.
@@ -164,55 +167,59 @@ def run_locust(options=parser.create_settings(), cli_mode=False, *arguments):
         options {OptionParser} -- OptionParser object for defining Locust options.
         arguments {[Locust classes]} -- List of Locust classes to include from those found.
     """
-    print('Running Locust with options: {}'.format(options))
-
     # setup logging
     setup_logging(options.loglevel, options.logfile)
     logger = logging.getLogger(__name__)
+
+    def locust_error(message, err_type=ValueError, exit_type=1):
+        logger.error(message)
+        if not cli_mode:
+            raise err_type(message)
+        sys.exit(exit_type)
     
     if options.show_version:
-        print("Locust %s" % (version,))
+        version_text = "Locust %s" % (version,)
+        print(version_text)
+        if not cli_mode:
+            return 0
         sys.exit(0)
 
+    # Either there is a locustfile, there are locust_classes, or both.
     locustfile = find_locustfile(options.locustfile)
 
-    if not locustfile:
-        if not cli_mode:
-            # Check whether locust classes are elsewhere
-            if options.locust_classes:
-                locusts = {}
-                for x in options.locust_classes:
-                    locusts[type(x).__name__] = x
-            else:
-                logger.error("No locust_classes included in options.locust_classes!")
-                sys.exit(1)
-        else:
-            logger.error("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.")
-            sys.exit(1)
-
-    if locustfile == "locust.py":
-        logger.error("The locustfile must not be named `locust.py`. Please rename the file and try again.")
-        sys.exit(1)
-
+    locusts = {}
     if locustfile:
+        if locustfile == "locust.py":
+            locust_error("The locustfile must not be named `locust.py`. Please rename the file and try again.")
         docstring, locusts = load_locustfile(locustfile)
+    elif not options.locust_classes:
+        locust_error("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.")
+    else:
+        pass
+
+    if options.locust_classes:
+        for x in options.locust_classes:
+            name = x.__name__
+            if name in locusts:
+                locust_error("Duplicate locust name {}.".format(name))
+            locusts[name] = x
 
     if options.list_commands:
         console_logger.info("Available Locusts:")
         for name in locusts:
             console_logger.info("    " + name)
+        if not cli_mode:
+            return [name for name in locusts]
         sys.exit(0)
 
     if not locusts:
-        logger.error("No Locust class found!")
-        sys.exit(1)
+        locust_error("No Locust class found!")
 
     # make sure specified Locust exists
     if arguments:
         missing = set(arguments) - set(locusts.keys())
         if missing:
-            logger.error("Unknown Locust(s): %s\n" % (", ".join(missing)))
-            sys.exit(1)
+            locust_error("Unknown Locust(s): %s\n" % (", ".join(missing)))
         else:
             names = set(arguments) & set(locusts.keys())
             locust_classes = [locusts[n] for n in names]
@@ -227,6 +234,8 @@ def run_locust(options=parser.create_settings(), cli_mode=False, *arguments):
         console_logger.info("\n Total task ratio")
         console_logger.info("-" * 80)
         print_task_ratio(locust_classes, total=True)
+        if not cli_mode:
+            return 0
         sys.exit(0)
     if options.show_task_ratio_json:
         from json import dumps
@@ -239,13 +248,11 @@ def run_locust(options=parser.create_settings(), cli_mode=False, *arguments):
     
     if options.run_time:
         if not options.no_web:
-            logger.error("The --run-time argument can only be used together with --no-web")
-            sys.exit(1)
+            locust_error("The --run-time argument can only be used together with --no-web")
         try:
             options.run_time = parse_timespan(options.run_time)
         except ValueError:
-            logger.error("Valid --run-time formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
-            sys.exit(1)
+            locust_error("Valid --run-time formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
         def spawn_run_time_limit_greenlet():
             logger.info("Run time limit set to %s seconds" % options.run_time)
             def timelimit_stop():
@@ -280,14 +287,13 @@ def run_locust(options=parser.create_settings(), cli_mode=False, *arguments):
                 spawn_run_time_limit_greenlet()
     elif options.slave:
         if options.run_time:
-            logger.error("--run-time should be specified on the master node, and not on slave nodes")
-            sys.exit(1)
+            locust_error("--run-time should be specified on the master node, and not on slave nodes")
         try:
             runners.locust_runner = SlaveLocustRunner(locust_classes, options)
             main_greenlet = runners.locust_runner.greenlet
         except socket.error as e:
-            logger.error("Failed to connect to the Locust master: %s", e)
-            sys.exit(-1)
+            socket_err = "Failed to connect to the Locust master: {}".format(e)
+            locust_error(socket_err, err_type=socket.error, exit_type=-1)
     
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
@@ -333,7 +339,7 @@ def run_locust(options=parser.create_settings(), cli_mode=False, *arguments):
 
 
 def main():
-    _, settings, arguments = parser.parse_options(sys.argv)
+    _, settings, arguments = parse_options(sys.argv)
     run_locust(True, settings, arguments)
 
 
