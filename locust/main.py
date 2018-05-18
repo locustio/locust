@@ -157,15 +157,19 @@ def load_tasksetfile(path):
     """
     return load_filterfile(path, is_taskset)
 
+default_options = create_options()
 
-def run_locust(options=create_options(), cli_mode=False, *arguments):
+def run_locust(options, cli_mode=False, *arguments):
     """Run Locust programmatically.
 
-    A default set of options can be acquired using the `create_default_settings` function.
+    A default set of options can be acquired using the `create_options` function with no arguments.
     
     Arguments:
-        options {OptionParser} -- OptionParser object for defining Locust options.
-        arguments {[Locust classes]} -- List of Locust classes to include from those found.
+        options (OptionParser): OptionParser object for defining Locust options. Obtain
+            by either using the `create_options` function or running `parse_options` on 
+            an argv-style list using the locust command-line format. Recommended to use
+            `create_options`.
+        arguments (list)): List of Locust classes to include from those found.
     """
     # setup logging
     setup_logging(options.loglevel, options.logfile)
@@ -341,7 +345,6 @@ def run_locust(options=create_options(), cli_mode=False, *arguments):
 def main():
     _, settings, arguments = parse_options(sys.argv)
     run_locust(True, settings, arguments)
-
 
 if __name__ == '__main__':
     main()
