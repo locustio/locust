@@ -184,7 +184,7 @@ class TestTaskSet(LocustTestCase):
             wait_function = lambda self: 1000 + (self.max_wait-self.min_wait)
         taskset = MyTaskSet(self.locust)
         self.assertEqual(taskset.get_wait_secs(), 2.0)
-    
+        
     def test_sub_taskset(self):
         class MySubTaskSet(TaskSet):
             min_wait = 1
