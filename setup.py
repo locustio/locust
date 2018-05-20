@@ -36,7 +36,7 @@ setup(
     keywords='',
     author='Jonatan Heyman, Carl Bystrom, Joakim Hamrén, Hugo Heyman',
     author_email='',
-    url='http://locust.io',
+    url='https://locust.io/',
     license='MIT',
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
@@ -51,7 +51,7 @@ setup(
         "geventhttpclient-wheels",
     ],
     test_suite="locust.test",
-    tests_require=['unittest2', 'mock'],
+    tests_require=['mock'],
     entry_points={
         'console_scripts': [
             'locust = locust.main:main',
