@@ -343,8 +343,8 @@ def run_locust(options, arguments=[], cli_mode=False):
 
 
 def main():
-    _, settings, arguments = parse_options(sys.argv)
-    run_locust(True, settings, arguments)
+    _, options, arguments = parse_options(sys.argv)
+    run_locust(options=options, arguments=arguments, cli_mode=True)
 
 if __name__ == '__main__':
     main()
