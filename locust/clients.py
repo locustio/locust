@@ -145,11 +145,6 @@ class HttpSession(requests.Session):
                     url=request_meta["url"],
                     response_time=request_meta["response_time"],
                     response_length=request_meta["content_size"],
-                    #start_time=request_meta["start_time"],
-                    #request_type=request_meta["method"],
-                    #name=request_meta["name"],
-                    #response_time=request_meta["response_time"],
-                    #response_length=request_meta["content_size"],
                 )
             else:
                 events.request_success.fire(

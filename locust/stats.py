@@ -557,14 +557,6 @@ global_stats = RequestStats()
 A global instance for holding the statistics. Should be removed eventually.
 """
 
-# setup logging
-#reqlogger = logging.getLogger("stdout")
-#resplogger = logging.getLogger("responses")
-#reqlogger_fh = logging.FileHandler('/var/tmp/locust-reqs.log')
-#reqlogger_fh.setLevel(logging.INFO)
-#reqlogger.addHandler(reqlogger_fh)
-#requests_log.addHandler(reqlogger_fh)
-
 def on_request_success(start_time, request_type, status_code, name, url, response_time, response_length):
     global_stats.log_request(request_type, name, response_time, response_length)
     resp_logger.info("\t{}\t{}\t{}\t{}\t{}\t{}".format(name, request_type, status_code, url, response_time, response_length))
@@ -573,10 +565,8 @@ def on_request_success(start_time, request_type, status_code, name, url, respons
 #    global_stats.log_error(request_type, name, exception)
 #    resp_logger.error("{}\t{}\t{}".format(name, request_type, exception))
 # TODO: remove deadcode before merge request
-#def on_request_failure(start_time, request_type, status_code, name, url, response_time, response_length, exception):
 
 def on_request_failure(start_time, request_type, name, exception, status_code, url, response_time, response_length):
-    #global_stats.log_request(request_type, name, response_time, response_length)
     global_stats.log_error(request_type, name, exception)
     resp_logger.error("\t{}\t{}\t{}\t{}\t{}\t{}".format(name, request_type, status_code, url, response_time, response_length))
 
