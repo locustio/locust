@@ -36,14 +36,14 @@ setup(
     keywords='',
     author='Jonatan Heyman, Carl Bystrom, Joakim Hamrén, Hugo Heyman',
     author_email='',
-    url='http://locust.io',
+    url='https://locust.io/',
     license='MIT',
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
     install_requires=["gevent>=1.2.2", "flask>=0.10.1", "requests>=2.9.1", "msgpack-python>=0.4.2", "six>=1.10.0", "pyzmq>=16.0.2"],
     test_suite="locust.test",
-    tests_require=['unittest2', 'mock'],
+    tests_require=['mock'],
     entry_points={
         'console_scripts': [
             'locust = locust.main:main',

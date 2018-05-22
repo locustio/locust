@@ -2,12 +2,19 @@
 Changelog
 ##########
 
+0.8.1
+=====
+
+* Updated pyzmq version, and changed so that we don't pin a specific version.
+  This makes it easier to install Locust on Windows.
+
+
 0.8
 ===
 
 * Python 3 support
 * Dropped support for Python 2.6
-* Added `--no-reset-stats` option for controling if the statistics should be reset once 
+* Added :code:`--no-reset-stats` option for controling if the statistics should be reset once 
   the hatching is complete
 * Added charts to the web UI for requests per second, average response time, and number of 
   simulated users.

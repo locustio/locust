@@ -557,7 +557,7 @@ global_stats = RequestStats()
 A global instance for holding the statistics. Should be removed eventually.
 """
 
-def on_request_success(start_time, request_type, status_code, name, url, response_time, response_length):
+def on_request_success(start_time, request_type, status_code, name, url, response_time, response_length, **kwargs):
     global_stats.log_request(request_type, name, response_time, response_length)
     resp_logger.info("\t{}\t{}\t{}\t{}\t{}\t{}".format(name, request_type, status_code, url, response_time, response_length))
 
@@ -566,7 +566,7 @@ def on_request_success(start_time, request_type, status_code, name, url, respons
 #    resp_logger.error("{}\t{}\t{}".format(name, request_type, exception))
 # TODO: remove deadcode before merge request
 
-def on_request_failure(start_time, request_type, name, exception, status_code, url, response_time, response_length):
+def on_request_failure(start_time, request_type, name, exception, status_code, url, response_time, response_length, **kwargs):
     global_stats.log_error(request_type, name, exception)
     resp_logger.error("\t{}\t{}\t{}\t{}\t{}\t{}".format(name, request_type, status_code, url, response_time, response_length))
 
@@ -652,7 +652,7 @@ def print_error_report():
     if not len(global_stats.errors):
         return
     console_logger.info("Error report")
-    console_logger.info(" %-18s %-100s" % ("# occurences", "Error"))
+    console_logger.info(" %-18s %-100s" % ("# occurrences", "Error"))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     for error in six.itervalues(global_stats.errors):
         console_logger.info(" %-18i %-100s" % (error.occurences, error.to_name()))

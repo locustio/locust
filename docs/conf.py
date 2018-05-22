@@ -41,7 +41,7 @@ project = 'Locust'
 
 # Intersphinx config
 intersphinx_mapping = {
-    'requests': ('http://requests.readthedocs.org/en/latest/', None),
+    'requests': ('https://requests.readthedocs.io/en/latest/', None),
 }
 
 

@@ -3,7 +3,7 @@ Installation
 
 Locust is available on PyPI and can be installed through pip or easy_install
 
-::
+.. code-block:: console
 
     pip install locustio
 
@@ -11,9 +11,11 @@ Locust is available on PyPI and can be installed through pip or easy_install
 When Locust is installed, a **locust** command should be available in your shell (if you're not using 
 virtualenv—which you should—make sure your python script directory is on your path).
 
-To see available options, run::
+To see available options, run:
 
-    locust --help
+.. code-block:: console
+
+    $ locust --help
 
 
 Supported Python Versions
@@ -33,9 +35,11 @@ the pre built binary packages for pyzmq, gevent and greenlet.
 You can find an unofficial collection of pre built python packages for windows here: 
 `http://www.lfd.uci.edu/~gohlke/pythonlibs/ <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_
 
-When you've downloaded a pre-built ``.whl`` file, you can install it with::
+When you've downloaded a pre-built ``.whl`` file, you can install it with:
 
-    pip install name-of-file.whl
+.. code-block:: console
+
+    $ pip install name-of-file.whl
 
 Once you've done that you should be able to just ``pip install locustio``. 
 
@@ -52,9 +56,11 @@ Installing Locust on OS X
 The following is currently the shortest path to installing gevent on OS X using Homebrew.
 
 #. Install `Homebrew <http://mxcl.github.com/homebrew/>`_.
-#. Install libev (dependency for gevent)::
+#. Install libev (dependency for gevent):
 
-    brew install libev
+    .. code-block:: console
+
+        brew install libev
 
 #. Then follow the above instructions.
 
