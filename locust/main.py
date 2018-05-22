@@ -201,7 +201,7 @@ def run_locust(options, arguments=[], cli_mode=False):
     else:
         pass
 
-    if options.locust_classes:
+    if hasattr(options,'locust_classes'):
         for x in options.locust_classes:
             name = x.__name__
             if name in locusts:
@@ -344,7 +344,8 @@ def run_locust(options, arguments=[], cli_mode=False):
 
 def main():
     _, options, arguments = parse_options(sys.argv)
-    run_locust(options=options, arguments=arguments, cli_mode=True)
+    args = arguments[1:]
+    run_locust(options=options, arguments=args, cli_mode=True)
 
 if __name__ == '__main__':
     main()
