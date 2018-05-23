@@ -191,6 +191,9 @@ def run_locust(options, arguments=[], cli_mode=False):
     # Either there is a locustfile, there are locust_classes, or both.
     locustfile = find_locustfile(options.locustfile)
 
+    if not hasattr(options,'locust_classes'):
+        options.locust_classes=[]
+
     locusts = {}
     if locustfile:
         if locustfile == "locust.py":
@@ -201,12 +204,11 @@ def run_locust(options, arguments=[], cli_mode=False):
     else:
         pass
 
-    if hasattr(options,'locust_classes'):
-        for x in options.locust_classes:
-            name = x.__name__
-            if name in locusts:
-                locust_error("Duplicate locust name {}.".format(name))
-            locusts[name] = x
+    for x in options.locust_classes:
+        name = x.__name__
+        if name in locusts:
+            locust_error("Duplicate locust name {}.".format(name))
+        locusts[name] = x
 
     if options.list_commands:
         console_logger.info("Available Locusts:")
