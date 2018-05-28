@@ -38,7 +38,7 @@ class TestTaskSet(LocustTestCase):
         class MyLocust(Locust):
             task_set = MyTaskSet
 
-        default_options = main.create_options(list_commands=True, locustfile="locustfile_test.py")
+        default_options = main.create_options(list_commands=True, locustfile="locust/test/locustfile_test.py")
         # Test that it runs with locustfile
         self.assertEqual(set(main.run_locust(default_options)), set(["LocustfileHttpLocust","LocustfileLocust"]))
 
