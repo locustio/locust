@@ -1,13 +1,14 @@
 import re
 import time
-from six.moves.urllib.parse import urlparse, urlunparse
-import six
 
 import requests
-from requests import Response, Request
+import six
+from requests import Request, Response
 from requests.auth import HTTPBasicAuth
-from requests.exceptions import (RequestException, MissingSchema,
-    InvalidSchema, InvalidURL)
+from requests.exceptions import (InvalidSchema, InvalidURL, MissingSchema,
+                                 RequestException)
+
+from six.moves.urllib.parse import urlparse, urlunparse
 
 from . import events
 from .exception import CatchResponseError, ResponseError

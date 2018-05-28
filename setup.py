@@ -1,8 +1,9 @@
-# encoding: utf-8
+# -*- coding: utf-8 -*-
+import ast
+import os
+import re
 
-from setuptools import setup, find_packages
-import os, re, ast
-
+from setuptools import find_packages, setup
 
 # parse version from locust/__init__.py
 _version_re = re.compile(r'__version__\s+=\s+(.*)')
@@ -41,6 +42,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=["pandas==0.22.0","gevent==1.2.2", "flask>=0.10.1", "requests>=2.9.1", "msgpack-python>=0.4.2", "six>=1.10.0", "pyzmq==16.0.4", "jsonpath-rw==1.4.0", "jsonpath-rw-ext==1.1.3", "chardet==3.0.4", "urllib3==1.22"],
+    test_suite="locust.test",
     tests_require=['unittest2', 'mock'],
     entry_points={
         'console_scripts': [

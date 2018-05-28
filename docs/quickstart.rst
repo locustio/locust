@@ -101,6 +101,20 @@ host defaults to 127.0.0.1)::
 
     locust -f locust_files/my_locust_file.py --slave --master-host=192.168.0.100 --host=http://example.com
 
+You may wish to consume your Locust results via a csv file. In this case, there are two ways to do this.
+
+First, when running the webserver, you can retrieve a csv from ``localhost:8089/stats/requests/csv`` and ``localhost:8089/stats/distribution/csv``.
+Second you can run Locust with a flag which will periodically save the csv file. This is particularly useful
+if you plan on running Locust in an automated way with the ``--no-web`` flag::
+
+    locust -f locust_files/my_locust_file.py --csv=foobar --no-web -n10 -c1
+
+You can also customize how frequently this is written if you desire faster (or slower) writing::
+
+
+    import locust.stats
+    locust.stats.CSV_STATS_INTERVAL_SEC = 5 # default is 2 seconds
+
 .. note::
 
 To see all available options type::
