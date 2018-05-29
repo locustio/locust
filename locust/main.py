@@ -59,7 +59,7 @@ def create_parser():
         '-f', '--locustfile',
         dest='locustfile',
         default='locustfile',
-        help="Python module file to import, e.g. '../other.py'. Default: locustfilePython module file to import, e.g. '../other.py'. Default: locustfile"
+        help="Python module file to import, e.g. '../other.py'. Default: locustfile"
     )
 
     # A file that contains the current request stats.
@@ -133,7 +133,7 @@ def create_parser():
         type='int',
         dest='expect_slaves',
         default=1,
-        help="How many slaves master should expect to connect before starting the test (only when:no-web used)."
+        help="How many slaves master should expect to connect before starting the test (only when --no-web used)."
     )
 
     # if we should print stats in the console
@@ -152,7 +152,7 @@ def create_parser():
         type='int',
         dest='num_clients',
         default=1,
-        help="Number of concurrent Locust users. Only used together with:no-web"
+        help="Number of concurrent Locust users. Only used together with --no-web"
     )
 
     # Client hatch rate
@@ -162,7 +162,7 @@ def create_parser():
         type='float',
         dest='hatch_rate',
         default=1,
-        help="The rate per second in which clients are spawned. Only used together with:no-web"
+        help="The rate per second in which clients are spawned. Only used together with --no-web"
     )
     
     # Time limit of the test run
@@ -172,7 +172,7 @@ def create_parser():
         type='str',
         dest='run_time',
         default=None,
-        help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with:no-web"
+        help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --no-web"
     )
     
     # log level
@@ -216,7 +216,7 @@ def create_parser():
     parser.add_option(
         '--no-reset-stats',
         action='store_true',
-        help="[DEPRECATED] Do not reset statistics once hatching has been completed. This is now the default behavior. See:reset-stats to disable",
+        help="[DEPRECATED] Do not reset statistics once hatching has been completed. This is now the default behavior. See --reset-stats to disable",
     )
 
     parser.add_option(
