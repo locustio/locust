@@ -97,7 +97,7 @@ def create_parser():
         type='str',
         dest='master_host',
         default="127.0.0.1",
-        help="Host or IP address of locust master for distributed load testing. Only used when running with:slave. Defaults to 127.0.0.1."
+        help="Host or IP address of locust master for distributed load testing. Only used when running with --slave. Defaults to 127.0.0.1."
     )
     
     parser.add_option(
@@ -106,7 +106,7 @@ def create_parser():
         type='int',
         dest='master_port',
         default=5557,
-        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with:slave. Defaults to 5557. Note that slaves will also connect to the master node on this port + 1."
+        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --slave. Defaults to 5557. Note that slaves will also connect to the master node on this port + 1."
     )
 
     parser.add_option(
@@ -115,7 +115,7 @@ def create_parser():
         type='str',
         dest='master_bind_host',
         default="*",
-        help="Interfaces (hostname, ip) that locust master should bind to. Only used when running with:master. Defaults to * (all available interfaces)."
+        help="Interfaces (hostname, ip) that locust master should bind to. Only used when running with --master. Defaults to * (all available interfaces)."
     )
     
     parser.add_option(
@@ -124,7 +124,7 @@ def create_parser():
         type='int',
         dest='master_bind_port',
         default=5557,
-        help="Port that locust master should bind to. Only used when running with:master. Defaults to 5557. Note that Locust will also use this port + 1, so by default the master node will bind to 5557 and 5558."
+        help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557. Note that Locust will also use this port + 1, so by default the master node will bind to 5557 and 5558."
     )
 
     parser.add_option(
@@ -253,7 +253,7 @@ def create_parser():
         help="print json data of the locust classes' task execution ratio"
     )
     
-    # Version number (optparse gives you:version but we have to do it
+    # Version number (optparse gives you --version but we have to do it
     # ourselves to get -V too. sigh)
     parser.add_option(
         '-V', '--version',
