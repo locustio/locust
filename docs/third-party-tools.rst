@@ -19,3 +19,5 @@ Locust4j (Java)
 ---------------
 
 `Locust4j <https://github.com/myzhan/locust4j>`_ is a Locust slave runner written in Java.
+
+`Swarm <https://github.com/anhldbk/swarm>`_ is another elegant Java client for Locust
