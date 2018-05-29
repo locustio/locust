@@ -123,7 +123,7 @@ var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Ti
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 
 function updateStats() {
-    $.get('/stats/requests', function (report) {
+    $.get('./stats/requests', function (report) {
         $("#total_rps").html(Math.round(report.total_rps*100)/100);
         //$("#fail_ratio").html(Math.round(report.fail_ratio*10000)/100);
         $("#fail_ratio").html(Math.round(report.fail_ratio*100));
@@ -164,7 +164,7 @@ function updateStats() {
 updateStats();
 
 function updateExceptions() {
-    $.get('/exceptions', function (data) {
+    $.get('./exceptions', function (data) {
         $('#exceptions tbody').empty();
         $('#exceptions tbody').jqoteapp(exceptions_tpl, data.exceptions);
         setTimeout(updateExceptions, 5000);
