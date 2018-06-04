@@ -38,5 +38,5 @@ class TestTaskSet(LocustTestCase):
         self.assertFalse(main.is_taskset(("TaskSet", TaskSet)))
         self.assertFalse(main.is_taskset(("random_dict", {})))
         self.assertFalse(main.is_taskset(("random_list", [])))
-        self.assertFalse(main.is_taskset(("MyTaskset",ThriftTaskSet)))
+        self.assertFalse(main.is_taskset(("ThriftTaskSet",ThriftTaskSet)))
         self.assertTrue(main.is_taskset(("MyTaskSet",MyTaskSet)))
