@@ -12,7 +12,7 @@ import gevent
 import locust
 
 from . import events, runners, web
-from .core import HttpLocust, Locust
+from .core import HttpLocust, Locust, TaskSet
 from .inspectlocust import get_task_ratio_dict, print_task_ratio
 from .log import console_logger, setup_logging
 from .runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner
@@ -313,7 +313,7 @@ def find_locustfile(locustfile):
     # Implicit 'return None' if nothing was found
 
 
-def is_locust(tup):
+def is_locust(tup, ignore_prefix='_'):
     """
     Takes (name, object) tuple, returns True if it's a public Locust subclass.
     """
@@ -323,20 +323,32 @@ def is_locust(tup):
         and issubclass(item, Locust)
         and hasattr(item, "task_set")
         and getattr(item, "task_set")
-        and not name.startswith('_')
+        and not name.startswith(ignore_prefix)
     )
 
 
-def load_locustfile(path):
-    """
-    Import given locustfile path and return (docstring, callables).
+def is_taskset(tup, ignore_prefix='_'):
+    """Takes (name, object) tuple, returns True if it's a public TaskSet subclass."""
+    name, item = tup
+    return bool(
+        inspect.isclass(item)
+        and issubclass(item, TaskSet)
+        and hasattr(item, "tasks")
+        and not name.startswith(ignore_prefix)
+        and name != 'TaskSet'
+    )
 
-    Specifically, the locustfile's ``__doc__`` attribute (a string) and a
+
+def load_filterfile(path, filter_function):
+    """
+    Import given path and return (docstring, callables) of all clases that pass the test.
+
+    Specifically, the classfile's ``__doc__`` attribute (a string) and a
     dictionary of ``{'name': callable}`` containing all callables which pass
-    the "is a Locust" test.
+    the `filter_function` test.
     """
     # Get directory and locustfile name
-    directory, locustfile = os.path.split(path)
+    directory, filterfile = os.path.split(path)
     # If the directory isn't in the PYTHONPATH, add it so our import will work
     added_to_path = False
     index = None
@@ -355,7 +367,7 @@ def load_locustfile(path):
             sys.path.insert(0, directory)
             del sys.path[i + 1]
     # Perform the import (trimming off the .py)
-    imported = __import__(os.path.splitext(locustfile)[0])
+    imported = __import__(os.path.splitext(filterfile)[0])
     # Remove directory from path if we added it ourselves (just to be neat)
     if added_to_path:
         del sys.path[0]
@@ -364,8 +376,31 @@ def load_locustfile(path):
         sys.path.insert(index + 1, directory)
         del sys.path[0]
     # Return our two-tuple
-    locusts = dict(filter(is_locust, vars(imported).items()))
-    return imported.__doc__, locusts
+    classes = dict(filter(filter_function, vars(imported).items()))
+    return imported.__doc__, classes
+
+
+def load_locustfile(path):
+    """
+    Import given locustfile path and return (docstring, callables).
+
+    Specifically, the locustfile's ``__doc__`` attribute (a string) and a
+    dictionary of ``{'name': callable}`` containing all callables which pass
+    the "is a Locust" test.
+    """
+    return load_filterfile(path, is_locust)
+
+
+def load_tasksetfile(path):
+    """
+    Import given tasksetfile path and return (docstring, callables).
+
+    Specifically, the tasksetfile's ``__doc__`` attribute (a string) and a
+    dictionary of ``{'name': callable}`` containing all callables which pass
+    the "is a TaskSet" test (`is_taskset`).
+    """
+    return load_filterfile(path, is_taskset)
+
 
 def main():
     parser, options, arguments = parse_options()
