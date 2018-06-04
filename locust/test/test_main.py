@@ -28,6 +28,14 @@ class TestTaskSet(LocustTestCase):
         
         self.assertFalse(main.is_locust(("ThriftLocust", ThriftLocust)))
 
+    def test_is_taskset(self):
+        class MyTaskSet(TaskSet):
+            pass
+        self.assertFalse(main.is_taskset(("TaskSet", TaskSet)))
+        self.assertFalse(main.is_taskset(("random_dict", {})))
+        self.assertFalse(main.is_taskset(("random_list", [])))
+        self.assertTrue(main.is_taskset(("MyTaskset",MyTaskSet)))
+
     def test_run_programmatically(self):
         class MyTaskSet(TaskSet):
             pass
@@ -65,6 +73,3 @@ class TestTaskSet(LocustTestCase):
 
         # Test that arguments and locust_classes work correctly
         self.assertEqual(set(main.run_locust(no_locustfile, arguments=["MyLocust"])),set(["MyLocust", "MyHttpLocust"]))
-
-
-
