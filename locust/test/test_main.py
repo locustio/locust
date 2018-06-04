@@ -29,9 +29,14 @@ class TestTaskSet(LocustTestCase):
         self.assertFalse(main.is_locust(("ThriftLocust", ThriftLocust)))
 
     def test_is_taskset(self):
-        class MyTaskSet(TaskSet):
+        class ThriftTaskSet(TaskSet):
             pass
+        del ThriftTaskSet.tasks
+        class MyTaskset(TaskSet):
+            pass
+
         self.assertFalse(main.is_taskset(("TaskSet", TaskSet)))
         self.assertFalse(main.is_taskset(("random_dict", {})))
         self.assertFalse(main.is_taskset(("random_list", [])))
-        self.assertTrue(main.is_taskset(("MyTaskset",MyTaskSet)))
+        self.assertFalse(main.is_taskset(("MyTaskset",ThriftTaskSet)))
+        self.assertTrue(main.is_taskset(("MyTaskset",MyTaskset)))
