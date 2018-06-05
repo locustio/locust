@@ -23,8 +23,6 @@ from .stats import (print_error_report, print_percentile_stats, print_stats,
 
 _internals = [Locust, HttpLocust]
 version = locust.__version__
-is_integration = False
-global_repetition = 1
 
 def parse_options():
     """
@@ -172,7 +170,6 @@ def parse_options():
     parser.add_option(
         '-n', '--num-request',
         action='store',
-        
         type='int',
         dest='num_requests',
         default=None,
@@ -282,10 +279,10 @@ def parse_options():
     # set number of repetition for integration test feature
     parser.add_option(
         '-t','--repetition',
-        action='store_true',
+        action='store',
         dest='repetition',
-        default=False,
-        help='Set number of repetition for integration test, without this option test will be run once. Only used together with --integration. Repetition priority levels: (1) if -t is set, this one will be taken for all test cases, despite of what repetition value set in a test case. (2) if -t is not set, the one set under test case will be used. (3) if no repetition variable is set in the testcase, default 1 time repetition will be used.'
+        default=None,
+        help="Number of how much one or a set of integration test file(s) will be run. Only used together with --integration. Repetition's priority levels: (1) if -t is specified, the value will be applied to all test files and ignore repetition value which already set in each test file. (2) if -t is not specified, repetition value which already set in each test file will be used. (3) if repetition value is not specified both from -t and inside test file, the test will be run once."
     )
 
     # Finalize
