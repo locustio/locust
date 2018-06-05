@@ -23,6 +23,7 @@ from .stats import (print_error_report, print_percentile_stats, print_stats,
 
 _internals = [Locust, HttpLocust]
 version = locust.__version__
+global_repetition = 1
 
 def parse_options():
     """
@@ -268,6 +269,24 @@ def parse_options():
         help="Enables the auto tuning ramping feature for finding highest stable client count. NOTE having ramp enabled will add some more overhead for additional stats gathering"
     )
 
+    # if want to use integration test feature
+    parser.add_option(
+        '--integration',
+        action='store_true',
+        dest='integration',
+        default=False,
+        help='Run the test as integration test without web UI'
+    )
+
+    # set number of repetition for integration test feature
+    parser.add_option(
+        '-t','--repetition',
+        action='store_true',
+        dest='repetition',
+        default=False,
+        help='Set number of repetition for integration test, without this option test will be run once. Only used together with --integration'
+    )
+
     # Finalize
     # Return three-tuple of parser + the output from parse_args (opt obj, args)
     opts, args = parser.parse_args()
@@ -343,15 +362,15 @@ def main():
         console_logger.info(dumps(task_data))
         sys.exit(0)
 
-    if not options.no_web and not options.slave:
+    if not options.no_web and not options.slave and not options.integration:
         # spawn web greenlet
         logger.info("Starting web monitor at %s:%s" % (options.web_host or "*", options.port))
         main_greenlet = gevent.spawn(web.start, locust_classes, options)
     
-    if not options.master and not options.slave:
+    if (not options.master and not options.slave) or options.integration:
         runners.locust_runner = LocalLocustRunner(locust_classes, options, available_locustfiles=all_locustfiles)
         # spawn client spawning/hatching greenlet
-        if options.no_web:
+        if options.no_web or options.integration:
             runners.locust_runner.start_hatching(wait=True)
             main_greenlet = runners.locust_runner.greenlet
     elif options.master:
@@ -371,7 +390,7 @@ def main():
         except socket.error as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
-    
+
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
         gevent.spawn(stats_printer)
