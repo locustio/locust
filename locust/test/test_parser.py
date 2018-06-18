@@ -10,6 +10,7 @@ class TestParser(unittest.TestCase):
     def test_default(self):
         opts, _ = self.parser.parse_args([])
         self.assertEqual(opts.reset_stats, False)
+        self.assertEqual(opts.skip_log_setup, False)
 
     def test_reset_stats(self):
         args = [
@@ -24,3 +25,10 @@ class TestParser(unittest.TestCase):
         ]
         opts, _ = self.parser.parse_args(args)
         self.assertEqual(opts.reset_stats, False)
+
+    def test_skip_log_setup(self):
+        args = [
+            "--skip-log-setup"
+        ]
+        opts, _ = self.parser.parse_args(args)
+        self.assertEqual(opts.skip_log_setup, True)
