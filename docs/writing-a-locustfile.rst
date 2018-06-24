@@ -255,6 +255,31 @@ its Locust instance, and the attribute :py:attr:`parent <locust.core.TaskSet.par
 parent TaskSet (it will point to the Locust instance, in the base TaskSet).
 
 
+TaskSequence class
+==================
+
+TaskSequence class is a TaskSet but its tasks will be executed in order.
+To define this order you should do the following:
+
+.. code-block:: python
+
+    class MyTaskSequence(TaskSequence):
+        @seq_task(1)
+        def first_task(self):
+            pass
+
+        @seq_task(2)
+        def second_task(self):
+            pass
+
+        @seq_task(3)
+        @task(10)
+        def third_task(self):
+            pass
+
+In the above example, the order is defined to execute first_task, then second_task and lastly the third_task for 10 times.
+As you can see, you can compose :py:meth:`@seq_task <locust.core.seq_task>` with :py:meth:`@task <locust.core.task>` decorator, and of course you can also nest TaskSets within TaskSequences and vice versa.
+
 Setups, Teardowns, on_start, and on_stop
 ========================================
 
