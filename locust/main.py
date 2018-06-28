@@ -5,15 +5,13 @@ import signal
 import socket
 import sys
 import time
-import tests_loader
-import fileio
 from optparse import OptionParser
 
 import gevent
 
 import locust
 
-from . import events, runners, web
+from . import events, runners, web, tests_loader, fileio
 from .core import HttpLocust, Locust
 from .inspectlocust import get_task_ratio_dict, print_task_ratio
 from .log import console_logger, setup_logging

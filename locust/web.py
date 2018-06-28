@@ -15,10 +15,9 @@ from gevent import pywsgi, spawn
 from locust import __version__ as version
 from six.moves import StringIO, xrange
 from werkzeug.utils import secure_filename
-import tests_loader
 import requests
 
-from . import runners, configuration
+from . import runners, configuration, tests_loader
 from .cache import memoize
 from .runners import MasterLocustRunner
 from .stats import distribution_csv, median_from_dict, requests_csv, sort_stats
@@ -199,7 +198,7 @@ def request_stats():
     report["state"] = runners.locust_runner.state
     report["user_count"] = runners.locust_runner.user_count
     report["running_type"] = runners.locust_runner.running_type
-    report["host"] = runners.locust_runner.locust_classes[0].host
+    report["host"] = runners.locust_runner.locust_classes[0].host if len(runners.locust_runner.locust_classes) > 0 else None
     return json.dumps(report)
 
 @app.route("/exceptions")

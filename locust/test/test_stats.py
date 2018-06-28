@@ -18,13 +18,13 @@ class TestRequestStats(unittest.TestCase):
         self.s.log(45, 0)
         self.s.log(135, 0)
         self.s.log(44, 0)
-        self.s.log_error(Exception("dummy fail"))
-        self.s.log_error(Exception("dummy fail"))
+        self.s.log_error(50,Exception("dummy fail"))
+        self.s.log_error(100,Exception("dummy fail"))
         self.s.log(375, 0)
         self.s.log(601, 0)
         self.s.log(35, 0)
         self.s.log(79, 0)
-        self.s.log_error(Exception("dummy fail"))
+        self.s.log_error(520,Exception("dummy fail"))
 
     def test_percentile(self):
         s = StatsEntry(self.stats, "percentile_test", "GET")
@@ -39,33 +39,33 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(self.s.median_response_time, 79)
 
     def test_total_rps(self):
-        self.assertEqual(self.s.total_rps, 7)
+        self.assertEqual(self.s.total_rps, 10)
 
     def test_current_rps(self):
         self.stats.last_request_timestamp = int(time.time()) + 4
-        self.assertEqual(self.s.current_rps, 3.5)
+        self.assertEqual(self.s.current_rps, 5)
 
         self.stats.last_request_timestamp = int(time.time()) + 25
         self.assertEqual(self.s.current_rps, 0)
 
     def test_num_reqs_fails(self):
-        self.assertEqual(self.s.num_requests, 7)
+        self.assertEqual(self.s.num_requests, 10)
         self.assertEqual(self.s.num_failures, 3)
 
     def test_avg(self):
-        self.assertEqual(self.s.avg_response_time, 187.71428571428571428571428571429)
+        self.assertEqual(self.s.avg_response_time, 198.4)
 
     def test_reset(self):
         self.s.reset()
         self.s.log(756, 0)
-        self.s.log_error(Exception("dummy fail after reset"))
+        self.s.log_error(1000,Exception("dummy fail after reset"))
         self.s.log(85, 0)
 
-        self.assertEqual(self.s.total_rps, 2)
-        self.assertEqual(self.s.num_requests, 2)
+        self.assertEqual(self.s.total_rps, 3)
+        self.assertEqual(self.s.num_requests, 3)
         self.assertEqual(self.s.num_failures, 1)
-        self.assertEqual(self.s.avg_response_time, 420.5)
-        self.assertEqual(self.s.median_response_time, 85)
+        self.assertEqual(self.s.avg_response_time, 613.6666666666666)
+        self.assertEqual(self.s.median_response_time, 760)
     
     def test_reset_min_response_time(self):
         self.s.reset()
@@ -77,11 +77,11 @@ class TestRequestStats(unittest.TestCase):
         s1.log(12, 0)
         s1.log(12, 0)
         s1.log(38, 0)
-        s1.log_error("Dummy exzeption")
+        s1.log_error(100,"Dummy exzeption")
 
         s2 = StatsEntry(self.stats, "aggregate me!", "GET")
-        s2.log_error("Dummy exzeption")
-        s2.log_error("Dummy exzeption")
+        s2.log_error(100,"Dummy exzeption")
+        s2.log_error(60,"Dummy exzeption")
         s2.log(12, 0)
         s2.log(99, 0)
         s2.log(14, 0)
@@ -94,25 +94,25 @@ class TestRequestStats(unittest.TestCase):
         s.extend(s1, full_request_history=True)
         s.extend(s2, full_request_history=True)
 
-        self.assertEqual(s.num_requests, 10)
+        self.assertEqual(s.num_requests, 13)
         self.assertEqual(s.num_failures, 3)
-        self.assertEqual(s.median_response_time, 38)
-        self.assertEqual(s.avg_response_time, 43.2)
+        self.assertEqual(s.median_response_time, 55)
+        self.assertEqual(s.avg_response_time, 53.23076923076923)
     
     def test_error_grouping(self):
         # reset stats
         self.stats = RequestStats()
         
         s = StatsEntry(self.stats, "/some-path", "GET")
-        s.log_error(Exception("Exception!"))
-        s.log_error(Exception("Exception!"))
+        s.log_error(100,Exception("Exception!"))
+        s.log_error(100,Exception("Exception!"))
             
         self.assertEqual(1, len(self.stats.errors))
         self.assertEqual(2, list(self.stats.errors.values())[0].occurences)
         
-        s.log_error(Exception("Another exception!"))
-        s.log_error(Exception("Another exception!"))
-        s.log_error(Exception("Third exception!"))
+        s.log_error(100,Exception("Another exception!"))
+        s.log_error(100,Exception("Another exception!"))
+        s.log_error(100,Exception("Third exception!"))
         self.assertEqual(3, len(self.stats.errors))
     
     def test_error_grouping_errors_with_memory_addresses(self):
@@ -122,8 +122,8 @@ class TestRequestStats(unittest.TestCase):
             pass
         
         s = StatsEntry(self.stats, "/", "GET")
-        s.log_error(Exception("Error caused by %r" % Dummy()))
-        s.log_error(Exception("Error caused by %r" % Dummy()))
+        s.log_error(100,Exception("Error caused by %r" % Dummy()))
+        s.log_error(100,Exception("Error caused by %r" % Dummy()))
         
         self.assertEqual(1, len(self.stats.errors))
     
@@ -204,7 +204,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         response = locust.client.get("/", timeout=0.1)
         self.assertEqual(response.status_code, 0)
         self.assertEqual(1, global_stats.get("/", "GET").num_failures)
-        self.assertEqual(0, global_stats.get("/", "GET").num_requests)
+        self.assertEqual(1, global_stats.get("/", "GET").num_requests)
     
     def test_max_requests(self):
         class MyTaskSet(TaskSet):
@@ -257,7 +257,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
             
             l = MyLocust()
             self.assertRaises(StopLocust, lambda: l.task_set(l).run())
-            self.assertEqual(1, global_stats.num_requests)
+            self.assertEqual(3, global_stats.num_requests)
             self.assertEqual(2, global_stats.num_failures)
             
             global_stats.clear_all()
@@ -265,7 +265,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
             self.assertEqual(0, global_stats.num_requests)
             self.assertEqual(0, global_stats.num_failures)
             l.run()
-            self.assertEqual(1, global_stats.num_requests)
+            self.assertEqual(2, global_stats.num_requests)
             self.assertEqual(1, global_stats.num_failures)
         finally:
             global_stats.clear_all()

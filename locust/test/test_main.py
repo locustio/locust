@@ -1,4 +1,4 @@
-from locust import main
+from locust import main, tests_loader
 from locust.core import HttpLocust, Locust, TaskSet
 
 from .testcases import LocustTestCase
@@ -6,10 +6,10 @@ from .testcases import LocustTestCase
 
 class TestTaskSet(LocustTestCase):
     def test_is_locust(self):
-        self.assertFalse(main.is_locust(("Locust", Locust)))
-        self.assertFalse(main.is_locust(("HttpLocust", HttpLocust)))
-        self.assertFalse(main.is_locust(("random_dict", {})))
-        self.assertFalse(main.is_locust(("random_list", [])))
+        self.assertFalse(tests_loader.is_locust(("Locust", Locust)))
+        self.assertFalse(tests_loader.is_locust(("HttpLocust", HttpLocust)))
+        self.assertFalse(tests_loader.is_locust(("random_dict", {})))
+        self.assertFalse(tests_loader.is_locust(("random_list", [])))
         
         class MyTaskSet(TaskSet):
             pass
@@ -20,10 +20,10 @@ class TestTaskSet(LocustTestCase):
         class MyLocust(Locust):
             task_set = MyTaskSet
         
-        self.assertTrue(main.is_locust(("MyHttpLocust", MyHttpLocust)))
-        self.assertTrue(main.is_locust(("MyLocust", MyLocust)))
+        self.assertTrue(tests_loader.is_locust(("MyHttpLocust", MyHttpLocust)))
+        self.assertTrue(tests_loader.is_locust(("MyLocust", MyLocust)))
         
         class ThriftLocust(Locust):
             pass
         
-        self.assertFalse(main.is_locust(("ThriftLocust", ThriftLocust)))
+        self.assertFalse(tests_loader.is_locust(("ThriftLocust", ThriftLocust)))

@@ -81,7 +81,7 @@ class TestWebUI(LocustTestCase):
         self.assertEqual(200, response.status_code)
     
     def test_request_stats_with_errors(self):
-        stats.global_stats.get("/", "GET").log_error(Exception("Error1337"))
+        stats.global_stats.get("/", "GET").log_error(100,Exception("Error1337"))
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertIn("Error1337", str(response.content))

@@ -14,11 +14,9 @@ from gevent.pool import Group
 
 from six.moves import xrange
 
-from . import events, configuration
+from . import events, configuration, fileio, tests_loader
 from .rpc import Message, rpc
 from .stats import global_stats
-import fileio
-import tests_loader
 
 logger = logging.getLogger(__name__)
 
