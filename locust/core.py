@@ -2,6 +2,7 @@ import logging
 import random
 import sys
 import traceback
+from .report import report
 from time import time
 
 import gevent
@@ -267,7 +268,7 @@ class TaskSet(object):
         #e2e
         if (runners.options is not None) and runners.options.integration:
             self.test_suite = TestSuite(name=self.__class__.__name__)
-            runners.test_suites.append(self.test_suite)
+            report.set_test_suite(self.test_suite)
             
 
     def run(self, *args, **kwargs):
@@ -311,7 +312,8 @@ class TaskSet(object):
                             #add testcase to test suite
                             newTestcase = TestCase(name=currenttask.__name__)
                             newTestcase.repetition_index = sameTaskCounter
-                            self.test_suite.set_test_case(newTestcase) 
+                            self.test_suite.set_test_case(newTestcase)
+                            report.set_test_suite(self.test_suite)
 
                             # execute task 
                             currenttask(self)

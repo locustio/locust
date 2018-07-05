@@ -38,8 +38,6 @@ locust_runners = []
 runnersCompletedCounter = 0
 # to lock runnersCompletedCounter
 lock = threading.Lock()
-# holds many test suite objects
-test_suites = []
 
 STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_STOPPED = ["ready", "hatching", "running", "stopped"]
 SLAVE_REPORT_INTERVAL = 3.0

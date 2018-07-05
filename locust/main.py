@@ -6,6 +6,7 @@ import socket
 import sys
 import time
 from optparse import OptionParser
+from .report import report
 
 import gevent
 
@@ -293,6 +294,7 @@ def main():
 
     #e2e
     runners.options = options
+    report.options = options
 
     # setup logging
     setup_logging(options.loglevel, options.logfile)

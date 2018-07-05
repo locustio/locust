@@ -193,3 +193,6 @@ class TestStep(object):
     @response.setter
     def response(self, response):
         self._response = response
+
+class TestStatus:
+    SUCCESS, WARNING, FAILED, SKIP, ERROR = "Success", "Warning", "Failed", "Skip", "Error"
