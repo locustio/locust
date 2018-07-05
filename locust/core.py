@@ -18,6 +18,7 @@ from six.moves import xrange
 monkey.patch_all()
 
 from . import events
+from .test_object import TestSuite, TestCase
 from .clients import HttpSession
 from .configuration import ClientConfiguration
 from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
@@ -26,7 +27,7 @@ from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
 logger = logging.getLogger(__name__)
 
 
-def task(weight=1):
+def task(weight=1, repetition=1):
     """
     Used as a convenience decorator to be able to declare tasks for a TaskSet 
     inline in the class. Example::
@@ -36,15 +37,22 @@ def task(weight=1):
             def read_thread(self):
                 pass
             
-            @task(7)
+            @task(7,2)
             def create_thread(self):
                 pass
+    
+    The 2nd parameter (repetition) is only used in E2E mode, represents how many times the task has to run.
     """
-    
+
     def decorator_func(func):
-        func.locust_task_weight = weight
-        return func
-    
+        #e2e
+        #replace weight with repetition
+        if (runners.options is not None) and runners.options.integration : 
+            func.locust_task_weight = int(runners.options.repetition) if (runners.options.repetition is not None) and int(runners.options.repetition) > 0 else repetition
+        else:
+            func.locust_task_weight = weight
+        return func    
+
     """
     Check if task was used without parentheses (not called), like this::
     
@@ -233,6 +241,9 @@ class TaskSet(object):
     config = None
     """Will refer to the ClientConfiguration class instance when the TaskSet has been instantiated"""
 
+    test_suite = None
+    """E2E Test suite (represent a test file containing one or more tasks (test cases)"""
+
     def __init__(self, parent):
         self._task_queue = []
         self._time_start = time()
@@ -252,6 +263,12 @@ class TaskSet(object):
             self.min_wait = self.locust.min_wait
         if not self.max_wait:
             self.max_wait = self.locust.max_wait
+
+        #e2e
+        if (runners.options is not None) and runners.options.integration:
+            self.test_suite = TestSuite(name=self.__class__.__name__)
+            runners.test_suites.append(self.test_suite)
+            
 
     def run(self, *args, **kwargs):
         self.args = args
@@ -275,7 +292,40 @@ class TaskSet(object):
                     self.schedule_task(self.get_next_task())
                 
                 try:
-                    self.execute_next_task()
+                    #e2e
+                    if (runners.options is not None) and runners.options.integration:
+                        #number of elements in self.tasks already represents actual repetition
+
+                        lastTaskName = ""
+                        sameTaskCounter = 1
+                        for currenttask in self.tasks:
+                            className = self.__class__.__name__
+                            logger.info("Running Test Case: %s         Task: %s" % (className, currenttask.__name__))
+
+                            if lastTaskName == currenttask.__name__ :
+                                sameTaskCounter += 1
+                            else:
+                                sameTaskCounter = 1
+                                lastTaskName = currenttask.__name__
+
+                            #add testcase to test suite
+                            newTestcase = TestCase(name=currenttask.__name__)
+                            newTestcase.repetition_index = sameTaskCounter
+                            self.test_suite.set_test_case(newTestcase) 
+
+                            # execute task 
+                            currenttask(self)
+
+                        try:
+                            runners.lock.acquire()
+                            runners.runnersCompletedCounter += 1
+                        finally:
+                            runners.lock.release()
+                        
+                        return
+                    else:
+                        #normal locust mode
+                        self.execute_next_task()
                 except RescheduleTaskImmediately:
                     pass
                 except RescheduleTask:

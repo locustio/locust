@@ -3,7 +3,7 @@ import time
 
 class TestSuite(object):
     def __init__(self, **kwargs):
-        self._id = 'TSU-%s' % int(time.time())
+        self._id = 'TSU-%s' % time.time()
         self._name = kwargs.get('name', None)
         self._test_cases = kwargs.get('test_cases', dict())
         self._path = kwargs.get('path', None)
@@ -28,10 +28,12 @@ class TestSuite(object):
     def test_cases(self):
         return self._test_cases
 
-    def set_test_case(self, key, test_case):
-        test_case.test_suite_id = self._id
-        self._test_cases[key] = test_case
-        return test_case
+    def set_test_case(self, test_case):
+        try:
+            test_case.test_suite_id = self._id
+            self._test_cases[test_case.id] = test_case
+        finally:
+            return test_case
 
     @property
     def path(self):
@@ -44,7 +46,7 @@ class TestSuite(object):
 
 class TestCase(object):
     def __init__(self, **kwargs):
-        self._id = 'TC-%s' % int(time.time())
+        self._id = 'TC-%s' % time.time()
         self._test_suite_id = kwargs.get('test_suite_id', None)
         self._name = kwargs.get('name', None)
         self._test_steps = kwargs.get('test_steps', [])
@@ -53,7 +55,7 @@ class TestCase(object):
         self._time_start = kwargs.get('time_start', None)
         self._time_end = kwargs.get('time_end', None)
 
-   @property
+    @property
     def id(self):
         return self._id
     
@@ -119,7 +121,7 @@ class TestCase(object):
 
 class TestStep(object):
     def __init__(self, **kwargs):
-        self._id = 'TST-%s' % int(time.time())
+        self._id = 'TST-%s' % time.time()
         self._test_case_id = kwargs.get('test_case_id', None)
         self._name = kwargs.get('name', None)
         self._status = kwargs.get('status', None)
@@ -138,7 +140,7 @@ class TestStep(object):
 
     @property
     def test_case_id(self):
-        return self._test_suite_id
+        return self._test_case_id
 
     @test_case_id.setter
     def test_case_id(self, value):

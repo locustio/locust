@@ -291,6 +291,9 @@ def parse_options():
 def main():
     parser, options, arguments = parse_options()
 
+    #e2e
+    runners.options = options
+
     # setup logging
     setup_logging(options.loglevel, options.logfile)
     logger = logging.getLogger(__name__)
@@ -317,6 +320,9 @@ def main():
 
     # Use the first locustfile for the default locusts
     locusts = all_locustfiles.values()[0]
+
+    #e2e
+    totalRunners = len(all_locustfiles.values())
 
     if options.list_commands:
         console_logger.info("Available Locusts:")
@@ -362,11 +368,23 @@ def main():
         # spawn web greenlet
         logger.info("Starting web monitor at %s:%s" % (options.web_host or "*", options.port))
         main_greenlet = gevent.spawn(web.start, locust_classes, options)
-    
-    if (not options.master and not options.slave) or options.integration:
+
+    #e2e
+    if options.integration:
+        #for all input files, create runner thread.
+        for i in range(totalRunners):
+            #get current file class
+            locust_classes = list((all_locustfiles.values()[i]).values())
+            
+            #create corresponding thread
+            runners.locust_runners.append(LocalLocustRunner(locust_classes, options, available_locustfiles=all_locustfiles))
+            #execute the thread
+            runners.locust_runners[i].start_hatching(wait=True)
+
+    elif not options.master and not options.slave:
         runners.locust_runner = LocalLocustRunner(locust_classes, options, available_locustfiles=all_locustfiles)
         # spawn client spawning/hatching greenlet
-        if options.no_web or options.integration:
+        if options.no_web:
             runners.locust_runner.start_hatching(wait=True)
             main_greenlet = runners.locust_runner.greenlet
     elif options.master:
@@ -402,8 +420,11 @@ def main():
         logger.info("Shutting down (exit code %s), bye." % code)
 
         events.quitting.fire()
-        print_stats(runners.locust_runner.request_stats)
-        print_percentile_stats(runners.locust_runner.request_stats)
+        if not options.integration:
+            #e2e does not print stats
+            print_stats(runners.locust_runner.request_stats)
+            print_percentile_stats(runners.locust_runner.request_stats)
+
         if options.csvfilebase:
             write_stat_csvs(options.csvfilebase)
         print_error_report()
@@ -416,11 +437,20 @@ def main():
     gevent.signal(signal.SIGTERM, sig_term_handler)
     
     try:
-        logger.info("Starting Locust %s" % version)
-        main_greenlet.join()
-        code = 0
-        if len(runners.locust_runner.errors):
-            code = 1
+        #e2e
+        if options.integration:
+            logger.info("Starting Locust in E2E/Integration test, version %s" % version)
+            while runners.runnersCompletedCounter < totalRunners:
+                gevent.sleep(1)
+            code = 0
+
+        else:
+            #normal locust execution mode
+            logger.info("Starting Locust %s" % version)
+            main_greenlet.join()
+            code = 0
+            if len(runners.locust_runner.errors):
+                code = 1
         shutdown(code=code)
     except KeyboardInterrupt as e:
         shutdown(0)

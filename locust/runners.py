@@ -17,11 +17,29 @@ from six.moves import xrange
 from . import events, configuration, fileio, tests_loader
 from .rpc import Message, rpc
 from .stats import global_stats
+import fileio
+import tests_loader
+
+#e2e
+#   required for MUTEX
+import threading
 
 logger = logging.getLogger(__name__)
 
 # global locust runner singleton
 locust_runner = None
+
+#e2e
+# holds global options to be accessed by other files. Initialized by main.py
+options = None
+# holds array of Runners
+locust_runners = []
+# indicator if all runner thread has been completed
+runnersCompletedCounter = 0
+# to lock runnersCompletedCounter
+lock = threading.Lock()
+# holds many test suite objects
+test_suites = []
 
 STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_STOPPED = ["ready", "hatching", "running", "stopped"]
 SLAVE_REPORT_INTERVAL = 3.0
@@ -102,14 +120,17 @@ class LocustRunner(object):
         else:
             self.num_clients += spawn_count
 
-        logger.info("Hatching and swarming %i clients at the rate %g clients/s..." % (spawn_count, self.hatch_rate))
+        #e2e
+        if (options is None) or not options.integration:
+            logger.info("Hatching and swarming %i clients at the rate %g clients/s..." % (spawn_count, self.hatch_rate))
         occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
         
         def hatch():
             sleep_time = 1.0 / self.hatch_rate
             while True:
                 if not bucket:
-                    logger.info("All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in six.iteritems(occurence_count)]))
+                    if (options is None) or not options.integration:
+                        logger.info("All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in six.iteritems(occurence_count)]))
                     events.hatch_complete.fire(user_count=self.num_clients)
                     return
 
@@ -122,13 +143,15 @@ class LocustRunner(object):
                         pass
                 new_locust = self.locusts.spawn(start_locust, locust)
                 if len(self.locusts) % 10 == 0:
-                    logger.debug("%i locusts hatched" % len(self.locusts))
+                    if (options is None) or not options.integration:
+                        logger.debug("%i locusts hatched" % len(self.locusts))
                 gevent.sleep(sleep_time)
         
         hatch()
         if wait:
             self.locusts.join()
-            logger.info("All locusts dead\n")
+            if (options is None) or not options.integration:
+                logger.info("All locusts dead\n")
 
     def kill_locusts(self, kill_count):
         """
