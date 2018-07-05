@@ -27,8 +27,7 @@ from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
 
 logger = logging.getLogger(__name__)
 
-
-def task(weight=1, repetition=1):
+def task(weight=1, repetition=1, name=None):
     """
     Used as a convenience decorator to be able to declare tasks for a TaskSet 
     inline in the class. Example::
@@ -50,6 +49,7 @@ def task(weight=1, repetition=1):
         #replace weight with repetition
         if (runners.options is not None) and runners.options.integration : 
             func.locust_task_weight = int(runners.options.repetition) if (runners.options.repetition is not None) and int(runners.options.repetition) > 0 else repetition
+            func.__name__ = name if name is not None else func.func_name
         else:
             func.locust_task_weight = weight
         return func    

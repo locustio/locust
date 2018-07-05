@@ -1,10 +1,9 @@
-
 import time
 
 class TestSuite(object):
     def __init__(self, **kwargs):
         self._id = 'TSU-%s' % time.time()
-        self._name = kwargs.get('name', None)
+        self._name = self.prepare_name(kwargs.get('name', None))
         self._test_cases = kwargs.get('test_cases', dict())
         self._path = kwargs.get('path', None)
 
@@ -22,7 +21,7 @@ class TestSuite(object):
 
     @name.setter
     def name(self, value):
-        self._name = value
+        self._name = self.prepare_name(value)
 
     @property
     def test_cases(self):
@@ -43,12 +42,34 @@ class TestSuite(object):
     def path(self, value):
         self._path = value
 
+    def prepare_name(self, name):
+        if name:
+            x = []
+            y = list(name)
+            first_char = True
+            for index, char in enumerate(y):
+                if first_char:
+                    first_char = False
+                    x.append(char.upper())
+                else:
+                    if char.isupper():
+                        if (y[index-1].islower() & y[index+2].islower()) or y[index+1].islower() or y[index-1].islower():
+                            x.append(' %s' % char)
+                        else:
+                            x.append(char)
+                    else:
+                        x.append(char)
+
+            return ''.join(x)
+
+        return None
+
 
 class TestCase(object):
     def __init__(self, **kwargs):
         self._id = 'TC-%s' % time.time()
         self._test_suite_id = kwargs.get('test_suite_id', None)
-        self._name = kwargs.get('name', None)
+        self._name = self.prepare_name(kwargs.get('name', None))
         self._test_steps = kwargs.get('test_steps', [])
         self._status = kwargs.get('status', None)
         self._repetition_index = kwargs.get('repetition_index', None)
@@ -77,7 +98,7 @@ class TestCase(object):
 
     @name.setter
     def name(self, value):
-        self._name = value
+        self._name = self.prepare_name(value)
 
     @property
     def test_steps(self):
@@ -117,6 +138,26 @@ class TestCase(object):
     @time_end.setter
     def time_end(self, value):
         self._time_end = value
+
+    def prepare_name(self, name):
+        if name:
+            x = []
+            y = list(name)
+            first_char = True
+            for index, char in enumerate(y):
+                if first_char:
+                    x.append(char.upper())
+                    first_char = False
+                elif y[index-1] == '_':
+                    x.append(' %s' % char.upper())
+                elif char == '_':
+                    continue
+                else:
+                    x.append(char)
+
+            return ''.join(x)
+            
+        return None
 
 
 class TestStep(object):
