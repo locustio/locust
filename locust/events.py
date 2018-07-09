@@ -1,3 +1,5 @@
+import gevent
+
 class EventHook(object):
     """
     Simple event class used to provide hooks for different types of events in Locust.
@@ -9,6 +11,9 @@ class EventHook(object):
             print "Event was fired with arguments: %s, %s" % (a, b)
         my_event += on_my_event
         my_event.fire(a="foo", b="bar")
+
+    If reverse is True, then the handlers will run in the reverse order
+    that they were inserted
     """
 
     def __init__(self):
@@ -22,7 +27,9 @@ class EventHook(object):
         self._handlers.remove(handler)
         return self
 
-    def fire(self, **kwargs):
+    def fire(self, reverse=False, **kwargs):
+        if reverse:
+            self._handlers.reverse()
         for handler in self._handlers:
             handler(**kwargs)
 
@@ -99,21 +106,21 @@ Event is fire with the following arguments:
 
 quitting = EventHook()
 """
-*quitting* is fired when the locust process in exiting
+*quitting* is fired when the locust process is exiting
 """
 
 master_start_hatching = EventHook()
 """
 *master_start_hatching* is fired when we initiate the hatching process on the master.
 
-This event is especially usefull to detect when the 'start' button is clicked on the web ui.
+This event is especially useful to detect when the 'start' button is clicked on the web ui.
 """
 
 master_stop_hatching = EventHook()
 """
 *master_stop_hatching* is fired when terminate the hatching process on the master.
 
-This event is especially usefull to detect when the 'stop' button is clicked on the web ui.
+This event is especially useful to detect when the 'stop' button is clicked on the web ui.
 """
 
 locust_start_hatching = EventHook()

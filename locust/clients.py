@@ -114,7 +114,7 @@ class HttpSession(requests.Session):
         response = self._send_request_safe_mode(method, url, **kwargs)
         
         # record the consumed time
-        request_meta["response_time"] = int((time.time() - request_meta["start_time"]) * 1000)
+        request_meta["response_time"] = (time.time() - request_meta["start_time"]) * 1000
         
     
         request_meta["name"] = name or (response.history and response.history[0] or response).request.path_url
@@ -124,7 +124,7 @@ class HttpSession(requests.Session):
         if kwargs.get("stream", False):
             request_meta["content_size"] = int(response.headers.get("content-length") or 0)
         else:
-            request_meta["content_size"] = len(response.content or "")
+            request_meta["content_size"] = len(response.content or b"")
         
         if catch_response:
             response.locust_request_meta = request_meta
@@ -233,7 +233,7 @@ class ResponseContextManager(LocustResponse):
         Example::
         
             with self.client.get("/", catch_response=True) as response:
-                if response.content == "":
+                if response.content == b"":
                     response.failure("No data")
         """
         if isinstance(exc, six.string_types):

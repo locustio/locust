@@ -6,7 +6,7 @@ import traceback
 
 import gevent
 import requests
-from gevent import wsgi
+from gevent import pywsgi
 
 from locust import events, runners, stats, web
 from locust.main import parse_options
@@ -27,7 +27,7 @@ class TestWebUI(LocustTestCase):
         
         web.request_stats.clear_cache()
         
-        self._web_ui_server = wsgi.WSGIServer(('127.0.0.1', 0), web.app, log=None)
+        self._web_ui_server = pywsgi.WSGIServer(('127.0.0.1', 0), web.app, log=None)
         gevent.spawn(lambda: self._web_ui_server.serve_forever())
         gevent.sleep(0.01)
         self.web_port = self._web_ui_server.server_port
@@ -85,7 +85,7 @@ class TestWebUI(LocustTestCase):
         stats.global_stats.log_request("GET", "/test2", 1200, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/distribution/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
-        rows = str(response.content.decode("utf-8")).split("\n")
+        rows = response.text.split("\n")
         # check that /test2 is present in stats
         row = rows[len(rows)-2].split(",")
         self.assertEqual('"GET /test2"', row[0])
@@ -100,7 +100,7 @@ class TestWebUI(LocustTestCase):
         stats.global_stats.log_error("GET", "/", Exception("Error1337"))
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
-        self.assertIn("Error1337", str(response.content))
+        self.assertIn("Error1337", response.text)
     
     def test_exceptions(self):
         try:
@@ -112,7 +112,7 @@ class TestWebUI(LocustTestCase):
         
         response = requests.get("http://127.0.0.1:%i/exceptions" % self.web_port)
         self.assertEqual(200, response.status_code)
-        self.assertIn("A cool test exception", str(response.content))
+        self.assertIn("A cool test exception", response.text)
         
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
