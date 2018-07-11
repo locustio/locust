@@ -58,6 +58,35 @@ def task(weight=1):
         return decorator_func
 
 
+def seq_task(order):
+    """
+    Used as a convenience decorator to be able to declare tasks for a TaskSequence
+    inline in the class. Example::
+
+        class NormalUser(TaskSequence):
+            @seq_task(1)
+            def login_first(self):
+                pass
+
+            @seq_task(2)
+            @task(25) # You can also set the weight in order to execute the task for `weight` times one after another.
+            def then_read_thread(self):
+                pass
+
+            @seq_task(3)
+            def then_logout(self):
+                pass
+    """
+
+    def decorator_func(func):
+        func.locust_task_order = order
+        if not hasattr(func, 'locust_task_weight'):
+            func.locust_task_weight = 1
+        return func
+
+    return decorator_func
+
+
 class NoClientWarningRaiser(object):
     """
     The purpose of this class is to emit a sensible error message for old test scripts that 
@@ -419,3 +448,34 @@ class TaskSet(object):
         Locust instance.
         """
         return self.locust.client
+
+
+class TaskSequence(TaskSet):
+    """
+    Class defining a sequence of tasks that a Locust user will execute.
+
+    When a TaskSequence starts running, it will pick the task in `index` from the *tasks* attribute,
+    execute it, and call its *wait_function* which will define a time to sleep for.
+    This defaults to a uniformly distributed random number between *min_wait* and
+    *max_wait* milliseconds. It will then schedule the `index + 1 % len(tasks)` task for execution and so on.
+
+    TaskSequence can be nested with TaskSet, which means that a TaskSequence's *tasks* attribute can contain
+    TaskSet instances as well as other TaskSequence instances. If the nested TaskSet it scheduled to be executed, it will be
+    instantiated and called from the current executing TaskSet. Execution in the
+    currently running TaskSet will then be handed over to the nested TaskSet which will
+    continue to run until it throws an InterruptTaskSet exception, which is done when
+    :py:meth:`TaskSet.interrupt() <locust.core.TaskSet.interrupt>` is called. (execution
+    will then continue in the first TaskSet).
+
+    In this class, tasks should be defined as a list, or simply define the tasks with the @seq_task decorator
+    """
+
+    def __init__(self, parent):
+        super(TaskSequence, self).__init__(parent)
+        self._index = 0
+        self.tasks.sort(key=lambda t: t.locust_task_order if hasattr(t, 'locust_task_order') else 1)
+
+    def get_next_task(self):
+        task = self.tasks[self._index]
+        self._index = (self._index + 1) % len(self.tasks)
+        return task

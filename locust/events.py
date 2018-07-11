@@ -113,14 +113,14 @@ master_start_hatching = EventHook()
 """
 *master_start_hatching* is fired when we initiate the hatching process on the master.
 
-This event is especially usefull to detect when the 'start' button is clicked on the web ui.
+This event is especially useful to detect when the 'start' button is clicked on the web ui.
 """
 
 master_stop_hatching = EventHook()
 """
 *master_stop_hatching* is fired when terminate the hatching process on the master.
 
-This event is especially usefull to detect when the 'stop' button is clicked on the web ui.
+This event is especially useful to detect when the 'stop' button is clicked on the web ui.
 """
 
 locust_start_hatching = EventHook()
