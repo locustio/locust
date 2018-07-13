@@ -444,8 +444,9 @@ def main():
             logger.info("Starting Locust in E2E/Integration test, version %s" % version)
             while runners.runnersCompletedCounter < totalRunners:
                 gevent.sleep(1)
+            report.set_dummy_data()
+            report.compile_report()
             code = 0
-
         else:
             #normal locust execution mode
             logger.info("Starting Locust %s" % version)

@@ -1,4 +1,6 @@
 import time
+import random
+from enum import Enum
 
 class TestSuite(object):
     def __init__(self, **kwargs):
@@ -26,6 +28,10 @@ class TestSuite(object):
     @property
     def test_cases(self):
         return self._test_cases
+    
+    @test_cases.setter
+    def test_cases(self, value):
+        self._test_cases = value
 
     def set_test_case(self, test_case):
         try:
@@ -75,6 +81,19 @@ class TestCase(object):
         self._repetition_index = kwargs.get('repetition_index', None)
         self._time_start = kwargs.get('time_start', None)
         self._time_end = kwargs.get('time_end', None)
+        self._group = kwargs.get('group', None)
+        self.reason = kwargs.get('reason', None)
+
+    def auto_set_status(self):
+        new_status = TestStatus.SUCCESS
+        for x in range(0,len(self._test_steps)):
+            test_step = self._test_steps[x]
+            if test_step.status.value > new_status.value :
+                new_status = test_step.status
+                self.reason = "%s on step %s [%s]" % (new_status.name,(x+1),test_step.name)
+        self._time_start = self.test_steps[0]._time_start
+        self._time_end = self.test_steps[len(self.test_steps)-1]._time_end
+        self._status = new_status
 
     @property
     def id(self):
@@ -83,6 +102,14 @@ class TestCase(object):
     @id.setter
     def id(self, value):
         self._id = value
+    
+    @property
+    def group(self):
+        return self._group
+
+    @group.setter
+    def group(self, value):
+        self._group = value
 
     @property
     def test_suite_id(self):
@@ -159,7 +186,6 @@ class TestCase(object):
             
         return None
 
-
 class TestStep(object):
     def __init__(self, **kwargs):
         self._id = 'TST-%s' % time.time()
@@ -170,6 +196,31 @@ class TestStep(object):
         self._time_end = kwargs.get('time_end', None)
         self._request = kwargs.get('request', None)
         self._response = kwargs.get('response', None)
+        self.reason = kwargs.get('reason', None)
+        if(kwargs.get('dummy', False) is True) :
+            self._time_start = time.time()
+            time.sleep(0.1)
+            self._time_end = time.time()
+            class dummyResponse(object):
+                def __init__(self):
+                    self.content = str(random.randint(1000000,1000000000))
+                    self.headers = {
+                        'content-type':'application/json/response',
+                        'date':'Thu, 16 Jul 2019 04:19:02 GMT'
+                    }
+                    self.status_code = random.randint(100,600)
+                    self.url = 'https:/%s' % (random.randint(0,1000))
+                    class dummyRequest(object):
+                        def __init__(self, url):
+                            self.headers = {
+                                'content-type':'application/json/request',
+                                'date':'Thu, 12 Jul 2018 04:19:02 GMT'
+                            }
+                            self.method = 'GET'
+                            self.body = None
+                            self.url = url
+                    self.request = dummyRequest(self.url)
+            self._response = dummyResponse()
 
     @property
     def id(self):
@@ -218,14 +269,6 @@ class TestStep(object):
     @time_end.setter
     def time_end(self, value):
         self._time_end = value
-        
-    @property
-    def request(self):
-        return self._request
-
-    @request.setter
-    def request(self, request):
-        self._request = request
 
     @property
     def response(self):
@@ -235,5 +278,5 @@ class TestStep(object):
     def response(self, response):
         self._response = response
 
-class TestStatus:
-    SUCCESS, WARNING, FAILED, SKIP, ERROR = "Success", "Warning", "Failed", "Skip", "Error"
+class TestStatus(Enum):
+    SUCCESS, WARNING, FAIL = 0, 1, 2
