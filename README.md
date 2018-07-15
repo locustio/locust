@@ -3,14 +3,14 @@
 [![Build Status](https://img.shields.io/travis/locustio/locust.svg)](https://travis-ci.org/locustio/locust)
 [![codecov](https://codecov.io/gh/locustio/locust/branch/master/graph/badge.svg)](https://codecov.io/gh/locustio/locust)
 [![license](https://img.shields.io/github/license/locustio/locust.svg)](https://github.com/locustio/locust/blob/master/LICENSE)
-[![PyPI](https://img.shields.io/pypi/v/locustio.svg)](https://pypi.python.org/pypi/locustio)
-[![PyPI](https://img.shields.io/pypi/pyversions/locustio.svg)](https://pypi.python.org/pypi/locustio)
+[![PyPI](https://img.shields.io/pypi/v/locustio.svg)](https://pypi.org/project/locustio/)
+[![PyPI](https://img.shields.io/pypi/pyversions/locustio.svg)](https://pypi.org/project/locustio/)
 [![GitHub contributors](https://img.shields.io/github/contributors/locustio/locust.svg)](https://github.com/locustio/locust/graphs/contributors)
 
 ## Links
 
-* Website: <a href="http://locust.io">locust.io</a>
-* Documentation: <a href="http://docs.locust.io">docs.locust.io</a>
+* Website: <a href="https://locust.io">locust.io</a>
+* Documentation: <a href="https://docs.locust.io">docs.locust.io</a>
 * Support/Questions: [Slack signup](https://slack.locust.io/)
 
 ## Description
@@ -50,7 +50,7 @@ of callbacks, your code looks and behaves like normal, blocking Python code.
 
 ## Documentation
 
-More info and documentation can be found at: <a href="http://docs.locust.io/">http://docs.locust.io/</a>
+More info and documentation can be found at: <a href="https://docs.locust.io/">https://docs.locust.io/</a>
 
 ## Questions/help?
 
@@ -62,10 +62,10 @@ Open a Github issue and follow the template listed there.
 
 ## Authors
 
-- <a href="http://cgbystrom.com">Carl Bystr&ouml;m</a> (@<a href="http://twitter.com/cgbystrom">cgbystrom</a> on Twitter)
-- <a href="http://heyman.info">Jonatan Heyman</a> (@<a href="http://twitter.com/jonatanheyman">jonatanheyman</a> on Twitter)
-- Joakim Hamrén (@<a href="http://twitter.com/Jahaaja">Jahaaja</a>)
-- Hugo Heyman (@<a href="http://twitter.com/hugoheyman">hugoheyman</a>)
+- <a href="http://cgbystrom.com">Carl Bystr&ouml;m</a> (@<a href="https://twitter.com/cgbystrom">cgbystrom</a> on Twitter)
+- <a href="http://heyman.info">Jonatan Heyman</a> (@<a href="https://twitter.com/jonatanheyman">jonatanheyman</a> on Twitter)
+- Joakim Hamrén (@<a href="https://twitter.com/Jahaaja">Jahaaja</a>)
+- Hugo Heyman (@<a href="https://twitter.com/hugoheyman">hugoheyman</a>)
 
 ## License
 
@@ -74,4 +74,4 @@ Open source licensed under the MIT license (see _LICENSE_ file for details).
 
 ## Supported Python Versions
 
-Locust supports Python 2.7, 3.3, 3.4, 3.5, and 3.6.
+Locust supports Python 2.7, 3.4, 3.5, and 3.6.

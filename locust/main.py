@@ -496,7 +496,11 @@ def main():
         """
         logger.info("Shutting down (exit code %s), bye." % code)
 
-        events.quitting.fire()
+        logger.info("Cleaning up runner...")
+        if runners.locust_runner is not None:
+            runners.locust_runner.quit()
+        logger.info("Running teardowns...")
+        events.quitting.fire(reverse=True)
         print_stats(runners.locust_runner.request_stats)
         print_percentile_stats(runners.locust_runner.request_stats)
         if options.csvfilebase:
