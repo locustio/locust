@@ -422,13 +422,13 @@ class TaskSet(object):
         Reference to configuration.py
         """
         return self.config.read_json()
-
+    
     def team_configuration(self, path):
         """
         Reference to get_team_config func in configuration.py
         """
         config = ClientConfiguration()
-        return config.get_team_config(path)
+        return config.read_json(path)
 
     @property
     def runners(self):
