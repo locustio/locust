@@ -423,6 +423,13 @@ class TaskSet(object):
         """
         return self.config.read_json()
 
+    def team_configuration(self, path):
+        """
+        Reference to get_team_config func in configuration.py
+        """
+        config = ClientConfiguration()
+        return config.get_team_config(path)
+
     @property
     def runners(self):
         """
