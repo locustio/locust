@@ -132,7 +132,7 @@
                   <h4 class="modal-title">Upload Test File</h4>
                 </div>
                 <div class="modal-body">
-                    <form method="POST" id="upload_file_form" enctype="multipart/form-data" action="/upload_file">
+                    <form method="POST" class="upload_file_form_test_file" enctype="multipart/form-data" action="/upload_file">
                         <label>Path :</label>
                         <select name="upload_directory" id="directories" class="select2">
                             {% for value in test_file_directories %}
@@ -143,9 +143,9 @@
                         <br/>
                         <label>File to upload :</label>
                         <br/>
-                        <input type="file" accept=".py" name="python_file" id="python_file" />
+                        <input type="file" accept=".py" name="uploaded_file" class="uploaded_file" />
                         <br/>
-                        <input type="submit" value="Upload" id="upload_btn_submit" />
+                        <input type="submit" value="Upload" id="upload_py_submit" />
                     </form>
                 </div>
               </div>
@@ -230,7 +230,7 @@
         <div class="edit_config" id="edit_config" style="display:none;">
             <div class="head_section">
                 <div class="container">
-                    <div class="title_header">Configuration</div>
+                    <div class="title_header">Main Configuration</div>
                     <ul id="link_navigation">
                         <li><a href="#" class="config_new_test">New Test</a></li>
                         {% if ramp %}
@@ -239,6 +239,7 @@
                     </ul>
                 </div>
             </div>
+
             <div class="custom_padder container body_section">
                 <label>Import CSV</label>
                 <form method="POST" enctype="multipart/form-data" id="import_csv_form">
@@ -271,6 +272,41 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="custom_padder container body_section">
+                <div class="title_header">Team Configuration</div>
+                <br/>
+                <button type="button" data-toggle="modal" data-target="#upload-json-modal" >Upload JSON</button>
+            </div>
+        </div>
+
+        <div id="upload-json-modal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+          
+              <!-- Modal content-->
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                  <h4 class="modal-title">Upload JSON</h4>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" class="upload_file_form_json" enctype="multipart/form-data" action="/upload_file">
+                        <label>Path :</label>
+                        <select name="upload_directory" id="directories" class="select2">
+                            {% for value in all_test_file_directories %}
+                                <option value="{{value}}">{{value}}</option>
+                            {% endfor %}
+                        </select>
+                        <br/>
+                        <br/>
+                        <label>File to upload :</label>
+                        <br/>
+                        <input type="file" accept=".json" name="uploaded_file" class="uploaded_file" />
+                        <br/>
+                        <input type="submit" value="Upload" id="upload_json_submit" />
+                    </form>
+                </div>
+              </div>
             </div>
         </div>
 

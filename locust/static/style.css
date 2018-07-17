@@ -308,7 +308,7 @@ label[for="json_option"]+div{
 
 .start button,
 .edit button, .edit_config button[type=submit], .multiple_column button, 
-#new-test-confirmation .btn-newtest, #upload_btn_submit {
+#new-test-confirmation .btn-newtest, #upload_json_submit, #upload_py_submit {
     margin: 20px 0px 20px 0px;
     float: right;
     font-size: 14px;
@@ -566,7 +566,7 @@ ul.tabs li a.current:after {
 }
 
 
-#add-new-file-modal, #new-test-confirmation {
+#add-new-file-modal, #upload-json-modal, #new-test-confirmation {
     width: 398px;
     position: absolute;
     left: 50%;
@@ -580,33 +580,36 @@ ul.tabs li a.current:after {
     background: #132b21;
     box-shadow: 0 0 120px rgba(0,0,0,0.3);
 }
-#add-new-file-modal{
+
+#add-new-file-modal, #upload-json-modal {
     padding-left : 1%; 
     padding-right: 1%;
     height: 275px;
 }
 #new-test-confirmation {
     height: 160px;
+    width: 450px;
 }
-#add-new-file-modal .modal-dialog, #new-test-confirmation .modal-dialog{
+
+#add-new-file-modal .modal-dialog, #new-test-confirmation .modal-dialog, #upload-json-modal .modal-dialog{
     display: flex;
     flex-direction: column;
     vertical-align: middle;
     margin-top: 0px;
     margin-bottom: -50px;
 }
-#add-new-file-modal .modal-header, #new-test-confirmation .modal-header {
+#add-new-file-modal .modal-header, #new-test-confirmation .modal-header, #upload-json-modal .modal-header {
     border-bottom-color: transparent;
 }   
-#add-new-file-modal .close, #new-test-confirmation .close {
+#add-new-file-modal .close, #new-test-confirmation .close, #upload-json-modal .close {
     color: #addf82;
 }
-#new-test-confirmation .modal-header .close, #add-new-file-modal .close{
+#new-test-confirmation .modal-header .close, #add-new-file-modal .close, #upload-json-modal .modal-header .close{
     margin-right: -25px;
     padding: 3px;
 }
 
-#new-test-confirmation .modal-body, #add-new-file-modal .modal-body {
+#new-test-confirmation .modal-body, #add-new-file-modal .modal-body, #upload-json-modal .modal-body {
     padding-top: 25px;
     padding-bottom: 0px;
     color: white;
@@ -616,17 +619,20 @@ ul.tabs li a.current:after {
     padding: 0;
 }
 #new-test-confirmation .btn-newtest {
-    padding: 8px 30px;
-    margin: 3px 3px;
+    padding: 10px 30px;
+    margin: 4px 4px;
 }
-#add-new-file-modal .modal-content, #new-test-confirmation .modal-content {
+#new-test-confirmation .modal-header .close {
+    margin-right: -10px;
+}
+#add-new-file-modal .modal-content, #new-test-confirmation .modal-content, #upload-json-modal .modal-content {
     background-color: #132b21;
     border-color: transparent;
 }
-#add-new-file-modal .modal-title, #new-test-confirmation .modal-title {
+#add-new-file-modal .modal-title, #new-test-confirmation .modal-title, #upload-json-modal .modal-title {
     color:#addf82;
 }
-#upload_file_form, #new-test-confirmation {
+.upload_file_form_test_file, .upload_file_form_json, #new-test-confirmation {
     color: white;
 }
 .about {

@@ -64,6 +64,7 @@ def index():
     modules = tests_loader.populate_directories(fileio.os_path(),'tests/modules/')
     modules.update(pages)
     directories = modules
+    all_directories = tests_loader.populate_directories(fileio.os_path(),'tests/')
 
     return render_template("index.html",
         state=runners.locust_runner.state,
@@ -72,6 +73,7 @@ def index():
         user_count=runners.locust_runner.user_count,
         available_locustfiles = sorted(runners.locust_runner.available_locustfiles.keys()),
         test_file_directories = sorted(directories),
+        all_test_file_directories = sorted(all_directories),
         version=version,
         ramp = _ramp,
         host=host
@@ -324,16 +326,18 @@ def convert_csv_to_json():
 @app.route("/upload_file", methods=["POST"])
 def upload_file():
     upload_directory = request.form.get('upload_directory')
-    python_file = request.files['python_file']
-    python_file_path = upload_directory + python_file.filename
-    python_file_extension = os.path.splitext(python_file.filename)[1]
-    python_file_content = python_file.read()
-    if not python_file and python_file_extension != ".py":
-        return expected_response({'success':False, 'message':"Can't upload this file. Please try again with python file with .py extension"})
-    upload_status,upload_message = fileio.write(python_file_path, python_file_content)
+    uploaded_file = request.files['uploaded_file']
+    uploaded_file_path = upload_directory + uploaded_file.filename
+    uploaded_file_extension = os.path.splitext(uploaded_file.filename)[1]
+    uploaded_file_content = uploaded_file.read()    
+    if not uploaded_file :
+        return expected_response({'success':False, 'message':'Please choose .json or .py file to upload'})
+    if uploaded_file_extension != ".py" and uploaded_file_extension != ".json":
+        return expected_response({'success':False, 'message':"Can't upload this file. Currently only supports .json or .py file"})
+    upload_status,upload_message = fileio.write(uploaded_file_path, uploaded_file_content)
     if upload_status is False :
         return expected_response({'success':False, 'message':upload_message})
-    events.master_new_file_uploaded.fire(new_file={"full_path": python_file_path, "name": python_file.filename, "content":python_file_content})
+    events.master_new_file_uploaded.fire(new_file={"full_path": uploaded_file_path, "name": uploaded_file.filename, "content":uploaded_file_content})
     runners.locust_runner.reload_tests()
     return expected_response({'success':True, 'message':""})
 

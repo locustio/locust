@@ -170,19 +170,27 @@ $(".edit_config_link").click(function(event) {
     
 });
 
-$('#upload_btn_submit').click(function(event){
-    event.preventDefault();
-    $('#upload_file_form').submit();
-});
-
 $("#directories .select2").select2({
     placeholder: "Select a state"
 });
 
-$('#upload_file_form').submit(function(event) {
+let whichform = $('.upload_file_form_test_file')[0];
+
+$('#upload_py_submit').click(function(event){
     event.preventDefault();
-    var form = $('#upload_file_form')[0];
-    var form_data = new FormData(form);
+    whichform = $('.upload_file_form_test_file')[0];
+    $('.upload_file_form_test_file').submit();
+});
+
+$('#upload_json_submit').click(function(event){
+    event.preventDefault();
+    whichform = $('.upload_file_form_json')[0];
+    $('.upload_file_form_json').submit();
+});
+
+$('.upload_file_form_test_file, .upload_file_form_json').submit(function(event) {
+    event.preventDefault();
+    var form_data = new FormData(whichform);
     $.ajax({
         type: 'POST',
         url: "/upload_file",
@@ -200,7 +208,6 @@ $('#upload_file_form').submit(function(event) {
         }
     })
 });
-
 
 $('#submit_json_btn').click(function(){
     event.preventDefault();
