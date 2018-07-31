@@ -1,7 +1,7 @@
 Installation
 ============
 
-Locust is available on [PyPI](https://pypi.org/project/locustio/) and can be installed with [pip](https://pip.pypa.io/).
+Locust is available on `PyPI <https://pypi.org/project/locustio/>`_ and can be installed with `pip <https://pip.pypa.io/>`_.
 
 for Python 2.7:
 
