@@ -94,27 +94,23 @@ class LocustRunner(object):
 
         logger.info("Hatching and swarming %i clients at the rate %g clients/s..." % (spawn_count, self.hatch_rate))
 
-        def hatch():
-            sleep_time = 1.0 / self.hatch_rate
-            while True:
-                if not bucket:
-                    hatched_locusts = Counter(map(lambda l: l.__name__, bucket))
-                    logger.info("All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in hatched_locusts.items()]))
-                    events.hatch_complete.fire(user_count=self.num_clients)
-                    return
+        sleep_time = 1.0 / self.hatch_rate
+        random.shuffle(bucket)
+        for locust in bucket:
+            def start_locust(_):
+                try:
+                    locust().run(runner=self)
+                except GreenletExit:
+                    pass
+            new_locust = self.locusts.spawn(start_locust, locust)
+            if len(self.locusts) % 10 == 0:
+                logger.debug("%i locusts hatched" % len(self.locusts))
+            gevent.sleep(sleep_time)
 
-                locust = bucket.pop(random.randint(0, len(bucket)-1))
-                def start_locust(_):
-                    try:
-                        locust().run(runner=self)
-                    except GreenletExit:
-                        pass
-                new_locust = self.locusts.spawn(start_locust, locust)
-                if len(self.locusts) % 10 == 0:
-                    logger.debug("%i locusts hatched" % len(self.locusts))
-                gevent.sleep(sleep_time)
-        
-        hatch()
+        hatched_locusts = Counter(map(lambda l: l.__name__, bucket))
+        logger.info("All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in hatched_locusts.items()]))
+        events.hatch_complete.fire(user_count=self.num_clients)
+
         if wait:
             self.locusts.join()
             logger.info("All locusts dead\n")
