@@ -5,6 +5,7 @@ import socket
 import traceback
 import warnings
 from hashlib import md5
+from collections import Counter
 from time import time
 
 import gevent
@@ -17,6 +18,7 @@ from six.moves import xrange
 from . import events
 from .rpc import Message, rpc
 from .stats import global_stats
+from .locusts_collection import LocustsCollection
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +32,7 @@ SLAVE_REPORT_INTERVAL = 3.0
 class LocustRunner(object):
     def __init__(self, locust_classes, options):
         self.options = options
-        self.locust_classes = self.filter_true_locust_classes(locust_classes)
+        self.locusts_collection = LocustsCollection(self.filter_true_locust_classes(locust_classes))
         self.hatch_rate = options.hatch_rate
         self.num_clients = options.num_clients
         self.host = options.host
@@ -70,31 +72,20 @@ class LocustRunner(object):
                 true_locust_classes.append(locust)
         return true_locust_classes
 
-    def weight_locusts(self, amount, stop_timeout = None):
-        """
-        Distributes the amount of locusts for each WebLocust-class according to it's weight
-        returns a list "bucket" with the weighted locusts
-        """
-        bucket = []
-        weight_sum = sum((locust.weight for locust in self.locust_classes if locust.task_set))
-        for locust in self.locust_classes:
+    def update_locusts_settings(self, locusts, stop_timeout=None):
+        for locust in self.locusts:
             if self.host is not None:
                 locust.host = self.host
             if stop_timeout is not None:
                 locust.stop_timeout = stop_timeout
-
-            # create locusts depending on weight
-            percent = locust.weight / float(weight_sum)
-            num_locusts = int(round(amount * percent))
-            bucket.extend([locust for x in xrange(0, num_locusts)])
-        return bucket
+        return locusts
 
     def spawn_locusts(self, spawn_count=None, stop_timeout=None, wait=False):
         if spawn_count is None:
             spawn_count = self.num_clients
 
-        bucket = self.weight_locusts(spawn_count, stop_timeout)
-        spawn_count = len(bucket)
+        bucket = self.locusts_collection.spawn_locusts(spawn_count)
+        bucket = self.update_locusts_settings(bucket, stop_timeout)
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
             self.state = STATE_HATCHING
             self.num_clients = spawn_count
@@ -102,18 +93,17 @@ class LocustRunner(object):
             self.num_clients += spawn_count
 
         logger.info("Hatching and swarming %i clients at the rate %g clients/s..." % (spawn_count, self.hatch_rate))
-        occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
-        
+
         def hatch():
             sleep_time = 1.0 / self.hatch_rate
             while True:
                 if not bucket:
-                    logger.info("All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in six.iteritems(occurence_count)]))
+                    hatched_locusts = Counter(map(lambda l: l.__name__, bucket))
+                    logger.info("All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in hatched_locusts.items()]))
                     events.hatch_complete.fire(user_count=self.num_clients)
                     return
 
                 locust = bucket.pop(random.randint(0, len(bucket)-1))
-                occurence_count[locust.__name__] += 1
                 def start_locust(_):
                     try:
                         locust().run(runner=self)
@@ -133,8 +123,8 @@ class LocustRunner(object):
         """
         Kill a kill_count of weighted locusts from the Group() object in self.locusts
         """
-        bucket = self.weight_locusts(kill_count)
-        kill_count = len(bucket)
+        bucket = self.locusts_collection.kill_locusts(kill_count)
+        bucket = self.update_locusts_settings(bucket)
         self.num_clients -= kill_count
         logger.info("Killing %i locusts" % kill_count)
         dying = []

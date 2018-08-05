@@ -39,7 +39,7 @@ def index():
 
     if runners.locust_runner.host:
         host = runners.locust_runner.host
-    elif len(runners.locust_runner.locust_classes) > 0:
+    elif runners.locust_runner.locusts_collection.classes:
         host = runners.locust_runner.locust_classes[0].host
     else:
         host = None
