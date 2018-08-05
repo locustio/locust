@@ -30,7 +30,7 @@ SLAVE_REPORT_INTERVAL = 3.0
 class LocustRunner(object):
     def __init__(self, locust_classes, options):
         self.options = options
-        self.locust_classes = locust_classes
+        self.locust_classes = self.filter_true_locust_classes(locust_classes)
         self.hatch_rate = options.hatch_rate
         self.num_clients = options.num_clients
         self.host = options.host
@@ -61,6 +61,15 @@ class LocustRunner(object):
     def user_count(self):
         return len(self.locusts)
 
+    def filter_true_locust_classes(self, locust_classes):
+        true_locust_classes = []
+        for locust in locust_classes:
+            if not locust.task_set:
+                warnings.warn("Notice: Found Locust class (%s.%s) got no task_set. Skipping..." % (locust.__module__, locust.__name__))
+            else:
+                true_locust_classes.append(locust)
+        return true_locust_classes
+
     def weight_locusts(self, amount, stop_timeout = None):
         """
         Distributes the amount of locusts for each WebLocust-class according to it's weight
@@ -69,10 +78,6 @@ class LocustRunner(object):
         bucket = []
         weight_sum = sum((locust.weight for locust in self.locust_classes if locust.task_set))
         for locust in self.locust_classes:
-            if not locust.task_set:
-                warnings.warn("Notice: Found Locust class (%s) got no task_set. Skipping..." % locust.__name__)
-                continue
-
             if self.host is not None:
                 locust.host = self.host
             if stop_timeout is not None:

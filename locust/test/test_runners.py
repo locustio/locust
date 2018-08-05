@@ -57,11 +57,16 @@ class TestMasterRunner(LocustTestCase):
     def test_slave_connect(self):
         import mock
         
+        class MyTaskSet(TaskSet):
+            @task
+            def my_task(self):
+                pass
+            
         class MyTestLocust(Locust):
-            pass
+            task_set = MyTaskSet
         
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
-            master = MasterLocustRunner(MyTestLocust, self.options)
+            master = MasterLocustRunner([MyTestLocust], self.options)
             server.mocked_send(Message("client_ready", None, "zeh_fake_client1"))
             self.assertEqual(1, len(master.clients))
             self.assertTrue("zeh_fake_client1" in master.clients, "Could not find fake client in master instance's clients dict")
@@ -76,11 +81,16 @@ class TestMasterRunner(LocustTestCase):
     def test_slave_stats_report_median(self):
         import mock
         
+        class MyTaskSet(TaskSet):
+            @task
+            def my_task(self):
+                pass
+            
         class MyTestLocust(Locust):
-            pass
+            task_set = MyTaskSet
         
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
-            master = MasterLocustRunner(MyTestLocust, self.options)
+            master = MasterLocustRunner([MyTestLocust], self.options)
             server.mocked_send(Message("client_ready", None, "fake_client"))
             
             master.stats.get("/", "GET").log(100, 23455)
@@ -98,11 +108,16 @@ class TestMasterRunner(LocustTestCase):
     def test_master_total_stats(self):
         import mock
         
+        class MyTaskSet(TaskSet):
+            @task
+            def my_task(self):
+                pass
+            
         class MyTestLocust(Locust):
-            pass
+            task_set = MyTaskSet
         
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
-            master = MasterLocustRunner(MyTestLocust, self.options)
+            master = MasterLocustRunner([MyTestLocust], self.options)
             server.mocked_send(Message("client_ready", None, "fake_client"))
             stats = RequestStats()
             stats.log_request("GET", "/1", 100, 3546)
@@ -126,15 +141,20 @@ class TestMasterRunner(LocustTestCase):
     def test_master_current_response_times(self):
         import mock
         
+        class MyTaskSet(TaskSet):
+            @task
+            def my_task(self):
+                pass
+            
         class MyTestLocust(Locust):
-            pass
+            task_set = MyTaskSet
         
         start_time = 1
         with mock.patch("time.time") as mocked_time:
             mocked_time.return_value = start_time
             global_stats.reset_all()
             with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
-                master = MasterLocustRunner(MyTestLocust, self.options)
+                master = MasterLocustRunner([MyTestLocust], self.options)
                 mocked_time.return_value += 1
                 server.mocked_send(Message("client_ready", None, "fake_client"))
                 stats = RequestStats()
@@ -205,11 +225,16 @@ class TestMasterRunner(LocustTestCase):
         """
         import mock
         
+        class MyTaskSet(TaskSet):
+            @task
+            def my_task(self):
+                pass
+            
         class MyTestLocust(Locust):
-            pass
+            task_set = MyTaskSet
         
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
-            master = MasterLocustRunner(MyTestLocust, self.options)
+            master = MasterLocustRunner([MyTestLocust], self.options)
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
             
@@ -225,11 +250,16 @@ class TestMasterRunner(LocustTestCase):
     def test_spawn_fewer_locusts_than_slaves(self):
         import mock
         
+        class MyTaskSet(TaskSet):
+            @task
+            def my_task(self):
+                pass
+            
         class MyTestLocust(Locust):
-            pass
+            task_set = MyTaskSet
         
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
-            master = MasterLocustRunner(MyTestLocust, self.options)
+            master = MasterLocustRunner([MyTestLocust], self.options)
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
             
