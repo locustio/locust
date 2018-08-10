@@ -647,7 +647,6 @@ def run_locust(options, arguments=[], cli_mode=False):
         if options.csvfilebase:
             write_stat_csvs(options.csvfilebase)
         print_error_report()
-        sys.exit(code)
     
     # install SIGTERM handler
     def sig_term_handler():
