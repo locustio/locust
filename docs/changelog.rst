@@ -2,6 +2,18 @@
 Changelog
 ##########
 
+For full details of the Locust changelog, please see https://github.com/locustio/locust/CHANGELOG.md
+
+
+0.9.0
+====
+
+* Added detailed changelog (https://github.com/locustio/locust/CHANGELOG.md)
+* Numerous bugfixes (see detailed changelog)
+* Added sequential task support - https://github.com/locustio/locust/pull/827
+* Dropped support for Python 3.3
+* Updated documentation
+
 0.8.1
 =====
 
