@@ -1,8 +1,6 @@
 from locust import HttpLocust, TaskSet, task
 
 
-print('running a config once')
-
 def index(l):
     l.client.get("/")
 

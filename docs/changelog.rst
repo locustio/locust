@@ -1,5 +1,5 @@
 ##########
-Changelog
+Changelog Highlights
 ##########
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/CHANGELOG.md
