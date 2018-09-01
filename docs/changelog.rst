@@ -1,6 +1,22 @@
 ##########
-Changelog
+Changelog Highlights
 ##########
+
+For full details of the Locust changelog, please see https://github.com/locustio/locust/CHANGELOG.md
+
+
+0.9.0
+====
+
+* Added detailed changelog (https://github.com/locustio/locust/CHANGELOG.md)
+* Numerous bugfixes (see detailed changelog)
+* Added sequential task support - https://github.com/locustio/locust/pull/827
+* Added support for user-defined wait_function - https://github.com/locustio/locust/pull/785
+* By default, Locust no longer resets the statistics when the hatching is complete.  
+  Therefore :code:`--no-reset-stats` has been deprected (since it's now the default behaviour), 
+  and instead a new :code:`--reset-stats` option has been added.
+* Dropped support for Python 3.3
+* Updated documentation
 
 0.8.1
 =====
