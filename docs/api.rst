@@ -34,7 +34,7 @@ TaskSequence class
 	:members: locust, parent, min_wait, max_wait, wait_function, client, tasks, interrupt, schedule_task
 
 seq_task decorator
-==============
+==================
 
 .. autofunction:: locust.core.seq_task
 
