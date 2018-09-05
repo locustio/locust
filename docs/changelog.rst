@@ -1,12 +1,12 @@
-##########
+####################
 Changelog Highlights
-##########
+####################
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/CHANGELOG.md
 
 
 0.9.0
-====
+=====
 
 * Added detailed changelog (https://github.com/locustio/locust/CHANGELOG.md)
 * Numerous bugfixes (see detailed changelog)
