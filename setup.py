@@ -5,6 +5,7 @@ import re
 
 from setuptools import find_packages, setup
 
+
 # parse version from locust/__init__.py
 _version_re = re.compile(r'__version__\s+=\s+(.*)')
 _init_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "locust", "__init__.py")
@@ -37,7 +38,7 @@ setup(
     author_email='',
     url='https://locust.io/',
     license='MIT',
-    packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+    packages=find_packages(exclude=['examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
     install_requires=["gevent>=1.2.2", "flask>=0.10.1", "requests>=2.9.1", "msgpack>=0.4.2", "six>=1.10.0", "pyzmq>=16.0.2"],
