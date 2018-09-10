@@ -2,13 +2,13 @@
 Changelog Highlights
 ####################
 
-For full details of the Locust changelog, please see https://github.com/locustio/locust/CHANGELOG.md
+For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
 
 0.9.0
 =====
 
-* Added detailed changelog (https://github.com/locustio/locust/CHANGELOG.md)
+* Added detailed changelog (https://github.com/locustio/locust/blob/master/CHANGELOG.md)
 * Numerous bugfixes (see detailed changelog)
 * Added sequential task support - https://github.com/locustio/locust/pull/827
 * Added support for user-defined wait_function - https://github.com/locustio/locust/pull/785
