@@ -1,4 +1,4 @@
-FROM python:3.7-alpine
+FROM python:3.6-alpine
 
 RUN apk --no-cache add g++
 RUN pip install locustio pyzmq
