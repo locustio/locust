@@ -1,7 +1,7 @@
-FROM python:3.6-alpine
+FROM python:3.6.6-alpine3.8
 
-RUN apk --no-cache add g++
-RUN pip install locustio pyzmq
+RUN apk --no-cache add g++ \ 
+      && pip install locustio pyzmq
 
 EXPOSE 8089 5557 5558
 
