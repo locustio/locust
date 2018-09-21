@@ -1,0 +1,25 @@
+version: "3.4"
+
+x-common: &common
+  image: locustio/locust
+  environment: &common-env
+    TARGET_URL: http://locust-master:8089
+    LOCUSTFILE_PATH: /tests/basic.py
+  volumes:
+    - ../:/tests
+
+services:
+  locust-master:
+    <<: *common
+    ports:
+      - 8089:8089
+    environment:
+      <<: *common-env
+      LOCUST_MODE: master
+  
+  locust-slave:
+    <<: *common
+    environment:
+      <<: *common-env
+      LOCUST_MODE: slave
+      LOCUST_MASTER_HOST: locust-master
