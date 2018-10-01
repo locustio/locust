@@ -1,0 +1,3 @@
+Do we have a feature to record the user session with the click of the user and then convert it into jmeter script which then can be used for load testing?
+If yes, can we extend it to multiple tab user session recording? 
+A chrome plugin for that. 
