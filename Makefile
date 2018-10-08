@@ -5,7 +5,7 @@ test:
 	tox
 
 build:
-	rm -f dist/* && python setup.py sdist
+	rm -f dist/* && python setup.py sdist bdist_wheel
 
 release: build
 	twine upload dist/*
