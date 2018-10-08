@@ -73,7 +73,7 @@ class LocustRunner(object):
         return true_locust_classes
 
     def update_locusts_settings(self, locusts, stop_timeout=None):
-        for locust in self.locusts:
+        for locust in locusts:
             if self.host is not None:
                 locust.host = self.host
             if stop_timeout is not None:
