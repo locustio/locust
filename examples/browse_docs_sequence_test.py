@@ -2,13 +2,13 @@
 # browsing the Locust documentation on https://docs.locust.io/
 
 import random
-from locust import HttpLocust, TaskSquence, seq_task, task
+from locust import HttpLocust, TaskSequence, seq_task, task
 from pyquery import PyQuery
 
 
-class BrowseDocumentationSequence(TaskSquence):
+class BrowseDocumentationSequence(TaskSequence):
     def on_start(self):
-        self.urls_on_current_page = self.toc_urls
+        self.urls_on_current_page = self.toc_urls = None
 
     # assume all users arrive at the index page
     @seq_task(1)
