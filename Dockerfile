@@ -1,8 +1,11 @@
-FROM python:3.6.6-alpine3.8
+FROM python:3.6
 
-RUN apk --no-cache add g++ \ 
-      && pip install locustio pyzmq
+RUN pip install locustio pyzmq
+
+ADD docker_start.sh /locust-tests/docker_start.sh
+
+WORKDIR /locust-tests
 
 EXPOSE 8089 5557 5558
 
-ENTRYPOINT ["/usr/local/bin/locust"]
+ENTRYPOINT ["./docker_start.sh"]
