@@ -17,7 +17,8 @@ from .inspectlocust import get_task_ratio_dict, print_task_ratio
 from .log import console_logger, setup_logging
 from .runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner
 from .stats import (print_error_report, print_percentile_stats, print_stats,
-                    stats_printer, stats_writer, write_stat_csvs)
+                    stats_printer, stats_writer_csv, write_stat_csvs,
+                    stats_writer_json, write_stat_json)
 from .util.time import parse_timespan
 
 _internals = [Locust, HttpLocust]
@@ -70,6 +71,16 @@ def parse_options():
         dest='csvfilebase',
         default=None,
         help="Store current request stats to files in CSV format.",
+    )
+
+    # A file that contains the current request stats.
+    parser.add_option(
+        '--json', '--json-base-name',
+        action='store',
+        type='str',
+        dest='jsonfilebase',
+        default=None,
+        help="Store current request stats to files in JSON format.",
     )
 
     # if locust should be run in distributed mode as master
@@ -487,7 +498,10 @@ def main():
         gevent.spawn(stats_printer)
 
     if options.csvfilebase:
-        gevent.spawn(stats_writer, options.csvfilebase)
+        gevent.spawn(stats_writer_csv, options.csvfilebase)
+
+    if options.jsonfilebase:
+        gevent.spawn(stats_writer_json, options.jsonfilebase)
 
     
     def shutdown(code=0):
@@ -505,6 +519,8 @@ def main():
         print_percentile_stats(runners.locust_runner.request_stats)
         if options.csvfilebase:
             write_stat_csvs(options.csvfilebase)
+        if options.jsonfilebase:
+            write_stat_json(options.jsonfilebase)
         print_error_report()
         sys.exit(code)
     

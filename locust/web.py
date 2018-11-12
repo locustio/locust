@@ -17,7 +17,7 @@ from six.moves import StringIO, xrange
 
 from . import runners
 from .runners import MasterLocustRunner
-from .stats import distribution_csv, median_from_dict, requests_csv, sort_stats
+from .stats import distribution_csv, median_from_dict, requests_csv, sort_stats, request_json
 from .util.cache import memoize
 
 logger = logging.getLogger(__name__)
@@ -92,45 +92,7 @@ def distribution_stats_csv():
 @app.route('/stats/requests')
 @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
 def request_stats():
-    stats = []
-    
-    for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
-        stats.append({
-            "method": s.method,
-            "name": s.name,
-            "num_requests": s.num_requests,
-            "num_failures": s.num_failures,
-            "avg_response_time": s.avg_response_time,
-            "min_response_time": s.min_response_time or 0,
-            "max_response_time": s.max_response_time,
-            "current_rps": s.current_rps,
-            "median_response_time": s.median_response_time,
-            "avg_content_length": s.avg_content_length,
-        })
-
-    errors = [e.to_dict() for e in six.itervalues(runners.locust_runner.errors)]
-
-    # Truncate the total number of stats and errors displayed since a large number of rows will cause the app
-    # to render extremely slowly. Aggregate stats should be preserved.
-    report = {"stats": stats[:500], "errors": errors[:500]}
-
-    if stats:
-        report["total_rps"] = stats[len(stats)-1]["current_rps"]
-        report["fail_ratio"] = runners.locust_runner.stats.total.fail_ratio
-        report["current_response_time_percentile_95"] = runners.locust_runner.stats.total.get_current_response_time_percentile(0.95)
-        report["current_response_time_percentile_50"] = runners.locust_runner.stats.total.get_current_response_time_percentile(0.5)
-    
-    is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
-    if is_distributed:
-        slaves = []
-        for slave in runners.locust_runner.clients.values():
-            slaves.append({"id":slave.id, "state":slave.state, "user_count": slave.user_count})
-
-        report["slaves"] = slaves
-    
-    report["state"] = runners.locust_runner.state
-    report["user_count"] = runners.locust_runner.user_count
-
+    report = request_json()
     return jsonify(report)
 
 @app.route("/exceptions")
