@@ -6,6 +6,7 @@ from itertools import chain
 
 import gevent
 import six
+import json
 from six.moves import xrange
 
 from . import events
@@ -669,6 +670,12 @@ def write_stat_csvs(base_filepath):
 
     with open(base_filepath + '_distribution.csv', 'w') as f:
         f.write(distribution_csv())
+        
+
+def write_stat_json(base_filepath):
+    """Writes the stats and distribution json."""
+    with open(base_filepath + '_result.json', "w") as f:
+        json.dump(request_json(), f)
 
 
 def sort_stats(stats):
@@ -733,3 +740,52 @@ def distribution_csv():
             rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
 
     return "\n".join(rows)
+
+def request_json():
+    """Returns the stats as JSON."""
+    from . import runners
+    from .runners import MasterLocustRunner
+
+    stats = []
+
+    for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
+        stats.append({
+            "method": s.method,
+            "name": s.name,
+            "num_requests": s.num_requests,
+            "num_failures": s.num_failures,
+            "avg_response_time": s.avg_response_time,
+            "min_response_time": s.min_response_time or 0,
+            "max_response_time": s.max_response_time,
+            "current_rps": s.current_rps,
+            "median_response_time": s.median_response_time,
+            "avg_content_length": s.avg_content_length,
+        })
+
+    errors = [e.to_dict() for e in six.itervalues(runners.locust_runner.errors)]
+
+    # Truncate the total number of stats and errors displayed since a large number of rows will cause the app
+    # to render extremely slowly. Aggregate stats should be preserved.
+    report = {"stats": stats[:500], "errors": errors[:500]}
+
+    if stats:
+        report["total_rps"] = stats[len(stats) - 1]["current_rps"]
+        report["fail_ratio"] = runners.locust_runner.stats.total.fail_ratio
+        report[
+            "current_response_time_percentile_95"] = runners.locust_runner.stats.total.get_current_response_time_percentile(
+            0.95)
+        report[
+            "current_response_time_percentile_50"] = runners.locust_runner.stats.total.get_current_response_time_percentile(
+            0.5)
+
+    is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
+    if is_distributed:
+        slaves = []
+        for slave in runners.locust_runner.clients.values():
+            slaves.append({"id": slave.id, "state": slave.state, "user_count": slave.user_count})
+
+        report["slaves"] = slaves
+
+    report["state"] = runners.locust_runner.state
+    report["user_count"] = runners.locust_runner.user_count
+    return report
