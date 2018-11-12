@@ -4,7 +4,7 @@ import random
 import socket
 import traceback
 import warnings
-from hashlib import md5
+from uuid import uuid4
 from time import time
 
 import gevent
@@ -352,7 +352,7 @@ class MasterLocustRunner(DistributedLocustRunner):
 class SlaveLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
-        self.client_id = socket.gethostname() + "_" + md5(str(time() + random.randint(0,10000)).encode('utf-8')).hexdigest()
+        self.client_id = socket.gethostname() + "_" + uuid4().hex
         
         self.client = rpc.Client(self.master_host, self.master_port)
         self.greenlet = Group()
