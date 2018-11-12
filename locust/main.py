@@ -17,7 +17,8 @@ from .inspectlocust import get_task_ratio_dict, print_task_ratio
 from .log import console_logger, setup_logging
 from .runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner
 from .stats import (print_error_report, print_percentile_stats, print_stats,
-                    stats_printer, stats_writer, write_stat_csvs, write_stat_json)
+                    stats_printer, stats_writer_csv, write_stat_csvs,
+                    stats_writer_json, write_stat_json)
 from .util.time import parse_timespan
 
 _internals = [Locust, HttpLocust]
@@ -497,10 +498,10 @@ def main():
         gevent.spawn(stats_printer)
 
     if options.csvfilebase:
-        gevent.spawn(stats_writer, options.csvfilebase)
+        gevent.spawn(stats_writer_csv, options.csvfilebase)
 
-    # if options.jsonfilebase:
-    #     gevent.spawn(stats_writer, options.jsonfilebase)
+    if options.jsonfilebase:
+        gevent.spawn(stats_writer_json, options.jsonfilebase)
 
     
     def shutdown(code=0):

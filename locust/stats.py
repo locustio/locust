@@ -656,10 +656,16 @@ def stats_printer():
         print_stats(runners.locust_runner.request_stats)
         gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
 
-def stats_writer(base_filepath):
+def stats_writer_csv(base_filepath):
     """Writes the csv files for the locust run."""
     while True:
         write_stat_csvs(base_filepath)
+        gevent.sleep(CSV_STATS_INTERVAL_SEC)
+
+def stats_writer_json(base_filepath):
+    """Writes the jsono files for the locust run."""
+    while True:
+        write_stat_json(base_filepath)
         gevent.sleep(CSV_STATS_INTERVAL_SEC)
 
 
