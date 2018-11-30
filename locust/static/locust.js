@@ -44,6 +44,7 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
         rpsChart.resize();
         responseTimeChart.resize();
         usersChart.resize();
+        errorsChart.resize();
     }
 });
 
@@ -121,6 +122,7 @@ $(".stats_label").click(function(event) {
 var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS"], "reqs/s");
 var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times (ms)", ["Median Response Time", "95% percentile"], "ms");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
+var errorsChart = new LocustLineChart($(".charts-container"), "Total HTTP Errors", ["4xx Errors", "5xx Errors"], "errors");
 
 function updateStats() {
     $.get('./stats/requests', function (report) {
@@ -149,6 +151,20 @@ function updateStats() {
         alternate = false;
         $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
 
+        var total400Errors = report.errors.reduce(function(acc, err) {
+            if (err.error.match(/HTTPError/) && err.error.match(/4[0-9][0-9]/)) {
+                return acc + err.occurences;
+            }
+            return acc;
+        }, 0);
+
+        var total500Errors = report.errors.reduce(function(acc, err) {
+            if (err.error.match(/HTTPError/) && err.error.match(/5[0-9][0-9]/)) {
+                return acc + err.occurences;
+            }
+            return acc;
+        }, 0);
+
         if (report.state !== "stopped"){
             // get total stats row
             var total = report.stats[report.stats.length-1];
@@ -156,6 +172,7 @@ function updateStats() {
             rpsChart.addValue([total.current_rps]);
             responseTimeChart.addValue([report.current_response_time_percentile_50, report.current_response_time_percentile_95]);
             usersChart.addValue([report.user_count]);
+            errorsChart.addValue([total400Errors, total500Errors]);
         }
 
         setTimeout(updateStats, 2000);
