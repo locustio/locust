@@ -48,7 +48,9 @@ The *min_wait* and *max_wait* attributes can also be overridden in a TaskSet cla
 The *weight* attribute
 ----------------------
 
-You can run two locusts from the same file like so:
+If more than one locust class exists in the file, and no locusts are specified on the command line,
+each new spawn will choose randomly from the existing locusts. Otherwise, you can specify which locusts
+to use from the same file like so:
 
 .. code-block:: console
 
