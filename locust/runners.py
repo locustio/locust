@@ -233,6 +233,10 @@ class MasterLocustRunner(DistributedLocustRunner):
                 return [c for c in six.itervalues(self) if c.state == state]
             
             @property
+            def all(self):
+                return six.itervalues(self)
+
+            @property
             def ready(self):
                 return self.get_by_state(STATE_INIT)
             
@@ -286,7 +290,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.exceptions = {}
             events.master_start_hatching.fire()
         
-        for client in six.itervalues(self.clients):
+        for client in (self.clients.ready + self.clients.running):
             data = {
                 "hatch_rate":slave_hatch_rate,
                 "num_clients":slave_num_clients,
@@ -298,24 +302,25 @@ class MasterLocustRunner(DistributedLocustRunner):
                 data["num_clients"] += 1
                 remaining -= 1
 
-            self.server.send(Message("hatch", data, None))
+            self.server.send_multipart(client.id, Message("hatch", data, None))
         
         self.stats.start_time = time()
         self.state = STATE_HATCHING
 
     def stop(self):
-        for client in self.clients.hatching + self.clients.running:
-            self.server.send(Message("stop", None, None))
+        for client in self.clients.all:
+            self.server.send_multipart(client.id, Message("stop", None, None))
         events.master_stop_hatching.fire()
     
     def quit(self):
-        for client in six.itervalues(self.clients):
-            self.server.send(Message("quit", None, None))
+        for client in self.clients.all:
+            self.server.send_multipart(client.id, Message("quit", None, None))
         self.greenlet.kill(block=True)
     
     def client_listener(self):
         while True:
-            msg = self.server.recv()
+            client_id, msg = self.server.recv_multipart()
+            msg.node_id = client_id
             if msg.type == "client_ready":
                 id = msg.node_id
                 self.clients[id] = SlaveNode(id)
@@ -354,7 +359,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         
-        self.client = rpc.Client(self.master_host, self.master_port)
+        self.client = rpc.Client(self.master_host, self.master_port, self.client_id)
         self.greenlet = Group()
 
         self.greenlet.spawn(self.worker).link_exception(callback=self.noop)
