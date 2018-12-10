@@ -10,17 +10,16 @@ class BaseSocket(object):
 
     def send(self, msg):
         self.socket.send(msg.serialize())
-    
-    def send_multipart(self, client_id, msg):
-        print 'sending %s to %s' % (msg, client_id)
-        self.socket.send_multipart([client_id, msg.serialize()])
+
+    def send_to_client(self, msg):
+        self.socket.send_multipart([msg.node_id, msg.serialize()])
 
     def recv(self):
         data = self.socket.recv()
         msg = Message.unserialize(data)
         return msg
 
-    def recv_multipart(self):
+    def recv_from_client(self):
         try:
             data = self.socket.recv_multipart()
             addr = data[0]

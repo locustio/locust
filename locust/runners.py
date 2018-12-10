@@ -302,24 +302,24 @@ class MasterLocustRunner(DistributedLocustRunner):
                 data["num_clients"] += 1
                 remaining -= 1
 
-            self.server.send_multipart(client.id, Message("hatch", data, None))
+            self.server.send_to_client(Message("hatch", data, client.id))
         
         self.stats.start_time = time()
         self.state = STATE_HATCHING
 
     def stop(self):
         for client in self.clients.all:
-            self.server.send_multipart(client.id, Message("stop", None, None))
+            self.server.send_to_client(Message("stop", None, client.id))
         events.master_stop_hatching.fire()
     
     def quit(self):
         for client in self.clients.all:
-            self.server.send_multipart(client.id, Message("quit", None, None))
+            self.server.send_to_client(Message("quit", None, client.id))
         self.greenlet.kill(block=True)
     
     def client_listener(self):
         while True:
-            client_id, msg = self.server.recv_multipart()
+            client_id, msg = self.server.recv_from_client()
             msg.node_id = client_id
             if msg.type == "client_ready":
                 id = msg.node_id
