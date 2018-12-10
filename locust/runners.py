@@ -324,7 +324,7 @@ class MasterLocustRunner(DistributedLocustRunner):
     def heartbeat_worker(self):
         while True:
             gevent.sleep(HEARTBEAT_INTERVAL)
-            for client in six.viewvalues(self.clients):
+            for client in self.clients.all:
                 if client.heartbeat < 0 and client.state != STATE_MISSING:
                     logger.warning('Slave %s failed to send heartbeat, setting state to missing.' % str(client.id))
                     client.state = STATE_MISSING
