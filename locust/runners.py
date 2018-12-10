@@ -344,12 +344,11 @@ class MasterLocustRunner(DistributedLocustRunner):
                 #    warnings.warn("The slave node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
             elif msg.type == "client_stopped":
                 del self.clients[msg.node_id]
-                if len(self.clients.hatching + self.clients.running) == 0:
-                    self.state = STATE_STOPPED
                 logger.info("Removing %s client from running clients" % (msg.node_id))
             elif msg.type == "heartbeat":
-                self.clients[msg.node_id].heartbeat = HEARTBEAT_LIVENESS
-                self.clients[msg.node_id].state = msg.data['state']
+                if msg.node_id in self.clients:
+                    self.clients[msg.node_id].heartbeat = HEARTBEAT_LIVENESS
+                    self.clients[msg.node_id].state = msg.data['state']
             elif msg.type == "stats":
                 events.slave_report.fire(client_id=msg.node_id, data=msg.data)
             elif msg.type == "hatching":
@@ -366,6 +365,9 @@ class MasterLocustRunner(DistributedLocustRunner):
                     logger.info("Client %r quit. Currently %i clients connected." % (msg.node_id, len(self.clients.ready)))
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
+
+            if not self.state == STATE_INIT and all(map(lambda x: x.state == STATE_INIT, self.clients.all)):
+                    self.state = STATE_STOPPED
 
     @property
     def slave_count(self):
