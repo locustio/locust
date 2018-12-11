@@ -9,10 +9,9 @@ from locust import events
 from locust.core import Locust, TaskSet, task
 from locust.exception import LocustError
 from locust.rpc import Message
-from locust.runners import LocalLocustRunner, MasterLocustRunner
+from locust.runners import LocalLocustRunner, MasterLocustRunner, STATE_MISSING
 from locust.stats import global_stats, RequestStats
 from locust.test.testcases import LocustTestCase
-
 
 def mocked_rpc_server():
     class MockedRpcServer(object):
@@ -53,6 +52,10 @@ class mocked_options(object):
         self.master_port = 5557
         self.master_bind_host = '*'
         self.master_bind_port = 5557
+        self.heartbeat_interval = 0.01
+
+    def reset_stats(self):
+        pass
 
 class TestMasterRunner(LocustTestCase):
     def setUp(self):
@@ -104,7 +107,20 @@ class TestMasterRunner(LocustTestCase):
             server.mocked_send(Message("stats", data, "fake_client"))
             s = master.stats.get("/", "GET")
             self.assertEqual(700, s.median_response_time)
-    
+
+    def test_master_marks_downed_slaves_as_missing(self):
+        import mock
+
+        class MyTestLocust(Locust):
+            pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
+            master = MasterLocustRunner(MyTestLocust, self.options)
+            server.mocked_send(Message("client_ready", None, "fake_client"))
+            sleep(0.1)
+            # print(master.clients['fake_client'].__dict__)
+            assert master.clients['fake_client'].state == STATE_MISSING
+
     def test_master_total_stats(self):
         import mock
         

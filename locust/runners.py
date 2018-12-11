@@ -215,6 +215,7 @@ class DistributedLocustRunner(LocustRunner):
         self.master_port = options.master_port
         self.master_bind_host = options.master_bind_host
         self.master_bind_port = options.master_bind_port
+        self.heartbeat_interval = options.heartbeat_interval
     
     def noop(self, *args, **kwargs):
         """ Used to link() greenlets to in order to be compatible with gevent 1.0 """
@@ -323,7 +324,7 @@ class MasterLocustRunner(DistributedLocustRunner):
     
     def heartbeat_worker(self):
         while True:
-            gevent.sleep(HEARTBEAT_INTERVAL)
+            gevent.sleep(self.heartbeat_interval)
             for client in self.clients.all:
                 if client.heartbeat < 0 and client.state != STATE_MISSING:
                     logger.info('Slave %s failed to send heartbeat, setting state to missing.' % str(client.id))
