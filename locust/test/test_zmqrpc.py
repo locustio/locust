@@ -1,7 +1,5 @@
 import unittest
 from time import sleep
-# import gevent
-# import zmq.green as zmq
 import zmq
 from locust.rpc import zmqrpc, Message
 
@@ -29,6 +27,8 @@ class ZMQRPC_tests(unittest.TestCase):
         server = zmqrpc.Server('*', PORT)
         client = zmqrpc.Client('localhost', PORT, 'identity')
         sleep(0.01)
+        # We have to wait for the client to finish connecting 
+        # before sending a msg to it.
         server.send_to_client(Message('test', None, 'identity'))
         client.recv()
         server.socket.close()
