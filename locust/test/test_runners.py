@@ -225,8 +225,8 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(5, len(server.outbox))
             
             num_clients = 0
-            for msg in server.outbox:
-                num_clients += Message.unserialize(msg[1]).data["num_clients"]
+            for _, msg in server.outbox:
+                num_clients += Message.unserialize(msg).data["num_clients"]
             
             self.assertEqual(7, num_clients, "Total number of locusts that would have been spawned is not 7")
     
@@ -245,8 +245,8 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(5, len(server.outbox))
             
             num_clients = 0
-            for msg in server.outbox:
-                num_clients += Message.unserialize(msg[1]).data["num_clients"]
+            for _, msg in server.outbox:
+                num_clients += Message.unserialize(msg).data["num_clients"]
             
             self.assertEqual(2, num_clients, "Total number of locusts that would have been spawned is not 2")
     
