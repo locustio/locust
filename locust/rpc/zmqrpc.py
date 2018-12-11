@@ -20,13 +20,10 @@ class BaseSocket(object):
         return msg
 
     def recv_from_client(self):
-        try:
-            data = self.socket.recv_multipart()
-            addr = data[0]
-            msg = Message.unserialize(data[1])
-            return addr, msg
-        except Exception:
-            raise
+        data = self.socket.recv_multipart()
+        addr = data[0]
+        msg = Message.unserialize(data[1])
+        return addr, msg
 
 class Server(BaseSocket):
     def __init__(self, host, port):
