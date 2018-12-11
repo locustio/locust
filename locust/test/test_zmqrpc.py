@@ -17,9 +17,9 @@ class ZMQRPC_tests(unittest.TestCase):
     def test_client_send(self):
         self.client.send(Message('test', 'message', 'identity'))
         addr, msg = self.server.recv_from_client()
-        assert addr == 'identity'
-        assert msg.type == 'test'
-        assert msg.data == 'message'
+        self.assertEqual(addr, 'identity')
+        self.assertEqual(msg.type, 'test')
+        self.assertEqual(msg.data, 'message')
 
     def test_client_recv(self):
         sleep(0.01)
@@ -27,6 +27,6 @@ class ZMQRPC_tests(unittest.TestCase):
         # before sending a msg to it.
         self.server.send_to_client(Message('test', 'message', 'identity'))
         msg = self.client.recv()
-        assert msg.type == 'test'
-        assert msg.data == 'message'
-        assert msg.node_id == 'identity'
+        self.assertEqual(msg.type, 'test')
+        self.assertEqual(msg.data, 'message')
+        self.assertEqual(msg.node_id, 'identity')
