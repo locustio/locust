@@ -8,7 +8,6 @@ import mock
 from locust import events
 from locust.core import Locust, TaskSet, task
 from locust.exception import LocustError
-from locust.main import parse_options
 from locust.rpc import Message
 from locust.runners import LocalLocustRunner, MasterLocustRunner
 from locust.stats import global_stats, RequestStats
@@ -45,19 +44,22 @@ def mocked_rpc_server():
 
     return MockedRpcServer
 
+class mocked_options(object):
+    def __init__(self):
+        self.hatch_rate = 5
+        self.num_clients = 5
+        self.host = '/'
+        self.master_host = 'localhost'
+        self.master_port = 5557
+        self.master_bind_host = '*'
+        self.master_bind_port = 5557
 
 class TestMasterRunner(LocustTestCase):
     def setUp(self):
         global_stats.reset_all()
         self._slave_report_event_handlers = [h for h in events.slave_report._handlers]
+        self.options = mocked_options()
 
-        parser, _, _ = parse_options()
-        args = [
-            "--clients", "10",
-            "--hatch-rate", "10"
-        ]
-        opts, _ = parser.parse_args(args)
-        self.options = opts
         
     def tearDown(self):
         events.slave_report._handlers = self._slave_report_event_handlers
