@@ -17,7 +17,7 @@ class ZMQRPC_tests(unittest.TestCase):
     def test_client_send(self):
         self.client.send(Message('test', 'message', 'identity'))
         addr, msg = self.server.recv_from_client()
-        self.assertEqual(addr, 'identity')
+        self.assertEqual(addr, b'identity')
         self.assertEqual(msg.type, 'test')
         self.assertEqual(msg.data, 'message')
 
