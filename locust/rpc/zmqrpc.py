@@ -12,7 +12,7 @@ class BaseSocket(object):
         self.socket.send(msg.serialize())
 
     def send_to_client(self, msg):
-        self.socket.send_multipart([msg.node_id, msg.serialize()])
+        self.socket.send_multipart([msg.node_id.encode(), msg.serialize()])
 
     def recv(self):
         data = self.socket.recv()
@@ -33,6 +33,6 @@ class Server(BaseSocket):
 class Client(BaseSocket):
     def __init__(self, host, port, identity):
         BaseSocket.__init__(self, zmq.DEALER)
-        self.socket.setsockopt(zmq.IDENTITY, identity)
+        self.socket.setsockopt(zmq.IDENTITY, identity.encode())
         self.socket.connect("tcp://%s:%i" % (host, port))
         
