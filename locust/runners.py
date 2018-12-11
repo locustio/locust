@@ -326,7 +326,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             gevent.sleep(HEARTBEAT_INTERVAL)
             for client in self.clients.all:
                 if client.heartbeat < 0 and client.state != STATE_MISSING:
-                    logger.warning('Slave %s failed to send heartbeat, setting state to missing.' % str(client.id))
+                    logger.info('Slave %s failed to send heartbeat, setting state to missing.' % str(client.id))
                     client.state = STATE_MISSING
                 else:
                     client.heartbeat -= 1
