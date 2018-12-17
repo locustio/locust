@@ -25,8 +25,6 @@ locust_runner = None
 
 STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_CLEANUP, STATE_STOPPED, STATE_MISSING = ["ready", "hatching", "running", "cleanup", "stopped", "missing"]
 SLAVE_REPORT_INTERVAL = 3.0
-HEARTBEAT_LIVENESS = 3
-HEARTBEAT_INTERVAL = 1
 
 
 class LocustRunner(object):
@@ -215,24 +213,24 @@ class DistributedLocustRunner(LocustRunner):
         self.master_port = options.master_port
         self.master_bind_host = options.master_bind_host
         self.master_bind_port = options.master_bind_port
-        self.heartbeat_liveness = options.heartbeat_liveness or HEARTBEAT_LIVENESS
-        self.heartbeat_interval = options.heartbeat_interval or HEARTBEAT_INTERVAL
+        self.heartbeat_liveness = options.heartbeat_liveness
+        self.heartbeat_interval = options.heartbeat_interval
     
     def noop(self, *args, **kwargs):
         """ Used to link() greenlets to in order to be compatible with gevent 1.0 """
         pass
 
 class SlaveNode(object):
-    def __init__(self, id, state=STATE_INIT):
+    def __init__(self, id, state=STATE_INIT, heartbeat_liveness=3):
         self.id = id
         self.state = state
         self.user_count = 0
-        self.heartbeat = HEARTBEAT_LIVENESS
+        self.heartbeat = heartbeat_liveness
 
 class MasterLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
         super(MasterLocustRunner, self).__init__(*args, **kwargs)
-        
+
         class SlaveNodesDict(dict):
             def get_by_state(self, state):
                 return [c for c in six.itervalues(self) if c.state == state]
@@ -339,7 +337,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             msg.node_id = client_id
             if msg.type == "client_ready":
                 id = msg.node_id
-                self.clients[id] = SlaveNode(id)
+                self.clients[id] = SlaveNode(id, heartbeat_liveness=self.heartbeat_liveness)
                 logger.info("Client %r reported as ready. Currently %i clients ready to swarm." % (id, len(self.clients.ready)))
                 ## emit a warning if the slave's clock seem to be out of sync with our clock
                 #if abs(time() - msg.data["time"]) > 5.0:
