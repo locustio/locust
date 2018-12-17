@@ -215,7 +215,8 @@ class DistributedLocustRunner(LocustRunner):
         self.master_port = options.master_port
         self.master_bind_host = options.master_bind_host
         self.master_bind_port = options.master_bind_port
-        self.heartbeat_interval = options.heartbeat_interval
+        self.heartbeat_liveness = options.heartbeat_liveness or HEARTBEAT_LIVENESS
+        self.heartbeat_interval = options.heartbeat_interval or HEARTBEAT_INTERVAL
     
     def noop(self, *args, **kwargs):
         """ Used to link() greenlets to in order to be compatible with gevent 1.0 """
@@ -348,7 +349,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                 logger.info("Removing %s client from running clients" % (msg.node_id))
             elif msg.type == "heartbeat":
                 if msg.node_id in self.clients:
-                    self.clients[msg.node_id].heartbeat = HEARTBEAT_LIVENESS
+                    self.clients[msg.node_id].heartbeat = self.heartbeat_liveness
                     self.clients[msg.node_id].state = msg.data['state']
             elif msg.type == "stats":
                 events.slave_report.fire(client_id=msg.node_id, data=msg.data)
@@ -413,7 +414,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
     def heartbeat(self):
         while True:
             self.client.send(Message('heartbeat', {'state': self.slave_state}, self.client_id))
-            gevent.sleep(HEARTBEAT_INTERVAL)
+            gevent.sleep(self.heartbeat_interval)
 
     def worker(self):
         while True:
