@@ -48,7 +48,9 @@ The *min_wait* and *max_wait* attributes can also be overridden in a TaskSet cla
 The *weight* attribute
 ----------------------
 
-You can run two locusts from the same file like so:
+If more than one locust class exists in the file, and no locusts are specified on the command line,
+each new spawn will choose randomly from the existing locusts. Otherwise, you can specify which locusts
+to use from the same file like so:
 
 .. code-block:: console
 
@@ -254,6 +256,31 @@ A TaskSet instance will have the attribute :py:attr:`locust <locust.core.TaskSet
 its Locust instance, and the attribute :py:attr:`parent <locust.core.TaskSet.parent>` point to its 
 parent TaskSet (it will point to the Locust instance, in the base TaskSet).
 
+
+TaskSequence class
+==================
+
+TaskSequence class is a TaskSet but its tasks will be executed in order.
+To define this order you should do the following:
+
+.. code-block:: python
+
+    class MyTaskSequence(TaskSequence):
+        @seq_task(1)
+        def first_task(self):
+            pass
+
+        @seq_task(2)
+        def second_task(self):
+            pass
+
+        @seq_task(3)
+        @task(10)
+        def third_task(self):
+            pass
+
+In the above example, the order is defined to execute first_task, then second_task and lastly the third_task for 10 times.
+As you can see, you can compose :py:meth:`@seq_task <locust.core.seq_task>` with :py:meth:`@task <locust.core.task>` decorator, and of course you can also nest TaskSets within TaskSequences and vice versa.
 
 Setups, Teardowns, on_start, and on_stop
 ========================================
