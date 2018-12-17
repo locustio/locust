@@ -52,6 +52,7 @@ class mocked_options(object):
         self.master_port = 5557
         self.master_bind_host = '*'
         self.master_bind_port = 5557
+        self.heartbeat_liveness = 3
         self.heartbeat_interval = 0.01
 
     def reset_stats(self):
