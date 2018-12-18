@@ -110,8 +110,6 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(700, s.median_response_time)
 
     def test_master_marks_downed_slaves_as_missing(self):
-        import mock
-
         class MyTestLocust(Locust):
             pass
 
@@ -203,8 +201,6 @@ class TestMasterRunner(LocustTestCase):
     
     def test_sends_hatch_data_to_ready_running_hatching_slaves(self):
         '''Sends hatch job to running, ready, or hatching slaves'''
-        import mock
-
         class MyTestLocust(Locust):
             pass
 
