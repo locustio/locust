@@ -9,7 +9,7 @@ from locust import events
 from locust.core import Locust, TaskSet, task
 from locust.exception import LocustError
 from locust.rpc import Message
-from locust.runners import LocalLocustRunner, MasterLocustRunner, STATE_MISSING
+from locust.runners import LocalLocustRunner, MasterLocustRunner, SlaveNode, STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_MISSING
 from locust.stats import global_stats, RequestStats
 from locust.test.testcases import LocustTestCase
 
@@ -201,6 +201,25 @@ class TestMasterRunner(LocustTestCase):
                 self.assertEqual(30, master.stats.total.get_current_response_time_percentile(0.5))
                 self.assertEqual(3000, master.stats.total.get_current_response_time_percentile(0.95))
     
+    def test_sends_hatch_data_to_ready_running_hatching_slaves(self):
+        '''Sends hatch job to running, ready, or hatching slaves'''
+        import mock
+
+        class MyTestLocust(Locust):
+            pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
+            master = MasterLocustRunner(MyTestLocust, self.options)
+            master.clients[1] = SlaveNode(1)
+            master.clients[2] = SlaveNode(2)
+            master.clients[3] = SlaveNode(3)
+            master.clients[1].state = STATE_INIT
+            master.clients[2].state = STATE_HATCHING
+            master.clients[3].state = STATE_RUNNING
+            master.start_hatching(5,5)
+
+            self.assertEqual(3, len(server.outbox))
+
     def test_spawn_zero_locusts(self):
         class MyTaskSet(TaskSet):
             @task
