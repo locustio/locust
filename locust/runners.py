@@ -276,7 +276,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         return sum([c.user_count for c in six.itervalues(self.clients)])
     
     def start_hatching(self, locust_count, hatch_rate):
-        num_slaves = len(self.clients.ready) + len(self.clients.running)
+        num_slaves = len(self.clients.ready) + len(self.clients.running) + len(self.clients.hatching)
         if not num_slaves:
             logger.warning("You are running in distributed mode but have no slave servers connected. "
                            "Please connect slaves prior to swarming.")
@@ -294,7 +294,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.exceptions = {}
             events.master_start_hatching.fire()
         
-        for client in (self.clients.ready + self.clients.running):
+        for client in (self.clients.ready + self.clients.running + self.clients.hatching):
             data = {
                 "hatch_rate":slave_hatch_rate,
                 "num_clients":slave_num_clients,
