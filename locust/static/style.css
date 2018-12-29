@@ -258,7 +258,9 @@ a:hover {
 }
 
 .status table {
+    display: block;
     width: 100%;
+    overflow-x: auto;
     border-radius: 3px;
     border: 2px solid #11251c;
     border-spacing: 0;
