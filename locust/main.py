@@ -1,6 +1,7 @@
 import inspect
 import logging
 import os
+import imp
 import signal
 import socket
 import sys
@@ -354,8 +355,9 @@ def load_locustfile(path):
             # Add to front, then remove from original position
             sys.path.insert(0, directory)
             del sys.path[i + 1]
-    # Perform the import (trimming off the .py)
-    imported = __import__(os.path.splitext(locustfile)[0])
+    # Find the module, then perform import
+    found = imp.find_module(path)
+    imported = imp.load_module(os.path.splitext(locustfile)[0], *found)
     # Remove directory from path if we added it ourselves (just to be neat)
     if added_to_path:
         del sys.path[0]
