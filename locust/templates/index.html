@@ -107,6 +107,7 @@
                                 <th class="stats_label numeric" href="#" data-sortkey="num_requests" title="Number of successful requests"># requests</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="num_failures" title="Number of failures"># fails</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="median_response_time" title="Median response time">Median (ms)</th>
+                                <th class="stats_label numeric" href="#" data-sortkey="ninetieth_response_time" title="Ninetieth percentile response time, because the response time greater than 100ms is rounded, you may see it greater than the max response time">90%ile (ms)</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="avg_response_time" title="Average response time">Average (ms)</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="min_response_time" title="Min response time">Min (ms)</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="max_response_time" title="Max response time">Max (ms)</th>
@@ -222,6 +223,7 @@
             <td class="numeric"><%= this.num_requests %></td>
             <td class="numeric"><%= this.num_failures %></td>
             <td class="numeric"><%= Math.round(this.median_response_time) %></td>
+            <td class="numeric"><%= Math.round(this.ninetieth_response_time) %></td>
             <td class="numeric"><%= Math.round(this.avg_response_time) %></td>
             <td class="numeric"><%= this.min_response_time %></td>
             <td class="numeric"><%= this.max_response_time %></td>
