@@ -311,7 +311,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         response = locust.client.get("/", timeout=0.1)
         self.assertEqual(response.status_code, 0)
         self.assertEqual(1, global_stats.get("/", "GET").num_failures)
-        self.assertEqual(0, global_stats.get("/", "GET").num_requests)
+        self.assertEqual(1, global_stats.get("/", "GET").num_requests)
 
 
 class MyTaskSet(TaskSet):
