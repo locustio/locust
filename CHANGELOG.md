@@ -1,9 +1,76 @@
 # Change Log
 
+## [Unreleased](https://github.com/Locustio/Locust/tree/HEAD)
 
-## [v0.9.0](https://github.com/Locustio/Locust/tree/v0.9.0) (2018-08-20)
-[Full Changelog](https://github.com/Locustio/Locust/compare/v0.8.1...v0.9.0)
-[Full Changelog](https://github.com/Locustio/Locust/compare/v0.9.0...HEAD)
+[Full Changelog](https://github.com/Locustio/Locust/compare/0.9.0...HEAD)
+
+**Fixed bugs:**
+
+- filenames with several dots fails [\#940](https://github.com/locustio/locust/issues/940)
+- Percentiles rounding error [\#331](https://github.com/locustio/locust/issues/331)
+
+**Closed issues:**
+
+- HttpLocust class instance variable not set for all users during setup [\#957](https://github.com/locustio/locust/issues/957)
+- locust.runners.MasterLocustRunner failed with ExtraData [\#956](https://github.com/locustio/locust/issues/956)
+- Use pytest tests as locust tasks [\#955](https://github.com/locustio/locust/issues/955)
+- Time limit reached,but test does not stop,throw GreenletExit exception [\#953](https://github.com/locustio/locust/issues/953)
+- Bug: Locust master doesn't remove killed slave [\#951](https://github.com/locustio/locust/issues/951)
+- How to pass multiple request under same @task. Eg: If I need to pass diferrent key for same get, how to do that? Is parameterization exist? [\#948](https://github.com/locustio/locust/issues/948)
+- multiple user behaviour  [\#947](https://github.com/locustio/locust/issues/947)
+- seq\_task does not work [\#937](https://github.com/locustio/locust/issues/937)
+- locust no-web mode [\#933](https://github.com/locustio/locust/issues/933)
+- reqs/sec is much lower than expected [\#931](https://github.com/locustio/locust/issues/931)
+- --only-summary does not show the summary results [\#922](https://github.com/locustio/locust/issues/922)
+- locust http request size [\#921](https://github.com/locustio/locust/issues/921)
+- Retrieving/saving current number of users [\#920](https://github.com/locustio/locust/issues/920)
+- OpenVAS - ERROR: \('Connection aborted.', BadStatusLine\("''",\)\) [\#918](https://github.com/locustio/locust/issues/918)
+- git changelog page on v0.9.0 return 404 [\#913](https://github.com/locustio/locust/issues/913)
+- locust: error: no such option: -n [\#912](https://github.com/locustio/locust/issues/912)
+- Next version plans [\#907](https://github.com/locustio/locust/issues/907)
+- Need a way for "Device" Locust class to pass a value to the TaskSet [\#906](https://github.com/locustio/locust/issues/906)
+- --only-summary does not show the summary results [\#905](https://github.com/locustio/locust/issues/905)
+- Locust Report Ui Last column is not displaying [\#903](https://github.com/locustio/locust/issues/903)
+- mogul，help me，when i use “sudo pip install locustio”to install， after i use“locust --help”，What should I do if I give an error [\#902](https://github.com/locustio/locust/issues/902)
+- Unable to Get Statistics with --csv or Web Mode when running distributed. [\#901](https://github.com/locustio/locust/issues/901)
+- Locust slave will not start when attempting to start via Node.js SSH2 connection. [\#900](https://github.com/locustio/locust/issues/900)
+- Changelog page in github referenced from docs.locust.io returns a 404  [\#898](https://github.com/locustio/locust/issues/898)
+- slave client\_id collisions in large environments [\#894](https://github.com/locustio/locust/issues/894)
+- Put a big sign "you must reload this page before any stats are displayed" somewhere on the web interface [\#893](https://github.com/locustio/locust/issues/893)
+- Wrong statistic of total request count with 0.9.0 [\#892](https://github.com/locustio/locust/issues/892)
+- Questions:  [\#890](https://github.com/locustio/locust/issues/890)
+- Strange behavior of "Total Requests per Second" chart [\#888](https://github.com/locustio/locust/issues/888)
+- Locust 0.9.0 slave TypeError: \_\_init\_\_\(\) takes exactly 1 argument \(2 given\) [\#887](https://github.com/locustio/locust/issues/887)
+- KeyError on weighted tasks [\#886](https://github.com/locustio/locust/issues/886)
+- How do I view the maximum concurrency in 1 second during runtime? [\#880](https://github.com/locustio/locust/issues/880)
+- locust command is not found on parrot security, even when it is successfully installed [\#878](https://github.com/locustio/locust/issues/878)
+- use the FastHttpLocust,how to get cookies ? [\#861](https://github.com/locustio/locust/issues/861)
+- Immediate crash under python 3.7 [\#852](https://github.com/locustio/locust/issues/852)
+- Release 0.9.0 and document release steps [\#842](https://github.com/locustio/locust/issues/842)
+- Extended socket protocol [\#776](https://github.com/locustio/locust/issues/776)
+- Feature request: on\_quit\(\) [\#248](https://github.com/locustio/locust/issues/248)
+
+**Merged pull requests:**
+
+- Allow loading of a locustfile with multiple dots in filename [\#941](https://github.com/locustio/locust/pull/941) ([raiyankamal](https://github.com/raiyankamal))
+- Both succeeded and failed requests are counted in total number of requests [\#939](https://github.com/locustio/locust/pull/939) ([raiyankamal](https://github.com/raiyankamal))
+- Support horizontal scrolling for the stats table [\#938](https://github.com/locustio/locust/pull/938) ([mingrammer](https://github.com/mingrammer))
+- Remove repeated imports of mock [\#936](https://github.com/locustio/locust/pull/936) ([Jonnymcc](https://github.com/Jonnymcc))
+- Speed up task sequence tests [\#935](https://github.com/locustio/locust/pull/935) ([Jonnymcc](https://github.com/Jonnymcc))
+- Add heartbeat to detect down slaves [\#927](https://github.com/locustio/locust/pull/927) ([Jonnymcc](https://github.com/Jonnymcc))
+- clarifying locust class usage when no classes specified on CLI [\#925](https://github.com/locustio/locust/pull/925) ([smadness](https://github.com/smadness))
+- Include LICENSE in the sdist. [\#919](https://github.com/locustio/locust/pull/919) ([benjaminp](https://github.com/benjaminp))
+- fix About link [\#914](https://github.com/locustio/locust/pull/914) ([cgoldberg](https://github.com/cgoldberg))
+- Fixed \#903 to allow requests/sec UI column to display. [\#908](https://github.com/locustio/locust/pull/908) ([devmonkey22](https://github.com/devmonkey22))
+- Update browse\_docs\_sequence\_test [\#904](https://github.com/locustio/locust/pull/904) ([Realsid](https://github.com/Realsid))
+- Use uuid4 to generate slave client\_id [\#895](https://github.com/locustio/locust/pull/895) ([mattbailey](https://github.com/mattbailey))
+- Python37 [\#885](https://github.com/locustio/locust/pull/885) ([cgoldberg](https://github.com/cgoldberg))
+- Official Docker image and documentation V2 [\#882](https://github.com/locustio/locust/pull/882) ([spayeur207](https://github.com/spayeur207))
+- Fix links to changelog in changelog [\#877](https://github.com/locustio/locust/pull/877) ([dmand](https://github.com/dmand))
+- Fix Sphinx build warnings [\#875](https://github.com/locustio/locust/pull/875) ([jdufresne](https://github.com/jdufresne))
+
+## [0.9.0](https://github.com/Locustio/Locust/tree/0.9.0) (2018-09-01)
+[Full Changelog](https://github.com/Locustio/Locust/compare/v0.8.1...0.9.0)
 
 **Fixed bugs:**
 
@@ -12,6 +79,7 @@
 
 **Closed issues:**
 
+- a crash bug for master [\#869](https://github.com/locustio/locust/issues/869)
 - I started 50 users, but i found there are 100 tomcat connections established at that time, why.... [\#866](https://github.com/locustio/locust/issues/866)
 - Error is raised: AttributeError: 'RequestStats' object has no attribute 'log\_request' [\#865](https://github.com/locustio/locust/issues/865)
 - Two locust packages in pypi [\#863](https://github.com/locustio/locust/issues/863)
@@ -121,6 +189,9 @@
 
 **Merged pull requests:**
 
+- update Makefile so build also creates a wheel [\#871](https://github.com/locustio/locust/pull/871) ([cgoldberg](https://github.com/cgoldberg))
+- Fix deprecation warnings [\#870](https://github.com/locustio/locust/pull/870) ([cgoldberg](https://github.com/cgoldberg))
+- Release 0.9.0 [\#867](https://github.com/locustio/locust/pull/867) ([aldenpeterson-wf](https://github.com/aldenpeterson-wf))
 - Separate release into build and release steps [\#858](https://github.com/locustio/locust/pull/858) ([hoylemd](https://github.com/hoylemd))
 - Install instructions [\#857](https://github.com/locustio/locust/pull/857) ([cgoldberg](https://github.com/cgoldberg))
 - Specify seconds for the `timeout` parameter [\#856](https://github.com/locustio/locust/pull/856) ([hoylemd](https://github.com/hoylemd))
@@ -135,34 +206,35 @@
 - Drop Python 3.3 support [\#804](https://github.com/locustio/locust/pull/804) ([ps-george](https://github.com/ps-george))
 - docs: Syntax highlight code and commands [\#797](https://github.com/locustio/locust/pull/797) ([joar](https://github.com/joar))
 - Added user-defined wait\_function to locust and TaskSet [\#785](https://github.com/locustio/locust/pull/785) ([ps-george](https://github.com/ps-george))
-- expand and re-order documentation index [\#779](https://github.com/locustio/locust/pull/779) ([cgoldberg](https://github.com/cgoldberg))
-- drop unitt2 and use tox in 'make test' target [\#772](https://github.com/locustio/locust/pull/772) ([cgoldberg](https://github.com/cgoldberg))
 - Remove compatibility workarounds for Python 2.6 [\#770](https://github.com/locustio/locust/pull/770) ([jdufresne](https://github.com/jdufresne))
-- Fix bytes/text confusion with response objects [\#762](https://github.com/locustio/locust/pull/762) ([jdufresne](https://github.com/jdufresne))
-- Remove unused environment variables form tox configuration [\#761](https://github.com/locustio/locust/pull/761) ([jdufresne](https://github.com/jdufresne))
 - Enable pip cache in Travis CI [\#760](https://github.com/locustio/locust/pull/760) ([jdufresne](https://github.com/jdufresne))
 - Use https:// URLs where available [\#758](https://github.com/locustio/locust/pull/758) ([jdufresne](https://github.com/jdufresne))
-- Update tox.ini so as to not respecify package dependency pyzmq [\#757](https://github.com/locustio/locust/pull/757) ([jdufresne](https://github.com/jdufresne))
 - Distribute package as a universal wheel [\#756](https://github.com/locustio/locust/pull/756) ([jdufresne](https://github.com/jdufresne))
-- Remove test dependency unittest2 [\#755](https://github.com/locustio/locust/pull/755) ([jdufresne](https://github.com/jdufresne))
 - Docs: update test statistics page with example responses [\#747](https://github.com/locustio/locust/pull/747) ([aldenpeterson-wf](https://github.com/aldenpeterson-wf))
 - Introduce \*\*kwargs to request\_success/failure parameter list [\#746](https://github.com/locustio/locust/pull/746) ([karol-brejna-i](https://github.com/karol-brejna-i))
 - Change Locust website url to https [\#743](https://github.com/locustio/locust/pull/743) ([iassal](https://github.com/iassal))
-- Adding unit to Response Time chart [\#742](https://github.com/locustio/locust/pull/742) ([coderlifter](https://github.com/coderlifter))
 - Fix typo in docstring [\#729](https://github.com/locustio/locust/pull/729) ([giantryansaul](https://github.com/giantryansaul))
-- Use flask.jsonify for json responses [\#725](https://github.com/locustio/locust/pull/725) ([hyperair](https://github.com/hyperair))
-- fix error message on invalid time format [\#717](https://github.com/locustio/locust/pull/717) ([cgoldberg](https://github.com/cgoldberg))
 - Changed the spelling of "occurences" on the output text [\#706](https://github.com/locustio/locust/pull/706) ([ethansmith-wf](https://github.com/ethansmith-wf))
 - Merge 0.8 branch. [\#701](https://github.com/locustio/locust/pull/701) ([mbeacom](https://github.com/mbeacom))
 - added introduction to Locust4j [\#698](https://github.com/locustio/locust/pull/698) ([myzhan](https://github.com/myzhan))
 - Resolve improper display of About in Web UI [\#697](https://github.com/locustio/locust/pull/697) ([mbeacom](https://github.com/mbeacom))
 - Make UI URL links relative [\#692](https://github.com/locustio/locust/pull/692) ([karol-brejna-i](https://github.com/karol-brejna-i))
-- Add codecov integration [\#687](https://github.com/locustio/locust/pull/687) ([mbeacom](https://github.com/mbeacom))
 - Small python 3 syntax improvement in docs [\#676](https://github.com/locustio/locust/pull/676) ([miki725](https://github.com/miki725))
-- Do not reset statistics on hatch complete  [\#674](https://github.com/locustio/locust/pull/674) ([hhowe29](https://github.com/hhowe29))
-- Adds support for setup, teardown, and on\_stop methods [\#658](https://github.com/locustio/locust/pull/658) ([DeepHorizons](https://github.com/DeepHorizons))
 - \#331:  Use rounded\_response\_time for min/max/total response times [\#558](https://github.com/locustio/locust/pull/558) ([jude](https://github.com/jude))
 - Added a slaves-tab to show the id, status and number of users running on each slave. [\#305](https://github.com/locustio/locust/pull/305) ([TZer0](https://github.com/TZer0))
+- expand and re-order documentation index [\#779](https://github.com/locustio/locust/pull/779) ([cgoldberg](https://github.com/cgoldberg))
+- drop unitt2 and use tox in 'make test' target [\#772](https://github.com/locustio/locust/pull/772) ([cgoldberg](https://github.com/cgoldberg))
+- Fix bytes/text confusion with response objects [\#762](https://github.com/locustio/locust/pull/762) ([jdufresne](https://github.com/jdufresne))
+- Remove unused environment variables form tox configuration [\#761](https://github.com/locustio/locust/pull/761) ([jdufresne](https://github.com/jdufresne))
+- Update tox.ini so as to not respecify package dependency pyzmq [\#757](https://github.com/locustio/locust/pull/757) ([jdufresne](https://github.com/jdufresne))
+- Remove test dependency unittest2 [\#755](https://github.com/locustio/locust/pull/755) ([jdufresne](https://github.com/jdufresne))
+- Adding unit to Response Time chart [\#742](https://github.com/locustio/locust/pull/742) ([albertowar](https://github.com/albertowar))
+- Use flask.jsonify for json responses [\#725](https://github.com/locustio/locust/pull/725) ([hyperair](https://github.com/hyperair))
+- fix error message on invalid time format [\#717](https://github.com/locustio/locust/pull/717) ([cgoldberg](https://github.com/cgoldberg))
+- Add codecov integration [\#687](https://github.com/locustio/locust/pull/687) ([mbeacom](https://github.com/mbeacom))
+- Do not reset statistics on hatch complete  [\#674](https://github.com/locustio/locust/pull/674) ([hhowe29](https://github.com/hhowe29))
+- Adds support for setup, teardown, and on\_stop methods [\#658](https://github.com/locustio/locust/pull/658) ([DeepHorizons](https://github.com/DeepHorizons))
+- Remove --num-requests/-n in favor of --run-time/-t [\#656](https://github.com/locustio/locust/pull/656) ([heyman](https://github.com/heyman))
 
 ## [v0.8.1](https://github.com/Locustio/Locust/tree/v0.8.1) (2017-09-19)
 [Full Changelog](https://github.com/Locustio/Locust/compare/v0.8...v0.8.1)
@@ -177,7 +249,6 @@
 
 **Merged pull requests:**
 
-- Remove --num-requests/-n in favor of --run-time/-t [\#656](https://github.com/locustio/locust/pull/656) ([heyman](https://github.com/heyman))
 - Refactored stats code and display median as well as 95% percentile response times in web UI's charts [\#549](https://github.com/locustio/locust/pull/549) ([heyman](https://github.com/heyman))
 
 ## [v0.8](https://github.com/Locustio/Locust/tree/v0.8) (2017-09-19)
