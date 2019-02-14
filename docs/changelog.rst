@@ -5,6 +5,15 @@ Changelog Highlights
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
 
+
+0.10.0
+=====
+
+* Python 3.7 support
+* Added heartbeat to detect down slaves
+* Numerous bugfixes/documentation updates (see detailed changelog)
+
+
 0.9.0
 =====
 
