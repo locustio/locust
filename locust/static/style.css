@@ -258,9 +258,7 @@ a:hover {
 }
 
 .status table {
-    display: block;
     width: 100%;
-    overflow-x: auto;
     border-radius: 3px;
     border: 2px solid #11251c;
     border-spacing: 0;
@@ -317,6 +315,14 @@ a:hover {
     .status td {
         max-width: 350px;
     }
+}
+
+#stats {
+    table-layout: fixed;
+}
+
+#stats td {
+    word-wrap: break-word;
 }
 
 #errors td, #errors th {
