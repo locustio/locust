@@ -283,6 +283,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             return
 
         self.num_clients = locust_count
+        self.hatch_rate = hatch_rate
         slave_num_clients = locust_count // (num_slaves or 1)
         slave_hatch_rate = float(hatch_rate) / (num_slaves or 1)
         remaining = locust_count % num_slaves
@@ -328,6 +329,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                 if client.heartbeat < 0 and client.state != STATE_MISSING:
                     logger.info('Slave %s failed to send heartbeat, setting state to missing.' % str(client.id))
                     client.state = STATE_MISSING
+                    client.user_count = 0
                 else:
                     client.heartbeat -= 1
 
@@ -338,7 +340,10 @@ class MasterLocustRunner(DistributedLocustRunner):
             if msg.type == "client_ready":
                 id = msg.node_id
                 self.clients[id] = SlaveNode(id, heartbeat_liveness=self.heartbeat_liveness)
-                logger.info("Client %r reported as ready. Currently %i clients ready to swarm." % (id, len(self.clients.ready)))
+                logger.info("Client %r reported as ready. Currently %i clients ready to swarm." % (id, len(self.clients.ready + self.clients.running + self.clients.hatching)))
+                # balance the load distribution when new client joins
+                if self.state == STATE_RUNNING or self.state == STATE_HATCHING:
+                    self.start_hatching(self.num_clients, self.hatch_rate)
                 ## emit a warning if the slave's clock seem to be out of sync with our clock
                 #if abs(time() - msg.data["time"]) > 5.0:
                 #    warnings.warn("The slave node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
@@ -366,8 +371,8 @@ class MasterLocustRunner(DistributedLocustRunner):
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
 
-            if not self.state == STATE_INIT and all(map(lambda x: x.state == STATE_INIT, self.clients.all)):
-                    self.state = STATE_STOPPED
+            if not self.state == STATE_INIT and all(map(lambda x: x.state != STATE_RUNNING and x.state != STATE_HATCHING, self.clients.all)):
+                self.state = STATE_STOPPED
 
     @property
     def slave_count(self):
