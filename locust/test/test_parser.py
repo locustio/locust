@@ -24,3 +24,10 @@ class TestParser(unittest.TestCase):
         ]
         opts, _ = self.parser.parse_args(args)
         self.assertEqual(opts.reset_stats, False)
+        
+    def test_web_auth(self):
+        args = [
+            "--web-auth", "john:doe"
+        ]
+        opts, _ = self.parser.parse_args(args)
+        self.assertEqual(opts.web_auth, "john:doe")

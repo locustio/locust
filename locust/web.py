@@ -10,6 +10,8 @@ from time import time
 
 import six
 from flask import Flask, make_response, jsonify, render_template, request
+from flask_basicauth import BasicAuth
+
 from gevent import pywsgi
 
 from locust import __version__ as version
@@ -164,5 +166,12 @@ def exceptions_csv():
     return response
 
 def start(locust, options):
+    if options.web_auth is not None:
+        credentials = options.web_auth.split(":")
+        if len(credentials) == 2:
+            app.config["BASIC_AUTH_USERNAME"] = credentials[0]
+            app.config["BASIC_AUTH_PASSWORD"] = credentials[1]
+            app.config["BASIC_AUTH_FORCE"] = True
+            BasicAuth(app)
     pywsgi.WSGIServer((options.web_host, options.port),
                       app, log=None).serve_forever()

@@ -42,7 +42,7 @@ setup(
     packages=find_packages(exclude=['examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
-    install_requires=["gevent>=1.2.2", "flask>=0.10.1", "requests>=2.9.1", "msgpack>=0.4.2", "six>=1.10.0", "pyzmq>=16.0.2"],
+    install_requires=["gevent>=1.2.2", "flask>=0.10.1", "requests>=2.9.1", "msgpack>=0.4.2", "six>=1.10.0", "pyzmq>=16.0.2", "Flask-BasicAuth==0.2.0"],
     test_suite="locust.test",
     tests_require=['mock'],
     entry_points={

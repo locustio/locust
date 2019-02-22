@@ -15,6 +15,29 @@ from six.moves import StringIO
 
 from .testcases import LocustTestCase
 
+class TestWebUIAuth(LocustTestCase):
+    def setUp(self):
+        super(TestWebUIAuth, self).setUp()
+        
+        stats.global_stats.clear_all()
+        parser = parse_options()[0]
+        options = parser.parse_args(["--web-auth","john:doe"])[0]
+        runners.locust_runner = LocustRunner([], options)
+        
+        web.request_stats.clear_cache()
+        
+        self._web_ui_server = pywsgi.WSGIServer(('127.0.0.1', 0), web.app, log=None)
+        gevent.spawn(lambda: self._web_ui_server.serve_forever())
+        gevent.sleep(0.01)
+        self.web_port = self._web_ui_server.server_port
+    
+    def tearDown(self):
+        super(TestWebUIAuth, self).tearDown()
+        self._web_ui_server.stop()
+
+    
+    def test_index(self):
+        self.assertEqual(200, requests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port, auth=('john','doe')).status_code)
 
 class TestWebUI(LocustTestCase):
     def setUp(self):

@@ -57,6 +57,14 @@ def parse_options():
     )
     
     parser.add_option(
+        '-B', '--web-auth',
+        type="str",
+        dest='web_auth',
+        default=None,
+        help="Set the Basic Auth for the UI (fmt: username:password )"
+    )
+    
+    parser.add_option(
         '-f', '--locustfile',
         dest='locustfile',
         default='locustfile',
