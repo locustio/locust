@@ -332,6 +332,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                     client.heartbeat -= 1
 
     def client_listener(self):
+        started = False
         while True:
             client_id, msg = self.server.recv_from_client()
             msg.node_id = client_id
@@ -351,6 +352,12 @@ class MasterLocustRunner(DistributedLocustRunner):
                     self.clients[msg.node_id].state = msg.data['state']
             elif msg.type == "stats":
                 events.slave_report.fire(client_id=msg.node_id, data=msg.data)
+                if not started:
+                    if self.user_count>0:
+                        started = True
+                else:
+                    if self.user_count==0:
+                        self.quit()
             elif msg.type == "hatching":
                 self.clients[msg.node_id].state = STATE_HATCHING
             elif msg.type == "hatch_complete":
