@@ -17,12 +17,12 @@ class ZMQRPC_tests(unittest.TestCase):
     def test_client_send(self):
         self.client.send(Message('test', 'message', 'identity'))
         addr, msg = self.server.recv_from_client()
-        self.assertEqual(addr, b'identity')
+        self.assertEqual(addr, 'identity')
         self.assertEqual(msg.type, 'test')
         self.assertEqual(msg.data, 'message')
 
     def test_client_recv(self):
-        sleep(0.01)
+        sleep(0.1)
         # We have to wait for the client to finish connecting 
         # before sending a msg to it.
         self.server.send_to_client(Message('test', 'message', 'identity'))
