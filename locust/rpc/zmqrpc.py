@@ -21,7 +21,7 @@ class BaseSocket(object):
 
     def recv_from_client(self):
         data = self.socket.recv_multipart()
-        addr = data[0]
+        addr = data[0].decode()
         msg = Message.unserialize(data[1])
         return addr, msg
 
