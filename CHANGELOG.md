@@ -11,6 +11,10 @@
 
 **Closed issues:**
 
+- Installed in virtualenv but locust command not found \(macOS Mojave 10.14\) [\#976](https://github.com/locustio/locust/issues/976)
+- how can I send https request  with locust when I already have been authentication.. [\#966](https://github.com/locustio/locust/issues/966)
+- How to understand -c when I run locust with no-web mode? [\#965](https://github.com/locustio/locust/issues/965)
+- FunctionNotFound\('random\_uuid is not found.',\) [\#964](https://github.com/locustio/locust/issues/964)
 - HttpLocust class instance variable not set for all users during setup [\#957](https://github.com/locustio/locust/issues/957)
 - locust.runners.MasterLocustRunner failed with ExtraData [\#956](https://github.com/locustio/locust/issues/956)
 - Use pytest tests as locust tasks [\#955](https://github.com/locustio/locust/issues/955)
@@ -52,6 +56,11 @@
 
 **Merged pull requests:**
 
+- remove references to submitting feature requests [\#975](https://github.com/locustio/locust/pull/975) ([cgoldberg](https://github.com/cgoldberg))
+- balance/recover the load distribution when new slave joins [\#970](https://github.com/locustio/locust/pull/970) ([delulu](https://github.com/delulu))
+- Ui headings [\#963](https://github.com/locustio/locust/pull/963) ([cgoldberg](https://github.com/cgoldberg))
+- better horizontal scrolling [\#962](https://github.com/locustio/locust/pull/962) ([myzhan](https://github.com/myzhan))
+- Update change logs & release 0.10.0 [\#960](https://github.com/locustio/locust/pull/960) ([aldenpeterson-wf](https://github.com/aldenpeterson-wf))
 - Allow loading of a locustfile with multiple dots in filename [\#941](https://github.com/locustio/locust/pull/941) ([raiyankamal](https://github.com/raiyankamal))
 - Both succeeded and failed requests are counted in total number of requests [\#939](https://github.com/locustio/locust/pull/939) ([raiyankamal](https://github.com/raiyankamal))
 - Support horizontal scrolling for the stats table [\#938](https://github.com/locustio/locust/pull/938) ([mingrammer](https://github.com/mingrammer))
