@@ -1,8 +1,7 @@
 # Change Log
 
-## [Unreleased](https://github.com/Locustio/Locust/tree/HEAD)
-
-[Full Changelog](https://github.com/Locustio/Locust/compare/0.9.0...HEAD)
+## [0.10.0](https://github.com/Locustio/Locust/tree/0.10.0) (2019-03-13)
+[Full Changelog](https://github.com/Locustio/Locust/compare/0.9.0...0.10.0)
 
 **Fixed bugs:**
 
@@ -57,6 +56,8 @@
 **Merged pull requests:**
 
 - remove references to submitting feature requests [\#975](https://github.com/locustio/locust/pull/975) ([cgoldberg](https://github.com/cgoldberg))
+- add retry in zmqrpc [\#973](https://github.com/locustio/locust/pull/973) ([delulu](https://github.com/delulu))
+- fix inconsistency in zmqrpc [\#972](https://github.com/locustio/locust/pull/972) ([delulu](https://github.com/delulu))
 - balance/recover the load distribution when new slave joins [\#970](https://github.com/locustio/locust/pull/970) ([delulu](https://github.com/delulu))
 - Ui headings [\#963](https://github.com/locustio/locust/pull/963) ([cgoldberg](https://github.com/cgoldberg))
 - better horizontal scrolling [\#962](https://github.com/locustio/locust/pull/962) ([myzhan](https://github.com/myzhan))
