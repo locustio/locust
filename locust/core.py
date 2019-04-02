@@ -101,22 +101,26 @@ class Locust(object):
     def __init__(self):
         super(Locust, self).__init__()
         self._update_coroutine = None
+        self.task_set_instance = self.task_set(self)
+
+    def run(self):
         if hasattr(self, 'on_update'):
-            def _do_onupdate(locust):
+            from runners import locust_runner
+            update_ivl = locust_runner.options.per_locust_update_interval
+            def _do_onupdate():
                 while True:
                     try:
-                        locust.on_update()
-                        gevent.sleep(1)
+                        self.on_update()
                     except GreenletExit:
                         return
                     except Exception, e:
                         logger.error('Locust <on_update> exception:{}'.format(e), exc_info=True)
-                        pass
-            self._update_coroutine = gevent.spawn(_do_onupdate, self)
+                        gevent.sleep(update_ivl)
+                    else:
+                        gevent.sleep(update_ivl)
 
-        self.task_set_instance = self.task_set(self)
+            self._update_coroutine = gevent.spawn(_do_onupdate)
 
-    def run(self):
         try:
             self.task_set_instance.run()
         except StopLocust:

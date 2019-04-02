@@ -258,6 +258,16 @@ def parse_options():
         help='set locust_update event fire interval, in seconds'
     )
 
+    # Per-Locust interval update
+    parser.add_option(
+        '-U', '--per-locust-update-interval',
+        action='store',
+        type=float,
+        dest='per_locust_update_interval',
+        default=1,
+        help='set per-locust update interval, in seconds'
+    )
+
     # Finalize
     # Return three-tuple of parser + the output from parse_args (opt obj, args)
     opts, args = parser.parse_args()
