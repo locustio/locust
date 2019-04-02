@@ -100,6 +100,20 @@ class Locust(object):
 
     def __init__(self):
         super(Locust, self).__init__()
+        self._update_coroutine = None
+        if hasattr(self, 'on_update'):
+            def _do_onupdate(locust):
+                while True:
+                    try:
+                        locust.on_update()
+                        gevent.sleep(1)
+                    except GreenletExit:
+                        return
+                    except Exception, e:
+                        logger.error('Locust <on_update> exception:{}'.format(e), exc_info=True)
+                        pass
+            self._update_coroutine = gevent.spawn(_do_onupdate, self)
+
         self.task_set_instance = self.task_set(self)
 
     def run(self):
@@ -109,6 +123,10 @@ class Locust(object):
             pass
         except (RescheduleTask, RescheduleTaskImmediately) as e:
             six.reraise(LocustError, LocustError("A task inside a Locust class' main TaskSet (`%s.task_set` of type `%s`) seems to have called interrupt() or raised an InterruptTaskSet exception. The interrupt() function is used to hand over execution to a parent TaskSet, and should never be called in the main TaskSet which a Locust class' task_set attribute points to." % (type(self).__name__, self.task_set.__name__)), sys.exc_info()[2])
+        finally:
+            if self._update_coroutine:
+                self._update_coroutine.kill(block=True, timeout=3)
+                self._update_coroutine = None
 
 
 class HttpLocust(Locust):
