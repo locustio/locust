@@ -1,6 +1,7 @@
 import inspect
 import logging
 import os
+import importlib
 import signal
 import socket
 import sys
@@ -125,6 +126,24 @@ def parse_options():
         dest='master_bind_port',
         default=5557,
         help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557. Note that Locust will also use this port + 1, so by default the master node will bind to 5557 and 5558."
+    )
+
+    parser.add_option(
+        '--heartbeat-liveness',
+        action='store',
+        type='int',
+        dest='heartbeat_liveness',
+        default=3,
+        help="set number of seconds before failed heartbeat from slave"
+    )
+
+    parser.add_option(
+        '--heartbeat-interval',
+        action='store',
+        type='int',
+        dest='heartbeat_interval',
+        default=1,
+        help="set number of seconds delay between slave heartbeats to master"
     )
 
     parser.add_option(
@@ -335,6 +354,22 @@ def load_locustfile(path):
     dictionary of ``{'name': callable}`` containing all callables which pass
     the "is a Locust" test.
     """
+
+    def __import_locustfile__(filename, path):
+        """
+        Loads the locust file as a module, similar to performing `import`
+        """
+        try:
+            # Python 3 compatible
+            source = importlib.machinery.SourceFileLoader(os.path.splitext(locustfile)[0], path)
+            imported = source.load_module()
+        except AttributeError:
+            # Python 2.7 compatible
+            import imp
+            imported = imp.load_source(os.path.splitext(locustfile)[0], path)
+
+        return imported
+
     # Get directory and locustfile name
     directory, locustfile = os.path.split(path)
     # If the directory isn't in the PYTHONPATH, add it so our import will work
@@ -354,8 +389,8 @@ def load_locustfile(path):
             # Add to front, then remove from original position
             sys.path.insert(0, directory)
             del sys.path[i + 1]
-    # Perform the import (trimming off the .py)
-    imported = __import__(os.path.splitext(locustfile)[0])
+    # Perform the import
+    imported = __import_locustfile__(locustfile, path)
     # Remove directory from path if we added it ourselves (just to be neat)
     if added_to_path:
         del sys.path[0]

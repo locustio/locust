@@ -1,33 +1,42 @@
 import zmq.green as zmq
 
 from .protocol import Message
-
+from locust.util.exception_handler import retry
 
 class BaseSocket(object):
-
-    def send(self, msg):
-        self.sender.send(msg.serialize())
+    def __init__(self, sock_type):
+        context = zmq.Context()
+        self.socket = context.socket(sock_type)
     
-    def recv(self):
-        data = self.receiver.recv()
-        return Message.unserialize(data)
+    @retry()
+    def send(self, msg):
+        self.socket.send(msg.serialize())
 
+    @retry()
+    def send_to_client(self, msg):
+        self.socket.send_multipart([msg.node_id.encode(), msg.serialize()])
+
+    @retry()
+    def recv(self):
+        data = self.socket.recv()
+        msg = Message.unserialize(data)
+        return msg
+
+    @retry()
+    def recv_from_client(self):
+        data = self.socket.recv_multipart()
+        addr = data[0].decode()
+        msg = Message.unserialize(data[1])
+        return addr, msg
 
 class Server(BaseSocket):
     def __init__(self, host, port):
-        context = zmq.Context()
-        self.receiver = context.socket(zmq.PULL)
-        self.receiver.bind("tcp://%s:%i" % (host, port))
-        
-        self.sender = context.socket(zmq.PUSH)
-        self.sender.bind("tcp://%s:%i" % (host, port+1))
-    
+        BaseSocket.__init__(self, zmq.ROUTER)
+        self.socket.bind("tcp://%s:%i" % (host, port))
 
 class Client(BaseSocket):
-    def __init__(self, host, port):
-        context = zmq.Context()
-        self.receiver = context.socket(zmq.PULL)
-        self.receiver.connect("tcp://%s:%i" % (host, port+1))
+    def __init__(self, host, port, identity):
+        BaseSocket.__init__(self, zmq.DEALER)
+        self.socket.setsockopt(zmq.IDENTITY, identity.encode())
+        self.socket.connect("tcp://%s:%i" % (host, port))
         
-        self.sender = context.socket(zmq.PUSH)
-        self.sender.connect("tcp://%s:%i" % (host, port))

@@ -14,6 +14,8 @@ class TestTaskSet(LocustTestCase):
 
         class User(Locust):
             host = "127.0.0.1"
+            min_wait = 1
+            max_wait = 10
         self.locust = User()
 
     def test_task_sequence_with_list(self):
@@ -37,7 +39,7 @@ class TestTaskSet(LocustTestCase):
             tasks = [t1, t2, t3]
 
         l = MyTaskSequence(self.locust)
-        
+
         self.assertRaises(RescheduleTask, lambda: l.run())
         self.assertTrue(l.t1_executed)
         self.assertTrue(l.t2_executed)
@@ -48,7 +50,7 @@ class TestTaskSet(LocustTestCase):
             t1_executed = 0
             t2_executed = 0
             t3_executed = 0
-            
+
             @seq_task(1)
             def t1(self):
               if self._index == 1:
@@ -69,6 +71,6 @@ class TestTaskSet(LocustTestCase):
         l = MyTaskSequence(self.locust)
 
         self.assertRaises(RescheduleTask, lambda: l.run())
-        self.assertEquals(l.t1_executed, 1)
-        self.assertEquals(l.t2_executed, 3)
-        self.assertEquals(l.t3_executed, 1)
+        self.assertEqual(l.t1_executed, 1)
+        self.assertEqual(l.t2_executed, 3)
+        self.assertEqual(l.t3_executed, 1)

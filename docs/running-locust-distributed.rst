@@ -81,6 +81,12 @@ Used when starting the master node with ``--no-web``. The master node will then 
 nodes has connected before the test is started.
 
 
+Running distributed with Docker
+=============================================
+
+See :ref:`running-locust-docker`
+
+
 Running Locust distributed without the web UI
 =============================================
 
