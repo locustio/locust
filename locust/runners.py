@@ -80,7 +80,7 @@ class LocustRunner(object):
 
             # create locusts depending on weight
             percent = locust.weight / float(weight_sum)
-            num_locusts = int(round(amount * percent))
+            num_locusts = int(round(amount * percent)) or 1
             bucket.extend([locust for x in xrange(0, num_locusts)])
         return bucket
 
