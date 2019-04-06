@@ -282,6 +282,14 @@ def parse_options():
         help="show program's version number and exit"
     )
 
+    parser.add_option(
+        '--no-exit-code-on-fail',
+        action='store_true',
+        dest='no_exit_code_on_fail',
+        default=False,
+        help="disable exit codes on failure"
+    )
+
     # Finalize
     # Return three-tuple of parser + the output from parse_args (opt obj, args)
     opts, args = parser.parse_args()
@@ -553,7 +561,7 @@ def main():
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
         code = 0
-        if len(runners.locust_runner.errors):
+        if len(runners.locust_runner.errors) and not options.no_exit_code_on_fail:
             code = 1
         shutdown(code=code)
     except KeyboardInterrupt as e:
