@@ -131,6 +131,9 @@ class HttpSession(requests.Session):
             return ResponseContextManager(response)
         else:
             try:
+                if name:
+                    orig_url = response.url
+                    response.url = name
                 response.raise_for_status()
             except RequestException as e:
                 events.request_failure.fire(
@@ -146,6 +149,8 @@ class HttpSession(requests.Session):
                     response_time=request_meta["response_time"],
                     response_length=request_meta["content_size"],
                 )
+            if name:
+                response.url = orig_url
             return response
     
     def _send_request_safe_mode(self, method, url, **kwargs):
