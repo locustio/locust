@@ -283,11 +283,11 @@ def parse_options():
     )
 
     parser.add_option(
-        '--no-exit-code-on-fail',
-        action='store_true',
-        dest='no_exit_code_on_fail',
-        default=False,
-        help="disable exit codes on failure"
+        '--exit-code-on-fail',
+        action='store_false',
+        dest='exit_code_on_fail',
+        default=True,
+        help="post exit code 1 on error"
     )
 
     # Finalize
@@ -561,7 +561,7 @@ def main():
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
         code = 0
-        if len(runners.locust_runner.errors) and not options.no_exit_code_on_fail:
+        if len(runners.locust_runner.errors) and options.exit_code_on_fail:
             code = 1
         shutdown(code=code)
     except KeyboardInterrupt as e:
