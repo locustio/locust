@@ -734,3 +734,25 @@ def distribution_csv():
             rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
 
     return "\n".join(rows)
+
+def failures_csv():
+    """"Return the contents of the 'failures' tab as a CSV."""
+    from . import runners
+
+    rows = [
+        ",".join((
+            '"Method"',
+            '"Name"',
+            '"Error"',
+            '"Occurences"',
+        ))
+    ]
+
+    for s in sort_stats(runners.locust_runner.stats.errors):
+        rows.append('"%s","%s","%s",%i' % (
+            s.method,
+            s.name,
+            s.error,
+            s.occurences,
+        ))
+    return "\n".join(rows)
