@@ -95,6 +95,11 @@ class TestWebUI(LocustTestCase):
         # verify that the 95%, 98%, 99% and 100% percentiles are 1200
         for value in total_cols[-4:]:
             self.assertEqual('1200', value)
+
+    def test_failure_stats_csv(self):
+        stats.global_stats.log_error("GET", "/", Exception("Error1337"))
+        response = requests.get("http://127.0.0.1:%i/stats/failures/csv" % self.web_port)
+        self.assertEqual(200, response.status_code)
     
     def test_request_stats_with_errors(self):
         stats.global_stats.log_error("GET", "/", Exception("Error1337"))
