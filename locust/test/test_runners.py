@@ -59,6 +59,7 @@ class mocked_options(object):
         self.heartbeat_liveness = 3
         self.heartbeat_interval = 0.01
         self.stop_timeout = None
+        self.step_load = True
 
     def reset_stats(self):
         pass
@@ -413,6 +414,25 @@ class TestMasterRunner(LocustTestCase):
             
             self.assertEqual(2, num_clients, "Total number of locusts that would have been spawned is not 2")
     
+    def test_spawn_locusts_in_stepload_mode(self):
+        class MyTestLocust(Locust):
+            pass
+        
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
+            master = MasterLocustRunner(MyTestLocust, self.options)
+            for i in range(5):
+                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+            
+            master.start_stepload(2, 1, 1, 3)
+            sleep(1)
+            self.assertEqual(5, len(server.outbox))
+            
+            num_clients = 0
+            for _, msg in server.outbox:
+                num_clients += Message.unserialize(msg).data["num_clients"]
+            
+            self.assertEqual(1, num_clients, "Total number of locusts that would have been spawned is not 1")
+
     def test_exception_in_task(self):
         class HeyAnException(Exception):
             pass
