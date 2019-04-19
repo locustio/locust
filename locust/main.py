@@ -165,7 +165,7 @@ def parse_options(args=None, default_config_files=['~/.locust.conf','locust.conf
         '-t', '--run-time',
         help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --no-web"
     )
-
+    
     # skip logging setup
     parser.add_argument(
         '--skip-log-setup',
@@ -175,6 +175,27 @@ def parse_options(args=None, default_config_files=['~/.locust.conf','locust.conf
         help="Disable Locust's logging setup. Instead, the configuration is provided by the Locust test or Python defaults."
     )
 
+    # Enable Step Load mode
+    parser.add_argument(
+        '--step-load',
+        action='store_true',
+        help="Enable Step Load mode to monitor how performance metrics varies when user load increases. Requires --step-clients and --step-time to be specified."
+    )
+
+    # Number of clients to incease by Step
+    parser.add_argument(
+        '--step-clients',
+        type='int',
+        default=1,
+        help="Client count to increase by step in Step Load mode. Only used together with --step-load"
+    )
+
+    # Time limit of each step
+    parser.add_argument(
+        '--step-time',
+        help="Step duration in Step Load mode, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --step-load"
+    )
+    
     # log level
     parser.add_argument(
         '--loglevel', '-L',
@@ -450,6 +471,9 @@ def main():
         if not options.no_web:
             logger.error("The --run-time argument can only be used together with --no-web")
             sys.exit(1)
+        if options.slave:
+            logger.error("--run-time should be specified on the master node, and not on slave nodes")
+            sys.exit(1)
         try:
             options.run_time = parse_timespan(options.run_time)
         except ValueError:
@@ -462,42 +486,50 @@ def main():
                 runners.locust_runner.quit()
             gevent.spawn_later(options.run_time, timelimit_stop)
 
-    if not options.no_web and not options.slave:
-        # spawn web greenlet
-        logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.port))
-        main_greenlet = gevent.spawn(web.start, locust_classes, options)
-    
-    if not options.master and not options.slave:
-        runners.locust_runner = LocalLocustRunner(locust_classes, options)
-        # spawn client spawning/hatching greenlet
-        if options.no_web:
-            runners.locust_runner.start_hatching(wait=True)
-            main_greenlet = runners.locust_runner.greenlet
-        if options.run_time:
-            spawn_run_time_limit_greenlet()
-    elif options.master:
-        runners.locust_runner = MasterLocustRunner(locust_classes, options)
-        if options.no_web:
-            while len(runners.locust_runner.clients.ready)<options.expect_slaves:
-                logging.info("Waiting for slaves to be ready, %s of %s connected",
-                             len(runners.locust_runner.clients.ready), options.expect_slaves)
-                time.sleep(1)
-
-            runners.locust_runner.start_hatching(options.num_clients, options.hatch_rate)
-            main_greenlet = runners.locust_runner.greenlet
-            if options.run_time:
-                spawn_run_time_limit_greenlet()
-    elif options.slave:
-        if options.run_time:
-            logger.error("--run-time should be specified on the master node, and not on slave nodes")
+    if options.step_time:
+        if not options.step_load:
+            logger.error("The --step-time argument can only be used together with --step-load")
+            sys.exit(1)
+        if options.slave:
+            logger.error("--step-time should be specified on the master node, and not on slave nodes")
             sys.exit(1)
         try:
+            options.step_time = parse_timespan(options.step_time)
+        except ValueError:
+            logger.error("Valid --step-time formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
+            sys.exit(1)
+    
+    if options.master:
+        runners.locust_runner = MasterLocustRunner(locust_classes, options)
+    elif options.slave:
+        try:
             runners.locust_runner = SlaveLocustRunner(locust_classes, options)
-            main_greenlet = runners.locust_runner.greenlet
         except socket.error as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
-    
+    else:
+        runners.locust_runner = LocalLocustRunner(locust_classes, options)
+    # main_greenlet is pointing to runners.locust_runner.greenlet by default, it will point the web greenlet later if in web mode
+    main_greenlet = runners.locust_runner.greenlet
+
+    if options.no_web:
+        if options.master:
+            while len(runners.locust_runner.clients.ready) < options.expect_slaves:
+                logging.info("Waiting for slaves to be ready, %s of %s connected",
+                             len(runners.locust_runner.clients.ready), options.expect_slaves)
+                time.sleep(1)
+        if options.step_time:
+            runners.locust_runner.start_stepload(options.num_clients, options.hatch_rate, options.step_clients, options.step_time)
+        elif not options.slave:
+            runners.locust_runner.start_hatching(options.num_clients, options.hatch_rate)
+    elif not options.slave:
+        # spawn web greenlet
+        logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.port))
+        main_greenlet = gevent.spawn(web.start, locust_classes, options)
+
+    if options.run_time:
+        spawn_run_time_limit_greenlet()
+
     stats_printer_greenlet = None
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
