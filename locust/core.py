@@ -317,7 +317,7 @@ class TaskSet(object):
         if not self.max_wait:
             self.max_wait = self.locust.max_wait
         if not self.wait_function:
-            self.wait_function = self.locust.wait_function
+            self.wait_function = lambda: random.randint(self.min_wait, self.max_wait)
 
         self._lock.acquire()
         if hasattr(self, "setup") and self._setup_has_run is False:
