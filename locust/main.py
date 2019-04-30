@@ -18,7 +18,7 @@ from .inspectlocust import get_task_ratio_dict, print_task_ratio
 from .log import console_logger, setup_logging
 from .runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner
 from .stats import (print_error_report, print_percentile_stats, print_stats,
-                    stats_printer, stats_writer, write_stat_csvs)
+                    stats_printer, stats_writer, trend_writer, write_stat_csvs)
 from .util.time import parse_timespan
 
 _internals = [Locust, HttpLocust]
@@ -71,6 +71,16 @@ def parse_options():
         dest='csvfilebase',
         default=None,
         help="Store current request stats to files in CSV format.",
+    )
+
+    # A file for storing trend data in CSV format
+    parser.add_option(
+        '--trend',
+        action='store',
+        type='str',
+        dest='trendfilename',
+        default=None,
+        help="Store response time distributions and other statistics trends to this file in CSV format.",
     )
 
     # if locust should be run in distributed mode as master
@@ -533,6 +543,9 @@ def main():
 
     if options.csvfilebase:
         gevent.spawn(stats_writer, options.csvfilebase)
+
+    if options.trendfilename:
+        gevent.spawn(trend_writer, options.trendfilename)
 
     
     def shutdown(code=0):

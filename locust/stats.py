@@ -18,6 +18,9 @@ STATS_NAME_WIDTH = 60
 is configured."""
 CSV_STATS_INTERVAL_SEC = 2
 
+"""Default interval for how frequently the trend CSV file is written if enabled."""
+TREND_INTERVAL_SEC = 2
+
 """Default interval for how frequently results are written to console."""
 CONSOLE_STATS_INTERVAL_SEC = 2
 
@@ -656,13 +659,19 @@ def stats_printer():
 
 def stats_writer(base_filepath):
     """Writes the csv files for the locust run."""
-    with open(base_filepath + '_trend.csv', 'w') as f:
-        f.write(trend_csv_header())
 
     while True:
         write_stat_csvs(base_filepath)
         gevent.sleep(CSV_STATS_INTERVAL_SEC)
 
+def trend_writer(trend_filename):
+    """Periodically add new stats for the current locust run to the trend CSV."""
+    with open(trend_filename, 'w') as f:
+        f.write(trend_csv_header())
+    while True:
+        with open(trend_filename, 'a') as f:
+            f.write(trend_csv())
+        gevent.sleep(TREND_INTERVAL_SEC)
 
 def write_stat_csvs(base_filepath):
     """Writes the requests and distribution csvs."""
@@ -671,9 +680,6 @@ def write_stat_csvs(base_filepath):
 
     with open(base_filepath + '_distribution.csv', 'w') as f:
         f.write(distribution_csv())
-
-    with open(base_filepath + '_trend.csv', 'a') as f:
-        f.write(trend_csv())
 
 
 def sort_stats(stats):
