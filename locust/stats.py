@@ -656,6 +656,9 @@ def stats_printer():
 
 def stats_writer(base_filepath):
     """Writes the csv files for the locust run."""
+    with open(base_filepath + '_trend.csv', 'w') as f:
+        f.write(trend_csv_header())
+
     while True:
         write_stat_csvs(base_filepath)
         gevent.sleep(CSV_STATS_INTERVAL_SEC)
@@ -663,11 +666,14 @@ def stats_writer(base_filepath):
 
 def write_stat_csvs(base_filepath):
     """Writes the requests and distribution csvs."""
-    with open(base_filepath + '_requests.csv', "w") as f:
+    with open(base_filepath + '_requests.csv', 'w') as f:
         f.write(requests_csv())
 
     with open(base_filepath + '_distribution.csv', 'w') as f:
         f.write(distribution_csv())
+
+    with open(base_filepath + '_trend.csv', 'a') as f:
+        f.write(trend_csv())
 
 
 def sort_stats(stats):
@@ -754,3 +760,66 @@ def failures_csv():
             s.occurrences,
         ))
     return "\n".join(rows)
+
+# The percentiles which will be written to the trend file
+TREND_PERCENTILES = (
+    0.00,
+    0.01,
+    0.02,
+    0.05,
+    0.10,
+    0.20,
+    0.25,
+    0.33,
+    0.50,
+    0.66,
+    0.75,
+    0.80,
+    0.90,
+    0.95,
+    0.98,
+    0.99,
+    1.00,
+)
+
+def trend_csv_header():
+    """Produce headers for the trend CSV"""
+    return ','.join((
+        '"Name"',
+        '"Timestamp"',
+        '"# clients"',
+        '"# requests"',
+        '"# failures"',
+        '"Requests/s"',
+    )) + ''.join([',"%i%%"' % (int(x * 100),) for x in TREND_PERCENTILES]) + '\n'
+
+def trend_csv():
+    """Produce a row in the trends table"""
+    from . import runners
+
+    rows = []
+    timestamp = int(time.time())
+
+    for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
+        rps = 0.0
+        if s.num_requests:
+            rps = s.current_rps
+
+        if s.num_requests and s.use_response_times_cache:
+            # We need to have use_response_times_cache in order to get running percentiles
+            percentile_str = ','.join([
+                str(int(s.get_current_response_time_percentile(x) or 0)) for x in TREND_PERCENTILES])
+        else:
+            percentile_str = ','.join(['"N/A"'] * len(TREND_PERCENTILES))
+
+        rows.append(
+            '"%s",%i,%i,%i,%i,%g,%s\n' % (
+                s.name,
+                timestamp,
+                runners.locust_runner.user_count,
+                s.num_requests or 0,
+                s.num_failures or 0,
+                rps,
+                percentile_str
+        ))
+    return ''.join(rows)
