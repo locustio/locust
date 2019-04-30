@@ -764,8 +764,9 @@ def failures_csv():
 # The percentiles which will be written to the trend file
 TREND_PERCENTILES = (
     0.00,
+    0.005,
     0.01,
-    0.02,
+    0.025,
     0.05,
     0.10,
     0.20,
@@ -777,8 +778,9 @@ TREND_PERCENTILES = (
     0.80,
     0.90,
     0.95,
-    0.98,
+    0.975,
     0.99,
+    0.995,
     1.00,
 )
 
@@ -791,7 +793,7 @@ def trend_csv_header():
         '"# requests"',
         '"# failures"',
         '"Requests/s"',
-    )) + ''.join([',"%i%%"' % (int(x * 100),) for x in TREND_PERCENTILES]) + '\n'
+    )) + ''.join([',"%g%%"' % (x * 100,) for x in TREND_PERCENTILES]) + '\n'
 
 def trend_csv():
     """Produce a row in the trends table"""
