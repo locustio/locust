@@ -8,7 +8,7 @@ Locust's default HTTP client uses `python-requests <http://www.python-requests.o
 The reason for this is that requests is a very well-maintained python package, that 
 provides a really nice API, that many python developers are familiar with. Therefore, 
 in many cases, we recommend that you use the default :py:class:`HttpLocust <locust.core.HttpLocust>` 
-which uses requests. However, if you're planning to run really large scale scale tests, 
+which uses requests. However, if you're planning to run really large scale tests, 
 Locust comes with an alternative HTTP client, 
 :py:class:`FastHttpLocust <locust.contrib.fasthttp.FastHttpLocust>` which 
 uses `geventhttpclient <https://github.com/gwik/geventhttpclient/>`_ instead of requests.
