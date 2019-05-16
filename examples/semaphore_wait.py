@@ -1,6 +1,7 @@
 from locust import HttpLocust, TaskSet, task, events
 
-from gevent.coros import Semaphore
+from gevent.lock import Semaphore
+
 all_locusts_spawned = Semaphore()
 all_locusts_spawned.acquire()
 

@@ -95,12 +95,40 @@ class TestWebUI(LocustTestCase):
         # verify that the 95%, 98%, 99% and 100% percentiles are 1200
         for value in total_cols[-4:]:
             self.assertEqual('1200', value)
+
+    def test_failure_stats_csv(self):
+        stats.global_stats.log_error("GET", "/", Exception("Error1337"))
+        response = requests.get("http://127.0.0.1:%i/stats/failures/csv" % self.web_port)
+        self.assertEqual(200, response.status_code)
     
     def test_request_stats_with_errors(self):
         stats.global_stats.log_error("GET", "/", Exception("Error1337"))
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertIn("Error1337", response.text)
+
+    def test_reset_stats(self):
+        try:
+            raise Exception(u"A cool test exception")
+        except Exception as e:
+            tb = sys.exc_info()[2]
+            runners.locust_runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
+            runners.locust_runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
+
+        stats.global_stats.log_request("GET", "/test", 120, 5612)
+        stats.global_stats.log_error("GET", "/", Exception("Error1337"))
+
+        response = requests.get("http://127.0.0.1:%i/stats/reset" % self.web_port)
+
+        self.assertEqual(200, response.status_code)
+
+        self.assertEqual({}, stats.global_stats.errors)
+        self.assertEqual({}, runners.locust_runner.exceptions)
+        
+        self.assertEqual(0, stats.global_stats.get("/", "GET").num_requests)
+        self.assertEqual(0, stats.global_stats.get("/", "GET").num_failures)
+        self.assertEqual(0, stats.global_stats.get("/test", "GET").num_requests)
+        self.assertEqual(0, stats.global_stats.get("/test", "GET").num_failures)
     
     def test_exceptions(self):
         try:

@@ -17,7 +17,7 @@ from six.moves import StringIO, xrange
 
 from . import runners
 from .runners import MasterLocustRunner
-from .stats import distribution_csv, median_from_dict, requests_csv, sort_stats
+from .stats import distribution_csv, failures_csv, median_from_dict, requests_csv, sort_stats
 from .util.cache import memoize
 
 logger = logging.getLogger(__name__)
@@ -69,6 +69,7 @@ def stop():
 @app.route("/stats/reset")
 def reset_stats():
     runners.locust_runner.stats.reset_all()
+    runners.locust_runner.exceptions = {}
     return "ok"
     
 @app.route("/stats/requests/csv")
@@ -84,6 +85,15 @@ def request_stats_csv():
 def distribution_stats_csv():
     response = make_response(distribution_csv())
     file_name = "distribution_{0}.csv".format(time())
+    disposition = "attachment;filename={0}".format(file_name)
+    response.headers["Content-type"] = "text/csv"
+    response.headers["Content-disposition"] = disposition
+    return response
+
+@app.route("/stats/failures/csv")
+def failures_stats_csv():
+    response = make_response(failures_csv())
+    file_name = "failures_{0}.csv".format(time())
     disposition = "attachment;filename={0}".format(file_name)
     response.headers["Content-type"] = "text/csv"
     response.headers["Content-disposition"] = disposition

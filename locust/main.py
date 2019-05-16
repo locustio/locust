@@ -282,6 +282,16 @@ def parse_options():
         help="show program's version number and exit"
     )
 
+    # set the exit code to post on errors
+    parser.add_option(
+        '--exit-code-on-error',
+        action='store',
+        type="int",
+        dest='exit_code_on_error',
+        default=1,
+        help="sets the exit code to post on error"
+    )
+
     # Finalize
     # Return three-tuple of parser + the output from parse_args (opt obj, args)
     opts, args = parser.parse_args()
@@ -554,7 +564,7 @@ def main():
         main_greenlet.join()
         code = 0
         if len(runners.locust_runner.errors):
-            code = 1
+            code = options.exit_code_on_error
         shutdown(code=code)
     except KeyboardInterrupt as e:
         shutdown(0)
