@@ -16,6 +16,9 @@ from six.moves import xrange
 # See: https://github.com/requests/requests/issues/3752#issuecomment-294608002
 monkey.patch_all()
 
+import grpc.experimental.gevent as grpc_gevent
+grpc_gevent.init_gevent()
+
 from . import events
 from .clients import HttpSession
 from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
