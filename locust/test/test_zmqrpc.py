@@ -14,6 +14,12 @@ class ZMQRPC_tests(unittest.TestCase):
         self.server.socket.close()
         self.client.socket.close()
 
+    def test_constructor(self):
+      self.assertEqual(self.server.socket.getsockopt(zmq.TCP_KEEPALIVE), 1)
+      self.assertEqual(self.server.socket.getsockopt(zmq.TCP_KEEPALIVE_IDLE), 30)
+      self.assertEqual(self.client.socket.getsockopt(zmq.TCP_KEEPALIVE), 1)
+      self.assertEqual(self.client.socket.getsockopt(zmq.TCP_KEEPALIVE_IDLE), 30)
+
     def test_client_send(self):
         self.client.send(Message('test', 'message', 'identity'))
         addr, msg = self.server.recv_from_client()
@@ -23,7 +29,7 @@ class ZMQRPC_tests(unittest.TestCase):
 
     def test_client_recv(self):
         sleep(0.1)
-        # We have to wait for the client to finish connecting 
+        # We have to wait for the client to finish connecting
         # before sending a msg to it.
         self.server.send_to_client(Message('test', 'message', 'identity'))
         msg = self.client.recv()
