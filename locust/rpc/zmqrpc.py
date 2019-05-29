@@ -7,7 +7,9 @@ class BaseSocket(object):
     def __init__(self, sock_type):
         context = zmq.Context()
         self.socket = context.socket(sock_type)
-    
+        self.socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
+        self.socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 30)
+
     @retry()
     def send(self, msg):
         self.socket.send(msg.serialize())
@@ -39,4 +41,3 @@ class Client(BaseSocket):
         BaseSocket.__init__(self, zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, identity.encode())
         self.socket.connect("tcp://%s:%i" % (host, port))
-        
