@@ -137,7 +137,7 @@
                 <div style="display:none;">
                     <table id="exceptions" class="stats">
                         <thead>
-                            <th class="exception_occurences stats_label" data-sortkey="1"># occurences</th>
+                            <th class="exception_occurrences stats_label" data-sortkey="1"># occurrences</th>
                             <th class="exception_traceback stats_label" data-sortkey="0">Traceback</th>
                         </thead>
                         <tbody>
@@ -235,7 +235,7 @@
     <script type="text/x-jqote-template" id="errors-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%>">
-            <td><%= this.occurences %></td>
+            <td><%= this.occurrences %></td>
             <td><%= this.method %></td>
             <td><%= this.name %></td>
             <td><%= function(e) { return e.replace("<", "&lt;"); }(this.error) %></td>
@@ -246,7 +246,7 @@
     <script type="text/x-jqote-template" id="exceptions-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%>">
-            <td class="occurences"><%= this.count %></td>
+            <td class="occurrences"><%= this.count %></td>
             <td class="traceback" title="Occured on: <%= this.nodes %>"><%= function(e) { return e.replace("<", "&lt;"); }(this.traceback) %>
 <%= function(e) { return e.replace("<", "&lt;"); }(this.msg) %></td>
         </tr>
