@@ -97,18 +97,18 @@ class LocustRunner(object):
             self.num_clients += spawn_count
 
         logger.info("Hatching and swarming %i clients at the rate %g clients/s..." % (spawn_count, self.hatch_rate))
-        occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
+        occurrence_count = dict([(l.__name__, 0) for l in self.locust_classes])
         
         def hatch():
             sleep_time = 1.0 / self.hatch_rate
             while True:
                 if not bucket:
-                    logger.info("All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in six.iteritems(occurence_count)]))
+                    logger.info("All locusts hatched: %s" % ", ".join(["%s: %d" % (name, count) for name, count in six.iteritems(occurrence_count)]))
                     events.hatch_complete.fire(user_count=self.num_clients)
                     return
 
                 locust = bucket.pop(random.randint(0, len(bucket)-1))
-                occurence_count[locust.__name__] += 1
+                occurrence_count[locust.__name__] += 1
                 def start_locust(_):
                     try:
                         locust().run(runner=self)

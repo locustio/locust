@@ -329,7 +329,7 @@ a:hover {
     text-align: left;
 }
 
-#exceptions th.exception_occurences {
+#exceptions th.exception_occurrences {
     width: 110px;
     text-align: center;
 }
@@ -337,7 +337,7 @@ a:hover {
     text-align: left;
 }
 
-#exceptions td.occurences {
+#exceptions td.occurrences {
     text-align: center;
 }
 #exceptions td.traceback {
