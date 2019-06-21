@@ -26,11 +26,11 @@ Example
 
 To start locust in master mode::
 
-    locust -f my_locustfile.py --master
+    locust -f my_locustfile.py --master --host=http://example.com
 
 And then on each slave (replace ``192.168.0.14`` with IP of the master machine)::
 
-    locust -f my_locustfile.py --slave --master-host=192.168.0.14
+    locust -f my_locustfile.py --slave --master-host=192.168.0.14 --host=http://example.com
 
 
 Options
@@ -79,6 +79,11 @@ number +1. So if 5557 is used, locust will use both port 5557 and 5558.
 
 Used when starting the master node with ``--no-web``. The master node will then wait until X slave 
 nodes has connected before the test is started.
+
+``--host=X``
+---------------------
+
+The address of the host to load test.
 
 
 Running distributed with Docker
