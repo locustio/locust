@@ -71,7 +71,7 @@ class HttpSession(requests.Session):
         else:
             return "%s%s" % (self.base_url, path)
     
-    def request(self, method, url, name=None, catch_response=False, additional_info={}, **kwargs):
+    def request(self, method, url, name=None, additional_info={}, save_response_text=False, catch_response=False, **kwargs):
         """
         Constructs and sends a :py:class:`requests.Request`.
         Returns :py:class:`requests.Response` object.
@@ -119,6 +119,9 @@ class HttpSession(requests.Session):
     
         request_meta["name"] = name or (response.history and response.history[0] or response).request.path_url
         request_meta["additional_info"] = additional_info
+
+        if save_response_text:
+            request_meta["additional_info"]["response_text"] = response.text
 
         # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body
