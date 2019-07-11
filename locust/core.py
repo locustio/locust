@@ -187,13 +187,22 @@ class HttpLocust(Locust):
     Instance of HttpSession that is created upon instantiation of Locust. 
     The client support cookies, and therefore keeps the session between HTTP requests.
     """
+
+    trust_env = False
+    """
+    Look for proxy settings will slow down the default http client.
+    It's the default behavior of the requests library.
+    We don't need this feature most of the time, so disable it by default.
+    """
     
     def __init__(self):
         super(HttpLocust, self).__init__()
         if self.host is None:
             raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
-        
-        self.client = HttpSession(base_url=self.host)
+
+        session = HttpSession(base_url=self.host)
+        session.trust_env = self.trust_env
+        self.client = session
 
 
 class TaskSetMeta(type):
