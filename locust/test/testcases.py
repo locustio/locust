@@ -80,6 +80,7 @@ def no_content_length():
     r = send_file(BytesIO("This response does not have content-length in the header".encode('utf-8')),
                   add_etags=False,
                   mimetype='text/plain')
+    r.headers.remove("Content-Length")
     return r
 
 @app.errorhandler(404)
