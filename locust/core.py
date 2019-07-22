@@ -469,7 +469,7 @@ class TaskSequence(TaskSet):
     *max_wait* milliseconds. It will then schedule the `index + 1 % len(tasks)` task for execution and so on.
 
     TaskSequence can be nested with TaskSet, which means that a TaskSequence's *tasks* attribute can contain
-    TaskSet instances as well as other TaskSequence instances. If the nested TaskSet it scheduled to be executed, it will be
+    TaskSet instances as well as other TaskSequence instances. If the nested TaskSet is scheduled to be executed, it will be
     instantiated and called from the current executing TaskSet. Execution in the
     currently running TaskSet will then be handed over to the nested TaskSet which will
     continue to run until it throws an InterruptTaskSet exception, which is done when
