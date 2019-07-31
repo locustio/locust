@@ -141,6 +141,7 @@ class HttpSession(requests.Session):
                     response_time=request_meta["response_time"], 
                     exception=e,
                     session_info=self.session_info,
+                    status_code=response.status_code,
                 )
             else:
                 events.request_success.fire(
@@ -149,6 +150,7 @@ class HttpSession(requests.Session):
                     response_time=request_meta["response_time"],
                     response_length=request_meta["content_size"],
                     session_info=self.session_info,
+                    status_code=response.status_code,
                 )
             return response
     
@@ -226,6 +228,7 @@ class ResponseContextManager(LocustResponse):
             response_time=self.locust_request_meta["response_time"],
             response_length=self.locust_request_meta["content_size"],
             session_info=self.session_info,
+            status_code=self.status_code,
         )
         self._is_reported = True
     
@@ -251,5 +254,6 @@ class ResponseContextManager(LocustResponse):
             response_time=self.locust_request_meta["response_time"],
             exception=exc,
             session_info=self.session_info,
+            status_code=self.status_code
         )
         self._is_reported = True
