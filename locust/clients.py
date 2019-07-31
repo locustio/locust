@@ -120,6 +120,17 @@ class HttpSession(requests.Session):
         
     
         request_meta["name"] = name or (response.history and response.history[0] or response).request.path_url
+
+        # loop through all the 
+        for redirect_response in response.history:
+            events.request_success.fire(
+                    request_type=redirect_response.method,
+                    name=redirect_response.path_url,
+                    response_time=redirect_response.elapsed.total_seconds()*1000,
+                    response_length= len(response.content or b""),
+                    session_info=self.session_info,
+                    status_code=redirect_response.status_code,
+                )
         
         # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body
