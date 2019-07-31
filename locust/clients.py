@@ -51,6 +51,8 @@ class HttpSession(requests.Session):
         super(HttpSession, self).__init__(*args, **kwargs)
 
         self.base_url = base_url
+
+        self.session_info = None
         
         # Check for basic authentication
         parsed_url = urlparse(self.base_url)
@@ -128,7 +130,7 @@ class HttpSession(requests.Session):
         
         if catch_response:
             response.locust_request_meta = request_meta
-            return ResponseContextManager(response)
+            return ResponseContextManager(response, self.session_info)
         else:
             try:
                 response.raise_for_status()
@@ -137,7 +139,8 @@ class HttpSession(requests.Session):
                     request_type=request_meta["method"], 
                     name=request_meta["name"], 
                     response_time=request_meta["response_time"], 
-                    exception=e, 
+                    exception=e,
+                    session_info=self.session_info,
                 )
             else:
                 events.request_success.fire(
@@ -145,6 +148,7 @@ class HttpSession(requests.Session):
                     name=request_meta["name"],
                     response_time=request_meta["response_time"],
                     response_length=request_meta["content_size"],
+                    session_info=self.session_info,
                 )
             return response
     
@@ -178,9 +182,10 @@ class ResponseContextManager(LocustResponse):
     
     _is_reported = False
     
-    def __init__(self, response):
+    def __init__(self, response, session_info):
         # copy data from response to this object
         self.__dict__ = response.__dict__
+        self.session_info = session_info
     
     def __enter__(self):
         return self
@@ -220,6 +225,7 @@ class ResponseContextManager(LocustResponse):
             name=self.locust_request_meta["name"],
             response_time=self.locust_request_meta["response_time"],
             response_length=self.locust_request_meta["content_size"],
+            session_info=self.session_info,
         )
         self._is_reported = True
     
@@ -244,5 +250,6 @@ class ResponseContextManager(LocustResponse):
             name=self.locust_request_meta["name"],
             response_time=self.locust_request_meta["response_time"],
             exception=exc,
+            session_info=self.session_info,
         )
         self._is_reported = True
