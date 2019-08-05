@@ -119,7 +119,7 @@ class HttpSession(requests.Session):
         request_meta["response_time"] = (time.time() - request_meta["start_time"]) * 1000
         
     
-        request_meta["name"] = name or (response.history and response.history[0] or response).request.path_url
+        request_meta["name"] = name or (response.history and response.history[0] or response).request.url
 
         # loop through all the 
         for redirect_response in response.history:
