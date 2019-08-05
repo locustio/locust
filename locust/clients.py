@@ -124,8 +124,8 @@ class HttpSession(requests.Session):
         # loop through all the 
         for redirect_response in response.history:
             events.request_success.fire(
-                    request_type=redirect_response.method,
-                    name=redirect_response.path_url,
+                    request_type=redirect_response.request.method,
+                    name=redirect_response.url,
                     response_time=redirect_response.elapsed.total_seconds()*1000,
                     response_length= len(response.content or b""),
                     session_info=self.session_info,
