@@ -123,6 +123,8 @@ def request_stats():
     # Truncate the total number of stats and errors displayed since a large number of rows will cause the app
     # to render extremely slowly. Aggregate stats should be preserved.
     report = {"stats": stats[:500], "errors": errors[:500]}
+    if len(stats) > 500:
+        report["stats"] += [stats[-1]]
 
     if stats:
         report["total_rps"] = stats[len(stats)-1]["current_rps"]
