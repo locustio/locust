@@ -74,4 +74,4 @@ Open source licensed under the MIT license (see _LICENSE_ file for details).
 
 ## Supported Python Versions
 
-Locust is supported on Python 2.7, 3.4, 3.5, 3.6, 3.7.
+Locust is supported on Python 2.7, 3.5, 3.6, 3.7.
