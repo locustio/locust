@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 if [ -z "${TARGET_URL}" ]; then
   echo "ERROR: TARGET_URL not configured" >&2
