@@ -1,5 +1,6 @@
 import time
 import unittest
+import re
 
 from locust.core import HttpLocust, TaskSet, task
 from locust.inspectlocust import get_task_ratio_dict
@@ -253,15 +254,66 @@ class TestStatsEntryResponseTimesCache(unittest.TestCase):
 
 
 class TestStatsEntry(unittest.TestCase):
+
+    def parse_string_output(self, text):
+        tokenlist = re.split('[\s\(\)%|]+', text.strip())
+        tokens = {
+            'method': tokenlist[0],
+            'name': tokenlist[1],
+            'request_count': int(tokenlist[2]),
+            'failure_count': int(tokenlist[3]),
+            'failure_precentage': float(tokenlist[4]),
+        }
+        return tokens
+
     def setUp(self, *args, **kwargs):
         super(TestStatsEntry, self).setUp(*args, **kwargs)
         self.stats = RequestStats()
 
-    def test_fail_ratio_with_failures(self):
+    def test_fail_ratio_with_no_failures(self):
+        REQUEST_COUNT = 10
+        FAILURE_COUNT = 0
+        EXPECTED_FAIL_RATIO = 0.0
+
         s = StatsEntry(self.stats, "/", "GET")
-        s.num_requests = 10
-        s.num_failures = 5
-        self.assertAlmostEqual(s.fail_ratio, 0.5)
+        s.num_requests = REQUEST_COUNT
+        s.num_failures = FAILURE_COUNT
+
+        self.assertAlmostEqual(s.fail_ratio, EXPECTED_FAIL_RATIO)
+        output_fields = self.parse_string_output(str(s))
+        self.assertEqual(output_fields['request_count'], REQUEST_COUNT)
+        self.assertEqual(output_fields['failure_count'], FAILURE_COUNT)
+        self.assertAlmostEqual(output_fields['failure_precentage'], EXPECTED_FAIL_RATIO*100)
+
+    def test_fail_ratio_with_all_failures(self):
+        REQUEST_COUNT = 10
+        FAILURE_COUNT = 10
+        EXPECTED_FAIL_RATIO = 1.0
+
+        s = StatsEntry(self.stats, "/", "GET")
+        s.num_requests = REQUEST_COUNT
+        s.num_failures = FAILURE_COUNT
+
+        self.assertAlmostEqual(s.fail_ratio, EXPECTED_FAIL_RATIO)
+        output_fields = self.parse_string_output(str(s))
+        self.assertEqual(output_fields['request_count'], REQUEST_COUNT)
+        self.assertEqual(output_fields['failure_count'], FAILURE_COUNT)
+        self.assertAlmostEqual(output_fields['failure_precentage'], EXPECTED_FAIL_RATIO*100)
+
+    def test_fail_ratio_with_half_failures(self):
+        REQUEST_COUNT = 10
+        FAILURE_COUNT = 5
+        EXPECTED_FAIL_RATIO = 0.5
+
+        s = StatsEntry(self.stats, "/", "GET")
+        s.num_requests = REQUEST_COUNT
+        s.num_failures = FAILURE_COUNT
+
+        self.assertAlmostEqual(s.fail_ratio, EXPECTED_FAIL_RATIO)
+        output_fields = self.parse_string_output(str(s))
+        self.assertEqual(output_fields['request_count'], REQUEST_COUNT)
+        self.assertEqual(output_fields['failure_count'], FAILURE_COUNT)
+        self.assertAlmostEqual(output_fields['failure_precentage'], EXPECTED_FAIL_RATIO*100)
 
 
 class TestRequestStatsWithWebserver(WebserverTestCase):

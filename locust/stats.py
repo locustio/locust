@@ -384,11 +384,8 @@ class StatsEntry(object):
         return report
 
     def __str__(self):
-        try:
-            fail_percent = float(self.num_failures/self.num_requests)*100
-        except ZeroDivisionError:
-            fail_percent = 0
-        
+        fail_percent = self.fail_ratio*100
+
         return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d  | %7d %7.2f") % (
             (self.method and self.method + " " or "") + self.name,
             self.num_requests,
