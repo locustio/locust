@@ -52,6 +52,8 @@ def calculate_response_time_percentile(response_times, num_requests, percent):
         processed_count += response_times[response_time]
         if(num_requests - processed_count <= num_of_request):
             return response_time
+    # if all response times were None
+    return 0
 
 
 def diff_response_time_dicts(latest, old):
@@ -246,6 +248,8 @@ class StatsEntry(object):
         self.last_request_timestamp = t
 
     def _log_response_time(self, response_time):
+        if response_time is None:
+            return
 
         self.total_response_time += response_time
 
