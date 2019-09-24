@@ -19,6 +19,7 @@ from . import runners
 from .runners import MasterLocustRunner
 from .stats import distribution_csv, failures_csv, median_from_dict, requests_csv, sort_stats
 from .util.cache import memoize
+from .util.rounding import proper_round
 
 logger = logging.getLogger(__name__)
 
@@ -105,15 +106,14 @@ def request_stats():
     stats = []
     
     for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
-        0 if s.min_response_time is None else round(s.min_response_time)
         stats.append({
             "method": s.method,
             "name": s.name,
             "num_requests": s.num_requests,
             "num_failures": s.num_failures,
             "avg_response_time": s.avg_response_time,
-            "min_response_time": 0 if s.min_response_time is None else round(s.min_response_time),
-            "max_response_time": round(s.max_response_time),
+            "min_response_time": 0 if s.min_response_time is None else proper_round(s.min_response_time),
+            "max_response_time": proper_round(s.max_response_time),
             "current_rps": s.current_rps,
             "median_response_time": s.median_response_time,
             "avg_content_length": s.avg_content_length,

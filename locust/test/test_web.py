@@ -75,13 +75,13 @@ class TestWebUI(LocustTestCase):
         self.assertEqual(3, len(data["stats"])) # this should no longer be cached
     
     def test_stats_rounding(self):
-        stats.global_stats.log_request("GET", "/test", 1.5, 15)
-        stats.global_stats.log_request("GET", "/test", 999.99, 99999)
+        stats.global_stats.log_request("GET", "/test", 1.39764125, 2)
+        stats.global_stats.log_request("GET", "/test", 999.9764125, 1000)
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         
         data = json.loads(response.text)
-        self.assertEqual(2, data["stats"][0]["min_response_time"])
+        self.assertEqual(1, data["stats"][0]["min_response_time"])
         self.assertEqual(1000, data["stats"][0]["max_response_time"])
     
     def test_request_stats_csv(self):
