@@ -54,6 +54,7 @@ class mocked_options(object):
         self.master_bind_port = 5557
         self.heartbeat_liveness = 3
         self.heartbeat_interval = 0.01
+        self.task_finish_wait_time = None
 
     def reset_stats(self):
         pass
@@ -348,3 +349,31 @@ class TestMessageSerializing(unittest.TestCase):
         self.assertEqual(msg.type, rebuilt.type)
         self.assertEqual(msg.data, rebuilt.data)
         self.assertEqual(msg.node_id, rebuilt.node_id)
+
+class TestTaskFinishWaitTime(unittest.TestCase):
+    def test_task_finish_wait_time(self):    
+        class MyTaskSet(TaskSet):
+            @task
+            def my_task(self):
+                TestTaskFinishWaitTime.req_count = 1 # should always run
+                gevent.sleep(0.2)
+                TestTaskFinishWaitTime.req_count += 1 # should run when run time + task_finish_wait_time is > 0.2
+                gevent.sleep(1)
+                raise Exception("Locust kept running even after wait_time was exceeded.")
+
+        class MyTestLocust(Locust):
+            task_set = MyTaskSet
+        
+        self.options = mocked_options()
+        runner = LocalLocustRunner([MyTestLocust], self.options)
+        runner.start_hatching(1, 1)
+        gevent.sleep(0.1)
+        runner.quit()
+        self.assertEqual(1, TestTaskFinishWaitTime.req_count)
+
+        self.options.task_finish_wait_time = 0.2
+        runner = LocalLocustRunner([MyTestLocust], self.options)
+        runner.start_hatching(1, 1)
+        gevent.sleep(0.1)
+        runner.quit()
+        self.assertEqual(2, TestTaskFinishWaitTime.req_count)
