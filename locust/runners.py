@@ -183,7 +183,7 @@ class LocustRunner(object):
                     raise GreenletExit()
                 l.args[0].task_set.wait_function = exit_greenlet
             if not self.locusts.join(timeout=self.options.task_finish_wait_time):
-                logger.info(f"Not all locusts finished their tasks & terminated in {self.options.task_finish_wait_time} seconds. Killing them...")
+                logger.info("Not all locusts finished their tasks & terminated in %s seconds. Killing them..." % self.options.task_finish_wait_time)
         self.locusts.kill(block=True)
         self.state = STATE_STOPPED
         events.locust_stop_hatching.fire()
