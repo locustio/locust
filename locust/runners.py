@@ -321,6 +321,7 @@ class MasterLocustRunner(DistributedLocustRunner):
     def quit(self):
         for client in self.clients.all:
             self.server.send_to_client(Message("quit", None, client.id))
+        gevent.sleep(0.5) # wait for final stats report from all slaves
         self.greenlet.kill(block=True)
     
     def heartbeat_worker(self):
@@ -439,16 +440,20 @@ class SlaveLocustRunner(DistributedLocustRunner):
             elif msg.type == "quit":
                 logger.info("Got quit message from master, shutting down...")
                 self.stop()
+                self._send_stats() # send a final report, in case there were any samples not yet reported
                 self.greenlet.kill(block=True)
 
     def stats_reporter(self):
         while True:
-            data = {}
-            events.report_to_master.fire(client_id=self.client_id, data=data)
             try:
-                self.client.send(Message("stats", data, self.client_id))
+                self._send_stats()
             except:
                 logger.error("Connection lost to master server. Aborting...")
                 break
             
             gevent.sleep(SLAVE_REPORT_INTERVAL)
+
+    def _send_stats(self):
+        data = {}
+        events.report_to_master.fire(client_id=self.client_id, data=data)
+        self.client.send(Message("stats", data, self.client_id))
