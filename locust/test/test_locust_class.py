@@ -555,6 +555,6 @@ class TestCatchResponse(WebserverTestCase):
         with l.client.get("/", catch_response=True) as r:
             self.assertEqual(r.status_code, 0)
             self.assertEqual(None, r.content)
-            r.success()
-        self.assertEqual(1, self.num_success)
-        self.assertEqual(0, self.num_failures)
+            r.failure("Manual fail")
+        self.assertEqual(0, self.num_success)
+        self.assertEqual(1, self.num_failures)
