@@ -292,6 +292,15 @@ def parse_options():
         help="sets the exit code to post on error"
     )
 
+    parser.add_option(
+        '--task-finish-wait-time',
+        action='store',
+        type="int",
+        dest='task_finish_wait_time',
+        default=None,
+        help="number of seconds to wait for a taskset to complete an iteration before exiting. default is to terminate immediately."
+    )
+
     # Finalize
     # Return three-tuple of parser + the output from parse_args (opt obj, args)
     opts, args = parser.parse_args()

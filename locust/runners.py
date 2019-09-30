@@ -177,6 +177,11 @@ class LocustRunner(object):
         # if we are currently hatching locusts we need to kill the hatching greenlet first
         if self.hatching_greenlet and not self.hatching_greenlet.ready():
             self.hatching_greenlet.kill(block=True)
+        if self.options.task_finish_wait_time:
+            for l in self.locusts:
+                l.args[0].exit_at_end_of_iteration = True
+            if not self.locusts.join(timeout=self.options.task_finish_wait_time):
+                logger.info("Not all locusts finished their tasks & terminated in %s seconds. Killing them..." % self.options.task_finish_wait_time)
         self.locusts.kill(block=True)
         self.state = STATE_STOPPED
         events.locust_stop_hatching.fire()

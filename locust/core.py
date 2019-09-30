@@ -129,6 +129,9 @@ class Locust(object):
     weight = 10
     """Probability of locust being chosen. The higher the weight, the greater is the chance of it being chosen."""
         
+    exit_at_end_of_iteration = False  
+    """Used with --task-finish-wait-time to stop a locust at end of iteration"""
+
     client = NoClientWarningRaiser()
     _catch_exceptions = True
     _setup_has_run = False  # Internal state to see if we have already run
@@ -432,6 +435,8 @@ class TaskSet(object):
         return millis / 1000.0
 
     def wait(self):
+        if self.locust.exit_at_end_of_iteration:
+            raise GreenletExit()
         self._sleep(self.get_wait_secs())
 
     def _sleep(self, seconds):

@@ -54,6 +54,7 @@ class mocked_options(object):
         self.master_bind_port = 5557
         self.heartbeat_liveness = 3
         self.heartbeat_interval = 0.01
+        self.task_finish_wait_time = None
 
     def reset_stats(self):
         pass
@@ -348,3 +349,39 @@ class TestMessageSerializing(unittest.TestCase):
         self.assertEqual(msg.type, rebuilt.type)
         self.assertEqual(msg.data, rebuilt.data)
         self.assertEqual(msg.node_id, rebuilt.node_id)
+
+class TestTaskFinishWaitTime(unittest.TestCase):
+    def test_task_finish_wait_time(self):
+        short_time = 0.05
+        class MyTaskSet(TaskSet):
+            @task
+            def my_task(self):
+                TestTaskFinishWaitTime.state = "first"
+                gevent.sleep(short_time)
+                TestTaskFinishWaitTime.state = "second" # should only run when run time + task_finish_wait_time is > short_time
+                gevent.sleep(short_time)
+                TestTaskFinishWaitTime.state = "third" # should only run when run time + task_finish_wait_time is > short_time * 2
+
+        class MyTestLocust(Locust):
+            task_set = MyTaskSet
+        
+        self.options = mocked_options()
+        runner = LocalLocustRunner([MyTestLocust], self.options)
+        runner.start_hatching(1, 1)
+        gevent.sleep(short_time / 2)
+        runner.quit()
+        self.assertEqual("first", TestTaskFinishWaitTime.state)
+
+        self.options.task_finish_wait_time = short_time / 2 # exit with timeout
+        runner = LocalLocustRunner([MyTestLocust], self.options)
+        runner.start_hatching(1, 1)
+        gevent.sleep(short_time)
+        runner.quit()
+        self.assertEqual("second", TestTaskFinishWaitTime.state)
+        
+        self.options.task_finish_wait_time = short_time * 2 # allow task iteration to complete, with some margin
+        runner = LocalLocustRunner([MyTestLocust], self.options)
+        runner.start_hatching(1, 1)
+        gevent.sleep(short_time)
+        runner.quit()
+        self.assertEqual("third", TestTaskFinishWaitTime.state)
