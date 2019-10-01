@@ -14,6 +14,12 @@ class ZMQRPC_tests(unittest.TestCase):
         self.server.socket.close()
         self.client.socket.close()
 
+    def test_constructor(self):
+        self.assertEqual(self.server.socket.getsockopt(zmq.TCP_KEEPALIVE), 1)
+        self.assertEqual(self.server.socket.getsockopt(zmq.TCP_KEEPALIVE_IDLE), 30)
+        self.assertEqual(self.client.socket.getsockopt(zmq.TCP_KEEPALIVE), 1)
+        self.assertEqual(self.client.socket.getsockopt(zmq.TCP_KEEPALIVE_IDLE), 30)
+
     def test_client_send(self):
         self.client.send(Message('test', 'message', 'identity'))
         addr, msg = self.server.recv_from_client()

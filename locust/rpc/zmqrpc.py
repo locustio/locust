@@ -7,6 +7,9 @@ class BaseSocket(object):
     def __init__(self, sock_type):
         context = zmq.Context()
         self.socket = context.socket(sock_type)
+
+        self.socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
+        self.socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 30)
     
     @retry()
     def send(self, msg):
