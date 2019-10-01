@@ -1,7 +1,6 @@
 [run]
 branch = True
 source = locust
-concurrency = gevent
 
 [report]
 exclude_lines =
