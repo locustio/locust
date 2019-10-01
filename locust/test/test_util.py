@@ -1,5 +1,5 @@
 import unittest
-from locust.util.time import parse_timespan
+from locust.util.timespan import parse_timespan
 from locust.util.rounding import proper_round
 
 
