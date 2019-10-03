@@ -316,6 +316,8 @@ class ResponseContextManager(FastResponse):
     def __init__(self, response):
         # copy data from response to this object
         self.__dict__ = response.__dict__
+        if isinstance(response, FastResponse):
+            self._cached_content = response._cached_content
     
     def __enter__(self):
         return self
