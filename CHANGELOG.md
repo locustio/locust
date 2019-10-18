@@ -1,15 +1,18 @@
 # Change Log
 
-## [0.12.0](https://github.com/locustio/locust/tree/0.12.0) (2019-10-01)
-[Full Changelog](https://github.com/locustio/locust/compare/0.11.1...0.12.0)
+
+## [0.12.1](https://github.com/locustio/locust/tree/0.12.1) (2019-10-01)
+[Full Changelog](https://github.com/locustio/locust/compare/0.11.1...0.12.1)
 
 **Fixed bugs:**
 
+- Resolved time import error in exception_handler [\#1023](https://github.com/locustio/locust/issues/1023)
 - response time has too many decimal places in the web statistics page [\#1081](https://github.com/locustio/locust/issues/1081)
 - Fail ratio calculation for individual requests is incorrect [\#991](https://github.com/locustio/locust/issues/991)
 
 **Closed issues:**
 
+- Added TCP Keep Alive to guarantee master-slave communication after idle periods [\#1101](https://github.com/locustio/locust/pull/1101)
 - Distributed load test k8s and openshift [\#1100](https://github.com/locustio/locust/issues/1100)
 - http return code as 0 [\#1098](https://github.com/locustio/locust/issues/1098)
 - Official docker image does not actually exist [\#1092](https://github.com/locustio/locust/issues/1092)
@@ -97,6 +100,11 @@
 - Correct fail ratio calculation. Fixes \#991. [\#994](https://github.com/locustio/locust/pull/994) ([genericmoniker](https://github.com/genericmoniker))
 - Add command line argument to specify exit code on response errors [\#992](https://github.com/locustio/locust/pull/992) ([Stateford](https://github.com/Stateford))
 - Geventhttpclientmergeconflicts [\#838](https://github.com/locustio/locust/pull/838) ([SpencerPinegar](https://github.com/SpencerPinegar))
+
+## [0.12.0]
+
+- Skipped because of accidental upload of master to PyPI.
+
 
 ## [0.11.1](https://github.com/locustio/locust/tree/0.11.1) (2019-03-19)
 [Full Changelog](https://github.com/locustio/locust/compare/0.11.0...0.11.1)
