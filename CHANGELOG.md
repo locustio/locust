@@ -101,7 +101,7 @@
 - Add command line argument to specify exit code on response errors [\#992](https://github.com/locustio/locust/pull/992) ([Stateford](https://github.com/Stateford))
 - Geventhttpclientmergeconflicts [\#838](https://github.com/locustio/locust/pull/838) ([SpencerPinegar](https://github.com/SpencerPinegar))
 
-## [0.12.0]
+## 0.12.0
 
 - Skipped because of accidental upload of master to PyPI.
 
