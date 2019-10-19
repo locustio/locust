@@ -125,6 +125,14 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(s1.min_response_time, 122)
         self.assertEqual(s1.max_response_time, 992)
 
+    def test_aggregation_min_response_time(self):
+        s1 = StatsEntry(self.stats, "min", "GET")
+        s1.log(10, 0)
+        self.assertEqual(10, s1.min_response_time)
+        s2 = StatsEntry(self.stats, "min", "GET")
+        s1.extend(s2)
+        self.assertEqual(10, s1.min_response_time)
+
     def test_percentile_rounded_down(self):
         s1 = StatsEntry(self.stats, "rounding down!", "GET")
         s1.log(122, 0)    # (rounded 120) min

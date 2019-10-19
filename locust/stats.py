@@ -343,7 +343,11 @@ class StatsEntry(object):
         self.num_failures = self.num_failures + other.num_failures
         self.total_response_time = self.total_response_time + other.total_response_time
         self.max_response_time = max(self.max_response_time, other.max_response_time)
-        self.min_response_time = min(self.min_response_time or 0, other.min_response_time or 0) or other.min_response_time
+        if self.min_response_time is not None and other.min_response_time is not None:
+            self.min_response_time = min(self.min_response_time, other.min_response_time)
+        elif other.min_response_time is not None:
+            # this means self.min_response_time is None, so we can safely replace it
+            self.min_response_time = other.min_response_time
         self.total_content_length = self.total_content_length + other.total_content_length
 
         for key in other.response_times:
