@@ -296,10 +296,16 @@ class StatsEntry(object):
         if not self.response_times:
             return 0
         median = median_from_dict(self.num_requests, self.response_times)
+
+        # Since we only use two digits of precision when calculating the median response time 
+        # while still using the exact values for min and max response times, the following checks 
+        # makes sure that we don't report a median > max or median < min when a StatsEntry only 
+        # have one (or very few) really slow requests
         if median > self.max_response_time:
             median = self.max_response_time
         elif median < self.min_response_time:
             median = self.min_response_time
+
         return median
 
     @property
