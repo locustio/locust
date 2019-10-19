@@ -104,14 +104,14 @@
                             <tr>
                                 <th class="stats_label" href="#" data-sortkey="method">Type</th>
                                 <th class="stats_label" href="#" data-sortkey="name">Name</th>
-                                <th class="stats_label numeric" href="#" data-sortkey="num_requests" title="Number of successful requests"># requests</th>
-                                <th class="stats_label numeric" href="#" data-sortkey="num_failures" title="Number of failures"># fails</th>
+                                <th class="stats_label numeric" href="#" data-sortkey="num_requests" title="Number of successful requests"># Requests</th>
+                                <th class="stats_label numeric" href="#" data-sortkey="num_failures" title="Number of failures"># Fails</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="median_response_time" title="Median response time">Median (ms)</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="avg_response_time" title="Average response time">Average (ms)</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="min_response_time" title="Min response time">Min (ms)</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="max_response_time" title="Max response time">Max (ms)</th>
-                                <th class="stats_label numeric" href="#" data-sortkey="avg_content_length" title="Average response size">Content Size (bytes)</th>
-                                <th class="stats_label numeric" href="#" data-sortkey="current_rps" title="Current number of requests per second"># reqs/sec</th>
+                                <th class="stats_label numeric" href="#" data-sortkey="avg_content_length" title="Average response size">Average size (bytes)</th>
+                                <th class="stats_label numeric" href="#" data-sortkey="current_rps" title="Current number of requests per second">Current RPS</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -137,7 +137,7 @@
                 <div style="display:none;">
                     <table id="exceptions" class="stats">
                         <thead>
-                            <th class="exception_occurences stats_label" data-sortkey="1"># occurences</th>
+                            <th class="exception_occurrences stats_label" data-sortkey="1"># occurrences</th>
                             <th class="exception_traceback stats_label" data-sortkey="0">Traceback</th>
                         </thead>
                         <tbody>
@@ -148,6 +148,7 @@
                     <div style="margin-top:20px;">
                         <a href="./stats/requests/csv">Download request statistics CSV</a><br>
                         <a href="./stats/distribution/csv">Download response time distribution CSV</a><br>
+                        <a href="./stats/failures/csv">Download failures CSV</a><br>
                         <a href="./exceptions/csv">Download exceptions CSV</a>
                     </div>
                 </div>
@@ -194,7 +195,7 @@
                 <h1>License</h1>
                 Open source licensed under the MIT license.
 
-                <h2>Version <a href="https://github.com/locustio/locust/releases/tag/v{{version}}">{{version}}</a></h2>
+                <h2>Version <a href="https://github.com/locustio/locust/releases/tag/{{version}}">{{version}}</a></h2>
                 <br>
                 <a href="https://locust.io/">https://locust.io</a>
             </div>
@@ -234,7 +235,7 @@
     <script type="text/x-jqote-template" id="errors-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%>">
-            <td><%= this.occurences %></td>
+            <td><%= this.occurrences %></td>
             <td><%= this.method %></td>
             <td><%= this.name %></td>
             <td><%= function(e) { return e.replace("<", "&lt;"); }(this.error) %></td>
@@ -245,7 +246,7 @@
     <script type="text/x-jqote-template" id="exceptions-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%>">
-            <td class="occurences"><%= this.count %></td>
+            <td class="occurrences"><%= this.count %></td>
             <td class="traceback" title="Occured on: <%= this.nodes %>"><%= function(e) { return e.replace("<", "&lt;"); }(this.traceback) %>
 <%= function(e) { return e.replace("<", "&lt;"); }(this.msg) %></td>
         </tr>

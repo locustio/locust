@@ -1,16 +1,18 @@
-sudo: false
 language: python
 cache: pip
 matrix:
   include:
+    - python: 3.7
+      env: TOXENV=py37
+      dist: xenial
     - python: 3.6
       env: TOXENV=py36
     - python: 3.5
       env: TOXENV=py35
-    - python: 3.4
-      env: TOXENV=py34
     - python: 2.7
       env: TOXENV=py27
+    - stage: Verify Docker image builds
+      script: docker build -t locustio/locust .
 addons:
   apt:
     packages:

@@ -74,6 +74,16 @@ class TestWebUI(LocustTestCase):
         data = json.loads(requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).text)
         self.assertEqual(3, len(data["stats"])) # this should no longer be cached
     
+    def test_stats_rounding(self):
+        stats.global_stats.log_request("GET", "/test", 1.39764125, 2)
+        stats.global_stats.log_request("GET", "/test", 999.9764125, 1000)
+        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
+        self.assertEqual(200, response.status_code)
+        
+        data = json.loads(response.text)
+        self.assertEqual(1, data["stats"][0]["min_response_time"])
+        self.assertEqual(1000, data["stats"][0]["max_response_time"])
+    
     def test_request_stats_csv(self):
         stats.global_stats.log_request("GET", "/test2", 120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/requests/csv" % self.web_port)
@@ -95,12 +105,40 @@ class TestWebUI(LocustTestCase):
         # verify that the 95%, 98%, 99% and 100% percentiles are 1200
         for value in total_cols[-4:]:
             self.assertEqual('1200', value)
+
+    def test_failure_stats_csv(self):
+        stats.global_stats.log_error("GET", "/", Exception("Error1337"))
+        response = requests.get("http://127.0.0.1:%i/stats/failures/csv" % self.web_port)
+        self.assertEqual(200, response.status_code)
     
     def test_request_stats_with_errors(self):
         stats.global_stats.log_error("GET", "/", Exception("Error1337"))
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertIn("Error1337", response.text)
+
+    def test_reset_stats(self):
+        try:
+            raise Exception(u"A cool test exception")
+        except Exception as e:
+            tb = sys.exc_info()[2]
+            runners.locust_runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
+            runners.locust_runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
+
+        stats.global_stats.log_request("GET", "/test", 120, 5612)
+        stats.global_stats.log_error("GET", "/", Exception("Error1337"))
+
+        response = requests.get("http://127.0.0.1:%i/stats/reset" % self.web_port)
+
+        self.assertEqual(200, response.status_code)
+
+        self.assertEqual({}, stats.global_stats.errors)
+        self.assertEqual({}, runners.locust_runner.exceptions)
+        
+        self.assertEqual(0, stats.global_stats.get("/", "GET").num_requests)
+        self.assertEqual(0, stats.global_stats.get("/", "GET").num_failures)
+        self.assertEqual(0, stats.global_stats.get("/test", "GET").num_requests)
+        self.assertEqual(0, stats.global_stats.get("/test", "GET").num_failures)
     
     def test_exceptions(self):
         try:

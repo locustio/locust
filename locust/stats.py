@@ -103,7 +103,7 @@ class RequestStats(object):
         if not entry:
             entry = StatsError(method, name, error)
             self.errors[key] = entry
-        entry.occured()
+        entry.occurred()
     
     def get(self, name, method):
         """
@@ -121,6 +121,7 @@ class RequestStats(object):
         """
         self.start_time = time.time()
         self.total.reset()
+        self.errors = {}
         for r in six.itervalues(self.entries):
             r.reset()
     
@@ -276,7 +277,7 @@ class StatsEntry(object):
     @property
     def fail_ratio(self):
         try:
-            return float(self.num_failures) / (self.num_requests + self.num_failures)
+            return float(self.num_failures) / self.num_requests
         except ZeroDivisionError:
             if self.num_failures > 0:
                 return 1.0
@@ -383,11 +384,8 @@ class StatsEntry(object):
         return report
 
     def __str__(self):
-        try:
-            fail_percent = (self.num_failures/float(self.num_requests + self.num_failures))*100
-        except ZeroDivisionError:
-            fail_percent = 0
-        
+        fail_percent = self.fail_ratio * 100
+
         return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d  | %7d %7.2f") % (
             (self.method and self.method + " " or "") + self.name,
             self.num_requests,
@@ -484,11 +482,11 @@ class StatsEntry(object):
 
 
 class StatsError(object):
-    def __init__(self, method, name, error, occurences=0):
+    def __init__(self, method, name, error, occurrences=0):
         self.method = method
         self.name = name
         self.error = error
-        self.occurences = occurences
+        self.occurrences = occurrences
 
     @classmethod
     def parse_error(cls, error):
@@ -509,8 +507,8 @@ class StatsError(object):
         key = "%s.%s.%r" % (method, name, StatsError.parse_error(error))
         return hashlib.md5(key.encode('utf-8')).hexdigest()
 
-    def occured(self):
-        self.occurences += 1
+    def occurred(self):
+        self.occurrences += 1
 
     def to_name(self):
         return "%s %s: %r" % (self.method, 
@@ -521,7 +519,7 @@ class StatsError(object):
             "method": self.method,
             "name": self.name,
             "error": StatsError.parse_error(self.error),
-            "occurences": self.occurences
+            "occurrences": self.occurrences
         }
 
     @classmethod
@@ -530,7 +528,7 @@ class StatsError(object):
             data["method"], 
             data["name"], 
             data["error"], 
-            data["occurences"]
+            data["occurrences"]
         )
 
 
@@ -558,6 +556,7 @@ def on_request_success(request_type, name, response_time, response_length, **kwa
     global_stats.log_request(request_type, name, response_time, response_length)
 
 def on_request_failure(request_type, name, response_time, exception, **kwargs):
+    global_stats.log_request(request_type, name, response_time, 0)
     global_stats.log_error(request_type, name, exception)
 
 def on_report_to_master(client_id, data):
@@ -578,7 +577,7 @@ def on_slave_report(client_id, data):
         if error_key not in global_stats.errors:
             global_stats.errors[error_key] = StatsError.from_dict(error)
         else:
-            global_stats.errors[error_key].occurences += error["occurences"]
+            global_stats.errors[error_key].occurrences += error["occurrences"]
     
     # save the old last_request_timestamp, to see if we should store a new copy
     # of the response times in the response times cache
@@ -645,7 +644,7 @@ def print_error_report():
     console_logger.info(" %-18s %-100s" % ("# occurrences", "Error"))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     for error in six.itervalues(global_stats.errors):
-        console_logger.info(" %-18i %-100s" % (error.occurences, error.to_name()))
+        console_logger.info(" %-18i %-100s" % (error.occurrences, error.to_name()))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     console_logger.info("")
 
@@ -732,4 +731,26 @@ def distribution_csv():
         else:
             rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
 
+    return "\n".join(rows)
+
+def failures_csv():
+    """"Return the contents of the 'failures' tab as a CSV."""
+    from . import runners
+
+    rows = [
+        ",".join((
+            '"Method"',
+            '"Name"',
+            '"Error"',
+            '"Occurrences"',
+        ))
+    ]
+
+    for s in sort_stats(runners.locust_runner.stats.errors):
+        rows.append('"%s","%s","%s",%i' % (
+            s.method,
+            s.name,
+            s.error,
+            s.occurrences,
+        ))
     return "\n".join(rows)

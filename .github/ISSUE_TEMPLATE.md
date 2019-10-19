@@ -1,7 +1,7 @@
 <!-- For general questions about how to use Locust, use either the Slack link provided in the Readme or [ask a question on Stack Overflow](https://stackoverflow.com/questions/ask) tagged Locust.-->
 
 
-### Description of issue / feature request
+### Description of issue
 
 TBD
 
@@ -13,7 +13,7 @@ TBD
 
 TBD
 
-### Environment settings (for bug reports)
+### Environment settings
 
 - OS:
 - Python version:
@@ -21,4 +21,4 @@ TBD
 
 ### Steps to reproduce (for bug reports)
 
-TBD - [example code appreciated](https://stackoverflow.com/help/mcve)
+TBD - [please provide example code](https://stackoverflow.com/help/mcve)

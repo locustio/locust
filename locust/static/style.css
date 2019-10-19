@@ -143,7 +143,7 @@ a:hover {
 .stopped .boxes .box_stop {display: none;}
 
 .container {
-    max-width: 1200px;
+    max-width: 1800px;
     min-width: 1000px;
     margin-left: auto;
     margin-right: auto;
@@ -317,11 +317,19 @@ a:hover {
     }
 }
 
+#stats {
+    table-layout: fixed;
+}
+
+#stats td {
+    word-wrap: break-word;
+}
+
 #errors td, #errors th {
     text-align: left;
 }
 
-#exceptions th.exception_occurences {
+#exceptions th.exception_occurrences {
     width: 110px;
     text-align: center;
 }
@@ -329,7 +337,7 @@ a:hover {
     text-align: left;
 }
 
-#exceptions td.occurences {
+#exceptions td.occurrences {
     text-align: center;
 }
 #exceptions td.traceback {

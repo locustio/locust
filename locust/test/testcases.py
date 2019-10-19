@@ -41,7 +41,7 @@ def consistent():
     gevent.sleep(0.2)
     return "This is a consistent response"
 
-@app.route("/request_method", methods=["POST", "GET", "HEAD", "PUT", "DELETE"])
+@app.route("/request_method", methods=["POST", "GET", "HEAD", "PUT", "DELETE", "PATCH"])
 def request_method():
     return request.method
 
@@ -80,6 +80,7 @@ def no_content_length():
     r = send_file(BytesIO("This response does not have content-length in the header".encode('utf-8')),
                   add_etags=False,
                   mimetype='text/plain')
+    r.headers.remove("Content-Length")
     return r
 
 @app.errorhandler(404)

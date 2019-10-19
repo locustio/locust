@@ -48,7 +48,9 @@ The *min_wait* and *max_wait* attributes can also be overridden in a TaskSet cla
 The *weight* attribute
 ----------------------
 
-You can run two locusts from the same file like so:
+If more than one locust class exists in the file, and no locusts are specified on the command line,
+each new spawn will choose randomly from the existing locusts. Otherwise, you can specify which locusts
+to use from the same file like so:
 
 .. code-block:: console
 
@@ -71,7 +73,7 @@ classes. Say for example, web users are three times more likely than mobile user
 The *host* attribute
 --------------------
 
-The host attribute is a URL prefix (i.e. "https://google.com") to the host that is to be loaded. 
+The host attribute is a URL prefix (i.e. "https://google.com") to the host that is to be loaded.
 Usually, this is specified on the command line, using the :code:`--host` option, when locust is started. 
 If one declares a host attribute in the locust class, it will be used in the case when no :code:`--host` 
 is specified on the command line.
@@ -255,6 +257,31 @@ its Locust instance, and the attribute :py:attr:`parent <locust.core.TaskSet.par
 parent TaskSet (it will point to the Locust instance, in the base TaskSet).
 
 
+TaskSequence class
+==================
+
+TaskSequence class is a TaskSet but its tasks will be executed in order.
+To define this order you should do the following:
+
+.. code-block:: python
+
+    class MyTaskSequence(TaskSequence):
+        @seq_task(1)
+        def first_task(self):
+            pass
+
+        @seq_task(2)
+        def second_task(self):
+            pass
+
+        @seq_task(3)
+        @task(10)
+        def third_task(self):
+            pass
+
+In the above example, the order is defined to execute first_task, then second_task and lastly the third_task for 10 times.
+As you can see, you can compose :py:meth:`@seq_task <locust.core.seq_task>` with :py:meth:`@task <locust.core.task>` decorator, and of course you can also nest TaskSets within TaskSequences and vice versa.
+
 Setups, Teardowns, on_start, and on_stop
 ========================================
 
@@ -295,7 +322,7 @@ Since many setup and cleanup operations are dependent on each other, here is the
 In general, the setup and teardown methods should be complementary.
 
 
-Making HTTP requests 
+Making HTTP requests
 =====================
 
 So far, we've only covered the task scheduling part of a Locust user. In order to actually load test 
@@ -377,6 +404,8 @@ a connection error, timeout, or similar will not raise an exception, but rather 
 Response object. The request will be reported as a failure in Locust's statistics. The returned dummy 
 Response's *content* attribute will be set to None, and its *status_code* will be 0.
 
+
+.. _catch-response:
 
 Manually controlling if a request should be considered successful or a failure
 ------------------------------------------------------------------------------

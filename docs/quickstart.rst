@@ -51,6 +51,10 @@ The :py:class:`HttpLocust <locust.core.HttpLocust>` class inherits from the
 :py:class:`Locust <locust.core.Locust>` class, and it adds a client attribute which is an instance of
 :py:class:`HttpSession <locust.clients.HttpSession>` that can be used to make HTTP requests.
 
+By default, we stop looking for proxy settings to improve performance. If you really want the test requests
+go through a HTTP proxy, you can inherit from the :py:class:`HttpLocust <locust.core.HttpLocust>` class and
+set the trust_env field to True. For further details, refer to the documentation of requests.
+
 Another way we could declare tasks, which is usually more convenient, is to use the
 ``@task`` decorator. The following code is equivalent to the above:
 
