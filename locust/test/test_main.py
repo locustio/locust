@@ -10,22 +10,22 @@ class TestTaskSet(LocustTestCase):
         self.assertFalse(main.is_locust(("HttpLocust", HttpLocust)))
         self.assertFalse(main.is_locust(("random_dict", {})))
         self.assertFalse(main.is_locust(("random_list", [])))
-        
+
         class MyTaskSet(TaskSet):
             pass
-        
+
         class MyHttpLocust(HttpLocust):
             task_set = MyTaskSet
-        
+
         class MyLocust(Locust):
             task_set = MyTaskSet
-        
+
         self.assertTrue(main.is_locust(("MyHttpLocust", MyHttpLocust)))
         self.assertTrue(main.is_locust(("MyLocust", MyLocust)))
-        
+
         class ThriftLocust(Locust):
             pass
-        
+
         self.assertFalse(main.is_locust(("ThriftLocust", ThriftLocust)))
 
 
@@ -86,11 +86,11 @@ class NotLocustSubclass():
     def test_load_locust_file_with_a_dot_in_filename(self):
         self.__create_mock_locust_file('mock_locust_file.py')
         docstring, locusts = main.load_locustfile(self.file_path)
-    
+
     def test_load_locust_file_with_multiple_dots_in_filename(self):
         self.__create_mock_locust_file('mock_locust_file.test.py')
         docstring, locusts = main.load_locustfile(self.file_path)
-    
+
     def test_return_docstring_and_locusts(self):
         self.__create_mock_locust_file('mock_locust_file.py')
         docstring, locusts = main.load_locustfile(self.file_path)

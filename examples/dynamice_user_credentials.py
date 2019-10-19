@@ -13,7 +13,7 @@ class UserBehaviour(TaskSet):
         if len(USER_CREDENTIALS) > 0:
             user, passw = USER_CREDENTIALS.pop()
             self.client.post("/login", {"username":user, "password":passw})
-    
+
     @task
     def some_task(self):
         # user should be logged in here (unless the USER_CREDENTIALS ran out)

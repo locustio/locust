@@ -10,14 +10,14 @@ supported by many languages. So, you can write your Locust tasks in any language
 libraries do the job as a slave runner. They run your Locust tasks, and report to master regularly.
 
 
-Golang 
+Golang
 ---------------
 
-- `Boomer <https://github.com/myzhan/boomer/>`_ 
+- `Boomer <https://github.com/myzhan/boomer/>`_
 
 Java
 ---------------
 
-- `Locust4j <https://github.com/myzhan/locust4j>`_ 
+- `Locust4j <https://github.com/myzhan/locust4j>`_
 
-- `Swarm <https://github.com/anhldbk/swarm>`_ 
+- `Swarm <https://github.com/anhldbk/swarm>`_

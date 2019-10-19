@@ -10,12 +10,12 @@ def stats(l):
 class UserTasks(TaskSet):
     # one can specify tasks like this
     tasks = [index, stats]
-    
+
     # but it might be convenient to use the @task decorator
     @task
     def page404(self):
         self.client.get("/does_not_exist")
-    
+
 class WebsiteUser(HttpLocust):
     """
     Locust user class that does requests to the locust web server running on localhost
@@ -45,7 +45,3 @@ class StrictWebsiteUser(HttpLocust):
     host = "http://127.0.0.1:8089"
     wait_function = lambda self: strictExp(self.min_wait, self.max_wait)*1000
     task_set = UserTasks
-
-
-
-

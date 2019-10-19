@@ -19,7 +19,7 @@ assignees: ''
 <!-- Tell us what happens instead -->
 
 ### Steps to reproduce
-<!-- Please provide a minimal reproducible code example (https://stackoverflow.com/help/minimal-reproducible-example). Or even better - a pull request with a failing unit test --> 
+<!-- Please provide a minimal reproducible code example (https://stackoverflow.com/help/minimal-reproducible-example). Or even better - a pull request with a failing unit test -->
 
 ### Environment settings
 

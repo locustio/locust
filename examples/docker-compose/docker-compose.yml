@@ -16,7 +16,7 @@ services:
     environment:
       <<: *common-env
       LOCUST_MODE: master
-  
+
   locust-slave:
     <<: *common
     environment:

@@ -14,11 +14,11 @@ class UserTasks(TaskSet):
     def on_start(self):
         all_locusts_spawned.wait()
         self.wait()
-    
+
     @task
     def index(self):
         self.client.get("/")
-    
+
 class WebsiteUser(HttpLocust):
     host = "http://127.0.0.1:8089"
     min_wait = 2000

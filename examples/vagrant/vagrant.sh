@@ -1,11 +1,11 @@
 #!/bin/bash
-# NOTICE: 
+# NOTICE:
 #
 # This file must be saved with unix-style line endings or it will fail.
-# 
+#
 
 # Update and install some dependencies
-apt-get -y update 
+apt-get -y update
 apt-get -y install build-essential python-pip python-dev libev-dev libzmq-dev supervisor
 cd /vagrant
 

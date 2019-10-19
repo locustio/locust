@@ -123,10 +123,10 @@ class LocustTestCase(unittest.TestCase):
             event = getattr(events, name)
             if isinstance(event, events.EventHook):
                 self._event_handlers[event] = copy(event._handlers)
-        
-        # When running the tests in Python 3 we get warnings about unclosed sockets. 
-        # This causes tests that depends on calls to sys.stderr to fail, so we'll 
-        # suppress those warnings. For more info see: 
+
+        # When running the tests in Python 3 we get warnings about unclosed sockets.
+        # This causes tests that depends on calls to sys.stderr to fail, so we'll
+        # suppress those warnings. For more info see:
         # https://github.com/requests/requests/issues/1882
         try:
             warnings.filterwarnings(action="ignore", message="unclosed <socket object", category=ResourceWarning)
@@ -134,7 +134,7 @@ class LocustTestCase(unittest.TestCase):
             # ResourceWarning doesn't exist in Python 2, but since the warning only appears
             # on Python 3 we don't need to mock it. Instead we can happily ignore the exception
             pass
-                      
+
     def tearDown(self):
         for event, handlers in six.iteritems(self._event_handlers):
             event._handlers = handlers

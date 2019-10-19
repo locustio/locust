@@ -4,7 +4,7 @@ Retrieve test statistics in CSV format
 
 You may wish to consume your Locust results via a CSV file. In this case, there are two ways to do this.
 
-First, when running Locust with the web UI, you can retrieve CSV files under the Download Data tab. 
+First, when running Locust with the web UI, you can retrieve CSV files under the Download Data tab.
 
 Secondly, you can run Locust with a flag which will periodically save two CSV files. This is particularly useful
 if you plan on running Locust in an automated way with the ``--no-web`` flag:

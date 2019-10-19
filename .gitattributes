@@ -1,7 +1,7 @@
 # Set default behaviour, in case users don't have core.autocrlf set.
 * text=auto
 
-# Explicitly declare text files we want to always be normalized and converted 
+# Explicitly declare text files we want to always be normalized and converted
 # to native line endings on checkout.
 *.c text
 *.h text

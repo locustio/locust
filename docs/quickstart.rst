@@ -39,12 +39,12 @@ Below is a quick little example of a simple **locustfile.py**:
         max_wait = 9000
 
 
-Here we define a number of Locust tasks, which are normal Python callables that take one argument 
+Here we define a number of Locust tasks, which are normal Python callables that take one argument
 (a :py:class:`Locust <locust.core.Locust>` class instance). These tasks are gathered under a
 :py:class:`TaskSet <locust.core.TaskSet>` class in the *tasks* attribute. Then we have a
 :py:class:`HttpLocust <locust.core.HttpLocust>` class which represents a user, where we define how
 long a simulated user should wait between executing tasks, as well as what
-:py:class:`TaskSet <locust.core.TaskSet>` class should define the user's \"behaviour\". 
+:py:class:`TaskSet <locust.core.TaskSet>` class should define the user's \"behaviour\".
 :py:class:`TaskSet <locust.core.TaskSet>` classes can be nested.
 
 The :py:class:`HttpLocust <locust.core.HttpLocust>` class inherits from the
@@ -70,21 +70,21 @@ Another way we could declare tasks, which is usually more convenient, is to use 
         def on_stop(self):
             """ on_stop is called when the TaskSet is stopping """
             self.logout()
-        
+
         def login(self):
             self.client.post("/login", {"username":"ellen_key", "password":"education"})
-        
+
         def logout(self):
             self.client.post("/logout", {"username":"ellen_key", "password":"education"})
-        
+
         @task(2)
         def index(self):
             self.client.get("/")
-        
+
         @task(1)
         def profile(self):
             self.client.get("/profile")
-    
+
     class WebsiteUser(HttpLocust):
         task_set = UserBehavior
         min_wait = 5000
@@ -94,13 +94,13 @@ The :py:class:`Locust <locust.core.Locust>` class (as well as :py:class:`HttpLoc
 since it's a subclass) also allows one to specify minimum and maximum wait time in milliseconds—per simulated
 user—between the execution of tasks (*min_wait* and *max_wait*) as well as other user behaviours.
 By default the time is randomly chosen uniformly between *min_wait* and *max_wait*, but any user-defined
-time distributions can be used by setting *wait_function* to any arbitrary function. 
+time distributions can be used by setting *wait_function* to any arbitrary function.
 For example, for an exponentially distributed wait time with average of 1 second:
 
 .. code-block:: python
 
     import random
-    
+
     class WebsiteUser(HttpLocust):
         task_set = UserBehaviour
         wait_function = lambda self: random.expovariate(1)*1000
