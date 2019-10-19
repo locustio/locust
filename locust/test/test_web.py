@@ -22,7 +22,7 @@ class TestWebUI(LocustTestCase):
         
         stats.global_stats.clear_all()
         parser = parse_options()[0]
-        options = parser.parse_args([])[0]
+        options = parser.parse_args([])
         runners.locust_runner = LocustRunner([], options)
         
         web.request_stats.clear_cache()
