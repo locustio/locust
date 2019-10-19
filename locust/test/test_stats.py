@@ -39,6 +39,14 @@ class TestRequestStats(unittest.TestCase):
     def test_median(self):
         self.assertEqual(self.s.median_response_time, 79)
 
+    def test_median_out_of_min_max_bounds(self):
+        s = StatsEntry(self.stats, "median_test", "GET")
+        s.log(6034, 0)
+        self.assertEqual(s.median_response_time, 6034)
+        s.reset()
+        s.log(6099, 0)
+        self.assertEqual(s.median_response_time, 6099)
+
     def test_total_rps(self):
         self.assertEqual(self.s.total_rps, 7)
 
