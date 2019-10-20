@@ -19,6 +19,9 @@ processor core, on the slave machines.
 .. note::
     Both the master and each slave machine, must have a copy of the locust test scripts 
     when running Locust distributed.
+    
+    When specifying the target host (that you're load testing) on the command line using the 
+    ``--host`` argument, it should be passed to both the  master and slave nodes.
 
 
 Example
