@@ -158,7 +158,7 @@ def parse_options():
     )
 
     # skip logging setup
-    parser.add_option(
+    parser.add_argument(
         '--skip-log-setup',
         action='store_true',
         dest='skip_log_setup',
