@@ -8,7 +8,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 ======
 
 * Added new :code:`FastHttpLocust` class that uses a faster HTTP client, which should be 5-6 times faster 
-  than the normal :code:`HttpLocust` class. For more info see the documentaion on :ref:`increase-performance <increasing performance>`.
+  than the normal :code:`HttpLocust` class. For more info see the documentation on :ref:`increasing performance <increase-performance>`.
 * Added ability to set the exit code of the locust process when exceptions has occurred within the user code, 
   using the `--exit-code-on-error` parameter.
 * Added TCP keep alive to master/slave communication sockets to avoid broken connections in some environments.
