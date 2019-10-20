@@ -23,8 +23,9 @@ Getting started
     installation
     quickstart
 
-How to write Locust tests
--------------------------
+
+Writing Locust tests
+--------------------
 
 .. toctree ::
     :maxdepth: 2
@@ -32,8 +33,8 @@ How to write Locust tests
     writing-a-locustfile
 
 
-How to run your Locust tests
-----------------------------
+Running your Locust tests
+-------------------------
 
 .. toctree ::
     :maxdepth: 1
