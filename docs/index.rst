@@ -13,6 +13,8 @@ Locust Documentation
     * **Twitter**: `@locustio <https://twitter.com/locustio>`_
 
 
+Getting started
+---------------
 
 .. toctree ::
     :maxdepth: 4
@@ -21,20 +23,31 @@ Locust Documentation
     installation
     quickstart
 
+How to write Locust tests
+-------------------------
+
 .. toctree ::
-    :maxdepth: 4
+    :maxdepth: 2
 
     writing-a-locustfile
 
+
+How to run your Locust tests
+----------------------------
+
 .. toctree ::
-    :maxdepth: 4
+    :maxdepth: 1
 
     running-locust-distributed
     running-locust-without-web-ui
     increase-performance
 
+
+Other functionalities
+---------------------
+
 .. toctree ::
-    :maxdepth: 4
+    :maxdepth: 2
 
     retrieving-stats
     testing-other-systems
@@ -42,12 +55,28 @@ Locust Documentation
     extending-locust
     logging
 
+
+API
+---
 .. toctree ::
     :maxdepth: 4
+    
+    api
+
+
+Third-party tools
+-----------------
+
+.. toctree ::
+    :maxdepth: 1
 
     third-party-tools
 
+
+Changelog
+---------
+
 .. toctree ::
-    :maxdepth: 4
+    :maxdepth: 2
 
     changelog
