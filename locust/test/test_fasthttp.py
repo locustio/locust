@@ -9,6 +9,9 @@ from locust.stats import global_stats
 
 from .testcases import WebserverTestCase
 
+if six.PY2:
+    from locust.contrib.fasthttp import ConnectionRefusedError
+
 
 class TestFastHttpSession(WebserverTestCase):
     def test_get(self):
