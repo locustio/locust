@@ -84,6 +84,10 @@ class RequestStats(object):
         return self.total.num_requests
     
     @property
+    def num_none_requests(self):
+        return self.total.num_none_requests
+
+    @property
     def num_failures(self):
         return self.total.num_failures
     
@@ -157,6 +161,9 @@ class StatsEntry(object):
     num_requests = None
     """ The number of requests made """
     
+    num_none_requests = None
+    """ The number of requests made with a None response time (typically async requests) """
+
     num_failures = None
     """ Number of failed request """
     
@@ -216,6 +223,7 @@ class StatsEntry(object):
     def reset(self):
         self.start_time = time.time()
         self.num_requests = 0
+        self.num_none_requests = 0
         self.num_failures = 0
         self.total_response_time = 0
         self.response_times = {}
@@ -249,6 +257,7 @@ class StatsEntry(object):
 
     def _log_response_time(self, response_time):
         if response_time is None:
+            self.num_none_requests += 1
             return
 
         self.total_response_time += response_time
@@ -291,7 +300,7 @@ class StatsEntry(object):
     @property
     def avg_response_time(self):
         try:
-            return float(self.total_response_time) / self.num_requests
+            return float(self.total_response_time) / (self.num_requests - self.num_none_requests)
         except ZeroDivisionError:
             return 0
 
@@ -299,7 +308,7 @@ class StatsEntry(object):
     def median_response_time(self):
         if not self.response_times:
             return 0
-        median = median_from_dict(self.num_requests, self.response_times)
+        median = median_from_dict(self.num_requests - self.num_none_requests, self.response_times) or 0
 
         # Since we only use two digits of precision when calculating the median response time 
         # while still using the exact values for min and max response times, the following checks 
@@ -344,6 +353,7 @@ class StatsEntry(object):
         self.start_time = min(self.start_time, other.start_time)
 
         self.num_requests = self.num_requests + other.num_requests
+        self.num_none_requests = self.num_none_requests + other.num_none_requests
         self.num_failures = self.num_failures + other.num_failures
         self.total_response_time = self.total_response_time + other.total_response_time
         self.max_response_time = max(self.max_response_time, other.max_response_time)
@@ -366,6 +376,7 @@ class StatsEntry(object):
             "last_request_timestamp": self.last_request_timestamp,
             "start_time": self.start_time,
             "num_requests": self.num_requests,
+            "num_none_requests": self.num_none_requests,
             "num_failures": self.num_failures,
             "total_response_time": self.total_response_time,
             "max_response_time": self.max_response_time,
@@ -382,6 +393,7 @@ class StatsEntry(object):
             "last_request_timestamp",
             "start_time",
             "num_requests",
+            "num_none_requests",
             "num_failures",
             "total_response_time",
             "max_response_time",
