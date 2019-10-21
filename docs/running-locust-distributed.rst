@@ -18,7 +18,7 @@ processor core, on the slave machines.
 
 .. note::
     Both the master and each slave machine, must have a copy of the locust test scripts 
-    when running Locust distributed.
+    when running Locust distributed. 
 
 
 Example

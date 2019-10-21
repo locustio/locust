@@ -9,9 +9,11 @@ from locust import events
 from locust.core import Locust, TaskSet, task
 from locust.exception import LocustError
 from locust.rpc import Message
-from locust.runners import LocalLocustRunner, MasterLocustRunner, SlaveNode, STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_MISSING
+from locust.runners import LocustRunner, LocalLocustRunner, MasterLocustRunner, SlaveNode, \
+     STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_MISSING
 from locust.stats import global_stats, RequestStats
 from locust.test.testcases import LocustTestCase
+
 
 def mocked_rpc_server():
     class MockedRpcServer(object):
@@ -43,6 +45,7 @@ def mocked_rpc_server():
 
     return MockedRpcServer
 
+
 class mocked_options(object):
     def __init__(self):
         self.hatch_rate = 5
@@ -58,6 +61,57 @@ class mocked_options(object):
 
     def reset_stats(self):
         pass
+
+
+class TestLocustRunner(LocustTestCase):
+    def assert_locust_class_distribution(self, expected_distribution, classes):
+        # Construct a {LocustClass => count} dict from a list of locust classes
+        distribution = {}
+        for locust_class in classes:
+            if not locust_class in distribution:
+                distribution[locust_class] = 0
+            distribution[locust_class] += 1
+        expected_str = str({k.__name__:v for k,v in expected_distribution.items()})
+        actual_str = str({k.__name__:v for k,v in distribution.items()})
+        self.assertEqual(
+            expected_distribution,
+            distribution,
+            "Expected a locust class distribution of %s but found %s" % (
+                expected_str,
+                actual_str,
+            ),
+        )
+
+    def test_weight_locusts(self):
+        maxDiff = 2048
+        class BaseLocust(Locust):
+            class task_set(TaskSet): pass
+        class L1(BaseLocust):
+            weight = 101
+        class L2(BaseLocust):
+            weight = 99
+        class L3(BaseLocust):
+            weight = 100
+
+        runner = LocustRunner([L1, L2, L3], mocked_options())
+        self.assert_locust_class_distribution({L1:10, L2:9, L3:10}, runner.weight_locusts(29))
+        self.assert_locust_class_distribution({L1:10, L2:10, L3:10}, runner.weight_locusts(30))
+        self.assert_locust_class_distribution({L1:11, L2:10, L3:10}, runner.weight_locusts(31))
+
+    def test_weight_locusts_fewer_amount_than_locust_classes(self):
+        class BaseLocust(Locust):
+            class task_set(TaskSet): pass
+        class L1(BaseLocust):
+            weight = 101
+        class L2(BaseLocust):
+            weight = 99
+        class L3(BaseLocust):
+            weight = 100
+
+        runner = LocustRunner([L1, L2, L3], mocked_options())
+        self.assertEqual(1, len(runner.weight_locusts(1)))
+        self.assert_locust_class_distribution({L1:1},  runner.weight_locusts(1))
+
 
 class TestMasterRunner(LocustTestCase):
     def setUp(self):

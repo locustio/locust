@@ -34,7 +34,7 @@ To see available options, run:
 Supported Python Versions
 -------------------------
 
-Locust is supported on Python 2.7, 3.5, 3.6, 3.7.
+Locust is supported on Python 2.7, 3.5, 3.6, 3.7, 3.8.
 
 
 Installing Locust on Windows

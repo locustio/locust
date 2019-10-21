@@ -295,8 +295,18 @@ class StatsEntry(object):
     def median_response_time(self):
         if not self.response_times:
             return 0
+        median = median_from_dict(self.num_requests, self.response_times)
 
-        return median_from_dict(self.num_requests, self.response_times)
+        # Since we only use two digits of precision when calculating the median response time 
+        # while still using the exact values for min and max response times, the following checks 
+        # makes sure that we don't report a median > max or median < min when a StatsEntry only 
+        # have one (or very few) really slow requests
+        if median > self.max_response_time:
+            median = self.max_response_time
+        elif median < self.min_response_time:
+            median = self.min_response_time
+
+        return median
 
     @property
     def current_rps(self):
@@ -333,7 +343,11 @@ class StatsEntry(object):
         self.num_failures = self.num_failures + other.num_failures
         self.total_response_time = self.total_response_time + other.total_response_time
         self.max_response_time = max(self.max_response_time, other.max_response_time)
-        self.min_response_time = min(self.min_response_time or 0, other.min_response_time or 0) or other.min_response_time
+        if self.min_response_time is not None and other.min_response_time is not None:
+            self.min_response_time = min(self.min_response_time, other.min_response_time)
+        elif other.min_response_time is not None:
+            # this means self.min_response_time is None, so we can safely replace it
+            self.min_response_time = other.min_response_time
         self.total_content_length = self.total_content_length + other.total_content_length
 
         for key in other.response_times:

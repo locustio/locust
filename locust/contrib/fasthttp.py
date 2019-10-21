@@ -15,9 +15,9 @@ if six.PY2:
         # ConnectionRefusedError doesn't exist in python 2, so we'll 
         # define a dummy class to avoid a NameError
         pass
-    str = unicode
 else:
     from http.cookiejar import CookieJar
+    unicode = str
 
 from gevent.timeout import Timeout
 from geventhttpclient.useragent import UserAgent, CompatRequest, CompatResponse, ConnectionError
@@ -241,7 +241,7 @@ class FastResponse(CompatResponse):
         """
         # Decode unicode from detected encoding.
         try:
-            content = str(self.content, self.apparent_encoding, errors='replace')
+            content = unicode(self.content, self.apparent_encoding, errors='replace')
         except (LookupError, TypeError):
             # A LookupError is raised if the encoding was not found which could
             # indicate a misspelling or similar mistake.
@@ -249,7 +249,7 @@ class FastResponse(CompatResponse):
             # A TypeError can be raised if encoding is None
             #
             # Fallback to decode without specifying encoding
-            content = str(self.content, errors='replace')
+            content = unicode(self.content, errors='replace')
         return content
     
     @property
@@ -316,6 +316,7 @@ class ResponseContextManager(FastResponse):
     def __init__(self, response):
         # copy data from response to this object
         self.__dict__ = response.__dict__
+        self._cached_content = response.content
     
     def __enter__(self):
         return self

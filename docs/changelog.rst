@@ -4,13 +4,24 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+0.12.1
+======
+
+* Added new :code:`FastHttpLocust` class that uses a faster HTTP client, which should be 5-6 times faster 
+  than the normal :code:`HttpLocust` class. For more info see the documentation on :ref:`increasing performance <increase-performance>`.
+* Added ability to set the exit code of the locust process when exceptions has occurred within the user code, 
+  using the :code:`--exit-code-on-error` parameter.
+* Added TCP keep alive to master/slave communication sockets to avoid broken connections in some environments.
+* Dropped support for Python 3.4
+* Numerous other bug fixes and improvements.
 
 
 0.10.0
-=====
+======
 
 * Python 3.7 support
-* Added heartbeat to detect down slaves
+* Added a status page to the web UI when running Locust distributed showing the status of slave nodes 
+  and detect down slaves using heartbeats
 * Numerous bugfixes/documentation updates (see detailed changelog)
 
 

@@ -39,6 +39,14 @@ class TestRequestStats(unittest.TestCase):
     def test_median(self):
         self.assertEqual(self.s.median_response_time, 79)
 
+    def test_median_out_of_min_max_bounds(self):
+        s = StatsEntry(self.stats, "median_test", "GET")
+        s.log(6034, 0)
+        self.assertEqual(s.median_response_time, 6034)
+        s.reset()
+        s.log(6099, 0)
+        self.assertEqual(s.median_response_time, 6099)
+
     def test_total_rps(self):
         self.assertEqual(self.s.total_rps, 7)
 
@@ -116,6 +124,14 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(s1.avg_response_time, 535.75)
         self.assertEqual(s1.min_response_time, 122)
         self.assertEqual(s1.max_response_time, 992)
+
+    def test_aggregation_min_response_time(self):
+        s1 = StatsEntry(self.stats, "min", "GET")
+        s1.log(10, 0)
+        self.assertEqual(10, s1.min_response_time)
+        s2 = StatsEntry(self.stats, "min", "GET")
+        s1.extend(s2)
+        self.assertEqual(10, s1.min_response_time)
 
     def test_percentile_rounded_down(self):
         s1 = StatsEntry(self.stats, "rounding down!", "GET")
