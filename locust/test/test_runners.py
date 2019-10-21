@@ -159,6 +159,30 @@ class TestMasterRunner(LocustTestCase):
             s = master.stats.get("/", "GET")
             self.assertEqual(700, s.median_response_time)
 
+    def test_slave_stats_report_with_none_response_times(self):
+        class MyTestLocust(Locust):
+            pass
+        
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
+            master = MasterLocustRunner(MyTestLocust, self.options)
+            server.mocked_send(Message("client_ready", None, "fake_client"))
+            
+            master.stats.get("/", "GET").log(100, 23455)
+            master.stats.get("/", "GET").log(800, 23455)
+            master.stats.get("/", "GET").log(700, 23455)
+            master.stats.get("/", "GET").log(None, 23455)
+            master.stats.get("/other", "GET").log(None, 23455)
+            
+            data = {"user_count":1}
+            events.report_to_master.fire(client_id="fake_client", data=data)
+            master.stats.clear_all()
+            
+            server.mocked_send(Message("stats", data, "fake_client"))
+            s = master.stats.get("/", "GET")
+            self.assertEqual(700, s.median_response_time)
+            s = master.stats.get("/other", "GET")
+            self.assertEqual(0, s.median_response_time)
+
     def test_master_marks_downed_slaves_as_missing(self):
         class MyTestLocust(Locust):
             pass
