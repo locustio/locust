@@ -2,13 +2,13 @@
 <html>
 <head>
     <title>Locust</title>
-    <link rel="stylesheet" type="text/css" href="/static/style.css?v={{ version }}" media="screen">
-    <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" type="text/css" href="./static/style.css?v={{ version }}" media="screen">
+    <link rel="shortcut icon" href="./static/img/favicon.ico" type="image/x-icon"/>
 </head>
 <body class="{{state}}">
     <div class="top">
         <div class="top-content container">
-            <img src="/static/img/logo.png?v={{ version }}" class="logo" />
+            <img src="./static/img/logo.png?v={{ version }}" class="logo" />
             <div class="boxes">
                 <div class="top_box box_url">
                     <div class="label">HOST</div>
@@ -42,8 +42,8 @@
                     <div class="value"><span id="fail_ratio"></span>%</div>
                 </div>
                 <div class="top_box box_stop box_running" id="box_stop">
-                    <a href="/stop" class="stop-button"><i></i>STOP</a>
-                    <a href="/stats/reset" class="reset-button">Reset<br>Stats</a>
+                    <a href="./stop" class="stop-button"><i></i>STOP</a>
+                    <a href="./stats/reset" class="reset-button">Reset<br>Stats</a>
                 </div>
             </div>
             <div style="clear:both;"></div>
@@ -56,7 +56,7 @@
             </div>
             <div class="padder">
                 <h2>Start new Locust swarm</h2>
-                <form action="/swarm" method="POST" id="swarm_form">
+                <form action="./swarm" method="POST" id="swarm_form">
                     <label for="locust_count">Number of users to simulate</label>
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
@@ -73,7 +73,7 @@
             </div>
             <div class="padder">
                 <h2>Change the locust count</h2>
-                <form action="/swarm" method="POST" id="edit_form">
+                <form action="./swarm" method="POST" id="edit_form">
                     <label for="locust_count">Number of users to simulate</label>
                     <input type="text" name="locust_count" id="new_locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
@@ -104,14 +104,14 @@
                             <tr>
                                 <th class="stats_label" href="#" data-sortkey="method">Type</th>
                                 <th class="stats_label" href="#" data-sortkey="name">Name</th>
-                                <th class="stats_label numeric" href="#" data-sortkey="num_requests" title="Number of successful requests"># requests</th>
-                                <th class="stats_label numeric" href="#" data-sortkey="num_failures" title="Number of failures"># fails</th>
+                                <th class="stats_label numeric" href="#" data-sortkey="num_requests" title="Number of successful requests"># Requests</th>
+                                <th class="stats_label numeric" href="#" data-sortkey="num_failures" title="Number of failures"># Fails</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="median_response_time" title="Median response time">Median (ms)</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="avg_response_time" title="Average response time">Average (ms)</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="min_response_time" title="Min response time">Min (ms)</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="max_response_time" title="Max response time">Max (ms)</th>
-                                <th class="stats_label numeric" href="#" data-sortkey="avg_content_length" title="Average response size">Content Size</th>
-                                <th class="stats_label numeric" href="#" data-sortkey="current_rps" title="Current number of requests per second"># reqs/sec</th>
+                                <th class="stats_label numeric" href="#" data-sortkey="avg_content_length" title="Average response size">Average size (bytes)</th>
+                                <th class="stats_label numeric" href="#" data-sortkey="current_rps" title="Current number of requests per second">Current RPS</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -137,7 +137,7 @@
                 <div style="display:none;">
                     <table id="exceptions" class="stats">
                         <thead>
-                            <th class="exception_occurences stats_label" data-sortkey="1"># occurences</th>
+                            <th class="exception_occurrences stats_label" data-sortkey="1"># occurrences</th>
                             <th class="exception_traceback stats_label" data-sortkey="0">Traceback</th>
                         </thead>
                         <tbody>
@@ -146,9 +146,10 @@
                 </div>
                 <div style="display:none;">
                     <div style="margin-top:20px;">
-                        <a href="/stats/requests/csv">Download request statistics CSV</a><br>
-                        <a href="/stats/distribution/csv">Download response time distribution CSV</a><br>
-                        <a href="/exceptions/csv">Download exceptions CSV</a>
+                        <a href="./stats/requests/csv">Download request statistics CSV</a><br>
+                        <a href="./stats/distribution/csv">Download response time distribution CSV</a><br>
+                        <a href="./stats/failures/csv">Download failures CSV</a><br>
+                        <a href="./exceptions/csv">Download exceptions CSV</a>
                     </div>
                 </div>
                 <div style="display:none;">
@@ -184,17 +185,17 @@
                 </p>
 
                 <h1>Authors and Copyright</h1>
-                <a href="http://cgbystrom.com/">Carl Byström</a> (<a href="http://twitter.com/cgbystrom/">@cgbystrom</a>)<br>
-                <a href="http://heyman.info/">Jonatan Heyman</a> (<a href="http://twitter.com/jonatanheyman/">@jonatanheyman</a>)<br>
-                Joakim Hamrén (<a href="http://twitter.com/Jahaaja/">@jahaaja</a>)<br>
-                <a href="http://esn.me/">ESN Social Software</a> (<a href="http://twitter.com/uprise_ea/">@uprise_ea</a>)<br>
-                Hugo Heyman (<a href="http://twitter.com/hugoheyman/">@hugoheyman</a>)
+                <a href="http://cgbystrom.com/">Carl Byström</a> (<a href="https://twitter.com/cgbystrom/">@cgbystrom</a>)<br>
+                <a href="http://heyman.info/">Jonatan Heyman</a> (<a href="https://twitter.com/jonatanheyman/">@jonatanheyman</a>)<br>
+                Joakim Hamrén (<a href="https://twitter.com/Jahaaja/">@jahaaja</a>)<br>
+                <a href="http://esn.me/">ESN Social Software</a> (<a href="https://twitter.com/uprise_ea/">@uprise_ea</a>)<br>
+                Hugo Heyman (<a href="https://twitter.com/hugoheyman/">@hugoheyman</a>)
 
 
                 <h1>License</h1>
                 Open source licensed under the MIT license.
 
-                <h2>Version <a href="https://github.com/locustio/locust/releases/tag/v{{version}}">{{version}}</a></h2>
+                <h2>Version <a href="https://github.com/locustio/locust/releases/tag/{{version}}">{{version}}</a></h2>
                 <br>
                 <a href="https://locust.io/">https://locust.io</a>
             </div>
@@ -207,13 +208,13 @@
     </nav>
 
 
-    <script type="text/javascript" src="/static/jquery-1.11.3.min.js"></script>
-    <script type="text/javascript" src="/static/jquery.jqote2.min.js"></script>
-    <script type="text/javascript" src="/static/jquery.tools.min.js"></script>
+    <script type="text/javascript" src="./static/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="./static/jquery.jqote2.min.js"></script>
+    <script type="text/javascript" src="./static/jquery.tools.min.js"></script>
     <!-- echarts from https://github.com/ecomfe/echarts -->
-    <script type="text/javascript" src="/static/echarts.common.min.js"></script>
+    <script type="text/javascript" src="./static/echarts.common.min.js"></script>
     <!-- vintage theme of echarts -->
-    <script type="text/javascript" src="/static/vintage.js"></script>
+    <script type="text/javascript" src="./static/vintage.js"></script>
     <script type="text/x-jqote-template" id="stats-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%> <%=(this.name == "Total" ? "total" : "")%>">
@@ -234,7 +235,7 @@
     <script type="text/x-jqote-template" id="errors-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%>">
-            <td><%= this.occurences %></td>
+            <td><%= this.occurrences %></td>
             <td><%= this.method %></td>
             <td><%= this.name %></td>
             <td><%= function(e) { return e.replace("<", "&lt;"); }(this.error) %></td>
@@ -245,7 +246,7 @@
     <script type="text/x-jqote-template" id="exceptions-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%>">
-            <td class="occurences"><%= this.count %></td>
+            <td class="occurrences"><%= this.count %></td>
             <td class="traceback" title="Occured on: <%= this.nodes %>"><%= function(e) { return e.replace("<", "&lt;"); }(this.traceback) %>
 <%= function(e) { return e.replace("<", "&lt;"); }(this.msg) %></td>
         </tr>
@@ -262,7 +263,7 @@
         <% alternate = !alternate; %>
         ]]>
     </script>
-    <script type="text/javascript" src="/static/chart.js?v={{ version }}"></script>
-    <script type="text/javascript" src="/static/locust.js?v={{ version }}"></script>
+    <script type="text/javascript" src="./static/chart.js?v={{ version }}"></script>
+    <script type="text/javascript" src="./static/locust.js?v={{ version }}"></script>
 </body>
 </html>

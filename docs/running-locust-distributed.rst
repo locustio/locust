@@ -18,7 +18,7 @@ processor core, on the slave machines.
 
 .. note::
     Both the master and each slave machine, must have a copy of the locust test scripts 
-    when running Locust distributed.
+    when running Locust distributed. 
 
 
 Example
@@ -81,7 +81,20 @@ Used when starting the master node with ``--no-web``. The master node will then 
 nodes has connected before the test is started.
 
 
+Running distributed with Docker
+=============================================
+
+See :ref:`running-locust-docker`
+
+
 Running Locust distributed without the web UI
 =============================================
 
 See :ref:`running-locust-distributed-without-web-ui`
+
+
+Increase Locust's performance
+=============================
+
+If your planning to run large-scale load tests you might be interested to use the alternative 
+HTTP client that's shipped with Locust. You can read more about it here: :ref:`increase-performance`

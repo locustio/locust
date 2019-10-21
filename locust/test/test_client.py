@@ -68,3 +68,32 @@ class TestHttpSession(WebserverTestCase):
         get_stats = global_stats.get(url, method="GET")
         self.assertEqual(1, post_stats.num_requests)
         self.assertEqual(0, get_stats.num_requests)
+    
+    def test_cookie(self):
+        s = HttpSession("http://127.0.0.1:%i" % self.port)
+        r = s.post("/set_cookie?name=testcookie&value=1337")
+        self.assertEqual(200, r.status_code)
+        r = s.get("/get_cookie?name=testcookie")
+        self.assertEqual('1337', r.content.decode())
+    
+    def test_head(self):
+        s = HttpSession("http://127.0.0.1:%i" % self.port)
+        r = s.head("/request_method")
+        self.assertEqual(200, r.status_code)
+        self.assertEqual("", r.content.decode())
+    
+    def test_delete(self):
+        s = HttpSession("http://127.0.0.1:%i" % self.port)
+        r = s.delete("/request_method")
+        self.assertEqual(200, r.status_code)
+        self.assertEqual("DELETE", r.content.decode())
+    
+    def test_options(self):
+        s = HttpSession("http://127.0.0.1:%i" % self.port)
+        r = s.options("/request_method")
+        self.assertEqual(200, r.status_code)
+        self.assertEqual("", r.content.decode())
+        self.assertEqual(
+            set(["OPTIONS", "DELETE", "PUT", "GET", "POST", "HEAD", "PATCH"]),
+            set(r.headers["allow"].split(", ")),
+        )

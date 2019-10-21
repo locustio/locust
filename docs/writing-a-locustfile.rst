@@ -27,7 +27,9 @@ attributes. These are the minimum and maximum time respectively, in milliseconds
 between executing each task. *min_wait* and *max_wait* default to 1000, and therefore a locust will 
 always wait 1 second between each task if *min_wait* and *max_wait* are not declared.
 
-With the following locustfile, each user would wait between 5 and 15 seconds between tasks::
+With the following locustfile, each user would wait between 5 and 15 seconds between tasks:
+
+.. code-block:: python
 
     from locust import Locust, TaskSet, task
     
@@ -46,26 +48,32 @@ The *min_wait* and *max_wait* attributes can also be overridden in a TaskSet cla
 The *weight* attribute
 ----------------------
 
-You can run two locusts from the same file like so::
+If more than one locust class exists in the file, and no locusts are specified on the command line,
+each new spawn will choose randomly from the existing locusts. Otherwise, you can specify which locusts
+to use from the same file like so:
 
-    locust -f locust_file.py WebUserLocust MobileUserLocust
+.. code-block:: console
+
+    $ locust -f locust_file.py WebUserLocust MobileUserLocust
 
 If you wish to make one of these locusts execute more often you can set a weight attribute on those
-classes. Say for example, web users are three times more likely than mobile users::
+classes. Say for example, web users are three times more likely than mobile users:
+
+.. code-block:: python
 
     class WebUserLocust(Locust):
         weight = 3
-        ....
+        ...
 
     class MobileUserLocust(Locust):
         weight = 1
-        ....
+        ...
 
 
 The *host* attribute
 --------------------
 
-The host attribute is a URL prefix (i.e. "http://google.com") to the host that is to be loaded. 
+The host attribute is a URL prefix (i.e. "https://google.com") to the host that is to be loaded.
 Usually, this is specified on the command line, using the :code:`--host` option, when locust is started. 
 If one declares a host attribute in the locust class, it will be used in the case when no :code:`--host` 
 is specified on the command line.
@@ -93,7 +101,9 @@ Declaring tasks
 
 The typical way of declaring tasks for a TaskSet it to use the :py:meth:`task <locust.core.task>` decorator.
 
-Here is an example::
+Here is an example:
+
+.. code-block:: python
 
     from locust import Locust, TaskSet, task
     
@@ -106,7 +116,9 @@ Here is an example::
         task_set = MyTaskSet
 
 **@task** takes an optional weight argument that can be used to specify the task's execution ratio. In 
-the following example *task2* will be executed twice as much as *task1*::
+the following example *task2* will be executed twice as much as *task1*:
+
+.. code-block:: python
     
     from locust import Locust, TaskSet, task
     
@@ -136,7 +148,9 @@ just populate the *tasks* attribute).
 
 The *tasks* attribute is either a list of python callables, or a *<callable : int>* dict. 
 The tasks are python callables that receive one argument—the TaskSet class instance that is executing 
-the task. Here is an extremely simple example of a locustfile (this locustfile won't actually load test anything)::
+the task. Here is an extremely simple example of a locustfile (this locustfile won't actually load test anything):
+
+.. code-block:: python
 
     from locust import Locust, TaskSet
     
@@ -155,7 +169,7 @@ chosen from the *tasks* attribute. If however, *tasks* is a dict—with callable
 as values—the task that is to be executed will be chosen at random but with the int as ratio. So 
 with a tasks that looks like this::
 
-    {my_task: 3, another_task:1}
+    {my_task: 3, another_task: 1}
 
 *my_task* would be 3 times more likely to be executed than *another_task*.
 
@@ -187,7 +201,9 @@ we could define TaskSets with the following structure:
  * About page
 
 The way you nest TaskSets is just like when you specify a task using the **tasks** attribute, but 
-instead of referring to a python function, you refer to another TaskSet::
+instead of referring to a python function, you refer to another TaskSet:
+
+.. code-block:: python
 
     class ForumPage(TaskSet):
         @task(20)
@@ -222,7 +238,9 @@ But by having the interrupt function, we can—together with task weighting—de
 is that a simulated user leaves the forum.
 
 It's also possible to declare a nested TaskSet, inline in a class, using the 
-:py:meth:`@task <locust.core.task>` decorator, just like when declaring normal tasks::
+:py:meth:`@task <locust.core.task>` decorator, just like when declaring normal tasks:
+
+.. code-block:: python
 
     class MyTaskSet(TaskSet):
         @task
@@ -230,14 +248,6 @@ It's also possible to declare a nested TaskSet, inline in a class, using the
             @task
             def my_task(self):
                 pass
-
-
-The on_start function
----------------------
-
-A TaskSet class can optionally declare an :py:meth:`on_start <locust.core.TaskSet.on_start>` function. 
-If so, that function is called when a simulated user starts executing that TaskSet class.
-
 
 Referencing the Locust instance, or the parent TaskSet instance
 ---------------------------------------------------------------
@@ -247,7 +257,72 @@ its Locust instance, and the attribute :py:attr:`parent <locust.core.TaskSet.par
 parent TaskSet (it will point to the Locust instance, in the base TaskSet).
 
 
-Making HTTP requests 
+TaskSequence class
+==================
+
+TaskSequence class is a TaskSet but its tasks will be executed in order.
+To define this order you should do the following:
+
+.. code-block:: python
+
+    class MyTaskSequence(TaskSequence):
+        @seq_task(1)
+        def first_task(self):
+            pass
+
+        @seq_task(2)
+        def second_task(self):
+            pass
+
+        @seq_task(3)
+        @task(10)
+        def third_task(self):
+            pass
+
+In the above example, the order is defined to execute first_task, then second_task and lastly the third_task for 10 times.
+As you can see, you can compose :py:meth:`@seq_task <locust.core.seq_task>` with :py:meth:`@task <locust.core.task>` decorator, and of course you can also nest TaskSets within TaskSequences and vice versa.
+
+Setups, Teardowns, on_start, and on_stop
+========================================
+
+Locust optionally supports :py:class:`Locust <locust.core.Locust>` level :py:meth:`setup <locust.core.Locust.setup>` and :py:meth:`teardown <locust.core.Locust.teardown>`,
+:py:class:`TaskSet <locust.core.TaskSet>` level :py:meth:`setup <locust.core.Locust.setup>` and :py:meth:`teardown <locust.core.Locust.teardown>`,
+and :py:class:`TaskSet <locust.core.TaskSet>` :py:meth:`on_start <locust.core.TaskSet.on_start>` and :py:meth:`on_stop <locust.core.TaskSet.on_stop>`
+
+Setups and Teardowns
+--------------------
+
+:py:meth:`setup <locust.core.Locust.setup>` and :py:meth:`teardown <locust.core.Locust.teardown>`, whether it's run on :py:class:`Locust <locust.core.Locust>` or :py:class:`TaskSet <locust.core.TaskSet>`, are methods that are run only once.
+:py:meth:`setup <locust.core.Locust.setup>` is run before tasks start running, while :py:meth:`teardown <locust.core.Locust.teardown>` is run after all tasks have finished and Locust is exiting.
+This enables you to perform some preparation before tasks start running (like creating a database) and to clean up before the Locust quits (like deleting the database).
+
+To use, simply declare a :py:meth:`setup <locust.core.Locust.setup>` and/or :py:meth:`teardown <locust.core.Locust.teardown>` on the :py:class:`Locust <locust.core.Locust>` or :py:class:`TaskSet <locust.core.TaskSet>` class.
+These methods will be run for you.
+
+The on_start and on_stop methods
+----------------------------------
+
+A TaskSet class can declare an :py:meth:`on_start <locust.core.TaskSet.on_start>` method or an :py:meth:`on_stop <locust.core.TaskSet.on_stop>` method.
+The :py:meth:`on_start <locust.core.TaskSet.on_start>` method is called when a simulated user starts executing that TaskSet class,
+while the :py:meth:`on_stop <locust.core.TaskSet.on_stop` method is called when the TaskSet is stopped.
+
+Order of events
+---------------
+
+Since many setup and cleanup operations are dependent on each other, here is the order which they are run:
+
+1. Locust setup
+2. TaskSet setup
+3. TaskSet on_start
+4. TaskSet tasks...
+5. TaskSet on_stop
+6. TaskSet teardown
+7. Locust teardown
+
+In general, the setup and teardown methods should be complementary.
+
+
+Making HTTP requests
 =====================
 
 So far, we've only covered the task scheduling part of a Locust user. In order to actually load test 
@@ -262,7 +337,9 @@ class exists. When using this class, each instance gets a
 
 When inheriting from the HttpLocust class, we can use its client attribute to make HTTP requests 
 against the server. Here is an example of a locust file that can be used to load test a site 
-with two URLs; **/** and **/about/**::
+with two URLs; **/** and **/about/**:
+
+.. code-block:: python
 
     from locust import HttpLocust, TaskSet, task
     
@@ -306,13 +383,17 @@ tasks.
 
 Here's a simple example that makes a GET request to the */about* path (in this case we assume *self* 
 is an instance of a :py:class:`TaskSet <locust.core.TaskSet>` or :py:class:`HttpLocust <locust.core.Locust>` 
-class::
+class:
+
+.. code-block:: python
 
     response = self.client.get("/about")
     print("Response status code:", response.status_code)
-    print("Response content:", response.content)
+    print("Response content:", response.text)
 
-And here's an example making a POST request::
+And here's an example making a POST request:
+
+.. code-block:: python
 
     response = self.client.post("/login", {"username":"testuser", "password":"secret"})
 
@@ -324,6 +405,8 @@ Response object. The request will be reported as a failure in Locust's statistic
 Response's *content* attribute will be set to None, and its *status_code* will be 0.
 
 
+.. _catch-response:
+
 Manually controlling if a request should be considered successful or a failure
 ------------------------------------------------------------------------------
 
@@ -334,15 +417,19 @@ return *200 OK* even though an error occurred—there's a need for manually cont
 locust should consider a request as a success or a failure.
 
 One can mark requests as failed, even when the response code is OK, by using the 
-*catch_response* argument and a with statement::
+*catch_response* argument and a with statement:
+
+.. code-block:: python
 
     with client.get("/", catch_response=True) as response:
-        if response.content != "Success":
+        if response.content != b"Success":
             response.failure("Got wrong response")
 
 Just as one can mark requests with OK response codes as failures, one can also use **catch_response** 
 argument together with a *with* statement to make requests that resulted in an HTTP error code still 
-be reported as a success in the statistics::
+be reported as a success in the statistics:
+
+.. code-block:: python
 
     with client.get("/does_not_exist/", catch_response=True) as response:
         if response.status_code == 404:
@@ -357,7 +444,9 @@ Often it makes sense to group these URLs together in Locust's statistics. This c
 by passing a *name* argument to the :py:class:`HttpSession's <locust.clients.HttpSession>` 
 different request methods. 
 
-Example::
+Example:
+
+.. code-block:: python
 
     # Statistics for these requests will be grouped under: /blog/?id=[id]
     for i in range(10):
@@ -415,7 +504,9 @@ working directory) importable.
 
     * ``ecommerce.py``
 
-With the above project structure, your locust files can import common libraries using::
+With the above project structure, your locust files can import common libraries using:
+
+.. code-block:: python
 
     sys.path.append(os.getcwd())
     import common.auth
