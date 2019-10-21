@@ -1,6 +1,42 @@
-##########
-Changelog
-##########
+####################
+Changelog Highlights
+####################
+
+For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
+
+0.12.1
+======
+
+* Added new :code:`FastHttpLocust` class that uses a faster HTTP client, which should be 5-6 times faster 
+  than the normal :code:`HttpLocust` class. For more info see the documentation on :ref:`increasing performance <increase-performance>`.
+* Added ability to set the exit code of the locust process when exceptions has occurred within the user code, 
+  using the :code:`--exit-code-on-error` parameter.
+* Added TCP keep alive to master/slave communication sockets to avoid broken connections in some environments.
+* Dropped support for Python 3.4
+* Numerous other bug fixes and improvements.
+
+
+0.10.0
+======
+
+* Python 3.7 support
+* Added a status page to the web UI when running Locust distributed showing the status of slave nodes 
+  and detect down slaves using heartbeats
+* Numerous bugfixes/documentation updates (see detailed changelog)
+
+
+0.9.0
+=====
+
+* Added detailed changelog (https://github.com/locustio/locust/blob/master/CHANGELOG.md)
+* Numerous bugfixes (see detailed changelog)
+* Added sequential task support - https://github.com/locustio/locust/pull/827
+* Added support for user-defined wait_function - https://github.com/locustio/locust/pull/785
+* By default, Locust no longer resets the statistics when the hatching is complete.  
+  Therefore :code:`--no-reset-stats` has been deprected (since it's now the default behaviour), 
+  and instead a new :code:`--reset-stats` option has been added.
+* Dropped support for Python 3.3
+* Updated documentation
 
 0.8.1
 =====
