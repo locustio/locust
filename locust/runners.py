@@ -68,6 +68,7 @@ class LocustRunner(object):
         """
         bucket = []
         weight_sum = sum((locust.weight for locust in self.locust_classes if locust.task_set))
+        residuals = {}
         for locust in self.locust_classes:
             if not locust.task_set:
                 warnings.warn("Notice: Found Locust class (%s) got no task_set. Skipping..." % locust.__name__)
@@ -82,6 +83,21 @@ class LocustRunner(object):
             percent = locust.weight / float(weight_sum)
             num_locusts = int(round(amount * percent))
             bucket.extend([locust for x in xrange(0, num_locusts)])
+            # used to keep track of the amount of rounding was done if we need
+            # to add/remove some instances from bucket
+            residuals[locust] = amount * percent - round(amount * percent)
+        if len(bucket) < amount:
+            # We got too few locust classes in the bucket, so we need to create a few extra locusts,
+            # and we do this by iterating over each of the Locust classes - starting with the one
+            # where the residual from the rounding was the largest - and creating one of each until
+            # we get the correct amount
+            for locust in [l for l, r in sorted(residuals.items(), key=lambda x:x[1], reverse=True)][:amount-len(bucket)]:
+                bucket.append(locust)
+        elif len(bucket) > amount:
+            # We've got too many locusts due to rounding errors so we need to remove some
+            for locust in [l for l, r in sorted(residuals.items(), key=lambda x:x[1])][:len(bucket)-amount]:
+                bucket.remove(locust)
+
         return bucket
 
     def spawn_locusts(self, spawn_count=None, stop_timeout=None, wait=False):
