@@ -116,7 +116,20 @@ class Locust(object):
     
     max_wait = 1000
     """Maximum waiting time between the execution of locust tasks"""
-
+    
+    wait_time = None
+    """
+    Method that returns the time (in seconds) between the execution of locust tasks. 
+    Can be overridden for individual TaskSets.
+    
+    Example::
+    
+        from locust import Locust
+        from locust.wait_time import between
+        class User(Locust):
+            wait_time = between(3, 25)
+    """
+    
     wait_function = lambda self: random.randint(self.min_wait,self.max_wait) 
     """Function used to calculate waiting time between the execution of locust tasks in milliseconds"""
     
@@ -427,12 +440,13 @@ class TaskSet(object):
     def get_next_task(self):
         return random.choice(self.tasks)
     
-    def get_wait_secs(self):
-        millis = self.wait_function()
-        return millis / 1000.0
-
+    def wait_time(self):
+        if self.locust.wait_time:
+            return self.locust.wait_time()
+        return random.randint(self.min_wait, self.max_wait) / 1000.0
+    
     def wait(self):
-        self._sleep(self.get_wait_secs())
+        self._sleep(self.wait_time())
 
     def _sleep(self, seconds):
         gevent.sleep(seconds)
