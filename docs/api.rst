@@ -7,20 +7,20 @@ Locust class
 ============
 
 .. autoclass:: locust.core.Locust
-	:members: min_wait, max_wait, wait_function, task_set, weight
+	:members: wait_time, task_set, weight
 
 HttpLocust class
 ================
 
 .. autoclass:: locust.core.HttpLocust
-	:members: min_wait, max_wait, wait_function, task_set, client
+	:members: wait_time, task_set, client
 
 
 TaskSet class
 =============
 
 .. autoclass:: locust.core.TaskSet
-	:members: locust, parent, min_wait, max_wait, wait_function, client, tasks, interrupt, schedule_task
+	:members: locust, parent, wait_time, client, tasks, interrupt, schedule_task
 
 task decorator
 ==============
@@ -31,12 +31,18 @@ TaskSequence class
 ==================
 
 .. autoclass:: locust.core.TaskSequence
-	:members: locust, parent, min_wait, max_wait, wait_function, client, tasks, interrupt, schedule_task
+	:members: locust, parent, wait_time, client, tasks, interrupt, schedule_task
 
 seq_task decorator
 ==================
 
 .. autofunction:: locust.core.seq_task
+
+Built in wait_time functions
+============================
+
+.. automodule:: locust.wait_time
+	:members: between, constant, constant_pacing
 
 HttpSession class
 =================

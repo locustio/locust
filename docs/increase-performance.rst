@@ -28,7 +28,7 @@ First, you need to install the geventhttplocust python package::
 
 Then you just subclass FastHttpLocust instead of HttpLocust::
 
-    from locust import TaskSet, task
+    from locust import TaskSet, task, between
     from locust.contrib.fasthttp import FastHttpLocust
     
     class MyTaskSet(TaskSet):
@@ -38,8 +38,7 @@ Then you just subclass FastHttpLocust instead of HttpLocust::
     
     class MyLocust(FastHttpLocust):
         task_set = MyTaskSet
-        min_wait = 1000
-        max_wait = 60000
+        wait_time = between(1, 60)
 
 
 .. note::
