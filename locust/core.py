@@ -113,10 +113,10 @@ class Locust(object):
     """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
     
     min_wait = None
-    """Minimum waiting time between the execution of locust tasks"""
+    """Deprecated: Use wait_time instead. Minimum waiting time between the execution of locust tasks"""
     
     max_wait = None
-    """Maximum waiting time between the execution of locust tasks"""
+    """Deprecated: Use wait_time instead. Maximum waiting time between the execution of locust tasks"""
     
     wait_time = None
     """
@@ -297,6 +297,7 @@ class TaskSet(object):
     
     min_wait = None
     """
+    Deprecated: Use wait_time instead. 
     Minimum waiting time between the execution of locust tasks. Can be used to override 
     the min_wait defined in the root Locust class, which will be used if not set on the 
     TaskSet.
@@ -304,6 +305,7 @@ class TaskSet(object):
     
     max_wait = None
     """
+    Deprecated: Use wait_time instead. 
     Maximum waiting time between the execution of locust tasks. Can be used to override 
     the max_wait defined in the root Locust class, which will be used if not set on the 
     TaskSet.
@@ -311,6 +313,7 @@ class TaskSet(object):
     
     wait_function = None
     """
+    Deprecated: Use wait_time instead.
     Function used to calculate waiting time betwen the execution of locust tasks in milliseconds. 
     Can be used to override the wait_function defined in the root Locust class, which will be used
     if not set on the TaskSet.
