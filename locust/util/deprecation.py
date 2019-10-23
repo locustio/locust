@@ -1,6 +1,11 @@
 import six
 import warnings
 
+
+# Show deprecation warnings
+warnings.filterwarnings('always', category=DeprecationWarning, module="locust")
+
+
 def get_class_func(f):
     if six.PY2:
         return f.__func__

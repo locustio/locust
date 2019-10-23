@@ -1,7 +1,6 @@
 import logging
 import random
 import sys
-import warnings
 import traceback
 from time import time
 

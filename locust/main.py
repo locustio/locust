@@ -7,7 +7,6 @@ import socket
 import sys
 import time
 import argparse
-import warnings
 
 import gevent
 
@@ -24,9 +23,6 @@ from .util.timespan import parse_timespan
 
 _internals = [Locust, HttpLocust]
 version = locust.__version__
-
-# Show deprecation warnings
-warnings.filterwarnings('always', category=DeprecationWarning, module="locust")
 
 
 def parse_options():
