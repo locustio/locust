@@ -7,6 +7,7 @@ import os.path
 from collections import defaultdict
 from itertools import chain
 from time import time
+import html
 
 import six
 from flask import Flask, make_response, jsonify, render_template, request
@@ -109,6 +110,7 @@ def request_stats():
         stats.append({
             "method": s.method,
             "name": s.name,
+            "safe_name": html.escape(s.name),
             "num_requests": s.num_requests,
             "num_failures": s.num_failures,
             "avg_response_time": s.avg_response_time,
