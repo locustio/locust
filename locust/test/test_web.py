@@ -43,13 +43,14 @@ class TestWebUI(LocustTestCase):
         self.assertEqual(200, requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).status_code)
     
     def test_stats(self):
-        stats.global_stats.log_request("GET", "/test", 120, 5612)
+        stats.global_stats.log_request("GET", "/<html>", 120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         
         data = json.loads(response.text)
         self.assertEqual(2, len(data["stats"])) # one entry plus Total
-        self.assertEqual("/test", data["stats"][0]["name"])
+        self.assertEqual("/<html>", data["stats"][0]["name"])
+        self.assertEqual("/&lt;html&gt;", data["stats"][0]["safe_name"])
         self.assertEqual("GET", data["stats"][0]["method"])
         self.assertEqual(120, data["stats"][0]["avg_response_time"])
         
