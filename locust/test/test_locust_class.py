@@ -4,7 +4,7 @@ from locust import InterruptTaskSet, ResponseError
 from locust.core import HttpLocust, Locust, TaskSet, events, task
 from locust.exception import (CatchResponseError, LocustError, RescheduleTask,
                               RescheduleTaskImmediately)
-
+from locust.wait_time import between, constant
 from .testcases import LocustTestCase, WebserverTestCase
 
 
@@ -179,16 +179,15 @@ class TestTaskSet(LocustTestCase):
     
     def test_wait_function(self):
         class MyTaskSet(TaskSet):
-            min_wait = 1
-            max_wait = 2
-            wait_time = lambda self: 1 + (self.max_wait-self.min_wait)
+            a = 1
+            b = 2
+            wait_time = lambda self: 1 + (self.b-self.a)
         taskset = MyTaskSet(self.locust)
         self.assertEqual(taskset.wait_time(), 2.0)
     
     def test_sub_taskset(self):
         class MySubTaskSet(TaskSet):
-            min_wait = 1
-            max_wait = 1
+            constant(1)
             @task()
             def a_task(self):
                 self.locust.sub_locust_task_executed = True
@@ -207,8 +206,7 @@ class TestTaskSet(LocustTestCase):
         class MyTaskSet(TaskSet):
             @task
             class MySubTaskSet(TaskSet):
-                min_wait = 1
-                max_wait = 1
+                wait_time = constant(0.001)
                 @task()
                 def a_task(self):
                     self.locust.sub_locust_task_executed = True
@@ -222,8 +220,7 @@ class TestTaskSet(LocustTestCase):
     
     def test_sub_taskset_arguments(self):
         class MySubTaskSet(TaskSet):
-            min_wait = 1
-            max_wait = 1
+            wait_time = constant(0.001)
             @task()
             def a_task(self):
                 self.locust.sub_taskset_args = self.args

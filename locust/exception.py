@@ -7,6 +7,9 @@ class ResponseError(Exception):
 class CatchResponseError(Exception):
     pass
 
+class MissingWaitTimeError(LocustError):
+    pass
+
 class InterruptTaskSet(Exception):
     """
     Exception that will interrupt a Locust when thrown inside a task

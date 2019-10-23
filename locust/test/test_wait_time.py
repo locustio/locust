@@ -2,6 +2,7 @@ import random
 import time
 
 from locust.core import HttpLocust, Locust, TaskSet, events, task
+from locust.exception import MissingWaitTimeError
 from locust.wait_time import between, constant, constant_pacing
 
 from .testcases import LocustTestCase, WebserverTestCase
@@ -39,6 +40,17 @@ class TestWaitTime(LocustTestCase):
         self.assertEqual(13, User().wait_time())
         self.assertEqual(13, TaskSet1(User()).wait_time())
     
+    def test_constant_zero(self):
+        class User(Locust):
+            wait_time = constant(0)
+        class TaskSet1(TaskSet):
+            pass
+        self.assertEqual(0, User().wait_time())
+        self.assertEqual(0, TaskSet1(User()).wait_time())
+        start_time = time.time()
+        TaskSet1(User()).wait()
+        self.assertLess(time.time() - start_time, 0.002)
+    
     def test_constant_pacing(self):
         class User(Locust):
             wait_time = constant_pacing(0.1)
@@ -57,4 +69,11 @@ class TestWaitTime(LocustTestCase):
             time.sleep(random.random() * 0.1)
             _ = ts2.wait_time()
             _ = ts2.wait_time()
+
+    def test_missing_wait_time(self):
+        class User(Locust):
+            pass
+        class TS(TaskSet):
+            pass
+        self.assertRaises(MissingWaitTimeError, lambda: TS(User()).wait_time())
 

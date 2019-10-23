@@ -1,6 +1,7 @@
 import logging
 import random
 import sys
+import warnings
 import traceback
 from time import time
 
@@ -19,8 +20,9 @@ monkey.patch_all()
 from . import events
 from .clients import HttpSession
 from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
-                        RescheduleTaskImmediately, StopLocust)
+                        RescheduleTaskImmediately, StopLocust, MissingWaitTimeError)
 from .runners import STATE_CLEANUP
+from .util import deprecation
 logger = logging.getLogger(__name__)
 
 
@@ -111,10 +113,10 @@ class Locust(object):
     host = None
     """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
     
-    min_wait = 1000
+    min_wait = None
     """Minimum waiting time between the execution of locust tasks"""
     
-    max_wait = 1000
+    max_wait = None
     """Maximum waiting time between the execution of locust tasks"""
     
     wait_time = None
@@ -124,14 +126,19 @@ class Locust(object):
     
     Example::
     
-        from locust import Locust
-        from locust.wait_time import between
+        from locust import Locust, between
         class User(Locust):
             wait_time = between(3, 25)
     """
     
-    wait_function = lambda self: random.randint(self.min_wait,self.max_wait) 
-    """Function used to calculate waiting time between the execution of locust tasks in milliseconds"""
+    wait_function = None
+    """
+    .. warning::
+    
+        DEPRECATED: Use wait_time instead. Note that the new wait_time method should return seconds and not milliseconds.
+    
+    Method that returns the time between the execution of locust tasks in milliseconds
+    """
     
     task_set = None
     """TaskSet class that defines the execution behaviour of this locust"""
@@ -150,6 +157,9 @@ class Locust(object):
     
     def __init__(self):
         super(Locust, self).__init__()
+        # check if deprecated wait API is used
+        deprecation.check_for_deprecated_wait_api(self)
+        
         self._lock.acquire()
         if hasattr(self, "setup") and self._setup_has_run is False:
             self._set_setup_flag()
@@ -321,6 +331,9 @@ class TaskSet(object):
     _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
 
     def __init__(self, parent):
+        # check if deprecated wait API is used
+        deprecation.check_for_deprecated_wait_api(self)
+        
         self._task_queue = []
         self._time_start = time()
         
@@ -441,9 +454,21 @@ class TaskSet(object):
         return random.choice(self.tasks)
     
     def wait_time(self):
+        """
+        Method that returns the time (in seconds) between the execution of tasks. 
+        
+        Example::
+        
+            from locust import TaskSet, between
+            class Tasks(TaskSet):
+                wait_time = between(3, 25)
+        """
         if self.locust.wait_time:
             return self.locust.wait_time()
-        return random.randint(self.min_wait, self.max_wait) / 1000.0
+        elif self.min_wait and self.max_wait:
+            return random.randint(self.min_wait, self.max_wait) / 1000.0
+        else:
+            raise MissingWaitTimeError("You must define a wait_time method on either the Locust or TaskSet class")
     
     def wait(self):
         self._sleep(self.wait_time())
