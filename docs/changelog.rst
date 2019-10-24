@@ -2,6 +2,8 @@
 Changelog Highlights
 ####################
 
+For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
+
 Unreleased
 ==========
 
@@ -13,8 +15,6 @@ Unreleased
 * Fixed bugs in the web UI related to the fact that the stats table is truncated at 500 entries.
 * Numerous other bug fixes and improvements.
 
-
-For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
 0.12.1
 ======
