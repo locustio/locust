@@ -137,6 +137,7 @@ class Locust(object):
     _setup_has_run = False  # Internal state to see if we have already run
     _teardown_is_set = False  # Internal state to see if we have already run
     _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
+    _waiting = False
     
     def __init__(self):
         super(Locust, self).__init__()
@@ -437,7 +438,9 @@ class TaskSet(object):
     def wait(self):
         if self.locust.exit_at_end_of_iteration:
             raise GreenletExit()
+        self.locust._waiting = True
         self._sleep(self.get_wait_secs())
+        self.locust._waiting = False
 
     def _sleep(self, seconds):
         gevent.sleep(seconds)

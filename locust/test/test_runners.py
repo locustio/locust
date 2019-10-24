@@ -439,3 +439,30 @@ class TestTaskFinishWaitTime(unittest.TestCase):
         gevent.sleep(short_time)
         runner.quit()
         self.assertEqual("third", TestTaskFinishWaitTime.state)
+
+    def test_task_finish_wait_time_exit_during_wait(self):
+        short_time = 0.05
+        class MyTaskSet(TaskSet):
+            @task
+            def my_task(self):
+                pass
+
+        class MyTestLocust(Locust):
+            task_set = MyTaskSet
+            min_wait = 1000
+            max_wait = 1000
+
+        self.options = mocked_options()
+        self.options.task_finish_wait_time = short_time
+        runner = LocalLocustRunner([MyTestLocust], self.options)
+        runner.start_hatching(1, 1)
+        gevent.sleep(short_time) # sleep to make sure locust has had time to start waiting
+        timeout = gevent.Timeout(short_time)
+        timeout.start()
+        try:
+            runner.quit()
+            runner.greenlet.join()
+        except gevent.Timeout:
+            self.fail("Got Timeout exception. Waiting locusts should stop immediately, even when using task_finish_wait_time.")
+        finally:
+            timeout.cancel()

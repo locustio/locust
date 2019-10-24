@@ -125,12 +125,13 @@ class LocustRunner(object):
 
                 locust = bucket.pop(random.randint(0, len(bucket)-1))
                 occurrence_count[locust.__name__] += 1
+                new_locust = locust()
                 def start_locust(_):
                     try:
-                        locust().run(runner=self)
+                        new_locust.run(runner=self)
                     except GreenletExit:
                         pass
-                new_locust = self.locusts.spawn(start_locust, locust)
+                self.locusts.spawn(start_locust, new_locust)
                 if len(self.locusts) % 10 == 0:
                     logger.debug("%i locusts hatched" % len(self.locusts))
                 gevent.sleep(sleep_time)
@@ -194,8 +195,11 @@ class LocustRunner(object):
         if self.hatching_greenlet and not self.hatching_greenlet.ready():
             self.hatching_greenlet.kill(block=True)
         if self.options.task_finish_wait_time:
-            for l in self.locusts:
-                l.args[0].exit_at_end_of_iteration = True
+            for locust_greenlet in self.locusts:
+                locust = locust_greenlet.args[0]
+                if locust._waiting:
+                    locust_greenlet.kill()
+                locust.exit_at_end_of_iteration = True
             if not self.locusts.join(timeout=self.options.task_finish_wait_time):
                 logger.info("Not all locusts finished their tasks & terminated in %s seconds. Killing them..." % self.options.task_finish_wait_time)
         self.locusts.kill(block=True)
