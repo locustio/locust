@@ -3,12 +3,11 @@ from time import sleep
 import zmq
 from locust.rpc import zmqrpc, Message
 
-PORT = 5557
 
 class ZMQRPC_tests(unittest.TestCase):
     def setUp(self):
-        self.server = zmqrpc.Server('*', PORT)
-        self.client = zmqrpc.Client('localhost', PORT, 'identity')
+        self.server = zmqrpc.Server('*', 0)
+        self.client = zmqrpc.Client('localhost', self.server.port, 'identity')
 
     def tearDown(self):
         self.server.socket.close()
