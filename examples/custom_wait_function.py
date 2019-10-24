@@ -23,7 +23,7 @@ class WebsiteUser(HttpLocust):
     host = "http://127.0.0.1:8089"
     # Most task inter-arrival times approximate to exponential distributions
     # We will model this wait time as exponentially distributed with a mean of 1 second
-    wait_function = lambda self: random.expovariate(1)*1000 # *1000 to convert to milliseconds
+    wait_time = lambda self: random.expovariate(1)
     task_set = UserTasks
 
 def strictExp(min_wait,max_wait,mu=1):
@@ -43,7 +43,7 @@ class StrictWebsiteUser(HttpLocust):
     Locust user class that makes exponential requests but strictly between two bounds.
     """
     host = "http://127.0.0.1:8089"
-    wait_function = lambda self: strictExp(self.min_wait, self.max_wait)*1000
+    wait_time = lambda self: strictExp(3, 7)
     task_set = UserTasks
 
 
