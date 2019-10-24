@@ -4,6 +4,18 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+Unreleased
+==========
+
+* Added `--skip-log-setup` to disable Locust's default logging setup.
+* Renamed the last row in statistics table from "Total" to "Aggregated" (since the values aren't 
+  a sum of the individual table rows). 
+* Some visual improvements to the web UI.
+* Fixed issue with simulating fewer number of locust users than the number of slave/worker nodes.
+* Fixed bugs in the web UI related to the fact that the stats table is truncated at 500 entries.
+* Various other bug fixes and improvements.
+
+
 0.12.1
 ======
 

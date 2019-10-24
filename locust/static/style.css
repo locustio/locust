@@ -290,6 +290,9 @@ a:hover {
 .status th.numeric {
     text-align: right;
 }
+.status th.nowrap {
+    white-space: nowrap;
+}
 .status tr.dark {
     background:#153126;
 }
@@ -315,10 +318,6 @@ a:hover {
     .status td {
         max-width: 350px;
     }
-}
-
-#stats {
-    table-layout: fixed;
 }
 
 #stats td {
