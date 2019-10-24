@@ -19,12 +19,14 @@ class TestRequestStats(unittest.TestCase):
         self.s.log(45, 0)
         self.s.log(135, 0)
         self.s.log(44, 0)
+        self.s.log(None, 0)        
         self.s.log_error(Exception("dummy fail"))
         self.s.log_error(Exception("dummy fail"))
         self.s.log(375, 0)
         self.s.log(601, 0)
         self.s.log(35, 0)
         self.s.log(79, 0)
+        self.s.log(None, 0)        
         self.s.log_error(Exception("dummy fail"))
 
     def test_percentile(self):
@@ -48,17 +50,17 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(s.median_response_time, 6099)
 
     def test_total_rps(self):
-        self.assertEqual(self.s.total_rps, 7)
+        self.assertEqual(self.s.total_rps, 9)
 
     def test_current_rps(self):
         self.stats.total.last_request_timestamp = int(time.time()) + 4
-        self.assertEqual(self.s.current_rps, 3.5)
+        self.assertEqual(self.s.current_rps, 4.5)
 
         self.stats.total.last_request_timestamp = int(time.time()) + 25
         self.assertEqual(self.s.current_rps, 0)
 
     def test_num_reqs_fails(self):
-        self.assertEqual(self.s.num_requests, 7)
+        self.assertEqual(self.s.num_requests, 9)
         self.assertEqual(self.s.num_failures, 3)
 
     def test_avg(self):
@@ -76,6 +78,13 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(self.s.avg_response_time, 420.5)
         self.assertEqual(self.s.median_response_time, 85)
     
+    def test_avg_only_none(self):
+        self.s.reset()
+        self.s.log(None, 123)
+        self.assertEqual(self.s.avg_response_time, 0)
+        self.assertEqual(self.s.median_response_time, 0)
+        self.assertEqual(self.s.get_response_time_percentile(0.5), 0)
+
     def test_reset_min_response_time(self):
         self.s.reset()
         self.s.log(756, 0)
