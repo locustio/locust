@@ -48,13 +48,13 @@ class TestWebUI(LocustTestCase):
         self.assertEqual(200, response.status_code)
         
         data = json.loads(response.text)
-        self.assertEqual(2, len(data["stats"])) # one entry plus Total
+        self.assertEqual(2, len(data["stats"])) # one entry plus Aggregated
         self.assertEqual("/<html>", data["stats"][0]["name"])
         self.assertEqual("/&lt;html&gt;", data["stats"][0]["safe_name"])
         self.assertEqual("GET", data["stats"][0]["method"])
         self.assertEqual(120, data["stats"][0]["avg_response_time"])
         
-        self.assertEqual("Total", data["stats"][1]["name"])
+        self.assertEqual("Aggregated", data["stats"][1]["name"])
         self.assertEqual(1, data["stats"][1]["num_requests"])
         self.assertEqual(120, data["stats"][1]["avg_response_time"])
         
@@ -63,7 +63,7 @@ class TestWebUI(LocustTestCase):
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         data = json.loads(response.text)
-        self.assertEqual(2, len(data["stats"])) # one entry plus Total
+        self.assertEqual(2, len(data["stats"])) # one entry plus Aggregated
         
         # add another entry
         stats.global_stats.log_request("GET", "/test2", 120, 5612)
@@ -102,7 +102,7 @@ class TestWebUI(LocustTestCase):
         self.assertEqual('"GET /test2"', row[0])
         # check total row
         total_cols = rows[len(rows)-1].split(",")
-        self.assertEqual('"Total"', total_cols[0])
+        self.assertEqual('"Aggregated"', total_cols[0])
         # verify that the 95%, 98%, 99% and 100% percentiles are 1200
         for value in total_cols[-4:]:
             self.assertEqual('1200', value)

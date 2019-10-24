@@ -103,6 +103,7 @@ var report;
 
 function renderTable(report) {
     var totalRow = report.stats.pop();
+    totalRow.is_aggregated = true;
     var sortedStats = (report.stats).sort(sortBy(sortAttribute, desc));
     sortedStats.push(totalRow);
     $('#stats tbody').empty();

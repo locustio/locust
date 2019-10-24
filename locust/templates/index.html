@@ -217,7 +217,7 @@
     <script type="text/javascript" src="./static/vintage.js"></script>
     <script type="text/x-jqote-template" id="stats-template">
         <![CDATA[
-        <tr class="<%=(alternate ? "dark" : "")%> <%=(this.name == "Total" ? "total" : "")%>">
+        <tr class="<%=(alternate ? "dark" : "")%> <%=(this.is_aggregated ? "total" : "")%>">
             <td><%= (this.method ? this.method : "") %></td>
             <td class="name" title="<%= this.name %>"><%= this.safe_name %></td>
             <td class="numeric"><%= this.num_requests %></td>

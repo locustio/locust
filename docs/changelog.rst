@@ -2,6 +2,13 @@
 Changelog Highlights
 ####################
 
+Unreleased
+==========
+
+* Renamed the last row in statistics from "Total" to "Aggregated" (since the values aren't a sum of the 
+  individual table rows). 
+
+
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
 0.12.1
