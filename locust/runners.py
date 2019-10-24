@@ -152,7 +152,7 @@ class LocustRunner(object):
         dying = []
         for g in self.locusts:
             for l in bucket:
-                if l == g.args[0]:
+                if l == type(g.args[0]):
                     dying.append(g)
                     bucket.remove(l)
                     break
