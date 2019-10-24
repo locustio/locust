@@ -178,6 +178,35 @@ class TestMasterRunner(LocustTestCase):
             s = master.stats.get("/", "GET")
             self.assertEqual(700, s.median_response_time)
 
+    def test_slave_stats_report_with_none_response_times(self):
+        class MyTestLocust(Locust):
+            pass
+        
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
+            master = MasterLocustRunner(MyTestLocust, self.options)
+            server.mocked_send(Message("client_ready", None, "fake_client"))
+            
+            master.stats.get("/mixed", "GET").log(0, 23455)
+            master.stats.get("/mixed", "GET").log(800, 23455)
+            master.stats.get("/mixed", "GET").log(700, 23455)
+            master.stats.get("/mixed", "GET").log(None, 23455)
+            master.stats.get("/mixed", "GET").log(None, 23455)
+            master.stats.get("/mixed", "GET").log(None, 23455)
+            master.stats.get("/mixed", "GET").log(None, 23455)
+            master.stats.get("/onlyNone", "GET").log(None, 23455)
+            
+            data = {"user_count":1}
+            events.report_to_master.fire(client_id="fake_client", data=data)
+            master.stats.clear_all()
+            
+            server.mocked_send(Message("stats", data, "fake_client"))
+            s1 = master.stats.get("/mixed", "GET")
+            self.assertEqual(700, s1.median_response_time)
+            self.assertEqual(500, s1.avg_response_time)            
+            s2 = master.stats.get("/onlyNone", "GET")
+            self.assertEqual(0, s2.median_response_time)
+            self.assertEqual(0, s2.avg_response_time)
+
     def test_master_marks_downed_slaves_as_missing(self):
         class MyTestLocust(Locust):
             pass
@@ -214,7 +243,43 @@ class TestMasterRunner(LocustTestCase):
                 "user_count": 2,
             }, "fake_client"))
             self.assertEqual(700, master.stats.total.median_response_time)
-    
+
+    def test_master_total_stats_with_none_response_times(self):
+        class MyTestLocust(Locust):
+            pass
+        
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
+            master = MasterLocustRunner(MyTestLocust, self.options)
+            server.mocked_send(Message("client_ready", None, "fake_client"))
+            stats = RequestStats()
+            stats.log_request("GET", "/1", 100, 3546)
+            stats.log_request("GET", "/1", 800, 56743)
+            stats.log_request("GET", "/1", None, 56743)
+            stats2 = RequestStats()
+            stats2.log_request("GET", "/2", 700, 2201)
+            stats2.log_request("GET", "/2", None, 2201)
+            stats3 = RequestStats()
+            stats3.log_request("GET", "/3", None, 2201)
+            server.mocked_send(Message("stats", {
+                "stats":stats.serialize_stats(), 
+                "stats_total": stats.total.serialize(),
+                "errors":stats.serialize_errors(),
+                "user_count": 1,
+            }, "fake_client"))
+            server.mocked_send(Message("stats", {
+                "stats":stats2.serialize_stats(), 
+                "stats_total": stats2.total.serialize(),
+                "errors":stats2.serialize_errors(),
+                "user_count": 2,
+            }, "fake_client"))
+            server.mocked_send(Message("stats", {
+                "stats":stats3.serialize_stats(), 
+                "stats_total": stats3.total.serialize(),
+                "errors":stats3.serialize_errors(),
+                "user_count": 2,
+            }, "fake_client"))
+            self.assertEqual(700, master.stats.total.median_response_time)
+        
     def test_master_current_response_times(self):
         class MyTestLocust(Locust):
             pass
