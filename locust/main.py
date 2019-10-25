@@ -243,10 +243,10 @@ def parse_options():
     )
 
     parser.add_argument(
-        '-w', '--task-finish-wait-time',
+        '-s', '--stop-timeout',
         action='store',
         type=int,
-        dest='task_finish_wait_time',
+        dest='stop_timeout',
         default=None,
         help="number of seconds to wait for a taskset to complete an iteration before exiting. default is to terminate immediately."
     )
