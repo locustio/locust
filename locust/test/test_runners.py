@@ -486,3 +486,32 @@ class TestTaskFinishWaitTime(unittest.TestCase):
             self.fail("Got Timeout exception. Waiting locusts should stop immediately, even when using task_finish_wait_time.")
         finally:
             timeout.cancel()
+
+    def test_task_finish_wait_time_with_interrupt(self):
+        short_time = 0.05
+        class MySubTaskSet(TaskSet):
+            @task
+            def a_task(self):
+                gevent.sleep(0)
+                self.interrupt(reschedule=True)
+
+        class MyTaskSet(TaskSet):
+            tasks = [MySubTaskSet]
+        
+        class MyTestLocust(Locust):
+            task_set = MyTaskSet
+
+        self.options = mocked_options()
+        self.options.task_finish_wait_time = short_time
+        runner = LocalLocustRunner([MyTestLocust], self.options)
+        runner.start_hatching(1, 1)
+        gevent.sleep(0)
+        timeout = gevent.Timeout(short_time)
+        timeout.start()
+        try:
+            runner.quit()
+            runner.greenlet.join()
+        except gevent.Timeout:
+            self.fail("Got Timeout exception. Interrupted locusts should check if they should exit immediately, even when using task_finish_wait_time.")
+        finally:
+            timeout.cancel()

@@ -20,7 +20,7 @@ from . import events
 from .clients import HttpSession
 from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
                         RescheduleTaskImmediately, StopLocust)
-from .runners import STATE_CLEANUP
+from .runners import STATE_CLEANUP, LOCUST_STATE_RUNNING, LOCUST_STATE_STOPPING, LOCUST_STATE_WAITING
 logger = logging.getLogger(__name__)
 
 
@@ -129,15 +129,12 @@ class Locust(object):
     weight = 10
     """Probability of locust being chosen. The higher the weight, the greater is the chance of it being chosen."""
         
-    exit_at_end_of_iteration = False  
-    """Used with --task-finish-wait-time to stop a locust at end of iteration"""
-
     client = NoClientWarningRaiser()
     _catch_exceptions = True
     _setup_has_run = False  # Internal state to see if we have already run
     _teardown_is_set = False  # Internal state to see if we have already run
     _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
-    _waiting = False
+    _state = False
     
     def __init__(self):
         super(Locust, self).__init__()
@@ -373,6 +370,8 @@ class TaskSet(object):
                 try:
                     self.execute_next_task()
                 except RescheduleTaskImmediately:
+                    if self.locust._state == LOCUST_STATE_STOPPING:
+                        raise GreenletExit()
                     pass
                 except RescheduleTask:
                     self.wait()
@@ -436,11 +435,11 @@ class TaskSet(object):
         return millis / 1000.0
 
     def wait(self):
-        if self.locust.exit_at_end_of_iteration:
+        if self.locust._state == LOCUST_STATE_STOPPING:
             raise GreenletExit()
-        self.locust._waiting = True
+        self.locust._state = LOCUST_STATE_WAITING
         self._sleep(self.get_wait_secs())
-        self.locust._waiting = False
+        self.locust._state = LOCUST_STATE_RUNNING
 
     def _sleep(self, seconds):
         gevent.sleep(seconds)

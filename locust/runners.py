@@ -26,6 +26,7 @@ locust_runner = None
 STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_CLEANUP, STATE_STOPPING, STATE_STOPPED, STATE_MISSING = ["ready", "hatching", "running", "cleanup", "stopping", "stopped", "missing"]
 SLAVE_REPORT_INTERVAL = 3.0
 
+LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING = ["running", "waiting", "stopping"]
 
 class LocustRunner(object):
     def __init__(self, locust_classes, options):
@@ -197,9 +198,10 @@ class LocustRunner(object):
         if self.options.task_finish_wait_time:
             for locust_greenlet in self.locusts:
                 locust = locust_greenlet.args[0]
-                if locust._waiting:
+                if locust._state == LOCUST_STATE_WAITING:
                     locust_greenlet.kill()
-                locust.exit_at_end_of_iteration = True
+                else:
+                    locust._state = LOCUST_STATE_STOPPING
             if not self.locusts.join(timeout=self.options.task_finish_wait_time):
                 logger.info("Not all locusts finished their tasks & terminated in %s seconds. Killing them..." % self.options.task_finish_wait_time)
         self.locusts.kill(block=True)
