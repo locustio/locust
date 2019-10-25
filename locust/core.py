@@ -58,6 +58,7 @@ class NoClientWarningRaiser(object):
     The purpose of this class is to emit a sensible error message for old test scripts that 
     inherits from Locust, and expects there to be an HTTP client under the client attribute.
     """
+
     def __getattr__(self, _):
         raise LocustError("No client instantiated. Did you intend to inherit from HttpLocust?")
 
@@ -103,16 +104,33 @@ class Locust(object):
         self._update_coroutine = None
         self.task_set_instance = self.task_set(self)
 
+    @property
+    def self_co(self):
+        from runners import locust_runner
+        if locust_runner is None:
+            return None
+
+        co_idx = getattr(self, '_locust_co_index')
+        if co_idx is None:
+            return None
+
+        return locust_runner.get_locust_co(co_idx)
+
     def run(self):
         if hasattr(self, 'on_update'):
             from runners import locust_runner
             update_ivl = locust_runner.options.per_locust_update_interval
+
             def _do_onupdate():
                 while True:
                     try:
                         self.on_update()
                     except GreenletExit:
                         return
+                    except StopLocust:
+                        if self.self_co:
+                            self.self_co.kill(block=True, timeout=3)
+                            return
                     except Exception, e:
                         logger.error('Locust <on_update> exception:{}'.format(e), exc_info=True)
                         gevent.sleep(update_ivl)
@@ -126,7 +144,9 @@ class Locust(object):
         except StopLocust:
             pass
         except (RescheduleTask, RescheduleTaskImmediately) as e:
-            six.reraise(LocustError, LocustError("A task inside a Locust class' main TaskSet (`%s.task_set` of type `%s`) seems to have called interrupt() or raised an InterruptTaskSet exception. The interrupt() function is used to hand over execution to a parent TaskSet, and should never be called in the main TaskSet which a Locust class' task_set attribute points to." % (type(self).__name__, self.task_set.__name__)), sys.exc_info()[2])
+            six.reraise(LocustError, LocustError(
+                "A task inside a Locust class' main TaskSet (`%s.task_set` of type `%s`) seems to have called interrupt() or raised an InterruptTaskSet exception. The interrupt() function is used to hand over execution to a parent TaskSet, and should never be called in the main TaskSet which a Locust class' task_set attribute points to." % (
+                type(self).__name__, self.task_set.__name__)), sys.exc_info()[2])
         finally:
             if self._update_coroutine:
                 self._update_coroutine.kill(block=True, timeout=3)
@@ -153,7 +173,8 @@ class HttpLocust(Locust):
     def __init__(self):
         super(HttpLocust, self).__init__()
         if self.host is None:
-            raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
+            raise LocustError(
+                "You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
 
         self.client = HttpSession(base_url=self.host)
 
@@ -432,7 +453,7 @@ class TaskSet(object):
         * kwargs: Dict of keyword arguments that will be passed to the task callable.
         * first: Optional keyword argument. If True, the task will be put first in the queue.
         """
-        task = {"callable":task_callable, "args":args or [], "kwargs":kwargs or {}}
+        task = {"callable": task_callable, "args": args or [], "kwargs": kwargs or {}}
         if first:
             self._task_queue.insert(0, task)
         else:
@@ -486,4 +507,3 @@ class TaskSet(object):
         Locust instance.
         """
         return self.locust.client
-
