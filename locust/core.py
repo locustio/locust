@@ -338,6 +338,7 @@ class TaskSet(object):
         self.args = args
         self.kwargs = kwargs
 
+        self.last_execute_task_index = 0
         try:
             if hasattr(self, "on_start"):
                 self.on_start()

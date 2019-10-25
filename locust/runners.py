@@ -45,8 +45,10 @@ class LocustRunner(object):
         def on_hatch_complete(user_count):
             self.state = STATE_RUNNING
             if not self.options.no_reset_stats:
-                logger.info("Resetting stats\n")
-                self.stats.reset_all()
+                pass
+                # Do not reset stats
+                # logger.info("Resetting stats\n")
+                # self.stats.reset_all()
         events.hatch_complete += on_hatch_complete
 
     @property

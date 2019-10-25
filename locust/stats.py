@@ -266,6 +266,8 @@ class StatsEntry(object):
                 self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) + other.num_reqs_per_sec[key]
             for key in other.total_content_length_per_sec:
                 self.total_content_length_per_sec[key] = self.total_content_length_per_sec.get(key, 0) + other.total_content_length_per_sec[key]
+            for key in other.total_response_time_per_sec:
+                self.total_response_time_per_sec[key] = self.total_response_time_per_sec.get(key, 0) + other.total_response_time_per_sec[key]
         else:
             # still add the number of reqs per seconds the last 20 seconds
             for i in xrange(other.last_request_timestamp-20, other.last_request_timestamp+1):
@@ -286,6 +288,7 @@ class StatsEntry(object):
             "total_content_length": self.total_content_length,
             "response_times": self.response_times,
             "num_reqs_per_sec": self.num_reqs_per_sec,
+            "total_response_time_per_sec": self.total_response_time_per_sec,
         }
     
     @classmethod
@@ -302,6 +305,7 @@ class StatsEntry(object):
             "total_content_length",
             "response_times",
             "num_reqs_per_sec",
+            "total_response_time_per_sec",
         ]:
             setattr(obj, key, data[key])
         return obj
@@ -447,7 +451,7 @@ def on_request_failure(request_type, name, response_time, exception):
 
 def on_report_to_master(client_id, data):
     data["stats"] = [global_stats.entries[key].get_stripped_report() for key in six.iterkeys(global_stats.entries) if not (global_stats.entries[key].num_requests == 0 and global_stats.entries[key].num_failures == 0)]
-    data["errors"] =  dict([(k, e.to_dict()) for k, e in six.iteritems(global_stats.errors)])
+    data["errors"] = dict([(k, e.to_dict()) for k, e in six.iteritems(global_stats.errors)])
     global_stats.errors = {}
 
 def on_slave_report(client_id, data):
