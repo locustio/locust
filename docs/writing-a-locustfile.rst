@@ -421,7 +421,7 @@ One can mark requests as failed, even when the response code is OK, by using the
 
 .. code-block:: python
 
-    with client.get("/", catch_response=True) as response:
+    with self.client.get("/", catch_response=True) as response:
         if response.content != b"Success":
             response.failure("Got wrong response")
 
@@ -431,7 +431,7 @@ be reported as a success in the statistics:
 
 .. code-block:: python
 
-    with client.get("/does_not_exist/", catch_response=True) as response:
+    with self.client.get("/does_not_exist/", catch_response=True) as response:
         if response.status_code == 404:
             response.success()
 
@@ -450,7 +450,7 @@ Example:
 
     # Statistics for these requests will be grouped under: /blog/?id=[id]
     for i in range(10):
-        client.get("/blog?id=%i" % i, name="/blog?id=[id]")
+        self.client.get("/blog?id=%i" % i, name="/blog?id=[id]")
 
 Common libraries
 =================
