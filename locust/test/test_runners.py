@@ -57,6 +57,7 @@ class mocked_options(object):
         self.master_bind_port = 5557
         self.heartbeat_liveness = 3
         self.heartbeat_interval = 0.01
+        self.stop_timeout = None
 
     def reset_stats(self):
         pass
@@ -486,3 +487,95 @@ class TestMessageSerializing(unittest.TestCase):
         self.assertEqual(msg.type, rebuilt.type)
         self.assertEqual(msg.data, rebuilt.data)
         self.assertEqual(msg.node_id, rebuilt.node_id)
+
+class TestStopTimeout(unittest.TestCase):
+    def test_stop_timeout(self):
+        short_time = 0.05
+        class MyTaskSet(TaskSet):
+            @task
+            def my_task(self):
+                MyTaskSet.state = "first"
+                gevent.sleep(short_time)
+                MyTaskSet.state = "second" # should only run when run time + stop_timeout is > short_time
+                gevent.sleep(short_time)
+                MyTaskSet.state = "third" # should only run when run time + stop_timeout is > short_time * 2
+
+        class MyTestLocust(Locust):
+            task_set = MyTaskSet
+        
+        options = mocked_options()
+        runner = LocalLocustRunner([MyTestLocust], options)
+        runner.start_hatching(1, 1)
+        gevent.sleep(short_time / 2)
+        runner.quit()
+        self.assertEqual("first", MyTaskSet.state)
+
+        options.stop_timeout = short_time / 2 # exit with timeout
+        runner = LocalLocustRunner([MyTestLocust], options)
+        runner.start_hatching(1, 1)
+        gevent.sleep(short_time)
+        runner.quit()
+        self.assertEqual("second", MyTaskSet.state)
+        
+        options.stop_timeout = short_time * 2 # allow task iteration to complete, with some margin
+        runner = LocalLocustRunner([MyTestLocust], options)
+        runner.start_hatching(1, 1)
+        gevent.sleep(short_time)
+        runner.quit()
+        self.assertEqual("third", MyTaskSet.state)
+
+    def test_stop_timeout_exit_during_wait(self):
+        short_time = 0.05
+        class MyTaskSet(TaskSet):
+            @task
+            def my_task(self):
+                pass
+
+        class MyTestLocust(Locust):
+            task_set = MyTaskSet
+            min_wait = 1000
+            max_wait = 1000
+
+        options = mocked_options()
+        options.stop_timeout = short_time
+        runner = LocalLocustRunner([MyTestLocust], options)
+        runner.start_hatching(1, 1)
+        gevent.sleep(short_time) # sleep to make sure locust has had time to start waiting
+        timeout = gevent.Timeout(short_time)
+        timeout.start()
+        try:
+            runner.quit()
+            runner.greenlet.join()
+        except gevent.Timeout:
+            self.fail("Got Timeout exception. Waiting locusts should stop immediately, even when using stop_timeout.")
+        finally:
+            timeout.cancel()
+
+    def test_stop_timeout_with_interrupt(self):
+        short_time = 0.05
+        class MySubTaskSet(TaskSet):
+            @task
+            def a_task(self):
+                gevent.sleep(0)
+                self.interrupt(reschedule=True)
+
+        class MyTaskSet(TaskSet):
+            tasks = [MySubTaskSet]
+        
+        class MyTestLocust(Locust):
+            task_set = MyTaskSet
+
+        options = mocked_options()
+        options.stop_timeout = short_time
+        runner = LocalLocustRunner([MyTestLocust], options)
+        runner.start_hatching(1, 1)
+        gevent.sleep(0)
+        timeout = gevent.Timeout(short_time)
+        timeout.start()
+        try:
+            runner.quit()
+            runner.greenlet.join()
+        except gevent.Timeout:
+            self.fail("Got Timeout exception. Interrupted locusts should exit immediately during stop_timeout.")
+        finally:
+            timeout.cancel()

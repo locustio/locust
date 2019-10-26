@@ -20,7 +20,7 @@ from . import events
 from .clients import HttpSession
 from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
                         RescheduleTaskImmediately, StopLocust)
-from .runners import STATE_CLEANUP
+from .runners import STATE_CLEANUP, LOCUST_STATE_RUNNING, LOCUST_STATE_STOPPING, LOCUST_STATE_WAITING
 logger = logging.getLogger(__name__)
 
 
@@ -134,6 +134,7 @@ class Locust(object):
     _setup_has_run = False  # Internal state to see if we have already run
     _teardown_is_set = False  # Internal state to see if we have already run
     _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
+    _state = False
     
     def __init__(self):
         super(Locust, self).__init__()
@@ -360,6 +361,9 @@ class TaskSet(object):
         
         while (True):
             try:
+                if self.locust._state == LOCUST_STATE_STOPPING:
+                    raise GreenletExit()
+
                 if self.locust.stop_timeout is not None and time() - self._time_start > self.locust.stop_timeout:
                     return
         
@@ -432,7 +436,9 @@ class TaskSet(object):
         return millis / 1000.0
 
     def wait(self):
+        self.locust._state = LOCUST_STATE_WAITING
         self._sleep(self.get_wait_secs())
+        self.locust._state = LOCUST_STATE_RUNNING
 
     def _sleep(self, seconds):
         gevent.sleep(seconds)

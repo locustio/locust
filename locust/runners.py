@@ -26,6 +26,7 @@ locust_runner = None
 STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_CLEANUP, STATE_STOPPING, STATE_STOPPED, STATE_MISSING = ["ready", "hatching", "running", "cleanup", "stopping", "stopped", "missing"]
 SLAVE_REPORT_INTERVAL = 3.0
 
+LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING = ["running", "waiting", "stopping"]
 
 class LocustRunner(object):
     def __init__(self, locust_classes, options):
@@ -125,12 +126,13 @@ class LocustRunner(object):
 
                 locust = bucket.pop(random.randint(0, len(bucket)-1))
                 occurrence_count[locust.__name__] += 1
+                new_locust = locust()
                 def start_locust(_):
                     try:
-                        locust().run(runner=self)
+                        new_locust.run(runner=self)
                     except GreenletExit:
                         pass
-                new_locust = self.locusts.spawn(start_locust, locust)
+                self.locusts.spawn(start_locust, new_locust)
                 if len(self.locusts) % 10 == 0:
                     logger.debug("%i locusts hatched" % len(self.locusts))
                 gevent.sleep(sleep_time)
@@ -151,7 +153,7 @@ class LocustRunner(object):
         dying = []
         for g in self.locusts:
             for l in bucket:
-                if l == g.args[0]:
+                if l == type(g.args[0]):
                     dying.append(g)
                     bucket.remove(l)
                     break
@@ -193,6 +195,15 @@ class LocustRunner(object):
         # if we are currently hatching locusts we need to kill the hatching greenlet first
         if self.hatching_greenlet and not self.hatching_greenlet.ready():
             self.hatching_greenlet.kill(block=True)
+        if self.options.stop_timeout:
+            for locust_greenlet in self.locusts:
+                locust = locust_greenlet.args[0]
+                if locust._state == LOCUST_STATE_WAITING:
+                    locust_greenlet.kill()
+                else:
+                    locust._state = LOCUST_STATE_STOPPING
+            if not self.locusts.join(timeout=self.options.stop_timeout):
+                logger.info("Not all locusts finished their tasks & terminated in %s seconds. Killing them..." % self.options.stop_timeout)
         self.locusts.kill(block=True)
         self.state = STATE_STOPPED
         events.locust_stop_hatching.fire()
