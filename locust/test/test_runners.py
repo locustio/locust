@@ -430,35 +430,35 @@ class TestStopTimeout(unittest.TestCase):
         class MyTaskSet(TaskSet):
             @task
             def my_task(self):
-                TestStopTimeout.state = "first"
+                MyTaskSet.state = "first"
                 gevent.sleep(short_time)
-                TestStopTimeout.state = "second" # should only run when run time + stop_timeout is > short_time
+                MyTaskSet.state = "second" # should only run when run time + stop_timeout is > short_time
                 gevent.sleep(short_time)
-                TestStopTimeout.state = "third" # should only run when run time + stop_timeout is > short_time * 2
+                MyTaskSet.state = "third" # should only run when run time + stop_timeout is > short_time * 2
 
         class MyTestLocust(Locust):
             task_set = MyTaskSet
         
-        self.options = mocked_options()
-        runner = LocalLocustRunner([MyTestLocust], self.options)
+        options = mocked_options()
+        runner = LocalLocustRunner([MyTestLocust], options)
         runner.start_hatching(1, 1)
         gevent.sleep(short_time / 2)
         runner.quit()
-        self.assertEqual("first", TestStopTimeout.state)
+        self.assertEqual("first", MyTaskSet.state)
 
-        self.options.stop_timeout = short_time / 2 # exit with timeout
-        runner = LocalLocustRunner([MyTestLocust], self.options)
+        options.stop_timeout = short_time / 2 # exit with timeout
+        runner = LocalLocustRunner([MyTestLocust], options)
         runner.start_hatching(1, 1)
         gevent.sleep(short_time)
         runner.quit()
-        self.assertEqual("second", TestStopTimeout.state)
+        self.assertEqual("second", MyTaskSet.state)
         
-        self.options.stop_timeout = short_time * 2 # allow task iteration to complete, with some margin
-        runner = LocalLocustRunner([MyTestLocust], self.options)
+        options.stop_timeout = short_time * 2 # allow task iteration to complete, with some margin
+        runner = LocalLocustRunner([MyTestLocust], options)
         runner.start_hatching(1, 1)
         gevent.sleep(short_time)
         runner.quit()
-        self.assertEqual("third", TestStopTimeout.state)
+        self.assertEqual("third", MyTaskSet.state)
 
     def test_stop_timeout_exit_during_wait(self):
         short_time = 0.05
@@ -472,9 +472,9 @@ class TestStopTimeout(unittest.TestCase):
             min_wait = 1000
             max_wait = 1000
 
-        self.options = mocked_options()
-        self.options.stop_timeout = short_time
-        runner = LocalLocustRunner([MyTestLocust], self.options)
+        options = mocked_options()
+        options.stop_timeout = short_time
+        runner = LocalLocustRunner([MyTestLocust], options)
         runner.start_hatching(1, 1)
         gevent.sleep(short_time) # sleep to make sure locust has had time to start waiting
         timeout = gevent.Timeout(short_time)
@@ -501,9 +501,9 @@ class TestStopTimeout(unittest.TestCase):
         class MyTestLocust(Locust):
             task_set = MyTaskSet
 
-        self.options = mocked_options()
-        self.options.stop_timeout = short_time
-        runner = LocalLocustRunner([MyTestLocust], self.options)
+        options = mocked_options()
+        options.stop_timeout = short_time
+        runner = LocalLocustRunner([MyTestLocust], options)
         runner.start_hatching(1, 1)
         gevent.sleep(0)
         timeout = gevent.Timeout(short_time)
@@ -512,6 +512,6 @@ class TestStopTimeout(unittest.TestCase):
             runner.quit()
             runner.greenlet.join()
         except gevent.Timeout:
-            self.fail("Got Timeout exception. Interrupted locusts should check if they should exit immediately, even when using stop_timeout.")
+            self.fail("Got Timeout exception. Interrupted locusts should exit immediately during stop_timeout.")
         finally:
             timeout.cancel()
