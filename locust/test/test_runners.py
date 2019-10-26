@@ -502,6 +502,7 @@ class TestStopTimeout(unittest.TestCase):
 
         class MyTestLocust(Locust):
             task_set = MyTaskSet
+            wait_time = constant(1)
         
         options = mocked_options()
         runner = LocalLocustRunner([MyTestLocust], options)
@@ -533,8 +534,7 @@ class TestStopTimeout(unittest.TestCase):
 
         class MyTestLocust(Locust):
             task_set = MyTaskSet
-            min_wait = 1000
-            max_wait = 1000
+            wait_time = between(1, 1)
 
         options = mocked_options()
         options.stop_timeout = short_time
