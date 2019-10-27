@@ -49,7 +49,7 @@ setup(
         "msgpack-python>=0.4.2", 
         "six>=1.10.0", 
         "pyzmq>=16.0.2", 
-        "geventhttpclient-wheels",
+        "geventhttpclient-wheels==1.3.1.dev2",
     ],
     test_suite="locust.test",
     tests_require=['mock'],

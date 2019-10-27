@@ -8,6 +8,13 @@ from collections import defaultdict
 from itertools import chain
 from time import time
 
+try:
+    # >= Py3.2
+    from html import escape
+except ImportError:
+    # < Py3.2
+    from cgi import escape
+
 import six
 from flask import Flask, make_response, jsonify, render_template, request
 from gevent import pywsgi
@@ -104,11 +111,12 @@ def failures_stats_csv():
 @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
 def request_stats():
     stats = []
-    
+
     for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
         stats.append({
             "method": s.method,
             "name": s.name,
+            "safe_name": escape(s.name, quote=False),
             "num_requests": s.num_requests,
             "num_failures": s.num_failures,
             "avg_response_time": s.avg_response_time,

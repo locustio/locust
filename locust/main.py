@@ -243,6 +243,15 @@ def parse_options():
     )
 
     parser.add_argument(
+        '-s', '--stop-timeout',
+        action='store',
+        type=int,
+        dest='stop_timeout',
+        default=None,
+        help="number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately."
+    )
+
+    parser.add_argument(
         'locust_classes',
         nargs='*',
         metavar='LocustClass',
