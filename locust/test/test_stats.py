@@ -146,13 +146,13 @@ class TestRequestStats(unittest.TestCase):
         s1 = StatsEntry(self.stats, "rounding down!", "GET")
         s1.log(122, 0)    # (rounded 120) min
         actual_percentile = s1.percentile()
-        self.assertEqual(actual_percentile, " GET rounding down!                                                  1    120    120    120    120    120    120    120    120    120")
+        self.assertEqual(actual_percentile, " GET rounding down!                                                  1    120    120    120    120    120    120    120    120    120    120    120")
 
     def test_percentile_rounded_up(self):
         s2 = StatsEntry(self.stats, "rounding up!", "GET")
         s2.log(127, 0)    # (rounded 130) min
         actual_percentile = s2.percentile()
-        self.assertEqual(actual_percentile, " GET rounding up!                                                    1    130    130    130    130    130    130    130    130    130")
+        self.assertEqual(actual_percentile, " GET rounding up!                                                    1    130    130    130    130    130    130    130    130    130    130    130")
     
     def test_error_grouping(self):
         # reset stats
