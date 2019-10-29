@@ -8,6 +8,8 @@ Unreleased
 ==========
 
 * Added `--skip-log-setup` to disable Locust's default logging setup.
+* Added `--stop-timeout` to allow tasks to finish running their iteration before stopping
+* Added 99.9 and 99.99 percentile response times to csv output
 * Allow custom clients to set request response time to None. Those requests will be excluded 
   when calculating median, average, min, max and percentile response times.
 * Renamed the last row in statistics table from "Total" to "Aggregated" (since the values aren't 
