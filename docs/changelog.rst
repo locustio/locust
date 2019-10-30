@@ -4,14 +4,14 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
-Unreleased
+0.12.2
 ==========
 
 * Added `--skip-log-setup` to disable Locust's default logging setup.
-* Allow custom clients to set request response time to None. Those requests will be excluded 
+* Allow custom clients to set request response time to None. Those requests will be excluded
   when calculating median, average, min, max and percentile response times.
-* Renamed the last row in statistics table from "Total" to "Aggregated" (since the values aren't 
-  a sum of the individual table rows). 
+* Renamed the last row in statistics table from "Total" to "Aggregated" (since the values aren't
+  a sum of the individual table rows).
 * Some visual improvements to the web UI.
 * Fixed issue with simulating fewer number of locust users than the number of slave/worker nodes.
 * Fixed bugs in the web UI related to the fact that the stats table is truncated at 500 entries.
@@ -21,9 +21,9 @@ Unreleased
 0.12.1
 ======
 
-* Added new :code:`FastHttpLocust` class that uses a faster HTTP client, which should be 5-6 times faster 
+* Added new :code:`FastHttpLocust` class that uses a faster HTTP client, which should be 5-6 times faster
   than the normal :code:`HttpLocust` class. For more info see the documentation on :ref:`increasing performance <increase-performance>`.
-* Added ability to set the exit code of the locust process when exceptions has occurred within the user code, 
+* Added ability to set the exit code of the locust process when exceptions has occurred within the user code,
   using the :code:`--exit-code-on-error` parameter.
 * Added TCP keep alive to master/slave communication sockets to avoid broken connections in some environments.
 * Dropped support for Python 3.4
@@ -34,7 +34,7 @@ Unreleased
 ======
 
 * Python 3.7 support
-* Added a status page to the web UI when running Locust distributed showing the status of slave nodes 
+* Added a status page to the web UI when running Locust distributed showing the status of slave nodes
   and detect down slaves using heartbeats
 * Numerous bugfixes/documentation updates (see detailed changelog)
 
@@ -46,8 +46,8 @@ Unreleased
 * Numerous bugfixes (see detailed changelog)
 * Added sequential task support - https://github.com/locustio/locust/pull/827
 * Added support for user-defined wait_function - https://github.com/locustio/locust/pull/785
-* By default, Locust no longer resets the statistics when the hatching is complete.  
-  Therefore :code:`--no-reset-stats` has been deprected (since it's now the default behaviour), 
+* By default, Locust no longer resets the statistics when the hatching is complete.
+  Therefore :code:`--no-reset-stats` has been deprected (since it's now the default behaviour),
   and instead a new :code:`--reset-stats` option has been added.
 * Dropped support for Python 3.3
 * Updated documentation
@@ -64,14 +64,14 @@ Unreleased
 
 * Python 3 support
 * Dropped support for Python 2.6
-* Added :code:`--no-reset-stats` option for controling if the statistics should be reset once 
+* Added :code:`--no-reset-stats` option for controling if the statistics should be reset once
   the hatching is complete
-* Added charts to the web UI for requests per second, average response time, and number of 
+* Added charts to the web UI for requests per second, average response time, and number of
   simulated users.
 * Updated the design of the web UI.
 * Added ability to write a CSV file for results via command line flag
 * Added the URL of the host that is currently being tested to the web UI.
-* We now also apply gevent's monkey patching of threads. This fixes an issue when 
+* We now also apply gevent's monkey patching of threads. This fixes an issue when
   using Locust to test Cassandra (https://github.com/locustio/locust/issues/569).
 * Various bug fixes and improvements
 
@@ -85,7 +85,7 @@ Unreleased
 0.7.4
 =====
 
-* Use a newer version of requests, which fixed an issue for users with older versions of 
+* Use a newer version of requests, which fixed an issue for users with older versions of
   requests getting ConnectionErrors (https://github.com/locustio/locust/issues/273).
 * Various fixes to documentation.
 
@@ -93,9 +93,9 @@ Unreleased
 0.7.3
 =====
 
-* Fixed bug where POST requests (and other methods as well) got incorrectly reported as 
+* Fixed bug where POST requests (and other methods as well) got incorrectly reported as
   GET requests, if the request resulted in a redirect.
-* Added ability to download exceptions in CSV format. Download links has also been moved 
+* Added ability to download exceptions in CSV format. Download links has also been moved
   to it's own tab in the web UI.
 
 
@@ -103,16 +103,16 @@ Unreleased
 =====
 
 * Locust now returns an exit code of 1 when any failed requests were reported.
-* When making an HTTP request to an endpoint that responds with a redirect, the original 
-  URL that was requested is now used as the name for that entry in the statistics (unless 
-  an explicit override is specified through the *name* argument). Previously, the last 
+* When making an HTTP request to an endpoint that responds with a redirect, the original
+  URL that was requested is now used as the name for that entry in the statistics (unless
+  an explicit override is specified through the *name* argument). Previously, the last
   URL in the redirect chain was used to label the request(s) in the statistics.
-* Fixed bug which caused only the time of the last request in a redirect chain to be 
+* Fixed bug which caused only the time of the last request in a redirect chain to be
   included in the reported time.
-* Fixed bug which caused the download time of the request body not to be included in the 
-  reported response time. 
-* Fixed bug that occurred on some linux dists that were tampering with the python-requests 
-  system package (removing dependencies which requests is bundling). This bug only occured 
+* Fixed bug which caused the download time of the request body not to be included in the
+  reported response time.
+* Fixed bug that occurred on some linux dists that were tampering with the python-requests
+  system package (removing dependencies which requests is bundling). This bug only occured
   when installing Locust in the python system packages, and not when using virtualenv.
 * Various minor fixes and improvements.
 
@@ -124,7 +124,7 @@ Unreleased
 * Fixed bug which caused Min response time to always be 0 after all locusts had been hatched
   and the statistics had been reset.
 * Minor UI improvements in the web interface.
-* Handle messages from "zombie" slaves by ignoring the message and making a log entry 
+* Handle messages from "zombie" slaves by ignoring the message and making a log entry
   in the master process.
 
 
@@ -135,31 +135,31 @@ Unreleased
 HTTP client functionality moved to HttpLocust
 ---------------------------------------------
 
-Previously, the Locust class instantiated a :py:class:`HttpSession <locust.clients.HttpSession>` 
-under the client attribute that was used to make HTTP requests. This funcionality has 
-now been moved into the :py:class:`HttpLocust <locust.core.HttpLocust>` class, in an 
-effort to make it more obvious how one can use Locust to 
+Previously, the Locust class instantiated a :py:class:`HttpSession <locust.clients.HttpSession>`
+under the client attribute that was used to make HTTP requests. This funcionality has
+now been moved into the :py:class:`HttpLocust <locust.core.HttpLocust>` class, in an
+effort to make it more obvious how one can use Locust to
 :doc:`load test non-HTTP systems <testing-other-systems>`.
 
-To make existing locust scripts compatible with the new version you should make your 
+To make existing locust scripts compatible with the new version you should make your
 locust classes inherit from HttpLocust instead of the base Locust class.
 
 
 msgpack for serializing master/slave data
 -----------------------------------------
 
-Locust now uses `msgpack <http://msgpack.org/>`_ for serializing data that is sent between 
-a master node and it's slaves. This adresses a possible attack that can be used to execute 
-code remote, if one has access to the internal locust ports that are used for master-slave 
-communication. The reason for this exploit was due to the fact that pickle was used. 
+Locust now uses `msgpack <http://msgpack.org/>`_ for serializing data that is sent between
+a master node and it's slaves. This adresses a possible attack that can be used to execute
+code remote, if one has access to the internal locust ports that are used for master-slave
+communication. The reason for this exploit was due to the fact that pickle was used.
 
 .. warning::
 
-    Anyone who uses an older version should make sure that their Locust machines are not publicly 
+    Anyone who uses an older version should make sure that their Locust machines are not publicly
     accessible on port 5557 and 5558. Also, one should never run Locust as root.
 
-Anyone who uses the :py:class:`report_to_master <locust.events.report_to_master>` and 
-:py:class:`slave_report <locust.events.slave_report>` events, needs to make sure that 
+Anyone who uses the :py:class:`report_to_master <locust.events.report_to_master>` and
+:py:class:`slave_report <locust.events.slave_report>` events, needs to make sure that
 any data that is attached to the slave reports is serializable by msgpack.
 
 requests updated to version 2.2
@@ -208,19 +208,19 @@ Locust Event hooks now takes keyword argument
 ---------------------------------------------
 
 When :doc:`extending-locust` by listening to :ref:`events`, the listener functions should now expect
-the arguments to be passed in as keyword arguments. It's also highly recommended to add an extra 
-wildcard keyword arguments to listener functions, since they're then less likely to break if extra  
+the arguments to be passed in as keyword arguments. It's also highly recommended to add an extra
+wildcard keyword arguments to listener functions, since they're then less likely to break if extra
 arguments are added to that event in some future version. For example::
 
     from locust import events
-    
+
     def on_request(request_type, name, response_time, response_length, **kw):
         print "Got request!"
-    
+
     locust.events.request_success += on_request
 
-The *method* and *path* arguments to :py:obj:`request_success <locust.events.request_success>` and 
-:py:obj:`request_failure <locust.events.request_failure>` are now called *request_type* and *name*, 
+The *method* and *path* arguments to :py:obj:`request_success <locust.events.request_success>` and
+:py:obj:`request_failure <locust.events.request_failure>` are now called *request_type* and *name*,
 since it's less HTTP specific.
 
 
@@ -245,10 +245,10 @@ Other changes
 0.6.2
 =====
 
-* Made Locust compatible with gevent 1.0rc2. This allows user to step around a problem 
-  with running Locust under some versions of CentOS, that can be fixed by upgrading 
+* Made Locust compatible with gevent 1.0rc2. This allows user to step around a problem
+  with running Locust under some versions of CentOS, that can be fixed by upgrading
   gevent to 1.0.
-* Added :py:attr:`parent <locust.core.TaskSet.parent>` attribute to TaskSet class that 
+* Added :py:attr:`parent <locust.core.TaskSet.parent>` attribute to TaskSet class that
   refers to the parent TaskSet, or Locust, instance. Contributed by Aaron Daubman.
 
 
@@ -264,18 +264,18 @@ Other changes
 
 .. warning::
 
-    This version comes with non backward compatible changes to the API. 
+    This version comes with non backward compatible changes to the API.
     Anyone who is currently using existing locust scripts and want to upgrade to 0.6
-    should read through these changes. 
+    should read through these changes.
 
 :py:class:`SubLocust <locust.core.SubLocust>` replaced by :py:class:`TaskSet <locust.core.TaskSet>` and :py:class:`Locust <locust.core.Locust>` class behaviour changed
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-:py:class:`Locust <locust.core.Locust>` classes does no longer control task scheduling and execution. 
-Therefore, you no longer define tasks within Locust classes, instead the Locust class has a 
-:py:attr:`task_set <locust.core.Locust.task_set>` attribute which should point to a 
-:py:class:`TaskSet <locust.core.TaskSet>` class. Tasks should now be defined in TaskSet 
-classes, in the same way that was previously done in Locust and SubLocust classes. TaskSets can be 
+:py:class:`Locust <locust.core.Locust>` classes does no longer control task scheduling and execution.
+Therefore, you no longer define tasks within Locust classes, instead the Locust class has a
+:py:attr:`task_set <locust.core.Locust.task_set>` attribute which should point to a
+:py:class:`TaskSet <locust.core.TaskSet>` class. Tasks should now be defined in TaskSet
+classes, in the same way that was previously done in Locust and SubLocust classes. TaskSets can be
 nested just like SubLocust classes could.
 
 So the following code for 0.5.1::
@@ -283,27 +283,27 @@ So the following code for 0.5.1::
     class User(Locust):
         min_wait = 10000
         max_wait = 120000
-        
+
         @task(10)
         def index(self):
             self.client.get("/")
-        
+
         @task(2)
         class AboutPage(SubLocust):
             min_wait = 10000
             max_wait = 120000
-            
+
             def on_init(self):
                 self.client.get("/about/")
-            
+
             @task
             def team_page(self):
                 self.client.get("/about/team/")
-            
+
             @task
             def press_page(self):
                 self.client.get("/about/press/")
-            
+
             @task
             def stop(self):
                 self.interrupt()
@@ -314,46 +314,46 @@ Should now be written like::
         @task(10)
         def index(self):
             self.client.get("/")
-        
+
         @task(2)
         class AboutPage(TaskSet):
             def on_init(self):
                 self.client.get("/about/")
-            
+
             @task
             def team_page(self):
                 self.client.get("/about/team/")
-            
+
             @task
             def press_page(self):
                 self.client.get("/about/press/")
-            
+
             @task
             def stop(self):
                 self.interrupt()
-    
+
     class User(Locust):
         min_wait = 10000
         max_wait = 120000
         task_set = BrowsePage
 
-Each TaskSet instance gets a :py:attr:`locust <locust.core.TaskSet.locust>` attribute, which refers to the  
+Each TaskSet instance gets a :py:attr:`locust <locust.core.TaskSet.locust>` attribute, which refers to the
 Locust class.
-  
+
 Locust now uses Requests
 ------------------------
 
-Locust's own HttpBrowser class (which was typically accessed through *self.client* from within a locust class) 
-has been replaced by a thin wrapper around the requests library (http://python-requests.org). This comes with 
-a number of advantages. Users can  now take advantage of a well documented, well written, fully fledged 
-library for making HTTP requests. However, it also comes with some small API changes wich will require users 
+Locust's own HttpBrowser class (which was typically accessed through *self.client* from within a locust class)
+has been replaced by a thin wrapper around the requests library (http://python-requests.org). This comes with
+a number of advantages. Users can  now take advantage of a well documented, well written, fully fledged
+library for making HTTP requests. However, it also comes with some small API changes wich will require users
 to update their existing load testing scripts.
 
 Gzip encoding turned on by default
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The HTTP client now sends headers for accepting gzip encoding by default. The **--gzip** command line argument 
-has been removed and if someone want to disable the *Accept-Encoding* that the HTTP client uses, or any 
+The HTTP client now sends headers for accepting gzip encoding by default. The **--gzip** command line argument
+has been removed and if someone want to disable the *Accept-Encoding* that the HTTP client uses, or any
 other HTTP headers you can do::
 
     class MyWebUser(Locust):
@@ -364,53 +364,53 @@ other HTTP headers you can do::
 Improved HTTP client
 ^^^^^^^^^^^^^^^^^^^^
 
-Because of the switch to using python-requests in the HTTP client, the API for the client has also 
+Because of the switch to using python-requests in the HTTP client, the API for the client has also
 gotten a few changes.
 
-* Additionally to the :py:meth:`get <locust.clients.HttpSession.get>`, :py:meth:`post <locust.clients.HttpSession.post>`, 
-  :py:meth:`put <locust.clients.HttpSession.put>`, :py:meth:`delete <locust.clients.HttpSession.delete>` and 
-  :py:meth:`head <locust.clients.HttpSession.head>` methods, the :py:class:`HttpSession <locust.clients.HttpSession>` class 
+* Additionally to the :py:meth:`get <locust.clients.HttpSession.get>`, :py:meth:`post <locust.clients.HttpSession.post>`,
+  :py:meth:`put <locust.clients.HttpSession.put>`, :py:meth:`delete <locust.clients.HttpSession.delete>` and
+  :py:meth:`head <locust.clients.HttpSession.head>` methods, the :py:class:`HttpSession <locust.clients.HttpSession>` class
   now also has :py:meth:`patch <locust.clients.HttpSession.patch>` and :py:meth:`options <locust.clients.HttpSession.options>` methods.
 
 * All arguments to the HTTP request methods, except for **url** and **data** should now be specified as keyword arguments.
   For example, previously one could specify headers using::
-  
+
       client.get("/path", {"User-Agent":"locust"}) # this will no longer work
-  
+
   And should now be specified like::
-  
+
       client.get("/path", headers={"User-Agent":"locust"})
 
 * In general the whole HTTP client is now more powerful since it leverages on python-requests. Features that we're
   now able to use in Locust includes file upload, SSL, connection keep-alive, and more.
   See the `python-requests documentation <http://python-requests.org>`_ for more details.
 
-* The new :py:class:`HttpSession <locust.clients.HttpSession>` class' methods now return python-request 
-  :py:class:`Response <requests.Response>` objects. This means that accessing the content of the response 
-  is no longer made using the **data** attribute, but instead the **content** attribute. The HTTP response 
+* The new :py:class:`HttpSession <locust.clients.HttpSession>` class' methods now return python-request
+  :py:class:`Response <requests.Response>` objects. This means that accessing the content of the response
+  is no longer made using the **data** attribute, but instead the **content** attribute. The HTTP response
   code is now accessed through the **status_code** attribute, instead of the **code** attribute.
 
 
 HttpSession methods' catch_response argument improved and allow_http_error argument removed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * When doing HTTP requests using the **catch_response** argument, the context manager that is returned now
-  provides two functions, :py:meth:`success <locust.clients.ResponseContextManager.success>` and 
-  :py:meth:`failure <locust.clients.ResponseContextManager.failure>` that can be used to manually control 
+  provides two functions, :py:meth:`success <locust.clients.ResponseContextManager.success>` and
+  :py:meth:`failure <locust.clients.ResponseContextManager.failure>` that can be used to manually control
   what the request should be reported as in Locust's statistics.
-  
+
   .. autoclass:: locust.clients.ResponseContextManager
     :members: success, failure
     :noindex:
 
-* The **allow_http_error** argument of the HTTP client's methods has been removed. Instead one can use the 
+* The **allow_http_error** argument of the HTTP client's methods has been removed. Instead one can use the
   **catch_response** argument to get a context manager, which can be used together with a with statement.
-  
+
   The following code in the previous Locust version::
-  
+
       client.get("/does/not/exist", allow_http_error=True)
-  
+
   Can instead now be written like::
-  
+
       with client.get("/does/not/exist", catch_response=True) as response:
           response.success()
 
@@ -419,7 +419,7 @@ Other improvements and bug fixes
 --------------------------------
 
 * Scheduled task callables can now take keyword arguments and not only normal function arguments.
-* SubLocust classes that are scheduled using :func:`locust.core.Locust.schedule_task` can now take 
+* SubLocust classes that are scheduled using :func:`locust.core.Locust.schedule_task` can now take
   arguments and keyword arguments (available in *self.args* and *self.kwargs*).
 * Fixed bug where the average content size would be zero when doing requests against a server that
   didn't set the content-length header (i.e. server that uses *Transfer-Encoding: chunked*)
@@ -429,22 +429,22 @@ Other improvements and bug fixes
 Smaller API Changes
 -------------------
 
-* The *require_once* decorator has been removed. It was an old legacy function that no longer fit into 
-  the current way of writing Locust tests, where tasks are either methods under a Locust class or SubLocust 
+* The *require_once* decorator has been removed. It was an old legacy function that no longer fit into
+  the current way of writing Locust tests, where tasks are either methods under a Locust class or SubLocust
   classes containing task methods.
 * Changed signature of :func:`locust.core.Locust.schedule_task`. Previously all extra arguments that
   was given to the method was passed on to the task when it was called. It no longer accepts extra arguments.
-  Instead, it takes an *args* argument (list) and a *kwargs* argument (dict) which are be passed to the task when 
+  Instead, it takes an *args* argument (list) and a *kwargs* argument (dict) which are be passed to the task when
   it's called.
-* Arguments for :py:class:`request_success <locust.events.request_success>` event hook has been changed. 
-  Previously it took an HTTP Response instance as argument, but this has been changed to take the 
+* Arguments for :py:class:`request_success <locust.events.request_success>` event hook has been changed.
+  Previously it took an HTTP Response instance as argument, but this has been changed to take the
   content-length of the response instead. This makes it easier to write custom clients for Locust.
 
 
 0.5.1
 =====
 
-* Fixed bug which caused --logfile and --loglevel command line parameters to not be respected when running 
+* Fixed bug which caused --logfile and --loglevel command line parameters to not be respected when running
   locust without zeromq.
 
 0.5
@@ -464,7 +464,7 @@ Improvements and bug fixes
   "brain".
 * The HTTP method used when a client requests a URL is now displayed in the web UI
 * Some fixes and improvements in the stats exporting:
- 
+
  * A file name is now set (using content-disposition header) when downloading stats.
  * The order of the column headers for request stats was wrong.
  * Thanks Benjamin W. Smith, Jussi Kuosa and Samuele Pedroni!
@@ -475,9 +475,9 @@ Improvements and bug fixes
 API changes
 -----------
 
-* WebLocust class has been deprecated and is now called just Locust. The class that was previously 
+* WebLocust class has been deprecated and is now called just Locust. The class that was previously
   called Locust is now called LocustBase.
-* The *catch_http_error* argument to HttpClient.get() and HttpClient.post() has been renamed to 
+* The *catch_http_error* argument to HttpClient.get() and HttpClient.post() has been renamed to
   *allow_http_error*.
 
 Improvements and bug fixes

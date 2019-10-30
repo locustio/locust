@@ -62,7 +62,7 @@ class LocustRunner(object):
     def user_count(self):
         return len(self.locusts)
 
-    def weight_locusts(self, amount, stop_timeout = None):
+    def weight_locusts(self, amount):
         """
         Distributes the amount of locusts for each WebLocust-class according to it's weight
         returns a list "bucket" with the weighted locusts
@@ -77,8 +77,6 @@ class LocustRunner(object):
 
             if self.host is not None:
                 locust.host = self.host
-            if stop_timeout is not None:
-                locust.stop_timeout = stop_timeout
 
             # create locusts depending on weight
             percent = locust.weight / float(weight_sum)
@@ -101,11 +99,11 @@ class LocustRunner(object):
 
         return bucket
 
-    def spawn_locusts(self, spawn_count=None, stop_timeout=None, wait=False):
+    def spawn_locusts(self, spawn_count=None, wait=False):
         if spawn_count is None:
             spawn_count = self.num_clients
 
-        bucket = self.weight_locusts(spawn_count, stop_timeout)
+        bucket = self.weight_locusts(spawn_count)
         spawn_count = len(bucket)
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
             self.state = STATE_HATCHING
@@ -327,7 +325,6 @@ class MasterLocustRunner(DistributedLocustRunner):
                 "hatch_rate":slave_hatch_rate,
                 "num_clients":slave_num_clients,
                 "host":self.host,
-                "stop_timeout":None
             }
 
             if remaining > 0:

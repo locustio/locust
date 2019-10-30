@@ -142,9 +142,6 @@ class Locust(object):
     
     task_set = None
     """TaskSet class that defines the execution behaviour of this locust"""
-    
-    stop_timeout = None
-    """Number of seconds after which the Locust will die. If None it won't timeout."""
 
     weight = 10
     """Probability of locust being chosen. The higher the weight, the greater is the chance of it being chosen."""
@@ -392,9 +389,6 @@ class TaskSet(object):
             try:
                 if self.locust._state == LOCUST_STATE_STOPPING:
                     raise GreenletExit()
-
-                if self.locust.stop_timeout is not None and time() - self._time_start > self.locust.stop_timeout:
-                    return
         
                 if not self._task_queue:
                     self.schedule_task(self.get_next_task())
