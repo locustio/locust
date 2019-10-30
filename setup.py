@@ -20,7 +20,7 @@ setup(
     long_description="""Locust is a python utility for doing easy, distributed load testing of a web site""",
     classifiers=[
         "Topic :: Software Development :: Testing :: Traffic Generation",
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
