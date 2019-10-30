@@ -410,7 +410,7 @@ Response's *content* attribute will be set to None, and its *status_code* will b
 Manually controlling if a request should be considered successful or a failure
 ------------------------------------------------------------------------------
 
-By default, requests are marked as failed requests unless the HTTP response code is OK (2xx). 
+By default, requests are marked as failed requests unless the HTTP response code is OK (<400). 
 Most of the time, this default is what you want. Sometimes however—for example when testing 
 a URL endpoint that you expect to return 404, or testing a badly designed system that might 
 return *200 OK* even though an error occurred—there's a need for manually controlling if 
