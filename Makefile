@@ -1,8 +1,14 @@
-test:
-	unit2 discover
+coverage:
+	coverage run -m unittest discover
 
-release:
-	rm dist/* && python setup.py sdist && twine upload dist/*
+test:
+	tox
+
+build:
+	rm -f dist/* && python setup.py sdist bdist_wheel
+
+release: build
+	twine upload dist/*
 
 build_docs:
 	sphinx-build -b html docs/ docs/_build/

@@ -1,5 +1,5 @@
 # This locust test script example will simulate a user 
-# browsing the Locust documentation on http://docs.locust.io
+# browsing the Locust documentation on https://docs.locust.io/
 
 import random
 from locust import HttpLocust, TaskSet, task
@@ -39,7 +39,7 @@ class BrowseDocumentation(TaskSet):
 
 class AwesomeUser(HttpLocust):
     task_set = BrowseDocumentation
-    host = "http://docs.locust.io/en/latest/"
+    host = "https://docs.locust.io/en/latest/"
     
     # we assume someone who is browsing the Locust docs, 
     # generally has a quite long waiting time (between 

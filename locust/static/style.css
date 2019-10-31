@@ -143,7 +143,7 @@ a:hover {
 .stopped .boxes .box_stop {display: none;}
 
 .container {
-    max-width: 1200px;
+    max-width: 1800px;
     min-width: 1000px;
     margin-left: auto;
     margin-right: auto;
@@ -290,6 +290,9 @@ a:hover {
 .status th.numeric {
     text-align: right;
 }
+.status th.nowrap {
+    white-space: nowrap;
+}
 .status tr.dark {
     background:#153126;
 }
@@ -308,7 +311,7 @@ a:hover {
 .status td {
     max-width: 450px;
     overflow: hidden;
-    whitespace: no-wrap;
+    white-space: no-wrap;
     text-overflow: ellipsis;
 }
 @media (max-width: 1100px) {
@@ -317,11 +320,15 @@ a:hover {
     }
 }
 
+#stats td {
+    word-wrap: break-word;
+}
+
 #errors td, #errors th {
     text-align: left;
 }
 
-#exceptions th.exception_occurences {
+#exceptions th.exception_occurrences {
     width: 110px;
     text-align: center;
 }
@@ -329,7 +336,7 @@ a:hover {
     text-align: left;
 }
 
-#exceptions td.occurences {
+#exceptions td.occurrences {
     text-align: center;
 }
 #exceptions td.traceback {
@@ -414,14 +421,15 @@ ul.tabs li a.current:after {
     width: 398px;
     position: absolute;
     left: 50%;
-    top: 30px;
+    top: 5px;
     margin-left: -169px;
     border-radius: 5px;
     -moz-border-radius: 5px;
-    -webkit-border-radisu: 5px;
+    -webkit-border-radius: 5px;
     border: 3px solid #eee;
     background: #132b21;
     box-shadow: 0 0 60px rgba(0,0,0,0.3);
+    z-index: 1;
 }
 .about a.close_link {
     position: absolute;
