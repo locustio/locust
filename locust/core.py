@@ -362,6 +362,8 @@ class TaskSet(object):
                     self.schedule_task(self.get_next_task())
                 
                 try:
+                    if self.locust._state == LOCUST_STATE_STOPPING:
+                        raise GreenletExit()
                     self.execute_next_task()
                     if self.locust._state == LOCUST_STATE_STOPPING:
                         raise GreenletExit()

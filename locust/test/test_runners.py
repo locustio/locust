@@ -534,6 +534,34 @@ class TestStopTimeout(unittest.TestCase):
             timeout.cancel()
         self.assertEqual("third", MyTaskSet.state)
 
+    def test_stop_timeout_during_on_start(self):
+        short_time = 0.05
+        class MyTaskSet(TaskSet):
+            finished_on_start = False
+            my_task_run = False
+            def on_start(self):
+                gevent.sleep(short_time)
+                MyTaskSet.finished_on_start = True
+
+            @task
+            def my_task(self):
+                MyTaskSet.my_task_run = True
+
+        class MyTestLocust(Locust):
+            task_set = MyTaskSet
+            min_wait = 0
+            max_wait = 0
+        
+        options = mocked_options()
+        options.stop_timeout = short_time
+        runner = LocalLocustRunner([MyTestLocust], options)
+        runner.start_hatching(1, 1)
+        gevent.sleep(short_time / 2)
+        runner.quit()
+
+        self.assertTrue(MyTaskSet.finished_on_start)
+        self.assertFalse(MyTaskSet.my_task_run)
+
     def test_stop_timeout_exit_during_wait(self):
         short_time = 0.05
         class MyTaskSet(TaskSet):
