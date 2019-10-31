@@ -358,15 +358,18 @@ class TaskSet(object):
         
         while (True):
             try:
-                if self.locust._state == LOCUST_STATE_STOPPING:
-                    raise GreenletExit()
-        
                 if not self._task_queue:
                     self.schedule_task(self.get_next_task())
                 
                 try:
+                    if self.locust._state == LOCUST_STATE_STOPPING:
+                        raise GreenletExit()
                     self.execute_next_task()
+                    if self.locust._state == LOCUST_STATE_STOPPING:
+                        raise GreenletExit()
                 except RescheduleTaskImmediately:
+                    if self.locust._state == LOCUST_STATE_STOPPING:
+                        raise GreenletExit()
                     pass
                 except RescheduleTask:
                     self.wait()
