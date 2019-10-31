@@ -124,6 +124,7 @@ def request_stats():
             "max_response_time": proper_round(s.max_response_time),
             "current_rps": s.current_rps,
             "median_response_time": s.median_response_time,
+            "ninetieth_response_time": s.get_response_time_percentile(0.9),
             "avg_content_length": s.avg_content_length,
         })
 
