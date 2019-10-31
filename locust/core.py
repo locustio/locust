@@ -363,6 +363,8 @@ class TaskSet(object):
                 
                 try:
                     self.execute_next_task()
+                    if self.locust._state == LOCUST_STATE_STOPPING:
+                        raise GreenletExit()
                 except RescheduleTaskImmediately:
                     if self.locust._state == LOCUST_STATE_STOPPING:
                         raise GreenletExit()
@@ -429,8 +431,6 @@ class TaskSet(object):
         return millis / 1000.0
 
     def wait(self):
-        if self.locust._state == LOCUST_STATE_STOPPING:
-            raise GreenletExit()
         self.locust._state = LOCUST_STATE_WAITING
         self._sleep(self.get_wait_secs())
         self.locust._state = LOCUST_STATE_RUNNING
