@@ -77,10 +77,10 @@ find it as useful as we do.
 Authors
 =======
 
-- `Jonatan Heyman <http://heyman.info>`_ (`@jonatanheyman <http://twitter.com/jonatanheyman>`_ on Twitter)
-- Carl Byström (`@cgbystrom <http://twitter.com/cgbystrom>`_ on Twitter)
-- Joakim Hamrén (`@Jahaaja <http://twitter.com/Jahaaja>`_ on Twitter)
-- Hugo Heyman (`@hugoheyman <http://twitter.com/hugoheyman>`_ on Twitter)
+- `Jonatan Heyman <http://heyman.info>`_ (`@jonatanheyman <https://twitter.com/jonatanheyman>`_ on Twitter)
+- Carl Byström (`@cgbystrom <https://twitter.com/cgbystrom>`_ on Twitter)
+- Joakim Hamrén (`@Jahaaja <https://twitter.com/Jahaaja>`_ on Twitter)
+- Hugo Heyman (`@hugoheyman <https://twitter.com/hugoheyman>`_ on Twitter)
 
 License
 =======

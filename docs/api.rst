@@ -7,26 +7,36 @@ Locust class
 ============
 
 .. autoclass:: locust.core.Locust
-	:members: min_wait, max_wait, task_set, weight
+	:members: min_wait, max_wait, wait_function, task_set, weight
 
 HttpLocust class
 ================
 
 .. autoclass:: locust.core.HttpLocust
-	:members: min_wait, max_wait, task_set, client
+	:members: min_wait, max_wait, wait_function, task_set, client
 
 
 TaskSet class
 =============
 
 .. autoclass:: locust.core.TaskSet
-	:members: locust, parent, min_wait, max_wait, client, tasks, interrupt, schedule_task
+	:members: locust, parent, min_wait, max_wait, wait_function, client, tasks, interrupt, schedule_task
 
 task decorator
 ==============
 
 .. autofunction:: locust.core.task
 
+TaskSequence class
+==================
+
+.. autoclass:: locust.core.TaskSequence
+	:members: locust, parent, min_wait, max_wait, wait_function, client, tasks, interrupt, schedule_task
+
+seq_task decorator
+==================
+
+.. autofunction:: locust.core.seq_task
 
 HttpSession class
 =================

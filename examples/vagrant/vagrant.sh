@@ -6,7 +6,7 @@
 
 # Update and install some dependencies
 apt-get -y update 
-apt-get -y install build-essential python-pip python-dev libevent-dev libev-dev libzmq-dev
+apt-get -y install build-essential python-pip python-dev libev-dev libzmq-dev supervisor
 cd /vagrant
 
 pip install --use-mirrors pyzmq supervisor

@@ -1,10 +1,11 @@
-from requests.exceptions import (RequestException, MissingSchema,
-        InvalidSchema, InvalidURL)
+from requests.exceptions import (InvalidSchema, InvalidURL, MissingSchema,
+                                 RequestException)
 
-import gevent
+from locust import events
 from locust.clients import HttpSession
 from locust.stats import global_stats
 from .testcases import WebserverTestCase
+
 
 class TestHttpSession(WebserverTestCase):
     def test_get(self):
@@ -68,3 +69,45 @@ class TestHttpSession(WebserverTestCase):
         self.assertEqual(1, post_stats.num_requests)
         self.assertEqual(0, get_stats.num_requests)
     
+    def test_cookie(self):
+        s = HttpSession("http://127.0.0.1:%i" % self.port)
+        r = s.post("/set_cookie?name=testcookie&value=1337")
+        self.assertEqual(200, r.status_code)
+        r = s.get("/get_cookie?name=testcookie")
+        self.assertEqual('1337', r.content.decode())
+    
+    def test_head(self):
+        s = HttpSession("http://127.0.0.1:%i" % self.port)
+        r = s.head("/request_method")
+        self.assertEqual(200, r.status_code)
+        self.assertEqual("", r.content.decode())
+    
+    def test_delete(self):
+        s = HttpSession("http://127.0.0.1:%i" % self.port)
+        r = s.delete("/request_method")
+        self.assertEqual(200, r.status_code)
+        self.assertEqual("DELETE", r.content.decode())
+    
+    def test_options(self):
+        s = HttpSession("http://127.0.0.1:%i" % self.port)
+        r = s.options("/request_method")
+        self.assertEqual(200, r.status_code)
+        self.assertEqual("", r.content.decode())
+        self.assertEqual(
+            set(["OPTIONS", "DELETE", "PUT", "GET", "POST", "HEAD", "PATCH"]),
+            set(r.headers["allow"].split(", ")),
+        )
+
+    def test_error_message_with_name_replacment(self):
+        s = HttpSession("http://127.0.0.1:%i" % self.port)
+        my_event = events.EventHook()
+        kwargs = {}
+        def on_my_event(**kw):
+            kwargs.update(kw)
+
+        my_event += on_my_event
+        orig_events = events.request_failure
+        events.request_failure = my_event
+        s.request('get', '/wrong_url/01', name='replaced_url_name')
+        events.request_failure = orig_events
+        self.assertIn('for url: replaced_url_name', str(kwargs['exception']))

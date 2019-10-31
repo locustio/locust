@@ -1,14 +1,15 @@
-import unittest
 import time
+import unittest
+import re
 
-from requests.exceptions import RequestException
+from locust.core import HttpLocust, TaskSet, task
+from locust.inspectlocust import get_task_ratio_dict
+from locust.rpc.protocol import Message
+from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_response_time_dicts, global_stats
 from six.moves import xrange
 
 from .testcases import WebserverTestCase
-from locust.stats import RequestStats, StatsEntry, global_stats
-from locust.core import HttpLocust, Locust, TaskSet, task
-from locust.inspectlocust import get_task_ratio_dict
-from locust.rpc.protocol import Message
+
 
 class TestRequestStats(unittest.TestCase):
     def setUp(self):
@@ -18,12 +19,14 @@ class TestRequestStats(unittest.TestCase):
         self.s.log(45, 0)
         self.s.log(135, 0)
         self.s.log(44, 0)
+        self.s.log(None, 0)        
         self.s.log_error(Exception("dummy fail"))
         self.s.log_error(Exception("dummy fail"))
         self.s.log(375, 0)
         self.s.log(601, 0)
         self.s.log(35, 0)
         self.s.log(79, 0)
+        self.s.log(None, 0)        
         self.s.log_error(Exception("dummy fail"))
 
     def test_percentile(self):
@@ -38,22 +41,30 @@ class TestRequestStats(unittest.TestCase):
     def test_median(self):
         self.assertEqual(self.s.median_response_time, 79)
 
+    def test_median_out_of_min_max_bounds(self):
+        s = StatsEntry(self.stats, "median_test", "GET")
+        s.log(6034, 0)
+        self.assertEqual(s.median_response_time, 6034)
+        s.reset()
+        s.log(6099, 0)
+        self.assertEqual(s.median_response_time, 6099)
+
     def test_total_rps(self):
-        self.assertEqual(self.s.total_rps, 7)
+        self.assertEqual(self.s.total_rps, 9)
 
     def test_current_rps(self):
-        self.stats.last_request_timestamp = int(time.time()) + 4
-        self.assertEqual(self.s.current_rps, 3.5)
+        self.stats.total.last_request_timestamp = int(time.time()) + 4
+        self.assertEqual(self.s.current_rps, 4.5)
 
-        self.stats.last_request_timestamp = int(time.time()) + 25
+        self.stats.total.last_request_timestamp = int(time.time()) + 25
         self.assertEqual(self.s.current_rps, 0)
 
     def test_num_reqs_fails(self):
-        self.assertEqual(self.s.num_requests, 7)
+        self.assertEqual(self.s.num_requests, 9)
         self.assertEqual(self.s.num_failures, 3)
 
     def test_avg(self):
-        self.assertEqual(self.s.avg_response_time, 187.71428571428571428571428571429)
+        self.assertEqual(self.s.avg_response_time, 187.71428571428572)
 
     def test_reset(self):
         self.s.reset()
@@ -67,6 +78,13 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(self.s.avg_response_time, 420.5)
         self.assertEqual(self.s.median_response_time, 85)
     
+    def test_avg_only_none(self):
+        self.s.reset()
+        self.s.log(None, 123)
+        self.assertEqual(self.s.avg_response_time, 0)
+        self.assertEqual(self.s.median_response_time, 0)
+        self.assertEqual(self.s.get_response_time_percentile(0.5), 0)
+
     def test_reset_min_response_time(self):
         self.s.reset()
         self.s.log(756, 0)
@@ -91,28 +109,64 @@ class TestRequestStats(unittest.TestCase):
         s2.log(97, 0)
 
         s = StatsEntry(self.stats, "GET", "")
-        s.extend(s1, full_request_history=True)
-        s.extend(s2, full_request_history=True)
+        s.extend(s1)
+        s.extend(s2)
 
         self.assertEqual(s.num_requests, 10)
         self.assertEqual(s.num_failures, 3)
         self.assertEqual(s.median_response_time, 38)
         self.assertEqual(s.avg_response_time, 43.2)
+
+    def test_aggregation_with_rounding(self):
+        s1 = StatsEntry(self.stats, "round me!", "GET")
+        s1.log(122, 0)    # (rounded 120) min
+        s1.log(992, 0)    # (rounded 990) max
+        s1.log(142, 0)    # (rounded 140)
+        s1.log(552, 0)    # (rounded 550)
+        s1.log(557, 0)    # (rounded 560)
+        s1.log(387, 0)    # (rounded 390)
+        s1.log(557, 0)    # (rounded 560)
+        s1.log(977, 0)    # (rounded 980)
+
+        self.assertEqual(s1.num_requests, 8)
+        self.assertEqual(s1.median_response_time, 550)
+        self.assertEqual(s1.avg_response_time, 535.75)
+        self.assertEqual(s1.min_response_time, 122)
+        self.assertEqual(s1.max_response_time, 992)
+
+    def test_aggregation_min_response_time(self):
+        s1 = StatsEntry(self.stats, "min", "GET")
+        s1.log(10, 0)
+        self.assertEqual(10, s1.min_response_time)
+        s2 = StatsEntry(self.stats, "min", "GET")
+        s1.extend(s2)
+        self.assertEqual(10, s1.min_response_time)
+
+    def test_percentile_rounded_down(self):
+        s1 = StatsEntry(self.stats, "rounding down!", "GET")
+        s1.log(122, 0)    # (rounded 120) min
+        actual_percentile = s1.percentile()
+        self.assertEqual(actual_percentile, " GET rounding down!                                                  1    120    120    120    120    120    120    120    120    120    120    120")
+
+    def test_percentile_rounded_up(self):
+        s2 = StatsEntry(self.stats, "rounding up!", "GET")
+        s2.log(127, 0)    # (rounded 130) min
+        actual_percentile = s2.percentile()
+        self.assertEqual(actual_percentile, " GET rounding up!                                                    1    130    130    130    130    130    130    130    130    130    130    130")
     
     def test_error_grouping(self):
         # reset stats
         self.stats = RequestStats()
         
-        s = StatsEntry(self.stats, "/some-path", "GET")
-        s.log_error(Exception("Exception!"))
-        s.log_error(Exception("Exception!"))
+        self.stats.log_error("GET", "/some-path", Exception("Exception!"))
+        self.stats.log_error("GET", "/some-path", Exception("Exception!"))
             
         self.assertEqual(1, len(self.stats.errors))
-        self.assertEqual(2, list(self.stats.errors.values())[0].occurences)
+        self.assertEqual(2, list(self.stats.errors.values())[0].occurrences)
         
-        s.log_error(Exception("Another exception!"))
-        s.log_error(Exception("Another exception!"))
-        s.log_error(Exception("Third exception!"))
+        self.stats.log_error("GET", "/some-path", Exception("Another exception!"))
+        self.stats.log_error("GET", "/some-path", Exception("Another exception!"))
+        self.stats.log_error("GET", "/some-path", Exception("Third exception!"))
         self.assertEqual(3, len(self.stats.errors))
     
     def test_error_grouping_errors_with_memory_addresses(self):
@@ -121,10 +175,7 @@ class TestRequestStats(unittest.TestCase):
         class Dummy(object):
             pass
         
-        s = StatsEntry(self.stats, "/", "GET")
-        s.log_error(Exception("Error caused by %r" % Dummy()))
-        s.log_error(Exception("Error caused by %r" % Dummy()))
-        
+        self.stats.log_error("GET", "/", Exception("Error caused by %r" % Dummy()))
         self.assertEqual(1, len(self.stats.errors))
     
     def test_serialize_through_message(self):
@@ -143,6 +194,151 @@ class TestRequestStats(unittest.TestCase):
         u1 = StatsEntry.unserialize(data)
         
         self.assertEqual(20, u1.median_response_time)
+    
+    
+class TestStatsEntryResponseTimesCache(unittest.TestCase):
+    def setUp(self, *args, **kwargs):
+        super(TestStatsEntryResponseTimesCache, self).setUp(*args, **kwargs)
+        self.stats = RequestStats()
+    
+    def test_response_times_cached(self):
+        s = StatsEntry(self.stats, "/", "GET", use_response_times_cache=True)
+        self.assertEqual(1, len(s.response_times_cache))
+        s.log(11, 1337)
+        self.assertEqual(1, len(s.response_times_cache))
+        s.last_request_timestamp -= 1
+        s.log(666, 1337)
+        self.assertEqual(2, len(s.response_times_cache))
+        self.assertEqual(CachedResponseTimes(
+            response_times={11:1}, 
+            num_requests=1,
+        ), s.response_times_cache[s.last_request_timestamp-1])
+    
+    def test_response_times_not_cached_if_not_enabled(self):
+        s = StatsEntry(self.stats, "/", "GET")
+        s.log(11, 1337)
+        self.assertEqual(None, s.response_times_cache)
+        s.last_request_timestamp -= 1
+        s.log(666, 1337)
+        self.assertEqual(None, s.response_times_cache)
+    
+    def test_latest_total_response_times_pruned(self):
+        """
+        Check that RequestStats.latest_total_response_times are pruned when execeeding 20 entries
+        """
+        s = StatsEntry(self.stats, "/", "GET", use_response_times_cache=True)
+        t = int(time.time())
+        for i in reversed(range(2, 30)):
+            s.response_times_cache[t-i] = CachedResponseTimes(response_times={}, num_requests=0)
+        self.assertEqual(29, len(s.response_times_cache))
+        s.log(17, 1337)
+        s.last_request_timestamp -= 1
+        s.log(1, 1)
+        self.assertEqual(20, len(s.response_times_cache))
+        self.assertEqual(
+            CachedResponseTimes(response_times={17:1}, num_requests=1),
+            s.response_times_cache.popitem(last=True)[1],
+        )
+    
+    def test_get_current_response_time_percentile(self):
+        s = StatsEntry(self.stats, "/", "GET", use_response_times_cache=True)
+        t = int(time.time())
+        s.response_times_cache[t-10] = CachedResponseTimes(
+            response_times={i:1 for i in xrange(100)},
+            num_requests=200
+        )
+        s.response_times_cache[t-10].response_times[1] = 201
+        
+        s.response_times = {i:2 for i in xrange(100)}
+        s.response_times[1] = 202
+        s.num_requests = 300
+        
+        self.assertEqual(95, s.get_current_response_time_percentile(0.95))
+    
+    def test_diff_response_times_dicts(self):
+        self.assertEqual({1:5, 6:8}, diff_response_time_dicts(
+            {1:6, 6:16, 2:2}, 
+            {1:1, 6:8, 2:2},
+        ))
+        self.assertEqual({}, diff_response_time_dicts(
+            {}, 
+            {},
+        ))
+        self.assertEqual({10:15}, diff_response_time_dicts(
+            {10:15}, 
+            {},
+        ))
+        self.assertEqual({10:10}, diff_response_time_dicts(
+            {10:10}, 
+            {},
+        ))
+        self.assertEqual({}, diff_response_time_dicts(
+            {1:1}, 
+            {1:1},
+        ))
+
+
+class TestStatsEntry(unittest.TestCase):
+
+    def parse_string_output(self, text):
+        tokenlist = re.split('[\s\(\)%|]+', text.strip())
+        tokens = {
+            'method': tokenlist[0],
+            'name': tokenlist[1],
+            'request_count': int(tokenlist[2]),
+            'failure_count': int(tokenlist[3]),
+            'failure_precentage': float(tokenlist[4]),
+        }
+        return tokens
+
+    def setUp(self, *args, **kwargs):
+        super(TestStatsEntry, self).setUp(*args, **kwargs)
+        self.stats = RequestStats()
+
+    def test_fail_ratio_with_no_failures(self):
+        REQUEST_COUNT = 10
+        FAILURE_COUNT = 0
+        EXPECTED_FAIL_RATIO = 0.0
+
+        s = StatsEntry(self.stats, "/", "GET")
+        s.num_requests = REQUEST_COUNT
+        s.num_failures = FAILURE_COUNT
+
+        self.assertAlmostEqual(s.fail_ratio, EXPECTED_FAIL_RATIO)
+        output_fields = self.parse_string_output(str(s))
+        self.assertEqual(output_fields['request_count'], REQUEST_COUNT)
+        self.assertEqual(output_fields['failure_count'], FAILURE_COUNT)
+        self.assertAlmostEqual(output_fields['failure_precentage'], EXPECTED_FAIL_RATIO*100)
+
+    def test_fail_ratio_with_all_failures(self):
+        REQUEST_COUNT = 10
+        FAILURE_COUNT = 10
+        EXPECTED_FAIL_RATIO = 1.0
+
+        s = StatsEntry(self.stats, "/", "GET")
+        s.num_requests = REQUEST_COUNT
+        s.num_failures = FAILURE_COUNT
+
+        self.assertAlmostEqual(s.fail_ratio, EXPECTED_FAIL_RATIO)
+        output_fields = self.parse_string_output(str(s))
+        self.assertEqual(output_fields['request_count'], REQUEST_COUNT)
+        self.assertEqual(output_fields['failure_count'], FAILURE_COUNT)
+        self.assertAlmostEqual(output_fields['failure_precentage'], EXPECTED_FAIL_RATIO*100)
+
+    def test_fail_ratio_with_half_failures(self):
+        REQUEST_COUNT = 10
+        FAILURE_COUNT = 5
+        EXPECTED_FAIL_RATIO = 0.5
+
+        s = StatsEntry(self.stats, "/", "GET")
+        s.num_requests = REQUEST_COUNT
+        s.num_failures = FAILURE_COUNT
+
+        self.assertAlmostEqual(s.fail_ratio, EXPECTED_FAIL_RATIO)
+        output_fields = self.parse_string_output(str(s))
+        self.assertEqual(output_fields['request_count'], REQUEST_COUNT)
+        self.assertEqual(output_fields['failure_count'], FAILURE_COUNT)
+        self.assertAlmostEqual(output_fields['failure_precentage'], EXPECTED_FAIL_RATIO*100)
 
 
 class TestRequestStatsWithWebserver(WebserverTestCase):
@@ -204,72 +400,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         response = locust.client.get("/", timeout=0.1)
         self.assertEqual(response.status_code, 0)
         self.assertEqual(1, global_stats.get("/", "GET").num_failures)
-        self.assertEqual(0, global_stats.get("/", "GET").num_requests)
-    
-    def test_max_requests(self):
-        class MyTaskSet(TaskSet):
-            @task
-            def my_task(self):
-                self.client.get("/ultra_fast")
-        class MyLocust(HttpLocust):
-            host = "http://127.0.0.1:%i" % self.port
-            task_set = MyTaskSet
-            min_wait = 1
-            max_wait = 1
-            
-        try:
-            from locust.exception import StopLocust
-            global_stats.clear_all()
-            global_stats.max_requests = 2
-            
-            l = MyLocust()
-            self.assertRaises(StopLocust, lambda: l.task_set(l).run())
-            self.assertEqual(2, global_stats.num_requests)
-            
-            global_stats.clear_all()
-            global_stats.max_requests = 2
-            self.assertEqual(0, global_stats.num_requests)
-            
-            l.run()
-            self.assertEqual(2, global_stats.num_requests)
-        finally:
-            global_stats.clear_all()
-            global_stats.max_requests = None
-    
-    def test_max_requests_failed_requests(self):
-        class MyTaskSet(TaskSet):
-            @task
-            def my_task(self):
-                self.client.get("/ultra_fast")
-                self.client.get("/fail")
-                self.client.get("/fail")
-            
-        class MyLocust(HttpLocust):
-            host = "http://127.0.0.1:%i" % self.port
-            task_set = MyTaskSet
-            min_wait = 1
-            max_wait = 1
-            
-        try:
-            from locust.exception import StopLocust
-            global_stats.clear_all()
-            global_stats.max_requests = 3
-            
-            l = MyLocust()
-            self.assertRaises(StopLocust, lambda: l.task_set(l).run())
-            self.assertEqual(1, global_stats.num_requests)
-            self.assertEqual(2, global_stats.num_failures)
-            
-            global_stats.clear_all()
-            global_stats.max_requests = 2
-            self.assertEqual(0, global_stats.num_requests)
-            self.assertEqual(0, global_stats.num_failures)
-            l.run()
-            self.assertEqual(1, global_stats.num_requests)
-            self.assertEqual(1, global_stats.num_failures)
-        finally:
-            global_stats.clear_all()
-            global_stats.max_requests = None
+        self.assertEqual(1, global_stats.get("/", "GET").num_requests)
 
 
 class MyTaskSet(TaskSet):

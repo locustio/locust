@@ -10,6 +10,12 @@
 
 import os
 
+# The default replacements for |version| and |release|, also used in various
+# other places throughout the built documents.
+#
+# The short X.Y version.
+from locust import __version__
+
 # General configuration
 # ---------------------
 
@@ -35,17 +41,12 @@ project = 'Locust'
 
 # Intersphinx config
 intersphinx_mapping = {
-    'requests': ('http://requests.readthedocs.org/en/latest/', None),
+    'requests': ('https://requests.readthedocs.io/en/latest/', None),
 }
 
-# The default replacements for |version| and |release|, also used in various
-# other places throughout the built documents.
-#
-# The short X.Y version.
-from locust import version
 
 # The full version, including alpha/beta/rc tags.
-release = version
+release = __version__
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
