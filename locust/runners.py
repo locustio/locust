@@ -356,8 +356,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         if self.stepload_greenlet:
             logger.info("There is an ongoing swarming in Step Load mode, will stop it now.")
             self.greenlet.killone(self.stepload_greenlet)
-        
-        logger.info("Start a new swarming in Step Load mode: %d locusts, %d delta locusts in step, %ds step duration " % (locust_count, step_locust_count, step_duration))
+        logger.info("Start a new swarming in Step Load mode: total locust count of %d, hatch rate of %d, step locust count of %d, step duration of %d " % (locust_count, hatch_rate, step_locust_count, step_duration))
         self.state = STATE_INIT
         self.stepload_greenlet = self.greenlet.spawn(self.stepload_worker)
         self.stepload_greenlet.link_exception(callback=self.noop)
