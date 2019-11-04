@@ -57,7 +57,7 @@ class mocked_options(object):
         self.master_bind_host = '*'
         self.master_bind_port = 5557
         self.heartbeat_liveness = 3
-        self.heartbeat_interval = 3
+        self.heartbeat_interval = 1
         self.stop_timeout = None
         self.step_load = True
 
@@ -219,7 +219,7 @@ class TestMasterRunner(LocustTestCase):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = MasterLocustRunner(MyTestLocust, self.options)
             server.mocked_send(Message("client_ready", None, "fake_client"))
-            sleep(0.1)
+            sleep(6)
             # print(master.clients['fake_client'].__dict__)
             assert master.clients['fake_client'].state == STATE_MISSING
 

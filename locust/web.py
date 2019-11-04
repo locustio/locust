@@ -27,7 +27,7 @@ from .runners import MasterLocustRunner
 from .stats import failures_csv, median_from_dict, requests_csv, sort_stats, stats_history_csv
 from .util.cache import memoize
 from .util.rounding import proper_round
-from .util.time import parse_timespan
+from .util.timespan import parse_timespan
 
 logger = logging.getLogger(__name__)
 
