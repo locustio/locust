@@ -22,11 +22,7 @@ CPU time in making HTTP-requests, you are likely to see signifant performance ga
 How to use FastHttpLocust
 ===========================
 
-First, you need to install the geventhttplocust python package::
-
-    pip install geventhttpclient
-
-Then you just subclass FastHttpLocust instead of HttpLocust::
+Subclass FastHttpLocust instead of HttpLocust::
 
     from locust import TaskSet, task
     from locust.contrib.fasthttp import FastHttpLocust
