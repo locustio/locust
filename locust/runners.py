@@ -211,10 +211,14 @@ class LocustRunner(object):
                 self.spawn_locusts(wait=wait)
 
     def start_stepload(self, locust_count, hatch_rate, step_locust_count, step_duration):
+        if locust_count < step_locust_count:
+          logger.error("Invalid parameters: total locust count of %d is smaller than step locust count of %d" % (locust_count, step_locust_count))
+          return
         self.total_clients = locust_count
         self.hatch_rate = hatch_rate
         self.step_clients_growth = step_locust_count
         self.step_duration = step_duration
+        
         if self.stepload_greenlet:
             logger.info("There is an ongoing swarming in Step Load mode, will stop it now.")
             self.greenlet.killone(self.stepload_greenlet)
