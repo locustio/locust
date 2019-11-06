@@ -522,6 +522,8 @@ def main():
             runners.locust_runner.start_stepload(options.num_clients, options.hatch_rate, options.step_clients, options.step_time)
         elif not options.slave:
             runners.locust_runner.start_hatching(options.num_clients, options.hatch_rate)
+            # make locusts are spawned
+            time.sleep(1)
     elif not options.slave:
         # spawn web greenlet
         logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.port))
