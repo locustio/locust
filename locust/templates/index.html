@@ -13,7 +13,7 @@
                 <div class="top_box box_url">
                     <div class="label">HOST</div>
                     <div class="value" id="host_url">
-                        {{host}}
+                        {{ host or "" }}
                     </div>
                 </div>
                 <div class="top_box box_status">
@@ -49,6 +49,7 @@
             <div style="clear:both;"></div>
         </div>
     </div>
+
     <div class="main">
         <div class="start" id="start">
             <div style="position:relative;">
@@ -61,6 +62,13 @@
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
+                    <label for="host">
+                        Host
+                        {% if override_host_warning %}
+                            <span style="color:#8a8a8a; font-size:12px;">(setting this will override the host on all Locust classes)</span></label>
+                        {% endif %}
+                    </label>
+                    <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or ""}}"/><br>
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>

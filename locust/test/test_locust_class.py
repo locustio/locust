@@ -5,7 +5,7 @@ from locust.core import HttpLocust, Locust, TaskSet, events, task
 from locust.exception import (CatchResponseError, LocustError, RescheduleTask,
                               RescheduleTaskImmediately)
 
-from .testcases import LocustTestCase, WebserverTestCase
+from locust.test.testcases import LocustTestCase, WebserverTestCase
 
 
 class TestTaskSet(LocustTestCase):
