@@ -9,6 +9,7 @@ import requests
 from gevent import pywsgi
 
 from locust import events, runners, stats, web
+from locust.core import Locust
 from locust.main import parse_options
 from locust.runners import LocustRunner
 from six.moves import StringIO
@@ -26,8 +27,8 @@ class TestWebUI(LocustTestCase):
         
         stats.global_stats.clear_all()
         parser = parse_options()[0]
-        options = parser.parse_args([])
-        runners.locust_runner = LocustRunner([], options)
+        self.options = parser.parse_args([])
+        runners.locust_runner = LocustRunner([], self.options)
         
         web.request_stats.clear_cache()
         
@@ -38,6 +39,7 @@ class TestWebUI(LocustTestCase):
     
     def tearDown(self):
         super(TestWebUI, self).tearDown()
+        runners.locust_runner = None
         self._web_ui_server.stop()
     
     def test_index(self):
@@ -189,3 +191,34 @@ class TestWebUI(LocustTestCase):
         response = requests.post("http://127.0.0.1:%i/swarm" % self.web_port, data=SWARM_DATA_WITH_NO_HOST)
         self.assertEqual(200, response.status_code)
         self.assertEqual(runners.locust_runner.host, None)
+    
+    def test_host_value_from_locust_class(self):
+        class MyLocust(Locust):
+            host = "http://example.com"
+        runners.locust_runner = LocustRunner([MyLocust], options=self.options)
+        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+        self.assertEqual(200, response.status_code)
+        self.assertIn("http://example.com", response.content.decode("utf-8"))
+        self.assertNotIn("setting this will override the host on all Locust classes", response.content.decode("utf-8"))
+    
+    def test_host_value_from_multiple_locust_classes(self):
+        class MyLocust(Locust):
+            host = "http://example.com"
+        class MyLocust2(Locust):
+            host = "http://example.com"        
+        runners.locust_runner = LocustRunner([MyLocust, MyLocust2], options=self.options)
+        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+        self.assertEqual(200, response.status_code)
+        self.assertIn("http://example.com", response.content.decode("utf-8"))
+        self.assertNotIn("setting this will override the host on all Locust classes", response.content.decode("utf-8"))
+    
+    def test_host_value_from_multiple_locust_classes_different_hosts(self):
+        class MyLocust(Locust):
+            host = None
+        class MyLocust2(Locust):
+            host = "http://example.com"
+        runners.locust_runner = LocustRunner([MyLocust, MyLocust2], options=self.options)
+        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+        self.assertEqual(200, response.status_code)
+        self.assertNotIn("http://example.com", response.content.decode("utf-8"))
+        self.assertIn("setting this will override the host on all Locust classes", response.content.decode("utf-8"))
