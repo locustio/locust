@@ -51,6 +51,7 @@ var exceptions_tpl = $('#exceptions-template');
 var slaves_tpl = $('#slave-template');
 
 function setHostName(hostname) {
+    hostname = hostname || "";
     $('#host_url').text(hostname);
 }
 
