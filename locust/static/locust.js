@@ -51,7 +51,7 @@ var exceptions_tpl = $('#exceptions-template');
 var slaves_tpl = $('#slave-template');
 
 function setHostName(hostname) {
-    $('.hostname .value').attr('href', hostname).text(hostname);
+    $('#host_url').text(hostname);
 }
 
 $('#swarm_form').submit(function(event) {
