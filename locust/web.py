@@ -8,8 +8,15 @@ from collections import defaultdict
 from itertools import chain
 from time import time
 
+try:
+    # >= Py3.2
+    from html import escape
+except ImportError:
+    # < Py3.2
+    from cgi import escape
+
 import six
-from flask import Flask, make_response, render_template, request
+from flask import Flask, make_response, jsonify, render_template, request
 from gevent import pywsgi
 
 from locust import __version__ as version
@@ -17,8 +24,9 @@ from six.moves import StringIO, xrange
 
 from . import runners
 from .runners import MasterLocustRunner
-from .stats import distribution_csv, median_from_dict, requests_csv, sort_stats
+from .stats import distribution_csv, failures_csv, median_from_dict, requests_csv, sort_stats
 from .util.cache import memoize
+from .util.rounding import proper_round
 
 logger = logging.getLogger(__name__)
 
@@ -59,20 +67,17 @@ def swarm():
     locust_count = int(request.form["locust_count"])
     hatch_rate = float(request.form["hatch_rate"])
     runners.locust_runner.start_hatching(locust_count, hatch_rate)
-    response = make_response(json.dumps({'success':True, 'message': 'Swarming started'}))
-    response.headers["Content-type"] = "application/json"
-    return response
+    return jsonify({'success': True, 'message': 'Swarming started'})
 
 @app.route('/stop')
 def stop():
     runners.locust_runner.stop()
-    response = make_response(json.dumps({'success':True, 'message': 'Test stopped'}))
-    response.headers["Content-type"] = "application/json"
-    return response
+    return jsonify({'success':True, 'message': 'Test stopped'})
 
 @app.route("/stats/reset")
 def reset_stats():
     runners.locust_runner.stats.reset_all()
+    runners.locust_runner.exceptions = {}
     return "ok"
     
 @app.route("/stats/requests/csv")
@@ -93,22 +98,33 @@ def distribution_stats_csv():
     response.headers["Content-disposition"] = disposition
     return response
 
+@app.route("/stats/failures/csv")
+def failures_stats_csv():
+    response = make_response(failures_csv())
+    file_name = "failures_{0}.csv".format(time())
+    disposition = "attachment;filename={0}".format(file_name)
+    response.headers["Content-type"] = "text/csv"
+    response.headers["Content-disposition"] = disposition
+    return response
+
 @app.route('/stats/requests')
 @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
 def request_stats():
     stats = []
-    
+
     for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
         stats.append({
             "method": s.method,
             "name": s.name,
+            "safe_name": escape(s.name, quote=False),
             "num_requests": s.num_requests,
             "num_failures": s.num_failures,
             "avg_response_time": s.avg_response_time,
-            "min_response_time": s.min_response_time or 0,
-            "max_response_time": s.max_response_time,
+            "min_response_time": 0 if s.min_response_time is None else proper_round(s.min_response_time),
+            "max_response_time": proper_round(s.max_response_time),
             "current_rps": s.current_rps,
             "median_response_time": s.median_response_time,
+            "ninetieth_response_time": s.get_response_time_percentile(0.9),
             "avg_content_length": s.avg_content_length,
         })
 
@@ -117,6 +133,8 @@ def request_stats():
     # Truncate the total number of stats and errors displayed since a large number of rows will cause the app
     # to render extremely slowly. Aggregate stats should be preserved.
     report = {"stats": stats[:500], "errors": errors[:500]}
+    if len(stats) > 500:
+        report["stats"] += [stats[-1]]
 
     if stats:
         report["total_rps"] = stats[len(stats)-1]["current_rps"]
@@ -135,22 +153,20 @@ def request_stats():
     report["state"] = runners.locust_runner.state
     report["user_count"] = runners.locust_runner.user_count
 
-    return json.dumps(report)
+    return jsonify(report)
 
 @app.route("/exceptions")
 def exceptions():
-    response = make_response(json.dumps({
+    return jsonify({
         'exceptions': [
             {
-                "count": row["count"], 
-                "msg": row["msg"], 
-                "traceback": row["traceback"], 
+                "count": row["count"],
+                "msg": row["msg"],
+                "traceback": row["traceback"],
                 "nodes" : ", ".join(row["nodes"])
             } for row in six.itervalues(runners.locust_runner.exceptions)
         ]
-    }))
-    response.headers["Content-type"] = "application/json"
-    return response
+    })
 
 @app.route("/exceptions/csv")
 def exceptions_csv():
