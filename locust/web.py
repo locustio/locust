@@ -48,7 +48,11 @@ def index():
     if runners.locust_runner.host:
         host = runners.locust_runner.host
     elif len(runners.locust_runner.locust_classes) > 0:
-        host = runners.locust_runner.locust_classes[0].host
+        all_hosts = set([l.host for l in runners.locust_runner.locust_classes])
+        if len(all_hosts) == 1:
+            host = list(all_hosts)[0]
+        else:
+            host = None
     else:
         host = None
     
@@ -57,7 +61,7 @@ def index():
         is_distributed=is_distributed,
         user_count=runners.locust_runner.user_count,
         version=version,
-        host=host
+        host=host,
     )
 
 @app.route('/swarm', methods=["POST"])
