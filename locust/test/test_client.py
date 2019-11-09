@@ -23,8 +23,8 @@ class TestHttpSession(WebserverTestCase):
     def test_wrong_url(self):
         for url, exception in (
                 (u"http://\x94", InvalidURL),
-                ("telnet://127.0.0.1", InvalidSchema),
-                ("127.0.0.1", MissingSchema), 
+                ("telnet://127.0.0.1", MissingSchema),
+                ("127.0.0.1", MissingSchema),
             ):
             s = HttpSession(url)
             try:
