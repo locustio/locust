@@ -32,6 +32,11 @@ from locust.exception import LocustError, CatchResponseError, ResponseError
 # More info: https://github.com/requests/requests/pull/871
 CompatRequest.unverifiable = False
 
+# Workaround for AttributeError: 'CompatRequest' object has no attribute 'type' in Cookiejar
+# https://github.com/locustio/locust/issues/1138
+# Might allow secure cookies over non-secure connections but that is a minor concern in a load testing tool
+CompatRequest.type = "https"
+
 # Regexp for checking if an absolute URL was specified
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
