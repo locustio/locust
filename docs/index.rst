@@ -52,7 +52,6 @@ Other functionalities
 
     retrieving-stats
     testing-other-systems
-    api
     extending-locust
     logging
 

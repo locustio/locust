@@ -112,27 +112,31 @@ directory, we could run:
 
 .. code-block:: console
 
-    $ locust --host=http://example.com
+    $ locust
+
 
 If the Locust file is located under a subdirectory and/or named different than *locustfile.py*, specify
 it using ``-f``:
 
 .. code-block:: console
 
-    $ locust -f locust_files/my_locust_file.py --host=http://example.com
+    $ locust -f locust_files/my_locust_file.py
+
 
 To run Locust distributed across multiple processes we would start a master process by specifying
 ``--master``:
 
 .. code-block:: console
 
-    $ locust -f locust_files/my_locust_file.py --master --host=http://example.com
+    $ locust -f locust_files/my_locust_file.py --master
+
 
 and then we would start an arbitrary number of slave processes:
 
 .. code-block:: console
 
-    $ locust -f locust_files/my_locust_file.py --slave --host=http://example.com
+    $ locust -f locust_files/my_locust_file.py --slave
+
 
 If we want to run Locust distributed on multiple machines we would also have to specify the master host when
 starting the slaves (this is not needed when running Locust distributed on a single machine, since the master
@@ -140,7 +144,7 @@ host defaults to 127.0.0.1):
 
 .. code-block:: console
 
-    $ locust -f locust_files/my_locust_file.py --slave --master-host=192.168.0.100 --host=http://example.com
+    $ locust -f locust_files/my_locust_file.py --slave --master-host=192.168.0.100
 
 
 .. note::

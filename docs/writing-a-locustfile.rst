@@ -93,10 +93,12 @@ classes. Say for example, web users are three times more likely than mobile user
 The *host* attribute
 --------------------
 
-The host attribute is a URL prefix (i.e. "https://google.com") to the host that is to be loaded.
-Usually, this is specified on the command line, using the :code:`--host` option, when locust is started. 
+The host attribute is a URL prefix (i.e. "http://google.com") to the host that is to be loaded. 
+Usually, this is specified in Locust's web UI or on the command line, using the 
+:code:`--host` option, when locust is started. 
+
 If one declares a host attribute in the locust class, it will be used in the case when no :code:`--host` 
-is specified on the command line.
+is specified on the command line or in the web request.
 
 
 TaskSet class
@@ -429,7 +431,7 @@ Response's *content* attribute will be set to None, and its *status_code* will b
 Manually controlling if a request should be considered successful or a failure
 ------------------------------------------------------------------------------
 
-By default, requests are marked as failed requests unless the HTTP response code is OK (2xx). 
+By default, requests are marked as failed requests unless the HTTP response code is OK (<400). 
 Most of the time, this default is what you want. Sometimes however—for example when testing 
 a URL endpoint that you expect to return 404, or testing a badly designed system that might 
 return *200 OK* even though an error occurred—there's a need for manually controlling if 

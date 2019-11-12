@@ -50,6 +50,11 @@ var errors_tpl = $('#errors-template');
 var exceptions_tpl = $('#exceptions-template');
 var slaves_tpl = $('#slave-template');
 
+function setHostName(hostname) {
+    hostname = hostname || "";
+    $('#host_url').text(hostname);
+}
+
 $('#swarm_form').submit(function(event) {
     event.preventDefault();
     $.post($(this).attr("action"), $(this).serialize(),
@@ -62,6 +67,7 @@ $('#swarm_form').submit(function(event) {
                 $("a.new_test").fadeOut();
                 $("a.edit_test").fadeIn();
                 $(".user_count").fadeIn();
+                setHostName(response.host);
             }
         }
     );
@@ -74,6 +80,7 @@ $('#edit_form').submit(function(event) {
             if (response.success) {
                 $("body").attr("class", "hatching");
                 $("#edit").fadeOut();
+                setHostName(response.host);
             }
         }
     );

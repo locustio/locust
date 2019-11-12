@@ -160,7 +160,7 @@ a:hover {
     width: 398px;
     position: absolute;
     left: 50%;
-    top: 100px;
+    top: 60px;
     margin-left: -169px;
     z-index: 1;
 }
@@ -440,6 +440,29 @@ ul.tabs li a.current:after {
     padding: 30px;
     padding-top: 0px;
 }
+
+.hostname {
+    width: 1000px;
+    margin-top: 25px;
+    margin-bottom: 25px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 16px;
+}
+
+.hostname .label {
+    color: #fff;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.hostname .value {
+    font-weight: bold;
+}
+
+.running .hostname, .hatching .hostname {display: block;}
+.stopped .hostname {display: block;}
+.ready .hostname {display: none;}
 
 .footer {
     position: absolute;

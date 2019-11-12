@@ -229,7 +229,7 @@ class StatsEntry(object):
         self.response_times = {}
         self.min_response_time = None
         self.max_response_time = 0
-        self.last_request_timestamp = int(time.time())
+        self.last_request_timestamp = None
         self.num_reqs_per_sec = {}
         self.total_content_length = 0
         if self.use_response_times_cache:
@@ -349,7 +349,10 @@ class StatsEntry(object):
         Extend the data from the current StatsEntry with the stats from another
         StatsEntry instance. 
         """
-        self.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
+        if self.last_request_timestamp is not None and other.last_request_timestamp is not None:
+            self.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
+        elif other.last_request_timestamp is not None:
+            self.last_request_timestamp = other.last_request_timestamp
         self.start_time = min(self.start_time, other.start_time)
 
         self.num_requests = self.num_requests + other.num_requests
@@ -474,7 +477,7 @@ class StatsEntry(object):
                 percent,
             )
     
-    def percentile(self, tpl=" %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
+    def percentile(self, tpl=" %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
         if not self.num_requests:
             raise ValueError("Can't calculate percentile on url with no successful requests")
         
@@ -489,6 +492,8 @@ class StatsEntry(object):
             self.get_response_time_percentile(0.95),
             self.get_response_time_percentile(0.98),
             self.get_response_time_percentile(0.99),
+            self.get_response_time_percentile(0.999),
+            self.get_response_time_percentile(0.9999),
             self.get_response_time_percentile(1.00)
         )
     
@@ -614,7 +619,7 @@ def on_slave_report(client_id, data):
     old_last_request_timestamp = global_stats.total.last_request_timestamp
     # update the total StatsEntry
     global_stats.total.extend(StatsEntry.unserialize(data["stats_total"]))
-    if global_stats.total.last_request_timestamp > old_last_request_timestamp:
+    if global_stats.total.last_request_timestamp and global_stats.total.last_request_timestamp > (old_last_request_timestamp or 0):
         # If we've entered a new second, we'll cache the response times. Note that there 
         # might still be reports from other slave nodes - that contains requests for the same 
         # time periods - that hasn't been received/accounted for yet. This will cause the cache to 
@@ -753,13 +758,15 @@ def distribution_csv():
         '"95%"',
         '"98%"',
         '"99%"',
+        '"99.9%"',
+        '"99.99%"',
         '"100%"',
     ))]
     for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
         if s.num_requests:
-            rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
+            rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
         else:
-            rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
+            rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
 
     return "\n".join(rows)
 

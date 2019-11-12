@@ -1,9 +1,9 @@
 from requests.exceptions import (InvalidSchema, InvalidURL, MissingSchema,
                                  RequestException)
 
+from locust import events
 from locust.clients import HttpSession
 from locust.stats import global_stats
-
 from .testcases import WebserverTestCase
 
 
@@ -23,8 +23,8 @@ class TestHttpSession(WebserverTestCase):
     def test_wrong_url(self):
         for url, exception in (
                 (u"http://\x94", InvalidURL),
-                ("telnet://127.0.0.1", InvalidSchema),
-                ("127.0.0.1", MissingSchema), 
+                ("telnet://127.0.0.1", MissingSchema),
+                ("127.0.0.1", MissingSchema),
             ):
             s = HttpSession(url)
             try:
@@ -97,3 +97,17 @@ class TestHttpSession(WebserverTestCase):
             set(["OPTIONS", "DELETE", "PUT", "GET", "POST", "HEAD", "PATCH"]),
             set(r.headers["allow"].split(", ")),
         )
+
+    def test_error_message_with_name_replacment(self):
+        s = HttpSession("http://127.0.0.1:%i" % self.port)
+        my_event = events.EventHook()
+        kwargs = {}
+        def on_my_event(**kw):
+            kwargs.update(kw)
+
+        my_event += on_my_event
+        orig_events = events.request_failure
+        events.request_failure = my_event
+        s.request('get', '/wrong_url/01', name='replaced_url_name')
+        events.request_failure = orig_events
+        self.assertIn('for url: replaced_url_name', str(kwargs['exception']))

@@ -27,11 +27,11 @@ This data will write two files with ``_distribution.csv`` and ``_requests.csv`` 
 .. code-block:: console
 
     $ cat example_distribution.csv
-    "Name","# requests","50%","66%","75%","80%","90%","95%","98%","99%","100%"
-    "GET /",31,4,4,4,4,4,4,4,4,4
+    "Name","# requests","50%","66%","75%","80%","90%","95%","98%","99%","99.9%","99.99%","100%"
+    "GET /",31,4,4,4,4,4,4,4,4,4,4,4
     "/does_not_exist",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"
-    "GET /stats/requests",38,3,4,4,4,4,5,5,5,5
-    "None Total",69,3,4,4,4,4,4,5,5,5
+    "GET /stats/requests",38,3,4,4,4,4,5,5,5,5,5,5
+    "None Total",69,3,4,4,4,4,4,5,5,5,5,5
 
 and:
 

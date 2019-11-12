@@ -6,3 +6,5 @@
  * Update `locust/__init__.py` with new version number: `__version__ = "VERSION"`
  * Tag master as "VERSION" in git
  * Build VERSION package and upload to PyPI
+ * Update Automated Builds configuration in Docker Hub so that the newly created 
+   git tag is built as the "latest" docker tag
