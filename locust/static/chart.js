@@ -3,7 +3,7 @@
         /**
          * lines should be an array of line names
          */
-        constructor(container, title, lines, unit) {
+        constructor(container, title, lines, unit, colors) {
             this.container = $(container);
             this.title = title;
             this.lines = lines;
@@ -75,6 +75,7 @@
                 },
                 series: seriesData,
                 grid: {x:60, y:70, x2:40, y2:40},
+                color: colors,
             })
         }
         
