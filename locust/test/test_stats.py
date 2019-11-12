@@ -63,6 +63,16 @@ class TestRequestStats(unittest.TestCase):
         self.stats.total.last_request_timestamp = int(time.time()) + 25
         self.assertEqual(self.s.current_rps, 0)
 
+    def test_current_fail_per_sec(self):
+        self.stats.total.last_request_timestamp = int(time.time()) + 4
+        self.assertEqual(self.s.current_fail_per_sec, 1.5)
+
+        self.stats.total.last_request_timestamp = int(time.time()) + 12
+        self.assertEqual(self.s.current_fail_per_sec, 0.3)
+
+        self.stats.total.last_request_timestamp = int(time.time()) + 25
+        self.assertEqual(self.s.current_fail_per_sec, 0)
+
     def test_num_reqs_fails(self):
         self.assertEqual(self.s.num_requests, 9)
         self.assertEqual(self.s.num_failures, 3)
