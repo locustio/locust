@@ -438,7 +438,7 @@ class StatsEntry(object):
     def __str__(self):
         fail_percent = self.fail_ratio * 100
 
-        return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d  | %7d %7.2f") % (
+        return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d  | %7d %7.2f %7.2f") % (
             (self.method and self.method + " " or "") + self.name,
             self.num_requests,
             "%d(%.2f%%)" % (self.num_failures, fail_percent),
