@@ -134,7 +134,7 @@ def request_stats():
             "min_response_time": 0 if s.min_response_time is None else proper_round(s.min_response_time),
             "max_response_time": proper_round(s.max_response_time),
             "current_rps": s.current_rps,
-            "current_fps": s.current_fps,
+            "current_fail_per_sec": s.current_fail_per_sec,
             "median_response_time": s.median_response_time,
             "ninetieth_response_time": s.get_response_time_percentile(0.9),
             "avg_content_length": s.avg_content_length,

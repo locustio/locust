@@ -159,7 +159,7 @@ function updateStats() {
             // get total stats row
             var total = report.stats[report.stats.length-1];
             // update charts
-            rpsChart.addValue([total.current_rps, total.current_fps]);
+            rpsChart.addValue([total.current_rps, total.current_fail_per_sec]);
             responseTimeChart.addValue([report.current_response_time_percentile_50, report.current_response_time_percentile_95]);
             usersChart.addValue([report.user_count]);
         }

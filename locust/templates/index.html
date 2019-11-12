@@ -121,7 +121,7 @@
                                 <th class="stats_label numeric" href="#" data-sortkey="max_response_time" title="Max response time">Max (ms)</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="avg_content_length" title="Average response size">Average size (bytes)</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="current_rps" title="Current number of requests per second">Current RPS</th>
-                                <th class="stats_label numeric" href="#" data-sortkey="current_fps" title="Current number of failures per second">Current Failures/s</th>
+                                <th class="stats_label numeric" href="#" data-sortkey="current_fail_per_sec" title="Current number of failures per second">Current Failures/s</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -239,7 +239,7 @@
             <td class="numeric"><%= this.max_response_time %></td>
             <td class="numeric"><%= Math.round(this.avg_content_length) %></td>
             <td class="numeric"><%= Math.round(this.current_rps*100)/100 %></td>
-            <td class="numeric"><%= Math.round(this.current_fps*100)/100 %></td>
+            <td class="numeric"><%= Math.round(this.current_fail_per_sec*100)/100 %></td>
         </tr>
         <% alternate = !alternate; %>
         ]]>
