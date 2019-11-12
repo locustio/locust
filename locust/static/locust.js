@@ -137,7 +137,7 @@ $(".stats_label").click(function(event) {
 });
 
 // init charts
-var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS"], "reqs/s");
+var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS", "FPS"], "reqs/s");
 var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times (ms)", ["Median Response Time", "95% percentile"], "ms");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 
@@ -159,7 +159,7 @@ function updateStats() {
             // get total stats row
             var total = report.stats[report.stats.length-1];
             // update charts
-            rpsChart.addValue([total.current_rps]);
+            rpsChart.addValue([total.current_rps, total.current_fps]);
             responseTimeChart.addValue([report.current_response_time_percentile_50, report.current_response_time_percentile_95]);
             usersChart.addValue([report.user_count]);
         }
