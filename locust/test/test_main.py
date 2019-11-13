@@ -33,7 +33,7 @@ class TestLoadLocustfile(LocustTestCase):
     mock_docstring = 'This is a mock locust file for unit testing.'
     mock_locust_file_content = """\"\"\"{}\"\"\"
 
-from locust import HttpLocust, TaskSet, task
+from locust import HttpLocust, TaskSet, task, between
 
 
 def index(l):
@@ -50,8 +50,7 @@ class UserTasks(TaskSet):
 
 class LocustSubclass(HttpLocust):
     host = "http://127.0.0.1:8089"
-    min_wait = 2000
-    max_wait = 5000
+    wait_time = between(2, 5)
     task_set = UserTasks
 
 

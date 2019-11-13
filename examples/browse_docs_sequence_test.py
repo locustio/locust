@@ -2,7 +2,7 @@
 # browsing the Locust documentation on https://docs.locust.io/
 
 import random
-from locust import HttpLocust, TaskSequence, seq_task, task
+from locust import HttpLocust, TaskSequence, seq_task, task, between
 from pyquery import PyQuery
 
 
@@ -46,5 +46,4 @@ class AwesomeUser(HttpLocust):
     # generally has a quite long waiting time (between
     # 20 and 600 seconds), since there's a bunch of text
     # on each page
-    min_wait = 20 * 1000
-    max_wait = 600 * 1000
+    wait_time = between(20, 600)

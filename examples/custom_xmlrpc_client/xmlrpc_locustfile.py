@@ -1,7 +1,7 @@
 import time
 import xmlrpclib
 
-from locust import Locust, TaskSet, events, task
+from locust import Locust, TaskSet, events, task, between
 
 
 class XmlRpcClient(xmlrpclib.ServerProxy):
@@ -41,8 +41,7 @@ class XmlRpcLocust(Locust):
 class ApiUser(XmlRpcLocust):
     
     host = "http://127.0.0.1:8877/"
-    min_wait = 100
-    max_wait = 1000
+    wait_time = between(0.1, 1)
     
     class task_set(TaskSet):
         @task(10)

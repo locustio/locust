@@ -10,7 +10,7 @@ Below is a quick little example of a simple **locustfile.py**:
 
 .. code-block:: python
 
-    from locust import HttpLocust, TaskSet
+    from locust import HttpLocust, TaskSet, between
 
     def login(l):
         l.client.post("/login", {"username":"ellen_key", "password":"education"})
@@ -35,8 +35,7 @@ Below is a quick little example of a simple **locustfile.py**:
 
     class WebsiteUser(HttpLocust):
         task_set = UserBehavior
-        min_wait = 5000
-        max_wait = 9000
+        wait_time = between(5.0, 9.0)
 
 
 Here we define a number of Locust tasks, which are normal Python callables that take one argument 
@@ -60,7 +59,7 @@ Another way we could declare tasks, which is usually more convenient, is to use 
 
 .. code-block:: python
 
-    from locust import HttpLocust, TaskSet, task
+    from locust import HttpLocust, TaskSet, task, between
 
     class UserBehavior(TaskSet):
         def on_start(self):
@@ -87,14 +86,13 @@ Another way we could declare tasks, which is usually more convenient, is to use 
     
     class WebsiteUser(HttpLocust):
         task_set = UserBehavior
-        min_wait = 5000
-        max_wait = 9000
+        wait_time = between(5, 9)
 
 The :py:class:`Locust <locust.core.Locust>` class (as well as :py:class:`HttpLocust <locust.core.HttpLocust>`
-since it's a subclass) also allows one to specify minimum and maximum wait time in milliseconds—per simulated
-user—between the execution of tasks (*min_wait* and *max_wait*) as well as other user behaviours.
-By default the time is randomly chosen uniformly between *min_wait* and *max_wait*, but any user-defined
-time distributions can be used by setting *wait_function* to any arbitrary function. 
+since it's a subclass) also allows one to specify the wait time between the execution of tasks 
+(:code:`wait_time = between(5, 9)`) as well as other user behaviours.
+With the between function the time is randomly chosen uniformly between the specified min and max values, 
+but any user-defined time distributions can be used by setting *wait_time* to any arbitrary function. 
 For example, for an exponentially distributed wait time with average of 1 second:
 
 .. code-block:: python
@@ -103,7 +101,7 @@ For example, for an exponentially distributed wait time with average of 1 second
     
     class WebsiteUser(HttpLocust):
         task_set = UserBehaviour
-        wait_function = lambda self: random.expovariate(1)*1000
+        wait_time = lambda self: random.expovariate(1)*1000
 
 
 Start Locust

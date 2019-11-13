@@ -24,6 +24,7 @@ from .util.timespan import parse_timespan
 _internals = [Locust, HttpLocust]
 version = locust.__version__
 
+
 def parse_options():
     """
     Handle command-line options with argparse.ArgumentParser.
