@@ -301,7 +301,7 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         
         self.num_failures = 0
         self.num_success = 0
-        def on_failure(request_type, name, response_time, exception):
+        def on_failure(request_type, name, response_time, response_length, exception):
             self.num_failures += 1
             self.last_failure_exception = exception
         def on_success(**kwargs):
