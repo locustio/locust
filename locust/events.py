@@ -54,6 +54,7 @@ Event is fired with the following arguments:
 * *request_type*: Request type method used
 * *name*: Path to the URL that was called (or override name if it was used in the call to the client)
 * *response_time*: Time in milliseconds until exception was thrown
+* *response_length*: Content-length of the response
 * *exception*: Exception instance that was thrown
 """
 
