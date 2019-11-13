@@ -19,17 +19,17 @@ class TestRequestStats(unittest.TestCase):
             self.stats.log_request("GET", "test_entry", response_time, size)
         def log_error(exc):
             self.stats.log_error("GET", "test_entry", exc)
-        log(45, 0)
-        log(135, 0)
-        log(44, 0)
-        log(None, 0)        
+        log(45, 1)
+        log(135, 1)
+        log(44, 1)
+        log(None, 1)        
         log_error(Exception("dummy fail"))
         log_error(Exception("dummy fail"))
-        log(375, 0)
-        log(601, 0)
-        log(35, 0)
-        log(79, 0)
-        log(None, 0)        
+        log(375, 1)
+        log(601, 1)
+        log(35, 1)
+        log(79, 1)
+        log(None, 1)        
         log_error(Exception("dummy fail"))
         self.s = self.stats.get("test_entry",  "GET")
 
@@ -79,6 +79,9 @@ class TestRequestStats(unittest.TestCase):
 
     def test_avg(self):
         self.assertEqual(self.s.avg_response_time, 187.71428571428572)
+
+    def test_total_content_length(self):
+        self.assertEqual(self.s.total_content_length, 9)
 
     def test_reset(self):
         self.s.reset()
