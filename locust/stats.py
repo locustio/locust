@@ -77,7 +77,6 @@ class RequestStats(object):
         self.entries = {}
         self.errors = {}
         self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=True)
-        self.start_time = None
     
     @property
     def num_requests(self):
@@ -94,6 +93,10 @@ class RequestStats(object):
     @property
     def last_request_timestamp(self):
         return self.total.last_request_timestamp
+    
+    @property
+    def start_time(self):
+        return self.total.start_time
     
     def log_request(self, method, name, response_time, content_length):
         self.total.log(response_time, content_length)
@@ -125,7 +128,6 @@ class RequestStats(object):
         """
         Go through all stats entries and reset them to zero
         """
-        self.start_time = time.time()
         self.total.reset()
         self.errors = {}
         for r in six.itervalues(self.entries):
@@ -138,7 +140,6 @@ class RequestStats(object):
         self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=True)
         self.entries = {}
         self.errors = {}
-        self.start_time = None
     
     def serialize_stats(self):
         return [self.entries[key].get_stripped_report() for key in six.iterkeys(self.entries) if not (self.entries[key].num_requests == 0 and self.entries[key].num_failures == 0)]

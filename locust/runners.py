@@ -162,7 +162,6 @@ class LocustRunner(object):
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
-            self.stats.start_time = time()
             self.exceptions = {}
             events.locust_start_hatching.fire()
 
@@ -333,7 +332,6 @@ class MasterLocustRunner(DistributedLocustRunner):
 
             self.server.send_to_client(Message("hatch", data, client.id))
         
-        self.stats.start_time = time()
         self.state = STATE_HATCHING
 
     def stop(self):

@@ -14,7 +14,6 @@ from .testcases import WebserverTestCase
 class TestRequestStats(unittest.TestCase):
     def setUp(self):
         self.stats = RequestStats()
-        self.stats.start_time = time.time()
         def log(response_time, size):
             self.stats.log_request("GET", "test_entry", response_time, size)
         def log_error(exc):
