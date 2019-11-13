@@ -43,6 +43,11 @@ Subclass FastHttpLocust instead of HttpLocust::
     the default HttpLocust that uses python-requests. Therefore FastHttpLocust might not work as a d
     rop-in replacement for HttpLocust, depending on how the HttpClient is used.
 
+.. note::
+
+    SSL domain check is turned off in the FastHttpLocust's client implementation. So it will let through 
+    invalid SSL certificates without complaining.
+
 
 API
 ===

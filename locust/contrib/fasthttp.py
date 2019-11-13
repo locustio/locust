@@ -88,7 +88,7 @@ class FastHttpSession(object):
     def __init__(self, base_url, **kwargs):
         self.base_url = base_url
         self.cookiejar = CookieJar()
-        self.client = LocustUserAgent(max_retries=1, cookiejar=self.cookiejar, **kwargs)
+        self.client = LocustUserAgent(max_retries=1, cookiejar=self.cookiejar, insecure=True, **kwargs)
         
         # Check for basic authentication
         parsed_url = urlparse(self.base_url)
