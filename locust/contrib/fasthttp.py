@@ -254,7 +254,10 @@ class FastResponse(CompatResponse):
             # A TypeError can be raised if encoding is None
             #
             # Fallback to decode without specifying encoding
-            content = unicode(self.content, errors='replace')
+            if self.content is None:
+                content = None
+            else:
+                content = unicode(self.content, errors='replace')
         return content
     
     @property
