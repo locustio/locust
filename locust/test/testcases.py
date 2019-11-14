@@ -58,6 +58,10 @@ def manipulate():
 def failed_request():
     return "This response failed", 500
 
+@app.route("/status/204")
+def status_204():
+    return "", 204
+
 @app.route("/redirect", methods=["GET", "POST"])
 def do_redirect():
     delay = request.args.get("delay")
