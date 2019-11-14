@@ -4,6 +4,18 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+0.13.0
+==========
+
+* New API for specifying wait time - https://github.com/locustio/locust/pull/1118
+* FastHttpLocust: Accept self signed SSL certificates, ignore host checks. Improved response code handling
+* Add current working dir to sys.path - https://github.com/locustio/locust/pull/484
+* Web UI improvements: Added 90th percentile to table, failure per seconds as a series in the chart
+* Ability to specify host in web ui
+* Added response_length to request_failure event - https://github.com/locustio/locust/pull/1144
+* Added p99.9 and p99.99 to request stats distribution csv - https://github.com/locustio/locust/pull/1125
+* Various other bug fixes and improvements.
+
 0.12.2
 ==========
 

@@ -1,5 +1,47 @@
 # Change Log
 
+## [0.13.0](https://github.com/locustio/locust/tree/0.13.0) (2019-11-14)
+
+[Full Changelog](https://github.com/locustio/locust/compare/0.12.2...0.13.0)
+
+**Fixed bugs:**
+
+- autoscaling slaves resets users [\#1143](https://github.com/locustio/locust/issues/1143)
+- Repeated secure requests with FastHttpLocust crashes in cookie management [\#1138](https://github.com/locustio/locust/issues/1138)
+- FastHttpLocust gives ssl error with let's encrypt certs [\#1137](https://github.com/locustio/locust/issues/1137)
+- stop\_timeout defined in Locust class takes precedence over --run-time option [\#1117](https://github.com/locustio/locust/issues/1117)
+- Test metrics are not preserved on Stop click in the UI [\#883](https://github.com/locustio/locust/issues/883)
+- locust stuck in hatching state [\#146](https://github.com/locustio/locust/issues/146)
+
+**Closed issues:**
+
+- To improve build\_url method in Locust HttpSession [\#1133](https://github.com/locustio/locust/issues/1133)
+- Duplicate API section in navigation of document [\#1132](https://github.com/locustio/locust/issues/1132)
+- Locust with custom clients only displays maximum response time [\#1084](https://github.com/locustio/locust/issues/1084)
+- Stop locusts graceful [\#1062](https://github.com/locustio/locust/issues/1062)
+- could we report 99.9% percentile in CSV file? [\#1040](https://github.com/locustio/locust/issues/1040)
+- Provide an official Docker image [\#849](https://github.com/locustio/locust/issues/849)
+- Number of Users Dependent on Number of slaves ?  [\#724](https://github.com/locustio/locust/issues/724)
+- Allow a fixed RPS rate [\#646](https://github.com/locustio/locust/issues/646)
+- nitpick: "\# requests" should be "\# successful requests"? [\#145](https://github.com/locustio/locust/issues/145)
+- Display percentiles in the UI instead of just min, max and average [\#140](https://github.com/locustio/locust/issues/140)
+
+**Merged pull requests:**
+
+- Add response\_length to request\_failure event [\#1144](https://github.com/locustio/locust/pull/1144) ([cyberw](https://github.com/cyberw))
+- Add failure per seconds as a series in the chart [\#1140](https://github.com/locustio/locust/pull/1140) ([alercunha](https://github.com/alercunha))
+- Fix AttributeError: 'CompatRequest' object has no attribute 'type' in Cookiejar [\#1139](https://github.com/locustio/locust/pull/1139) ([cyberw](https://github.com/cyberw))
+- update build\_url function in Locust HttpSession  [\#1134](https://github.com/locustio/locust/pull/1134) ([vstepanov-lohika-tix](https://github.com/vstepanov-lohika-tix))
+- Fix and add test for when locusts fail to exit at end of iteration during stop timeout. [\#1127](https://github.com/locustio/locust/pull/1127) ([cyberw](https://github.com/cyberw))
+- Let's stop calling the package beta! [\#1126](https://github.com/locustio/locust/pull/1126) ([cyberw](https://github.com/cyberw))
+- Add p99.9 and p99.99 to request stats distribution csv [\#1125](https://github.com/locustio/locust/pull/1125) ([cyberw](https://github.com/cyberw))
+- New API for specifying wait time [\#1118](https://github.com/locustio/locust/pull/1118) ([heyman](https://github.com/heyman))
+- Add errors grouping for dynamic endpoint [\#993](https://github.com/locustio/locust/pull/993) ([dduleba](https://github.com/dduleba))
+- add 90th %ile to the stats page [\#945](https://github.com/locustio/locust/pull/945) ([myzhan](https://github.com/myzhan))
+- Make stdout/stderr wrappers identify themselves as not being a tty [\#929](https://github.com/locustio/locust/pull/929) ([michaelboulton](https://github.com/michaelboulton))
+- Specify host in web ui [\#523](https://github.com/locustio/locust/pull/523) ([PayscaleNateW](https://github.com/PayscaleNateW))
+- make sure the current working dir is in the sys.path [\#484](https://github.com/locustio/locust/pull/484) ([pwnage101](https://github.com/pwnage101))
+
 ## [0.12.2](https://github.com/locustio/locust/tree/0.12.2) (2019-10-26)
 [Full Changelog](https://github.com/locustio/locust/compare/0.12.1...0.12.2)
 
