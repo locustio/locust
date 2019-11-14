@@ -27,6 +27,7 @@ from .runners import MasterLocustRunner
 from .stats import failures_csv, median_from_dict, requests_csv, sort_stats, stats_history_csv
 from .util.cache import memoize
 from .util.rounding import proper_round
+from .util.time import parse_timespan
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +61,8 @@ def index():
     else:
         host = None
     
+    is_step_load = runners.locust_runner.step_load
+
     return render_template("index.html",
         state=runners.locust_runner.state,
         is_distributed=is_distributed,
@@ -67,16 +70,25 @@ def index():
         version=version,
         host=host,
         override_host_warning=override_host_warning,
+        slave_count=slave_count,
+        is_step_load=is_step_load
     )
 
 @app.route('/swarm', methods=["POST"])
 def swarm():
     assert request.method == "POST"
-
+    is_step_load = runners.locust_runner.step_load
     locust_count = int(request.form["locust_count"])
     hatch_rate = float(request.form["hatch_rate"])
     if (request.form.get("host")):
         runners.locust_runner.host = str(request.form["host"]) 
+
+    if is_step_load:
+        step_locust_count = int(request.form["step_locust_count"])
+        step_duration = parse_timespan(str(request.form["step_duration"]))
+        runners.locust_runner.start_stepload(locust_count, hatch_rate, step_locust_count, step_duration)
+        return jsonify({'success': True, 'message': 'Swarming started in Step Load Mode', 'host': runners.locust_runner.host})
+    
     runners.locust_runner.start_hatching(locust_count, hatch_rate)
     return jsonify({'success': True, 'message': 'Swarming started', 'host': runners.locust_runner.host})
 
