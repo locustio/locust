@@ -19,6 +19,7 @@ else:
     from http.cookiejar import CookieJar
     unicode = str
 
+import gevent
 from gevent.timeout import Timeout
 from geventhttpclient.useragent import UserAgent, CompatRequest, CompatResponse, ConnectionError
 from geventhttpclient.response import HTTPConnectionClosed
@@ -88,7 +89,13 @@ class FastHttpSession(object):
     def __init__(self, base_url, **kwargs):
         self.base_url = base_url
         self.cookiejar = CookieJar()
-        self.client = LocustUserAgent(max_retries=1, cookiejar=self.cookiejar, insecure=True, **kwargs)
+        self.client = LocustUserAgent(
+            max_retries=1, 
+            cookiejar=self.cookiejar, 
+            insecure=True, 
+            ssl_options={"cert_reqs": gevent.ssl.CERT_NONE}, 
+            **kwargs
+        )
         
         # Check for basic authentication
         parsed_url = urlparse(self.base_url)
