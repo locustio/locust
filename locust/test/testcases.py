@@ -1,4 +1,5 @@
 import base64
+import logging
 import random
 import sys
 import unittest
@@ -13,7 +14,9 @@ from flask import (Flask, Response, make_response, redirect, request,
                    send_file, stream_with_context)
 
 from locust import events
+from locust.log import console_logger
 from locust.stats import global_stats
+from locust.test.mock_logging import MockedLoggingHandler
 
 
 app = Flask(__name__)
@@ -138,10 +141,29 @@ class LocustTestCase(unittest.TestCase):
             # ResourceWarning doesn't exist in Python 2, but since the warning only appears
             # on Python 3 we don't need to mock it. Instead we can happily ignore the exception
             pass
+        
+        # set up mocked logging handler
+        self._logger_class = MockedLoggingHandler()
+        self._logger_class.setLevel(logging.INFO)
+        console_logger.propagate = True
+        self._root_log_handlers = [h for h in logging.root.handlers]
+        self._console_log_handlers = [h for h in console_logger.handlers]
+        [logging.root.removeHandler(h) for h in logging.root.handlers]
+        [console_logger.removeHandler(h) for h in console_logger.handlers]
+        logging.root.addHandler(self._logger_class)
+        logging.root.setLevel(logging.INFO)
+        self.mocked_log = MockedLoggingHandler
                       
     def tearDown(self):
         for event, handlers in six.iteritems(self._event_handlers):
             event._handlers = handlers
+        
+        # restore logging class
+        logging.root.removeHandler(self._logger_class)
+        [logging.root.addHandler(h) for h in self._root_log_handlers]
+        [console_logger.addHandler(h) for h in self._console_log_handlers]
+        self.mocked_log.reset()
+        console_logger.propagate = False
 
 
 class WebserverTestCase(LocustTestCase):
