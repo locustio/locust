@@ -55,7 +55,23 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(s.median_response_time, 6099)
 
     def test_total_rps(self):
-        self.assertEqual(self.s.total_rps, 9)
+        self.stats.log_request("GET", "other_endpoint", 1337, 1337)
+        s2 = self.stats.get("other_endpoint", "GET")
+        s2.start_time = 2.0
+        s2.last_request_timestamp = 6.0
+        self.s.start_time = 1.0
+        self.s.last_request_timestamp = 4.0
+        self.stats.total.start_time = 1.0
+        self.stats.total.last_request_timestamp = 6.0
+        self.assertEqual(self.s.total_rps, 9/5.0)
+        self.assertAlmostEqual(s2.total_rps, 1/5.0)
+        self.assertEqual(self.stats.total.total_rps, 10/5.0)
+    
+    def test_rps_less_than_one_second(self):
+        s = StatsEntry(self.stats, "percentile_test", "GET")
+        for i in range(10):
+            s.log(i, 0)
+        self.assertGreater(s.total_rps, 10)
 
     def test_current_rps(self):
         self.stats.total.last_request_timestamp = int(time.time()) + 4
@@ -90,7 +106,7 @@ class TestRequestStats(unittest.TestCase):
         self.s.log_error(Exception("dummy fail after reset"))
         self.s.log(85, 0)
 
-        self.assertEqual(self.s.total_rps, 2)
+        self.assertGreater(self.s.total_rps, 2)
         self.assertEqual(self.s.num_requests, 2)
         self.assertEqual(self.s.num_failures, 1)
         self.assertEqual(self.s.avg_response_time, 420.5)
@@ -269,7 +285,7 @@ class TestStatsEntryResponseTimesCache(unittest.TestCase):
         self.assertEqual(CachedResponseTimes(
             response_times={11:1}, 
             num_requests=1,
-        ), s.response_times_cache[s.last_request_timestamp-1])
+        ), s.response_times_cache[int(s.last_request_timestamp)-1])
     
     def test_response_times_not_cached_if_not_enabled(self):
         s = StatsEntry(self.stats, "/", "GET")

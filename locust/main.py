@@ -513,7 +513,7 @@ def main():
             runners.locust_runner.quit()
         logger.info("Running teardowns...")
         events.quitting.fire(reverse=True)
-        print_stats(runners.locust_runner.stats)
+        print_stats(runners.locust_runner.stats, current=False)
         print_percentile_stats(runners.locust_runner.stats)
         if options.csvfilebase:
             write_stat_csvs(options.csvfilebase)
