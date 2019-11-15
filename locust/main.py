@@ -492,9 +492,10 @@ def main():
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
     
+    stats_printer_greenlet = None
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
-        gevent.spawn(stats_printer)
+        stats_printer_greenlet = gevent.spawn(stats_printer)
 
     if options.csvfilebase:
         gevent.spawn(stats_writer, options.csvfilebase)
@@ -505,7 +506,8 @@ def main():
         Shut down locust by firing quitting event, printing/writing stats and exiting
         """
         logger.info("Shutting down (exit code %s), bye." % code)
-
+        if stats_printer_greenlet is not None:
+            stats_printer_greenlet.kill(block=False)
         logger.info("Cleaning up runner...")
         if runners.locust_runner is not None:
             runners.locust_runner.quit()
