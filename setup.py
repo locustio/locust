@@ -43,7 +43,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        "gevent>=1.2.2", 
+        "gevent==1.5a2", 
         "flask>=0.10.1", 
         "requests>=2.9.1", 
         "msgpack-python>=0.4.2", 
