@@ -38,6 +38,8 @@ seq_task decorator
 
 .. autofunction:: locust.core.seq_task
 
+.. _wait_time_functions:
+
 Built in wait_time functions
 ============================
 

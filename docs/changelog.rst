@@ -4,10 +4,28 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+0.13.1
+======
+
+* Fixed crash bug on Python 3.8.0
+* Various other bug fixes and improvements.
+
+
 0.13.0
-==========
+======
 
 * New API for specifying wait time - https://github.com/locustio/locust/pull/1118
+  
+  Example of the new API::
+  
+      from locust import HttpLocust, between
+      class User(HttpLocust):
+          # wait between 5 and 30 seconds
+          wait_time = between(5, 30)
+  
+  There are three built in :ref:`wait time functions <wait_time_functions>`: :py:func:`between <locust.wait_time.between>`,
+  :py:func:`constant <locust.wait_time.constant>` and :py:func:`constant_pacing <locust.wait_time.constant_pacing>`.
+  
 * FastHttpLocust: Accept self signed SSL certificates, ignore host checks. Improved response code handling
 * Add current working dir to sys.path - https://github.com/locustio/locust/pull/484
 * Web UI improvements: Added 90th percentile to table, failure per seconds as a series in the chart
@@ -17,7 +35,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 * Various other bug fixes and improvements.
 
 0.12.2
-==========
+======
 
 * Added `--skip-log-setup` to disable Locust's default logging setup.
 * Added `--stop-timeout` to allow tasks to finish running their iteration before stopping
