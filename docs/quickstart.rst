@@ -100,7 +100,7 @@ For example, for an exponentially distributed wait time with average of 1 second
     import random
     
     class WebsiteUser(HttpLocust):
-        task_set = UserBehaviour
+        task_set = UserBehavior
         wait_time = lambda self: random.expovariate(1)*1000
 
 
