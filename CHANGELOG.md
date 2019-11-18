@@ -1,8 +1,21 @@
 # Change Log
 
-## [Unreleased](https://github.com/locustio/locust/tree/HEAD)
+## [0.13.2](https://github.com/locustio/locust/tree/0.13.2)
 
-[Full Changelog](https://github.com/locustio/locust/compare/0.13.0...HEAD)
+[Full Changelog](https://github.com/locustio/locust/compare/0.13.1...013.2)
+
+**Fixed bugs:**
+
+- Response Times graph broken \(drops to 0 after a while\) [\#1157](https://github.com/locustio/locust/issues/1157)
+- TaskSet min\_wait and max\_wait are ignored [\#891](https://github.com/locustio/locust/issues/891)
+
+**Closed issues:**
+
+- Can I do a Chinese tutorial based on the locust documentation? [\#1145](https://github.com/locustio/locust/issues/1145)
+- Add charts for number of failures in the Web UI [\#952](https://github.com/locustio/locust/issues/952)
+
+## [0.13.1](https://github.com/locustio/locust/tree/0.13.1) (2019-11-16)
+[Full Changelog](https://github.com/locustio/locust/compare/0.13.0...0.13.1)
 
 **Fixed bugs:**
 
