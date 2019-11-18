@@ -672,7 +672,7 @@ def on_slave_report(client_id, data):
         # lag behind a second or two, but since StatsEntry.current_response_time_percentile() 
         # (which is what the response times cache is used for) uses an approximation of the 
         # last 10 seconds anyway, it should be fine to ignore this. 
-        global_stats.total._cache_response_times(global_stats.total.last_request_timestamp)
+        global_stats.total._cache_response_times(int(global_stats.total.last_request_timestamp))
     
 
 events.request_success += on_request_success

@@ -294,7 +294,7 @@ class TestMasterRunner(LocustTestCase):
             global_stats.reset_all()
             with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
                 master = MasterLocustRunner(MyTestLocust, self.options)
-                mocked_time.return_value += 1
+                mocked_time.return_value += 1.0234
                 server.mocked_send(Message("client_ready", None, "fake_client"))
                 stats = RequestStats()
                 stats.log_request("GET", "/1", 100, 3546)
@@ -320,7 +320,7 @@ class TestMasterRunner(LocustTestCase):
                 
                 # let 10 second pass, do some more requests, send it to the master and make
                 # sure the current response time percentiles only accounts for these new requests
-                mocked_time.return_value += 10
+                mocked_time.return_value += 10.10023
                 stats.log_request("GET", "/1", 20, 1)
                 stats.log_request("GET", "/1", 30, 1)
                 stats.log_request("GET", "/1", 3000, 1)
