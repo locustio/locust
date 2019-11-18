@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+0.13.2
+======
+
+* Fixed bug that broke the Web UI's repsonse time graph
+
 0.13.1
 ======
 
