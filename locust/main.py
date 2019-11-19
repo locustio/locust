@@ -249,7 +249,7 @@ def parse_options():
         type=int,
         dest='stop_timeout',
         default=None,
-        help="number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately."
+        help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. This parameter only needs to be specified for the master process when running Locust distributed."
     )
 
     parser.add_argument(
