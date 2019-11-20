@@ -147,6 +147,22 @@ host defaults to 127.0.0.1):
     $ locust -f locust_files/my_locust_file.py --slave --master-host=192.168.0.100
 
 
+All parameters can also be set in a `config file <https://github.com/bw2/ConfigArgParse#config-file-syntax>`_ (locust.conf or ~/.locust.conf) or in env vars, prefixed by LOCUST\_
+
+For example: (this will do the same thing as the previous command)
+
+.. code-block::
+
+    # locust.conf in current directory
+    slave
+    locustfile locust_files/my_locust_file.py
+
+
+.. code-block:: console
+
+    $ LOCUST_MASTER_HOST=192.168.0.100 locust
+
+
 .. note::
 
     To see all available options type: ``locust --help``
