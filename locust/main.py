@@ -132,7 +132,7 @@ def parse_options():
     parser.add_argument(
         '--no-web',
         action='store_true',
-        help="Disable the web interface, and instead start running the test immediately. Requires -c and -r to be specified."
+        help="Disable the web interface, and instead start running the test immediately. Requires -c and -t to be specified."
     )
 
     # Number of clients
@@ -458,7 +458,7 @@ def main():
 
     if not options.no_web and not options.slave:
         # spawn web greenlet
-        logger.info("Starting web monitor at %s:%s" % (options.web_host or "*", options.port))
+        logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.port))
         main_greenlet = gevent.spawn(web.start, locust_classes, options)
     
     if not options.master and not options.slave:
