@@ -76,6 +76,14 @@
                 series: seriesData,
                 grid: {x:60, y:70, x2:40, y2:40},
                 color: colors,
+                toolbox: {
+                    feature: {
+                        saveAsImage: {
+                            name: this.title.replace(/\s+/g, '_').toLowerCase() + '_' + Date.parse(new Date()) / 1000,
+                            title: "Download as PNG"
+                        }
+                    }
+                }
             })
         }
         
