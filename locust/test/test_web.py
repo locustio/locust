@@ -95,7 +95,7 @@ class TestWebUI(LocustTestCase):
         stats.global_stats.log_request("GET", "/test2", 120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/requests/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
-    
+
     def test_distribution_stats_csv(self):
         for i in range(19):
             stats.global_stats.log_request("GET", "/test2", 400, 5612)
@@ -105,10 +105,12 @@ class TestWebUI(LocustTestCase):
         rows = response.text.split("\n")
         # check that /test2 is present in stats
         row = rows[len(rows)-2].split(",")
-        self.assertEqual('"GET /test2"', row[0])
+        self.assertEqual('"GET"', row[0])
+        self.assertEqual('"/test2"', row[1])
         # check total row
         total_cols = rows[len(rows)-1].split(",")
-        self.assertEqual('"Aggregated"', total_cols[0])
+        self.assertEqual('"None"', total_cols[0])
+        self.assertEqual('"Aggregated"', total_cols[1])
         # verify that the 95%, 98%, 99% and 100% percentiles are 1200
         for value in total_cols[-4:]:
             self.assertEqual('1200', value)

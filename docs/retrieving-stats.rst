@@ -13,7 +13,7 @@ if you plan on running Locust in an automated way with the ``--no-web`` flag:
 
     $ locust -f examples/basic.py --csv=example --no-web -t10m
 
-The files will be named ``example_distribution.csv`` and ``example_requests.csv`` (when using ``--csv=example``) and mirror Locust's built in stat pages.
+The files will be named ``example_response_times.csv`` and ``example_stats.csv`` (when using ``--csv=example``) and mirror Locust's built in stat pages.
 
 You can also customize how frequently this is written if you desire faster (or slower) writing:
 
@@ -22,11 +22,11 @@ You can also customize how frequently this is written if you desire faster (or s
     import locust.stats
     locust.stats.CSV_STATS_INTERVAL_SEC = 5 # default is 2 seconds
 
-This data will write two files with ``_distribution.csv`` and ``_requests.csv`` added to the name you give:
+This data will write two files with ``_response_times.csv`` and ``_stats.csv`` added to the name you give:
 
 .. code-block:: console
 
-    $ cat example_distribution.csv
+    $ cat example_response_times.csv
     "Name","# requests","50%","66%","75%","80%","90%","95%","98%","99%","99.9%","99.99%","100%"
     "GET /",31,4,4,4,4,4,4,4,4,4,4,4
     "/does_not_exist",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"
@@ -37,8 +37,8 @@ and:
 
 .. code-block:: console
 
-    $ cat example_requests.csv
-    "Method","Name","# requests","# failures","Median response time","Average response time","Min response time","Max response time","Average Content Size","Requests/s"
+    $ cat example_stats.csv
+    "Type","Name","# requests","# failures","Median response time","Average response time","Min response time","Max response time","Average Content Size","Requests/s"
     "GET","/",51,0,4,3,2,6,12274,0.89
     "GET","/does_not_exist",0,56,0,0,0,0,0,0.00
     "GET","/stats/requests",58,0,3,3,2,5,1214,1.01

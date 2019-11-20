@@ -13,6 +13,7 @@ from .exception import StopLocust
 from .log import console_logger
 
 STATS_NAME_WIDTH = 60
+STATS_TYPE_WIDTH = 20
 
 """Default interval for how frequently the CSV file is written if this option
 is configured."""
@@ -523,12 +524,13 @@ class StatsEntry(object):
                 percent,
             )
     
-    def percentile(self, tpl=" %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
+    def percentile(self, tpl=" %-" + str(STATS_TYPE_WIDTH) + "s %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
         if not self.num_requests:
             raise ValueError("Can't calculate percentile on url with no successful requests")
         
         return tpl % (
-            (self.method and self.method + " " or "") + self.name,
+            self.method,
+            self.name,
             self.num_requests,
             self.get_response_time_percentile(0.5),
             self.get_response_time_percentile(0.66),
@@ -694,18 +696,19 @@ def print_stats(stats, current=True):
 
 def print_percentile_stats(stats):
     console_logger.info("Percentage of the requests completed within given times")
-    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %8s %6s %6s %6s %6s %6s %6s %6s %6s %6s %6s %6s") % (
-        'Name', 
-        '# reqs', 
-        '50%', 
-        '66%', 
-        '75%', 
-        '80%', 
-        '90%', 
-        '95%', 
-        '98%', 
-        '99%', 
-        '99.9%', 
+    console_logger.info((" %-" + str(STATS_TYPE_WIDTH) + "s %-" + str(STATS_NAME_WIDTH) + "s %8s %6s %6s %6s %6s %6s %6s %6s %6s %6s %6s %6s") % (
+        'Type',
+        'Name',
+        '# reqs',
+        '50%',
+        '66%',
+        '75%',
+        '80%',
+        '90%',
+        '95%',
+        '98%',
+        '99%',
+        '99.9%',
         '99.99%',
         '100%',
     ))
@@ -715,7 +718,7 @@ def print_percentile_stats(stats):
         if r.response_times:
             console_logger.info(r.percentile())
     console_logger.info("-" * (90 + STATS_NAME_WIDTH))
-    
+
     if stats.total.response_times:
         console_logger.info(stats.total.percentile())
     console_logger.info("")
@@ -746,10 +749,10 @@ def stats_writer(base_filepath):
 
 def write_stat_csvs(base_filepath):
     """Writes the requests and distribution csvs."""
-    with open(base_filepath + '_requests.csv', "w") as f:
+    with open(base_filepath + '_stats.csv', "w") as f:
         f.write(requests_csv())
 
-    with open(base_filepath + '_distribution.csv', 'w') as f:
+    with open(base_filepath + '_response_times.csv', 'w') as f:
         f.write(distribution_csv())
 
 
@@ -763,7 +766,7 @@ def requests_csv():
     """Returns the contents of the 'requests' tab as CSV."""
     rows = [
         ",".join([
-            '"Method"',
+            '"Type"',
             '"Name"',
             '"# requests"',
             '"# failures"',
@@ -773,11 +776,12 @@ def requests_csv():
             '"Max response time"',
             '"Average Content Size"',
             '"Requests/s"',
+            '"Requests Failed/s'
         ])
     ]
 
     for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
-        rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
+        rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f,%.2f' % (
             s.method,
             s.name,
             s.num_requests,
@@ -788,6 +792,7 @@ def requests_csv():
             s.max_response_time,
             s.avg_content_length,
             s.total_rps,
+            s.total_fail_per_sec
         ))
     return "\n".join(rows)
 
@@ -796,6 +801,7 @@ def distribution_csv():
     from . import runners
 
     rows = [",".join((
+        '"Type"'
         '"Name"',
         '"# requests"',
         '"50%"',
@@ -812,9 +818,9 @@ def distribution_csv():
     ))]
     for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
         if s.num_requests:
-            rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
+            rows.append(s.percentile(tpl='"%s","%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
         else:
-            rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
+            rows.append('"%s","%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % (s.method, s.name))
 
     return "\n".join(rows)
 
