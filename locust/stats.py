@@ -742,6 +742,8 @@ def stats_printer():
 
 def stats_writer(base_filepath):
     """Writes the csv files for the locust run."""
+    with open(base_filepath + '_stats_history.csv', 'w') as f:
+        f.write(stats_history_csv_header())
     while True:
         write_stat_csvs(base_filepath)
         gevent.sleep(CSV_STATS_INTERVAL_SEC)
@@ -749,11 +751,14 @@ def stats_writer(base_filepath):
 
 def write_stat_csvs(base_filepath):
     """Writes the requests and distribution csvs."""
-    with open(base_filepath + '_stats.csv', "w") as f:
+    with open(base_filepath + '_stats.csv', 'w') as f:
         f.write(requests_csv())
 
     with open(base_filepath + '_response_times.csv', 'w') as f:
         f.write(distribution_csv())
+
+    with open(base_filepath + '_stats_history.csv', 'a') as f:
+        f.write(stats_history() + "\n")
 
 
 def sort_stats(stats):
@@ -821,6 +826,78 @@ def distribution_csv():
             rows.append(s.percentile(tpl='"%s","%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
         else:
             rows.append('"%s","%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % (s.method, s.name))
+
+    return "\n".join(rows)
+
+def stats_history_csv_header():
+    """Headers for the stats history CSV"""
+
+    return ','.join((
+        '"Type"',
+        '"Name"',
+        '"Timestamp"',
+        '"# requests"',
+        '"# failures"',
+        '"Requests/s"',
+        '"Requests Failed/s"',
+        '"Median response time"',
+        '"Average response time"',
+        '"Min response time"',
+        '"Max response time"',
+        '"Average Content Size"',
+        '"50%"',
+        '"66%"',
+        '"75%"',
+        '"80%"',
+        '"90%"',
+        '"95%"',
+        '"98%"',
+        '"99%"',
+        '"99.9%"',
+        '"99.99%"',
+        '"100%"'
+    )) + '\n'
+
+def stats_history():
+    """Returns the Aggregated stats entry every interval"""
+    from . import runners
+
+    rows = []
+    timestamp = int(time.time())
+    PERCENTILES_TO_REPORT = [
+        0.50,
+        0.75,
+        0.90,
+        0.95,
+        0.99,
+        0.999,
+        0.9999,
+        0.99999,
+        1.0
+    ]
+
+    for s in chain([runners.locust_runner.stats.total]):
+        if s.num_requests:
+            percentile_str = ','.join([
+                str(int(s.get_current_response_time_percentile(x) or 0)) for x in PERCENTILES_TO_REPORT])
+        else:
+            percentile_str = ','.join(['"N/A"'] * len(PERCENTILES_TO_REPORT))
+
+        rows.append('"%s","%s","%s",%i,%i,%.2f,%.2f,%i,%i,%i,%.2f,%.2f,%s' % (
+            s.method,
+            s.name,
+            timestamp,
+            s.num_requests,
+            s.num_failures,
+            s.current_rps,
+            s.current_fail_per_sec,
+            s.median_response_time,
+            s.avg_response_time,
+            s.min_response_time or 0,
+            s.max_response_time,
+            s.avg_content_length,
+            percentile_str
+        ))
 
     return "\n".join(rows)
 
