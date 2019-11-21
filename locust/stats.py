@@ -740,16 +740,16 @@ def stats_printer():
         print_stats(runners.locust_runner.stats)
         gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
 
-def stats_writer(base_filepath):
+def stats_writer(base_filepath, stats_history_enabled=False):
     """Writes the csv files for the locust run."""
     with open(base_filepath + '_stats_history.csv', 'w') as f:
         f.write(stats_history_csv_header())
     while True:
-        write_stat_csvs(base_filepath)
+        write_stat_csvs(base_filepath, stats_history_enabled)
         gevent.sleep(CSV_STATS_INTERVAL_SEC)
 
 
-def write_stat_csvs(base_filepath):
+def write_stat_csvs(base_filepath, stats_history_enabled=False):
     """Writes the requests and distribution csvs."""
     with open(base_filepath + '_stats.csv', 'w') as f:
         f.write(requests_csv())
@@ -758,7 +758,7 @@ def write_stat_csvs(base_filepath):
         f.write(distribution_csv())
 
     with open(base_filepath + '_stats_history.csv', 'a') as f:
-        f.write(stats_history() + "\n")
+        f.write(stats_history_csv(stats_history_enabled) + "\n")
 
 
 def sort_stats(stats):
@@ -855,10 +855,11 @@ def stats_history_csv_header():
         '"99%"',
         '"99.9%"',
         '"99.99%"',
+        '"99.999"',
         '"100%"'
     )) + '\n'
 
-def stats_history():
+def stats_history_csv(stats_history_enabled=False):
     """Returns the Aggregated stats entry every interval"""
     from . import runners
 
@@ -866,9 +867,12 @@ def stats_history():
     timestamp = int(time.time())
     PERCENTILES_TO_REPORT = [
         0.50,
+        0.66,
         0.75,
+        0.80,
         0.90,
         0.95,
+        0.98,
         0.99,
         0.999,
         0.9999,
@@ -876,10 +880,14 @@ def stats_history():
         1.0
     ]
 
-    for s in chain([runners.locust_runner.stats.total]):
+    include_stats_entries_per_iteration = []
+    if stats_history_enabled:
+        include_stats_entries_per_iteration = sort_stats(runners.locust_runner.request_stats)
+
+    for s in chain(include_stats_entries_per_iteration, [runners.locust_runner.stats.total]):
         if s.num_requests:
             percentile_str = ','.join([
-                str(int(s.get_current_response_time_percentile(x) or 0)) for x in PERCENTILES_TO_REPORT])
+                str(int(s.get_response_time_percentile(x) or 0)) for x in PERCENTILES_TO_REPORT])
         else:
             percentile_str = ','.join(['"N/A"'] * len(PERCENTILES_TO_REPORT))
 
