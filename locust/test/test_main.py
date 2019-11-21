@@ -110,7 +110,6 @@ class TestParseOptions(LocustTestCase):
             "--stop-timeout", "5",
             "MyLocustClass",
         ])
-        print("options:", options)
         self.assertEqual("locustfile.py", options.locustfile)
         self.assertEqual(100, options.num_clients)
         self.assertEqual(10, options.hatch_rate)
