@@ -26,7 +26,7 @@ class TestWebUI(LocustTestCase):
         super(TestWebUI, self).setUp()
         
         stats.global_stats.clear_all()
-        parser = parse_options()[0]
+        parser = parse_options(default_config_files=[])[0]
         self.options = parser.parse_args([])
         runners.locust_runner = LocustRunner([], self.options)
         
