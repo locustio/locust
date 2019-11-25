@@ -8,7 +8,7 @@ from locust.test.testcases import LocustTestCase
 class ZMQRPC_tests(LocustTestCase):
     def setUp(self):
         super(ZMQRPC_tests, self).setUp()
-        self.server = zmqrpc.Server('*', 0)
+        self.server = zmqrpc.Server('127.0.0.1', 0)
         self.client = zmqrpc.Client('localhost', self.server.port, 'identity')
 
     def tearDown(self):
@@ -40,7 +40,8 @@ class ZMQRPC_tests(LocustTestCase):
         self.assertEqual(msg.node_id, 'identity')
 
     def test_client_retry(self):
-        server = zmqrpc.Server('0.0.0.0', 8888)
+        # use non-zero port this time, just to increase code coverage
+        server = zmqrpc.Server('127.0.0.1', 8888)
         server.socket.close()
         with self.assertRaises(zmq.error.ZMQError):
             server.recv_from_client()

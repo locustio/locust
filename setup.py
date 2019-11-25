@@ -50,6 +50,7 @@ setup(
         "six>=1.10.0", 
         "pyzmq>=16.0.2", 
         "geventhttpclient-wheels==1.3.1.dev2",
+        "ConfigArgParse==0.15.1",
     ],
     test_suite="locust.test",
     tests_require=['mock'],

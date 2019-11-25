@@ -6,7 +6,7 @@ import signal
 import socket
 import sys
 import time
-import argparse
+import configargparse
 
 import gevent
 
@@ -25,15 +25,14 @@ _internals = [Locust, HttpLocust]
 version = locust.__version__
 
 
-def parse_options(args=None):
+def parse_options(args=None, default_config_files=['~/.locust.conf','locust.conf']):
     """
-    Handle command-line options with argparse.ArgumentParser.
+    Handle command-line options with configargparse.ArgumentParser.
 
-    Return list of arguments, largely for use in `parse_arguments`.
+    Returns a two-tuple of parser + the output from parse_args()
     """
-
     # Initialize
-    parser = argparse.ArgumentParser()
+    parser = configargparse.ArgumentParser(default_config_files=default_config_files, auto_env_var_prefix="LOCUST_", add_env_var_help=False)
 
     parser.add_argument(
         '-H', '--host',
@@ -132,7 +131,7 @@ def parse_options(args=None):
     parser.add_argument(
         '--no-web',
         action='store_true',
-        help="Disable the web interface, and instead start running the test immediately. Requires -c and -r to be specified."
+        help="Disable the web interface, and instead start running the test immediately. Requires -c and -t to be specified."
     )
 
     # Number of clients
@@ -258,8 +257,6 @@ def parse_options(args=None):
         metavar='LocustClass',
     )
 
-    # Finalize
-    # Return two-tuple of parser + the output from parse_args
     return parser, parser.parse_args(args=args)
 
 
@@ -458,7 +455,7 @@ def main():
 
     if not options.no_web and not options.slave:
         # spawn web greenlet
-        logger.info("Starting web monitor at %s:%s" % (options.web_host or "*", options.port))
+        logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.port))
         main_greenlet = gevent.spawn(web.start, locust_classes, options)
     
     if not options.master and not options.slave:
