@@ -70,7 +70,7 @@ def parse_options(args=None, default_config_files=['~/.locust.conf','locust.conf
         '--csv-full-history',
         action='store_true',
         default=False,
-        dest='statshistory',
+        dest='stats_history_enabled',
         help="Store each stats entry in CSV format to _stats_history.csv file",
     )
 
@@ -504,7 +504,7 @@ def main():
         stats_printer_greenlet = gevent.spawn(stats_printer)
 
     if options.csvfilebase:
-        gevent.spawn(stats_writer, options.csvfilebase, options.statshistory)
+        gevent.spawn(stats_writer, options.csvfilebase, options.stats_history_enabled)
 
     
     def shutdown(code=0):
@@ -522,7 +522,7 @@ def main():
         print_stats(runners.locust_runner.stats, current=False)
         print_percentile_stats(runners.locust_runner.stats)
         if options.csvfilebase:
-            write_stat_csvs(options.csvfilebase, options.statshistory)
+            write_stat_csvs(options.csvfilebase, options.stats_history_enabled)
         print_error_report()
         sys.exit(code)
     
