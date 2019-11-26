@@ -40,8 +40,7 @@ class ZMQRPC_tests(LocustTestCase):
         self.assertEqual(msg.node_id, 'identity')
 
     def test_client_retry(self):
-        # use non-zero port this time, just to increase code coverage
-        server = zmqrpc.Server('127.0.0.1', 8888)
+        server = zmqrpc.Server('127.0.0.1', 0)
         server.socket.close()
         with self.assertRaises(zmq.error.ZMQError):
             server.recv_from_client()
