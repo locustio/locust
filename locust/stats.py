@@ -646,7 +646,7 @@ def on_report_to_master(client_id, data):
     data["errors"] =  global_stats.serialize_errors()
     global_stats.errors = {}
 
-def on_slave_report(client_id, data):
+def on_drone_report(client_id, data):
     for stats_data in data["stats"]:
         entry = StatsEntry.unserialize(stats_data)
         request_key = (entry.name, entry.method)
@@ -667,7 +667,7 @@ def on_slave_report(client_id, data):
     global_stats.total.extend(StatsEntry.unserialize(data["stats_total"]))
     if global_stats.total.last_request_timestamp and global_stats.total.last_request_timestamp > (old_last_request_timestamp or 0):
         # If we've entered a new second, we'll cache the response times. Note that there 
-        # might still be reports from other slave nodes - that contains requests for the same 
+        # might still be reports from other drone nodes - that contains requests for the same
         # time periods - that hasn't been received/accounted for yet. This will cause the cache to 
         # lag behind a second or two, but since StatsEntry.current_response_time_percentile() 
         # (which is what the response times cache is used for) uses an approximation of the 
@@ -678,7 +678,7 @@ def on_slave_report(client_id, data):
 events.request_success += on_request_success
 events.request_failure += on_request_failure
 events.report_to_master += on_report_to_master
-events.slave_report += on_slave_report
+events.drone_report += on_drone_report
 
 
 def print_stats(stats, current=True):

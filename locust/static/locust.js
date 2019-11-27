@@ -48,7 +48,7 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');
 var exceptions_tpl = $('#exceptions-template');
-var slaves_tpl = $('#slave-template');
+var drones_tpl = $('#drone-template');
 
 function setHostName(hostname) {
     hostname = hostname || "";
@@ -104,7 +104,7 @@ var sortBy = function(field, reverse, primer){
 // Sorting by column
 var alternate = false; //used by jqote2.min.js
 var sortAttribute = "name";
-var slaveSortAttribute = "id";
+var droneSortAttribute = "id";
 var desc = false;
 var report;
 
@@ -147,12 +147,12 @@ function updateStats() {
 
         renderTable(report);
 
-        if (report.slaves) {
-            slaves = (report.slaves).sort(sortBy(slaveSortAttribute, desc));
-            $("#slaves tbody").empty();
+        if (report.drones) {
+            drones = (report.drones).sort(sortBy(droneSortAttribute, desc));
+            $("#drones tbody").empty();
             window.alternate = false;
-            $("#slaves tbody").jqoteapp(slaves_tpl, slaves);
-            $("#slaveCount").html(slaves.length);
+            $("#drones tbody").jqoteapp(drones_tpl, drones);
+            $("#droneCount").html(drones.length);
         }
 
         if (report.state !== "stopped"){

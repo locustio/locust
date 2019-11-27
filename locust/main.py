@@ -16,7 +16,7 @@ from . import events, runners, web
 from .core import HttpLocust, Locust
 from .inspectlocust import get_task_ratio_dict, print_task_ratio
 from .log import console_logger, setup_logging
-from .runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner
+from .runners import LocalLocustRunner, MasterLocustRunner, DroneLocustRunner
 from .stats import (print_error_report, print_percentile_stats, print_stats,
                     stats_printer, stats_writer, write_stat_csvs)
 from .util.timespan import parse_timespan
@@ -72,25 +72,25 @@ def parse_options(args=None, default_config_files=['~/.locust.conf','locust.conf
         help="Set locust to run in distributed mode with this process as master"
     )
 
-    # if locust should be run in distributed mode as slave
+    # if locust should be run in distributed mode as drone
     parser.add_argument(
-        '--slave',
+        '--drone',
         action='store_true',
-        help="Set locust to run in distributed mode with this process as slave"
+        help="Set locust to run in distributed mode with this process as drone"
     )
     
     # master host options
     parser.add_argument(
         '--master-host',
         default="127.0.0.1",
-        help="Host or IP address of locust master for distributed load testing. Only used when running with --slave. Defaults to 127.0.0.1."
+        help="Host or IP address of locust master for distributed load testing. Only used when running with --drone. Defaults to 127.0.0.1."
     )
     
     parser.add_argument(
         '--master-port',
         type=int,
         default=5557,
-        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --slave. Defaults to 5557. Note that slaves will also connect to the master node on this port + 1."
+        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --drone. Defaults to 5557. Note that drones will also connect to the master node on this port + 1."
     )
 
     parser.add_argument(
@@ -110,21 +110,21 @@ def parse_options(args=None, default_config_files=['~/.locust.conf','locust.conf
         '--heartbeat-liveness',
         type=int,
         default=3,
-        help="set number of seconds before failed heartbeat from slave"
+        help="set number of seconds before failed heartbeat from drone"
     )
 
     parser.add_argument(
         '--heartbeat-interval',
         type=int,
         default=1,
-        help="set number of seconds delay between slave heartbeats to master"
+        help="set number of seconds delay between drone heartbeats to master"
     )
 
     parser.add_argument(
-        '--expect-slaves',
+        '--expect-drones',
         type=int,
         default=1,
-        help="How many slaves master should expect to connect before starting the test (only when --no-web used)."
+        help="How many drones master should expect to connect before starting the test (only when --no-web used)."
     )
 
     # if we should print stats in the console
@@ -202,7 +202,7 @@ def parse_options(args=None, default_config_files=['~/.locust.conf','locust.conf
     parser.add_argument(
         '--reset-stats',
         action='store_true',
-        help="Reset statistics once hatching has been completed. Should be set on both master and slaves when running in distributed mode",
+        help="Reset statistics once hatching has been completed. Should be set on both master and drones when running in distributed mode",
     )
     
     # List locust commands found in loaded locust files/source files
@@ -453,12 +453,12 @@ def main():
                 runners.locust_runner.quit()
             gevent.spawn_later(options.run_time, timelimit_stop)
 
-    if not options.no_web and not options.slave:
+    if not options.no_web and not options.drone:
         # spawn web greenlet
         logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.port))
         main_greenlet = gevent.spawn(web.start, locust_classes, options)
     
-    if not options.master and not options.slave:
+    if not options.master and not options.drone:
         runners.locust_runner = LocalLocustRunner(locust_classes, options)
         # spawn client spawning/hatching greenlet
         if options.no_web:
@@ -469,28 +469,28 @@ def main():
     elif options.master:
         runners.locust_runner = MasterLocustRunner(locust_classes, options)
         if options.no_web:
-            while len(runners.locust_runner.clients.ready)<options.expect_slaves:
-                logging.info("Waiting for slaves to be ready, %s of %s connected",
-                             len(runners.locust_runner.clients.ready), options.expect_slaves)
+            while len(runners.locust_runner.clients.ready)<options.expect_drones:
+                logging.info("Waiting for drones to be ready, %s of %s connected",
+                             len(runners.locust_runner.clients.ready), options.expect_drones)
                 time.sleep(1)
 
             runners.locust_runner.start_hatching(options.num_clients, options.hatch_rate)
             main_greenlet = runners.locust_runner.greenlet
             if options.run_time:
                 spawn_run_time_limit_greenlet()
-    elif options.slave:
+    elif options.drone:
         if options.run_time:
-            logger.error("--run-time should be specified on the master node, and not on slave nodes")
+            logger.error("--run-time should be specified on the master node, and not on drone nodes")
             sys.exit(1)
         try:
-            runners.locust_runner = SlaveLocustRunner(locust_classes, options)
+            runners.locust_runner = DroneLocustRunner(locust_classes, options)
             main_greenlet = runners.locust_runner.greenlet
         except socket.error as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
     
     stats_printer_greenlet = None
-    if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
+    if not options.only_summary and (options.print_stats or (options.no_web and not options.drone)):
         # spawn stats printing greenlet
         stats_printer_greenlet = gevent.spawn(stats_printer)
 

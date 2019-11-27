@@ -71,7 +71,7 @@ Event is fired with the following arguments:
 
 report_to_master = EventHook()
 """
-*report_to_master* is used when Locust is running in --slave mode. It can be used to attach
+*report_to_master* is used when Locust is running in --drone mode. It can be used to attach
 data to the dicts that are regularly sent to the master. It's fired regularly when a report
 is to be sent to the master server.
 
@@ -83,17 +83,17 @@ Event is fired with the following arguments:
 * *data*: Data dict that can be modified in order to attach data that should be sent to the master.
 """
 
-slave_report = EventHook()
+drone_report = EventHook()
 """
-*slave_report* is used when Locust is running in --master mode and is fired when the master
-server receives a report from a Locust slave server.
+*drone_report* is used when Locust is running in --master mode and is fired when the master
+server receives a report from a Locust drone server.
 
-This event can be used to aggregate data from the locust slave servers.
+This event can be used to aggregate data from the locust drone servers.
 
 Event is fired with following arguments:
 
-* *client_id*: Client id of the reporting locust slave
-* *data*: Data dict with the data from the slave node
+* *client_id*: Client id of the reporting locust drone
+* *data*: Data dict with the data from the drone node
 """
 
 hatch_complete = EventHook()

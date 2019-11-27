@@ -41,9 +41,9 @@ app.root_path = os.path.dirname(os.path.abspath(__file__))
 def index():
     is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
     if is_distributed:
-        slave_count = runners.locust_runner.slave_count
+        drone_count = runners.locust_runner.drone_count
     else:
-        slave_count = 0
+        drone_count = 0
     
     override_host_warning = False
     if runners.locust_runner.host:
@@ -156,11 +156,11 @@ def request_stats():
     
     is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
     if is_distributed:
-        slaves = []
-        for slave in runners.locust_runner.clients.values():
-            slaves.append({"id":slave.id, "state":slave.state, "user_count": slave.user_count})
+        drones = []
+        for drone in runners.locust_runner.clients.values():
+            drones.append({"id":drone.id, "state":drone.state, "user_count": drone.user_count})
 
-        report["slaves"] = slaves
+        report["drones"] = drones
     
     report["state"] = runners.locust_runner.state
     report["user_count"] = runners.locust_runner.user_count

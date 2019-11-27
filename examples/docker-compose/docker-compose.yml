@@ -17,9 +17,9 @@ services:
       <<: *common-env
       LOCUST_MODE: master
   
-  locust-slave:
+  locust-drone:
     <<: *common
     environment:
       <<: *common-env
-      LOCUST_MODE: slave
+      LOCUST_MODE: drone
       LOCUST_MASTER_HOST: locust-master

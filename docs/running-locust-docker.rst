@@ -4,14 +4,14 @@
 Running Locust with Docker
 =================================
 
-To keep things simple we provide a single Docker image that can run standalone, as a master, or as a slave.
+To keep things simple we provide a single Docker image that can run standalone, as a master, or as a drone.
 
 Environment Variables
 ---------------------------------------------
 
 - ``LOCUST_MODE``
 
-One of 'standalone', 'master', or 'slave'. Defaults to 'standalone'.
+One of 'standalone', 'master', or 'drone'. Defaults to 'standalone'.
 
 - ``LOCUSTFILE_PATH``
 

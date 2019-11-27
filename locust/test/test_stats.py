@@ -241,7 +241,7 @@ class TestRequestStats(unittest.TestCase):
         """
         Serialize a RequestStats instance, then serialize it through a Message, 
         and unserialize the whole thing again. This is done "IRL" when stats are sent 
-        from slaves to master.
+        from drones to master.
         """
         s1 = StatsEntry(self.stats, "test", "GET")
         s1.log(10, 0)

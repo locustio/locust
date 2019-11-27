@@ -37,7 +37,7 @@
 
 **Fixed bugs:**
 
-- autoscaling slaves resets users [\#1143](https://github.com/locustio/locust/issues/1143)
+- autoscaling drones resets users [\#1143](https://github.com/locustio/locust/issues/1143)
 - Repeated secure requests with FastHttpLocust crashes in cookie management [\#1138](https://github.com/locustio/locust/issues/1138)
 - FastHttpLocust gives ssl error with let's encrypt certs [\#1137](https://github.com/locustio/locust/issues/1137)
 - stop\_timeout defined in Locust class takes precedence over --run-time option [\#1117](https://github.com/locustio/locust/issues/1117)
@@ -52,7 +52,7 @@
 - Stop locusts graceful [\#1062](https://github.com/locustio/locust/issues/1062)
 - could we report 99.9% percentile in CSV file? [\#1040](https://github.com/locustio/locust/issues/1040)
 - Provide an official Docker image [\#849](https://github.com/locustio/locust/issues/849)
-- Number of Users Dependent on Number of slaves ?  [\#724](https://github.com/locustio/locust/issues/724)
+- Number of Users Dependent on Number of drones ?  [\#724](https://github.com/locustio/locust/issues/724)
 - Allow a fixed RPS rate [\#646](https://github.com/locustio/locust/issues/646)
 - nitpick: "\# requests" should be "\# successful requests"? [\#145](https://github.com/locustio/locust/issues/145)
 - Display percentiles in the UI instead of just min, max and average [\#140](https://github.com/locustio/locust/issues/140)
@@ -90,7 +90,7 @@
 - Exceptions tab not working for on\_start method [\#269](https://github.com/locustio/locust/issues/269)
 - Percentile response time anomalies at 100% [\#254](https://github.com/locustio/locust/issues/254)
 - log.py's StdErrWrapper swallows fatal stacktraces [\#163](https://github.com/locustio/locust/issues/163)
-- Slave count doesn't get updated in the UI if no more slaves are alive [\#62](https://github.com/locustio/locust/issues/62)
+- Slave count doesn't get updated in the UI if no more drones are alive [\#62](https://github.com/locustio/locust/issues/62)
 
 **Closed issues:**
 
@@ -109,7 +109,7 @@
 - locust's statistic collect N/A records [\#626](https://github.com/locustio/locust/issues/626)
 - how to make all locust users wait after executing on\_start method ? [\#611](https://github.com/locustio/locust/issues/611)
 - EventHook\(\) fired when locust user has stopped [\#604](https://github.com/locustio/locust/issues/604)
-- Is there a way to de-register slave with master on a slave node shutdown? [\#603](https://github.com/locustio/locust/issues/603)
+- Is there a way to de-register drone with master on a  node shutdown? [\#603](https://github.com/locustio/locust/issues/603)
 - Unable to Stop locust from Web interface occasionally [\#602](https://github.com/locustio/locust/issues/602)
 - no-web performance data saved [\#601](https://github.com/locustio/locust/issues/601)
 - Can you add or can I create a Pull Request to accept a command line option that would enable ALL events \(http requests\) to be logged to a file/location? [\#576](https://github.com/locustio/locust/issues/576)
