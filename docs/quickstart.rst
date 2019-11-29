@@ -10,7 +10,7 @@ Below is a quick little example of a simple **locustfile.py**:
 
 .. code-block:: python
 
-    from locust import HttpLocust, TaskSet
+    from locust import HttpLocust, TaskSet, between
 
     def login(l):
         l.client.post("/login", {"username":"ellen_key", "password":"education"})
@@ -35,8 +35,7 @@ Below is a quick little example of a simple **locustfile.py**:
 
     class WebsiteUser(HttpLocust):
         task_set = UserBehavior
-        min_wait = 5000
-        max_wait = 9000
+        wait_time = between(5.0, 9.0)
 
 
 Here we define a number of Locust tasks, which are normal Python callables that take one argument 
@@ -60,7 +59,7 @@ Another way we could declare tasks, which is usually more convenient, is to use 
 
 .. code-block:: python
 
-    from locust import HttpLocust, TaskSet, task
+    from locust import HttpLocust, TaskSet, task, between
 
     class UserBehavior(TaskSet):
         def on_start(self):
@@ -87,14 +86,13 @@ Another way we could declare tasks, which is usually more convenient, is to use 
     
     class WebsiteUser(HttpLocust):
         task_set = UserBehavior
-        min_wait = 5000
-        max_wait = 9000
+        wait_time = between(5, 9)
 
 The :py:class:`Locust <locust.core.Locust>` class (as well as :py:class:`HttpLocust <locust.core.HttpLocust>`
-since it's a subclass) also allows one to specify minimum and maximum wait time in milliseconds—per simulated
-user—between the execution of tasks (*min_wait* and *max_wait*) as well as other user behaviours.
-By default the time is randomly chosen uniformly between *min_wait* and *max_wait*, but any user-defined
-time distributions can be used by setting *wait_function* to any arbitrary function. 
+since it's a subclass) also allows one to specify the wait time between the execution of tasks 
+(:code:`wait_time = between(5, 9)`) as well as other user behaviours.
+With the between function the time is randomly chosen uniformly between the specified min and max values, 
+but any user-defined time distributions can be used by setting *wait_time* to any arbitrary function. 
 For example, for an exponentially distributed wait time with average of 1 second:
 
 .. code-block:: python
@@ -103,7 +101,7 @@ For example, for an exponentially distributed wait time with average of 1 second
     
     class WebsiteUser(HttpLocust):
         task_set = UserBehaviour
-        wait_function = lambda self: random.expovariate(1)*1000
+        wait_time = lambda self: random.expovariate(1)*1000
 
 
 Start Locust
@@ -114,27 +112,31 @@ directory, we could run:
 
 .. code-block:: console
 
-    $ locust --host=http://example.com
+    $ locust
+
 
 If the Locust file is located under a subdirectory and/or named different than *locustfile.py*, specify
 it using ``-f``:
 
 .. code-block:: console
 
-    $ locust -f locust_files/my_locust_file.py --host=http://example.com
+    $ locust -f locust_files/my_locust_file.py
+
 
 To run Locust distributed across multiple processes we would start a master process by specifying
 ``--master``:
 
 .. code-block:: console
 
-    $ locust -f locust_files/my_locust_file.py --master --host=http://example.com
+    $ locust -f locust_files/my_locust_file.py --master
+
 
 and then we would start an arbitrary number of slave processes:
 
 .. code-block:: console
 
-    $ locust -f locust_files/my_locust_file.py --slave --host=http://example.com
+    $ locust -f locust_files/my_locust_file.py --slave
+
 
 If we want to run Locust distributed on multiple machines we would also have to specify the master host when
 starting the slaves (this is not needed when running Locust distributed on a single machine, since the master
@@ -142,7 +144,23 @@ host defaults to 127.0.0.1):
 
 .. code-block:: console
 
-    $ locust -f locust_files/my_locust_file.py --slave --master-host=192.168.0.100 --host=http://example.com
+    $ locust -f locust_files/my_locust_file.py --slave --master-host=192.168.0.100
+
+
+Parameters can also be set in a `config file <https://github.com/bw2/ConfigArgParse#config-file-syntax>`_ (locust.conf or ~/.locust.conf) or in env vars, prefixed by LOCUST\_
+
+For example: (this will do the same thing as the previous command)
+
+.. code-block::
+
+    # locust.conf in current directory
+    locustfile locust_files/my_locust_file.py
+    slave
+
+
+.. code-block:: console
+
+    $ LOCUST_MASTER_HOST=192.168.0.100 locust
 
 
 .. note::

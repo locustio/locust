@@ -1,11 +1,13 @@
 import unittest
+import os
+import tempfile
 
 from locust.main import parse_options
 
 
 class TestParser(unittest.TestCase):
     def setUp(self):
-        self.parser, _ = parse_options()
+        self.parser, _ = parse_options(default_config_files=[])
 
     def test_default(self):
         opts = self.parser.parse_args([])
@@ -32,3 +34,15 @@ class TestParser(unittest.TestCase):
         ]
         opts = self.parser.parse_args(args)
         self.assertEqual(opts.skip_log_setup, True)
+
+    def test_parameter_parsing(self):
+        with tempfile.NamedTemporaryFile(mode='w') as file:
+            os.environ['LOCUST_LOCUSTFILE'] = "locustfile_from_env"
+            file.write("host host_from_config\nweb-host webhost_from_config")
+            file.flush()
+            parser, _ = parse_options(default_config_files=[file.name])
+            options = parser.parse_args(['-H','host_from_args'])
+            del os.environ['LOCUST_LOCUSTFILE']
+        self.assertEqual(options.web_host, 'webhost_from_config')
+        self.assertEqual(options.locustfile, 'locustfile_from_env')
+        self.assertEqual(options.host, 'host_from_args') # overridden

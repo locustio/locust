@@ -77,7 +77,6 @@ class RequestStats(object):
         self.entries = {}
         self.errors = {}
         self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=True)
-        self.start_time = None
     
     @property
     def num_requests(self):
@@ -94,6 +93,10 @@ class RequestStats(object):
     @property
     def last_request_timestamp(self):
         return self.total.last_request_timestamp
+    
+    @property
+    def start_time(self):
+        return self.total.start_time
     
     def log_request(self, method, name, response_time, content_length):
         self.total.log(response_time, content_length)
@@ -125,7 +128,6 @@ class RequestStats(object):
         """
         Go through all stats entries and reset them to zero
         """
-        self.start_time = time.time()
         self.total.reset()
         self.errors = {}
         for r in six.itervalues(self.entries):
@@ -138,7 +140,6 @@ class RequestStats(object):
         self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=True)
         self.entries = {}
         self.errors = {}
-        self.start_time = None
     
     def serialize_stats(self):
         return [self.entries[key].get_stripped_report() for key in six.iterkeys(self.entries) if not (self.entries[key].num_requests == 0 and self.entries[key].num_failures == 0)]
@@ -178,6 +179,9 @@ class StatsEntry(object):
     
     num_reqs_per_sec = None
     """ A {second => request_count} dict that holds the number of requests made per second """
+
+    num_fail_per_sec = None
+    """ A (second => failure_count) dict that hold the number of failures per second """    
     
     response_times = None
     """
@@ -229,8 +233,9 @@ class StatsEntry(object):
         self.response_times = {}
         self.min_response_time = None
         self.max_response_time = 0
-        self.last_request_timestamp = int(time.time())
+        self.last_request_timestamp = None
         self.num_reqs_per_sec = {}
+        self.num_fail_per_sec = {}
         self.total_content_length = 0
         if self.use_response_times_cache:
             self.response_times_cache = OrderedDict()
@@ -238,22 +243,24 @@ class StatsEntry(object):
     
     def log(self, response_time, content_length):
         # get the time
-        t = int(time.time())
+        current_time = time.time()
+        t = int(current_time)
         
-        if self.use_response_times_cache and self.last_request_timestamp and t > self.last_request_timestamp:
+        if self.use_response_times_cache and self.last_request_timestamp and t > int(self.last_request_timestamp):
             # see if we shall make a copy of the respone_times dict and store in the cache
             self._cache_response_times(t-1)
         
         self.num_requests += 1
-        self._log_time_of_request(t)
+        self._log_time_of_request(current_time)
         self._log_response_time(response_time)
 
         # increase total content-length
         self.total_content_length += content_length
 
-    def _log_time_of_request(self, t):
+    def _log_time_of_request(self, current_time):
+        t = int(current_time)
         self.num_reqs_per_sec[t] = self.num_reqs_per_sec.setdefault(t, 0) + 1
-        self.last_request_timestamp = t
+        self.last_request_timestamp = current_time
 
     def _log_response_time(self, response_time):
         if response_time is None:
@@ -286,6 +293,8 @@ class StatsEntry(object):
 
     def log_error(self, error):
         self.num_failures += 1
+        t = int(time.time())
+        self.num_fail_per_sec[t] = self.num_fail_per_sec.setdefault(t, 0) + 1
 
     @property
     def fail_ratio(self):
@@ -325,17 +334,37 @@ class StatsEntry(object):
     def current_rps(self):
         if self.stats.last_request_timestamp is None:
             return 0
-        slice_start_time = max(self.stats.last_request_timestamp - 12, int(self.stats.start_time or 0))
+        slice_start_time = max(int(self.stats.last_request_timestamp) - 12, int(self.stats.start_time or 0))
 
-        reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, self.stats.last_request_timestamp-2)]
+        reqs = [self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, int(self.stats.last_request_timestamp)-2)]
+        return avg(reqs)
+
+    @property
+    def current_fail_per_sec(self):
+        if self.stats.last_request_timestamp is None:
+            return 0
+        slice_start_time = max(int(self.stats.last_request_timestamp) - 12, int(self.stats.start_time or 0))
+
+        reqs = [self.num_fail_per_sec.get(t, 0) for t in range(slice_start_time, int(self.stats.last_request_timestamp)-2)]
         return avg(reqs)
 
     @property
     def total_rps(self):
         if not self.stats.last_request_timestamp or not self.stats.start_time:
             return 0.0
-
-        return self.num_requests / max(self.stats.last_request_timestamp - self.stats.start_time, 1)
+        try:
+            return self.num_requests / (self.stats.last_request_timestamp - self.stats.start_time)
+        except ZeroDivisionError:
+            return 0.0
+    
+    @property
+    def total_fail_per_sec(self):
+        if not self.stats.last_request_timestamp or not self.stats.start_time:
+            return 0.0
+        try:
+            return self.num_failures / (self.stats.last_request_timestamp - self.stats.start_time)
+        except ZeroDivisionError:
+            return 0.0
 
     @property
     def avg_content_length(self):
@@ -349,7 +378,10 @@ class StatsEntry(object):
         Extend the data from the current StatsEntry with the stats from another
         StatsEntry instance. 
         """
-        self.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
+        if self.last_request_timestamp is not None and other.last_request_timestamp is not None:
+            self.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
+        elif other.last_request_timestamp is not None:
+            self.last_request_timestamp = other.last_request_timestamp
         self.start_time = min(self.start_time, other.start_time)
 
         self.num_requests = self.num_requests + other.num_requests
@@ -367,7 +399,9 @@ class StatsEntry(object):
         for key in other.response_times:
             self.response_times[key] = self.response_times.get(key, 0) + other.response_times[key]
         for key in other.num_reqs_per_sec:
-            self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) +  other.num_reqs_per_sec[key]
+            self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) + other.num_reqs_per_sec[key]
+        for key in other.num_fail_per_sec:
+            self.num_fail_per_sec[key] = self.num_fail_per_sec.get(key, 0) + other.num_fail_per_sec[key]
     
     def serialize(self):
         return {
@@ -384,6 +418,7 @@ class StatsEntry(object):
             "total_content_length": self.total_content_length,
             "response_times": self.response_times,
             "num_reqs_per_sec": self.num_reqs_per_sec,
+            "num_fail_per_sec": self.num_fail_per_sec,
         }
     
     @classmethod
@@ -401,6 +436,7 @@ class StatsEntry(object):
             "total_content_length",
             "response_times",
             "num_reqs_per_sec",
+            "num_fail_per_sec",
         ]:
             setattr(obj, key, data[key])
         return obj
@@ -412,20 +448,33 @@ class StatsEntry(object):
         report = self.serialize()
         self.reset()
         return report
-
-    def __str__(self):
-        fail_percent = self.fail_ratio * 100
-
-        return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d  | %7d %7.2f") % (
+    
+    def to_string(self, current=True):
+        """
+        Return the stats as a string suitable for console output. If current is True, it'll show 
+        the RPS and failure rait for the last 10 seconds. If it's false, it'll show the total stats 
+        for the whole run.
+        """
+        if current:
+            rps = self.current_rps
+            fail_per_sec = self.current_fail_per_sec
+        else:
+            rps = self.total_rps
+            fail_per_sec = self.total_fail_per_sec
+        return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d  | %7d %7.2f %7.2f") % (
             (self.method and self.method + " " or "") + self.name,
             self.num_requests,
-            "%d(%.2f%%)" % (self.num_failures, fail_percent),
+            "%d(%.2f%%)" % (self.num_failures, self.fail_ratio * 100),
             self.avg_response_time,
             self.min_response_time or 0,
             self.max_response_time,
             self.median_response_time or 0,
-            self.current_rps or 0
+            rps or 0,
+            fail_per_sec or 0,
         )
+    
+    def __str__(self):
+        return self.to_string(current=True)
     
     def get_response_time_percentile(self, percent):
         """
@@ -474,7 +523,7 @@ class StatsEntry(object):
                 percent,
             )
     
-    def percentile(self, tpl=" %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
+    def percentile(self, tpl=" %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
         if not self.num_requests:
             raise ValueError("Can't calculate percentile on url with no successful requests")
         
@@ -489,6 +538,8 @@ class StatsEntry(object):
             self.get_response_time_percentile(0.95),
             self.get_response_time_percentile(0.98),
             self.get_response_time_percentile(0.99),
+            self.get_response_time_percentile(0.999),
+            self.get_response_time_percentile(0.9999),
             self.get_response_time_percentile(1.00)
         )
     
@@ -585,8 +636,8 @@ A global instance for holding the statistics. Should be removed eventually.
 def on_request_success(request_type, name, response_time, response_length, **kwargs):
     global_stats.log_request(request_type, name, response_time, response_length)
 
-def on_request_failure(request_type, name, response_time, exception, **kwargs):
-    global_stats.log_request(request_type, name, response_time, 0)
+def on_request_failure(request_type, name, response_time, response_length, exception, **kwargs):
+    global_stats.log_request(request_type, name, response_time, response_length)
     global_stats.log_error(request_type, name, exception)
 
 def on_report_to_master(client_id, data):
@@ -614,14 +665,14 @@ def on_slave_report(client_id, data):
     old_last_request_timestamp = global_stats.total.last_request_timestamp
     # update the total StatsEntry
     global_stats.total.extend(StatsEntry.unserialize(data["stats_total"]))
-    if global_stats.total.last_request_timestamp > old_last_request_timestamp:
+    if global_stats.total.last_request_timestamp and global_stats.total.last_request_timestamp > (old_last_request_timestamp or 0):
         # If we've entered a new second, we'll cache the response times. Note that there 
         # might still be reports from other slave nodes - that contains requests for the same 
         # time periods - that hasn't been received/accounted for yet. This will cause the cache to 
         # lag behind a second or two, but since StatsEntry.current_response_time_percentile() 
         # (which is what the response times cache is used for) uses an approximation of the 
         # last 10 seconds anyway, it should be fine to ignore this. 
-        global_stats.total._cache_response_times(global_stats.total.last_request_timestamp)
+        global_stats.total._cache_response_times(int(global_stats.total.last_request_timestamp))
     
 
 events.request_success += on_request_success
@@ -630,41 +681,43 @@ events.report_to_master += on_report_to_master
 events.slave_report += on_slave_report
 
 
-def print_stats(stats):
-    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s'))
+def print_stats(stats, current=True):
+    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s', 'failures/s'))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
-    total_rps = 0
-    total_reqs = 0
-    total_failures = 0
-    for key in sorted(six.iterkeys(stats)):
-        r = stats[key]
-        total_rps += r.current_rps
-        total_reqs += r.num_requests
-        total_failures += r.num_failures
-        console_logger.info(r)
+    for key in sorted(six.iterkeys(stats.entries)):
+        r = stats.entries[key]
+        console_logger.info(r.to_string(current=current))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
-
-    try:
-        fail_percent = (total_failures/float(total_reqs))*100
-    except ZeroDivisionError:
-        fail_percent = 0
-
-    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %42.2f") % ('Aggregated', total_reqs, "%d(%.2f%%)" % (total_failures, fail_percent), total_rps))
+    console_logger.info(stats.total.to_string(current=current))
     console_logger.info("")
+
 
 def print_percentile_stats(stats):
     console_logger.info("Percentage of the requests completed within given times")
-    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %8s %6s %6s %6s %6s %6s %6s %6s %6s %6s") % ('Name', '# reqs', '50%', '66%', '75%', '80%', '90%', '95%', '98%', '99%', '100%'))
-    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
-    for key in sorted(six.iterkeys(stats)):
-        r = stats[key]
+    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %8s %6s %6s %6s %6s %6s %6s %6s %6s %6s %6s %6s") % (
+        'Name', 
+        '# reqs', 
+        '50%', 
+        '66%', 
+        '75%', 
+        '80%', 
+        '90%', 
+        '95%', 
+        '98%', 
+        '99%', 
+        '99.9%', 
+        '99.99%',
+        '100%',
+    ))
+    console_logger.info("-" * (90 + STATS_NAME_WIDTH))
+    for key in sorted(six.iterkeys(stats.entries)):
+        r = stats.entries[key]
         if r.response_times:
             console_logger.info(r.percentile())
-    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
+    console_logger.info("-" * (90 + STATS_NAME_WIDTH))
     
-    total_stats = global_stats.total
-    if total_stats.response_times:
-        console_logger.info(total_stats.percentile())
+    if stats.total.response_times:
+        console_logger.info(stats.total.percentile())
     console_logger.info("")
 
 def print_error_report():
@@ -681,7 +734,7 @@ def print_error_report():
 def stats_printer():
     from . import runners
     while True:
-        print_stats(runners.locust_runner.request_stats)
+        print_stats(runners.locust_runner.stats)
         gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
 
 def stats_writer(base_filepath):
@@ -753,13 +806,15 @@ def distribution_csv():
         '"95%"',
         '"98%"',
         '"99%"',
+        '"99.9%"',
+        '"99.99%"',
         '"100%"',
     ))]
     for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
         if s.num_requests:
-            rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
+            rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
         else:
-            rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
+            rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
 
     return "\n".join(rows)
 

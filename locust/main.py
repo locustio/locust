@@ -6,7 +6,7 @@ import signal
 import socket
 import sys
 import time
-import argparse
+import configargparse
 
 import gevent
 
@@ -24,15 +24,15 @@ from .util.timespan import parse_timespan
 _internals = [Locust, HttpLocust]
 version = locust.__version__
 
-def parse_options():
-    """
-    Handle command-line options with argparse.ArgumentParser.
 
-    Return list of arguments, largely for use in `parse_arguments`.
+def parse_options(args=None, default_config_files=['~/.locust.conf','locust.conf']):
     """
+    Handle command-line options with configargparse.ArgumentParser.
 
+    Returns a two-tuple of parser + the output from parse_args()
+    """
     # Initialize
-    parser = argparse.ArgumentParser()
+    parser = configargparse.ArgumentParser(default_config_files=default_config_files, auto_env_var_prefix="LOCUST_", add_env_var_help=False)
 
     parser.add_argument(
         '-H', '--host',
@@ -131,7 +131,7 @@ def parse_options():
     parser.add_argument(
         '--no-web',
         action='store_true',
-        help="Disable the web interface, and instead start running the test immediately. Requires -c and -r to be specified."
+        help="Disable the web interface, and instead start running the test immediately. Requires -c and -t to be specified."
     )
 
     # Number of clients
@@ -248,7 +248,7 @@ def parse_options():
         type=int,
         dest='stop_timeout',
         default=None,
-        help="number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately."
+        help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. This parameter only needs to be specified for the master process when running Locust distributed."
     )
 
     parser.add_argument(
@@ -257,9 +257,7 @@ def parse_options():
         metavar='LocustClass',
     )
 
-    # Finalize
-    # Return two-tuple of parser + the output from parse_args
-    return parser, parser.parse_args()
+    return parser, parser.parse_args(args=args)
 
 
 def _is_package(path):
@@ -344,6 +342,8 @@ def load_locustfile(path):
 
         return imported
 
+    # Start with making sure the current working dir is in the sys.path
+    sys.path.insert(0, os.getcwd())
     # Get directory and locustfile name
     directory, locustfile = os.path.split(path)
     # If the directory isn't in the PYTHONPATH, add it so our import will work
@@ -455,7 +455,7 @@ def main():
 
     if not options.no_web and not options.slave:
         # spawn web greenlet
-        logger.info("Starting web monitor at %s:%s" % (options.web_host or "*", options.port))
+        logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.port))
         main_greenlet = gevent.spawn(web.start, locust_classes, options)
     
     if not options.master and not options.slave:
@@ -489,9 +489,10 @@ def main():
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
     
+    stats_printer_greenlet = None
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
-        gevent.spawn(stats_printer)
+        stats_printer_greenlet = gevent.spawn(stats_printer)
 
     if options.csvfilebase:
         gevent.spawn(stats_writer, options.csvfilebase)
@@ -502,14 +503,15 @@ def main():
         Shut down locust by firing quitting event, printing/writing stats and exiting
         """
         logger.info("Shutting down (exit code %s), bye." % code)
-
+        if stats_printer_greenlet is not None:
+            stats_printer_greenlet.kill(block=False)
         logger.info("Cleaning up runner...")
         if runners.locust_runner is not None:
             runners.locust_runner.quit()
         logger.info("Running teardowns...")
         events.quitting.fire(reverse=True)
-        print_stats(runners.locust_runner.request_stats)
-        print_percentile_stats(runners.locust_runner.request_stats)
+        print_stats(runners.locust_runner.stats, current=False)
+        print_percentile_stats(runners.locust_runner.stats)
         if options.csvfilebase:
             write_stat_csvs(options.csvfilebase)
         print_error_report()
@@ -525,7 +527,7 @@ def main():
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
         code = 0
-        if len(runners.locust_runner.errors):
+        if len(runners.locust_runner.errors) or len(runners.locust_runner.exceptions):
             code = options.exit_code_on_error
         shutdown(code=code)
     except KeyboardInterrupt as e:

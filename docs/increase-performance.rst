@@ -22,13 +22,9 @@ CPU time in making HTTP-requests, you are likely to see signifant performance ga
 How to use FastHttpLocust
 ===========================
 
-First, you need to install the geventhttplocust python package::
+Subclass FastHttpLocust instead of HttpLocust::
 
-    pip install geventhttpclient
-
-Then you just subclass FastHttpLocust instead of HttpLocust::
-
-    from locust import TaskSet, task
+    from locust import TaskSet, task, between
     from locust.contrib.fasthttp import FastHttpLocust
     
     class MyTaskSet(TaskSet):
@@ -38,8 +34,7 @@ Then you just subclass FastHttpLocust instead of HttpLocust::
     
     class MyLocust(FastHttpLocust):
         task_set = MyTaskSet
-        min_wait = 1000
-        max_wait = 60000
+        wait_time = between(1, 60)
 
 
 .. note::
@@ -47,6 +42,11 @@ Then you just subclass FastHttpLocust instead of HttpLocust::
     FastHttpLocust uses a whole other HTTP client implementation, with a different API, compared to 
     the default HttpLocust that uses python-requests. Therefore FastHttpLocust might not work as a d
     rop-in replacement for HttpLocust, depending on how the HttpClient is used.
+
+.. note::
+
+    SSL domain check is turned off in the FastHttpLocust's client implementation. So it will let through 
+    invalid SSL certificates without complaining.
 
 
 API

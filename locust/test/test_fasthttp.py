@@ -40,6 +40,14 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(404, r.status_code)
         self.assertEqual(1, global_stats.get("/does_not_exist", "GET").num_failures)
     
+    def test_204(self):
+        global_stats.clear_all()
+        s = FastHttpSession("http://127.0.0.1:%i" % self.port)
+        r = s.get("/status/204")
+        self.assertEqual(204, r.status_code)
+        self.assertEqual(1, global_stats.get("/status/204", "GET").num_requests)
+        self.assertEqual(0, global_stats.get("/status/204", "GET").num_failures)
+    
     def test_streaming_response(self):
         """
         Test a request to an endpoint that returns a streaming response
@@ -301,7 +309,7 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         
         self.num_failures = 0
         self.num_success = 0
-        def on_failure(request_type, name, response_time, exception):
+        def on_failure(request_type, name, response_time, response_length, exception):
             self.num_failures += 1
             self.last_failure_exception = exception
         def on_success(**kwargs):

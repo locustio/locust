@@ -130,6 +130,12 @@ class HttpSession(requests.Session):
             response.locust_request_meta = request_meta
             return ResponseContextManager(response)
         else:
+            if name:
+                # Since we use the Exception message when grouping failures, in order to not get 
+                # multiple failure entries for different URLs for the same name argument, we need 
+                # to temporarily override the reponse.url attribute
+                orig_url = response.url
+                response.url = name
             try:
                 response.raise_for_status()
             except RequestException as e:
@@ -137,6 +143,7 @@ class HttpSession(requests.Session):
                     request_type=request_meta["method"], 
                     name=request_meta["name"], 
                     response_time=request_meta["response_time"], 
+                    response_length=request_meta["content_size"],
                     exception=e, 
                 )
             else:
@@ -146,6 +153,8 @@ class HttpSession(requests.Session):
                     response_time=request_meta["response_time"],
                     response_length=request_meta["content_size"],
                 )
+            if name:
+                response.url = orig_url
             return response
     
     def _send_request_safe_mode(self, method, url, **kwargs):
@@ -243,6 +252,7 @@ class ResponseContextManager(LocustResponse):
             request_type=self.locust_request_meta["method"],
             name=self.locust_request_meta["name"],
             response_time=self.locust_request_meta["response_time"],
+            response_length=self.locust_request_meta["content_size"],
             exception=exc,
         )
         self._is_reported = True

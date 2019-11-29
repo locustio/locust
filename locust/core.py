@@ -19,9 +19,9 @@ monkey.patch_all()
 from . import events
 from .clients import HttpSession
 from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
-                        RescheduleTaskImmediately, StopLocust)
+                        RescheduleTaskImmediately, StopLocust, MissingWaitTimeError)
 from .runners import STATE_CLEANUP, LOCUST_STATE_RUNNING, LOCUST_STATE_STOPPING, LOCUST_STATE_WAITING
-logger = logging.getLogger(__name__)
+from .util import deprecation
 
 
 def task(weight=1):
@@ -111,20 +111,35 @@ class Locust(object):
     host = None
     """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
     
-    min_wait = 1000
-    """Minimum waiting time between the execution of locust tasks"""
+    min_wait = None
+    """Deprecated: Use wait_time instead. Minimum waiting time between the execution of locust tasks"""
     
-    max_wait = 1000
-    """Maximum waiting time between the execution of locust tasks"""
-
-    wait_function = lambda self: random.randint(self.min_wait,self.max_wait) 
-    """Function used to calculate waiting time between the execution of locust tasks in milliseconds"""
+    max_wait = None
+    """Deprecated: Use wait_time instead. Maximum waiting time between the execution of locust tasks"""
+    
+    wait_time = None
+    """
+    Method that returns the time (in seconds) between the execution of locust tasks. 
+    Can be overridden for individual TaskSets.
+    
+    Example::
+    
+        from locust import Locust, between
+        class User(Locust):
+            wait_time = between(3, 25)
+    """
+    
+    wait_function = None
+    """
+    .. warning::
+    
+        DEPRECATED: Use wait_time instead. Note that the new wait_time method should return seconds and not milliseconds.
+    
+    Method that returns the time between the execution of locust tasks in milliseconds
+    """
     
     task_set = None
     """TaskSet class that defines the execution behaviour of this locust"""
-    
-    stop_timeout = None
-    """Number of seconds after which the Locust will die. If None it won't timeout."""
 
     weight = 10
     """Probability of locust being chosen. The higher the weight, the greater is the chance of it being chosen."""
@@ -138,6 +153,9 @@ class Locust(object):
     
     def __init__(self):
         super(Locust, self).__init__()
+        # check if deprecated wait API is used
+        deprecation.check_for_deprecated_wait_api(self)
+        
         self._lock.acquire()
         if hasattr(self, "setup") and self._setup_has_run is False:
             self._set_setup_flag()
@@ -276,6 +294,7 @@ class TaskSet(object):
     
     min_wait = None
     """
+    Deprecated: Use wait_time instead. 
     Minimum waiting time between the execution of locust tasks. Can be used to override 
     the min_wait defined in the root Locust class, which will be used if not set on the 
     TaskSet.
@@ -283,6 +302,7 @@ class TaskSet(object):
     
     max_wait = None
     """
+    Deprecated: Use wait_time instead. 
     Maximum waiting time between the execution of locust tasks. Can be used to override 
     the max_wait defined in the root Locust class, which will be used if not set on the 
     TaskSet.
@@ -290,6 +310,7 @@ class TaskSet(object):
     
     wait_function = None
     """
+    Deprecated: Use wait_time instead.
     Function used to calculate waiting time betwen the execution of locust tasks in milliseconds. 
     Can be used to override the wait_function defined in the root Locust class, which will be used
     if not set on the TaskSet.
@@ -309,6 +330,9 @@ class TaskSet(object):
     _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
 
     def __init__(self, parent):
+        # check if deprecated wait API is used
+        deprecation.check_for_deprecated_wait_api(self)
+        
         self._task_queue = []
         self._time_start = time()
         
@@ -361,18 +385,18 @@ class TaskSet(object):
         
         while (True):
             try:
-                if self.locust._state == LOCUST_STATE_STOPPING:
-                    raise GreenletExit()
-
-                if self.locust.stop_timeout is not None and time() - self._time_start > self.locust.stop_timeout:
-                    return
-        
                 if not self._task_queue:
                     self.schedule_task(self.get_next_task())
                 
                 try:
+                    if self.locust._state == LOCUST_STATE_STOPPING:
+                        raise GreenletExit()
                     self.execute_next_task()
+                    if self.locust._state == LOCUST_STATE_STOPPING:
+                        raise GreenletExit()
                 except RescheduleTaskImmediately:
+                    if self.locust._state == LOCUST_STATE_STOPPING:
+                        raise GreenletExit()
                     pass
                 except RescheduleTask:
                     self.wait()
@@ -431,13 +455,29 @@ class TaskSet(object):
     def get_next_task(self):
         return random.choice(self.tasks)
     
-    def get_wait_secs(self):
-        millis = self.wait_function()
-        return millis / 1000.0
-
+    def wait_time(self):
+        """
+        Method that returns the time (in seconds) between the execution of tasks. 
+        
+        Example::
+        
+            from locust import TaskSet, between
+            class Tasks(TaskSet):
+                wait_time = between(3, 25)
+        """
+        if self.locust.wait_time:
+            return self.locust.wait_time()
+        elif self.min_wait and self.max_wait:
+            return random.randint(self.min_wait, self.max_wait) / 1000.0
+        else:
+            raise MissingWaitTimeError("You must define a wait_time method on either the %s or %s class" % (
+                type(self.locust).__name__, 
+                type(self).__name__,
+            ))
+    
     def wait(self):
         self.locust._state = LOCUST_STATE_WAITING
-        self._sleep(self.get_wait_secs())
+        self._sleep(self.wait_time())
         self.locust._state = LOCUST_STATE_RUNNING
 
     def _sleep(self, seconds):

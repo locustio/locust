@@ -13,7 +13,7 @@
                 <div class="top_box box_url">
                     <div class="label">HOST</div>
                     <div class="value" id="host_url">
-                        {{host}}
+                        {{ host or "" }}
                     </div>
                 </div>
                 <div class="top_box box_status">
@@ -49,6 +49,7 @@
             <div style="clear:both;"></div>
         </div>
     </div>
+
     <div class="main">
         <div class="start" id="start">
             <div style="position:relative;">
@@ -61,6 +62,13 @@
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
+                    <label for="host">
+                        Host
+                        {% if override_host_warning %}
+                            <span style="color:#8a8a8a; font-size:12px;">(setting this will override the host on all Locust classes)</span></label>
+                        {% endif %}
+                    </label>
+                    <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or ""}}"/><br>
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -107,11 +115,13 @@
                                 <th class="stats_label numeric nowrap" href="#" data-sortkey="num_requests" title="Number of successful requests"># Requests</th>
                                 <th class="stats_label numeric nowrap" href="#" data-sortkey="num_failures" title="Number of failures"># Fails</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="median_response_time" title="Median response time">Median (ms)</th>
+                                <th class="stats_label numeric" href="#" data-sortkey="ninetieth_response_time" title="Ninetieth percentile response time, because the response time greater than 100ms is rounded, you may see it greater than the max response time">90%ile (ms)</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="avg_response_time" title="Average response time">Average (ms)</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="min_response_time" title="Min response time">Min (ms)</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="max_response_time" title="Max response time">Max (ms)</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="avg_content_length" title="Average response size">Average size (bytes)</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="current_rps" title="Current number of requests per second">Current RPS</th>
+                                <th class="stats_label numeric" href="#" data-sortkey="current_fail_per_sec" title="Current number of failures per second">Current Failures/s</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -129,7 +139,7 @@
                             <th class="stats_label" href="#" data-sortkey="method">Method</th>
                             <th class="stats_label" href="#" data-sortkey="name">Name</th>
                             <th class="error_type stats_label" data-sortkey="0">Type</th>
-                        </thead>
+                        </thead>requests
                         <tbody>
                         </tbody>
                     </table>
@@ -223,11 +233,13 @@
             <td class="numeric"><%= this.num_requests %></td>
             <td class="numeric"><%= this.num_failures %></td>
             <td class="numeric"><%= Math.round(this.median_response_time) %></td>
+            <td class="numeric"><%= Math.round(this.ninetieth_response_time) %></td>
             <td class="numeric"><%= Math.round(this.avg_response_time) %></td>
             <td class="numeric"><%= this.min_response_time %></td>
             <td class="numeric"><%= this.max_response_time %></td>
             <td class="numeric"><%= Math.round(this.avg_content_length) %></td>
             <td class="numeric"><%= Math.round(this.current_rps*100)/100 %></td>
+            <td class="numeric"><%= Math.round(this.current_fail_per_sec*100)/100 %></td>
         </tr>
         <% alternate = !alternate; %>
         ]]>
