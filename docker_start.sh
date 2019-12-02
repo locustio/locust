@@ -5,6 +5,11 @@ if [ -z "${TARGET_URL}" ]; then
   exit 1
 fi
 
+if [ -z "${BRAND}" ]; then
+  echo "ERROR: BRAND not configured" >&2
+  exit 1
+fi
+
 LOCUST_MODE="${LOCUST_MODE:=standalone}"
 _LOCUST_OPTS="-f ${LOCUSTFILE_PATH:-/locustfile.py} -H ${TARGET_URL}"
 
@@ -20,6 +25,6 @@ elif [ "${LOCUST_MODE}" = "slave" ]; then
 fi
 
 echo "Starting Locust in ${LOCUST_MODE} mode..."
-echo "$ locust ${LOCUST_OPTS} ${_LOCUST_OPTS}"
+echo "$ env BRAND=${BRAND} locust ${LOCUST_OPTS} ${_LOCUST_OPTS}"
 
-exec locust ${LOCUST_OPTS} ${_LOCUST_OPTS}
+exec env BRAND=${BRAND} locust ${LOCUST_OPTS} ${_LOCUST_OPTS}
