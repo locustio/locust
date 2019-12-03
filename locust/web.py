@@ -24,7 +24,7 @@ from six.moves import StringIO, xrange
 
 from . import runners
 from .runners import MasterLocustRunner
-from .stats import failures_csv, median_from_dict, requests_csv, sort_stats
+from .stats import failures_csv, median_from_dict, requests_csv, sort_stats, stats_history_csv
 from .util.cache import memoize
 from .util.rounding import proper_round
 
@@ -95,6 +95,15 @@ def reset_stats():
 def request_stats_csv():
     response = make_response(requests_csv())
     file_name = "requests_{0}.csv".format(time())
+    disposition = "attachment;filename={0}".format(file_name)
+    response.headers["Content-type"] = "text/csv"
+    response.headers["Content-disposition"] = disposition
+    return response
+
+@app.route("/stats/stats_history/csv")
+def stats_history_stats_csv():
+    response = make_response(stats_history_csv(False, True))
+    file_name = "stats_history_{0}.csv".format(time())
     disposition = "attachment;filename={0}".format(file_name)
     response.headers["Content-type"] = "text/csv"
     response.headers["Content-disposition"] = disposition
