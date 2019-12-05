@@ -205,14 +205,14 @@ class TestRequestStats(unittest.TestCase):
         s1 = StatsEntry(self.stats, "rounding down!", "GET")
         s1.log(122, 0)    # (rounded 120) min
         actual_percentile = s1.percentile()
-        self.assertEqual(actual_percentile, " GET rounding down!                                                  1    120    120    120    120    120    120    120    120    120    120    120")
+        self.assertEqual(actual_percentile, " GET                  rounding down!                                                      1    120    120    120    120    120    120    120    120    120    120    120")
 
     def test_percentile_rounded_up(self):
         s2 = StatsEntry(self.stats, "rounding up!", "GET")
         s2.log(127, 0)    # (rounded 130) min
         actual_percentile = s2.percentile()
-        self.assertEqual(actual_percentile, " GET rounding up!                                                    1    130    130    130    130    130    130    130    130    130    130    130")
-    
+        self.assertEqual(actual_percentile, " GET                  rounding up!                                                        1    130    130    130    130    130    130    130    130    130    130    130")
+
     def test_error_grouping(self):
         # reset stats
         self.stats = RequestStats()
@@ -259,7 +259,7 @@ class TestStatsPrinting(LocustTestCase):
     def test_print_percentile_stats(self):
         stats = RequestStats()
         for i in range(100):
-            stats.log_request("", "test_entry", i, 2000+i)
+            stats.log_request("GET", "test_entry", i, 2000+i)
         locust.stats.print_percentile_stats(stats)
         info = self.mocked_log.info
         self.assertEqual(7, len(info))
