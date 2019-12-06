@@ -418,7 +418,7 @@ class TestMasterRunner(LocustTestCase):
         class MyTestLocust(Locust):
             pass
         
-        with mock.patch("locust.rpc.rpc.Server", mocked_rpc_server()) as server:
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = MasterLocustRunner(MyTestLocust, self.options)
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
@@ -433,7 +433,7 @@ class TestMasterRunner(LocustTestCase):
             num_clients = 0
             end_of_last_step = len(server.outbox)
             for _, msg in server.outbox:
-                num_clients += Message.unserialize(msg).data["num_clients"]
+                num_clients += msg.data["num_clients"]
             
             self.assertEqual(5, num_clients, "Total number of locusts that would have been spawned for first step is not 5")
 
@@ -443,7 +443,7 @@ class TestMasterRunner(LocustTestCase):
             idx = end_of_last_step
             while idx < len(server.outbox):
                 msg = server.outbox[idx][1]
-                num_clients += Message.unserialize(msg).data["num_clients"]
+                num_clients += msg.data["num_clients"]
                 idx += 1
             self.assertEqual(10, num_clients, "Total number of locusts that would have been spawned for second step is not 10")
 
