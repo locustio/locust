@@ -336,6 +336,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                 "num_clients": slave_num_clients,
                 "host": self.host,
                 "stop_timeout": self.options.stop_timeout,
+                "class_names": [cls.__name__ for cls in self.locust_classes],
             }
 
             if remaining > 0:
@@ -422,6 +423,8 @@ class SlaveLocustRunner(DistributedLocustRunner):
         self.client = rpc.Client(self.master_host, self.master_port, self.client_id)
         self.greenlet = Group()
 
+        self.orig_locust_classes = self.locust_classes
+
         self.greenlet.spawn(self.heartbeat).link_exception(callback=self.noop)
         self.greenlet.spawn(self.worker).link_exception(callback=self.noop)
         self.client.send(Message("client_ready", None, self.client_id))
@@ -455,6 +458,11 @@ class SlaveLocustRunner(DistributedLocustRunner):
             self.client.send(Message('heartbeat', {'state': self.slave_state}, self.client_id))
             gevent.sleep(self.heartbeat_interval)
 
+    def set_locust_classes(self, class_names):
+        """Set the Locust classes to run from the original set"""
+        if class_names:
+            self.locust_classes = [cls for cls in self.orig_locust_classes if cls.__name__ in class_names]
+
     def worker(self):
         while True:
             msg = self.client.recv()
@@ -462,6 +470,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 self.slave_state = STATE_HATCHING
                 self.client.send(Message("hatching", None, self.client_id))
                 job = msg.data
+                self.set_locust_classes(job["class_names"])
                 self.hatch_rate = job["hatch_rate"]
                 #self.num_clients = job["num_clients"]
                 self.host = job["host"]

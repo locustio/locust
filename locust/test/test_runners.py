@@ -339,7 +339,7 @@ class TestMasterRunner(LocustTestCase):
             pass
 
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = MasterLocustRunner(MyTestLocust, self.options)
+            master = MasterLocustRunner([MyTestLocust], self.options)
             master.clients[1] = SlaveNode(1)
             master.clients[2] = SlaveNode(2)
             master.clients[3] = SlaveNode(3)
@@ -382,7 +382,7 @@ class TestMasterRunner(LocustTestCase):
             pass
         
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = MasterLocustRunner(MyTestLocust, self.options)
+            master = MasterLocustRunner([MyTestLocust], self.options)
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
             
@@ -400,7 +400,7 @@ class TestMasterRunner(LocustTestCase):
             pass
         
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = MasterLocustRunner(MyTestLocust, self.options)
+            master = MasterLocustRunner([MyTestLocust], self.options)
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
             
@@ -512,6 +512,7 @@ class TestSlaveLocustRunner(LocustTestCase):
                 "num_clients": 1,
                 "host": "",
                 "stop_timeout": 1,
+                "class_names": ["MyTestLocust"]
             }, "dummy_client_id"))
             #print("outbox:", client.outbox)
             # wait for slave to hatch locusts
@@ -549,6 +550,7 @@ class TestSlaveLocustRunner(LocustTestCase):
                 "num_clients": 1,
                 "host": "",
                 "stop_timeout": None,
+                "class_names": ["MyTestLocust"]
             }, "dummy_client_id"))
             #print("outbox:", client.outbox)
             # wait for slave to hatch locusts
