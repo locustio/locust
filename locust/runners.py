@@ -460,8 +460,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
 
     def set_locust_classes(self, class_names):
         """Set the Locust classes to run from the original set"""
-        if class_names:
-            self.locust_classes = [cls for cls in self.orig_locust_classes if cls.__name__ in class_names]
+        self.locust_classes = [cls for cls in self.orig_locust_classes if cls.__name__ in class_names]
 
     def worker(self):
         while True:
