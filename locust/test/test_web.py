@@ -19,7 +19,7 @@ from .testcases import LocustTestCase
 ALTERNATIVE_HOST = 'http://localhost'
 SWARM_DATA_WITH_HOST = {'locust_count': 5, 'hatch_rate': 5, 'host': ALTERNATIVE_HOST}
 SWARM_DATA_WITH_NO_HOST = {'locust_count': 5, 'hatch_rate': 5}
-
+SWARM_DATA_WITH_STEP_LOAD = {"locust_count":5, "hatch_rate":2, "step_locust_count":2, "step_duration": "2m"}
 
 class TestWebUI(LocustTestCase):
     def setUp(self):
@@ -210,3 +210,9 @@ class TestWebUI(LocustTestCase):
         self.assertEqual(200, response.status_code)
         self.assertNotIn("http://example.com", response.content.decode("utf-8"))
         self.assertIn("setting this will override the host on all Locust classes", response.content.decode("utf-8"))
+
+    def test_swarm_in_step_load_mode(self):
+        runners.locust_runner.step_load = True
+        response = requests.post("http://127.0.0.1:%i/swarm" % self.web_port, SWARM_DATA_WITH_STEP_LOAD)
+        self.assertEqual(200, response.status_code)
+        self.assertIn("Step Load Mode", response.text)

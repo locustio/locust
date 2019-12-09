@@ -30,7 +30,7 @@
                 {% if is_distributed %}
                     <div class="top_box box_slaves" id="box_slaves">
                         <div class="label">SLAVES</div>
-                        <div class="value" id="slaveCount">0</div>
+                        <div class="value" id="slaveCount">{{slave_count}}</div>
                     </div>
                 {% endif %}
                 <div class="top_box box_rps box_running" id="box_rps">
@@ -58,7 +58,7 @@
             <div class="padder">
                 <h2>Start new Locust swarm</h2>
                 <form action="./swarm" method="POST" id="swarm_form">
-                    <label for="locust_count">Number of users to simulate</label>
+                    <label for="locust_count">Number of total users to simulate</label>
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="hatch_rate" class="val" /><br>
@@ -69,6 +69,12 @@
                         {% endif %}
                     </label>
                     <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or ""}}"/><br>
+                    {% if is_step_load %}
+                    <label for="step_locust_count">Number of users to increase by step</label>
+                    <input type="text" name="step_locust_count" id="step_locust_count" class="val" /><br>
+                    <label for="step_duration">Step duration <span style="color:#8a8a8a;">(300s, 20m, 3h, 1h30m, etc.)</span></label>
+                    <input type="text" name="step_duration" id="step_duration" class="val" /><br>
+                    {% endif %}
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -86,6 +92,12 @@
                     <input type="text" name="locust_count" id="new_locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="new_hatch_rate" class="val" /><br>
+                    {% if is_step_load %}
+                    <label for="step_locust_count">Number of users to increase by step</label>
+                    <input type="text" name="step_locust_count" id="step_locust_count" class="val" /><br>
+                    <label for="step_duration">Step duration <span style="color:#8a8a8a;">(300s, 20m, 3h, 1h30m, etc.)</span></label>
+                    <input type="text" name="step_duration" id="step_duration" class="val" /><br>
+                    {% endif %}
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
