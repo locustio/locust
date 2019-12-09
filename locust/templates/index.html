@@ -58,6 +58,9 @@
             <div class="padder">
                 <h2>Start new Locust swarm</h2>
                 <form action="./swarm" method="POST" id="swarm_form">
+                    <label for="class_names">Locust classes to run</label>
+                    <input type="text" name="class_names" id="class_names" class="val" autocapitalize="off"
+                           autocorrect="off" value="{{ ",".join(class_names) }}" /><br>
                     <label for="locust_count">Number of users to simulate</label>
                     <input type="text" name="locust_count" id="locust_count" class="val" /><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>

@@ -245,7 +245,7 @@ class LocalLocustRunner(LocustRunner):
             self.log_exception("local", str(exception), formatted_tb)
         events.locust_error += on_locust_error
 
-    def start_hatching(self, locust_count=None, hatch_rate=None, wait=False, class_names=False):
+    def start_hatching(self, locust_count=None, hatch_rate=None, wait=False, class_names=None):
         self.hatching_greenlet = gevent.spawn(lambda: super(LocalLocustRunner, self).start_hatching(locust_count, hatch_rate, wait=wait, class_names=class_names))
         self.greenlet = self.hatching_greenlet
 
@@ -478,7 +478,9 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 #self.num_clients = job["num_clients"]
                 self.host = job["host"]
                 self.options.stop_timeout = job["stop_timeout"]
-                self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
+                self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"],
+                                                                                  hatch_rate=job["hatch_rate"],
+                                                                                  class_names=job["class_names"]))
             elif msg.type == "stop":
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))

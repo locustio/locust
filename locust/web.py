@@ -36,6 +36,8 @@ app = Flask(__name__)
 app.debug = True
 app.root_path = os.path.dirname(os.path.abspath(__file__))
 
+def class_names():
+    return [cls.__name__ for cls in runners.locust_runner.locust_classes]
 
 @app.route('/')
 def index():
@@ -67,17 +69,19 @@ def index():
         version=version,
         host=host,
         override_host_warning=override_host_warning,
+        class_names=class_names(),
     )
 
 @app.route('/swarm', methods=["POST"])
 def swarm():
     assert request.method == "POST"
 
+    hatch_names = [n for n in request.form["class_names"].split(",") if n in class_names()]
     locust_count = int(request.form["locust_count"])
     hatch_rate = float(request.form["hatch_rate"])
     if (request.form.get("host")):
         runners.locust_runner.host = str(request.form["host"]) 
-    runners.locust_runner.start_hatching(locust_count, hatch_rate)
+    runners.locust_runner.start_hatching(locust_count, hatch_rate, class_names=hatch_names)
     return jsonify({'success': True, 'message': 'Swarming started', 'host': runners.locust_runner.host})
 
 @app.route('/stop')
