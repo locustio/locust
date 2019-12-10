@@ -57,8 +57,9 @@ class mocked_options(object):
         self.master_bind_host = '*'
         self.master_bind_port = 5557
         self.heartbeat_liveness = 3
-        self.heartbeat_interval = 0.01
+        self.heartbeat_interval = 1
         self.stop_timeout = None
+        self.step_load = True
 
     def reset_stats(self):
         pass
@@ -218,7 +219,7 @@ class TestMasterRunner(LocustTestCase):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = MasterLocustRunner(MyTestLocust, self.options)
             server.mocked_send(Message("client_ready", None, "fake_client"))
-            sleep(0.1)
+            sleep(6)
             # print(master.clients['fake_client'].__dict__)
             assert master.clients['fake_client'].state == STATE_MISSING
 
@@ -413,6 +414,39 @@ class TestMasterRunner(LocustTestCase):
             
             self.assertEqual(2, num_clients, "Total number of locusts that would have been spawned is not 2")
     
+    def test_spawn_locusts_in_stepload_mode(self):
+        class MyTestLocust(Locust):
+            pass
+        
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = MasterLocustRunner(MyTestLocust, self.options)
+            for i in range(5):
+                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+
+            # start a new swarming in Step Load mode: total locust count of 10, hatch rate of 2, step locust count of 5, step duration of 5s
+            master.start_stepload(10, 2, 5, 5)
+
+            # make sure the first step run is started
+            sleep(1)
+            self.assertEqual(5, len(server.outbox))
+
+            num_clients = 0
+            end_of_last_step = len(server.outbox)
+            for _, msg in server.outbox:
+                num_clients += msg.data["num_clients"]
+            
+            self.assertEqual(5, num_clients, "Total number of locusts that would have been spawned for first step is not 5")
+
+            # make sure the first step run is complete
+            sleep(5)
+            num_clients = 0
+            idx = end_of_last_step
+            while idx < len(server.outbox):
+                msg = server.outbox[idx][1]
+                num_clients += msg.data["num_clients"]
+                idx += 1
+            self.assertEqual(10, num_clients, "Total number of locusts that would have been spawned for second step is not 10")
+
     def test_exception_in_task(self):
         class HeyAnException(Exception):
             pass

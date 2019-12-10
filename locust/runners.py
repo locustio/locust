@@ -40,9 +40,11 @@ class LocustRunner(object):
         self.greenlet = self.locusts
         self.state = STATE_INIT
         self.hatching_greenlet = None
+        self.stepload_greenlet = None
         self.exceptions = {}
         self.stats = global_stats
-        
+        self.step_load = options.step_load
+
         # register listener that resets stats when hatching is complete
         def on_hatch_complete(user_count):
             self.state = STATE_RUNNING
@@ -216,6 +218,34 @@ class LocustRunner(object):
             else:
                 self.spawn_locusts(wait=wait)
 
+    def start_stepload(self, locust_count, hatch_rate, step_locust_count, step_duration):
+        if locust_count < step_locust_count:
+          logger.error("Invalid parameters: total locust count of %d is smaller than step locust count of %d" % (locust_count, step_locust_count))
+          return
+        self.total_clients = locust_count
+        self.hatch_rate = hatch_rate
+        self.step_clients_growth = step_locust_count
+        self.step_duration = step_duration
+
+        if self.stepload_greenlet:
+            logger.info("There is an ongoing swarming in Step Load mode, will stop it now.")
+            self.greenlet.killone(self.stepload_greenlet)
+        logger.info("Start a new swarming in Step Load mode: total locust count of %d, hatch rate of %d, step locust count of %d, step duration of %d " % (locust_count, hatch_rate, step_locust_count, step_duration))
+        self.state = STATE_INIT
+        self.stepload_greenlet = self.greenlet.spawn(self.stepload_worker)
+        self.stepload_greenlet.link_exception(callback=self.noop)
+
+    def stepload_worker(self):
+        current_num_clients = 0
+        while self.state == STATE_INIT or self.state == STATE_HATCHING or self.state == STATE_RUNNING:
+            current_num_clients += self.step_clients_growth
+            if current_num_clients > int(self.total_clients):
+                logger.info('Step Load is finished.')
+                break
+            self.start_hatching(current_num_clients, self.hatch_rate)
+            logger.info('Step loading: start hatch job of %d locust.' % (current_num_clients))
+            gevent.sleep(self.step_duration)
+
     def stop(self):
         # if we are currently hatching locusts we need to kill the hatching greenlet first
         if self.hatching_greenlet and not self.hatching_greenlet.ready():
@@ -234,6 +264,10 @@ class LocustRunner(object):
         row["count"] += 1
         row["nodes"].add(node_id)
         self.exceptions[key] = row
+
+    def noop(self, *args, **kwargs):
+        """ Used to link() greenlets to in order to be compatible with gevent 1.0 """
+        pass
 
 class LocalLocustRunner(LocustRunner):
     def __init__(self, locust_classes, options):
@@ -258,10 +292,6 @@ class DistributedLocustRunner(LocustRunner):
         self.master_bind_port = options.master_bind_port
         self.heartbeat_liveness = options.heartbeat_liveness
         self.heartbeat_interval = options.heartbeat_interval
-    
-    def noop(self, *args, **kwargs):
-        """ Used to link() greenlets to in order to be compatible with gevent 1.0 """
-        pass
 
 class SlaveNode(object):
     def __init__(self, id, state=STATE_INIT, heartbeat_liveness=3):
@@ -299,7 +329,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.greenlet = Group()
         self.greenlet.spawn(self.heartbeat_worker).link_exception(callback=self.noop)
         self.greenlet.spawn(self.client_listener).link_exception(callback=self.noop)
-        
+
         # listener that gathers info on how many locust users the slaves has spawned
         def on_slave_report(client_id, data):
             if client_id not in self.clients:
@@ -333,7 +363,7 @@ class MasterLocustRunner(DistributedLocustRunner):
 
         self.set_hatch_classes(class_names)
 
-        logger.info("Sending hatch jobs to %d ready clients", num_slaves)
+        logger.info("Sending hatch jobs of %d locusts and %.2f hatch rate to %d ready clients" % (slave_num_clients, slave_hatch_rate, num_slaves))
 
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
