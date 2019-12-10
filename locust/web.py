@@ -81,9 +81,7 @@ def index():
 def swarm():
     assert request.method == "POST"
 
-    hatch_names = [n.strip()
-                   for n in request.form["class_names"].split(",")
-                   if n.strip() in class_names()] if request.form.get("class_names") else []
+    hatch_names = request.form.getlist("class_names")
     is_step_load = runners.locust_runner.step_load
     locust_count = int(request.form["locust_count"])
     hatch_rate = float(request.form["hatch_rate"])

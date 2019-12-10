@@ -204,7 +204,14 @@ a:hover {
 .edit button:hover {
     background: #74b99d;
 }
-
+.start select.val {
+    border: none;
+    background: #fff;
+    height: 90px;
+    width: 328px;
+    font-size: 24px;
+    padding-left: 10px;
+}
 
 .stopped .start {
     display: none;

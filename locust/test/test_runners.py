@@ -419,7 +419,7 @@ class TestMasterRunner(LocustTestCase):
             pass
         
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = MasterLocustRunner(MyTestLocust, self.options)
+            master = MasterLocustRunner([MyTestLocust], self.options)
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
 
