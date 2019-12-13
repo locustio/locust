@@ -1,8 +1,29 @@
 # Change Log
 
-## [0.13.2](https://github.com/locustio/locust/tree/0.13.2)
+## [0.13.3](https://github.com/locustio/locust/tree/0.13.3) (2019-12-13)
 
-[Full Changelog](https://github.com/locustio/locust/compare/0.13.1...013.2)
+[Full Changelog](https://github.com/locustio/locust/compare/0.13.2...0.13.3)
+
+**Fixed bugs:**
+
+- Unable to properly connect multiple slaves,  master  [\#1176](https://github.com/locustio/locust/issues/1176)
+- Zero exit code on exception [\#1172](https://github.com/locustio/locust/issues/1172)
+- `--stop-timeout` is not respected when changing number of running Users in distributed mode [\#1162](https://github.com/locustio/locust/issues/1162)
+
+**Closed issues:**
+
+- "Percentage of the requests.." table has missing column headers [\#1180](https://github.com/locustio/locust/issues/1180)
+- Set locust parameters via env vars & config file [\#1166](https://github.com/locustio/locust/issues/1166)
+
+**Merged pull requests:**
+
+- Use ConfigArgParse instead of argparse, to support getting parameters from config file and/or env vars. [\#1167](https://github.com/locustio/locust/pull/1167) ([cyberw](https://github.com/cyberw))
+- Add toolbox control for for downloading chart as png [\#1165](https://github.com/locustio/locust/pull/1165) ([skivis](https://github.com/skivis))
+- Allow locust to get SIGTERM\(aka Ctrl+C\) messages. [\#1159](https://github.com/locustio/locust/pull/1159) ([turgayozgur](https://github.com/turgayozgur))
+- Stats: New argument "--csv-full-history" appends stats entries every interval in a new "\_stats\_history.csv" File [\#1146](https://github.com/locustio/locust/pull/1146) ([mehta-ankit](https://github.com/mehta-ankit))
+
+## [0.13.2](https://github.com/locustio/locust/tree/0.13.2) (2019-11-18)
+[Full Changelog](https://github.com/locustio/locust/compare/0.13.1...0.13.2)
 
 **Fixed bugs:**
 
@@ -11,7 +32,6 @@
 
 **Closed issues:**
 
-- Can I do a Chinese tutorial based on the locust documentation? [\#1145](https://github.com/locustio/locust/issues/1145)
 - Add charts for number of failures in the Web UI [\#952](https://github.com/locustio/locust/issues/952)
 
 ## [0.13.1](https://github.com/locustio/locust/tree/0.13.1) (2019-11-16)
@@ -67,7 +87,6 @@
 - Let's stop calling the package beta! [\#1126](https://github.com/locustio/locust/pull/1126) ([cyberw](https://github.com/cyberw))
 - Add p99.9 and p99.99 to request stats distribution csv [\#1125](https://github.com/locustio/locust/pull/1125) ([cyberw](https://github.com/cyberw))
 - New API for specifying wait time [\#1118](https://github.com/locustio/locust/pull/1118) ([heyman](https://github.com/heyman))
-- Remove concurrency from coverage [\#1102](https://github.com/locustio/locust/pull/1102) ([mbeacom](https://github.com/mbeacom))
 - Add errors grouping for dynamic endpoint [\#993](https://github.com/locustio/locust/pull/993) ([dduleba](https://github.com/dduleba))
 - add 90th %ile to the stats page [\#945](https://github.com/locustio/locust/pull/945) ([myzhan](https://github.com/myzhan))
 - Make stdout/stderr wrappers identify themselves as not being a tty [\#929](https://github.com/locustio/locust/pull/929) ([michaelboulton](https://github.com/michaelboulton))
@@ -79,7 +98,6 @@
 
 **Fixed bugs:**
 
-- Installing 0.12.1 requires "pipenv lock --pre" [\#1116](https://github.com/locustio/locust/issues/1116)
 - Strange behavior of "Total Requests per Second" chart [\#889](https://github.com/locustio/locust/issues/889)
 - Response time graph seems to be an average of all data [\#667](https://github.com/locustio/locust/issues/667)
 - Totals Clarity in Web Results [\#629](https://github.com/locustio/locust/issues/629)
@@ -141,9 +159,11 @@
 - Allow None response time for requests [\#1088](https://github.com/locustio/locust/pull/1088) ([cyberw](https://github.com/cyberw))
 - Fixed issue with Total Requests Per Second plot [\#1060](https://github.com/locustio/locust/pull/1060) ([williamlhunter](https://github.com/williamlhunter))
 - Tox: Add flake8 tests to find Python syntax errors and undefined names [\#1039](https://github.com/locustio/locust/pull/1039) ([cclauss](https://github.com/cclauss))
+- Support Step Load Pattern [\#1002](https://github.com/locustio/locust/pull/1002) ([delulu](https://github.com/delulu))
 - Fix frontend bugs. [\#822](https://github.com/locustio/locust/pull/822) ([omittones](https://github.com/omittones))
 - Switch from using optparse to argparse for command line arguments [\#769](https://github.com/locustio/locust/pull/769) ([jdufresne](https://github.com/jdufresne))
 - Allow skipping the logging setup [\#738](https://github.com/locustio/locust/pull/738) ([Exide](https://github.com/Exide))
+- Added link to an Ansible role as a 3rd party tool. [\#704](https://github.com/locustio/locust/pull/704) ([tinx](https://github.com/tinx))
 
 ## [0.12.1](https://github.com/locustio/locust/tree/0.12.1) (2019-10-18)
 [Full Changelog](https://github.com/locustio/locust/compare/0.12.0...0.12.1)
@@ -158,6 +178,7 @@
 
 **Merged pull requests:**
 
+- Remove concurrency from coverage [\#1102](https://github.com/locustio/locust/pull/1102) ([mbeacom](https://github.com/mbeacom))
 - Adding TCP Keep Alive to guarantee master-slave communication after i… [\#1101](https://github.com/locustio/locust/pull/1101) ([albertowar](https://github.com/albertowar))
 - Resolve time import error in exception\_handler [\#1095](https://github.com/locustio/locust/pull/1095) ([ajt89](https://github.com/ajt89))
 
@@ -256,7 +277,6 @@
 - Add failures csv download [\#999](https://github.com/locustio/locust/pull/999) ([ajt89](https://github.com/ajt89))
 - Correct fail ratio calculation. Fixes \#991. [\#994](https://github.com/locustio/locust/pull/994) ([genericmoniker](https://github.com/genericmoniker))
 - Add command line argument to specify exit code on response errors [\#992](https://github.com/locustio/locust/pull/992) ([Stateford](https://github.com/Stateford))
-- better horizontal scrolling [\#962](https://github.com/locustio/locust/pull/962) ([myzhan](https://github.com/myzhan))
 - Geventhttpclientmergeconflicts [\#838](https://github.com/locustio/locust/pull/838) ([SpencerPinegar](https://github.com/SpencerPinegar))
 
 ## [0.11.1](https://github.com/locustio/locust/tree/0.11.1) (2019-03-19)
@@ -334,6 +354,7 @@
 - fix inconsistency in zmqrpc [\#972](https://github.com/locustio/locust/pull/972) ([delulu](https://github.com/delulu))
 - balance/recover the load distribution when new slave joins [\#970](https://github.com/locustio/locust/pull/970) ([delulu](https://github.com/delulu))
 - Ui headings [\#963](https://github.com/locustio/locust/pull/963) ([cgoldberg](https://github.com/cgoldberg))
+- better horizontal scrolling [\#962](https://github.com/locustio/locust/pull/962) ([myzhan](https://github.com/myzhan))
 - Update change logs & release 0.10.0 [\#960](https://github.com/locustio/locust/pull/960) ([aldenpeterson-wf](https://github.com/aldenpeterson-wf))
 - Allow loading of a locustfile with multiple dots in filename [\#941](https://github.com/locustio/locust/pull/941) ([raiyankamal](https://github.com/raiyankamal))
 - Both succeeded and failed requests are counted in total number of requests [\#939](https://github.com/locustio/locust/pull/939) ([raiyankamal](https://github.com/raiyankamal))
@@ -498,7 +519,6 @@
 - Change Locust website url to https [\#743](https://github.com/locustio/locust/pull/743) ([iassal](https://github.com/iassal))
 - Fix typo in docstring [\#729](https://github.com/locustio/locust/pull/729) ([giantryansaul](https://github.com/giantryansaul))
 - Changed the spelling of "occurences" on the output text [\#706](https://github.com/locustio/locust/pull/706) ([ethansmith-wf](https://github.com/ethansmith-wf))
-- Added link to an Ansible role as a 3rd party tool. [\#704](https://github.com/locustio/locust/pull/704) ([tinx](https://github.com/tinx))
 - Merge 0.8 branch. [\#701](https://github.com/locustio/locust/pull/701) ([mbeacom](https://github.com/mbeacom))
 - added introduction to Locust4j [\#698](https://github.com/locustio/locust/pull/698) ([myzhan](https://github.com/myzhan))
 - Resolve improper display of About in Web UI [\#697](https://github.com/locustio/locust/pull/697) ([mbeacom](https://github.com/mbeacom))
@@ -506,7 +526,6 @@
 - Small python 3 syntax improvement in docs [\#676](https://github.com/locustio/locust/pull/676) ([miki725](https://github.com/miki725))
 - \#331:  Use rounded\_response\_time for min/max/total response times [\#558](https://github.com/locustio/locust/pull/558) ([jude](https://github.com/jude))
 - Added a slaves-tab to show the id, status and number of users running on each slave. [\#305](https://github.com/locustio/locust/pull/305) ([TZer0](https://github.com/TZer0))
-- changed how request\_meta\["method"\] is set [\#267](https://github.com/locustio/locust/pull/267) ([dantagg](https://github.com/dantagg))
 - expand and re-order documentation index [\#779](https://github.com/locustio/locust/pull/779) ([cgoldberg](https://github.com/cgoldberg))
 - drop unitt2 and use tox in 'make test' target [\#772](https://github.com/locustio/locust/pull/772) ([cgoldberg](https://github.com/cgoldberg))
 - Fix bytes/text confusion with response objects [\#762](https://github.com/locustio/locust/pull/762) ([jdufresne](https://github.com/jdufresne))
@@ -528,12 +547,12 @@
 
 - Release new Locust version [\#657](https://github.com/locustio/locust/issues/657)
 - make test is failing on 0.7 tags due to Flask 0.12 [\#637](https://github.com/locustio/locust/issues/637)
+- num-requests bug [\#512](https://github.com/locustio/locust/issues/512)
 - Run the tests for the specified time [\#196](https://github.com/locustio/locust/issues/196)
 - Remove support for plain sockets for master/slave communication [\#14](https://github.com/locustio/locust/issues/14)
 
 **Merged pull requests:**
 
-- Fix formatting issue combining double dashes into single dash [\#577](https://github.com/locustio/locust/pull/577) ([swoodford](https://github.com/swoodford))
 - Refactored stats code and display median as well as 95% percentile response times in web UI's charts [\#549](https://github.com/locustio/locust/pull/549) ([heyman](https://github.com/heyman))
 
 ## [v0.8](https://github.com/locustio/locust/tree/v0.8) (2017-09-19)
@@ -631,7 +650,6 @@
 - How to display QOS metrics ? [\#520](https://github.com/locustio/locust/issues/520)
 - Allow importing swagger files [\#519](https://github.com/locustio/locust/issues/519)
 - stats & counters are reset during test [\#513](https://github.com/locustio/locust/issues/513)
-- num-requests bug [\#512](https://github.com/locustio/locust/issues/512)
 - slack channel for locust dev [\#511](https://github.com/locustio/locust/issues/511)
 - Variance/Standard Dev. or something [\#508](https://github.com/locustio/locust/issues/508)
 - RPS value drops after a long run [\#507](https://github.com/locustio/locust/issues/507)
@@ -672,7 +690,6 @@
 - Extra / at start of request paths [\#235](https://github.com/locustio/locust/issues/235)
 - SSL broken on Python 2.7.9 [\#234](https://github.com/locustio/locust/issues/234)
 - Suggest Python version  [\#231](https://github.com/locustio/locust/issues/231)
-- Alternative terminology for "slave" [\#220](https://github.com/locustio/locust/issues/220)
 - Changing locustfile.py on master via UI and having  master / slave replication [\#209](https://github.com/locustio/locust/issues/209)
 - Option to prevent stats from being reset when all locusts are hatched [\#205](https://github.com/locustio/locust/issues/205)
 - PUT requests are shown as GET [\#204](https://github.com/locustio/locust/issues/204)
@@ -701,6 +718,7 @@
 - Add ability to write csv stats files   [\#612](https://github.com/locustio/locust/pull/612) ([aldenpeterson-wf](https://github.com/aldenpeterson-wf))
 - Fix spelling error in README.md [\#606](https://github.com/locustio/locust/pull/606) ([fiso](https://github.com/fiso))
 - Bump gevent version [\#599](https://github.com/locustio/locust/pull/599) ([ed1d1a8d](https://github.com/ed1d1a8d))
+- Fix formatting issue combining double dashes into single dash [\#577](https://github.com/locustio/locust/pull/577) ([swoodford](https://github.com/swoodford))
 - Add slack signup link to readme [\#570](https://github.com/locustio/locust/pull/570) ([aldenpeterson-wf](https://github.com/aldenpeterson-wf))
 - Fix off by 1 error in stats.py resulting in additional request always being off [\#566](https://github.com/locustio/locust/pull/566) ([aldenpeterson-wf](https://github.com/aldenpeterson-wf))
 - Add more formatting and class links to quickstart page. [\#557](https://github.com/locustio/locust/pull/557) ([alimony](https://github.com/alimony))
@@ -716,6 +734,7 @@
 - Add charts for RPS and average response time in the WebUI [\#509](https://github.com/locustio/locust/pull/509) ([myzhan](https://github.com/myzhan))
 - docs: clarify locust invocation norms [\#501](https://github.com/locustio/locust/pull/501) ([pwnage101](https://github.com/pwnage101))
 - Improve the language in writing-a-locustfile.rst [\#470](https://github.com/locustio/locust/pull/470) ([aknuds1](https://github.com/aknuds1))
+- Adds host name to the header [\#447](https://github.com/locustio/locust/pull/447) ([thaffenden](https://github.com/thaffenden))
 - Allow --no-web together with --master for automation [\#333](https://github.com/locustio/locust/pull/333) ([undera](https://github.com/undera))
 
 ## [v0.8a1](https://github.com/locustio/locust/tree/v0.8a1) (2016-11-24)
@@ -861,7 +880,6 @@
 
 **Merged pull requests:**
 
-- Adds host name to the header [\#447](https://github.com/locustio/locust/pull/447) ([thaffenden](https://github.com/thaffenden))
 - Release updates for v0.7.4 [\#418](https://github.com/locustio/locust/pull/418) ([justiniso](https://github.com/justiniso))
 - bump version of requests module in setup.py [\#401](https://github.com/locustio/locust/pull/401) ([cgoldberg](https://github.com/cgoldberg))
 - \[\#62\] Correctly update slave count when drops below 1. [\#381](https://github.com/locustio/locust/pull/381) ([KashifSaadat](https://github.com/KashifSaadat))
@@ -910,6 +928,7 @@
 **Merged pull requests:**
 
 - Update writing-a-locustfile.rst [\#268](https://github.com/locustio/locust/pull/268) ([cristopherchacon](https://github.com/cristopherchacon))
+- changed how request\_meta\["method"\] is set [\#267](https://github.com/locustio/locust/pull/267) ([dantagg](https://github.com/dantagg))
 - list supported Python versions [\#261](https://github.com/locustio/locust/pull/261) ([cgoldberg](https://github.com/cgoldberg))
 - add host cli arg to quickstart [\#250](https://github.com/locustio/locust/pull/250) ([groovecoder](https://github.com/groovecoder))
 - Update what-is-locust.rst [\#247](https://github.com/locustio/locust/pull/247) ([frvi](https://github.com/frvi))
@@ -917,7 +936,6 @@
 - Fixed link to ESN's Twitter page [\#227](https://github.com/locustio/locust/pull/227) ([gentlecat](https://github.com/gentlecat))
 - Fix a missing backtick [\#221](https://github.com/locustio/locust/pull/221) ([chrisramsay](https://github.com/chrisramsay))
 - Fix typo in docs [\#216](https://github.com/locustio/locust/pull/216) ([gregeinfrank](https://github.com/gregeinfrank))
-- Add start and stop hatching events [\#199](https://github.com/locustio/locust/pull/199) ([skinp](https://github.com/skinp))
 - Typos in docs. [\#193](https://github.com/locustio/locust/pull/193) ([jfacorro](https://github.com/jfacorro))
 - recieve -\> receive; locsutfile -\> locustfile [\#183](https://github.com/locustio/locust/pull/183) ([stevetjoa](https://github.com/stevetjoa))
 
@@ -951,12 +969,14 @@
 
 **Merged pull requests:**
 
+- Add start and stop hatching events [\#199](https://github.com/locustio/locust/pull/199) ([skinp](https://github.com/skinp))
 - fixed typo: your're -\> you are [\#182](https://github.com/locustio/locust/pull/182) ([stevetjoa](https://github.com/stevetjoa))
 - choosed -\> chosen [\#181](https://github.com/locustio/locust/pull/181) ([mrjf](https://github.com/mrjf))
 - Include method name in percentile distribution reports [\#176](https://github.com/locustio/locust/pull/176) ([fordhurley](https://github.com/fordhurley))
 - Redefine err message for locustfile [\#164](https://github.com/locustio/locust/pull/164) ([illogicalextend](https://github.com/illogicalextend))
 - Fixed typos in events.py example [\#159](https://github.com/locustio/locust/pull/159) ([nawaidshamim](https://github.com/nawaidshamim))
 - Added: favicon, fixed paths. [\#158](https://github.com/locustio/locust/pull/158) ([dotpot](https://github.com/dotpot))
+- Exit 1 when errors are found [\#155](https://github.com/locustio/locust/pull/155) ([jpotter](https://github.com/jpotter))
 
 ## [v0.7.1](https://github.com/locustio/locust/tree/v0.7.1) (2014-04-29)
 [Full Changelog](https://github.com/locustio/locust/compare/v0.7...v0.7.1)
@@ -975,7 +995,6 @@
 
 **Merged pull requests:**
 
-- Exit 1 when errors are found [\#155](https://github.com/locustio/locust/pull/155) ([jpotter](https://github.com/jpotter))
 - Fixed Docs Homebrew Link [\#143](https://github.com/locustio/locust/pull/143) ([saulshanabrook](https://github.com/saulshanabrook))
 - Fix typo [\#132](https://github.com/locustio/locust/pull/132) ([rafax](https://github.com/rafax))
 - Fix task ratio [\#125](https://github.com/locustio/locust/pull/125) ([sanga](https://github.com/sanga))
@@ -990,7 +1009,6 @@
 **Closed issues:**
 
 - Different Users [\#126](https://github.com/locustio/locust/issues/126)
-- Simulating real browser behaviour [\#120](https://github.com/locustio/locust/issues/120)
 - doc updates for main class change from Locust to HttpLocust [\#116](https://github.com/locustio/locust/issues/116)
 - collection of exceptions broken since 4ca0eef5 [\#114](https://github.com/locustio/locust/issues/114)
 - number locusts must be a multiple of the number of slaves [\#112](https://github.com/locustio/locust/issues/112)
@@ -1017,6 +1035,7 @@
 - Custom http\_code stats [\#73](https://github.com/locustio/locust/issues/73)
 - Need Clarification [\#70](https://github.com/locustio/locust/issues/70)
 - It'd be nice to include the machine that a logging message came from [\#67](https://github.com/locustio/locust/issues/67)
+- Allowing custom options to passed into tests? [\#65](https://github.com/locustio/locust/issues/65)
 - requests \>1.0 [\#61](https://github.com/locustio/locust/issues/61)
 - pyzmq 13.0.0 breaks distribution [\#58](https://github.com/locustio/locust/issues/58)
 - Locust web interface not starting on Windows [\#57](https://github.com/locustio/locust/issues/57)
@@ -1056,6 +1075,7 @@
 
 **Merged pull requests:**
 
+- add docs: Installing Locust on Mac OS [\#51](https://github.com/locustio/locust/pull/51) ([yurtaev](https://github.com/yurtaev))
 - Add parent to TaskSet to enable state sharing among hierarchical TaskSets [\#50](https://github.com/locustio/locust/pull/50) ([daubman](https://github.com/daubman))
 
 ## [v0.6.1](https://github.com/locustio/locust/tree/v0.6.1) (2012-12-04)
@@ -1074,7 +1094,6 @@
 
 **Closed issues:**
 
-- Allowing custom options to passed into tests? [\#65](https://github.com/locustio/locust/issues/65)
 - Drop the require\_once decorator [\#42](https://github.com/locustio/locust/issues/42)
 - Improve catch\_response feature \(was previous: Remove catch\_response feature from HttpBrowser\) [\#39](https://github.com/locustio/locust/issues/39)
 - RPS count drops when master and slaves drift in time [\#38](https://github.com/locustio/locust/issues/38)
@@ -1086,7 +1105,6 @@
 
 **Merged pull requests:**
 
-- add docs: Installing Locust on Mac OS [\#51](https://github.com/locustio/locust/pull/51) ([yurtaev](https://github.com/yurtaev))
 - Change Locust/SubLocust API [\#43](https://github.com/locustio/locust/pull/43) ([heyman](https://github.com/heyman))
 - Quickstart example was missing import task [\#41](https://github.com/locustio/locust/pull/41) ([natancox](https://github.com/natancox))
 - Use python-requests as HTTP client in Locust [\#40](https://github.com/locustio/locust/pull/40) ([heyman](https://github.com/heyman))

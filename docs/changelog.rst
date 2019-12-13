@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+0.13.3
+======
+
+* Unable to properly connect multiple slaves - https://github.com/locustio/locust/issues/1176
+* Zero exit code on exception - https://github.com/locustio/locust/issues/1172
+* `--stop-timeout` is not respected when changing number of running Users in distributed mode - https://github.com/locustio/locust/issues/1162
+
 0.13.2
 ======
 
@@ -20,17 +27,17 @@ For full details of the Locust changelog, please see https://github.com/locustio
 ======
 
 * New API for specifying wait time - https://github.com/locustio/locust/pull/1118
-  
+
   Example of the new API::
-  
+
       from locust import HttpLocust, between
       class User(HttpLocust):
           # wait between 5 and 30 seconds
           wait_time = between(5, 30)
-  
+
   There are three built in :ref:`wait time functions <wait_time_functions>`: :py:func:`between <locust.wait_time.between>`,
   :py:func:`constant <locust.wait_time.constant>` and :py:func:`constant_pacing <locust.wait_time.constant_pacing>`.
-  
+
 * FastHttpLocust: Accept self signed SSL certificates, ignore host checks. Improved response code handling
 * Add current working dir to sys.path - https://github.com/locustio/locust/pull/484
 * Web UI improvements: Added 90th percentile to table, failure per seconds as a series in the chart
@@ -45,7 +52,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 * Added `--skip-log-setup` to disable Locust's default logging setup.
 * Added `--stop-timeout` to allow tasks to finish running their iteration before stopping
 * Added 99.9 and 99.99 percentile response times to csv output
-* Allow custom clients to set request response time to None. Those requests will be excluded 
+* Allow custom clients to set request response time to None. Those requests will be excluded
   when calculating median, average, min, max and percentile response times.
 * Renamed the last row in statistics table from "Total" to "Aggregated" (since the values aren't
   a sum of the individual table rows).
