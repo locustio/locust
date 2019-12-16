@@ -812,7 +812,7 @@ def requests_csv():
     for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
         if s.num_requests:
             percentile_str = ','.join([
-                str(int(s.get_current_response_time_percentile(x) or 0)) for x in PERCENTILES_TO_REPORT])
+                str(int(s.get_response_time_percentile(x) or 0)) for x in PERCENTILES_TO_REPORT])
         else:
             percentile_str = ','.join(['"N/A"'] * len(PERCENTILES_TO_REPORT))
 
