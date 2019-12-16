@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+0.13.4
+======
+
+Identical to previous version, but now built & deployed to Pypi using Travis.
+
 0.13.3
 ======
 
