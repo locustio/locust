@@ -24,3 +24,11 @@ script:
   - tox
 after_success:
   - codecov -e TOXENV
+deploy:
+  provider: pypi
+  user: $TWINE_USERNAME
+  password: $TWINE_PASSWORD
+  skip_existing: true
+  distributions: "sdist bdist_wheel"
+  on:
+    tags: true
