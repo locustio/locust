@@ -1,4 +1,23 @@
 # Change Log
+## [0.13.5](https://github.com/locustio/locust/tree/0.13.5) (2019-12-17)
+
+[Full Changelog](https://github.com/locustio/locust/compare/0.13.4...0.13.5)
+
+**Fixed bugs:**
+
+- Fix percentiles printed in \_stats.csv file [\#1198](https://github.com/locustio/locust/issues/1198)
+- set default Accept-Encoding to "gzip, deflate" in FastHttpLocust to match HttpLocust behaviour [\#1195](https://github.com/locustio/locust/issues/1195)
+- FastHttpLocust is very slow at returning the response text [\#1193](https://github.com/locustio/locust/issues/1193)
+
+**Merged pull requests:**
+
+- Use `response\_time\_percentile` for \<name\>\_stats.csv file instead of `current\_response\_time\_percentile` [\#1197](https://github.com/locustio/locust/pull/1197) ([mehta-ankit](https://github.com/mehta-ankit))
+- Send Accept-Encoding: gzip, deflate as default in FastHttpLocust. [\#1196](https://github.com/locustio/locust/pull/1196) ([cyberw](https://github.com/cyberw))
+- Get encoding from content-type header instead of autodetecting using chardet \(which is slow\) [\#1194](https://github.com/locustio/locust/pull/1194) ([cyberw](https://github.com/cyberw))
+
+## [0.13.4](https://github.com/locustio/locust/tree/0.13.4) (2019-12-16)
+
+[Full Changelog](https://github.com/locustio/locust/compare/0.13.3...0.13.4)
 
 ## [0.13.3](https://github.com/locustio/locust/tree/0.13.3) (2019-12-13)
 

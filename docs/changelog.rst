@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+0.13.5
+======
+
+Various minor fixes, mainly regarding FastHttpLocust.
+
 0.13.4
 ======
 
