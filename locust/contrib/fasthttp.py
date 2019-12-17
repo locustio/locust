@@ -166,13 +166,14 @@ class FastHttpSession(object):
         request_meta["start_time"] = default_timer()
         request_meta["name"] = name or path
         
+        headers = headers or {}
         if auth:
-            headers = headers or {}
             headers['Authorization'] = _construct_basic_auth_str(auth[0], auth[1])
         elif self.auth_header:
-            headers = headers or {}
             headers['Authorization'] = self.auth_header
-        
+        if not "Accept-Encoding" in headers:
+            headers['Accept-Encoding'] = "gzip, deflate"
+
         # send request, and catch any exceptions
         response = self._send_request_safe_mode(method, url, payload=data, headers=headers, **kwargs)
         
