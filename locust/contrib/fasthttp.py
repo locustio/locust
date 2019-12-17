@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import chardet
 import re
 import six
 import socket
@@ -252,9 +251,9 @@ class FastResponse(CompatResponse):
         Returns the text content of the response as a decoded string
         (unicode on python2)
         """
-        # Decode unicode from detected encoding.
         try:
-            content = unicode(self.content, self.apparent_encoding, errors='replace')
+            charset = self.headers.get('content-type', '').partition("charset=")[2]
+            content = unicode(self.content, charset or 'utf-8', errors='replace')
         except (LookupError, TypeError):
             # A LookupError is raised if the encoding was not found which could
             # indicate a misspelling or similar mistake.
@@ -267,11 +266,6 @@ class FastResponse(CompatResponse):
             else:
                 content = unicode(self.content, errors='replace')
         return content
-    
-    @property
-    def apparent_encoding(self):
-        """The apparent encoding, provided by the chardet library."""
-        return chardet.detect(self.content)['encoding']
     
     def raise_for_status(self):
         """Raise any connection errors that occured during the request"""
