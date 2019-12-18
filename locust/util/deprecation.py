@@ -23,7 +23,7 @@ def check_for_deprecated_wait_api(locust_or_taskset):
             # we'll add a wait_time function that just calls wait_function and divides the 
             # returned value by 1000.0
             locust_or_taskset.wait_time = lambda: locust_or_taskset.wait_function() / 1000.0
-    if locust_or_taskset.min_wait and locust_or_taskset.max_wait:
+    if locust_or_taskset.min_wait is not None and locust_or_taskset.max_wait is not None:
         def format_min_max_wait(i):
             float_value = i / 1000.0
             if float_value == int(float_value):

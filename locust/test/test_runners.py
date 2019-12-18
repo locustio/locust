@@ -668,8 +668,7 @@ class TestStopTimeout(LocustTestCase):
 
         class MyTestLocust(Locust):
             task_set = MyTaskSet
-            min_wait = 0
-            max_wait = 0
+            wait_time = constant(0)
         
         options = mocked_options()
         options.stop_timeout = short_time

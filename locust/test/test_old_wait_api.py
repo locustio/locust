@@ -53,6 +53,23 @@ class TestOldWaitApi(LocustTestCase):
             self.assertIn("min_wait", str(w[0].message))
             self.assertIn("max_wait", str(w[0].message))
     
+    def test_zero_min_max_wait(self):
+        return
+        with warnings.catch_warnings(record=True) as w:
+            class User(Locust):
+                min_wait = 0
+                max_wait = 0
+            class TS(TaskSet):
+                @task
+                def t(self):
+                    pass
+            taskset = TS(User())
+            self.assertEqual(0, taskset.wait_time())
+            self.assertEqual(1, len(w))
+            self.assertTrue(issubclass(w[0].category, DeprecationWarning))
+            self.assertIn("min_wait", str(w[0].message))
+            self.assertIn("max_wait", str(w[0].message))
+    
     def test_min_max_wait_combined_with_wait_time(self):
         with warnings.catch_warnings(record=True) as w:
             class User(Locust):
