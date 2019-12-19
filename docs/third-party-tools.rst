@@ -4,12 +4,13 @@ Third party tools
 
 Support for other sampler protocols, reporting etc
 ==================================================
+
 - `Locust Plugins <https://github.com/SvenskaSpel/locust-plugins/>`_
 
 
-Automating distributed runs
-===========================
-Launch slaves over ssh with no manual steps
+Automate distributed runs with no manual steps
+==============================================
+
 - `Locust Swarm <https://github.com/SvenskaSpel/locust-swarm/>`_
 
 
