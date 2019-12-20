@@ -7,19 +7,19 @@ for Python 2.7:
 
 .. code-block:: console
 
-    $ python -m pip install locustio
+    $ pip install locustio
 
 for Python 3:
 
 .. code-block:: console
 
-    $ python3 -m pip install locustio
+    $ pip3 install locustio
 
 If you want the bleeding edge version, you can use pip to install directly from our Git repository.  For example, to install the master branch using Python 3:
 
 .. code-block:: console
 
-    $ python3 -m pip install -e git://github.com/locustio/locust.git@master#egg=locustio
+    $ pip3 install -e git://github.com/locustio/locust.git@master#egg=locustio
 
 Once Locust is installed, a **locust** command should be available in your shell. (if you're not using
 virtualenv—which you should—make sure your python script directory is on your path).
@@ -34,7 +34,7 @@ To see available options, run:
 Supported Python Versions
 -------------------------
 
-Locust is supported on Python 2.7, 3.5, 3.6, 3.7, 3.8.
+Locust is supported on Python 2.7, 3.5, 3.6, 3.7 and 3.8.
 
 
 Installing Locust on Windows

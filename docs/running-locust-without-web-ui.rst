@@ -18,10 +18,6 @@ like a CI server - by using the ``--no-web`` flag together with ``-c`` and ``-r`
 Setting a time limit for the test
 ---------------------------------
 
-.. note::
-
-    This is a new feature in v0.9. For 0.8 use ``-n`` to specify the number of requests
-
 If you want to specify the run time for a test, you can do that with ``--run-time`` or ``-t``:
 
 .. code-block:: console
@@ -30,6 +26,14 @@ If you want to specify the run time for a test, you can do that with ``--run-tim
 
 Locust will shutdown once the time is up.
 
+Allow tasks to finish their iteration on shutdown
+-------------------------------------------------
+
+By default, locust will stop your tasks immediately. If you want to allow your tasks to finish their iteration, you can use ``--stop-timeout <seconds>``.
+
+.. code-block:: console
+
+    $ locust -f --no-web -c 1000 -r 100 --run-time 1h30m --stop-timeout 99
 
 .. _running-locust-distributed-without-web-ui:
 

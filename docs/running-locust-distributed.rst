@@ -13,8 +13,8 @@ statistics. The master node doesn't simulate any users itself. Instead you have 
 —most likely—multiple slave Locust nodes using the ``--slave`` flag, together with the 
 ``--master-host`` (to specify the IP/hostname of the master node).
 
-A common set up is to run a single master on one machine, and then run one slave instance per 
-processor core, on the slave machines.
+A common set up is to run a single master on one machine, and then run **one slave instance per 
+processor core** on the slave machines.
 
 .. note::
     Both the master and each slave machine, must have a copy of the locust test scripts 
