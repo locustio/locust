@@ -246,28 +246,20 @@ class FastResponse(CompatResponse):
     
     _response = None
     
+    encoding = None
+    """In some cases setting the encoding explicitly is needed. If so, do it before calling .text"""
+
     @property
     def text(self):
         """
         Returns the text content of the response as a decoded string
         (unicode on python2)
         """
-        try:
-            charset = self.headers.get('content-type', '').partition("charset=")[2]
-            content = unicode(self.content, charset or 'utf-8', errors='replace')
-        except (LookupError, TypeError):
-            # A LookupError is raised if the encoding was not found which could
-            # indicate a misspelling or similar mistake.
-            #
-            # A TypeError can be raised if encoding is None
-            #
-            # Fallback to decode without specifying encoding
-            if self.content is None:
-                content = None
-            else:
-                content = unicode(self.content, errors='replace')
-        return content
-    
+        if self.content is None:
+            return None
+        self.encoding = self.encoding or self.headers.get('content-type', '').partition("charset=")[2] or 'utf-8'
+        return unicode(self.content, self.encoding, errors='replace')
+
     def raise_for_status(self):
         """Raise any connection errors that occured during the request"""
         if hasattr(self, 'error') and self.error:
