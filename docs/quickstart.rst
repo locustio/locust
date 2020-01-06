@@ -13,16 +13,16 @@ Below is a quick little example of a simple **locustfile.py**:
     from locust import HttpLocust, TaskSet, between
 
     def login(l):
-        l.client.post("/login", {"username":"ellen_key", "password":"education"})
+        l.client.post("login", {"username":"ellen_key", "password":"education"})
 
     def logout(l):
-        l.client.post("/logout", {"username":"ellen_key", "password":"education"})
+        l.client.post("logout", {"username":"ellen_key", "password":"education"})
 
     def index(l):
         l.client.get("/")
 
     def profile(l):
-        l.client.get("/profile")
+        l.client.get("profile")
 
     class UserBehavior(TaskSet):
         tasks = {index: 2, profile: 1}
@@ -71,10 +71,10 @@ Another way we could declare tasks, which is usually more convenient, is to use 
             self.logout()
         
         def login(self):
-            self.client.post("/login", {"username":"ellen_key", "password":"education"})
+            self.client.post("login", {"username":"ellen_key", "password":"education"})
         
         def logout(self):
-            self.client.post("/logout", {"username":"ellen_key", "password":"education"})
+            self.client.post("logout", {"username":"ellen_key", "password":"education"})
         
         @task(2)
         def index(self):
@@ -82,7 +82,7 @@ Another way we could declare tasks, which is usually more convenient, is to use 
         
         @task(1)
         def profile(self):
-            self.client.get("/profile")
+            self.client.get("profile")
     
     class WebsiteUser(HttpLocust):
         task_set = UserBehavior
