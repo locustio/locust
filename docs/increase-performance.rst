@@ -40,8 +40,8 @@ Subclass FastHttpLocust instead of HttpLocust::
 .. note::
 
     FastHttpLocust uses a whole other HTTP client implementation, with a different API, compared to 
-    the default HttpLocust that uses python-requests. Therefore FastHttpLocust might not work as a d
-    rop-in replacement for HttpLocust, depending on how the HttpClient is used.
+    the default HttpLocust that uses python-requests. Therefore FastHttpLocust might not work as a 
+    drop-in replacement for HttpLocust, depending on how the HttpClient is used.
 
 .. note::
 
