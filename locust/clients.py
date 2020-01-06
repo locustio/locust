@@ -8,7 +8,7 @@ from requests.auth import HTTPBasicAuth
 from requests.exceptions import (InvalidSchema, InvalidURL, MissingSchema,
                                  RequestException)
 
-from six.moves.urllib.parse import urlparse, urlunparse
+from six.moves.urllib.parse import urljoin, urlparse, urlunparse
 
 from . import events
 from .exception import CatchResponseError, ResponseError
@@ -69,7 +69,7 @@ class HttpSession(requests.Session):
         if absolute_http_url_regexp.match(path):
             return path
         else:
-            return "%s%s" % (self.base_url, path)
+            return urljoin(self.base_url, path)
     
     def request(self, method, url, name=None, catch_response=False, **kwargs):
         """
