@@ -61,7 +61,7 @@ Another way we could declare tasks, which is usually more convenient, is to use 
 
     from locust import HttpLocust, TaskSet, task, between
 
-    class UserBehavior(TaskSet):
+    class UserBehaviour(TaskSet):
         def on_start(self):
             """ on_start is called when a Locust start before any task is scheduled """
             self.login()
@@ -85,7 +85,7 @@ Another way we could declare tasks, which is usually more convenient, is to use 
             self.client.get("/profile")
     
     class WebsiteUser(HttpLocust):
-        task_set = UserBehavior
+        task_set = UserBehaviour
         wait_time = between(5, 9)
 
 The :py:class:`Locust <locust.core.Locust>` class (as well as :py:class:`HttpLocust <locust.core.HttpLocust>`
