@@ -40,6 +40,7 @@ Running your Locust tests
     :maxdepth: 1
 
     running-locust-distributed
+    running-locust-docker
     running-locust-without-web-ui
     increase-performance
 
