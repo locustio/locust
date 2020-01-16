@@ -7,7 +7,9 @@ assignees: ''
 
 ---
 
-<!-- Please note: For general questions about how to use Locust go to [Stack Overflow](https://stackoverflow.com/questions/ask) and tag your question with "locust". Use this form only for reporting actual bugs in locust. Be mindful that the developers of locust are unpaid volunteers. Make sure you have tried everything you can think of before filing a bug :) -->
+<!-- Please note: For general questions about how to use Locust go to [Stack Overflow](https://stackoverflow.com/questions/ask) and tag your question with "locust". -->
+
+<!-- Use this form only for reporting actual bugs in locust. Be mindful that the developers of locust are unpaid volunteers, so make sure you have tried everything you can think of before filing a bug :) -->
 
 ### Describe the bug
 <!-- A clear and concise description of what the bug is -->
