@@ -176,3 +176,7 @@ and point it to http://127.0.0.1:8089 (if you are running Locust locally). Then 
 greeted with something like this:
 
 .. image:: images/webui-splash-screenshot.png
+
+If you :ref:`run Locust in Step Load Mode <running-locust-in-step-load-mode>`, then you should be greeted with Locust UI like this:
+
+.. image:: images/webui-stepload-screenshot.png

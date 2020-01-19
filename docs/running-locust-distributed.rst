@@ -103,6 +103,12 @@ Running Locust distributed without the web UI
 See :ref:`running-locust-distributed-without-web-ui`
 
 
+Running Locust distributed in Step Load mode
+=============================================
+
+See :ref:`running-locust-in-step-load-mode`
+
+
 Increase Locust's performance
 =============================
 

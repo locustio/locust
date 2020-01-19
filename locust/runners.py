@@ -221,10 +221,10 @@ class LocustRunner(object):
         
         if self.stepload_greenlet:
             logger.info("There is an ongoing swarming in Step Load mode, will stop it now.")
-            self.greenlet.killone(self.stepload_greenlet)
+            self.stepload_greenlet.kill()
         logger.info("Start a new swarming in Step Load mode: total locust count of %d, hatch rate of %d, step locust count of %d, step duration of %d " % (locust_count, hatch_rate, step_locust_count, step_duration))
         self.state = STATE_INIT
-        self.stepload_greenlet = self.greenlet.spawn(self.stepload_worker)
+        self.stepload_greenlet = gevent.spawn(self.stepload_worker)
         self.stepload_greenlet.link_exception(callback=self.noop)
 
     def stepload_worker(self):
