@@ -257,7 +257,11 @@ class FastResponse(CompatResponse):
         """
         if self.content is None:
             return None
-        self.encoding = self.encoding or self.headers.get('content-type', '').partition("charset=")[2] or 'utf-8'
+        if self.encoding is None:
+            if self.headers is None:
+                self.encoding = 'utf-8'
+            else:
+                self.encoding = self.headers.get('content-type', '').partition("charset=")[2] or 'utf-8'
         return unicode(self.content, self.encoding, errors='replace')
 
     def raise_for_status(self):
