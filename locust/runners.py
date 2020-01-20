@@ -8,6 +8,7 @@ from uuid import uuid4
 from time import time
 
 import gevent
+import psutil
 import six
 from gevent import GreenletExit
 from gevent.pool import Group
@@ -40,6 +41,9 @@ class LocustRunner(object):
         self.state = STATE_INIT
         self.hatching_greenlet = None
         self.stepload_greenlet = None
+        self.cpu_threshold_exceeded = False
+        self.slave_cpu_threshold_exceeded = False
+        self.cpu_monitoring_greenlet = gevent.spawn(self.cpucheck)
         self.exceptions = {}
         self.stats = global_stats
         self.step_load = options.step_load
@@ -180,11 +184,23 @@ class LocustRunner(object):
         else:
             for g in greenlets:
                 self.locusts.killone(g)
-    
+        
+    def cpucheck(self):
+        process = psutil.Process()
+        while True:
+            if not self.cpu_threshold_exceeded: 
+                current_cpu = process.cpu_percent()
+                if current_cpu > 90:
+                    self.cpu_threshold_exceeded = True
+                    logging.warning("Loadgen CPU usage above 90%! This may constrain your throughput and even give inconsistent response time measurements! See https://docs.locust.io/en/stable/running-locust-distributed.html for how to distribute the load over multiple CPU cores or machines")
+            gevent.sleep(2.0)
+
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
             self.exceptions = {}
+            self.cpu_threshold_exceeded = False
+            self.slave_cpu_threshold_exceeded = True
             events.locust_start_hatching.fire()
 
         # Dynamically changing the locust count
@@ -293,6 +309,7 @@ class SlaveNode(object):
         self.state = state
         self.user_count = 0
         self.heartbeat = heartbeat_liveness
+        self.cpu_threshold_exceeded = False
 
 class MasterLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
@@ -423,8 +440,13 @@ class MasterLocustRunner(DistributedLocustRunner):
                 logger.info("Removing %s client from running clients" % (msg.node_id))
             elif msg.type == "heartbeat":
                 if msg.node_id in self.clients:
-                    self.clients[msg.node_id].heartbeat = self.heartbeat_liveness
-                    self.clients[msg.node_id].state = msg.data['state']
+                    c = self.clients[msg.node_id]
+                    c.heartbeat = self.heartbeat_liveness
+                    c.state = msg.data['state']
+                    if not c.cpu_threshold_exceeded and msg.data['cpu_threshold_exceeded']:
+                        c.cpu_threshold_exceeded = True
+                        self.slave_cpu_threshold_exceeded = True
+                        logger.warning("Slave %s exceeded cpu threshold" % (msg.node_id))
             elif msg.type == "stats":
                 events.slave_report.fire(client_id=msg.node_id, data=msg.data)
             elif msg.type == "hatching":
@@ -487,7 +509,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
 
     def heartbeat(self):
         while True:
-            self.client.send(Message('heartbeat', {'state': self.slave_state}, self.client_id))
+            self.client.send(Message('heartbeat', {'state': self.slave_state, 'cpu_threshold_exceeded': self.cpu_threshold_exceeded}, self.client_id))
             gevent.sleep(self.heartbeat_interval)
 
     def worker(self):
