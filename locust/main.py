@@ -571,11 +571,7 @@ def main():
         main_greenlet.join()
         code = 0
         lr = runners.locust_runner
-        if lr.cpu_threshold_exceeded:
-            logger.warning("CPU threshold was exceeded during the test")
-        if lr.slave_cpu_threshold_exceeded:
-            logger.warning("CPU usage threshold was exceeded on slaves during the test")
-        if len(lr.errors) or len(lr.exceptions) or lr.cpu_threshold_exceeded or lr.slave_cpu_threshold_exceeded:
+        if len(lr.errors) or len(lr.exceptions) or lr.cpu_log_warning():
             code = options.exit_code_on_error
         shutdown(code=code)
     except KeyboardInterrupt as e:

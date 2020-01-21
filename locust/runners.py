@@ -42,8 +42,7 @@ class LocustRunner(object):
         self.hatching_greenlet = None
         self.stepload_greenlet = None
         self.current_cpu_usage = 0
-        self.cpu_threshold_exceeded = False
-        self.slave_cpu_threshold_exceeded = False
+        self.cpu_warning_emitted = False
         gevent.spawn(self.monitor_cpu)
         self.exceptions = {}
         self.stats = global_stats
@@ -68,6 +67,13 @@ class LocustRunner(object):
     @property
     def user_count(self):
         return len(self.locusts)
+
+    def cpu_log_warning(self):
+        """Called at the end of the test to repeat the warning & return the status"""
+        if self.cpu_warning_emitted:
+            logger.warning("Loadgen CPU usage was too high at some point during the test! See https://docs.locust.io/en/stable/running-locust-distributed.html for how to distribute the load over multiple CPU cores or machines")
+            return True
+        return False
 
     def weight_locusts(self, amount):
         """
@@ -190,17 +196,17 @@ class LocustRunner(object):
         process = psutil.Process()
         while True:
             self.current_cpu_usage = process.cpu_percent()
-            if self.current_cpu_usage > 90 and not self.cpu_threshold_exceeded:
+            if self.current_cpu_usage > 90 and not self.cpu_warning_emitted:
                 logging.warning("Loadgen CPU usage above 90%! This may constrain your throughput and may even give inconsistent response time measurements! See https://docs.locust.io/en/stable/running-locust-distributed.html for how to distribute the load over multiple CPU cores or machines")
-                self.cpu_threshold_exceeded = True
+                self.cpu_warning_emitted = True
             gevent.sleep(5.0)
 
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
             self.exceptions = {}
-            self.cpu_threshold_exceeded = False
-            self.slave_cpu_threshold_exceeded = False
+            self.cpu_warning_emitted = False
+            self.slave_cpu_warning_emitted = False
             events.locust_start_hatching.fire()
 
         # Dynamically changing the locust count
@@ -309,11 +315,13 @@ class SlaveNode(object):
         self.state = state
         self.user_count = 0
         self.heartbeat = heartbeat_liveness
-        self.cpu_threshold_exceeded = False
+        self.cpu_usage = 0
+        self.cpu_warning_emitted = False
 
 class MasterLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
         super(MasterLocustRunner, self).__init__(*args, **kwargs)
+        self.slave_cpu_warning_emitted = False
 
         class SlaveNodesDict(dict):
             def get_by_state(self, state):
@@ -359,6 +367,13 @@ class MasterLocustRunner(DistributedLocustRunner):
     def user_count(self):
         return sum([c.user_count for c in six.itervalues(self.clients)])
     
+    def cpu_log_warning(self):
+        warning_emitted = LocustRunner.cpu_log_warning(self)
+        if self.slave_cpu_warning_emitted:
+            logger.warning("CPU usage threshold was exceeded on slaves during the test!")
+            warning_emitted = True
+        return warning_emitted
+
     def start_hatching(self, locust_count, hatch_rate):
         num_slaves = len(self.clients.ready) + len(self.clients.running) + len(self.clients.hatching)
         if not num_slaves:
@@ -443,10 +458,11 @@ class MasterLocustRunner(DistributedLocustRunner):
                     c = self.clients[msg.node_id]
                     c.heartbeat = self.heartbeat_liveness
                     c.state = msg.data['state']
-                    if not c.cpu_threshold_exceeded and msg.data['current_cpu_usage'] > 90:
-                        c.cpu_threshold_exceeded = True
-                        self.slave_cpu_threshold_exceeded = True
-                        logger.warning("Slave %s exceeded cpu threshold" % (msg.node_id))
+                    c.cpu_usage = msg.data['current_cpu_usage']
+                    if not c.cpu_warning_emitted and c.cpu_usage > 90:
+                        self.slave_cpu_warning_emitted = True # used to fail the test in the end
+                        c.cpu_warning_emitted = True          # used to suppress logging for this node
+                        logger.warning("Slave %s exceeded cpu threshold (will only log this once per slave)" % (msg.node_id))
             elif msg.type == "stats":
                 events.slave_report.fire(client_id=msg.node_id, data=msg.data)
             elif msg.type == "hatching":
