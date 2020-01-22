@@ -7,9 +7,13 @@ assignees: ''
 
 ---
 
-<!-- Please note: For general questions about how to use Locust go to [Stack Overflow](https://stackoverflow.com/questions/ask) and tag your question with "locust". -->
+<!-- 
+If you have a general question about how to use Locust, please check Stack Overflow first https://stackoverflow.com/questions/tagged/locust
 
-<!-- Use this form only for reporting actual bugs in locust. Be mindful that the developers of locust are unpaid volunteers, so make sure you have tried everything you can think of before filing a bug :) -->
+You can also ask new questions on SO, https://stackoverflow.com/questions/ask just remember to tag your question with "locust".
+
+Use this form only for reporting actual bugs in locust. Be mindful that the developers of locust are unpaid volunteers, so make sure you have tried everything you can think of before filing a bug :) 
+-->
 
 ### Describe the bug
 <!-- A clear and concise description of what the bug is -->
@@ -21,7 +25,7 @@ assignees: ''
 <!-- Tell us what happens instead. Include screenshots if this an issue with the GUI. -->
 
 ### Steps to reproduce
-<!-- Please provide a minimal reproducible code example (https://stackoverflow.com/help/minimal-reproducible-example). Or even better - a pull request with a failing unit test --> 
+<!-- Please provide a minimal reproducible code example (https://stackoverflow.com/help/minimal-reproducible-example) --> 
 
 ### Environment
 
