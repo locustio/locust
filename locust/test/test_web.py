@@ -50,6 +50,7 @@ class TestWebUI(LocustTestCase):
     
     def test_stats(self):
         stats.global_stats.log_request("GET", "/<html>", 120, 5612)
+        gevent.sleep(0.01)
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         
@@ -66,6 +67,7 @@ class TestWebUI(LocustTestCase):
         
     def test_stats_cache(self):
         stats.global_stats.log_request("GET", "/test", 120, 5612)
+        gevent.sleep(0.01)
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         data = json.loads(response.text)
@@ -73,6 +75,7 @@ class TestWebUI(LocustTestCase):
         
         # add another entry
         stats.global_stats.log_request("GET", "/test2", 120, 5612)
+        gevent.sleep(0.01)
         data = json.loads(requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).text)
         self.assertEqual(2, len(data["stats"])) # old value should be cached now
         
@@ -84,6 +87,7 @@ class TestWebUI(LocustTestCase):
     def test_stats_rounding(self):
         stats.global_stats.log_request("GET", "/test", 1.39764125, 2)
         stats.global_stats.log_request("GET", "/test", 999.9764125, 1000)
+        gevent.sleep(0.01)
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         
@@ -93,21 +97,25 @@ class TestWebUI(LocustTestCase):
     
     def test_request_stats_csv(self):
         stats.global_stats.log_request("GET", "/test2", 120, 5612)
+        gevent.sleep(0.01)
         response = requests.get("http://127.0.0.1:%i/stats/requests/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
 
     def test_request_stats_history_csv(self):
         stats.global_stats.log_request("GET", "/test2", 120, 5612)
+        gevent.sleep(0.01)
         response = requests.get("http://127.0.0.1:%i/stats/stats_history/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
 
     def test_failure_stats_csv(self):
         stats.global_stats.log_error("GET", "/", Exception("Error1337"))
+        gevent.sleep(0.01)
         response = requests.get("http://127.0.0.1:%i/stats/failures/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
     
     def test_request_stats_with_errors(self):
         stats.global_stats.log_error("GET", "/", Exception("Error1337"))
+        gevent.sleep(0.01)
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertIn("Error1337", response.text)
@@ -123,6 +131,7 @@ class TestWebUI(LocustTestCase):
         stats.global_stats.log_request("GET", "/test", 120, 5612)
         stats.global_stats.log_error("GET", "/", Exception("Error1337"))
 
+        gevent.sleep(0.01)
         response = requests.get("http://127.0.0.1:%i/stats/reset" % self.web_port)
 
         self.assertEqual(200, response.status_code)
@@ -143,10 +152,12 @@ class TestWebUI(LocustTestCase):
             runners.locust_runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
             runners.locust_runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
         
+        gevent.sleep(0.01)
         response = requests.get("http://127.0.0.1:%i/exceptions" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertIn("A cool test exception", response.text)
         
+        gevent.sleep(0.01)
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
     
@@ -158,6 +169,7 @@ class TestWebUI(LocustTestCase):
             runners.locust_runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
             runners.locust_runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
         
+        gevent.sleep(0.01)
         response = requests.get("http://127.0.0.1:%i/exceptions/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
         
@@ -184,6 +196,7 @@ class TestWebUI(LocustTestCase):
         class MyLocust(Locust):
             host = "http://example.com"
         runners.locust_runner = LocustRunner([MyLocust], options=self.options)
+        gevent.sleep(0.01)
         response = requests.get("http://127.0.0.1:%i/" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertIn("http://example.com", response.content.decode("utf-8"))
@@ -195,6 +208,7 @@ class TestWebUI(LocustTestCase):
         class MyLocust2(Locust):
             host = "http://example.com"        
         runners.locust_runner = LocustRunner([MyLocust, MyLocust2], options=self.options)
+        gevent.sleep(0.01)
         response = requests.get("http://127.0.0.1:%i/" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertIn("http://example.com", response.content.decode("utf-8"))
@@ -206,6 +220,7 @@ class TestWebUI(LocustTestCase):
         class MyLocust2(Locust):
             host = "http://example.com"
         runners.locust_runner = LocustRunner([MyLocust, MyLocust2], options=self.options)
+        gevent.sleep(0.01)
         response = requests.get("http://127.0.0.1:%i/" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertNotIn("http://example.com", response.content.decode("utf-8"))
@@ -213,6 +228,7 @@ class TestWebUI(LocustTestCase):
 
     def test_swarm_in_step_load_mode(self):
         runners.locust_runner.step_load = True
+        gevent.sleep(0.01)
         response = requests.post("http://127.0.0.1:%i/swarm" % self.web_port, SWARM_DATA_WITH_STEP_LOAD)
         self.assertEqual(200, response.status_code)
         self.assertIn("Step Load Mode", response.text)
