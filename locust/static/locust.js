@@ -106,6 +106,7 @@ var alternate = false; //used by jqote2.min.js
 var sortAttribute = "name";
 var slaveSortAttribute = "id";
 var desc = false;
+var slaveDesc = false;
 var report;
 
 function renderTable(report) {
@@ -128,12 +129,29 @@ function renderTable(report) {
     $("#userCount").html(report.user_count);
 }
 
+function renderSlaveTable(report) {
+    if (report.slaves) {
+        var slaves = (report.slaves).sort(sortBy(slaveSortAttribute, slaveDesc));
+        $("#slaves tbody").empty();
+        window.alternate = false;
+        $("#slaves tbody").jqoteapp(slaves_tpl, slaves);
+        $("#slaveCount").html(slaves.length);
+    }
+}
 
-$(".stats_label").click(function(event) {
+
+$("#stats .stats_label").click(function(event) {
     event.preventDefault();
     sortAttribute = $(this).attr("data-sortkey");
     desc = !desc;
     renderTable(window.report);
+});
+
+$("#slaves .stats_label").click(function(event) {
+    event.preventDefault();
+    slaveSortAttribute = $(this).attr("data-sortkey");
+    slaveDesc = !slaveDesc;
+    renderSlaveTable(window.report);
 });
 
 // init charts
@@ -146,14 +164,7 @@ function updateStats() {
         window.report = report;
 
         renderTable(report);
-
-        if (report.slaves) {
-            slaves = (report.slaves).sort(sortBy(slaveSortAttribute, desc));
-            $("#slaves tbody").empty();
-            window.alternate = false;
-            $("#slaves tbody").jqoteapp(slaves_tpl, slaves);
-            $("#slaveCount").html(slaves.length);
-        }
+        renderSlaveTable(report);
 
         if (report.state !== "stopped"){
             // get total stats row

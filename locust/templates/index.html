@@ -181,6 +181,7 @@
                                 <th class="stats_label" href="#" data-sortkey="id">Slave</th>
                                 <th class="stats_label" href="#" data-sortkey="state">State</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="user_count" title="Number of users on this slave"># users</th>
+                                <th class="stats_label numeric" href="#" data-sortkey="cpu_usage" title="CPU usage of process">CPU usage</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -283,6 +284,7 @@
             <td><%= this.id %></td>
             <td><%= this.state %></td>
             <td class="numeric"><%= this.user_count %></td>
+            <td class="numeric"><%= this.cpu_usage %>%</td>
         </tr>
         <% alternate = !alternate; %>
         ]]>
