@@ -570,7 +570,8 @@ def main():
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
         code = 0
-        if len(runners.locust_runner.errors) or len(runners.locust_runner.exceptions):
+        lr = runners.locust_runner
+        if len(lr.errors) or len(lr.exceptions) or lr.cpu_log_warning():
             code = options.exit_code_on_error
         shutdown(code=code)
     except KeyboardInterrupt as e:

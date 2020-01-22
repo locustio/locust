@@ -51,6 +51,7 @@ setup(
         "pyzmq>=16.0.2", 
         "geventhttpclient-wheels==1.3.1.dev2",
         "ConfigArgParse==0.15.1",
+        "psutil==5.6.7",
     ],
     test_suite="locust.test",
     tests_require=['mock'],

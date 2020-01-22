@@ -5,7 +5,7 @@ from gevent import sleep
 from gevent.queue import Queue
 
 import mock
-from locust import events
+from locust import events, runners
 from locust.core import Locust, TaskSet, task
 from locust.exception import LocustError
 from locust.rpc import Message
@@ -83,6 +83,26 @@ class TestLocustRunner(LocustTestCase):
                 actual_str,
             ),
         )
+
+    def test_cpu_warning(self):
+        _monitor_interval = runners.CPU_MONITOR_INTERVAL
+        runners.CPU_MONITOR_INTERVAL = 2.0
+        try:
+            class CpuLocust(Locust):
+                wait_time = constant(0)
+                class task_set(TaskSet):
+                    @task
+                    def cpu_task(self):
+                        for i in range(1000000):
+                            _ = 3 / 2
+            runner = LocalLocustRunner([CpuLocust], mocked_options())
+            self.assertFalse(runner.cpu_warning_emitted)
+            runner.spawn_locusts(1, wait=False)
+            sleep(2.5)
+            runner.quit()
+            self.assertTrue(runner.cpu_warning_emitted)
+        finally:
+            runners.CPU_MONITOR_INTERVAL = _monitor_interval
 
     def test_weight_locusts(self):
         maxDiff = 2048
@@ -368,7 +388,7 @@ class TestMasterRunner(LocustTestCase):
         
         try:
             runner.start_hatching(0, 1, wait=True)
-            runner.greenlet.join()
+            runner.hatching_greenlet.join()
         except gevent.Timeout:
             self.fail("Got Timeout exception. A locust seems to have been spawned, even though 0 was specified.")
         finally:
