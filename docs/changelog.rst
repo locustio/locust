@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+In development (master)
+=======================
+
+* Continuously measure CPU usage and emit a warning if we get a five second average above 90%
+
+
 0.13.5
 ======
 
