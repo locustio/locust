@@ -84,6 +84,21 @@ class TestLocustRunner(LocustTestCase):
             ),
         )
 
+    def test_cpu_warning(self):
+        class CpuLocust(Locust):
+            wait_time = constant(0)
+            class task_set(TaskSet):
+                @task
+                def cpu_task(self):
+                    for i in range(1000000):
+                        _ = 3 / 2
+        runner = LocalLocustRunner([CpuLocust], mocked_options())
+        self.assertFalse(runner.cpu_warning_emitted)
+        runner.spawn_locusts(1, wait=False)
+        sleep(5.5)
+        runner.quit()
+        self.assertTrue(runner.cpu_warning_emitted)
+
     def test_weight_locusts(self):
         maxDiff = 2048
         class BaseLocust(Locust):
