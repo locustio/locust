@@ -5,7 +5,7 @@ from gevent import sleep
 from gevent.queue import Queue
 
 import mock
-from locust import events
+from locust import events, runners
 from locust.core import Locust, TaskSet, task
 from locust.exception import LocustError
 from locust.rpc import Message
@@ -85,19 +85,24 @@ class TestLocustRunner(LocustTestCase):
         )
 
     def test_cpu_warning(self):
-        class CpuLocust(Locust):
-            wait_time = constant(0)
-            class task_set(TaskSet):
-                @task
-                def cpu_task(self):
-                    for i in range(1000000):
-                        _ = 3 / 2
-        runner = LocalLocustRunner([CpuLocust], mocked_options())
-        self.assertFalse(runner.cpu_warning_emitted)
-        runner.spawn_locusts(1, wait=False)
-        sleep(5.5)
-        runner.quit()
-        self.assertTrue(runner.cpu_warning_emitted)
+        _monitor_interval = runners.CPU_MONITOR_INTERVAL
+        runners.CPU_MONITOR_INTERVAL = 2.0
+        try:
+            class CpuLocust(Locust):
+                wait_time = constant(0)
+                class task_set(TaskSet):
+                    @task
+                    def cpu_task(self):
+                        for i in range(1000000):
+                            _ = 3 / 2
+            runner = LocalLocustRunner([CpuLocust], mocked_options())
+            self.assertFalse(runner.cpu_warning_emitted)
+            runner.spawn_locusts(1, wait=False)
+            sleep(2.5)
+            runner.quit()
+            self.assertTrue(runner.cpu_warning_emitted)
+        finally:
+            runners.CPU_MONITOR_INTERVAL = _monitor_interval
 
     def test_weight_locusts(self):
         maxDiff = 2048
