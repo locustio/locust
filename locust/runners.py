@@ -37,13 +37,13 @@ class LocustRunner(object):
         self.num_clients = options.num_clients
         self.host = options.host
         self.locusts = Group()
-        self.greenlet = self.locusts
+        self.greenlet = Group()
         self.state = STATE_INIT
         self.hatching_greenlet = None
         self.stepload_greenlet = None
         self.current_cpu_usage = 0
         self.cpu_warning_emitted = False
-        gevent.spawn(self.monitor_cpu)
+        self.greenlet.spawn(self.monitor_cpu)
         self.exceptions = {}
         self.stats = global_stats
         self.step_load = options.step_load
@@ -55,6 +55,10 @@ class LocustRunner(object):
                 logger.info("Resetting stats\n")
                 self.stats.reset_all()
         events.hatch_complete += on_hatch_complete
+    
+    def __del__(self):
+        # don't leave any stray greenlets if runner is removed
+        self.greenlet.kill(block=False)
 
     @property
     def request_stats(self):
@@ -246,7 +250,7 @@ class LocustRunner(object):
             self.stepload_greenlet.kill()
         logger.info("Start a new swarming in Step Load mode: total locust count of %d, hatch rate of %d, step locust count of %d, step duration of %d " % (locust_count, hatch_rate, step_locust_count, step_duration))
         self.state = STATE_INIT
-        self.stepload_greenlet = gevent.spawn(self.stepload_worker)
+        self.stepload_greenlet = self.greenlet.spawn(self.stepload_worker)
         self.stepload_greenlet.link_exception(callback=self.noop)
 
     def stepload_worker(self):
@@ -296,8 +300,8 @@ class LocalLocustRunner(LocustRunner):
     def start_hatching(self, locust_count=None, hatch_rate=None, wait=False):
         if hatch_rate > 100:
             logger.warning("Your selected hatch rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?")
-        self.hatching_greenlet = gevent.spawn(lambda: super(LocalLocustRunner, self).start_hatching(locust_count, hatch_rate, wait=wait))
-        self.greenlet = self.hatching_greenlet
+        self.hatching_greenlet = self.greenlet.spawn(lambda: super(LocalLocustRunner, self).start_hatching(locust_count, hatch_rate, wait=wait))
+
 
 class DistributedLocustRunner(LocustRunner):
     def __init__(self, locust_classes, options):
@@ -345,7 +349,6 @@ class MasterLocustRunner(DistributedLocustRunner):
         
         self.clients = SlaveNodesDict()
         self.server = rpc.Server(self.master_bind_host, self.master_bind_port)
-        self.greenlet = Group()
         self.greenlet.spawn(self.heartbeat_worker).link_exception(callback=self.noop)
         self.greenlet.spawn(self.client_listener).link_exception(callback=self.noop)
 
@@ -493,8 +496,6 @@ class SlaveLocustRunner(DistributedLocustRunner):
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         
         self.client = rpc.Client(self.master_host, self.master_port, self.client_id)
-        self.greenlet = Group()
-
         self.greenlet.spawn(self.heartbeat).link_exception(callback=self.noop)
         self.greenlet.spawn(self.worker).link_exception(callback=self.noop)
         self.client.send(Message("client_ready", None, self.client_id))
@@ -539,7 +540,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 #self.num_clients = job["num_clients"]
                 self.host = job["host"]
                 self.options.stop_timeout = job["stop_timeout"]
-                self.hatching_greenlet = gevent.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
+                self.hatching_greenlet = self.greenlet.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
             elif msg.type == "stop":
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))

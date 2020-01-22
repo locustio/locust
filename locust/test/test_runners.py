@@ -368,7 +368,7 @@ class TestMasterRunner(LocustTestCase):
         
         try:
             runner.start_hatching(0, 1, wait=True)
-            runner.greenlet.join()
+            runner.hatching_greenlet.join()
         except gevent.Timeout:
             self.fail("Got Timeout exception. A locust seems to have been spawned, even though 0 was specified.")
         finally:
