@@ -301,6 +301,9 @@ class LocustUserAgent(UserAgent):
     response_type = FastResponse
     valid_response_codes = frozenset([200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 301, 302, 303, 307])
     
+    def __init__(self, **kwargs):
+        super(LocustUserAgent, self).__init__(network_timeout=60.0, connection_timeout=60.0, **kwargs)
+
     def _urlopen(self, request):
         """Override _urlopen() in order to make it use the response_type attribute"""
         client = self.clientpool.get_client(request.url_split)
