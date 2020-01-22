@@ -135,7 +135,8 @@ class LocustRunner(object):
                 self.locusts.spawn(start_locust, new_locust)
                 if len(self.locusts) % 10 == 0:
                     logger.debug("%i locusts hatched" % len(self.locusts))
-                gevent.sleep(sleep_time)
+                if bucket:
+                    gevent.sleep(sleep_time)
         
         hatch()
         if wait:
