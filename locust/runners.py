@@ -59,7 +59,8 @@ class LocustRunner(object):
     
     def __del__(self):
         # don't leave any stray greenlets if runner is removed
-        self.greenlet.kill(block=False)
+        if len(self.greenlet) > 0:
+            self.greenlet.kill(block=False)
 
     @property
     def request_stats(self):
