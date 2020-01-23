@@ -48,6 +48,7 @@ def constant_pacing(wait_time):
     If a task execution exceeds the specified wait_time, the wait will be 0 before starting 
     the next task.
     """
+
     def wait_time_func(self):
         if not hasattr(self, "_cp_last_run"):
             self._cp_last_wait_time = wait_time
@@ -58,50 +59,51 @@ def constant_pacing(wait_time):
             self._cp_last_wait_time = max(0, wait_time - run_time)
             self._cp_last_run = time()
             return self._cp_last_wait_time
+
     return wait_time_func
 
 
-def constant_rps(rps):
+def constant_ips(ips):
     """
     This behaves exactly the same as constant_pacing but with an inverted parameter.
-    It takes requests per second as a parameter instead of time between requests.
+    It takes iterations per second as a parameter instead of time between iterations.
     """
 
-    return constant_pacing(1.0 / rps)
+    return constant_pacing(1.0 / ips)
 
 
-def constant_rps_total(rps):
+def constant_ips_total(ips):
     """
     Returns a function that will track the run time of all tasks in this locust process, 
     and for each time it's called it will return a wait time that will try to make the 
     execution equal to the time specified by the wait_time argument. 
     
-    This is similar to constant_rps, but looks at all clients/locusts in a locust process.
+    This is similar to constant_ips, but looks at all clients/locusts in a locust process.
 
-    Note that in a distributed run, the RPS limit is applied per-slave, not globally.
+    Note that in a distributed run, the iterations per second limit is applied per-slave, not globally.
 
-    During rampup, the RPS is intentionally constrained to be the requested rps * the share of running clients.
+    During rampup, the IPS is intentionally constrained to be the requested ips * the share of running clients.
 
-    Will output a warning if RPS target is missed twice in a row
+    Will output a warning if IPS target is missed twice in a row
     """
 
     def wait_time_func(self):
         lr = runners.locust_runner
         if not lr:
             logging.warning(
-                "You asked for constant total rps, but you seem to be running a locust directly. Hopefully you are only running one locust, in which case this will give a somewhat reasonable estimate."
+                "You asked for constant total ips, but you seem to be running a locust directly. Hopefully you are only running one locust, in which case this will give a somewhat reasonable estimate."
             )
-            return 1.0 / rps
+            return 1.0 / ips
         current_time = float(time())
         unstarted_clients = lr.num_clients - len(lr.locusts)
         if not hasattr(self, "_cp_last_run"):
             self._cp_last_run = 0
             self._cp_target_missed = False
-        next_time = self._cp_last_run + (lr.num_clients + unstarted_clients) / rps
+        next_time = self._cp_last_run + (lr.num_clients + unstarted_clients) / ips
         if current_time > next_time:
-            if lr.state == runners.STATE_RUNNING and self._cp_target_missed and not lr.rps_warning_emitted:
-                logging.warning("Failed to reach target rps, even after rampup has finished")
-                lr.rps_warning_emitted = True  # stop logging
+            if lr.state == runners.STATE_RUNNING and self._cp_target_missed and not lr.ips_warning_emitted:
+                logging.warning("Failed to reach target ips, even after rampup has finished")
+                lr.ips_warning_emitted = True  # stop logging
             self._cp_target_missed = True
             self._cp_last_run = current_time
             return 0
