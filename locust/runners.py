@@ -43,6 +43,7 @@ class LocustRunner(object):
         self.stepload_greenlet = None
         self.current_cpu_usage = 0
         self.cpu_warning_emitted = False
+        self.rps_warning_emitted = False
         self.greenlet.spawn(self.monitor_cpu)
         self.exceptions = {}
         self.stats = global_stats
@@ -77,8 +78,13 @@ class LocustRunner(object):
         """Called at the end of the test to repeat the warning & return the status"""
         if self.cpu_warning_emitted:
             logger.warning("Loadgen CPU usage was too high at some point during the test! See https://docs.locust.io/en/stable/running-locust-distributed.html for how to distribute the load over multiple CPU cores or machines")
-            return True
-        return False
+        return self.cpu_warning_emitted
+
+    def rps_log_warning(self):
+        """Called at the end of the test to repeat the warning & return the status"""
+        if self.rps_warning_emitted:
+            logger.warning("Failed to reach target RPS (at some point during the test). The most common cause of this is target system overload or too few clients")
+        return self.rps_warning_emitted
 
     def weight_locusts(self, amount):
         """

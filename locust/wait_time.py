@@ -1,5 +1,7 @@
 import random
 from time import time
+from locust import runners
+import logging
 
 
 def between(min_wait, max_wait):
@@ -47,7 +49,7 @@ def constant_pacing(wait_time):
     the next task.
     """
     def wait_time_func(self):
-        if not hasattr(self,"_cp_last_run"):
+        if not self._cp_last_run:
             self._cp_last_wait_time = wait_time
             self._cp_last_run = time()
             return wait_time
@@ -56,4 +58,51 @@ def constant_pacing(wait_time):
             self._cp_last_wait_time = max(0, wait_time - run_time)
             self._cp_last_run = time()
             return self._cp_last_wait_time
+    return wait_time_func
+
+
+def constant_rps(rps):
+    """
+    This behaves exactly the same as constant_pacing but with an inverted parameter.
+    It takes requests per second as a parameter instead of time between requests.
+    """
+
+    return constant_pacing(1 / rps)
+
+
+def constant_rps_total(rps):
+    """
+    Returns a function that will track the run time of all tasks in this locust process, 
+    and for each time it's called it will return a wait time that will try to make the 
+    execution equal to the time specified by the wait_time argument. 
+    
+    This is similar to constant_rps, but looks at all clients/locusts in a locust process.
+
+    Note that in a distributed run, the RPS limit is applied per-slave, not globally.
+
+    During rampup, the RPS is intentionally constrained to be the requested rps * the share of running clients.
+
+    Will output a warning if RPS target is missed twice in a row
+    """
+
+    def wait_time_func(self):
+        lr = runners.locust_runner
+        if not lr:
+            # We're running a locust directly. Make some kind of effort to do the right thing,
+            # without overcomplicating things for what is really an edge case
+            return 1 / rps
+        current_time = float(time())
+        unstarted_clients = lr.num_clients - len(lr.locusts)
+        next_time = self._cp_last_run + (lr.num_clients + unstarted_clients) / rps
+        if current_time > next_time:
+            if lr.state == runners.STATE_RUNNING and self._cp_target_missed and not lr.rps_warning_emitted:
+                logging.warning("Failed to reach target rps, even after rampup has finished")
+                lr.rps_warning_emitted = True  # stop logging
+            self._cp_target_missed = True
+            self._cp_last_run = current_time
+            return 0
+        self._cp_target_missed = False
+        self._cp_last_run = next_time
+        return next_time - current_time
+
     return wait_time_func
