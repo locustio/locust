@@ -13,7 +13,7 @@ from locust.runners import LocustRunner, LocalLocustRunner, MasterLocustRunner, 
      SlaveLocustRunner, STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_MISSING
 from locust.stats import global_stats, RequestStats
 from locust.test.testcases import LocustTestCase
-from locust.wait_time import between, constant
+from locust.wait_time import between, constant, constant_rps_total
 
 
 def mocked_rpc():
@@ -627,6 +627,26 @@ class TestMasterRunner(LocustTestCase):
         self.assertTrue("HeyAnException" in exception["traceback"])
         self.assertEqual(2, exception["count"])
 
+    def test_constant_rps_total(self):
+        target_rps = 50
+        run_time = 3
+        
+        class MyTestLocust(Locust):
+            i = 0
+            class task_set(TaskSet):
+                @task
+                def the_task(self):
+                    MyTestLocust.i = MyTestLocust.i + 1
+            wait_time = constant_rps_total(target_rps)
+
+        options = mocked_options()
+        runner = LocalLocustRunner([MyTestLocust], options)
+        runners.locust_runner = runner # this is necessary for rps_total
+        runner.start_hatching(10, 999)
+        gevent.sleep(run_time)
+        runner.quit()
+        locust_runner = None # just in case someone depends on this not being set
+        self.assertAlmostEqual(MyTestLocust.i, target_rps * run_time, delta=25)
 
 class TestSlaveLocustRunner(LocustTestCase):
     def setUp(self):

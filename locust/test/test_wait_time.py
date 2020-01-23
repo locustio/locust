@@ -3,7 +3,7 @@ import time
 
 from locust.core import HttpLocust, Locust, TaskSet, events, task
 from locust.exception import MissingWaitTimeError
-from locust.wait_time import between, constant, constant_pacing
+from locust.wait_time import between, constant, constant_pacing, constant_rps, constant_rps_total
 
 from .testcases import LocustTestCase, WebserverTestCase
 
@@ -59,6 +59,26 @@ class TestWaitTime(LocustTestCase):
         ts = TS(User())
         
         ts2 = TS(User())      
+        
+        previous_time = time.time()
+        for i in range(7):
+            ts.wait()
+            since_last_run = time.time() - previous_time
+            self.assertLess(abs(0.1 - since_last_run), 0.02)
+            previous_time = time.time()
+            time.sleep(random.random() * 0.1)
+            _ = ts2.wait_time()
+            _ = ts2.wait_time()
+
+    def test_constant_rps(self):
+        # Note: constant_rps_total is tested in test_runners.py, because it requires a runner
+        class User(Locust):
+            wait_time = constant_rps(10)
+        class TS(TaskSet):
+            pass
+        ts = TS(User())
+        
+        ts2 = TS(User())
         
         previous_time = time.time()
         for i in range(7):
