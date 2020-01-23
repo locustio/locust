@@ -67,7 +67,7 @@ def constant_rps(rps):
     It takes requests per second as a parameter instead of time between requests.
     """
 
-    return constant_pacing(1 / rps)
+    return constant_pacing(1.0 / rps)
 
 
 def constant_rps_total(rps):
@@ -91,7 +91,7 @@ def constant_rps_total(rps):
             logging.warning(
                 "You asked for constant total rps, but you seem to be running a locust directly. Hopefully you are only running one locust, in which case this will give a somewhat reasonable estimate."
             )
-            return 1 / rps
+            return 1.0 / rps
         current_time = float(time())
         unstarted_clients = lr.num_clients - len(lr.locusts)
         if not hasattr(self, "_cp_last_run"):
