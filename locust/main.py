@@ -571,7 +571,7 @@ def main():
         main_greenlet.join()
         code = 0
         lr = runners.locust_runner
-        if len(lr.errors) or len(lr.exceptions) or lr.cpu_log_warning():
+        if len(lr.errors) | len(lr.exceptions) | lr.cpu_log_warning() | lr.rps_log_warning():
             code = options.exit_code_on_error
         shutdown(code=code)
     except KeyboardInterrupt as e:
