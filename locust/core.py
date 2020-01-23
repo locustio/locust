@@ -163,6 +163,7 @@ class Locust(object):
                     self.setup()
                 except Exception as e:
                     events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
+                    sys.stderr.write("\n" + traceback.format_exc())
             if hasattr(self, "teardown") and self._teardown_is_set is False:
                 self._set_teardown_flag()
                 events.quitting += self.teardown
@@ -362,6 +363,7 @@ class TaskSet(object):
                     self.setup()
                 except Exception as e:
                     events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
+                    sys.stderr.write("\n" + traceback.format_exc())
             if hasattr(self, "teardown") and self._teardown_is_set is False:
                 self._set_teardown_flag()
                 events.quitting += self.teardown
