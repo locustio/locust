@@ -44,7 +44,7 @@ Built in wait_time functions
 ============================
 
 .. automodule:: locust.wait_time
-    :members: between, constant, constant_pacing
+    :members: between, constant, constant_pacing, constant_ips, constant_ips_total
 
 HttpSession class
 =================

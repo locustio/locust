@@ -41,6 +41,7 @@ class LocustRunner(object):
         self.state = STATE_INIT
         self.hatching_greenlet = None
         self.stepload_greenlet = None
+        self.target_user_count = None
         self.current_cpu_usage = 0
         self.cpu_warning_emitted = False
         self.ips_warning_emitted = False
@@ -216,6 +217,7 @@ class LocustRunner(object):
             self.exceptions = {}
             self.cpu_warning_emitted = False
             self.slave_cpu_warning_emitted = False
+            self.target_user_count = locust_count
             events.locust_start_hatching.fire()
 
         # Dynamically changing the locust count
@@ -298,6 +300,7 @@ class LocalLocustRunner(LocustRunner):
         events.locust_error += on_locust_error
 
     def start_hatching(self, locust_count, hatch_rate, wait=False):
+        self.target_user_count = locust_count
         if hatch_rate > 100:
             logger.warning("Your selected hatch rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?")
         if self.hatching_greenlet:
@@ -329,7 +332,6 @@ class MasterLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
         super(MasterLocustRunner, self).__init__(*args, **kwargs)
         self.slave_cpu_warning_emitted = False
-        self.target_user_count = None
 
         class SlaveNodesDict(dict):
             def get_by_state(self, state):

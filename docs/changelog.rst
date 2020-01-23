@@ -9,7 +9,7 @@ In development (master)
 
 * Continuously measure CPU usage and emit a warning if we get a five second average above 90%
 * Show CPU usage of slave nodes in the Web UI
-
+* Add new timers that target iterations per second: constant_ips (the inverse of constant_pacing) and constant_ips_total (total iterations per second, across locusts)
 
 0.13.5
 ======

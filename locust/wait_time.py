@@ -95,11 +95,11 @@ def constant_ips_total(ips):
             )
             return 1.0 / ips
         current_time = float(time())
-        unstarted_clients = lr.num_clients - len(lr.locusts)
+        unstarted_clients = lr.target_user_count - lr.user_count
         if not hasattr(self, "_cp_last_run"):
             self._cp_last_run = 0
             self._cp_target_missed = False
-        next_time = self._cp_last_run + (lr.num_clients + unstarted_clients) / float(ips)
+        next_time = self._cp_last_run + (lr.target_user_count + unstarted_clients) / float(ips)
         if current_time > next_time:
             if lr.state == runners.STATE_RUNNING and self._cp_target_missed and not lr.ips_warning_emitted:
                 logging.warning("Failed to reach target ips, even after rampup has finished")
