@@ -152,7 +152,58 @@ class TestLocustRunner(LocustTestCase):
         self.assertTrue(g1.dead)
         self.assertTrue(g2.dead)
         self.assertTrue(triggered[0])
+    
+    def test_setup_method_exception(self):
+        class User(Locust):
+            setup_run_count = 0
+            task_run_count = 0
+            locust_error_count = 0
+            wait_time = constant(1)
+            def setup(self):
+                User.setup_run_count += 1
+                raise Exception("some exception")
+            class task_set(TaskSet):
+                @task
+                def my_task(self):
+                    User.task_run_count += 1
         
+        def on_locust_error(*args, **kwargs):
+            User.locust_error_count += 1
+        events.locust_error += on_locust_error
+        
+        runner = LocalLocustRunner([User], mocked_options())
+        runner.start_hatching(locust_count=3, hatch_rate=3, wait=False)
+        runner.hatching_greenlet.get(timeout=3)
+        
+        self.assertEqual(1, User.setup_run_count)
+        self.assertEqual(1, User.locust_error_count)
+        self.assertEqual(3, User.task_run_count)
+    
+    def test_taskset_setup_method_exception(self):
+        class User(Locust):
+            setup_run_count = 0
+            task_run_count = 0
+            locust_error_count = 0
+            wait_time = constant(1)
+            class task_set(TaskSet):
+                def setup(self):
+                    User.setup_run_count += 1
+                    raise Exception("some exception")
+                @task
+                def my_task(self):
+                    User.task_run_count += 1
+        
+        def on_locust_error(*args, **kwargs):
+            User.locust_error_count += 1
+        events.locust_error += on_locust_error
+        
+        runner = LocalLocustRunner([User], mocked_options())
+        runner.start_hatching(locust_count=3, hatch_rate=3, wait=False)
+        runner.hatching_greenlet.get(timeout=3)
+        
+        self.assertEqual(1, User.setup_run_count)
+        self.assertEqual(1, User.locust_error_count)
+        self.assertEqual(3, User.task_run_count)
 
 
 class TestMasterRunner(LocustTestCase):

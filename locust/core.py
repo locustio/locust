@@ -156,14 +156,16 @@ class Locust(object):
         # check if deprecated wait API is used
         deprecation.check_for_deprecated_wait_api(self)
         
-        self._lock.acquire()
-        if hasattr(self, "setup") and self._setup_has_run is False:
-            self._set_setup_flag()
-            self.setup()
-        if hasattr(self, "teardown") and self._teardown_is_set is False:
-            self._set_teardown_flag()
-            events.quitting += self.teardown
-        self._lock.release()
+        with self._lock:
+            if hasattr(self, "setup") and self._setup_has_run is False:
+                self._set_setup_flag()
+                try:
+                    self.setup()
+                except Exception as e:
+                    events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
+            if hasattr(self, "teardown") and self._teardown_is_set is False:
+                self._set_teardown_flag()
+                events.quitting += self.teardown
 
     @classmethod
     def _set_setup_flag(cls):
@@ -353,14 +355,16 @@ class TaskSet(object):
         if not self.wait_function:
             self.wait_function = self.locust.wait_function
 
-        self._lock.acquire()
-        if hasattr(self, "setup") and self._setup_has_run is False:
-            self._set_setup_flag()
-            self.setup()
-        if hasattr(self, "teardown") and self._teardown_is_set is False:
-            self._set_teardown_flag()
-            events.quitting += self.teardown
-        self._lock.release()
+        with self._lock:
+            if hasattr(self, "setup") and self._setup_has_run is False:
+                self._set_setup_flag()
+                try:
+                    self.setup()
+                except Exception as e:
+                    events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
+            if hasattr(self, "teardown") and self._teardown_is_set is False:
+                self._set_teardown_flag()
+                events.quitting += self.teardown
 
     @classmethod
     def _set_setup_flag(cls):
