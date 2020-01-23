@@ -49,7 +49,7 @@ def constant_pacing(wait_time):
     the next task.
     """
     def wait_time_func(self):
-        if not self._cp_last_run:
+        if not hasattr(self, "_cp_last_run"):
             self._cp_last_wait_time = wait_time
             self._cp_last_run = time()
             return wait_time
@@ -88,11 +88,15 @@ def constant_rps_total(rps):
     def wait_time_func(self):
         lr = runners.locust_runner
         if not lr:
-            # We're running a locust directly. Make some kind of effort to do the right thing,
-            # without overcomplicating things for what is really an edge case
+            logging.warning(
+                "You asked for constant total rps, but you seem to be running a locust directly. Hopefully you are only running one locust, in which case this will give a somewhat reasonable estimate."
+            )
             return 1 / rps
         current_time = float(time())
         unstarted_clients = lr.num_clients - len(lr.locusts)
+        if not hasattr(self, "_cp_last_run"):
+            self._cp_last_run = 0
+            self._cp_target_missed = False
         next_time = self._cp_last_run + (lr.num_clients + unstarted_clients) / rps
         if current_time > next_time:
             if lr.state == runners.STATE_RUNNING and self._cp_target_missed and not lr.rps_warning_emitted:

@@ -152,9 +152,6 @@ class Locust(object):
     _setup_has_run = False  # Internal state to see if we have already run
     _teardown_is_set = False  # Internal state to see if we have already run
     _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
-    # Used by constant_pacing timers
-    _cp_last_run = 0
-    _cp_target_missed = False
     _state = False
     
     def __init__(self):
