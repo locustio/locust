@@ -8,6 +8,7 @@ In development (master)
 =======================
 
 * Continuously measure CPU usage and emit a warning if we get a five second average above 90%
+* Show CPU usage of slave nodes in the Web UI
 
 
 0.13.5
