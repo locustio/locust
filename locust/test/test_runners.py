@@ -204,6 +204,22 @@ class TestLocustRunner(LocustTestCase):
         self.assertEqual(1, User.setup_run_count)
         self.assertEqual(1, User.locust_error_count)
         self.assertEqual(3, User.task_run_count)
+    
+    def test_change_user_count_during_hatching(self):
+            class User(Locust):
+                wait_time = constant(1)
+                class task_set(TaskSet):
+                    @task
+                    def my_task(self):
+                        pass
+            
+            runner = LocalLocustRunner([User], mocked_options())
+            runner.start_hatching(locust_count=10, hatch_rate=5, wait=False)
+            sleep(0.6)
+            runner.start_hatching(locust_count=5, hatch_rate=5, wait=False)
+            runner.hatching_greenlet.join()
+            self.assertEqual(5, len(runner.locusts))
+            runner.quit()
 
 
 class TestMasterRunner(LocustTestCase):
@@ -404,6 +420,33 @@ class TestMasterRunner(LocustTestCase):
                 }, "fake_client"))
                 self.assertEqual(30, master.stats.total.get_current_response_time_percentile(0.5))
                 self.assertEqual(3000, master.stats.total.get_current_response_time_percentile(0.95))
+    
+    def test_rebalance_locust_users_on_slave_connect(self):
+        class MyTestLocust(Locust):
+            pass
+        
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = MasterLocustRunner(MyTestLocust, self.options)
+            server.mocked_send(Message("client_ready", None, "zeh_fake_client1"))
+            self.assertEqual(1, len(master.clients))
+            self.assertTrue("zeh_fake_client1" in master.clients, "Could not find fake client in master instance's clients dict")
+            
+            master.start_hatching(100, 20)
+            self.assertEqual(1, len(server.outbox))
+            client_id, msg = server.outbox.pop()
+            self.assertEqual(100, msg.data["num_clients"])
+            self.assertEqual(20, msg.data["hatch_rate"])
+            
+            # let another slave connect
+            server.mocked_send(Message("client_ready", None, "zeh_fake_client2"))
+            self.assertEqual(2, len(master.clients))
+            self.assertEqual(2, len(server.outbox))
+            client_id, msg = server.outbox.pop()
+            self.assertEqual(50, msg.data["num_clients"])
+            self.assertEqual(10, msg.data["hatch_rate"])
+            client_id, msg = server.outbox.pop()
+            self.assertEqual(50, msg.data["num_clients"])
+            self.assertEqual(10, msg.data["hatch_rate"])
     
     def test_sends_hatch_data_to_ready_running_hatching_slaves(self):
         '''Sends hatch job to running, ready, or hatching slaves'''
@@ -667,6 +710,38 @@ class TestSlaveLocustRunner(LocustTestCase):
             slave.locusts.join()
             # check that locust user did not get to finish
             self.assertEqual(1, MyTestLocust._test_state)
+    
+    def test_change_user_count_during_hatching(self):
+        class User(Locust):
+            wait_time = constant(1)
+            class task_set(TaskSet):
+                @task
+                def my_task(self):
+                    pass
+        
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            options = mocked_options()
+            options.stop_timeout = None
+            slave = SlaveLocustRunner([User], options)
+            
+            client.mocked_send(Message("hatch", {
+                "hatch_rate": 5,
+                "num_clients": 10,
+                "host": "",
+                "stop_timeout": None,
+            }, "dummy_client_id"))
+            sleep(0.6)
+            self.assertEqual(STATE_HATCHING, slave.state)
+            client.mocked_send(Message("hatch", {
+                "hatch_rate": 5,
+                "num_clients": 9,
+                "host": "",
+                "stop_timeout": None,
+            }, "dummy_client_id"))
+            sleep(0)
+            slave.hatching_greenlet.join()
+            self.assertEqual(9, len(slave.locusts))
+            slave.quit()
             
 
 
