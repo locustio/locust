@@ -24,6 +24,9 @@ from .runners import STATE_CLEANUP, LOCUST_STATE_RUNNING, LOCUST_STATE_STOPPING,
 from .util import deprecation
 
 
+logger = logging.getLogger(__name__)
+
+
 def task(weight=1):
     """
     Used as a convenience decorator to be able to declare tasks for a TaskSet 
@@ -163,7 +166,7 @@ class Locust(object):
                     self.setup()
                 except Exception as e:
                     events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
-                    sys.stderr.write("\n" + traceback.format_exc())
+                    logger.error("%s\n%s", e, traceback.format_exc())
             if hasattr(self, "teardown") and self._teardown_is_set is False:
                 self._set_teardown_flag()
                 events.quitting += self.teardown
@@ -363,7 +366,7 @@ class TaskSet(object):
                     self.setup()
                 except Exception as e:
                     events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
-                    sys.stderr.write("\n" + traceback.format_exc())
+                    logger.error("%s\n%s", e, traceback.format_exc())
             if hasattr(self, "teardown") and self._teardown_is_set is False:
                 self._set_teardown_flag()
                 events.quitting += self.teardown
@@ -420,7 +423,7 @@ class TaskSet(object):
             except Exception as e:
                 events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
                 if self.locust._catch_exceptions:
-                    sys.stderr.write("\n" + traceback.format_exc())
+                    logger.error("%s\n%s", e, traceback.format_exc())
                     self.wait()
                 else:
                     raise

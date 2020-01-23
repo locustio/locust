@@ -570,13 +570,12 @@ class TestMasterRunner(LocustTestCase):
         runner = LocalLocustRunner([MyLocust], self.options)
         l = MyLocust()
         
-        # supress stderr
-        with mock.patch("sys.stderr") as mocked:
-            l.task_set._task_queue = [l.task_set.will_error, l.task_set.will_stop]
-            self.assertRaises(LocustError, l.run) # make sure HeyAnException isn't raised
-            l.task_set._task_queue = [l.task_set.will_error, l.task_set.will_stop]
-            self.assertRaises(LocustError, l.run) # make sure HeyAnException isn't raised
-        self.assertEqual(2, len(mocked.method_calls))
+        l.task_set._task_queue = [l.task_set.will_error, l.task_set.will_stop]
+        self.assertRaises(LocustError, l.run) # make sure HeyAnException isn't raised
+        l.task_set._task_queue = [l.task_set.will_error, l.task_set.will_stop]
+        self.assertRaises(LocustError, l.run) # make sure HeyAnException isn't raised
+        # make sure we got two entries in the error log
+        self.assertEqual(2, len(self.mocked_log.error))
         
         # make sure exception was stored
         self.assertEqual(1, len(runner.exceptions))
