@@ -4,7 +4,8 @@ import os
 import re
 
 from setuptools import find_packages, setup
-
+from setuptools.command.develop import develop
+from setuptools.command.install import install
 
 # parse version from locust/__init__.py
 _version_re = re.compile(r'__version__\s+=\s+(.*)')
@@ -12,6 +13,16 @@ _init_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "locust", 
 with open(_init_file, 'rb') as f:
     version = str(ast.literal_eval(_version_re.search(
         f.read().decode('utf-8')).group(1)))
+
+class PostDevelopCommand(develop):
+    def run(self):
+        if sys.version_info[0] < 3 or sys.version_info[1] < 6:
+            sys.exit("Your Python version is no longer supported by Locust. Please upgrade Python to at least 3.6, or use a pinned old locust version (pip/pip3 install locustio==0.13.5)")
+
+class PostInstallCommand(install):
+    def run(self):
+        if sys.version_info[0] < 3 or sys.version_info[1] < 6:
+            sys.exit("Your Python version is no longer supported by Locust. Please upgrade Python to at least 3.6, or use a pinned old locust version (pip/pip3 install locustio==0.13.5)")
 
 setup(
     name='locustio',
@@ -59,5 +70,9 @@ setup(
         'console_scripts': [
             'locust = locust.main:main',
         ]
+    },    
+    cmdclass={
+        'develop': PostDevelopCommand,
+        'install': PostInstallCommand,
     },
 )
