@@ -9,6 +9,8 @@ In development (master)
 
 * Continuously measure CPU usage and emit a warning if we get a five second average above 90%
 * Show CPU usage of slave nodes in the Web UI
+* Fixed issue when running Locust distributed and new slave nodes connected during the hatching/ramp-up 
+  phase (https://github.com/locustio/locust/issues/1168)
 
 
 0.13.5
