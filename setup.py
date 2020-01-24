@@ -19,11 +19,13 @@ class PostDevelopCommand(develop):
     def run(self):
         if sys.version_info[0] < 3 or sys.version_info[1] < 6:
             sys.exit("Your Python version is no longer supported by Locust. Please upgrade Python to at least 3.6, or use a pinned old locust version (pip/pip3 install locustio==0.13.5)")
+        develop.run(self)
 
 class PostInstallCommand(install):
     def run(self):
         if sys.version_info[0] < 3 or sys.version_info[1] < 6:
             sys.exit("Your Python version is no longer supported by Locust. Please upgrade Python to at least 3.6, or use a pinned old locust version (pip/pip3 install locustio==0.13.5)")
+        install.run(self)
 
 setup(
     name='locustio',
