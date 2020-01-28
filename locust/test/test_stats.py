@@ -1,9 +1,10 @@
 import time
 import unittest
 import re
+import os
 
 import locust
-from locust.core import HttpLocust, TaskSet, task
+from locust.core import HttpLocust, TaskSet, task, Locust
 from locust.inspectlocust import get_task_ratio_dict
 from locust.rpc.protocol import Message
 from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_response_time_dicts, global_stats
@@ -11,6 +12,7 @@ from locust.test.testcases import LocustTestCase
 from six.moves import xrange
 
 from .testcases import WebserverTestCase
+from .test_runners import mocked_options
 
 
 class TestRequestStats(unittest.TestCase):
@@ -268,6 +270,44 @@ class TestStatsPrinting(LocustTestCase):
         self.assertEqual(len(headlines), len(info[3].split()))
         self.assertEqual(len(headlines), len(info[5].split()))
 
+
+class TestWriteStatCSVs(LocustTestCase):
+    STATS_BASE_NAME = "test"
+    STATS_FILENAME = "{}_stats.csv".format(STATS_BASE_NAME)
+    STATS_HISTORY_FILENAME = "{}_stats_history.csv".format(STATS_BASE_NAME)
+    STATS_FAILURES_FILENAME = "{}_failures.csv".format(STATS_BASE_NAME)
+
+    def setUp(self):
+        class User(Locust):
+            setup_run_count = 0
+            task_run_count = 0
+            locust_error_count = 0
+            wait_time = locust.wait_time.constant(1)
+
+            class task_set(TaskSet):
+                @task
+                def my_task(self):
+                    User.task_run_count += 1
+        locust.runners.locust_runner = locust.runners.LocalLocustRunner([User], mocked_options())
+        self.remove_file_if_exists(self.STATS_FILENAME)
+        self.remove_file_if_exists(self.STATS_HISTORY_FILENAME)
+        self.remove_file_if_exists(self.STATS_FAILURES_FILENAME)
+
+    def tearDown(self):
+        locust.runners.locust_runner.quit()
+        self.remove_file_if_exists(self.STATS_FILENAME)
+        self.remove_file_if_exists(self.STATS_HISTORY_FILENAME)
+        self.remove_file_if_exists(self.STATS_FAILURES_FILENAME)
+
+    def remove_file_if_exists(self, filename):
+        if os.path.exists(filename):
+            os.remove(filename)
+
+    def test_write_stat_csvs(self):
+        locust.stats.write_stat_csvs(self.STATS_BASE_NAME)
+        self.assertTrue(os.path.exists(self.STATS_FILENAME))
+        self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
+        self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
 
 class TestStatsEntryResponseTimesCache(unittest.TestCase):
     def setUp(self, *args, **kwargs):

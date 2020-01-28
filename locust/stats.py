@@ -765,12 +765,15 @@ def stats_writer(base_filepath, stats_history_enabled=False):
 
 
 def write_stat_csvs(base_filepath, stats_history_enabled=False):
-    """Writes the requests and distribution csvs."""
+    """Writes the requests, distribution, and failures csvs."""
     with open(base_filepath + '_stats.csv', 'w') as f:
         f.write(requests_csv())
 
     with open(base_filepath + '_stats_history.csv', 'a') as f:
         f.write(stats_history_csv(stats_history_enabled) + "\n")
+
+    with open(base_filepath + '_failures.csv', 'w') as f:
+        f.write(failures_csv())
 
 
 def sort_stats(stats):
