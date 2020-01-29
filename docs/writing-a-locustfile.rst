@@ -333,13 +333,13 @@ Order of events
 
 Since many setup and cleanup operations are dependent on each other, here is the order which they are run:
 
-1. Locust setup
-2. TaskSet setup
-3. TaskSet on_start
+1. Locust setup (once)
+2. TaskSet setup (once)
+3. TaskSet on_start (once per locust)
 4. TaskSet tasks...
-5. TaskSet on_stop
-6. TaskSet teardown
-7. Locust teardown
+5. TaskSet on_stop (once per locust)
+6. TaskSet teardown (once)
+7. Locust teardown (once)
 
 In general, the setup and teardown methods should be complementary.
 
