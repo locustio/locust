@@ -1,4 +1,41 @@
 # Change Log
+## [0.14.0](https://github.com/locustio/locust/tree/0.14.0) (2020-02-03)
+
+[Full Changelog](https://github.com/locustio/locust/compare/0.13.5...0.14.0)
+
+**Fixed bugs:**
+
+- FastHttpLocust gives error when using valid url. [\#1222](https://github.com/locustio/locust/issues/1222)
+- Error generating request statistics CSV in master–slave mode [\#1191](https://github.com/locustio/locust/issues/1191)
+- Stats are reset when re-balancing users across slave nodes [\#1168](https://github.com/locustio/locust/issues/1168)
+- Slave count stuck at 3 instead of decreasing to 1 due to "missing" [\#1158](https://github.com/locustio/locust/issues/1158)
+
+**Closed issues:**
+
+- scale clients up and down during a run [\#1185](https://github.com/locustio/locust/issues/1185)
+- Locust should warn if CPU usage is too high [\#1161](https://github.com/locustio/locust/issues/1161)
+- Support Step Load Pattern \(up & down\) [\#1001](https://github.com/locustio/locust/issues/1001)
+- Provide a way to specify locust counts and hatch rate per locust class [\#683](https://github.com/locustio/locust/issues/683)
+- Alternative terminology for "slave" [\#220](https://github.com/locustio/locust/issues/220)
+
+**Merged pull requests:**
+
+- Save failures.csv in --no-web mode [\#1245](https://github.com/locustio/locust/pull/1245) ([ajt89](https://github.com/ajt89))
+- Drop support for pre 3.6 Python versions \(give error during installation\) [\#1243](https://github.com/locustio/locust/pull/1243) ([cyberw](https://github.com/cyberw))
+- Warn if CPU usage is too high \(\>90%\) \#1161 [\#1236](https://github.com/locustio/locust/pull/1236) ([cyberw](https://github.com/cyberw))
+- Update docs for running locust in Step Load Mode [\#1235](https://github.com/locustio/locust/pull/1235) ([delulu](https://github.com/delulu))
+- allow 1 percent codecov degradation before failing build \(because it is flaky\) [\#1230](https://github.com/locustio/locust/pull/1230) ([cyberw](https://github.com/cyberw))
+- Disable codecov patch analysis, because it fails all the time [\#1229](https://github.com/locustio/locust/pull/1229) ([cyberw](https://github.com/cyberw))
+- Relax host checking for FastHttpLocust to be more in line with HttpLocust. Fixes \#1222 [\#1227](https://github.com/locustio/locust/pull/1227) ([cyberw](https://github.com/cyberw))
+- Add "Running Locust with Docker" to the TOC [\#1221](https://github.com/locustio/locust/pull/1221) ([TBBle](https://github.com/TBBle))
+- Fix link formatting for the Helm chart [\#1219](https://github.com/locustio/locust/pull/1219) ([TBBle](https://github.com/TBBle))
+- fix: change typo UserBehavior to UserBehaviour [\#1218](https://github.com/locustio/locust/pull/1218) ([aasmpro](https://github.com/aasmpro))
+- Fix 'd rop-in' typo to 'drop-in' [\#1215](https://github.com/locustio/locust/pull/1215) ([jenglamlow](https://github.com/jenglamlow))
+- Update running-locust-distributed.rst [\#1212](https://github.com/locustio/locust/pull/1212) ([Neamar](https://github.com/Neamar))
+- Warn if spawn rate is too high. Adresses bug \#1174 for example. [\#1211](https://github.com/locustio/locust/pull/1211) ([cyberw](https://github.com/cyberw))
+- Allow users to override encoding when decoding requests \(maybe using chardet, as was the default before\) [\#1204](https://github.com/locustio/locust/pull/1204) ([cyberw](https://github.com/cyberw))
+- Allow min\_wait and max\_wait times of 0 [\#1199](https://github.com/locustio/locust/pull/1199) ([Aresius423](https://github.com/Aresius423))
+
 ## [0.13.5](https://github.com/locustio/locust/tree/0.13.5) (2019-12-17)
 
 [Full Changelog](https://github.com/locustio/locust/compare/0.13.4...0.13.5)

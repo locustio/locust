@@ -7,6 +7,9 @@ For full details of the Locust changelog, please see https://github.com/locustio
 In development (master)
 =======================
 
+0.14.0
+======
+
 * Drop Python 2 and Python 3.5 support!
 * Continuously measure CPU usage and emit a warning if we get a five second average above 90%
 * Show CPU usage of slave nodes in the Web UI
