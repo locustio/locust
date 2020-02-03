@@ -5,9 +5,6 @@ import re
 import sys
 
 from setuptools import find_packages, setup
-from setuptools.command.develop import develop
-from setuptools.command.install import install
-from setuptools.command.egg_info import egg_info
 
 # parse version from locust/__init__.py
 _version_re = re.compile(r'__version__\s+=\s+(.*)')
@@ -15,24 +12,6 @@ _init_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "locust", 
 with open(_init_file, 'rb') as f:
     version = str(ast.literal_eval(_version_re.search(
         f.read().decode('utf-8')).group(1)))
-
-class PostDevelopCommand(develop):
-    def run(self):
-        if sys.version_info[0] < 3 or sys.version_info[1] < 6:
-            sys.exit("Your Python version is no longer supported by Locust. Please upgrade Python to at least 3.6, or use a pinned old locust version (pip/pip3 install locustio==0.13.5)")
-        develop.run(self)
-
-class PostInstallCommand(install):
-    def run(self):
-        if sys.version_info[0] < 3 or sys.version_info[1] < 6:
-            sys.exit("Your Python version is no longer supported by Locust. Please upgrade Python to at least 3.6, or use a pinned old locust version (pip/pip3 install locustio==0.13.5)")
-        install.run(self)
-
-class PostEggInfoCommand(egg_info):
-    def run(self):
-        if sys.version_info[0] < 3 or sys.version_info[1] < 6:
-            sys.exit("Your Python version is no longer supported by Locust. Please upgrade Python to at least 3.6, or use a pinned old locust version (pip/pip3 install locustio==0.13.5)")
-        egg_info.run(self)
 
 setup(
     name='locustio',
@@ -45,8 +24,6 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
@@ -63,6 +40,7 @@ setup(
     packages=find_packages(exclude=['examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
+    python_requires=">=3.6",
     install_requires=[
         "gevent==1.5a2", 
         "flask>=0.10.1", 
@@ -81,9 +59,4 @@ setup(
             'locust = locust.main:main',
         ]
     },    
-    cmdclass={
-        'develop': PostDevelopCommand,
-        'install': PostInstallCommand,
-        'egg_info': PostEggInfoCommand,
-    },
 )
