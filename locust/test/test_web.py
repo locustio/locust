@@ -12,7 +12,7 @@ from locust import events, runners, stats, web
 from locust.core import Locust
 from locust.main import parse_options
 from locust.runners import LocustRunner
-from six.moves import StringIO
+from io import StringIO
 
 from .testcases import LocustTestCase
 

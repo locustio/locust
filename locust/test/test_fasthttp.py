@@ -1,4 +1,3 @@
-import six
 import socket
 
 from locust import TaskSet, task, events
@@ -8,9 +7,6 @@ from locust.exception import CatchResponseError, InterruptTaskSet, ResponseError
 from locust.stats import global_stats
 
 from .testcases import WebserverTestCase
-
-if six.PY2:
-    from locust.contrib.fasthttp import ConnectionRefusedError
 
 
 class TestFastHttpSession(WebserverTestCase):
@@ -26,12 +22,8 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(r.status_code, 0)
         self.assertEqual(None, r.content)
         self.assertEqual(1, len(global_stats.errors))
-        if six.PY2:
-            self.assertTrue(isinstance(r.error, socket.error))
-            self.assertTrue(isinstance(six.next(six.itervalues(global_stats.errors)).error, socket.error))
-        else:
-            self.assertTrue(isinstance(r.error, ConnectionRefusedError))
-            self.assertTrue(isinstance(six.next(six.itervalues(global_stats.errors)).error, ConnectionRefusedError))
+        self.assertTrue(isinstance(r.error, ConnectionRefusedError))
+        self.assertTrue(isinstance(next(iter(global_stats.errors.values())).error, ConnectionRefusedError))
     
     def test_404(self):
         global_stats.clear_all()

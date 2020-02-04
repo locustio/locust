@@ -9,11 +9,8 @@ from time import time
 
 import gevent
 import psutil
-import six
 from gevent import GreenletExit
 from gevent.pool import Group
-
-from six.moves import xrange
 
 from . import events
 from .rpc import Message, rpc
@@ -99,7 +96,7 @@ class LocustRunner(object):
             # create locusts depending on weight
             percent = locust.weight / float(weight_sum)
             num_locusts = int(round(amount * percent))
-            bucket.extend([locust for x in xrange(0, num_locusts)])
+            bucket.extend([locust for x in range(num_locusts)])
             # used to keep track of the amount of rounding was done if we need
             # to add/remove some instances from bucket
             residuals[locust] = amount * percent - round(amount * percent)
@@ -132,7 +129,7 @@ class LocustRunner(object):
             while True:
                 if not bucket:
                     logger.info("All locusts hatched: %s (%i already running)" % (
-                        ", ".join(["%s: %d" % (name, count) for name, count in six.iteritems(occurrence_count)]), 
+                        ", ".join(["%s: %d" % (name, count) for name, count in occurrence_count.items()]), 
                         existing_count,
                     ))
                     events.hatch_complete.fire(user_count=len(self.locusts))
@@ -327,11 +324,11 @@ class MasterLocustRunner(DistributedLocustRunner):
 
         class SlaveNodesDict(dict):
             def get_by_state(self, state):
-                return [c for c in six.itervalues(self) if c.state == state]
+                return [c for c in self.values() if c.state == state]
             
             @property
             def all(self):
-                return six.itervalues(self)
+                return self.values()
 
             @property
             def ready(self):
@@ -366,7 +363,7 @@ class MasterLocustRunner(DistributedLocustRunner):
     
     @property
     def user_count(self):
-        return sum([c.user_count for c in six.itervalues(self.clients)])
+        return sum([c.user_count for c in self.clients.values()])
     
     def cpu_log_warning(self):
         warning_emitted = LocustRunner.cpu_log_warning(self)
@@ -472,7 +469,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                 self.clients[msg.node_id].state = STATE_RUNNING
                 self.clients[msg.node_id].user_count = msg.data["count"]
                 if len(self.clients.hatching) == 0:
-                    count = sum(c.user_count for c in six.itervalues(self.clients))
+                    count = sum(c.user_count for c in self.clients.values())
                     events.hatch_complete.fire(user_count=count)
             elif msg.type == "quit":
                 if msg.node_id in self.clients:

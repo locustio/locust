@@ -1,4 +1,3 @@
-import six
 import warnings
 
 
@@ -6,19 +5,13 @@ import warnings
 warnings.filterwarnings('always', category=DeprecationWarning, module="locust")
 
 
-def get_class_func(f):
-    if six.PY2:
-        return f.__func__
-    else:
-        return f
-
 def check_for_deprecated_wait_api(locust_or_taskset):
     # check if deprecated wait API is used
     if locust_or_taskset.wait_function:
         warnings.warn("Usage of wait_function is deprecated since version 0.13. Declare a %s.wait_time method instead "
                       "(should return seconds and not milliseconds)" % type(locust_or_taskset).__name__, DeprecationWarning)
         from locust.core import TaskSet
-        if not locust_or_taskset.wait_time or locust_or_taskset.wait_time.__func__ == get_class_func(TaskSet.wait_time):
+        if not locust_or_taskset.wait_time or locust_or_taskset.wait_time.__func__ == TaskSet.wait_time:
             # If wait_function has been declared, and custom wait_time has NOT been declared, 
             # we'll add a wait_time function that just calls wait_function and divides the 
             # returned value by 1000.0

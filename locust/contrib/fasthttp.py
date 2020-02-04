@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import re
 import socket
 from base64 import b64encode
-from six.moves.urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse
 from ssl import SSLError
 from timeit import default_timer
 

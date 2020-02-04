@@ -9,7 +9,6 @@ from io import BytesIO
 
 import gevent
 import gevent.pywsgi
-import six
 from flask import (Flask, Response, make_response, redirect, request,
                    send_file, stream_with_context)
 
@@ -155,7 +154,7 @@ class LocustTestCase(unittest.TestCase):
         self.mocked_log = MockedLoggingHandler
                       
     def tearDown(self):
-        for event, handlers in six.iteritems(self._event_handlers):
+        for event, handlers in self._event_handlers.items():
             event._handlers = handlers
         
         # restore logging class
