@@ -361,16 +361,8 @@ def load_locustfile(path):
         """
         Loads the locust file as a module, similar to performing `import`
         """
-        try:
-            # Python 3 compatible
-            source = importlib.machinery.SourceFileLoader(os.path.splitext(locustfile)[0], path)
-            imported = source.load_module()
-        except AttributeError:
-            # Python 2.7 compatible
-            import imp
-            imported = imp.load_source(os.path.splitext(locustfile)[0], path)
-
-        return imported
+        source = importlib.machinery.SourceFileLoader(os.path.splitext(locustfile)[0], path)
+        return  source.load_module()
 
     # Start with making sure the current working dir is in the sys.path
     sys.path.insert(0, os.getcwd())
