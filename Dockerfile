@@ -13,7 +13,7 @@ COPY --from=builder /usr/local/bin/locust /usr/local/bin/locust
 COPY docker_start.sh docker_start.sh
 RUN chmod +x docker_start.sh
 
-EXPOSE 8089 5557 5558
+EXPOSE 8089 5557
 
 USER locust
 CMD ["./docker_start.sh"]
