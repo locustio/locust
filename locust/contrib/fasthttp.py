@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import re
 import socket
+import json
 from base64 import b64encode
 from urllib.parse import urlparse, urlunparse
 from ssl import SSLError
@@ -253,6 +254,9 @@ class FastResponse(CompatResponse):
             else:
                 self.encoding = self.headers.get('content-type', '').partition("charset=")[2] or 'utf-8'
         return str(self.content, self.encoding, errors='replace')
+
+    def json(self):
+        return json.loads(self.text)
 
     def raise_for_status(self):
         """Raise any connection errors that occured during the request"""
