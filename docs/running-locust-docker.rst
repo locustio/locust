@@ -35,7 +35,8 @@ Running your tests
 The easiest way to get your tests running is to build an image with your test file built in. Once you've
 written your locustfile you can bake it into a Docker image with a simple ``Dockerfile``:
 
-.. code-block::
+.. code-block:: docker
+
     FROM locustio/locust
     ADD locustfile.py locustfile.py
 
@@ -47,12 +48,14 @@ to authenticate with the repository to pull the image.
 For debugging locally you can run a container and pass your locustfile in as a volume:
 
 .. code-block:: console
+
     docker run -p 8089:8089 --volume $PWD/dir/of/locustfile:/mnt/locust -e LOCUSTFILE_PATH=/mnt/locust/locustfile.py -e TARGET_URL=https://abc.com locustio/locust
 
 
 To run in standalone mode without the web UI, you can use the ``LOCUST_OPTS`` environment variable to add the required options:
 
 .. code-block:: console
+
     docker run --volume $PWD/dir/of/locustfile:/mnt/locust -e LOCUSTFILE_PATH=/mnt/locust/locustfile.py -e TARGET_URL=https://abc.com -e LOCUST_OPTS="--clients=10 --no-web --run-time=600" locustio/locust
 
 
