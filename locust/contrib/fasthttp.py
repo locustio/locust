@@ -1,22 +1,14 @@
 from __future__ import absolute_import
 
 import re
-import six
 import socket
+import json
 from base64 import b64encode
-from six.moves.urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse
 from ssl import SSLError
 from timeit import default_timer
 
-if six.PY2:
-    from cookielib import CookieJar
-    class ConnectionRefusedError(Exception):
-        # ConnectionRefusedError doesn't exist in python 2, so we'll 
-        # define a dummy class to avoid a NameError
-        pass
-else:
-    from http.cookiejar import CookieJar
-    unicode = str
+from http.cookiejar import CookieJar
 
 import gevent
 from gevent.timeout import Timeout
@@ -254,7 +246,6 @@ class FastResponse(CompatResponse):
     def text(self):
         """
         Returns the text content of the response as a decoded string
-        (unicode on python2)
         """
         if self.content is None:
             return None
@@ -263,7 +254,10 @@ class FastResponse(CompatResponse):
                 self.encoding = 'utf-8'
             else:
                 self.encoding = self.headers.get('content-type', '').partition("charset=")[2] or 'utf-8'
-        return unicode(self.content, self.encoding, errors='replace')
+        return str(self.content, self.encoding, errors='replace')
+
+    def json(self):
+        return json.loads(self.text)
 
     def raise_for_status(self):
         """Raise any connection errors that occured during the request"""
@@ -386,7 +380,7 @@ class ResponseContextManager(FastResponse):
                 if response.content == "":
                     response.failure("No data")
         """
-        if isinstance(exc, six.string_types):
+        if isinstance(exc, str):
             exc = CatchResponseError(exc)
         
         self.environment.events.request_failure.fire(

@@ -1,5 +1,3 @@
-import six
-
 from locust import InterruptTaskSet, ResponseError
 from locust.core import HttpLocust, Locust, TaskSet, events, task
 from locust.env import Environment
@@ -156,7 +154,7 @@ class TestTaskSet(LocustTestCase):
         
         l = MySubTaskSet(self.locust)
         self.assertEqual(2, len(l.tasks))
-        self.assertEqual([t1, six.get_unbound_function(MySubTaskSet.t2)], l.tasks)
+        self.assertEqual([t1, MySubTaskSet.t2], l.tasks)
     
     def test_task_decorator_with_or_without_argument(self):
         class MyTaskSet(TaskSet):

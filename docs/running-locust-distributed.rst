@@ -67,9 +67,7 @@ to 127.0.0.1)
 ``--master-port=5557``
 ----------------------
 
-Optionally used together with ``--slave`` to set the port number of the master node (defaults to 5557). 
-Note that locust will use the port specified, as well as the port number +1. So if 5557 is used, locust 
-will use both port 5557 and 5558.
+Optionally used together with ``--slave`` to set the port number of the master node (defaults to 5557).
 
 ``--master-bind-host=X.X.X.X``
 ------------------------------
@@ -81,8 +79,7 @@ will bind to. Defaults to * (all available interfaces).
 ------------------------------
 
 Optionally used together with ``--master``. Determines what network ports that the master node will
-listen to. Defaults to 5557. Note that locust will use the port specified, as well as the port 
-number +1. So if 5557 is used, locust will use both port 5557 and 5558.
+listen to. Defaults to 5557.
 
 ``--expect-slaves=X``
 ---------------------

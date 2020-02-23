@@ -6,10 +6,8 @@ from time import time
 
 import gevent
 import gevent.lock
-import six
 
 from gevent import GreenletExit, monkey
-from six.moves import xrange
 
 # The monkey patching must run before requests is imported, or else 
 # we'll get an infinite recursion when doing SSL/HTTPS requests.
@@ -188,7 +186,7 @@ class Locust(object):
         except StopLocust:
             pass
         except (RescheduleTask, RescheduleTaskImmediately) as e:
-            six.reraise(LocustError, LocustError("A task inside a Locust class' main TaskSet (`%s.task_set` of type `%s`) seems to have called interrupt() or raised an InterruptTaskSet exception. The interrupt() function is used to hand over execution to a parent TaskSet, and should never be called in the main TaskSet which a Locust class' task_set attribute points to." % (type(self).__name__, self.task_set.__name__)), sys.exc_info()[2])
+            raise LocustError("A task inside a Locust class' main TaskSet (`%s.task_set` of type `%s`) seems to have called interrupt() or raised an InterruptTaskSet exception. The interrupt() function is used to hand over execution to a parent TaskSet, and should never be called in the main TaskSet which a Locust class' task_set attribute points to." % (type(self).__name__, self.task_set.__name__)) from e
         except GreenletExit as e:
             if runner:
                 runner.state = STATE_CLEANUP
@@ -247,27 +245,26 @@ class TaskSetMeta(type):
         if "tasks" in classDict and classDict["tasks"] is not None:
             tasks = classDict["tasks"]
             if isinstance(tasks, dict):
-                tasks = six.iteritems(tasks)
+                tasks = tasks.items()
             
             for task in tasks:
                 if isinstance(task, tuple):
                     task, count = task
-                    for i in xrange(0, count):
+                    for i in range(count):
                         new_tasks.append(task)
                 else:
                     new_tasks.append(task)
         
-        for item in six.itervalues(classDict):
+        for item in classDict.values():
             if hasattr(item, "locust_task_weight"):
-                for i in xrange(0, item.locust_task_weight):
+                for i in range(0, item.locust_task_weight):
                     new_tasks.append(item)
         
         classDict["tasks"] = new_tasks
         
         return type.__new__(mcs, classname, bases, classDict)
 
-@six.add_metaclass(TaskSetMeta)
-class TaskSet(object):
+class TaskSet(object, metaclass=TaskSetMeta):
     """
     Class defining a set of tasks that a Locust user will execute. 
     
@@ -390,9 +387,9 @@ class TaskSet(object):
                 self.on_start()
         except InterruptTaskSet as e:
             if e.reschedule:
-                six.reraise(RescheduleTaskImmediately, RescheduleTaskImmediately(e.reschedule), sys.exc_info()[2])
+                raise RescheduleTaskImmediately(e.reschedule).with_traceback(sys.exc_info()[2])
             else:
-                six.reraise(RescheduleTask, RescheduleTask(e.reschedule), sys.exc_info()[2])
+                raise RescheduleTask(e.reschedule).with_traceback(sys.exc_info()[2])
         
         while (True):
             try:
@@ -415,9 +412,9 @@ class TaskSet(object):
                     self.wait()
             except InterruptTaskSet as e:
                 if e.reschedule:
-                    six.reraise(RescheduleTaskImmediately, RescheduleTaskImmediately(e.reschedule), sys.exc_info()[2])
+                    raise RescheduleTaskImmediately(e.reschedule) from e
                 else:
-                    six.reraise(RescheduleTask, RescheduleTask(e.reschedule), sys.exc_info()[2])
+                    raise RescheduleTask(e.reschedule) from e
             except StopLocust:
                 raise
             except GreenletExit:

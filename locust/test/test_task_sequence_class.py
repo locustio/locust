@@ -1,5 +1,3 @@
-import six
-
 from locust import InterruptTaskSet, ResponseError
 from locust.core import HttpLocust, Locust, TaskSequence, events, seq_task, task
 from locust.exception import (CatchResponseError, LocustError, RescheduleTask,

@@ -15,12 +15,11 @@ except ImportError:
     # < Py3.2
     from cgi import escape
 
-import six
 from flask import Flask, make_response, jsonify, render_template, request
 from gevent import pywsgi
 
 from locust import __version__ as version
-from six.moves import StringIO, xrange
+from io import StringIO
 
 from . import runners
 from .runners import MasterLocustRunner
@@ -161,7 +160,7 @@ class WebUI:
                     "avg_content_length": s.avg_content_length,
                 })
         
-            errors = [e.to_dict() for e in six.itervalues(runner.errors)]
+            errors = [e.to_dict() for e in runner.errors.values()]
         
             # Truncate the total number of stats and errors displayed since a large number of rows will cause the app
             # to render extremely slowly. Aggregate stats should be preserved.
@@ -197,7 +196,7 @@ class WebUI:
                         "msg": row["msg"],
                         "traceback": row["traceback"],
                         "nodes" : ", ".join(row["nodes"])
-                    } for row in six.itervalues(runner.exceptions)
+                    } for row in runner.exceptions.values()
                 ]
             })
         
@@ -206,7 +205,7 @@ class WebUI:
             data = StringIO()
             writer = csv.writer(data)
             writer.writerow(["Count", "Message", "Traceback", "Nodes"])
-            for exc in six.itervalues(runner.exceptions):
+            for exc in runner.exceptions.values():
                 nodes = ", ".join(exc["nodes"])
                 writer.writerow([exc["count"], exc["msg"], exc["traceback"], nodes])
             

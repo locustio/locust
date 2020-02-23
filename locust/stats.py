@@ -5,8 +5,6 @@ from copy import copy
 from itertools import chain
 
 import gevent
-import six
-from six.moves import xrange
 
 from . import events
 from .exception import StopLocust
@@ -64,7 +62,7 @@ def calculate_response_time_percentile(response_times, num_requests, percent):
     num_of_request = int((num_requests * percent))
 
     processed_count = 0
-    for response_time in sorted(six.iterkeys(response_times), reverse=True):
+    for response_time in sorted(response_times.keys(), reverse=True):
         processed_count += response_times[response_time]
         if(num_requests - processed_count <= num_of_request):
             return response_time
@@ -146,7 +144,7 @@ class RequestStats(object):
         """
         self.total.reset()
         self.errors = {}
-        for r in six.itervalues(self.entries):
+        for r in self.entries.values():
             r.reset()
     
     def clear_all(self):
@@ -158,10 +156,10 @@ class RequestStats(object):
         self.errors = {}
     
     def serialize_stats(self):
-        return [self.entries[key].get_stripped_report() for key in six.iterkeys(self.entries) if not (self.entries[key].num_requests == 0 and self.entries[key].num_failures == 0)]
+        return [self.entries[key].get_stripped_report() for key in self.entries.keys() if not (self.entries[key].num_requests == 0 and self.entries[key].num_failures == 0)]
     
     def serialize_errors(self):
-        return dict([(k, e.to_dict()) for k, e in six.iteritems(self.errors)])
+        return dict([(k, e.to_dict()) for k, e in self.errors.items()])
         
 
 class StatsEntry(object):
@@ -518,7 +516,7 @@ class StatsEntry(object):
         # that it's ordered by preference by starting to add t-10, then t-11, t-9, t-12, t-8, 
         # and so on
         acceptable_timestamps = []
-        for i in xrange(9):
+        for i in range(9):
             acceptable_timestamps.append(t-CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW-i)
             acceptable_timestamps.append(t-CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW+i)
         
@@ -575,7 +573,7 @@ class StatsEntry(object):
         
         if len(self.response_times_cache) > cache_size:
             # only keep the latest 20 response_times dicts
-            for i in xrange(len(self.response_times_cache) - cache_size):
+            for i in range(len(self.response_times_cache) - cache_size):
                 self.response_times_cache.popitem(last=False)
 
 
@@ -639,7 +637,7 @@ def median_from_dict(total, count):
     count is a dict {response_time: count}
     """
     pos = (total - 1) / 2
-    for k in sorted(six.iterkeys(count)):
+    for k in sorted(count.keys()):
         if pos < count[k]:
             return k
         pos -= count[k]
@@ -660,7 +658,7 @@ def setup_distributed_stats_event_listeners(environment):
                 environment.stats.entries[request_key] = StatsEntry(environment.stats, entry.name, entry.method)
             environment.stats.entries[request_key].extend(entry)
     
-        for error_key, error in six.iteritems(data["errors"]):
+        for error_key, error in data["errors"].items():
             if error_key not in environment.stats.errors:
                 environment.stats.errors[error_key] = StatsError.from_dict(error)
             else:
@@ -687,7 +685,7 @@ def setup_distributed_stats_event_listeners(environment):
 def print_stats(stats, current=True):
     console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s', 'failures/s'))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
-    for key in sorted(six.iterkeys(stats.entries)):
+    for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
         console_logger.info(r.to_string(current=current))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
@@ -714,7 +712,7 @@ def print_percentile_stats(stats):
         '100%',
     ))
     console_logger.info("-" * (90 + STATS_NAME_WIDTH))
-    for key in sorted(six.iterkeys(stats.entries)):
+    for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
         if r.response_times:
             console_logger.info(r.percentile())
@@ -730,7 +728,7 @@ def print_error_report(stats):
     console_logger.info("Error report")
     console_logger.info(" %-18s %-100s" % ("# occurrences", "Error"))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
-    for error in six.itervalues(stats.errors):
+    for error in stats.errors.values():
         console_logger.info(" %-18i %-100s" % (error.occurrences, error.to_name()))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     console_logger.info("")
@@ -764,7 +762,7 @@ def write_stat_csvs(stats, base_filepath, stats_history_enabled=False):
 
 
 def sort_stats(stats):
-    return [stats[key] for key in sorted(six.iterkeys(stats))]
+    return [stats[key] for key in sorted(stats.keys())]
 
 
 def requests_csv(stats):

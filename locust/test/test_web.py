@@ -3,6 +3,7 @@ import csv
 import json
 import sys
 import traceback
+from io import StringIO
 
 import gevent
 import requests
@@ -14,7 +15,6 @@ from locust.env import Environment
 from locust.main import parse_options
 from locust.runners import LocustRunner
 from locust.web import WebUI
-from six.moves import StringIO
 
 from .testcases import LocustTestCase
 

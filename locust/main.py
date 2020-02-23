@@ -101,7 +101,7 @@ def parse_options(args=None, default_config_files=['~/.locust.conf','locust.conf
         '--master-port',
         type=int,
         default=5557,
-        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --slave. Defaults to 5557. Note that slaves will also connect to the master node on this port + 1."
+        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --slave. Defaults to 5557."
     )
 
     parser.add_argument(
@@ -114,7 +114,7 @@ def parse_options(args=None, default_config_files=['~/.locust.conf','locust.conf
         '--master-bind-port',
         type=int,
         default=5557,
-        help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557. Note that Locust will also use this port + 1, so by default the master node will bind to 5557 and 5558."
+        help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557."
     )
 
     parser.add_argument(
@@ -363,16 +363,8 @@ def load_locustfile(path):
         """
         Loads the locust file as a module, similar to performing `import`
         """
-        try:
-            # Python 3 compatible
-            source = importlib.machinery.SourceFileLoader(os.path.splitext(locustfile)[0], path)
-            imported = source.load_module()
-        except AttributeError:
-            # Python 2.7 compatible
-            import imp
-            imported = imp.load_source(os.path.splitext(locustfile)[0], path)
-
-        return imported
+        source = importlib.machinery.SourceFileLoader(os.path.splitext(locustfile)[0], path)
+        return  source.load_module()
 
     # Start with making sure the current working dir is in the sys.path
     sys.path.insert(0, os.getcwd())

@@ -51,6 +51,7 @@ Other functionalities
 .. toctree ::
     :maxdepth: 2
 
+    running-locust-in-step-load-mode
     retrieving-stats
     testing-other-systems
     extending-locust
@@ -61,7 +62,7 @@ API
 ---
 .. toctree ::
     :maxdepth: 4
-    
+
     api
 
 

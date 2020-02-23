@@ -10,7 +10,6 @@ from locust.inspectlocust import get_task_ratio_dict
 from locust.rpc.protocol import Message
 from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_response_time_dicts
 from locust.test.testcases import LocustTestCase
-from six.moves import xrange
 
 from .testcases import WebserverTestCase
 from .test_runners import mocked_options
@@ -39,7 +38,7 @@ class TestRequestStats(unittest.TestCase):
 
     def test_percentile(self):
         s = StatsEntry(self.stats, "percentile_test", "GET")
-        for x in xrange(100):
+        for x in range(100):
             s.log(x, 0)
 
         self.assertEqual(s.get_response_time_percentile(0.5), 50)
@@ -360,12 +359,12 @@ class TestStatsEntryResponseTimesCache(unittest.TestCase):
         s = StatsEntry(self.stats, "/", "GET", use_response_times_cache=True)
         t = int(time.time())
         s.response_times_cache[t-10] = CachedResponseTimes(
-            response_times={i:1 for i in xrange(100)},
+            response_times={i:1 for i in range(100)},
             num_requests=200
         )
         s.response_times_cache[t-10].response_times[1] = 201
         
-        s.response_times = {i:2 for i in xrange(100)}
+        s.response_times = {i:2 for i in range(100)}
         s.response_times[1] = 202
         s.num_requests = 300
         
