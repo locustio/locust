@@ -34,7 +34,6 @@ class LocustRunner(object):
         options = environment.options
         self.environment = environment
         self.options = options
-        self.hatch_rate = options.hatch_rate
         self.host = options.host
         self.locusts = Group()
         self.greenlet = Group()
@@ -122,18 +121,18 @@ class LocustRunner(object):
 
         return bucket
 
-    def spawn_locusts(self, spawn_count, wait=False):
+    def spawn_locusts(self, spawn_count, hatch_rate, wait=False):
         bucket = self.weight_locusts(spawn_count)
         spawn_count = len(bucket)
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
             self.state = STATE_HATCHING
         
         existing_count = len(self.locusts)
-        logger.info("Hatching and swarming %i users at the rate %g users/s (%i users already running)..." % (spawn_count, self.hatch_rate, existing_count))
+        logger.info("Hatching and swarming %i users at the rate %g users/s (%i users already running)..." % (spawn_count, hatch_rate, existing_count))
         occurrence_count = dict([(l.__name__, 0) for l in self.locust_classes])
         
         def hatch():
-            sleep_time = 1.0 / self.hatch_rate
+            sleep_time = 1.0 / hatch_rate
             while True:
                 if not bucket:
                     logger.info("All locusts hatched: %s (%i already running)" % (
@@ -226,42 +225,38 @@ class LocustRunner(object):
                 self.kill_locusts(kill_count)
             elif self.user_count < locust_count:
                 # Spawn some locusts
-                self.hatch_rate = hatch_rate
                 spawn_count = locust_count - self.user_count
-                self.spawn_locusts(spawn_count=spawn_count)
+                self.spawn_locusts(spawn_count=spawn_count, hatch_rate=hatch_rate)
             else:
                 self.environment.events.hatch_complete.fire(user_count=self.user_count)
         else:
             self.hatch_rate = hatch_rate
-            self.spawn_locusts(locust_count, wait=wait)
+            self.spawn_locusts(locust_count, hatch_rate=hatch_rate, wait=wait)
 
     def start_stepload(self, locust_count, hatch_rate, step_locust_count, step_duration):
         if locust_count < step_locust_count:
             logger.error("Invalid parameters: total locust count of %d is smaller than step locust count of %d" % (locust_count, step_locust_count))
             return
         self.total_clients = locust_count
-        self.hatch_rate = hatch_rate
-        self.step_clients_growth = step_locust_count
-        self.step_duration = step_duration
         
         if self.stepload_greenlet:
             logger.info("There is an ongoing swarming in Step Load mode, will stop it now.")
             self.stepload_greenlet.kill()
         logger.info("Start a new swarming in Step Load mode: total locust count of %d, hatch rate of %d, step locust count of %d, step duration of %d " % (locust_count, hatch_rate, step_locust_count, step_duration))
         self.state = STATE_INIT
-        self.stepload_greenlet = self.greenlet.spawn(self.stepload_worker)
+        self.stepload_greenlet = self.greenlet.spawn(self.stepload_worker, hatch_rate, step_locust_count, step_duration)
         self.stepload_greenlet.link_exception(callback=self.noop)
 
-    def stepload_worker(self):
+    def stepload_worker(self, hatch_rate, step_clients_growth, step_duration):
         current_num_clients = 0
         while self.state == STATE_INIT or self.state == STATE_HATCHING or self.state == STATE_RUNNING:
-            current_num_clients += self.step_clients_growth
+            current_num_clients += step_clients_growth
             if current_num_clients > int(self.total_clients):
                 logger.info('Step Load is finished.')
                 break
-            self.start(current_num_clients, self.hatch_rate)
+            self.start(current_num_clients, hatch_rate)
             logger.info('Step loading: start hatch job of %d locust.' % (current_num_clients))
-            gevent.sleep(self.step_duration)
+            gevent.sleep(step_duration)
 
     def stop(self):
         # if we are currently hatching locusts we need to kill the hatching greenlet first

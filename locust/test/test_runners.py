@@ -102,7 +102,7 @@ class TestLocustRunner(LocustTestCase):
             )
             runner = LocalLocustRunner(environment)
             self.assertFalse(runner.cpu_warning_emitted)
-            runner.spawn_locusts(1, wait=False)
+            runner.spawn_locusts(1, 1, wait=False)
             sleep(2.5)
             runner.quit()
             self.assertTrue(runner.cpu_warning_emitted)
@@ -148,7 +148,7 @@ class TestLocustRunner(LocustTestCase):
                 def trigger(self):
                     triggered[0] = True
         runner = LocustRunner(Environment(locust_classes=[BaseLocust], options=mocked_options()))
-        runner.spawn_locusts(2, wait=False)
+        runner.spawn_locusts(2, hatch_rate=2, wait=False)
         self.assertEqual(2, len(runner.locusts))
         g1 = list(runner.locusts)[0]
         g2 = list(runner.locusts)[1]
