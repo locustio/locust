@@ -118,4 +118,4 @@ class TestParseOptions(LocustTestCase):
         self.assertEqual(5, options.stop_timeout)
         self.assertEqual(["MyLocustClass"], options.locust_classes)
         # check default arg
-        self.assertEqual(8089, options.port)
+        self.assertEqual(8089, options.web_port)

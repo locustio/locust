@@ -645,57 +645,43 @@ def median_from_dict(total, count):
         pos -= count[k]
 
 
-global_stats = RequestStats()
-"""
-A global instance for holding the statistics. Should be removed eventually.
-"""
-
-def on_request_success(request_type, name, response_time, response_length, **kwargs):
-    global_stats.log_request(request_type, name, response_time, response_length)
-
-def on_request_failure(request_type, name, response_time, response_length, exception, **kwargs):
-    global_stats.log_request(request_type, name, response_time, response_length)
-    global_stats.log_error(request_type, name, exception)
-
-def on_report_to_master(client_id, data):
-    data["stats"] = global_stats.serialize_stats()
-    data["stats_total"] = global_stats.total.get_stripped_report()
-    data["errors"] =  global_stats.serialize_errors()
-    global_stats.errors = {}
-
-def on_slave_report(client_id, data):
-    for stats_data in data["stats"]:
-        entry = StatsEntry.unserialize(stats_data)
-        request_key = (entry.name, entry.method)
-        if not request_key in global_stats.entries:
-            global_stats.entries[request_key] = StatsEntry(global_stats, entry.name, entry.method)
-        global_stats.entries[request_key].extend(entry)
-
-    for error_key, error in six.iteritems(data["errors"]):
-        if error_key not in global_stats.errors:
-            global_stats.errors[error_key] = StatsError.from_dict(error)
-        else:
-            global_stats.errors[error_key].occurrences += error["occurrences"]
+def setup_distributed_stats_event_listeners(environment):
+    def on_report_to_master(client_id, data):
+        data["stats"] = environment.stats.serialize_stats()
+        data["stats_total"] = environment.stats.total.get_stripped_report()
+        data["errors"] =  environment.stats.serialize_errors()
+        environment.stats.errors = {}
     
-    # save the old last_request_timestamp, to see if we should store a new copy
-    # of the response times in the response times cache
-    old_last_request_timestamp = global_stats.total.last_request_timestamp
-    # update the total StatsEntry
-    global_stats.total.extend(StatsEntry.unserialize(data["stats_total"]))
-    if global_stats.total.last_request_timestamp and global_stats.total.last_request_timestamp > (old_last_request_timestamp or 0):
-        # If we've entered a new second, we'll cache the response times. Note that there 
-        # might still be reports from other slave nodes - that contains requests for the same 
-        # time periods - that hasn't been received/accounted for yet. This will cause the cache to 
-        # lag behind a second or two, but since StatsEntry.current_response_time_percentile() 
-        # (which is what the response times cache is used for) uses an approximation of the 
-        # last 10 seconds anyway, it should be fine to ignore this. 
-        global_stats.total._cache_response_times(int(global_stats.total.last_request_timestamp))
+    def on_slave_report(client_id, data):
+        for stats_data in data["stats"]:
+            entry = StatsEntry.unserialize(stats_data)
+            request_key = (entry.name, entry.method)
+            if not request_key in environment.stats.entries:
+                environment.stats.entries[request_key] = StatsEntry(environment.stats, entry.name, entry.method)
+            environment.stats.entries[request_key].extend(entry)
     
-
-events.request_success += on_request_success
-events.request_failure += on_request_failure
-events.report_to_master += on_report_to_master
-events.slave_report += on_slave_report
+        for error_key, error in six.iteritems(data["errors"]):
+            if error_key not in environment.stats.errors:
+                environment.stats.errors[error_key] = StatsError.from_dict(error)
+            else:
+                environment.stats.errors[error_key].occurrences += error["occurrences"]
+        
+        # save the old last_request_timestamp, to see if we should store a new copy
+        # of the response times in the response times cache
+        old_last_request_timestamp = environment.stats.total.last_request_timestamp
+        # update the total StatsEntry
+        environment.stats.total.extend(StatsEntry.unserialize(data["stats_total"]))
+        if environment.stats.total.last_request_timestamp and environment.stats.total.last_request_timestamp > (old_last_request_timestamp or 0):
+            # If we've entered a new second, we'll cache the response times. Note that there 
+            # might still be reports from other slave nodes - that contains requests for the same 
+            # time periods - that hasn't been received/accounted for yet. This will cause the cache to 
+            # lag behind a second or two, but since StatsEntry.current_response_time_percentile() 
+            # (which is what the response times cache is used for) uses an approximation of the 
+            # last 10 seconds anyway, it should be fine to ignore this. 
+            environment.stats.total._cache_response_times(int(environment.stats.total.last_request_timestamp))
+        
+    environment.events.report_to_master += on_report_to_master
+    environment.events.slave_report += on_slave_report
 
 
 def print_stats(stats, current=True):
@@ -738,22 +724,23 @@ def print_percentile_stats(stats):
         console_logger.info(stats.total.percentile())
     console_logger.info("")
 
-def print_error_report():
-    if not len(global_stats.errors):
+def print_error_report(stats):
+    if not len(stats.errors):
         return
     console_logger.info("Error report")
     console_logger.info(" %-18s %-100s" % ("# occurrences", "Error"))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
-    for error in six.itervalues(global_stats.errors):
+    for error in six.itervalues(stats.errors):
         console_logger.info(" %-18i %-100s" % (error.occurrences, error.to_name()))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     console_logger.info("")
 
-def stats_printer():
-    from . import runners
-    while True:
-        print_stats(runners.locust_runner.stats)
-        gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
+def stats_printer(environment):
+    def stats_printer_func():
+        while True:
+            print_stats(environment.stats)
+            gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
+    return stats_printer_func
 
 def stats_writer(base_filepath, stats_history_enabled=False):
     """Writes the csv files for the locust run."""
@@ -764,23 +751,23 @@ def stats_writer(base_filepath, stats_history_enabled=False):
         gevent.sleep(CSV_STATS_INTERVAL_SEC)
 
 
-def write_stat_csvs(base_filepath, stats_history_enabled=False):
+def write_stat_csvs(stats, base_filepath, stats_history_enabled=False):
     """Writes the requests, distribution, and failures csvs."""
     with open(base_filepath + '_stats.csv', 'w') as f:
-        f.write(requests_csv())
+        f.write(requests_csv(stats))
 
     with open(base_filepath + '_stats_history.csv', 'a') as f:
-        f.write(stats_history_csv(stats_history_enabled) + "\n")
+        f.write(stats_history_csv(stats, stats_history_enabled) + "\n")
 
     with open(base_filepath + '_failures.csv', 'w') as f:
-        f.write(failures_csv())
+        f.write(failures_csv(stats))
 
 
 def sort_stats(stats):
     return [stats[key] for key in sorted(six.iterkeys(stats))]
 
 
-def requests_csv():
+def requests_csv(stats):
     from . import runners
 
     """Returns the contents of the 'requests' & 'distribution' tab as CSV."""
@@ -812,7 +799,7 @@ def requests_csv():
         ])
     ]
 
-    for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
+    for s in chain(sort_stats(stats.entries), [stats.total]):
         if s.num_requests:
             percentile_str = ','.join([
                 str(int(s.get_response_time_percentile(x) or 0)) for x in PERCENTILES_TO_REPORT])
@@ -865,10 +852,8 @@ def stats_history_csv_header():
         '"100%"'
     )) + '\n'
 
-def stats_history_csv(stats_history_enabled=False, csv_for_web_ui=False):
+def stats_history_csv(stats, stats_history_enabled=False, csv_for_web_ui=False):
     """Returns the Aggregated stats entry every interval"""
-    from . import runners
-
     # csv_for_web_ui boolean returns the header along with the stats history row so that
     # it can be returned as a csv for download on the web ui. Otherwise when run with
     # the '--no-web' option we write the header first and then append the file with stats
@@ -882,9 +867,9 @@ def stats_history_csv(stats_history_enabled=False, csv_for_web_ui=False):
     stats_entries_per_iteration = []
 
     if stats_history_enabled:
-        stats_entries_per_iteration = sort_stats(runners.locust_runner.request_stats)
+        stats_entries_per_iteration = sort_stats(stats.entries)
 
-    for s in chain(stats_entries_per_iteration, [runners.locust_runner.stats.total]):
+    for s in chain(stats_entries_per_iteration, [stats.total]):
         if s.num_requests:
             percentile_str = ','.join([
                 str(int(s.get_current_response_time_percentile(x) or 0)) for x in PERCENTILES_TO_REPORT])
@@ -909,10 +894,8 @@ def stats_history_csv(stats_history_enabled=False, csv_for_web_ui=False):
 
     return "\n".join(rows)
 
-def failures_csv():
+def failures_csv(stats):
     """"Return the contents of the 'failures' tab as a CSV."""
-    from . import runners
-
     rows = [
         ",".join((
             '"Method"',
@@ -922,7 +905,7 @@ def failures_csv():
         ))
     ]
 
-    for s in sort_stats(runners.locust_runner.stats.errors):
+    for s in sort_stats(stats.errors):
         rows.append('"%s","%s","%s",%i' % (
             s.method,
             s.name,

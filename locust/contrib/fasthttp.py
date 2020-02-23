@@ -72,20 +72,21 @@ class FastHttpLocust(Locust):
     The client support cookies, and therefore keeps the session between HTTP requests.
     """
     
-    def __init__(self):
-        super(FastHttpLocust, self).__init__()
+    def __init__(self, environment):
+        super().__init__(environment)
         if self.host is None:
             raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
         if not re.match(r"^https?://[^/]+", self.host, re.I):
             raise LocustError("Invalid host (`%s`), must be a valid base URL. E.g. http://example.com" % self.host)
         
-        self.client = FastHttpSession(base_url=self.host)
+        self.client = FastHttpSession(self.environment, base_url=self.host)
 
 
 class FastHttpSession(object):
     auth_header = None
     
-    def __init__(self, base_url, **kwargs):
+    def __init__(self, environment, base_url, **kwargs):
+        self.environment = environment
         self.base_url = base_url
         self.cookiejar = CookieJar()
         self.client = LocustUserAgent(
@@ -191,12 +192,12 @@ class FastHttpSession(object):
         
         if catch_response:
             response.locust_request_meta = request_meta
-            return ResponseContextManager(response)
+            return ResponseContextManager(response, environment=self.environment)
         else:
             try:
                 response.raise_for_status()
             except FAILURE_EXCEPTIONS as e:
-                events.request_failure.fire(
+                self.environment.events.request_failure.fire(
                     request_type=request_meta["method"], 
                     name=request_meta["name"], 
                     response_time=request_meta["response_time"], 
@@ -204,7 +205,7 @@ class FastHttpSession(object):
                     exception=e, 
                 )
             else:
-                events.request_success.fire(
+                self.environment.events.request_success.fire(
                     request_type=request_meta["method"],
                     name=request_meta["name"],
                     response_time=request_meta["response_time"],
@@ -324,10 +325,12 @@ class ResponseContextManager(FastResponse):
     
     _is_reported = False
     
-    def __init__(self, response):
+    def __init__(self, response, environment):
         # copy data from response to this object
         self.__dict__ = response.__dict__
         self._cached_content = response.content
+        # store reference to locust Environment
+        self.environment = environment
     
     def __enter__(self):
         return self
@@ -362,7 +365,7 @@ class ResponseContextManager(FastResponse):
                 if response.status_code == 404:
                     response.success()
         """
-        events.request_success.fire(
+        self.environment.events.request_success.fire(
             request_type=self.locust_request_meta["method"],
             name=self.locust_request_meta["name"],
             response_time=self.locust_request_meta["response_time"],
@@ -386,7 +389,7 @@ class ResponseContextManager(FastResponse):
         if isinstance(exc, six.string_types):
             exc = CatchResponseError(exc)
         
-        events.request_failure.fire(
+        self.environment.events.request_failure.fire(
             request_type=self.locust_request_meta["method"],
             name=self.locust_request_meta["name"],
             response_time=self.locust_request_meta["response_time"],

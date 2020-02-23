@@ -14,12 +14,14 @@ import locust
 
 from . import events, runners, web
 from .core import HttpLocust, Locust
+from .env import Environment
 from .inspectlocust import get_task_ratio_dict, print_task_ratio
 from .log import console_logger, setup_logging
 from .runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner
 from .stats import (print_error_report, print_percentile_stats, print_stats,
                     stats_printer, stats_writer, write_stat_csvs)
 from .util.timespan import parse_timespan
+from .web import WebUI
 
 _internals = [Locust, HttpLocust]
 version = locust.__version__
@@ -46,7 +48,7 @@ def parse_options(args=None, default_config_files=['~/.locust.conf','locust.conf
     )
     
     parser.add_argument(
-        '-P', '--port', '--web-port',
+        '-P', '--web-port',
         type=int,
         default=8089,
         help="Port on which to run web host"
@@ -450,6 +452,12 @@ def main():
         # list() call is needed to consume the dict_view object in Python 3
         locust_classes = list(locusts.values())
     
+    # create locust Environment
+    environment = Environment(
+        locust_classes=locust_classes,
+        options=options,
+    )
+    
     if options.show_task_ratio:
         console_logger.info("\n Task ratio per locust class")
         console_logger.info( "-" * 80)
@@ -483,7 +491,7 @@ def main():
             logger.info("Run time limit set to %s seconds" % options.run_time)
             def timelimit_stop():
                 logger.info("Time limit reached. Stopping Locust.")
-                runners.locust_runner.quit()
+                environment.runner.quit()
             gevent.spawn_later(options.run_time, timelimit_stop)
 
     if options.step_time:
@@ -500,34 +508,35 @@ def main():
             sys.exit(1)
     
     if options.master:
-        runners.locust_runner = MasterLocustRunner(locust_classes, options)
+        runner = MasterLocustRunner(environment)
     elif options.slave:
         try:
-            runners.locust_runner = SlaveLocustRunner(locust_classes, options)
+            runner = SlaveLocustRunner(environment)
         except socket.error as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
     else:
-        runners.locust_runner = LocalLocustRunner(locust_classes, options)
+        runner = LocalLocustRunner(environment)
     # main_greenlet is pointing to runners.locust_runner.greenlet by default, it will point the web greenlet later if in web mode
-    main_greenlet = runners.locust_runner.greenlet
+    main_greenlet = runner.greenlet
 
     if options.no_web:
         if options.master:
-            while len(runners.locust_runner.clients.ready) < options.expect_slaves:
+            while len(runner.clients.ready) < options.expect_slaves:
                 logging.info("Waiting for slaves to be ready, %s of %s connected",
-                             len(runners.locust_runner.clients.ready), options.expect_slaves)
+                             len(runner.clients.ready), options.expect_slaves)
                 time.sleep(1)
         if options.step_time:
-            runners.locust_runner.start_stepload(options.num_clients, options.hatch_rate, options.step_clients, options.step_time)
+            runner.start_stepload(options.num_clients, options.hatch_rate, options.step_clients, options.step_time)
         elif not options.slave:
-            runners.locust_runner.start_hatching(options.num_clients, options.hatch_rate)
+            runner.start(options.num_clients, options.hatch_rate)
             # make locusts are spawned
             time.sleep(1)
     elif not options.slave:
         # spawn web greenlet
-        logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.port))
-        main_greenlet = gevent.spawn(web.start, locust_classes, options)
+        logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.web_port))
+        environment.web_ui = WebUI(environment=environment, runner=runner)
+        main_greenlet = gevent.spawn(environment.web_ui.start, host=options.web_host, port=options.web_port)
 
     if options.run_time:
         spawn_run_time_limit_greenlet()
@@ -535,7 +544,7 @@ def main():
     stats_printer_greenlet = None
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
-        stats_printer_greenlet = gevent.spawn(stats_printer)
+        stats_printer_greenlet = gevent.spawn(stats_printer(environment.stats))
 
     if options.csvfilebase:
         gevent.spawn(stats_writer, options.csvfilebase, options.stats_history_enabled)
@@ -549,15 +558,15 @@ def main():
         if stats_printer_greenlet is not None:
             stats_printer_greenlet.kill(block=False)
         logger.info("Cleaning up runner...")
-        if runners.locust_runner is not None:
-            runners.locust_runner.quit()
+        if runner is not None:
+            runner.quit()
         logger.info("Running teardowns...")
-        events.quitting.fire(reverse=True)
-        print_stats(runners.locust_runner.stats, current=False)
-        print_percentile_stats(runners.locust_runner.stats)
+        environment.events.quitting.fire(reverse=True)
+        print_stats(environment.stats, current=False)
+        print_percentile_stats(environment.stats)
         if options.csvfilebase:
             write_stat_csvs(options.csvfilebase, options.stats_history_enabled)
-        print_error_report()
+        print_error_report(environment.stats)
         sys.exit(code)
     
     # install SIGTERM handler
@@ -570,8 +579,7 @@ def main():
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
         code = 0
-        lr = runners.locust_runner
-        if len(lr.errors) or len(lr.exceptions) or lr.cpu_log_warning():
+        if len(runner.errors) or len(runner.exceptions) or runner.cpu_log_warning():
             code = options.exit_code_on_error
         shutdown(code=code)
     except KeyboardInterrupt as e:

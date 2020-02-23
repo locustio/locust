@@ -15,7 +15,7 @@ class TestTaskSet(LocustTestCase):
         class User(Locust):
             host = "127.0.0.1"
             wait_time = between(0.001, 0.1)
-        self.locust = User()
+        self.locust = User(self.environment)
 
     def test_task_sequence_with_list(self):
         def t1(l):

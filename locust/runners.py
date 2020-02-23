@@ -17,12 +17,10 @@ from six.moves import xrange
 
 from . import events
 from .rpc import Message, rpc
-from .stats import global_stats
+from .stats import setup_distributed_stats_event_listeners
 
 logger = logging.getLogger(__name__)
 
-# global locust runner singleton
-locust_runner = None
 
 STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_CLEANUP, STATE_STOPPING, STATE_STOPPED, STATE_MISSING = ["ready", "hatching", "running", "cleanup", "stopping", "stopped", "missing"]
 SLAVE_REPORT_INTERVAL = 3.0
@@ -31,9 +29,11 @@ CPU_MONITOR_INTERVAL = 5.0
 LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING = ["running", "waiting", "stopping"]
 
 class LocustRunner(object):
-    def __init__(self, locust_classes, options):
+    def __init__(self, environment):
+        environment.runner = self
+        options = environment.options
+        self.environment = environment
         self.options = options
-        self.locust_classes = locust_classes
         self.hatch_rate = options.hatch_rate
         self.host = options.host
         self.locusts = Group()
@@ -45,7 +45,7 @@ class LocustRunner(object):
         self.cpu_warning_emitted = False
         self.greenlet.spawn(self.monitor_cpu)
         self.exceptions = {}
-        self.stats = global_stats
+        self.stats = environment.stats
         self.step_load = options.step_load
 
         # register listener that resets stats when hatching is complete
@@ -54,13 +54,18 @@ class LocustRunner(object):
             if self.options.reset_stats:
                 logger.info("Resetting stats\n")
                 self.stats.reset_all()
-        events.hatch_complete += on_hatch_complete
+        self.environment.events.hatch_complete += on_hatch_complete
     
     def __del__(self):
         # don't leave any stray greenlets if runner is removed
-        if len(self.greenlet) > 0:
+        if self.greenlet and len(self.greenlet) > 0:
             self.greenlet.kill(block=False)
 
+            
+    @property
+    def locust_classes(self):
+        return self.environment.locust_classes
+    
     @property
     def request_stats(self):
         return self.stats.entries
@@ -135,12 +140,12 @@ class LocustRunner(object):
                         ", ".join(["%s: %d" % (name, count) for name, count in six.iteritems(occurrence_count)]), 
                         existing_count,
                     ))
-                    events.hatch_complete.fire(user_count=len(self.locusts))
+                    self.environment.events.hatch_complete.fire(user_count=len(self.locusts))
                     return
 
                 locust = bucket.pop(random.randint(0, len(bucket)-1))
                 occurrence_count[locust.__name__] += 1
-                new_locust = locust()
+                new_locust = locust(self.environment)
                 def start_locust(_):
                     try:
                         new_locust.run(runner=self)
@@ -172,7 +177,7 @@ class LocustRunner(object):
                     bucket.remove(l)
                     break
         self.kill_locust_greenlets(dying)
-        events.hatch_complete.fire(user_count=self.user_count)
+        self.environment.events.hatch_complete.fire(user_count=self.user_count)
     
     def kill_locust_greenlets(self, greenlets):
         """
@@ -204,13 +209,13 @@ class LocustRunner(object):
                 self.cpu_warning_emitted = True
             gevent.sleep(CPU_MONITOR_INTERVAL)
 
-    def start_hatching(self, locust_count, hatch_rate, wait=False):
+    def start(self, locust_count, hatch_rate, wait=False):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
             self.exceptions = {}
             self.cpu_warning_emitted = False
             self.slave_cpu_warning_emitted = False
-            events.locust_start_hatching.fire()
+            self.environment.events.locust_start_hatching.fire()
 
         # Dynamically changing the locust count
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
@@ -225,7 +230,7 @@ class LocustRunner(object):
                 spawn_count = locust_count - self.user_count
                 self.spawn_locusts(spawn_count=spawn_count)
             else:
-                events.hatch_complete.fire(user_count=self.user_count)
+                self.environment.events.hatch_complete.fire(user_count=self.user_count)
         else:
             self.hatch_rate = hatch_rate
             self.spawn_locusts(locust_count, wait=wait)
@@ -254,7 +259,7 @@ class LocustRunner(object):
             if current_num_clients > int(self.total_clients):
                 logger.info('Step Load is finished.')
                 break
-            self.start_hatching(current_num_clients, self.hatch_rate)
+            self.start(current_num_clients, self.hatch_rate)
             logger.info('Step loading: start hatch job of %d locust.' % (current_num_clients))
             gevent.sleep(self.step_duration)
 
@@ -264,7 +269,7 @@ class LocustRunner(object):
             self.hatching_greenlet.kill(block=True)
         self.kill_locust_greenlets([g for g in self.locusts])
         self.state = STATE_STOPPED
-        events.locust_stop_hatching.fire()
+        self.environment.events.locust_stop_hatching.fire()
     
     def quit(self):
         self.stop()
@@ -282,33 +287,34 @@ class LocustRunner(object):
         pass
 
 class LocalLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, options):
-        super(LocalLocustRunner, self).__init__(locust_classes, options)
+    def __init__(self, environment):
+        super(LocalLocustRunner, self).__init__(environment)
 
         # register listener thats logs the exception for the local runner
         def on_locust_error(locust_instance, exception, tb):
             formatted_tb = "".join(traceback.format_tb(tb))
             self.log_exception("local", str(exception), formatted_tb)
-        events.locust_error += on_locust_error
+        self.environment.events.locust_error += on_locust_error
 
-    def start_hatching(self, locust_count, hatch_rate, wait=False):
+    def start(self, locust_count, hatch_rate, wait=False):
         if hatch_rate > 100:
             logger.warning("Your selected hatch rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?")
         if self.hatching_greenlet:
             # kill existing hatching_greenlet before we start a new one
             self.hatching_greenlet.kill(block=True)
-        self.hatching_greenlet = self.greenlet.spawn(lambda: super(LocalLocustRunner, self).start_hatching(locust_count, hatch_rate, wait=wait))
+        self.hatching_greenlet = self.greenlet.spawn(lambda: super(LocalLocustRunner, self).start(locust_count, hatch_rate, wait=wait))
 
 
 class DistributedLocustRunner(LocustRunner):
-    def __init__(self, locust_classes, options):
-        super(DistributedLocustRunner, self).__init__(locust_classes, options)
-        self.master_host = options.master_host
-        self.master_port = options.master_port
-        self.master_bind_host = options.master_bind_host
-        self.master_bind_port = options.master_bind_port
-        self.heartbeat_liveness = options.heartbeat_liveness
-        self.heartbeat_interval = options.heartbeat_interval
+    def __init__(self, environment):
+        super(DistributedLocustRunner, self).__init__(environment)
+        self.master_host = environment.options.master_host
+        self.master_port = environment.options.master_port
+        self.master_bind_host = environment.options.master_bind_host
+        self.master_bind_port = environment.options.master_bind_port
+        self.heartbeat_liveness = environment.options.heartbeat_liveness
+        self.heartbeat_interval = environment.options.heartbeat_interval
+        setup_distributed_stats_event_listeners(environment)
 
 class SlaveNode(object):
     def __init__(self, id, state=STATE_INIT, heartbeat_liveness=3):
@@ -357,12 +363,12 @@ class MasterLocustRunner(DistributedLocustRunner):
                 return
 
             self.clients[client_id].user_count = data["user_count"]
-        events.slave_report += on_slave_report
+        self.environment.events.slave_report += on_slave_report
         
         # register listener that sends quit message to slave nodes
         def on_quitting():
             self.quit()
-        events.quitting += on_quitting
+        self.environment.events.quitting += on_quitting
     
     @property
     def user_count(self):
@@ -375,7 +381,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             warning_emitted = True
         return warning_emitted
 
-    def start_hatching(self, locust_count, hatch_rate):
+    def start(self, locust_count, hatch_rate):
         self.target_user_count = locust_count
         num_slaves = len(self.clients.ready) + len(self.clients.running) + len(self.clients.hatching)
         if not num_slaves:
@@ -396,7 +402,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
             self.exceptions = {}
-            events.master_start_hatching.fire()
+            self.environment.events.master_start_hatching.fire()
         
         for client in (self.clients.ready + self.clients.running + self.clients.hatching):
             data = {
@@ -418,7 +424,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.state = STATE_STOPPING
         for client in self.clients.all:
             self.server.send_to_client(Message("stop", None, client.id))
-        events.master_stop_hatching.fire()
+        self.environment.events.master_stop_hatching.fire()
     
     def quit(self):
         for client in self.clients.all:
@@ -447,7 +453,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                 logger.info("Client %r reported as ready. Currently %i clients ready to swarm." % (id, len(self.clients.ready + self.clients.running + self.clients.hatching)))
                 if self.state == STATE_RUNNING or self.state == STATE_HATCHING:
                     # balance the load distribution when new client joins
-                    self.start_hatching(self.target_user_count, self.hatch_rate)
+                    self.start(self.target_user_count, self.hatch_rate)
                 ## emit a warning if the slave's clock seem to be out of sync with our clock
                 #if abs(time() - msg.data["time"]) > 5.0:
                 #    warnings.warn("The slave node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
@@ -465,7 +471,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                         c.cpu_warning_emitted = True          # used to suppress logging for this node
                         logger.warning("Slave %s exceeded cpu threshold (will only log this once per slave)" % (msg.node_id))
             elif msg.type == "stats":
-                events.slave_report.fire(client_id=msg.node_id, data=msg.data)
+                self.environment.events.slave_report.fire(client_id=msg.node_id, data=msg.data)
             elif msg.type == "hatching":
                 self.clients[msg.node_id].state = STATE_HATCHING
             elif msg.type == "hatch_complete":
@@ -473,7 +479,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                 self.clients[msg.node_id].user_count = msg.data["count"]
                 if len(self.clients.hatching) == 0:
                     count = sum(c.user_count for c in six.itervalues(self.clients))
-                    events.hatch_complete.fire(user_count=count)
+                    self.environment.events.hatch_complete.fire(user_count=count)
             elif msg.type == "quit":
                 if msg.node_id in self.clients:
                     del self.clients[msg.node_id]
@@ -504,23 +510,23 @@ class SlaveLocustRunner(DistributedLocustRunner):
         def on_hatch_complete(user_count):
             self.client.send(Message("hatch_complete", {"count":user_count}, self.client_id))
             self.slave_state = STATE_RUNNING
-        events.hatch_complete += on_hatch_complete
+        self.environment.events.hatch_complete += on_hatch_complete
         
         # register listener that adds the current number of spawned locusts to the report that is sent to the master node 
         def on_report_to_master(client_id, data):
             data["user_count"] = self.user_count
-        events.report_to_master += on_report_to_master
+        self.environment.events.report_to_master += on_report_to_master
         
         # register listener that sends quit message to master
         def on_quitting():
             self.client.send(Message("quit", None, self.client_id))
-        events.quitting += on_quitting
+        self.environment.events.quitting += on_quitting
 
         # register listener thats sends locust exceptions to master
         def on_locust_error(locust_instance, exception, tb):
             formatted_tb = "".join(traceback.format_tb(tb))
             self.client.send(Message("exception", {"msg" : str(exception), "traceback" : formatted_tb}, self.client_id))
-        events.locust_error += on_locust_error
+        self.environment.events.locust_error += on_locust_error
 
     def heartbeat(self):
         while True:
@@ -540,7 +546,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 if self.hatching_greenlet:
                     # kill existing hatching greenlet before we launch new one
                     self.hatching_greenlet.kill(block=True)
-                self.hatching_greenlet = self.greenlet.spawn(lambda: self.start_hatching(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
+                self.hatching_greenlet = self.greenlet.spawn(lambda: self.start(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
             elif msg.type == "stop":
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))
@@ -564,5 +570,5 @@ class SlaveLocustRunner(DistributedLocustRunner):
 
     def _send_stats(self):
         data = {}
-        events.report_to_master.fire(client_id=self.client_id, data=data)
+        self.environment.events.report_to_master.fire(client_id=self.client_id, data=data)
         self.client.send(Message("stats", data, self.client_id))
