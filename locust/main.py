@@ -416,6 +416,7 @@ def create_environment(options):
     return Environment(
         host=options.host,
         options=options,
+        reset_stats=options.reset_stats,
     )
 
 
