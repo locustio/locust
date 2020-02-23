@@ -56,8 +56,8 @@ class WebUI:
                 slave_count = 0
             
             override_host_warning = False
-            if runner.host:
-                host = runner.host
+            if environment.host:
+                host = environment.host
             elif runner.locust_classes:
                 all_hosts = set([l.host for l in runner.locust_classes])
                 if len(all_hosts) == 1:
@@ -90,16 +90,16 @@ class WebUI:
             locust_count = int(request.form["locust_count"])
             hatch_rate = float(request.form["hatch_rate"])
             if (request.form.get("host")):
-                runner.host = str(request.form["host"]) 
+                environment.host = str(request.form["host"])
         
             if is_step_load:
                 step_locust_count = int(request.form["step_locust_count"])
                 step_duration = parse_timespan(str(request.form["step_duration"]))
                 runner.start_stepload(locust_count, hatch_rate, step_locust_count, step_duration)
-                return jsonify({'success': True, 'message': 'Swarming started in Step Load Mode', 'host': runner.host})
+                return jsonify({'success': True, 'message': 'Swarming started in Step Load Mode', 'host': environment.host})
             
             runner.start(locust_count, hatch_rate)
-            return jsonify({'success': True, 'message': 'Swarming started', 'host': runner.host})
+            return jsonify({'success': True, 'message': 'Swarming started', 'host': environment.host})
         
         @app.route('/stop')
         def stop():

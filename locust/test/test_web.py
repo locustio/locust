@@ -181,7 +181,8 @@ class TestWebUI(LocustTestCase):
             data={"locust_count": 5, "hatch_rate": 5, "host": "https://localhost"},
         )
         self.assertEqual(200, response.status_code)
-        self.assertEqual(self.runner.host, "https://localhost")
+        self.assertEqual("https://localhost", response.json()["host"])
+        self.assertEqual(self.environment.host, "https://localhost")
 
     def test_swarm_host_value_not_specified(self):
         class MyLocust(Locust):
@@ -196,7 +197,8 @@ class TestWebUI(LocustTestCase):
             data={'locust_count': 5, 'hatch_rate': 5},
         )
         self.assertEqual(200, response.status_code)
-        self.assertEqual(self.runner.host, None)
+        self.assertEqual(None, response.json()["host"])
+        self.assertEqual(self.environment.host, None)
     
     def test_host_value_from_locust_class(self):
         class MyLocust(Locust):

@@ -408,6 +408,17 @@ def load_locustfile(path):
     locusts = dict(filter(is_locust, vars(imported).items()))
     return imported.__doc__, locusts
 
+
+def create_environment(options):
+    """
+    Create an Environment instance from options
+    """
+    return Environment(
+        host=options.host,
+        options=options,
+    )
+
+
 def main():
     parser, options = parse_options()
 
@@ -453,10 +464,8 @@ def main():
         locust_classes = list(locusts.values())
     
     # create locust Environment
-    environment = Environment(
-        locust_classes=locust_classes,
-        options=options,
-    )
+    environment = create_environment(options)
+    environment.locust_classes = locust_classes
     
     if options.show_task_ratio:
         console_logger.info("\n Task ratio per locust class")

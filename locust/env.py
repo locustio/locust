@@ -21,11 +21,15 @@ class Environment:
     web_ui = None
     """Reference to the WebUI instance"""
     
-    def  __init__(self, locust_classes=None, options=None):
+    host = None
+    """Base URL of the target system"""
+    
+    def  __init__(self, locust_classes=None, options=None, host=None):
         self.events = Events()
         self.stats = RequestStats()
         self.locust_classes = locust_classes
         self.options = options
+        self.host = host
         
         # set up event listeners for recording requests
         def on_request_success(request_type, name, response_time, response_length, **kwargs):

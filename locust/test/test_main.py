@@ -1,4 +1,5 @@
 from locust import main
+from locust.main import create_environment
 from locust.core import HttpLocust, Locust, TaskSet
 
 from .testcases import LocustTestCase
@@ -119,3 +120,14 @@ class TestParseOptions(LocustTestCase):
         self.assertEqual(["MyLocustClass"], options.locust_classes)
         # check default arg
         self.assertEqual(8089, options.web_port)
+    
+    def test_create_environment(self):
+        parser, options = main.parse_options(args=[
+            "--host", "https://custom-host"
+        ])
+        env = create_environment(options)
+        self.assertEqual("https://custom-host", env.host)
+        
+        parser, options = main.parse_options(args=[])
+        env = create_environment(options)
+        self.assertEqual(None, env.host)
