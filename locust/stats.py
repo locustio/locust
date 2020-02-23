@@ -735,10 +735,10 @@ def print_error_report(stats):
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     console_logger.info("")
 
-def stats_printer(environment):
+def stats_printer(stats):
     def stats_printer_func():
         while True:
-            print_stats(environment.stats)
+            print_stats(stats)
             gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
     return stats_printer_func
 
