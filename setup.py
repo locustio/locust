@@ -44,7 +44,7 @@ setup(
         "gevent==1.5a3",
         "flask>=0.10.1", 
         "requests>=2.9.1", 
-        "msgpack-python>=0.4.2", 
+        "msgpack-python>=0.6.2", 
         "pyzmq>=16.0.2", 
         "geventhttpclient-wheels==1.3.1.dev2",
         "ConfigArgParse>=1.0",
