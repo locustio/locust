@@ -171,6 +171,17 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(s1.avg_response_time, 535.75)
         self.assertEqual(s1.min_response_time, 122)
         self.assertEqual(s1.max_response_time, 992)
+    
+    def test_aggregation_with_decimal_rounding(self):
+        s1 = StatsEntry(self.stats, "round me!", "GET")
+        s1.log(1.1, 0)
+        s1.log(1.99, 0)
+        s1.log(3.1, 0)
+        self.assertEqual(s1.num_requests, 3)
+        self.assertEqual(s1.median_response_time, 2)
+        self.assertEqual(s1.avg_response_time, (1.1+1.99+3.1)/3)
+        self.assertEqual(s1.min_response_time, 1.1)
+        self.assertEqual(s1.max_response_time, 3.1)
 
     def test_aggregation_min_response_time(self):
         s1 = StatsEntry(self.stats, "min", "GET")
