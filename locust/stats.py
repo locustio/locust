@@ -293,13 +293,13 @@ class StatsEntry(object):
         # running in distributed mode, we save the response time rounded in a dict
         # so that 147 becomes 150, 3432 becomes 3400 and 58760 becomes 59000
         if response_time < 100:
-            rounded_response_time = response_time
+            rounded_response_time = round(response_time)
         elif response_time < 1000:
-            rounded_response_time = int(round(response_time, -1))
+            rounded_response_time = round(response_time, -1)
         elif response_time < 10000:
-            rounded_response_time = int(round(response_time, -2))
+            rounded_response_time = round(response_time, -2)
         else:
-            rounded_response_time = int(round(response_time, -3))
+            rounded_response_time = round(response_time, -3)
 
         # increase request count for the rounded key in response time dict
         self.response_times.setdefault(rounded_response_time, 0)
