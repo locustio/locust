@@ -314,7 +314,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
     wait_function = None
     """
     Deprecated: Use wait_time instead.
-    Function used to calculate waiting time betwen the execution of locust tasks in milliseconds. 
+    Function used to calculate waiting time between the execution of locust tasks in milliseconds. 
     Can be used to override the wait_function defined in the root Locust class, which will be used
     if not set on the TaskSet.
     """
