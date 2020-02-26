@@ -3,12 +3,13 @@ import unittest
 import re
 import os
 
+import gevent
 import locust
 from locust.core import HttpLocust, TaskSet, task, Locust
 from locust.env import Environment
 from locust.inspectlocust import get_task_ratio_dict
 from locust.rpc.protocol import Message
-from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_response_time_dicts
+from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_response_time_dicts, stats_writer
 from locust.test.testcases import LocustTestCase
 
 from .testcases import WebserverTestCase
@@ -318,6 +319,14 @@ class TestWriteStatCSVs(LocustTestCase):
 
     def test_write_stat_csvs(self):
         locust.stats.write_stat_csvs(self.environment.stats, self.STATS_BASE_NAME)
+        self.assertTrue(os.path.exists(self.STATS_FILENAME))
+        self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
+        self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
+    
+    def test_csv_stats_writer(self):
+        greenlet = gevent.spawn(stats_writer, self.environment.stats, self.STATS_BASE_NAME)
+        gevent.sleep(0.2)
+        gevent.kill(greenlet)
         self.assertTrue(os.path.exists(self.STATS_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))

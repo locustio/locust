@@ -550,7 +550,7 @@ def main():
         stats_printer_greenlet = gevent.spawn(stats_printer(environment.stats))
 
     if options.csvfilebase:
-        gevent.spawn(stats_writer, options.csvfilebase, options.stats_history_enabled)
+        gevent.spawn(stats_writer, environment.stats, options.csvfilebase, options.stats_history_enabled)
 
     
     def shutdown(code=0):
@@ -568,7 +568,7 @@ def main():
         print_stats(environment.stats, current=False)
         print_percentile_stats(environment.stats)
         if options.csvfilebase:
-            write_stat_csvs(options.csvfilebase, options.stats_history_enabled)
+            write_stat_csvs(environment.stats, options.csvfilebase, options.stats_history_enabled)
         print_error_report(environment.stats)
         sys.exit(code)
     
