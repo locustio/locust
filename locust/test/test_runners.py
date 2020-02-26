@@ -550,11 +550,11 @@ class TestMasterRunner(LocustTestCase):
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
 
-            # start a new swarming in Step Load mode: total locust count of 10, hatch rate of 2, step locust count of 5, step duration of 5s
-            master.start_stepload(10, 2, 5, 5)
+            # start a new swarming in Step Load mode: total locust count of 10, hatch rate of 2, step locust count of 5, step duration of 2s
+            master.start_stepload(10, 2, 5, 2)
 
             # make sure the first step run is started
-            sleep(1)
+            sleep(0.5)
             self.assertEqual(5, len(server.outbox))
 
             num_clients = 0
@@ -565,7 +565,7 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(5, num_clients, "Total number of locusts that would have been spawned for first step is not 5")
 
             # make sure the first step run is complete
-            sleep(5)
+            sleep(2)
             num_clients = 0
             idx = end_of_last_step
             while idx < len(server.outbox):
