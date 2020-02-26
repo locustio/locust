@@ -41,7 +41,6 @@ class LocustRunner(object):
         self.greenlet.spawn(self.monitor_cpu)
         self.exceptions = {}
         self.stats = environment.stats
-        self.step_load = options.step_load
 
         # register listener that resets stats when hatching is complete
         def on_hatch_complete(user_count):

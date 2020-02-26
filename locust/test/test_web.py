@@ -242,7 +242,7 @@ class TestWebUI(LocustTestCase):
                 def my_task(self):
                     pass
         self.environment.locust_classes = [MyLocust]
-        self.web_ui.runner.step_load = True
+        self.environment.step_load = True
         response = requests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={"locust_count":5, "hatch_rate":2, "step_locust_count":2, "step_duration": "2m"}

@@ -27,12 +27,16 @@ class Environment:
     reset_stats = False
     """Determines if stats should be reset once all simulated users have been spawned"""
     
-    def  __init__(self, locust_classes=None, options=None, host=None, reset_stats=False):
+    step_load = False
+    """Determines if we're running in step load mode"""
+    
+    def  __init__(self, locust_classes=None, options=None, host=None, reset_stats=False, step_load=False):
         self.events = Events()
         self.stats = RequestStats()
         self.locust_classes = locust_classes
         self.host = host
         self.reset_stats = reset_stats
+        self.step_load = step_load
         self.options = options
         
         # set up event listeners for recording requests

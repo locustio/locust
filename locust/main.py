@@ -409,6 +409,7 @@ def create_environment(options):
         host=options.host,
         options=options,
         reset_stats=options.reset_stats,
+        step_load=options.step_load,
     )
 
 
