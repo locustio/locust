@@ -7,13 +7,16 @@ class Environment:
     """The locust user classes that is to be run"""
     
     events = None
-    """Event hooks used by Locust internally, as well as """
+    """
+    Event hooks used by Locust internally, as well as to extend Locust's functionality
+    See :ref:`events` for available events.
+    """
     
     stats = None
-    """Instance of RequestStats which holds the request statistics for this Locust test"""
+    """Instance of RequestStats which holds the request statistics"""
     
     options = None
-    """Other environment options"""
+    """Parsed command line options"""
     
     runner = None
     """Reference to the runner instance"""

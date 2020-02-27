@@ -77,10 +77,36 @@ InterruptTaskSet Exception
 .. autoexception:: locust.exception.InterruptTaskSet
 
 
+Environment class
+=================
+.. autoclass:: locust.env.Environment
+    :members:
+
+
 .. _events:
 
 Event hooks
 ===========
+
+Locust provide event hooks that can be used to extend Locus in various ways
+
+Events directly under locust.events
+-----------------------------------
+
+.. automodule:: locust.events
+    :members: init
+
+Events under Environment.events:
+--------------------------------
+
+The following event hooks are available under :py:attr:`Environment.events <locust.env.Environment.events>`:
+
+.. autoclass:: locust.events.Events
+    :members:
+
+
+EventHook class
+---------------
 
 The event hooks are instances of the **locust.events.EventHook** class:
 
@@ -90,12 +116,3 @@ The event hooks are instances of the **locust.events.EventHook** class:
 
     It's highly recommended that you add a wildcard keyword argument in your event listeners
     to prevent your code from breaking if new arguments are added in a future version.
-
-Available hooks
----------------
-
-The following event hooks are available under the **locust.events** module:
-
-.. automodule:: locust.events
-    :members: request_success, request_failure, locust_error, report_to_master, slave_report, hatch_complete, quitting
-
