@@ -520,6 +520,7 @@ def main():
             sys.exit(-1)
     else:
         runner = LocalLocustRunner(environment)
+    
     # main_greenlet is pointing to runners.locust_runner.greenlet by default, it will point the web greenlet later if in web mode
     main_greenlet = runner.greenlet
 
@@ -540,7 +541,11 @@ def main():
         logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.web_port))
         environment.web_ui = WebUI(environment=environment, runner=runner)
         main_greenlet = gevent.spawn(environment.web_ui.start, host=options.web_host, port=options.web_port)
-
+    
+    # Fire locust init event which can be used by end-users' code to run setup code that
+    # need access tg the Environment and/or Runner
+    events.init.fire(environment=environment)
+    
     if options.run_time:
         spawn_run_time_limit_greenlet()
 
