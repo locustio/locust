@@ -269,9 +269,10 @@ class TaskSet(object, metaclass=TaskSetMeta):
     Class defining a set of tasks that a Locust user will execute. 
     
     When a TaskSet starts running, it will pick a task from the *tasks* attribute, 
-    execute it, and call its *wait_function* which will define a time to sleep for. 
-    This defaults to a uniformly distributed random number between *min_wait* and 
-    *max_wait* milliseconds. It will then schedule another task for execution and so on.
+    execute it, and then sleep for the number of seconds returned by it's *wait_time* 
+    function. If no wait_time method has been declared on the TaskSet, it'll call the 
+    wait_time function on the Locust by default. It will then schedule another task 
+    for execution and so on.
     
     TaskSets can be nested, which means that a TaskSet's *tasks* attribute can contain 
     another TaskSet. If the nested TaskSet it scheduled to be executed, it will be 
@@ -316,7 +317,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
     wait_function = None
     """
     Deprecated: Use wait_time instead.
-    Function used to calculate waiting time betwen the execution of locust tasks in milliseconds. 
+    Function used to calculate waiting time between the execution of locust tasks in milliseconds. 
     Can be used to override the wait_function defined in the root Locust class, which will be used
     if not set on the TaskSet.
     """
