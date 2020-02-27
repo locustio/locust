@@ -59,16 +59,10 @@ Once you've done that you should be able to just ``pip install locustio``.
 Installing Locust on macOS
 --------------------------
 
-The following is currently the shortest path to installing gevent on OS X using Homebrew.
+Make sure you have a working installation of Python 3.6 or higher and follow the above 
+instructions. `Homebrew <http://mxcl.github.com/homebrew/>`_ can be used to install Python 
+on macOS.
 
-#. Install `Homebrew <http://mxcl.github.com/homebrew/>`_.
-#. Install libev (dependency for gevent):
-
-.. code-block:: console
-
-    brew install libev
-
-#. Then follow the above instructions.
 
 Increasing Maximum Number of Open Files Limit
 ---------------------------------------------
