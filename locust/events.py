@@ -6,8 +6,8 @@ class EventHook(object):
 
         my_event = EventHook()
         def on_my_event(a, b, **kw):
-            print "Event was fired with arguments: %s, %s" % (a, b)
-        my_event += on_my_event
+            print("Event was fired with arguments: %s, %s" % (a, b))
+        my_event.add_listener(on_my_event)
         my_event.fire(a="foo", b="bar")
 
     If reverse is True, then the handlers will run in the reverse order
