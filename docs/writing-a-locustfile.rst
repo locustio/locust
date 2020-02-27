@@ -473,61 +473,50 @@ Example:
     for i in range(10):
         self.client.get("/blog?id=%i" % i, name="/blog?id=[id]")
 
-Common libraries
-=================
 
-Often, people wish to group multiple locustfiles that share common libraries.  In that case, it is important
-to define the *project root* to be the directory where you invoke locust, and it is suggested that all
-locustfiles live somewhere beneath the project root.
+How to structure your test code
+================================
 
-A flat file structure works out of the box:
+It's important to remember that the locustfile.py is just an ordinary Python module that is imported 
+by Locust. From this module you're free to import other python code just as you normally would 
+in any Python program. The current working directory is automatically added to python's ``sys.path``, 
+so any python file/module/packages that resides in the working directory can be imported using the 
+python ``import`` statement.
 
-* project root
+For small tests, keeping all of the test code in a single ``locustfile.py`` should work fine, but for 
+larger test suites, you'll probably want to split the code into multiple files and directories. 
 
-  * ``commonlib_config.py``
+How you structure the test source code is ofcourse entirely up to you, but we recommend that you 
+follow Python best practices. Here's an example file structure of an imaginary Locust project:
 
-  * ``commonlib_auth.py``
-
-  * ``locustfile_web_app.py``
-
-  * ``locustfile_api.py``
-
-  * ``locustfile_ecommerce.py``
-
-The locustfiles may import common libraries using, e.g. ``import commonlib_auth``.  This approach does not
-cleanly separate common libraries from locust files, however.
-
-Subdirectories can be a cleaner approach (see example below), but locust will only import modules relative to
-the directory in which the running locustfile is placed. If you wish to import from your project root (i.e. the
-location where you are running the locust command), make sure to write ``sys.path.append(os.getcwd())`` in your
-locust file(s) before importing any common libraries---this will make the project root (i.e. the current
-working directory) importable.
-
-* project root
-
-  * ``__init__.py``
+* Project root
 
   * ``common/``
-
+  
     * ``__init__.py``
-
-    * ``config.py``
-
     * ``auth.py``
+    * ``config.py``
+  * ``locustfile.py``
+  * ``requirements.txt`` (External Python dependencies is often kept in a requirements.txt)
 
-  * ``locustfiles/``
+A project with multiple different locustfiles could also keep them in a separate subdirectory:
 
+* Project root
+
+  * ``common/``
+  
     * ``__init__.py``
-
-    * ``web_app.py``
-
+    * ``auth.py``
+    * ``config.py``
+  * ``locustfiles/``
+  
     * ``api.py``
+    * ``website.py``
+  * ``requirements.txt``
 
-    * ``ecommerce.py``
 
-With the above project structure, your locust files can import common libraries using:
+With any ofthe above project structure, your locustfile can import common libraries using:
 
 .. code-block:: python
 
-    sys.path.append(os.getcwd())
     import common.auth
