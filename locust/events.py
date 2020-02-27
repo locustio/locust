@@ -21,6 +21,7 @@ class EventHook(object):
     
     def add_listener(self, handler):
         self._handlers.append(handler)
+        return handler
     
     def remove_listener(self, handler):
         self._handlers.remove(handler)
