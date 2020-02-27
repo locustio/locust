@@ -26,8 +26,10 @@ class EventHook(object):
 
     def fire(self, reverse=False, **kwargs):
         if reverse:
-            self._handlers.reverse()
-        for handler in self._handlers:
+            handlers = reversed(self._handlers)
+        else:
+            handlers = self._handlers
+        for handler in handlers:
             handler(**kwargs)
 
 
