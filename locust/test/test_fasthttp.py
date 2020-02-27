@@ -300,8 +300,8 @@ class TestFastHttpCatchResponse(WebserverTestCase):
             self.last_failure_exception = exception
         def on_success(**kwargs):
             self.num_success += 1
-        self.environment.events.request_failure += on_failure
-        self.environment.events.request_success += on_success
+        self.environment.events.request_failure.add_listener(on_failure)
+        self.environment.events.request_success.add_listener(on_success)
         
     def test_catch_response(self):
         self.assertEqual(500, self.locust.client.get("/fail").status_code)

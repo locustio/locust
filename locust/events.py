@@ -18,14 +18,6 @@ class EventHook(object):
 
     def __init__(self):
         self._handlers = []
-
-    def __iadd__(self, handler):
-        self.add_listener(handler)
-        return self
-
-    def __isub__(self, handler):
-        self.remove_listener(handler)
-        return self
     
     def add_listener(self, handler):
         self._handlers.append(handler)
