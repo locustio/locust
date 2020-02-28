@@ -110,7 +110,7 @@ class WebUI:
             
         @app.route("/stats/requests/csv")
         def request_stats_csv():
-            response = make_response(requests_csv(self.environment.stats))
+            response = make_response(requests_csv(self.runner.stats))
             file_name = "requests_{0}.csv".format(time())
             disposition = "attachment;filename={0}".format(file_name)
             response.headers["Content-type"] = "text/csv"
@@ -119,7 +119,7 @@ class WebUI:
         
         @app.route("/stats/stats_history/csv")
         def stats_history_stats_csv():
-            response = make_response(stats_history_csv(self.environment.stats, False, True))
+            response = make_response(stats_history_csv(self.runner.stats, False, True))
             file_name = "stats_history_{0}.csv".format(time())
             disposition = "attachment;filename={0}".format(file_name)
             response.headers["Content-type"] = "text/csv"
@@ -128,7 +128,7 @@ class WebUI:
         
         @app.route("/stats/failures/csv")
         def failures_stats_csv():
-            response = make_response(failures_csv(self.environment.stats))
+            response = make_response(failures_csv(self.runner.stats))
             file_name = "failures_{0}.csv".format(time())
             disposition = "attachment;filename={0}".format(file_name)
             response.headers["Content-type"] = "text/csv"
@@ -140,7 +140,7 @@ class WebUI:
         def request_stats():
             stats = []
         
-            for s in chain(sort_stats(self.environment.stats.entries), [runner.stats.total]):
+            for s in chain(sort_stats(self.runner.stats.entries), [runner.stats.total]):
                 stats.append({
                     "method": s.method,
                     "name": s.name,

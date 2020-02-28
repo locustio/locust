@@ -3,26 +3,14 @@ from .stats import RequestStats
 
 
 class Environment:
-    locust_classes = None
-    """The locust user classes that is to be run"""
-    
     events = None
     """
     Event hooks used by Locust internally, as well as to extend Locust's functionality
     See :ref:`events` for available events.
     """
     
-    stats = None
-    """Instance of RequestStats which holds the request statistics"""
-    
     options = None
     """Parsed command line options"""
-    
-    runner = None
-    """Reference to the runner instance"""
-    
-    web_ui = None
-    """Reference to the WebUI instance"""
     
     host = None
     """Base URL of the target system"""
@@ -33,22 +21,13 @@ class Environment:
     step_load = False
     """Determines if we're running in step load mode"""
     
-    def  __init__(self, locust_classes=None, options=None, host=None, reset_stats=False, step_load=False):
-        self.events = Events()
-        self.stats = RequestStats()
-        self.locust_classes = locust_classes
+    def  __init__(self, events=None, options=None, host=None, reset_stats=False, step_load=False):
+        if events:
+            self.events = events
+        else:
+            self.events = Events()
+        
         self.host = host
         self.reset_stats = reset_stats
         self.step_load = step_load
         self.options = options
-        
-        # set up event listeners for recording requests
-        def on_request_success(request_type, name, response_time, response_length, **kwargs):
-            self.stats.log_request(request_type, name, response_time, response_length)
-        
-        def on_request_failure(request_type, name, response_time, response_length, exception, **kwargs):
-            self.stats.log_request(request_type, name, response_time, response_length)
-            self.stats.log_error(request_type, name, exception)
-        
-        self.events.request_success.add_listener(on_request_success)
-        self.events.request_failure.add_listener(on_request_failure)

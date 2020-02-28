@@ -14,7 +14,7 @@ from gevent.pool import Group
 
 from . import events
 from .rpc import Message, rpc
-from .stats import setup_distributed_stats_event_listeners
+from .stats import RequestStats, setup_distributed_stats_event_listeners
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +26,10 @@ CPU_MONITOR_INTERVAL = 5.0
 LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING = ["running", "waiting", "stopping"]
 
 class LocustRunner(object):
-    def __init__(self, environment):
-        environment.runner = self
+    def __init__(self, environment, locust_classes):
         options = environment.options
         self.environment = environment
+        self.locust_classes = locust_classes
         self.options = options
         self.locusts = Group()
         self.greenlet = Group()
@@ -40,7 +40,18 @@ class LocustRunner(object):
         self.cpu_warning_emitted = False
         self.greenlet.spawn(self.monitor_cpu)
         self.exceptions = {}
-        self.stats = environment.stats
+        self.stats = RequestStats()
+        
+        # set up event listeners for recording requests
+        def on_request_success(request_type, name, response_time, response_length, **kwargs):
+            self.stats.log_request(request_type, name, response_time, response_length)
+        
+        def on_request_failure(request_type, name, response_time, response_length, exception, **kwargs):
+            self.stats.log_request(request_type, name, response_time, response_length)
+            self.stats.log_error(request_type, name, exception)
+        
+        self.environment.events.request_success.add_listener(on_request_success)
+        self.environment.events.request_failure.add_listener(on_request_failure)
 
         # register listener that resets stats when hatching is complete
         def on_hatch_complete(user_count):
@@ -54,11 +65,6 @@ class LocustRunner(object):
         # don't leave any stray greenlets if runner is removed
         if self.greenlet and len(self.greenlet) > 0:
             self.greenlet.kill(block=False)
-
-            
-    @property
-    def locust_classes(self):
-        return self.environment.locust_classes
     
     @property
     def errors(self):
@@ -273,8 +279,8 @@ class LocustRunner(object):
         pass
 
 class LocalLocustRunner(LocustRunner):
-    def __init__(self, environment):
-        super(LocalLocustRunner, self).__init__(environment)
+    def __init__(self, environment, locust_classes):
+        super(LocalLocustRunner, self).__init__(environment, locust_classes)
 
         # register listener thats logs the exception for the local runner
         def on_locust_error(locust_instance, exception, tb):
@@ -292,15 +298,15 @@ class LocalLocustRunner(LocustRunner):
 
 
 class DistributedLocustRunner(LocustRunner):
-    def __init__(self, environment):
-        super(DistributedLocustRunner, self).__init__(environment)
+    def __init__(self, environment, locust_classes):
+        super(DistributedLocustRunner, self).__init__(environment, locust_classes)
         self.master_host = environment.options.master_host
         self.master_port = environment.options.master_port
         self.master_bind_host = environment.options.master_bind_host
         self.master_bind_port = environment.options.master_bind_port
         self.heartbeat_liveness = environment.options.heartbeat_liveness
         self.heartbeat_interval = environment.options.heartbeat_interval
-        setup_distributed_stats_event_listeners(environment)
+        setup_distributed_stats_event_listeners(self.environment.events, self.stats)
 
 class SlaveNode(object):
     def __init__(self, id, state=STATE_INIT, heartbeat_liveness=3):

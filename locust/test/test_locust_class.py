@@ -14,7 +14,7 @@ class TestTaskSet(LocustTestCase):
         
         class User(Locust):
             host = "127.0.0.1"
-        self.environment = Environment(locust_classes=[User])
+        self.environment = Environment()
         self.locust = User(self.environment)
     
     def test_task_ratio(self):
@@ -258,8 +258,8 @@ class TestTaskSet(LocustTestCase):
             host = "http://127.0.0.1"
             task_set = MyTaskSet2
         
-        l = MyLocust(Environment(locust_classes=[MyLocust]))
-        l2 = MyLocust2(Environment(locust_classes=[MyLocust2]))
+        l = MyLocust(Environment())
+        l2 = MyLocust2(Environment())
         self.assertRaises(LocustError, lambda: l.run())
         self.assertRaises(LocustError, lambda: l2.run())
         
@@ -291,7 +291,7 @@ class TestTaskSet(LocustTestCase):
             host = ""
             task_set = SubTaskSet
         
-        l = MyLocust(Environment(locust_classes=[MyLocust]))
+        l = MyLocust(Environment())
         task_set = SubTaskSet(l)
         self.assertRaises(RescheduleTaskImmediately, lambda: task_set.run(reschedule=True))
         self.assertRaises(RescheduleTask, lambda: task_set.run(reschedule=False))
@@ -319,7 +319,7 @@ class TestTaskSet(LocustTestCase):
             host = ""
             task_set = RootTaskSet
         
-        l = MyLocust(Environment(locust_classes=[MyLocust]))
+        l = MyLocust(Environment())
         l.run()
         self.assertTrue(isinstance(parents["sub"], RootTaskSet))
         self.assertTrue(isinstance(parents["subsub"], SubTaskSet))
@@ -432,8 +432,8 @@ class TestWebLocustClass(WebserverTestCase):
         my_locust = MyLocust(self.environment)
         my_locust.t1()
         
-        self.assertEqual(1, self.environment.stats.get("new name!", "GET").num_requests)
-        self.assertEqual(0, self.environment.stats.get("/ultra_fast", "GET").num_requests)
+        self.assertEqual(1, self.runner.stats.get("new name!", "GET").num_requests)
+        self.assertEqual(0, self.runner.stats.get("/ultra_fast", "GET").num_requests)
     
     def test_locust_client_error(self):
         class MyTaskSet(TaskSet):
@@ -458,9 +458,9 @@ class TestWebLocustClass(WebserverTestCase):
         l = MyLocust(self.environment)
         l.client.get("/redirect")
         
-        self.assertEqual(1, len(self.environment.stats.entries))
-        self.assertEqual(1, self.environment.stats.get("/redirect", "GET").num_requests)
-        self.assertEqual(0, self.environment.stats.get("/ultra_fast", "GET").num_requests)
+        self.assertEqual(1, len(self.runner.stats.entries))
+        self.assertEqual(1, self.runner.stats.get("/redirect", "GET").num_requests)
+        self.assertEqual(0, self.runner.stats.get("/ultra_fast", "GET").num_requests)
 
 
 class TestCatchResponse(WebserverTestCase):

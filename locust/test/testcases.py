@@ -15,6 +15,7 @@ from flask import (Flask, Response, make_response, redirect, request,
 from locust import events
 from locust.env import Environment
 from locust.log import console_logger
+from locust.runners import LocustRunner
 from locust.test.mock_logging import MockedLoggingHandler
 
 
@@ -125,6 +126,7 @@ class LocustTestCase(unittest.TestCase):
         del sys.argv[1:]
         
         self.environment = Environment()
+        self.runner = LocustRunner(self.environment, [])
         
         # When running the tests in Python 3 we get warnings about unclosed sockets. 
         # This causes tests that depends on calls to sys.stderr to fail, so we'll 

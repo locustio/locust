@@ -27,7 +27,7 @@ _internals = [Locust, HttpLocust]
 version = locust.__version__
 
 
-def parse_options(args=None, default_config_files=['~/.locust.conf','locust.conf']):
+def get_parser(default_config_files):
     """
     Handle command-line options with configargparse.ArgumentParser.
 
@@ -289,6 +289,11 @@ def parse_options(args=None, default_config_files=['~/.locust.conf','locust.conf
         metavar='LocustClass',
     )
 
+    return parser
+
+def parse_options(args=None, default_config_files=['~/.locust.conf','locust.conf']):
+    parser = get_parser(default_config_files=default_config_files)
+    # fire event that can be used by end-users to extend the command line arguments
     return parser, parser.parse_args(args=args)
 
 
@@ -401,11 +406,12 @@ def load_locustfile(path):
     return imported.__doc__, locusts
 
 
-def create_environment(options):
+def create_environment(options, events=None):
     """
     Create an Environment instance from options
     """
     return Environment(
+        events=events,
         host=options.host,
         options=options,
         reset_stats=options.reset_stats,
@@ -431,7 +437,10 @@ def main():
     if locustfile == "locust.py":
         logger.error("The locustfile must not be named `locust.py`. Please rename the file and try again.")
         sys.exit(1)
-
+    
+    # create an Events instance that the locustfile can use to register event listeners at the module level
+    events.events = events.Events()
+    
     docstring, locusts = load_locustfile(locustfile)
 
     if options.list_commands:
@@ -458,8 +467,7 @@ def main():
         locust_classes = list(locusts.values())
     
     # create locust Environment
-    environment = create_environment(options)
-    environment.locust_classes = locust_classes
+    environment = create_environment(options, events=events.events)
     
     if options.show_task_ratio:
         console_logger.info("\n Task ratio per locust class")
@@ -477,6 +485,33 @@ def main():
         }
         console_logger.info(dumps(task_data))
         sys.exit(0)
+
+    if options.step_time:
+        if not options.step_load:
+            logger.error("The --step-time argument can only be used together with --step-load")
+            sys.exit(1)
+        if options.slave:
+            logger.error("--step-time should be specified on the master node, and not on slave nodes")
+            sys.exit(1)
+        try:
+            options.step_time = parse_timespan(options.step_time)
+        except ValueError:
+            logger.error("Valid --step-time formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
+            sys.exit(1)
+    
+    if options.master:
+        runner = MasterLocustRunner(environment, locust_classes)
+    elif options.slave:
+        try:
+            runner = SlaveLocustRunner(environment, locust_classes)
+        except socket.error as e:
+            logger.error("Failed to connect to the Locust master: %s", e)
+            sys.exit(-1)
+    else:
+        runner = LocalLocustRunner(environment, locust_classes)
+    
+    # main_greenlet is pointing to runners.greenlet by default, it will point the web greenlet later if in web mode
+    main_greenlet = runner.greenlet
     
     if options.run_time:
         if not options.no_web:
@@ -494,35 +529,8 @@ def main():
             logger.info("Run time limit set to %s seconds" % options.run_time)
             def timelimit_stop():
                 logger.info("Time limit reached. Stopping Locust.")
-                environment.runner.quit()
+                runner.quit()
             gevent.spawn_later(options.run_time, timelimit_stop)
-
-    if options.step_time:
-        if not options.step_load:
-            logger.error("The --step-time argument can only be used together with --step-load")
-            sys.exit(1)
-        if options.slave:
-            logger.error("--step-time should be specified on the master node, and not on slave nodes")
-            sys.exit(1)
-        try:
-            options.step_time = parse_timespan(options.step_time)
-        except ValueError:
-            logger.error("Valid --step-time formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
-            sys.exit(1)
-    
-    if options.master:
-        runner = MasterLocustRunner(environment)
-    elif options.slave:
-        try:
-            runner = SlaveLocustRunner(environment)
-        except socket.error as e:
-            logger.error("Failed to connect to the Locust master: %s", e)
-            sys.exit(-1)
-    else:
-        runner = LocalLocustRunner(environment)
-    
-    # main_greenlet is pointing to runners.locust_runner.greenlet by default, it will point the web greenlet later if in web mode
-    main_greenlet = runner.greenlet
 
     if options.no_web:
         if options.master:
@@ -539,8 +547,8 @@ def main():
     elif not options.slave:
         # spawn web greenlet
         logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.web_port))
-        environment.web_ui = WebUI(environment=environment, runner=runner)
-        main_greenlet = gevent.spawn(environment.web_ui.start, host=options.web_host, port=options.web_port)
+        web_ui = WebUI(environment=environment, runner=runner)
+        main_greenlet = gevent.spawn(web_ui.start, host=options.web_host, port=options.web_port)
     
     # Fire locust init event which can be used by end-users' code to run setup code that
     # need access tg the Environment and/or Runner
@@ -552,10 +560,10 @@ def main():
     stats_printer_greenlet = None
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
-        stats_printer_greenlet = gevent.spawn(stats_printer(environment.stats))
+        stats_printer_greenlet = gevent.spawn(stats_printer(runner.stats))
 
     if options.csvfilebase:
-        gevent.spawn(stats_writer, environment.stats, options.csvfilebase, options.stats_history_enabled)
+        gevent.spawn(stats_writer, runner.stats, options.csvfilebase, options.stats_history_enabled)
 
     
     def shutdown(code=0):
@@ -570,11 +578,11 @@ def main():
             runner.quit()
         logger.info("Running teardowns...")
         environment.events.quitting.fire(reverse=True)
-        print_stats(environment.stats, current=False)
-        print_percentile_stats(environment.stats)
+        print_stats(runner.stats, current=False)
+        print_percentile_stats(runner.stats)
         if options.csvfilebase:
-            write_stat_csvs(environment.stats, options.csvfilebase, options.stats_history_enabled)
-        print_error_report(environment.stats)
+            write_stat_csvs(runner.stats, options.csvfilebase, options.stats_history_enabled)
+        print_error_report(runner.stats)
         sys.exit(code)
     
     # install SIGTERM handler
