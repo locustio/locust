@@ -61,10 +61,6 @@ class LocustRunner(object):
         return self.environment.locust_classes
     
     @property
-    def request_stats(self):
-        return self.stats.entries
-    
-    @property
     def errors(self):
         return self.stats.errors
     
