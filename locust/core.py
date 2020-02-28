@@ -225,7 +225,11 @@ class HttpLocust(Locust):
         if self.host is None:
             raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
 
-        session = HttpSession(self.environment, base_url=self.host)
+        session = HttpSession(
+            base_url=self.host, 
+            request_success=self.environment.events.request_success, 
+            request_failure=self.environment.events.request_failure,
+        )
         session.trust_env = self.trust_env
         self.client = session
 

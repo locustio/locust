@@ -8,13 +8,21 @@ from .testcases import WebserverTestCase
 
 
 class TestHttpSession(WebserverTestCase):
+    def get_client(self, base_url=None):
+        if base_url is None:
+            base_url = "http://127.0.0.1:%i" % self.port
+        return HttpSession(
+            base_url=base_url,
+            request_success=self.environment.events.request_success,
+            request_failure=self.environment.events.request_failure,
+        )
     def test_get(self):
-        s = HttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         r = s.get("/ultra_fast")
         self.assertEqual(200, r.status_code)
     
     def test_connection_error(self):
-        s = HttpSession(self.environment, "http://localhost:1")
+        s = self.get_client(base_url="http://localhost:1")
         r = s.get("/", timeout=0.1)
         self.assertEqual(r.status_code, 0)
         self.assertEqual(None, r.content)
@@ -26,7 +34,7 @@ class TestHttpSession(WebserverTestCase):
                 ("telnet://127.0.0.1", InvalidSchema),
                 ("127.0.0.1", MissingSchema), 
             ):
-            s = HttpSession(self.environment, url)
+            s = self.get_client(base_url=url)
             try:
                 self.assertRaises(exception, s.get, "/")
             except KeyError:
@@ -36,7 +44,7 @@ class TestHttpSession(WebserverTestCase):
         """
         Test a request to an endpoint that returns a streaming response
         """
-        s = HttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         r = s.get("/streaming/30")
         
         # verify that the time reported includes the download time of the whole streamed response
@@ -52,7 +60,7 @@ class TestHttpSession(WebserverTestCase):
         _ = r.content
     
     def test_slow_redirect(self):
-        s = HttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         url = "/redirect?url=/redirect?delay=0.5"
         r = s.get(url)
         stats = self.environment.stats.get(url, method="GET")
@@ -60,7 +68,7 @@ class TestHttpSession(WebserverTestCase):
         self.assertGreater(stats.avg_response_time, 500)
     
     def test_post_redirect(self):
-        s = HttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         url = "/redirect"
         r = s.post(url)
         self.assertEqual(200, r.status_code)
@@ -70,26 +78,26 @@ class TestHttpSession(WebserverTestCase):
         self.assertEqual(0, get_stats.num_requests)
     
     def test_cookie(self):
-        s = HttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         r = s.post("/set_cookie?name=testcookie&value=1337")
         self.assertEqual(200, r.status_code)
         r = s.get("/get_cookie?name=testcookie")
         self.assertEqual('1337', r.content.decode())
     
     def test_head(self):
-        s = HttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         r = s.head("/request_method")
         self.assertEqual(200, r.status_code)
         self.assertEqual("", r.content.decode())
     
     def test_delete(self):
-        s = HttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         r = s.delete("/request_method")
         self.assertEqual(200, r.status_code)
         self.assertEqual("DELETE", r.content.decode())
     
     def test_options(self):
-        s = HttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         r = s.options("/request_method")
         self.assertEqual(200, r.status_code)
         self.assertEqual("", r.content.decode())
@@ -99,7 +107,7 @@ class TestHttpSession(WebserverTestCase):
         )
 
     def test_error_message_with_name_replacment(self):
-        s = HttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         kwargs = {}
         def on_error(**kw):
             kwargs.update(kw)
