@@ -20,6 +20,7 @@ from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
                         RescheduleTaskImmediately, StopLocust, MissingWaitTimeError)
 from .runners import STATE_CLEANUP, LOCUST_STATE_RUNNING, LOCUST_STATE_STOPPING, LOCUST_STATE_WAITING
 from .util import deprecation
+from .wait_time import constant
 
 
 logger = logging.getLogger(__name__)
@@ -86,6 +87,31 @@ def seq_task(order):
         return func
 
     return decorator_func
+
+
+def simple_task(weight=1):
+    """
+    Used as a convenience decorator to create a standalone SimpleTaskSet
+    """
+
+    def decorator_func(func):
+        for i in range(0, weight):
+            SimpleTaskSet.tasks.append(func)
+        return func
+
+    """
+    Check if task was used without parentheses (not called), like this::
+    
+        @task
+        def my_task()
+            pass
+    """
+    if callable(weight):
+        func = weight
+        weight = 1
+        return decorator_func(func)
+    else:
+        return decorator_func
 
 
 class NoClientWarningRaiser(object):
@@ -541,3 +567,10 @@ class TaskSequence(TaskSet):
         task = self.tasks[self._index]
         self._index = (self._index + 1) % len(self.tasks)
         return task
+
+class SimpleTaskSet(TaskSet):
+    pass
+
+class SimpleHttpLocust(HttpLocust):
+    task_set = SimpleTaskSet
+    wait_time = constant(0)

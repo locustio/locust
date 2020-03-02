@@ -13,7 +13,7 @@ import gevent
 import locust
 
 from . import events, runners, web
-from .core import HttpLocust, Locust
+from .core import HttpLocust, Locust, SimpleTaskSet, SimpleHttpLocust
 from .inspectlocust import get_task_ratio_dict, print_task_ratio
 from .log import console_logger, setup_logging
 from .runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner
@@ -426,8 +426,11 @@ def main():
         sys.exit(0)
 
     if not locusts:
-        logger.error("No Locust class found!")
-        sys.exit(1)
+        if SimpleTaskSet.tasks:
+            locusts = {"SimpleHttpLocust": SimpleHttpLocust}
+        else:
+            logger.error("No Locust class found!")
+            sys.exit(1)
 
     # make sure specified Locust exists
     if options.locust_classes:

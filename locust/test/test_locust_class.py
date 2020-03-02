@@ -1,5 +1,5 @@
 from locust import InterruptTaskSet, ResponseError
-from locust.core import HttpLocust, Locust, TaskSet, events, task
+from locust.core import HttpLocust, SimpleHttpLocust, Locust, TaskSet, SimpleTaskSet, events, task, simple_task
 from locust.exception import (CatchResponseError, LocustError, RescheduleTask,
                               RescheduleTaskImmediately)
 
@@ -464,6 +464,18 @@ class TestWebLocustClass(WebserverTestCase):
         self.assertEqual(1, global_stats.get("/redirect", "GET").num_requests)
         self.assertEqual(0, global_stats.get("/ultra_fast", "GET").num_requests)
 
+    def test_simple_task_decorator(self):
+        @simple_task
+        def t1(task):
+            pass
+
+        @simple_task(2)
+        def t2(task):
+            pass
+
+        tasks = SimpleTaskSet.tasks
+        SimpleTaskSet.tasks = [] # dont leave this in place for later tests
+        self.assertEqual(len(tasks), 3)
 
 class TestCatchResponse(WebserverTestCase):
     def setUp(self):
