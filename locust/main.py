@@ -531,7 +531,8 @@ def main():
                 logger.info("Time limit reached. Stopping Locust.")
                 runner.quit()
             gevent.spawn_later(options.run_time, timelimit_stop)
-
+    
+    web_ui = None
     if options.no_web:
         if options.master:
             while len(runner.clients.ready) < options.expect_slaves:
@@ -551,8 +552,8 @@ def main():
         main_greenlet = gevent.spawn(web_ui.start, host=options.web_host, port=options.web_port)
     
     # Fire locust init event which can be used by end-users' code to run setup code that
-    # need access tg the Environment and/or Runner
-    events.init.fire(environment=environment)
+    # need access to the Environment, Runner or WebUI
+    events.init.fire(environment=environment, runner=runner, web_ui=web_ui)
     
     if options.run_time:
         spawn_run_time_limit_greenlet()
