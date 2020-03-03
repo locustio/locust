@@ -1,7 +1,7 @@
 import warnings
 
 from locust import InterruptTaskSet, ResponseError
-from locust.core import HttpLocust, Locust, TaskSet, events, task
+from locust.core import HttpLocust, Locust, TaskSet, task
 from locust.exception import (CatchResponseError, LocustError, RescheduleTask,
                               RescheduleTaskImmediately)
 from locust.wait_time import between, constant

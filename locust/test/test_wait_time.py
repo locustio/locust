@@ -1,11 +1,11 @@
 import random
 import time
 
-from locust.core import HttpLocust, Locust, TaskSet, events, task
+from locust.core import Locust, TaskSet
 from locust.exception import MissingWaitTimeError
 from locust.wait_time import between, constant, constant_pacing
 
-from .testcases import LocustTestCase, WebserverTestCase
+from .testcases import LocustTestCase
 
 
 class TestWaitTime(LocustTestCase):

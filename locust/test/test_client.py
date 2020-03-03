@@ -1,7 +1,6 @@
 from requests.exceptions import (InvalidSchema, InvalidURL, MissingSchema,
                                  RequestException)
 
-from locust import events
 from locust.clients import HttpSession
 from locust.env import Environment
 from .testcases import WebserverTestCase

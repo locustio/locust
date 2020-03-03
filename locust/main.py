@@ -11,7 +11,7 @@ import gevent
 
 import locust
 
-from . import events
+from .event import Events
 from .argument_parser import parse_locustfile_option, parse_options
 from .core import HttpLocust, Locust
 from .env import Environment
@@ -92,11 +92,12 @@ def load_locustfile(path):
     return imported.__doc__, locusts
 
 
-def create_environment(options):
+def create_environment(options, events=None):
     """
     Create an Environment instance from options
     """
     return Environment(
+        events=events,
         host=options.host,
         options=options,
         reset_stats=options.reset_stats,
@@ -105,6 +106,9 @@ def create_environment(options):
 
 
 def main():
+    # create an Events instance that the locustfile can use to register event listeners at the module level
+    locust.events = Events()
+    
     # find specified locustfile and make sure it exists, using a very simplified
     # command line parser that is only used to parse the -f option
     locustfile = parse_locustfile_option()
@@ -145,7 +149,7 @@ def main():
         locust_classes = list(locusts.values())
     
     # create locust Environment
-    environment = create_environment(options)
+    environment = create_environment(options, events=locust.events)
     
     if options.show_task_ratio:
         console_logger.info("\n Task ratio per locust class")
@@ -231,7 +235,7 @@ def main():
     
     # Fire locust init event which can be used by end-users' code to run setup code that
     # need access to the Environment, Runner or WebUI
-    events.init.fire(environment=environment, runner=runner, web_ui=web_ui)
+    environment.events.init.fire(environment=environment, runner=runner, web_ui=web_ui)
     
     if options.run_time:
         spawn_run_time_limit_greenlet()

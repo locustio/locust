@@ -5,7 +5,7 @@ from gevent import sleep
 from gevent.queue import Queue
 
 import mock
-from locust import events, runners
+from locust import runners
 from locust.core import Locust, TaskSet, task
 from locust.env import Environment
 from locust.exception import LocustError

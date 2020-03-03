@@ -4,7 +4,6 @@ import sys
 import configargparse
 
 import locust
-from locust import events
 
 version = locust.__version__
 
@@ -328,7 +327,7 @@ def get_parser(default_config_files=DEFAULT_CONFIG_FILES):
     # add all the other supported arguments
     setup_parser_arguments(parser)
     # fire event to provide a hook for locustscripts and plugins to add command line arguments
-    events.init_command_line_parser.fire(parser=parser)
+    locust.events.init_command_line_parser.fire(parser=parser)
     return parser
 
 

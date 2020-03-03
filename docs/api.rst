@@ -88,20 +88,13 @@ Environment class
 Event hooks
 ===========
 
-Locust provide event hooks that can be used to extend Locus in various ways
+Locust provide event hooks that can be used to extend Locus in various ways. 
 
-Events directly under locust.events
------------------------------------
+The following event hooks are available under :py:attr:`Environment.events <locust.env.Environment.events>`, 
+and there's also a reference to these events under ``locust.events`` that can be used at the module level 
+of locust scripts (since the Environment instance hasn't been created when the locustfile is imported).
 
-.. automodule:: locust.events
-    :members: init
-
-Events under Environment.events:
---------------------------------
-
-The following event hooks are available under :py:attr:`Environment.events <locust.env.Environment.events>`:
-
-.. autoclass:: locust.events.Events
+.. autoclass:: locust.event.Events
     :members:
 
 
@@ -110,7 +103,7 @@ EventHook class
 
 The event hooks are instances of the **locust.events.EventHook** class:
 
-.. autoclass:: locust.events.EventHook
+.. autoclass:: locust.event.EventHook
 
 .. note::
 

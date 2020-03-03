@@ -1,10 +1,6 @@
-import socket
-
-from locust import TaskSet, task, events
-from locust.core import LocustError
+from locust.core import task, TaskSet
 from locust.contrib.fasthttp import FastHttpSession, FastHttpLocust
 from locust.exception import CatchResponseError, InterruptTaskSet, ResponseError
-
 from .testcases import WebserverTestCase
 
 

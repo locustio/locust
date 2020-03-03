@@ -12,7 +12,8 @@ import gevent.pywsgi
 from flask import (Flask, Response, make_response, redirect, request,
                    send_file, stream_with_context)
 
-from locust import events
+import locust
+from locust.event import Events
 from locust.env import Environment
 from locust.log import console_logger
 from locust.runners import LocustRunner
@@ -125,15 +126,9 @@ class LocustTestCase(unittest.TestCase):
         # Prevent args passed to test runner from being passed to Locust
         del sys.argv[1:]
         
-        self.environment = Environment()
+        locust.events = Events()
+        self.environment = Environment(events=locust.events)
         self.runner = LocustRunner(self.environment, [])
-        
-        # store references to event handlers
-        self._event_handlers = {}
-        for name in dir(events):
-            event = getattr(events, name)
-            if isinstance(event, events.EventHook):
-                self._event_handlers[event] = copy(event._handlers)
         
         # When running the tests in Python 3 we get warnings about unclosed sockets. 
         # This causes tests that depends on calls to sys.stderr to fail, so we'll 
@@ -165,10 +160,6 @@ class LocustTestCase(unittest.TestCase):
         [console_logger.addHandler(h) for h in self._console_log_handlers]
         self.mocked_log.reset()
         console_logger.propagate = False
-        
-        # restore event handlers
-        for event, handlers in self._event_handlers.items():
-            event._handlers = handlers
 
 
 class WebserverTestCase(LocustTestCase):

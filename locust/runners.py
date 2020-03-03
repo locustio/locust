@@ -12,7 +12,6 @@ import psutil
 from gevent import GreenletExit
 from gevent.pool import Group
 
-from . import events
 from .rpc import Message, rpc
 from .stats import RequestStats, setup_distributed_stats_event_listeners
 

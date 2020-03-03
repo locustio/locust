@@ -1,5 +1,5 @@
 from locust import InterruptTaskSet, ResponseError
-from locust.core import HttpLocust, Locust, TaskSequence, events, seq_task, task
+from locust.core import HttpLocust, Locust, TaskSequence, seq_task, task
 from locust.exception import (CatchResponseError, LocustError, RescheduleTask,
                               RescheduleTaskImmediately)
 from locust.wait_time import between, constant

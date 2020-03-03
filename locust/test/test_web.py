@@ -7,12 +7,10 @@ from io import StringIO
 
 import gevent
 import requests
-from gevent import pywsgi
 
-from locust import events, runners, stats, web, constant
+from locust import constant
 from locust.argument_parser import get_parser
 from locust.core import Locust, TaskSet, task
-from locust.env import Environment
 from locust.runners import LocustRunner
 from locust.web import WebUI
 

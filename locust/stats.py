@@ -6,7 +6,6 @@ from itertools import chain
 
 import gevent
 
-from . import events
 from .exception import StopLocust
 from .log import console_logger
 
