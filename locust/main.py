@@ -20,6 +20,7 @@ from .runners import LocalLocustRunner, MasterLocustRunner, SlaveLocustRunner
 from .stats import (print_error_report, print_percentile_stats, print_stats,
                     stats_printer, stats_writer, write_stat_csvs)
 from .util.timespan import parse_timespan
+from .wait_time import constant
 
 _internals = [Locust, HttpLocust]
 version = locust.__version__
