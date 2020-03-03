@@ -1,5 +1,4 @@
 from .events import Events
-from .stats import RequestStats
 
 
 class Environment:
@@ -21,12 +20,8 @@ class Environment:
     step_load = False
     """Determines if we're running in step load mode"""
     
-    def  __init__(self, events=None, options=None, host=None, reset_stats=False, step_load=False):
-        if events:
-            self.events = events
-        else:
-            self.events = Events()
-        
+    def  __init__(self, options=None, host=None, reset_stats=False, step_load=False):
+        self.events = Events()
         self.host = host
         self.reset_stats = reset_stats
         self.step_load = step_load

@@ -92,12 +92,11 @@ def load_locustfile(path):
     return imported.__doc__, locusts
 
 
-def create_environment(options, events=None):
+def create_environment(options):
     """
     Create an Environment instance from options
     """
     return Environment(
-        events=events,
         host=options.host,
         options=options,
         reset_stats=options.reset_stats,
@@ -121,9 +120,6 @@ def main():
         setup_logging(options.loglevel, options.logfile)
 
     logger = logging.getLogger(__name__)
-    
-    # create an Events instance that the locustfile can use to register event listeners at the module level
-    events.events = events.Events()
 
     if options.list_commands:
         console_logger.info("Available Locusts:")
@@ -149,7 +145,7 @@ def main():
         locust_classes = list(locusts.values())
     
     # create locust Environment
-    environment = create_environment(options, events=events.events)
+    environment = create_environment(options)
     
     if options.show_task_ratio:
         console_logger.info("\n Task ratio per locust class")
