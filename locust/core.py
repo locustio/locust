@@ -266,7 +266,7 @@ class TaskSetMeta(type):
         
         cls = type.__new__(mcs, classname, bases, classDict)
         if subtask_of_simple_taskset:
-            SimpleHttpLocust.task_set = cls
+            HttpLocust.task_set = cls
         return cls
 
 class TaskSet(object, metaclass=TaskSetMeta):
@@ -551,6 +551,3 @@ class TaskSequence(TaskSet):
 
 class SimpleTaskSet(TaskSet):
     pass
-
-class SimpleHttpLocust(HttpLocust):
-    wait_time = constant(0)
