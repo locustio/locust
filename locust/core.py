@@ -43,8 +43,6 @@ def task(weight=1):
     
     def decorator_func(func):
         func.locust_task_weight = weight
-        for _ in range(0, weight):
-            SimpleTaskSet.tasks.append(func)
         return func
     
     """
@@ -239,7 +237,10 @@ class TaskSetMeta(type):
     
     def __new__(mcs, classname, bases, classDict):
         new_tasks = []
+        subtask_of_simple_taskset = False
         for base in bases:
+            if base.__name__ == "SimpleTaskSet":  # check by name, because the class might not actually exist yet
+                subtask_of_simple_taskset = True
             if hasattr(base, "tasks") and base.tasks:
                 new_tasks += base.tasks
         
@@ -263,7 +264,10 @@ class TaskSetMeta(type):
         
         classDict["tasks"] = new_tasks
         
-        return type.__new__(mcs, classname, bases, classDict)
+        cls = type.__new__(mcs, classname, bases, classDict)
+        if subtask_of_simple_taskset:
+            SimpleHttpLocust.task_set = cls
+        return cls
 
 class TaskSet(object, metaclass=TaskSetMeta):
     """
@@ -549,5 +553,4 @@ class SimpleTaskSet(TaskSet):
     pass
 
 class SimpleHttpLocust(HttpLocust):
-    task_set = SimpleTaskSet
     wait_time = constant(0)

@@ -425,12 +425,12 @@ def main():
             console_logger.info("    " + name)
         sys.exit(0)
 
+    if not locusts and SimpleHttpLocust.task_set:
+        locusts = {"SimpleHttpLocust": SimpleHttpLocust}
+
     if not locusts:
-        if SimpleTaskSet.tasks:
-            locusts = {"SimpleHttpLocust": SimpleHttpLocust}
-        else:
-            logger.error("No Locust class found!")
-            sys.exit(1)
+        logger.error("No Locust class found!")
+        sys.exit(1)
 
     # make sure specified Locust exists
     if options.locust_classes:
