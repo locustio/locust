@@ -152,3 +152,11 @@ Event is fired with following arguments:
 
 * *environment*: Environment instance
 """
+
+init_command_line_parser = EventHook()
+"""
+Event that can be used to add command line options to Locust
+
+Event is fired with the following arguments:
+* *parser*: ArgumentParser instance
+"""

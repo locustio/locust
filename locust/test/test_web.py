@@ -10,9 +10,9 @@ import requests
 from gevent import pywsgi
 
 from locust import events, runners, stats, web, constant
+from locust.argument_parser import get_parser
 from locust.core import Locust, TaskSet, task
 from locust.env import Environment
-from locust.main import parse_options
 from locust.runners import LocustRunner
 from locust.web import WebUI
 
@@ -23,7 +23,7 @@ class TestWebUI(LocustTestCase):
     def setUp(self):
         super(TestWebUI, self).setUp()
         
-        parser = parse_options(default_config_files=[])[0]
+        parser = get_parser(default_config_files=[])
         self.environment.options = parser.parse_args([])
         self.runner = LocustRunner(self.environment, [])
         self.stats = self.runner.stats
