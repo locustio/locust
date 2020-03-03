@@ -464,6 +464,7 @@ class TestWebLocustClass(WebserverTestCase):
         self.assertEqual(1, global_stats.get("/redirect", "GET").num_requests)
         self.assertEqual(0, global_stats.get("/ultra_fast", "GET").num_requests)
 
+
 class TestCatchResponse(WebserverTestCase):
     def setUp(self):
         super(TestCatchResponse, self).setUp()
