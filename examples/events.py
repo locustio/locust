@@ -24,7 +24,7 @@ class WebsiteUser(HttpLocust):
     
 
 @events.init.add_listener
-def locust_init(environment, **kwargs):
+def locust_init(environment, web_ui, **kwargs):
     """
     We need somewhere to store the stats.
     
@@ -60,9 +60,9 @@ def locust_init(environment, **kwargs):
         """
         stats["content-length"] += data["content-length"]
     
-    if environment.web_ui:
+    if web_ui:
         # this code is only run on the master node (the web_ui instance doesn't exist on slaves)
-        @environment.web_ui.app.route("/content-length")
+        @web_ui.app.route("/content-length")
         def total_content_length():
             """
             Add a route to the Locust web app, where we can see the total content-length
