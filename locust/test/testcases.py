@@ -128,6 +128,13 @@ class LocustTestCase(unittest.TestCase):
         self.environment = Environment()
         self.runner = LocustRunner(self.environment, [])
         
+        # store references to event handlers
+        self._event_handlers = {}
+        for name in dir(events):
+            event = getattr(events, name)
+            if isinstance(event, events.EventHook):
+                self._event_handlers[event] = copy(event._handlers)
+        
         # When running the tests in Python 3 we get warnings about unclosed sockets. 
         # This causes tests that depends on calls to sys.stderr to fail, so we'll 
         # suppress those warnings. For more info see: 
@@ -158,6 +165,10 @@ class LocustTestCase(unittest.TestCase):
         [console_logger.addHandler(h) for h in self._console_log_handlers]
         self.mocked_log.reset()
         console_logger.propagate = False
+        
+        # restore event handlers
+        for event, handlers in self._event_handlers.items():
+            event._handlers = handlers
 
 
 class WebserverTestCase(LocustTestCase):
