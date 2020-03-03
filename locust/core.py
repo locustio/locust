@@ -43,6 +43,8 @@ def task(weight=1):
     
     def decorator_func(func):
         func.locust_task_weight = weight
+        for _ in range(0, weight):
+            SimpleTaskSet.tasks.append(func)
         return func
     
     """
@@ -87,31 +89,6 @@ def seq_task(order):
         return func
 
     return decorator_func
-
-
-def simple_task(weight=1):
-    """
-    Used as a convenience decorator to create a standalone SimpleTaskSet
-    """
-
-    def decorator_func(func):
-        for i in range(0, weight):
-            SimpleTaskSet.tasks.append(func)
-        return func
-
-    """
-    Check if task was used without parentheses (not called), like this::
-    
-        @task
-        def my_task()
-            pass
-    """
-    if callable(weight):
-        func = weight
-        weight = 1
-        return decorator_func(func)
-    else:
-        return decorator_func
 
 
 class NoClientWarningRaiser(object):

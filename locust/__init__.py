@@ -1,4 +1,4 @@
-from .core import HttpLocust, Locust, SimpleHttpLocust, TaskSet, SimpleTaskSet, TaskSequence, task, seq_task, simple_task
+from .core import HttpLocust, Locust, SimpleHttpLocust, TaskSet, SimpleTaskSet, TaskSequence, task, seq_task
 from .exception import InterruptTaskSet, ResponseError, RescheduleTaskImmediately
 from .wait_time import between, constant, constant_pacing
 
