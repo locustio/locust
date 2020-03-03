@@ -20,7 +20,6 @@ from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
                         RescheduleTaskImmediately, StopLocust, MissingWaitTimeError)
 from .runners import STATE_CLEANUP, LOCUST_STATE_RUNNING, LOCUST_STATE_STOPPING, LOCUST_STATE_WAITING
 from .util import deprecation
-from .wait_time import constant
 
 
 logger = logging.getLogger(__name__)
