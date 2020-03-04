@@ -171,18 +171,6 @@ def setup_parser_arguments(parser):
         help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557."
     )
     parser.add_argument(
-        '--heartbeat-liveness',
-        type=int,
-        default=3,
-        help="set number of seconds before failed heartbeat from slave"
-    )
-    parser.add_argument(
-        '--heartbeat-interval',
-        type=int,
-        default=1,
-        help="set number of seconds delay between slave heartbeats to master"
-    )
-    parser.add_argument(
         '--expect-slaves',
         type=int,
         default=1,
