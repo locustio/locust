@@ -20,13 +20,54 @@ class Environment:
     step_load = False
     """Determines if we're running in step load mode"""
     
-    def  __init__(self, events=None, options=None, host=None, reset_stats=False, step_load=False):
+    stop_timeout = None
+    """
+    If set, the runner will try to stop the runnning users gracefully and wait this many seconds 
+    before killing them hard.
+    """
+    
+    master_host = "127.0.0.1"
+    """Hostname of master node that the slave should connect to"""
+    
+    master_port = 5557
+    """Port of master node that the slave should connect to. Defaults to 5557."""
+    
+    master_bind_host = "*"
+    """Hostname/interfaces that the master node should expect slaves to connect to. Defaults to '*' which means all interfaces."""
+    
+    master_bind_port = 5557    
+    """Port that the master node should listen to and expect slaves to connect to. Defaults to 5557."""
+    
+    def  __init__(
+        self, 
+        events=None, 
+        options=None, 
+        host=None, 
+        reset_stats=False, 
+        step_load=False, 
+        stop_timeout=None,
+        master_host=None,
+        master_port=None,
+        master_bind_host=None,
+        master_bind_port=None,
+    ):
         if events:
             self.events = events
         else:
             self.events = Events()
         
+        self.options = options
         self.host = host
         self.reset_stats = reset_stats
         self.step_load = step_load
-        self.options = options
+        self.stop_timeout = stop_timeout
+        
+        if master_host is not None:
+            self.master_host = master_host
+        if master_port is not None:
+            self.master_port = master_port
+        if master_bind_host is not None:
+            self.master_bind_host = master_bind_host
+        if master_bind_port is not None:
+            self.master_bind_port = master_bind_port
+        

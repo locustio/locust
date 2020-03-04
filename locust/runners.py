@@ -28,10 +28,8 @@ LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING = ["running", 
 
 class LocustRunner(object):
     def __init__(self, environment, locust_classes):
-        options = environment.options
         self.environment = environment
         self.locust_classes = locust_classes
-        self.options = options
         self.locusts = Group()
         self.greenlet = Group()
         self.state = STATE_INIT
@@ -178,10 +176,10 @@ class LocustRunner(object):
     
     def kill_locust_greenlets(self, greenlets):
         """
-        Kill running locust greenlets. If options.stop_timeout is set, we try to stop the 
+        Kill running locust greenlets. If environment.stop_timeout is set, we try to stop the 
         Locust users gracefully
         """
-        if self.options.stop_timeout:
+        if self.environment.stop_timeout:
             dying = Group()
             for g in greenlets:
                 locust = g.args[0]
@@ -190,8 +188,8 @@ class LocustRunner(object):
                 else:
                     locust._state = LOCUST_STATE_STOPPING
                     dying.add(g)
-            if not dying.join(timeout=self.options.stop_timeout):
-                logger.info("Not all locusts finished their tasks & terminated in %s seconds. Killing them..." % self.options.stop_timeout)
+            if not dying.join(timeout=self.environment.stop_timeout):
+                logger.info("Not all locusts finished their tasks & terminated in %s seconds. Killing them..." % self.environment.stop_timeout)
             dying.kill(block=True)
         else:
             for g in greenlets:
@@ -301,12 +299,10 @@ class LocalLocustRunner(LocustRunner):
 class DistributedLocustRunner(LocustRunner):
     def __init__(self, environment, locust_classes):
         super(DistributedLocustRunner, self).__init__(environment, locust_classes)
-        self.master_host = environment.options.master_host
-        self.master_port = environment.options.master_port
-        self.master_bind_host = environment.options.master_bind_host
-        self.master_bind_port = environment.options.master_bind_port
-        self.heartbeat_liveness = environment.options.heartbeat_liveness
-        self.heartbeat_interval = environment.options.heartbeat_interval
+        self.master_host = environment.master_host
+        self.master_port = environment.master_port
+        self.master_bind_host = environment.master_bind_host
+        self.master_bind_port = environment.master_bind_port
         setup_distributed_stats_event_listeners(self.environment.events, self.stats)
 
 class SlaveNode(object):
@@ -402,7 +398,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                 "hatch_rate": slave_hatch_rate,
                 "num_clients": slave_num_clients,
                 "host": self.environment.host,
-                "stop_timeout": self.options.stop_timeout,
+                "stop_timeout": self.environment.stop_timeout,
             }
 
             if remaining > 0:
@@ -535,7 +531,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 job = msg.data
                 self.hatch_rate = job["hatch_rate"]
                 self.environment.host = job["host"]
-                self.options.stop_timeout = job["stop_timeout"]
+                self.environment.stop_timeout = job["stop_timeout"]
                 if self.hatching_greenlet:
                     # kill existing hatching greenlet before we launch new one
                     self.hatching_greenlet.kill(block=True)

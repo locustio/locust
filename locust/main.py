@@ -102,6 +102,11 @@ def create_environment(options, events=None):
         options=options,
         reset_stats=options.reset_stats,
         step_load=options.step_load,
+        stop_timeout=options.stop_timeout,
+        master_host=options.master_host,
+        master_port=options.master_port,
+        master_bind_host=options.master_bind_host,
+        master_bind_port=options.master_bind_port,
     )
 
 

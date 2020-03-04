@@ -6,6 +6,7 @@ from gevent.queue import Queue
 
 import mock
 from locust import runners
+from locust.main import create_environment
 from locust.core import Locust, TaskSet, task
 from locust.env import Environment
 from locust.exception import LocustError
@@ -799,14 +800,14 @@ class TestStopTimeout(LocustTestCase):
         runner.quit()
         self.assertEqual("first", MyTaskSet.state)
 
-        options.stop_timeout = short_time / 2 # exit with timeout
+        environment.stop_timeout = short_time / 2 # exit with timeout
         runner = LocalLocustRunner(environment, [MyTestLocust])
         runner.start(1, 1)
         gevent.sleep(short_time)
         runner.quit()
         self.assertEqual("second", MyTaskSet.state)
         
-        options.stop_timeout = short_time * 3 # allow task iteration to complete, with some margin
+        environment.stop_timeout = short_time * 3 # allow task iteration to complete, with some margin
         runner = LocalLocustRunner(environment, [MyTestLocust])
         runner.start(1, 1)
         gevent.sleep(short_time)
@@ -838,9 +839,8 @@ class TestStopTimeout(LocustTestCase):
             task_set = MyTaskSet
             wait_time = constant(0)
         
-        options = mocked_options()
-        options.stop_timeout = short_time
-        environment = Environment(options=options)
+        environment = create_environment(mocked_options())
+        environment.stop_timeout = short_time
         runner = LocalLocustRunner(environment, [MyTestLocust])
         runner.start(1, 1)
         gevent.sleep(short_time / 2)
@@ -890,9 +890,8 @@ class TestStopTimeout(LocustTestCase):
         class MyTestLocust(Locust):
             task_set = MyTaskSet
 
-        options = mocked_options()
-        options.stop_timeout = short_time
-        environment = Environment(options=options)
+        environment = create_environment(mocked_options())
+        environment.stop_timeout = short_time
         runner = LocalLocustRunner(environment, [MyTestLocust])
         runner.start(1, 1)
         gevent.sleep(0)
@@ -921,8 +920,7 @@ class TestStopTimeout(LocustTestCase):
             task_set = MyTaskSet
             wait_time = constant(0)
         
-        options = mocked_options()
-        environment = Environment(options=options)
+        environment = create_environment(mocked_options())
         runner = LocalLocustRunner(environment, [MyTestLocust])
         runner.start(1, 1)
         gevent.sleep(short_time / 2)
@@ -930,7 +928,7 @@ class TestStopTimeout(LocustTestCase):
         self.assertEqual("first", MyTaskSet.state)
         runner.quit()
 
-        options.stop_timeout = short_time / 2 # exit with timeout
+        environment.stop_timeout = short_time / 2 # exit with timeout
         runner = LocalLocustRunner(environment, [MyTestLocust])
         runner.start(1, 1)
         gevent.sleep(short_time)
@@ -938,7 +936,7 @@ class TestStopTimeout(LocustTestCase):
         self.assertEqual("second", MyTaskSet.state)
         runner.quit()
         
-        options.stop_timeout = short_time * 3 # allow task iteration to complete, with some margin
+        environment.stop_timeout = short_time * 3 # allow task iteration to complete, with some margin
         runner = LocalLocustRunner(environment, [MyTestLocust])
         runner.start(1, 1)
         gevent.sleep(short_time)
