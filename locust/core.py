@@ -145,6 +145,10 @@ class Locust(object):
     weight = 10
     """Probability of locust being chosen. The higher the weight, the greater is the chance of it being chosen."""
         
+
+    id = 0
+    """ID of this locust object used for spacing out tasks in time."""
+
     client = NoClientWarningRaiser()
     _catch_exceptions = True
     _setup_has_run = False  # Internal state to see if we have already run

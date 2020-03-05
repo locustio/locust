@@ -126,12 +126,15 @@ class LocustRunner(object):
         
         def hatch():
             sleep_time = 1.0 / self.hatch_rate
+            hatch_count = 0
             while True:
                 if not bucket:
                     logger.info("All locusts hatched: %s (%i already running)" % (
                         ", ".join(["%s: %d" % (name, count) for name, count in occurrence_count.items()]), 
                         existing_count,
                     ))
+                    if not sorted([g.args[0].id for g in self.locusts]) == list(range(len(self.locusts))):
+                        logger.warning("Locust IDs are not consecutive.")
                     events.hatch_complete.fire(user_count=len(self.locusts))
                     return
 
@@ -143,7 +146,9 @@ class LocustRunner(object):
                         new_locust.run(runner=self)
                     except GreenletExit:
                         pass
+                new_locust.id = existing_count + hatch_count
                 self.locusts.spawn(start_locust, new_locust)
+                hatch_count += 1
                 if len(self.locusts) % 10 == 0:
                     logger.debug("%i locusts hatched" % len(self.locusts))
                 if bucket:
@@ -168,7 +173,17 @@ class LocustRunner(object):
                     dying.append(g)
                     bucket.remove(l)
                     break
+
+        dying_ids = sorted([g.args[0].id for g in dying])
+        remaining_count = len(self.locusts) - kill_count
+        for g in self.locusts:
+            if g.args[0].id >= remaining_count:
+                g.args[0].id = dying_ids.pop()
+
         self.kill_locust_greenlets(dying)
+        if not sorted([g.args[0].id for g in self.locusts]) == list(range(len(self.locusts))):
+            logger.warning("Locust IDs are not consecutive.")
+
         events.hatch_complete.fire(user_count=self.user_count)
     
     def kill_locust_greenlets(self, greenlets):
@@ -434,6 +449,14 @@ class MasterLocustRunner(DistributedLocustRunner):
                 else:
                     client.heartbeat -= 1
 
+    def broadcast_timeslots(self):
+        index = 0
+        num_clients = self.slave_count
+        for client in self.clients.all:
+            timeslot_ratio = index/num_clients
+            self.server.send_to_client(Message("timeslot_ratio", timeslot_ratio, client.id))
+            index += 1
+
     def client_listener(self):
         while True:
             client_id, msg = self.server.recv_from_client()
@@ -448,6 +471,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                 ## emit a warning if the slave's clock seem to be out of sync with our clock
                 #if abs(time() - msg.data["time"]) > 5.0:
                 #    warnings.warn("The slave node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
+                self.broadcast_timeslots()
             elif msg.type == "client_stopped":
                 del self.clients[msg.node_id]
                 logger.info("Removing %s client from running clients" % (msg.node_id))
@@ -475,6 +499,10 @@ class MasterLocustRunner(DistributedLocustRunner):
                 if msg.node_id in self.clients:
                     del self.clients[msg.node_id]
                     logger.info("Client %r quit. Currently %i clients connected." % (msg.node_id, len(self.clients.ready)))
+                    self.broadcast_timeslots()
+                    if self.state == STATE_RUNNING or self.state == STATE_HATCHING:
+                        # balance the load distribution when a client quits
+                        self.start_hatching(self.target_user_count, self.hatch_rate)
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
 
@@ -489,6 +517,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + uuid4().hex
+        self.timeslot_ratio = 0
         
         self.client = rpc.Client(self.master_host, self.master_port, self.client_id)
         self.greenlet.spawn(self.heartbeat).link_exception(callback=self.noop)
@@ -548,6 +577,8 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 self.stop()
                 self._send_stats() # send a final report, in case there were any samples not yet reported
                 self.greenlet.kill(block=True)
+            elif msg.type == "timeslot_ratio":
+                self.timeslot_ratio = msg.data
 
     def stats_reporter(self):
         while True:
