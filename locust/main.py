@@ -219,28 +219,33 @@ def main():
                 runner.quit()
             gevent.spawn_later(options.run_time, timelimit_stop)
     
-    web_ui = None
-    if options.no_web:
-        if options.master:
-            while len(runner.clients.ready) < options.expect_slaves:
-                logging.info("Waiting for slaves to be ready, %s of %s connected",
-                             len(runner.clients.ready), options.expect_slaves)
-                time.sleep(1)
-        if options.step_time:
-            runner.start_stepload(options.num_clients, options.hatch_rate, options.step_clients, options.step_time)
-        elif not options.slave:
-            runner.start(options.num_clients, options.hatch_rate)
-            # make locusts are spawned
-            time.sleep(1)
-    elif not options.slave:
+    # start Web UI
+    if not options.no_web and not options.slave:
         # spawn web greenlet
         logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.web_port))
         web_ui = WebUI(environment=environment, runner=runner)
         main_greenlet = gevent.spawn(web_ui.start, host=options.web_host, port=options.web_port)
+    else:
+        web_ui = None
     
     # Fire locust init event which can be used by end-users' code to run setup code that
     # need access to the Environment, Runner or WebUI
-    environment.events.init.fire(environment=environment, runner=runner, web_ui=web_ui)
+    environment.events.init.fire(environment=environment, runner=runner, web_ui=web_ui)    
+    
+    if options.no_web:
+        # headless mode
+        if options.master:
+            # what for slave nodes to connect
+            while len(runner.clients.ready) < options.expect_slaves:
+                logging.info("Waiting for slaves to be ready, %s of %s connected",
+                             len(runner.clients.ready), options.expect_slaves)
+                time.sleep(1)
+        if not options.slave:
+            # start the test
+            if options.step_time:
+                runner.start_stepload(options.num_clients, options.hatch_rate, options.step_clients, options.step_time)
+            else:
+                runner.start(options.num_clients, options.hatch_rate)
     
     if options.run_time:
         spawn_run_time_limit_greenlet()
