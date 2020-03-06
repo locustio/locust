@@ -94,7 +94,6 @@ def constant_uniform(wait_time):
         slave_offset = 0
         if (type(runners.locust_runner) == runners.SlaveLocustRunner):
             slave_offset = runners.locust_runner.timeslot_ratio * wait_time / n_locusts
-            slave_offset += runners.locust_runner.clock_offset
 
         wall_clock = time() + slave_offset + locust_offset 
         since_last_trigger = wall_clock % wait_time
@@ -144,7 +143,6 @@ def poisson(lambda_value):
         slave_offset = 0
         if (type(runners.locust_runner) == runners.SlaveLocustRunner):
             slave_offset = runners.locust_runner.timeslot_ratio * wait_time / n_locusts
-            slave_offset += runners.locust_runner.clock_offset
 
         next_trigger_target = random_exponential(lambda_value) + lambda_value
 
