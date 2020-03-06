@@ -518,6 +518,9 @@ class SlaveLocustRunner(DistributedLocustRunner):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         self.timeslot_ratio = 0
+
+        # TODO: Get clock offset from Master node.
+        self.clock_offset = 0
         
         self.client = rpc.Client(self.master_host, self.master_port, self.client_id)
         self.greenlet.spawn(self.heartbeat).link_exception(callback=self.noop)
