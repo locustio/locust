@@ -290,9 +290,12 @@ class TestMasterRunner(LocustTestCase):
         #events.slave_report._handlers = self._slave_report_event_handlers
         super(TestMasterRunner, self).tearDown()
     
+    def get_runner(self):
+        return MasterLocustRunner(self.environment, [], master_bind_host="*", master_bind_port=5557)
+    
     def test_slave_connect(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = MasterLocustRunner(self.environment, [])
+            master = self.get_runner()
             server.mocked_send(Message("client_ready", None, "zeh_fake_client1"))
             self.assertEqual(1, len(master.clients))
             self.assertTrue("zeh_fake_client1" in master.clients, "Could not find fake client in master instance's clients dict")
@@ -306,7 +309,7 @@ class TestMasterRunner(LocustTestCase):
     
     def test_slave_stats_report_median(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = MasterLocustRunner(self.environment, [])
+            master = self.get_runner()
             server.mocked_send(Message("client_ready", None, "fake_client"))
             
             master.stats.get("/", "GET").log(100, 23455)
@@ -323,7 +326,7 @@ class TestMasterRunner(LocustTestCase):
 
     def test_slave_stats_report_with_none_response_times(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = MasterLocustRunner(self.environment, [])
+            master = self.get_runner()
             server.mocked_send(Message("client_ready", None, "fake_client"))
             
             master.stats.get("/mixed", "GET").log(0, 23455)
@@ -349,7 +352,7 @@ class TestMasterRunner(LocustTestCase):
 
     def test_master_marks_downed_slaves_as_missing(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = MasterLocustRunner(self.environment, [])
+            master = self.get_runner()
             server.mocked_send(Message("client_ready", None, "fake_client"))
             sleep(6)
             # print(master.clients['fake_client'].__dict__)
@@ -357,7 +360,7 @@ class TestMasterRunner(LocustTestCase):
 
     def test_master_total_stats(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = MasterLocustRunner(self.environment, [])
+            master = self.get_runner()
             server.mocked_send(Message("client_ready", None, "fake_client"))
             stats = RequestStats()
             stats.log_request("GET", "/1", 100, 3546)
@@ -380,7 +383,7 @@ class TestMasterRunner(LocustTestCase):
 
     def test_master_total_stats_with_none_response_times(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = MasterLocustRunner(self.environment, [])
+            master = self.get_runner()
             server.mocked_send(Message("client_ready", None, "fake_client"))
             stats = RequestStats()
             stats.log_request("GET", "/1", 100, 3546)
@@ -417,7 +420,7 @@ class TestMasterRunner(LocustTestCase):
             mocked_time.return_value = start_time
             self.runner.stats.reset_all()
             with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-                master = MasterLocustRunner(self.environment, [])
+                master = self.get_runner()
                 mocked_time.return_value += 1.0234
                 server.mocked_send(Message("client_ready", None, "fake_client"))
                 stats = RequestStats()
@@ -459,7 +462,7 @@ class TestMasterRunner(LocustTestCase):
     
     def test_rebalance_locust_users_on_slave_connect(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = MasterLocustRunner(self.environment, [])
+            master = self.get_runner()
             server.mocked_send(Message("client_ready", None, "zeh_fake_client1"))
             self.assertEqual(1, len(master.clients))
             self.assertTrue("zeh_fake_client1" in master.clients, "Could not find fake client in master instance's clients dict")
@@ -484,7 +487,7 @@ class TestMasterRunner(LocustTestCase):
     def test_sends_hatch_data_to_ready_running_hatching_slaves(self):
         '''Sends hatch job to running, ready, or hatching slaves'''
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = MasterLocustRunner(self.environment, [])
+            master = self.get_runner()
             master.clients[1] = SlaveNode(1)
             master.clients[2] = SlaveNode(2)
             master.clients[3] = SlaveNode(3)
@@ -525,7 +528,7 @@ class TestMasterRunner(LocustTestCase):
         even number of the connected slaves
         """
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = MasterLocustRunner(self.environment, [])
+            master = self.get_runner()
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
             
@@ -540,7 +543,7 @@ class TestMasterRunner(LocustTestCase):
     
     def test_spawn_fewer_locusts_than_slaves(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = MasterLocustRunner(self.environment, [])
+            master = self.get_runner()
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
             
@@ -555,7 +558,7 @@ class TestMasterRunner(LocustTestCase):
     
     def test_spawn_locusts_in_stepload_mode(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = MasterLocustRunner(self.environment, [])
+            master = self.get_runner()
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
 
@@ -659,6 +662,11 @@ class TestSlaveLocustRunner(LocustTestCase):
         #events.report_to_master._handlers = self._report_to_master_event_handlers
         super(TestSlaveLocustRunner, self).tearDown()
     
+    def get_runner(self, environment=None, locust_classes=[]):
+        if environment is None:
+            environment = self.environment
+        return SlaveLocustRunner(environment, locust_classes, master_host="localhost", master_port=5557)
+    
     def test_slave_stop_timeout(self):
         class MyTestLocust(Locust):
             _test_state = 0
@@ -672,7 +680,7 @@ class TestSlaveLocustRunner(LocustTestCase):
         
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             environment = Environment(options=mocked_options())
-            slave = SlaveLocustRunner(environment, [MyTestLocust])
+            slave = self.get_runner(environment=environment, locust_classes=[MyTestLocust])
             self.assertEqual(1, len(client.outbox))
             self.assertEqual("client_ready", client.outbox[0].type)
             client.mocked_send(Message("hatch", {
@@ -710,7 +718,7 @@ class TestSlaveLocustRunner(LocustTestCase):
             options = mocked_options()
             options.stop_timeout = None
             environment = Environment(options=options)
-            slave = SlaveLocustRunner(environment, [MyTestLocust])
+            slave = self.get_runner(environment=environment, locust_classes=[MyTestLocust])
             self.assertEqual(1, len(client.outbox))
             self.assertEqual("client_ready", client.outbox[0].type)
             client.mocked_send(Message("hatch", {
@@ -745,7 +753,7 @@ class TestSlaveLocustRunner(LocustTestCase):
             options = mocked_options()
             options.stop_timeout = None
             environment = Environment(options=options)
-            slave = SlaveLocustRunner(environment, [User])
+            slave = self.get_runner(environment=environment, locust_classes=[User])
             
             client.mocked_send(Message("hatch", {
                 "hatch_rate": 5,

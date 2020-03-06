@@ -103,10 +103,6 @@ def create_environment(options, events=None):
         reset_stats=options.reset_stats,
         step_load=options.step_load,
         stop_timeout=options.stop_timeout,
-        master_host=options.master_host,
-        master_port=options.master_port,
-        master_bind_host=options.master_bind_host,
-        master_bind_port=options.master_bind_port,
     )
 
 
@@ -187,10 +183,20 @@ def main():
             sys.exit(1)
     
     if options.master:
-        runner = MasterLocustRunner(environment, locust_classes)
+        runner = MasterLocustRunner(
+            environment, 
+            locust_classes,
+            master_bind_host=options.master_bind_host,
+            master_bind_port=options.master_bind_port,
+        )
     elif options.slave:
         try:
-            runner = SlaveLocustRunner(environment, locust_classes)
+            runner = SlaveLocustRunner(
+                environment, 
+                locust_classes,
+                master_host=options.master_host,
+                master_port=options.master_port,
+            )
         except socket.error as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)

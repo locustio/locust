@@ -46,10 +46,6 @@ class Environment:
         reset_stats=False, 
         step_load=False, 
         stop_timeout=None,
-        master_host=None,
-        master_port=None,
-        master_bind_host=None,
-        master_bind_port=None,
     ):
         if events:
             self.events = events
@@ -61,13 +57,4 @@ class Environment:
         self.reset_stats = reset_stats
         self.step_load = step_load
         self.stop_timeout = stop_timeout
-        
-        if master_host is not None:
-            self.master_host = master_host
-        if master_port is not None:
-            self.master_port = master_port
-        if master_bind_host is not None:
-            self.master_bind_host = master_bind_host
-        if master_bind_port is not None:
-            self.master_bind_port = master_bind_port
         

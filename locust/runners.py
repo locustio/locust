@@ -297,12 +297,8 @@ class LocalLocustRunner(LocustRunner):
 
 
 class DistributedLocustRunner(LocustRunner):
-    def __init__(self, environment, locust_classes):
-        super(DistributedLocustRunner, self).__init__(environment, locust_classes)
-        self.master_host = environment.master_host
-        self.master_port = environment.master_port
-        self.master_bind_host = environment.master_bind_host
-        self.master_bind_port = environment.master_bind_port
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         setup_distributed_stats_event_listeners(self.environment.events, self.stats)
 
 class SlaveNode(object):
@@ -315,8 +311,8 @@ class SlaveNode(object):
         self.cpu_warning_emitted = False
 
 class MasterLocustRunner(DistributedLocustRunner):
-    def __init__(self, *args, **kwargs):
-        super(MasterLocustRunner, self).__init__(*args, **kwargs)
+    def __init__(self, *args, master_bind_host, master_bind_port, **kwargs):
+        super().__init__(*args, **kwargs)
         self.slave_cpu_warning_emitted = False
         self.target_user_count = None
 
@@ -341,7 +337,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                 return self.get_by_state(STATE_RUNNING)
         
         self.clients = SlaveNodesDict()
-        self.server = rpc.Server(self.master_bind_host, self.master_bind_port)
+        self.server = rpc.Server(master_bind_host, master_bind_port)
         self.greenlet.spawn(self.heartbeat_worker).link_exception(callback=self.noop)
         self.greenlet.spawn(self.client_listener).link_exception(callback=self.noop)
 
@@ -484,11 +480,11 @@ class MasterLocustRunner(DistributedLocustRunner):
         return len(self.clients.ready) + len(self.clients.hatching) + len(self.clients.running)
 
 class SlaveLocustRunner(DistributedLocustRunner):
-    def __init__(self, *args, **kwargs):
-        super(SlaveLocustRunner, self).__init__(*args, **kwargs)
+    def __init__(self, *args, master_host, master_port, **kwargs):
+        super().__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         
-        self.client = rpc.Client(self.master_host, self.master_port, self.client_id)
+        self.client = rpc.Client(master_host, master_port, self.client_id)
         self.greenlet.spawn(self.heartbeat).link_exception(callback=self.noop)
         self.greenlet.spawn(self.worker).link_exception(callback=self.noop)
         self.client.send(Message("client_ready", None, self.client_id))
