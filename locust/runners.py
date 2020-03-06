@@ -260,6 +260,7 @@ class LocustRunner(object):
             self.hatching_greenlet.kill(block=True)
         self.kill_locust_greenlets([g for g in self.locusts])
         self.state = STATE_STOPPED
+        self.cpu_log_warning()
         self.environment.events.locust_stop_hatching.fire()
     
     def quit(self):
