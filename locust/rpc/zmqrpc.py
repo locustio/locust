@@ -13,7 +13,7 @@ class BaseSocket(object):
     
     @retry()
     def send(self, msg):
-        self.socket.send(msg.serialize())
+        self.socket.send(msg.serialize(), zmq.NOBLOCK)
 
     @retry()
     def send_to_client(self, msg):
@@ -31,6 +31,9 @@ class BaseSocket(object):
         addr = data[0].decode()
         msg = Message.unserialize(data[1])
         return addr, msg
+
+    def close(self):
+        self.socket.close()
 
 class Server(BaseSocket):
     def __init__(self, host, port):
