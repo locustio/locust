@@ -156,9 +156,14 @@ class WebUI:
                     "ninetieth_response_time": s.get_response_time_percentile(0.9),
                     "avg_content_length": s.avg_content_length,
                 })
-        
-            errors = [e.to_dict() for e in runner.errors.values()]
-        
+            
+            errors = []
+            for e in runner.errors.values():
+                err_dict = e.to_dict()
+                err_dict["name"] = escape(err_dict["name"])
+                err_dict["error"] = escape(err_dict["error"])
+                errors.append(err_dict)
+
             # Truncate the total number of stats and errors displayed since a large number of rows will cause the app
             # to render extremely slowly. Aggregate stats should be preserved.
             report = {"stats": stats[:500], "errors": errors[:500]}
