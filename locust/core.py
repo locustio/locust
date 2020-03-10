@@ -14,7 +14,6 @@ from gevent import GreenletExit, monkey
 # See: https://github.com/requests/requests/issues/3752#issuecomment-294608002
 monkey.patch_all()
 
-from . import events
 from .clients import HttpSession
 from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
                         RescheduleTaskImmediately, StopLocust, MissingWaitTimeError)
@@ -152,10 +151,12 @@ class Locust(object):
     _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
     _state = False
     
-    def __init__(self):
+    def __init__(self, environment):
         super(Locust, self).__init__()
         # check if deprecated wait API is used
         deprecation.check_for_deprecated_wait_api(self)
+        
+        self.environment = environment
         
         with self._lock:
             if hasattr(self, "setup") and self._setup_has_run is False:
@@ -163,11 +164,11 @@ class Locust(object):
                 try:
                     self.setup()
                 except Exception as e:
-                    events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
+                    self.environment.events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
                     logger.error("%s\n%s", e, traceback.format_exc())
             if hasattr(self, "teardown") and self._teardown_is_set is False:
                 self._set_teardown_flag()
-                events.quitting += self.teardown
+                self.environment.events.quitting.add_listener(self.teardown)
 
     @classmethod
     def _set_setup_flag(cls):
@@ -218,12 +219,16 @@ class HttpLocust(Locust):
     We don't need this feature most of the time, so disable it by default.
     """
     
-    def __init__(self):
-        super(HttpLocust, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(HttpLocust, self).__init__(*args, **kwargs)
         if self.host is None:
             raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
 
-        session = HttpSession(base_url=self.host)
+        session = HttpSession(
+            base_url=self.host, 
+            request_success=self.environment.events.request_success, 
+            request_failure=self.environment.events.request_failure,
+        )
         session.trust_env = self.trust_env
         self.client = session
 
@@ -363,11 +368,11 @@ class TaskSet(object, metaclass=TaskSetMeta):
                 try:
                     self.setup()
                 except Exception as e:
-                    events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
+                    self.locust.environment.events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
                     logger.error("%s\n%s", e, traceback.format_exc())
             if hasattr(self, "teardown") and self._teardown_is_set is False:
                 self._set_teardown_flag()
-                events.quitting += self.teardown
+                self.environment.events.quitting.add_listener(self.teardown)
 
     @classmethod
     def _set_setup_flag(cls):
@@ -419,7 +424,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
             except GreenletExit:
                 raise
             except Exception as e:
-                events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
+                self.locust.environment.events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
                 if self.locust._catch_exceptions:
                     logger.error("%s\n%s", e, traceback.format_exc())
                     self.wait()

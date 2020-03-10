@@ -56,6 +56,7 @@ Other functionalities
     testing-other-systems
     extending-locust
     logging
+    use-as-lib
 
 
 API

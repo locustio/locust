@@ -101,7 +101,7 @@ For example, for an exponentially distributed wait time with average of 1 second
     
     class WebsiteUser(HttpLocust):
         task_set = UserBehaviour
-        wait_time = lambda self: random.expovariate(1)*1000
+        wait_time = lambda self: random.expovariate(1)
 
 
 Start Locust

@@ -9,7 +9,6 @@ from requests.exceptions import (InvalidSchema, InvalidURL, MissingSchema,
 
 from urllib.parse import urlparse, urlunparse
 
-from . import events
 from .exception import CatchResponseError, ResponseError
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
@@ -46,10 +45,12 @@ class HttpSession(requests.Session):
                            response, even if the response code is ok (2xx). The opposite also works, one can use catch_response to catch a request
                            and then mark it as successful even if the response code was not (i.e 500 or 404).
     """
-    def __init__(self, base_url, *args, **kwargs):
+    def __init__(self, base_url, request_success, request_failure, *args, **kwargs):
         super(HttpSession, self).__init__(*args, **kwargs)
-
+        
         self.base_url = base_url
+        self.request_success = request_success
+        self.request_failure = request_failure
         
         # Check for basic authentication
         parsed_url = urlparse(self.base_url)
@@ -127,7 +128,7 @@ class HttpSession(requests.Session):
         
         if catch_response:
             response.locust_request_meta = request_meta
-            return ResponseContextManager(response)
+            return ResponseContextManager(response, request_success=self.request_success, request_failure=self.request_failure)
         else:
             if name:
                 # Since we use the Exception message when grouping failures, in order to not get 
@@ -138,7 +139,7 @@ class HttpSession(requests.Session):
             try:
                 response.raise_for_status()
             except RequestException as e:
-                events.request_failure.fire(
+                self.request_failure.fire(
                     request_type=request_meta["method"], 
                     name=request_meta["name"], 
                     response_time=request_meta["response_time"], 
@@ -146,7 +147,7 @@ class HttpSession(requests.Session):
                     exception=e, 
                 )
             else:
-                events.request_success.fire(
+                self.request_success.fire(
                     request_type=request_meta["method"],
                     name=request_meta["name"],
                     response_time=request_meta["response_time"],
@@ -186,9 +187,11 @@ class ResponseContextManager(LocustResponse):
     
     _is_reported = False
     
-    def __init__(self, response):
+    def __init__(self, response, request_success, request_failure):
         # copy data from response to this object
         self.__dict__ = response.__dict__
+        self._request_success = request_success
+        self._request_failure = request_failure
     
     def __enter__(self):
         return self
@@ -223,7 +226,7 @@ class ResponseContextManager(LocustResponse):
                 if response.status_code == 404:
                     response.success()
         """
-        events.request_success.fire(
+        self._request_success.fire(
             request_type=self.locust_request_meta["method"],
             name=self.locust_request_meta["name"],
             response_time=self.locust_request_meta["response_time"],
@@ -247,7 +250,7 @@ class ResponseContextManager(LocustResponse):
         if isinstance(exc, str):
             exc = CatchResponseError(exc)
         
-        events.request_failure.fire(
+        self._request_failure.fire(
             request_type=self.locust_request_meta["method"],
             name=self.locust_request_meta["name"],
             response_time=self.locust_request_meta["response_time"],
