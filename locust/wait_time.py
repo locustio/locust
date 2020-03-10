@@ -1,6 +1,6 @@
 import random
 import math
-from time import time
+from time import monotonic
 
 from . import runners
 
@@ -51,12 +51,12 @@ def constant_pacing(wait_time):
     def wait_time_func(self):
         if not hasattr(self,"_cp_last_run"):
             self._cp_last_wait_time = wait_time
-            self._cp_last_run = time()
+            self._cp_last_run = monotonic()
             return wait_time
         else:
-            run_time = time() - self._cp_last_run - self._cp_last_wait_time
+            run_time = monotonic() - self._cp_last_run - self._cp_last_wait_time
             self._cp_last_wait_time = max(0, wait_time - run_time)
-            self._cp_last_run = time()
+            self._cp_last_run = monotonic()
             return self._cp_last_wait_time
     return wait_time_func
 
@@ -95,7 +95,7 @@ def constant_uniform(wait_time):
         if (type(runners.locust_runner) == runners.SlaveLocustRunner):
             slave_offset = runners.locust_runner.timeslot_ratio * wait_time / n_locusts
 
-        wall_clock = time() + slave_offset + locust_offset 
+        wall_clock = monotonic() + slave_offset + locust_offset
         since_last_trigger = wall_clock % wait_time
 
         time_remaining = max(0, wait_time - since_last_trigger)
@@ -146,7 +146,7 @@ def poisson(lambda_value):
 
         next_trigger_target = random_exponential(lambda_value) + lambda_value
 
-        wall_clock = time() + slave_offset + locust_offset 
+        wall_clock = monotonic() + slave_offset + locust_offset
         since_last_trigger = wall_clock % wait_time
 
         time_remaining = max(0, next_trigger_target - since_last_trigger)
