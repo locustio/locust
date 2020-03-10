@@ -15,13 +15,13 @@ Options
 =======
 
 ``--step-load``
-------------
+----------------
 
 Enable Step Load mode to monitor how performance metrics varies when user load increases.
 
 
 ``--step-clients``
------------
+-------------------
 
 Client count to increase by step in Step Load mode. Only used together with ``--step-load``.
 
@@ -33,7 +33,7 @@ Step duration in Step Load mode, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used to
 
 
 Running Locust in step load mode without the web UI
----------------------------------
+----------------------------------------------------
 
 If you want to run Locust in step load mode without the web UI, you can do that with ``--step-clients`` and ``--step-time``:
 

@@ -1,11 +1,11 @@
 import random
 import time
 
-from locust.core import HttpLocust, Locust, TaskSet, events, task
+from locust.core import Locust, TaskSet
 from locust.exception import MissingWaitTimeError
 from locust.wait_time import between, constant, constant_pacing
 
-from .testcases import LocustTestCase, WebserverTestCase
+from .testcases import LocustTestCase
 
 
 class TestWaitTime(LocustTestCase):
@@ -17,7 +17,7 @@ class TestWaitTime(LocustTestCase):
         class TaskSet2(TaskSet):
             wait_time = between(20.0, 21.0)
         
-        u = User()
+        u = User(self.environment)
         ts1 = TaskSet1(u)
         ts2 = TaskSet2(u)
         for i in range(100):
@@ -37,18 +37,18 @@ class TestWaitTime(LocustTestCase):
             wait_time = constant(13)
         class TaskSet1(TaskSet):
             pass
-        self.assertEqual(13, User().wait_time())
-        self.assertEqual(13, TaskSet1(User()).wait_time())
+        self.assertEqual(13, User(self.environment).wait_time())
+        self.assertEqual(13, TaskSet1(User(self.environment)).wait_time())
     
     def test_constant_zero(self):
         class User(Locust):
             wait_time = constant(0)
         class TaskSet1(TaskSet):
             pass
-        self.assertEqual(0, User().wait_time())
-        self.assertEqual(0, TaskSet1(User()).wait_time())
+        self.assertEqual(0, User(self.environment).wait_time())
+        self.assertEqual(0, TaskSet1(User(self.environment)).wait_time())
         start_time = time.time()
-        TaskSet1(User()).wait()
+        TaskSet1(User(self.environment)).wait()
         self.assertLess(time.time() - start_time, 0.002)
     
     def test_constant_pacing(self):
@@ -56,9 +56,9 @@ class TestWaitTime(LocustTestCase):
             wait_time = constant_pacing(0.1)
         class TS(TaskSet):
             pass
-        ts = TS(User())
+        ts = TS(User(self.environment))
         
-        ts2 = TS(User())      
+        ts2 = TS(User(self.environment))      
         
         previous_time = time.time()
         for i in range(7):
@@ -75,5 +75,5 @@ class TestWaitTime(LocustTestCase):
             pass
         class TS(TaskSet):
             pass
-        self.assertRaises(MissingWaitTimeError, lambda: TS(User()).wait_time())
+        self.assertRaises(MissingWaitTimeError, lambda: TS(User(self.environment)).wait_time())
 
