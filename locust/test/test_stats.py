@@ -3,11 +3,13 @@ import unittest
 import re
 import os
 
+import gevent
 import locust
 from locust.core import HttpLocust, TaskSet, task, Locust
+from locust.env import Environment
 from locust.inspectlocust import get_task_ratio_dict
 from locust.rpc.protocol import Message
-from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_response_time_dicts, global_stats
+from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_response_time_dicts, stats_writer
 from locust.test.testcases import LocustTestCase
 
 from .testcases import WebserverTestCase
@@ -288,6 +290,7 @@ class TestWriteStatCSVs(LocustTestCase):
     STATS_FAILURES_FILENAME = "{}_failures.csv".format(STATS_BASE_NAME)
 
     def setUp(self):
+        super().setUp()
         class User(Locust):
             setup_run_count = 0
             task_run_count = 0
@@ -298,7 +301,8 @@ class TestWriteStatCSVs(LocustTestCase):
                 @task
                 def my_task(self):
                     User.task_run_count += 1
-        locust.runners.locust_runner = locust.runners.LocalLocustRunner([User], mocked_options())
+        self.environment = Environment(options=mocked_options())
+        locust.runners.locust_runner = locust.runners.LocalLocustRunner(self.environment, [User])
         self.remove_file_if_exists(self.STATS_FILENAME)
         self.remove_file_if_exists(self.STATS_HISTORY_FILENAME)
         self.remove_file_if_exists(self.STATS_FAILURES_FILENAME)
@@ -314,7 +318,15 @@ class TestWriteStatCSVs(LocustTestCase):
             os.remove(filename)
 
     def test_write_stat_csvs(self):
-        locust.stats.write_stat_csvs(self.STATS_BASE_NAME)
+        locust.stats.write_stat_csvs(self.runner.stats, self.STATS_BASE_NAME)
+        self.assertTrue(os.path.exists(self.STATS_FILENAME))
+        self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
+        self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
+    
+    def test_csv_stats_writer(self):
+        greenlet = gevent.spawn(stats_writer, self.runner.stats, self.STATS_BASE_NAME)
+        gevent.sleep(0.2)
+        gevent.kill(greenlet)
         self.assertTrue(os.path.exists(self.STATS_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
@@ -465,65 +477,49 @@ class TestStatsEntry(unittest.TestCase):
 
 
 class TestRequestStatsWithWebserver(WebserverTestCase):
-    def test_request_stats_content_length(self):
+    def setUp(self):
+        super().setUp()
         class MyLocust(HttpLocust):
             host = "http://127.0.0.1:%i" % self.port
+        self.locust = MyLocust(self.environment)
     
-        locust = MyLocust()
-        locust.client.get("/ultra_fast")
-        self.assertEqual(global_stats.get("/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response"))
-        locust.client.get("/ultra_fast")
-        self.assertEqual(global_stats.get("/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response"))
+    def test_request_stats_content_length(self):
+        self.locust.client.get("/ultra_fast")
+        self.assertEqual(self.runner.stats.get("/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response"))
+        self.locust.client.get("/ultra_fast")
+        self.assertEqual(self.runner.stats.get("/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response"))
     
     def test_request_stats_no_content_length(self):
-        class MyLocust(HttpLocust):
-            host = "http://127.0.0.1:%i" % self.port
-        l = MyLocust()
         path = "/no_content_length"
-        r = l.client.get(path)
-        self.assertEqual(global_stats.get(path, "GET").avg_content_length, len("This response does not have content-length in the header"))
+        r = self.locust.client.get(path)
+        self.assertEqual(self.runner.stats.get(path, "GET").avg_content_length, len("This response does not have content-length in the header"))
     
     def test_request_stats_no_content_length_streaming(self):
-        class MyLocust(HttpLocust):
-            host = "http://127.0.0.1:%i" % self.port
-        l = MyLocust()
         path = "/no_content_length"
-        r = l.client.get(path, stream=True)
-        self.assertEqual(0, global_stats.get(path, "GET").avg_content_length)
+        r = self.locust.client.get(path, stream=True)
+        self.assertEqual(0, self.runner.stats.get(path, "GET").avg_content_length)
     
     def test_request_stats_named_endpoint(self):
-        class MyLocust(HttpLocust):
-            host = "http://127.0.0.1:%i" % self.port
-    
-        locust = MyLocust()
-        locust.client.get("/ultra_fast", name="my_custom_name")
-        self.assertEqual(1, global_stats.get("my_custom_name", "GET").num_requests)
+        self.locust.client.get("/ultra_fast", name="my_custom_name")
+        self.assertEqual(1, self.runner.stats.get("my_custom_name", "GET").num_requests)
     
     def test_request_stats_query_variables(self):
-        class MyLocust(HttpLocust):
-            host = "http://127.0.0.1:%i" % self.port
-    
-        locust = MyLocust()
-        locust.client.get("/ultra_fast?query=1")
-        self.assertEqual(1, global_stats.get("/ultra_fast?query=1", "GET").num_requests)
+        self.locust.client.get("/ultra_fast?query=1")
+        self.assertEqual(1, self.runner.stats.get("/ultra_fast?query=1", "GET").num_requests)
     
     def test_request_stats_put(self):
-        class MyLocust(HttpLocust):
-            host = "http://127.0.0.1:%i" % self.port
-    
-        locust = MyLocust()
-        locust.client.put("/put")
-        self.assertEqual(1, global_stats.get("/put", "PUT").num_requests)
+        self.locust.client.put("/put")
+        self.assertEqual(1, self.runner.stats.get("/put", "PUT").num_requests)
     
     def test_request_connection_error(self):
         class MyLocust(HttpLocust):
             host = "http://localhost:1"
         
-        locust = MyLocust()
+        locust = MyLocust(self.environment)
         response = locust.client.get("/", timeout=0.1)
         self.assertEqual(response.status_code, 0)
-        self.assertEqual(1, global_stats.get("/", "GET").num_failures)
-        self.assertEqual(1, global_stats.get("/", "GET").num_requests)
+        self.assertEqual(1, self.runner.stats.get("/", "GET").num_failures)
+        self.assertEqual(1, self.runner.stats.get("/", "GET").num_requests)
 
 
 class MyTaskSet(TaskSet):

@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import functools
 from time import time
 
 
@@ -12,6 +13,7 @@ def memoize(timeout, dynamic_timeout=False):
     """
     cache = {"timeout":timeout}
     def decorator(func):
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             start = time()
             if (not "time" in cache) or (start - cache["time"] > cache["timeout"]):

@@ -5,10 +5,11 @@ from gevent.lock import Semaphore
 all_locusts_spawned = Semaphore()
 all_locusts_spawned.acquire()
 
-def on_hatch_complete(**kw):
-    all_locusts_spawned.release()
-
-events.hatch_complete += on_hatch_complete
+@events.init.add_listener
+def _(environment, **kw):
+    @environment.events.hatch_complete.add_listener
+    def on_hatch_complete(**kw):
+        all_locusts_spawned.release()
 
 class UserTasks(TaskSet):
     def on_start(self):
