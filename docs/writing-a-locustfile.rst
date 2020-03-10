@@ -335,9 +335,9 @@ Since many setup and cleanup operations are dependent on each other, here is the
 
 1. Locust setup (once)
 2. TaskSet setup (once)
-3. TaskSet on_start (once per locust)
+3. TaskSet on_start (every time a user starts executing a new TaskSet)
 4. TaskSet tasks...
-5. TaskSet on_stop (once per locust)
+5. TaskSet on_stop (every time a user stops executing a TaskSet, either to run a different one or at shutdown)
 6. TaskSet teardown (once)
 7. Locust teardown (once)
 
