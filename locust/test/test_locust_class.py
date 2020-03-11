@@ -31,6 +31,22 @@ class TestTaskSet(LocustTestCase):
         self.assertEqual(t1_count, 5)
         self.assertEqual(t2_count, 2)
     
+    def test_tasks_missing_gives_user_friendly_exception(self):
+        class User(Locust):
+            wait_time = constant(0)
+            tasks = None
+            _catch_exceptions = False
+
+        l = MyTasks(User(self.environment))
+
+        self.assertRaisesRegex(Exception, "No tasks defined.*", l.run)
+
+        class MyTasks(TaskSet):
+            tasks = None
+
+        User.tasks = [MyTasks]
+        self.assertRaisesRegex(Exception, "No tasks defined.*", l.run)
+
     def test_task_decorator_ratio(self):
         t1 = lambda l: None
         t2 = lambda l: None
@@ -177,6 +193,7 @@ class TestTaskSet(LocustTestCase):
                 pass
         taskset = MyTaskSet3(self.locust)
         self.assertEqual(len(taskset.tasks), 3)
+    
     
     def test_wait_function(self):
         class MyTaskSet(TaskSet):

@@ -465,6 +465,8 @@ class TaskSet(object, metaclass=TaskSetMeta):
             self._task_queue.append(task)
     
     def get_next_task(self):
+        if not self.tasks:
+            raise Exception("No tasks defined. use the @task decorator or set the tasks property of the TaskSet")
         return random.choice(self.tasks)
     
     def wait_time(self):
