@@ -36,15 +36,13 @@ class TestTaskSet(LocustTestCase):
             wait_time = constant(0)
             tasks = None
             _catch_exceptions = False
-
-        l = MyTasks(User(self.environment))
-
-        self.assertRaisesRegex(Exception, "No tasks defined.*", l.run)
-
+        
         class MyTasks(TaskSet):
             tasks = None
 
-        User.tasks = [MyTasks]
+        l = MyTasks(User(self.environment))
+        self.assertRaisesRegex(Exception, "No tasks defined.*", l.run)
+        l.tasks = None
         self.assertRaisesRegex(Exception, "No tasks defined.*", l.run)
 
     def test_task_decorator_ratio(self):
