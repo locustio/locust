@@ -108,9 +108,6 @@ def create_environment(options, events=None):
 
 
 def main():
-    # create an Events instance that the locustfile can use to register event listeners at the module level
-    locust.events = Events()
-    
     # find specified locustfile and make sure it exists, using a very simplified
     # command line parser that is only used to parse the -f option
     locustfile = parse_locustfile_option()
