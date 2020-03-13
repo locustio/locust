@@ -19,6 +19,8 @@ from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
                         RescheduleTaskImmediately, StopLocust, MissingWaitTimeError)
 from .runners import STATE_CLEANUP, LOCUST_STATE_RUNNING, LOCUST_STATE_STOPPING, LOCUST_STATE_WAITING
 from .util import deprecation
+from .env import Environment
+from . import events
 
 
 logger = logging.getLogger(__name__)
@@ -155,9 +157,12 @@ class Locust(object):
         super(Locust, self).__init__()
         # check if deprecated wait API is used
         deprecation.check_for_deprecated_wait_api(self)
-        
-        self.environment = environment
-        
+
+        if environment:
+            self.environment = environment
+        else:
+            self.environment = Environment(events=events)
+
         with self._lock:
             if hasattr(self, "setup") and self._setup_has_run is False:
                 self._set_setup_flag()
