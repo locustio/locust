@@ -153,7 +153,7 @@ class Locust(object):
     _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
     _state = False
     
-    def __init__(self, environment):
+    def __init__(self, environment=None):
         super(Locust, self).__init__()
         # check if deprecated wait API is used
         deprecation.check_for_deprecated_wait_api(self)
