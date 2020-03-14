@@ -147,6 +147,17 @@ def setup_parser_arguments(parser):
         action='store_true',
         help="Set locust to run in distributed mode with this process as slave"
     )
+    parser.add_argument(
+        '--fast-slave',
+        action='store_true',
+        help="Set locust to run in distributed mode with multiple running processes as slaves"
+    )
+    parser.add_argument(
+        '--slave-count',
+        type=int,
+        default=multiprocessing.cpu_count(),
+        help="Number of running instances/processes of slaves. Only used when running with --fast-slave. Defaults to number of logical cores in the cpu."
+    )
     # master host options
     parser.add_argument(
         '--master-host',

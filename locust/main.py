@@ -105,12 +105,10 @@ def create_environment(options, events=None):
         stop_timeout=options.stop_timeout,
     )
 
-
 def main():
     # find specified locustfile and make sure it exists, using a very simplified
     # command line parser that is only used to parse the -f option
     locustfile = parse_locustfile_option()
-    
     # import the locustfile
     docstring, locusts = load_locustfile(locustfile)
     
@@ -178,7 +176,20 @@ def main():
         except ValueError:
             logger.error("Valid --step-time formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
             sys.exit(1)
-    
+
+    if options.fast_slave:
+        import subprocess
+        slave_processes = []
+        command = list(map(lambda arg: "--slave" if arg in "--fast-slave" else arg, sys.argv))
+        logger.info("Spawning {} slave processes".format(options.slave_count))
+        for _ in range(options.slave_count):
+            p = subprocess.Popen(command, stdout=subprocess.PIPE)
+            slave_processes.append(p)
+        for slave_process in slave_processes:
+            out, err = slave_process.communicate()
+            logger.info(out.decode('utf-8'))
+        sys.exit(0)
+
     if options.master:
         runner = MasterLocustRunner(
             environment, 
@@ -260,8 +271,7 @@ def main():
 
     if options.csvfilebase:
         gevent.spawn(stats_writer, runner.stats, options.csvfilebase, options.stats_history_enabled)
-
-    
+        
     def shutdown(code=0):
         """
         Shut down locust by firing quitting event, printing/writing stats and exiting
