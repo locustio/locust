@@ -31,8 +31,8 @@ Here's an example::
                 self.client.get("/non-existing-path")
     
     # setup Environment and Runner
-    env = Environment(locust_classes=[User])
-    runner = LocalLocustRunner(environment=env)
+    env = Environment()
+    runner = LocalLocustRunner(environment=env, locust_classes=[User])
     # start a WebUI instance
     web_ui = WebUI(runner=runner, environment=env)
     gevent.spawn(lambda: web_ui.start("127.0.0.1", 8089))
