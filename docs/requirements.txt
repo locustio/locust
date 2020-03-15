@@ -1,6 +1,2 @@
-sphinx==1.8.5
-sphinx-prompt==1.1.0
-sphinx-tabs==1.1.10
-sphinx-rtd-theme==0.4.3
-sphinx-notfound-page==0.3
-sphinx-js==2.7.1
+sphinx-rtd-theme
+-e git+https://github.com/readthedocs/readthedocs-sphinx-search#egg=sphinx-search
