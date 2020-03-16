@@ -8,6 +8,12 @@ class Environment:
     See :ref:`events` for available events.
     """
     
+    runner = None
+    """Reference to the LocustRunner instance"""
+    
+    web_ui = None
+    """Reference to the WebUI instance"""
+    
     options = None
     """Parsed command line options"""
     

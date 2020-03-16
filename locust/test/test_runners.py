@@ -277,6 +277,11 @@ class TestLocustRunner(LocustTestCase):
         self.assertEqual(6, runner.stats.get("/test", "GET").num_requests)
         runner.quit()
 
+    def test_runner_reference_on_environment(self):
+        env = Environment()
+        runner = LocalLocustRunner(environment=env, locust_classes=[])
+        self.assertEqual(env, runner.environment)
+
 
 class TestMasterRunner(LocustTestCase):
     def setUp(self):

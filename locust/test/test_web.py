@@ -38,6 +38,9 @@ class TestWebUI(LocustTestCase):
         self.web_ui.stop()
         self.runner.quit()
     
+    def test_web_ui_reference_on_environment(self):
+        self.assertEqual(self.web_ui, self.environment.web_ui)
+    
     def test_index(self):
         self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % self.web_port).status_code)
     

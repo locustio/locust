@@ -28,6 +28,7 @@ LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING = ["running", 
 
 class LocustRunner(object):
     def __init__(self, environment, locust_classes):
+        environment.runner = self
         self.environment = environment
         self.locust_classes = locust_classes
         self.locusts = Group()

@@ -39,6 +39,7 @@ class WebUI:
     """Refernce to pyqsgi.WSGIServer once it's started"""
     
     def __init__(self, environment, runner):
+        environment.web_ui = self
         self.environment = environment
         self.runner = runner
         app = Flask(__name__)
