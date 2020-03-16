@@ -38,7 +38,7 @@ class TestTaskSet(LocustTestCase):
             _catch_exceptions = False
         
         class MyTasks(TaskSet):
-            tasks = None
+            tasks = User
 
         l = MyTasks(User(self.environment))
         self.assertRaisesRegex(Exception, "No tasks defined.*", l.run)
