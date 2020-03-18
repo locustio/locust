@@ -18,23 +18,23 @@ class BaseSocket(object):
         try:
             self.socket.send(msg.serialize(), zmq.NOBLOCK)
         except zmqerr.ZMQError as e:
-            raise RPCError("ZMQ sent failure: %s" % (e) )
+            raise RPCError("ZMQ sent failure") from e
 
     @retry()
     def send_to_client(self, msg):
         try:
             self.socket.send_multipart([msg.node_id.encode(), msg.serialize()])
         except zmqerr.ZMQError as e:
-            raise RPCError("ZMQ sent failure: %s" % (e) )
+            raise RPCError("ZMQ sent failure") from e
 
     def recv(self):
         try:
             data = self.socket.recv()
             msg = Message.unserialize(data)
         except msgerr.ExtraData as e:
-            raise RPCError("Interrupted message: %s" % (e) )
+            raise RPCError("ZMQ interrupted message") from e
         except zmqerr.ZMQError as e:
-            raise RPCError("Network broken: %s" % (e) )
+            raise RPCError("ZMQ network broken") from e
         return msg
 
     def recv_from_client(self):
@@ -43,9 +43,9 @@ class BaseSocket(object):
             addr = data[0].decode()
             msg = Message.unserialize(data[1])
         except (UnicodeDecodeError, msgerr.ExtraData) as e:
-            raise RPCError("Interrupted message: %s" % (e) )
+            raise RPCError("ZMQ interrupted message") from e
         except zmqerr.ZMQError as e:
-            raise RPCError("Network broken: %s" % (e) )
+            raise RPCError("ZMQ network broken") from e
         return addr, msg
 
     def close(self):
