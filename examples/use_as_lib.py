@@ -26,7 +26,7 @@ class User(HttpLocust):
 env = Environment()
 runner = LocalLocustRunner(environment=env, locust_classes=[User])
 # start a WebUI instance
-web_ui = WebUI(environment=env, runner=runner)
+web_ui = WebUI(environment=env)
 gevent.spawn(lambda: web_ui.start("127.0.0.1", 8089))
 
 
