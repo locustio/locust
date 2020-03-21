@@ -307,6 +307,8 @@ class MasterLocustRunner(DistributedLocustRunner):
         super().__init__(*args, **kwargs)
         self.worker_cpu_warning_emitted = False
         self.target_user_count = None
+        self.master_bind_host = master_bind_host
+        self.master_bind_port = master_bind_port
 
         class WorkerNodesDict(dict):
             def get_by_state(self, state):
