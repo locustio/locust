@@ -495,7 +495,8 @@ class WorkerLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, master_host, master_port, **kwargs):
         super().__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + uuid4().hex
-        
+        self.master_host = master_host
+        self.master_port = master_port
         self.client = rpc.Client(master_host, master_port, self.client_id)
         self.greenlet.spawn(self.heartbeat).link_exception(callback=self.noop)
         self.greenlet.spawn(self.worker).link_exception(callback=self.noop)
