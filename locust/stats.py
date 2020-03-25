@@ -230,7 +230,7 @@ class StatsEntry(object):
     last_request_timestamp = None
     """ Time of the last request for this entry """
     
-    def __init__(self, stats, name, method, use_response_times_cache=False):
+    def __init__(self, stats, name, method, use_response_times_cache=True):
         self.stats = stats
         self.name = name
         self.method = method
@@ -258,7 +258,7 @@ class StatsEntry(object):
         # get the time
         current_time = time.time()
         t = int(current_time)
-        
+
         if self.use_response_times_cache and self.last_request_timestamp and t > int(self.last_request_timestamp):
             # see if we shall make a copy of the respone_times dict and store in the cache
             self._cache_response_times(t-1)
@@ -869,7 +869,9 @@ def stats_history_csv(stats, stats_history_enabled=False, csv_for_web_ui=False):
     for s in chain(stats_entries_per_iteration, [stats.total]):
         if s.num_requests:
             percentile_str = ','.join([
-                str(int(s.get_current_response_time_percentile(x) or 0)) for x in PERCENTILES_TO_REPORT])
+                str(int(s.get_response_time_percentile(x) or 0)) for x in PERCENTILES_TO_REPORT])
+                # get_current_response_time_percentile does not work because of problem described in https://github.com/locustio/locust/issues/1292
+                # str(int(s.get_current_response_time_percentile(x) or 0)) for x in PERCENTILES_TO_REPORT])
         else:
             percentile_str = ','.join(['"N/A"'] * len(PERCENTILES_TO_REPORT))
 
