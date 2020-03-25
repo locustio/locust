@@ -104,6 +104,10 @@ class TestFastHttpSession(WebserverTestCase):
             set(r.headers["allow"].split(", ")),
         )
 
+    def test_json_payload(self):
+        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        r = s.post("/request_method", json={"foo": "bar"})
+        self.assertEqual(200, r.status_code)
 
 class TestRequestStatsWithWebserver(WebserverTestCase):
     def test_request_stats_content_length(self):
