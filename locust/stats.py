@@ -229,6 +229,9 @@ class StatsEntry(object):
     
     last_request_timestamp = None
     """ Time of the last request for this entry """
+
+    users = {}
+    """ Started users on each node """
     
     def __init__(self, stats, name, method, use_response_times_cache=True):
         self.stats = stats
@@ -250,6 +253,7 @@ class StatsEntry(object):
         self.num_reqs_per_sec = {}
         self.num_fail_per_sec = {}
         self.total_content_length = 0
+        self.users = {}
         if self.use_response_times_cache:
             self.response_times_cache = OrderedDict()
             self._cache_response_times(int(time.time()))
@@ -385,8 +389,13 @@ class StatsEntry(object):
             return self.total_content_length / self.num_requests
         except ZeroDivisionError:
             return 0
+
+    @property
+    def total_users(self):
+        from functools import reduce
+        return reduce(lambda x, y: x + y, self.users.values(), 0)
     
-    def extend(self, other):
+    def extend(self, other, client_id = None, user_count = None):
         """
         Extend the data from the current StatsEntry with the stats from another
         StatsEntry instance. 
@@ -415,6 +424,9 @@ class StatsEntry(object):
             self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) + other.num_reqs_per_sec[key]
         for key in other.num_fail_per_sec:
             self.num_fail_per_sec[key] = self.num_fail_per_sec.get(key, 0) + other.num_fail_per_sec[key]
+
+        if client_id:
+            self.users[client_id] = user_count
     
     def serialize(self):
         return {
@@ -667,7 +679,7 @@ def setup_distributed_stats_event_listeners(events, stats):
         # of the response times in the response times cache
         old_last_request_timestamp = stats.total.last_request_timestamp
         # update the total StatsEntry
-        stats.total.extend(StatsEntry.unserialize(data["stats_total"]))
+        stats.total.extend(StatsEntry.unserialize(data["stats_total"]), client_id, data["user_count"])
         if stats.total.last_request_timestamp and stats.total.last_request_timestamp > (old_last_request_timestamp or 0):
             # If we've entered a new second, we'll cache the response times. Note that there 
             # might still be reports from other slave nodes - that contains requests for the same 
@@ -846,7 +858,8 @@ def stats_history_csv_header():
         '"99.9%"',
         '"99.99%"',
         '"99.999"',
-        '"100%"'
+        '"100%"',
+        '"Users"'
     )) + '\n'
 
 def stats_history_csv(stats, stats_history_enabled=False, csv_for_web_ui=False):
@@ -875,7 +888,7 @@ def stats_history_csv(stats, stats_history_enabled=False, csv_for_web_ui=False):
         else:
             percentile_str = ','.join(['"N/A"'] * len(PERCENTILES_TO_REPORT))
 
-        rows.append('"%s","%s","%s",%i,%i,%.2f,%.2f,%i,%i,%i,%.2f,%.2f,%s' % (
+        rows.append('"%s","%s","%s",%i,%i,%.2f,%.2f,%i,%i,%i,%.2f,%.2f,%s,%s' % (
             s.method,
             s.name,
             timestamp,
@@ -888,7 +901,8 @@ def stats_history_csv(stats, stats_history_enabled=False, csv_for_web_ui=False):
             s.min_response_time or 0,
             s.max_response_time,
             s.avg_content_length,
-            percentile_str
+            percentile_str,
+            s.total_users
         ))
 
     return "\n".join(rows)
