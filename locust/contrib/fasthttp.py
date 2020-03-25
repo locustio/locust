@@ -18,7 +18,7 @@ from geventhttpclient.response import HTTPConnectionClosed
 
 from locust.core import Locust
 from locust.exception import LocustError, CatchResponseError, ResponseError
-
+from locust.env import Environment
 
 # Monkey patch geventhttpclient.useragent.CompatRequest so that Cookiejar works with Python >= 3.3
 # More info: https://github.com/requests/requests/pull/871
@@ -64,6 +64,14 @@ class FastHttpLocust(Locust):
     The client support cookies, and therefore keeps the session between HTTP requests.
     """
     
+    # various UserAgent settings. Change these in your subclass to alter FastHttpLocust's behaviour. 
+    # It needs to be done before FastHttpLocust is instantiated, changing them later will have no effect
+    network_timeout: float = 60.0
+    connection_timeout: float = 60.0
+    max_redirects: int = 5
+    max_retries: int = 1
+    insecure: bool = True
+
     def __init__(self, environment):
         super().__init__(environment)
         if self.host is None:
@@ -71,20 +79,18 @@ class FastHttpLocust(Locust):
         if not re.match(r"^https?://[^/]+", self.host, re.I):
             raise LocustError("Invalid host (`%s`), must be a valid base URL. E.g. http://example.com" % self.host)
         
-        self.client = FastHttpSession(self.environment, base_url=self.host)
+        self.client = FastHttpSession(self.environment, base_url=self.host, network_timeout=type(self).network_timeout, connection_timeout=type(self).connection_timeout, max_redirects=type(self).max_redirects, max_retries=type(self).max_retries, insecure=type(self).insecure)
 
 
 class FastHttpSession(object):
     auth_header = None
     
-    def __init__(self, environment, base_url, **kwargs):
+    def __init__(self, environment: Environment, base_url: str, **kwargs):
         self.environment = environment
         self.base_url = base_url
         self.cookiejar = CookieJar()
         self.client = LocustUserAgent(
-            max_retries=1, 
-            cookiejar=self.cookiejar, 
-            insecure=True, 
+            cookiejar=self.cookiejar,
             ssl_options={"cert_reqs": gevent.ssl.CERT_NONE}, 
             **kwargs
         )
@@ -302,7 +308,7 @@ class LocustUserAgent(UserAgent):
     valid_response_codes = frozenset([200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 301, 302, 303, 307])
     
     def __init__(self, **kwargs):
-        super(LocustUserAgent, self).__init__(network_timeout=60.0, connection_timeout=60.0, **kwargs)
+        super(LocustUserAgent, self).__init__(**kwargs)
 
     def _urlopen(self, request):
         """Override _urlopen() in order to make it use the response_type attribute"""
