@@ -129,8 +129,8 @@ class FastHttpSession(object):
             r.error = e
             return r
     
-    def request(self, method, path, name=None, data=None, catch_response=False, stream=False, \
-                headers=None, auth=None, json=None, **kwargs):
+    def request(self, method: str, path: str, name: str=None, data: str=None, catch_response: bool=False, stream: bool=False,
+                headers: dict=None, auth=None, json: dict=None, **kwargs):
         """
         Send and HTTP request
         Returns :py:class:`locust.contrib.fasthttp.FastResponse` object.
@@ -147,7 +147,10 @@ class FastHttpSession(object):
             request to be marked as a fail based on the content of the response, even if the response 
             code is ok (2xx). The opposite also works, one can use catch_response to catch a request 
             and then mark it as successful even if the response code was not (i.e 500 or 404).
-        :param data: (optional) Dictionary or bytes to send in the body of the request.
+        :param data: (optional) String/bytes to send in the body of the request.
+        :param json: (optional) Dictionary to send in the body of the request. 
+            Automatically sets Content-Type and Accept headers to "application/json".
+            Only used if data is not set.
         :param headers: (optional) Dictionary of HTTP Headers to send with the request.
         :param auth: (optional) Auth (username, password) tuple to enable Basic HTTP Auth.
         :param stream: (optional) If set to true the response body will not be consumed immediately 
@@ -170,13 +173,15 @@ class FastHttpSession(object):
             headers['Authorization'] = _construct_basic_auth_str(auth[0], auth[1])
         elif self.auth_header:
             headers['Authorization'] = self.auth_header
-        if not "Accept-Encoding" in headers:
+        if "Accept-Encoding" not in headers and "accept-encoding" not in headers:
             headers['Accept-Encoding'] = "gzip, deflate"
 
         if not data and json is not None:
             data = unshadowed_json.dumps(json)
-            if "Content-Type" not in headers:
-                headers['Content-Type'] = "application/json"                
+            if "Content-Type" not in headers and "content-type" not in headers:
+                headers['Content-Type'] = "application/json"
+            if "Accept" not in headers and "accept" not in headers:
+                headers['Accept'] = "application/json"
 
         # send request, and catch any exceptions
         response = self._send_request_safe_mode(method, url, payload=data, headers=headers, **kwargs)
@@ -250,11 +255,11 @@ class FastResponse(CompatResponse):
     
     _response = None
     
-    encoding = None
+    encoding: str = None
     """In some cases setting the encoding explicitly is needed. If so, do it before calling .text"""
 
     @property
-    def text(self):
+    def text(self) -> str:
         """
         Returns the text content of the response as a decoded string
         """
@@ -267,7 +272,10 @@ class FastResponse(CompatResponse):
                 self.encoding = self.headers.get('content-type', '').partition("charset=")[2] or 'utf-8'
         return str(self.content, self.encoding, errors='replace')
 
-    def json(self):
+    def json(self) -> dict:
+        """
+        Parses the response as json and returns a dict
+        """
         return json.loads(self.text)
 
     def raise_for_status(self):
@@ -276,7 +284,7 @@ class FastResponse(CompatResponse):
             raise self.error
     
     @property
-    def status_code(self):
+    def status_code(self) -> int:
         """
         We override status_code in order to return None if no valid response was 
         returned. E.g. in the case of connection errors

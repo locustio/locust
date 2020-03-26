@@ -45,9 +45,13 @@ Subclass FastHttpLocust instead of HttpLocust::
 
 .. note::
 
-    SSL domain check is turned off in the FastHttpLocust's client implementation. So it will let through 
-    invalid SSL certificates without complaining.
+    You can set the following properties on your FastHttpLocust subclass to alter its behaviour:
 
+    | network_timeout (default 60.0)
+    | connection_timeout (default 60.0)
+    | max_redirects (default 5, meaning 4 redirects)
+    | max_retries (default 1, meaning zero retries)
+    | insecure (default True, meaning ignore ssl failures)
 
 API
 ===
@@ -56,7 +60,7 @@ FastHttpSession class
 =====================
 
 .. autoclass:: locust.contrib.fasthttp.FastHttpSession
-    :members: __init__, request, get, post, delete, put, head, options, patch
+    :members: request, get, post, delete, put, head, options, patch
 
 .. autoclass:: locust.contrib.fasthttp.FastResponse
-    :members: content, text, headers
+    :members: content, text, json, headers
