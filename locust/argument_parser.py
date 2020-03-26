@@ -81,13 +81,19 @@ def parse_locustfile_option(args=None):
         action='store_true',
         default=False,
     )
+    parser.add_argument(
+        '-V', '--version',
+        action='store_true',
+        default=False,
+    )
+    
     options, _ = parser.parse_known_args(args=args)
     
     locustfile = find_locustfile(options.locustfile)
     
     if not locustfile:
-        if options.help:
-            # if --help is specified we'll call parse_options which will print the default help message
+        if options.help or options.version:
+            # if --help or --version is specified we'll call parse_options which will print the help/version message
             parse_options(args=args)
         sys.stderr.write("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.\n")
         sys.exit(1)
