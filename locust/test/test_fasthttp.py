@@ -53,7 +53,7 @@ class TestFastHttpSession(WebserverTestCase):
     
     def test_slow_redirect(self):
         s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
-        url = "/redirect?url=/redirect?delay=0.5"
+        url = "/redirect?url=/redirect&delay=0.5"
         r = s.get(url)
         stats = self.runner.stats.get(url, method="GET")
         self.assertEqual(1, stats.num_requests)
@@ -264,6 +264,32 @@ class TestFastHttpLocustClass(WebserverTestCase):
         self.assertEqual(1, self.runner.stats.get("/redirect", "GET").num_requests)
         self.assertEqual(0, self.runner.stats.get("/ultra_fast", "GET").num_requests)
     
+    def test_network_timeout_setting(self):
+        class MyLocust(FastHttpLocust):
+            network_timeout = 0.5
+            host = "http://127.0.0.1:%i" % self.port
+
+        l = MyLocust(self.environment)
+        l.client.get("/redirect?url=/redirect&delay=5.0")
+        self.assertEqual(1, self.runner.stats.get("/redirect?url=/redirect&delay=5.0", "GET").num_failures)
+
+    def test_max_redirect_setting(self):
+        class MyLocust(FastHttpLocust):
+            max_redirects = 1 # max_redirects and max_retries are funny names, because they are actually max attempts
+            host = "http://127.0.0.1:%i" % self.port
+
+        l = MyLocust(self.environment)
+        l.client.get("/redirect")
+        self.assertEqual(1, self.runner.stats.get("/redirect", "GET").num_failures)
+
+    def test_slow_redirect(self):
+        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        url = "/redirect?url=/redirect&delay=0.5"
+        r = s.get(url)
+        stats = self.runner.stats.get(url, method="GET")
+        self.assertEqual(1, stats.num_requests)
+        self.assertGreater(stats.avg_response_time, 500)
+
     def test_client_basic_auth(self):
         class MyLocust(FastHttpLocust):
             host = "http://127.0.0.1:%i" % self.port
