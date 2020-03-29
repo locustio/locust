@@ -53,9 +53,9 @@ class WebUI:
             
             is_distributed = isinstance(environment.runner, MasterLocustRunner)
             if is_distributed:
-                slave_count = environment.runner.slave_count
+                worker_count = environment.runner.worker_count
             else:
-                slave_count = 0
+                worker_count = 0
             
             override_host_warning = False
             if environment.host:
@@ -73,15 +73,15 @@ class WebUI:
                 host = None
             
             return render_template("index.html",
-                state=environment.runner.state,
-                is_distributed=is_distributed,
-                user_count=environment.runner.user_count,
-                version=version,
-                host=host,
-                override_host_warning=override_host_warning,
-                slave_count=slave_count,
-                is_step_load=environment.step_load,
-            )
+                                   state=environment.runner.state,
+                                   is_distributed=is_distributed,
+                                   user_count=environment.runner.user_count,
+                                   version=version,
+                                   host=host,
+                                   override_host_warning=override_host_warning,
+                                   worker_count=worker_count,
+                                   is_step_load=environment.step_load,
+                                   )
         
         @app.route('/swarm', methods=["POST"])
         def swarm():
@@ -181,11 +181,11 @@ class WebUI:
             
             is_distributed = isinstance(environment.runner, MasterLocustRunner)
             if is_distributed:
-                slaves = []
-                for slave in environment.runner.clients.values():
-                    slaves.append({"id":slave.id, "state":slave.state, "user_count": slave.user_count, "cpu_usage":slave.cpu_usage})
+                workers = []
+                for worker in environment.runner.clients.values():
+                    workers.append({"id":worker.id, "state":worker.state, "user_count": worker.user_count, "cpu_usage":worker.cpu_usage})
         
-                report["slaves"] = slaves
+                report["workers"] = workers
             
             report["state"] = environment.runner.state
             report["user_count"] = environment.runner.user_count

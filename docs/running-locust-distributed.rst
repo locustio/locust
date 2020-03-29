@@ -10,24 +10,24 @@ running load tests distributed across multiple machines.
 To do this, you start one instance of Locust in master mode using the ``--master`` flag. This is 
 the instance that will be running Locust's web interface where you start the test and see live 
 statistics. The master node doesn't simulate any users itself. Instead you have to start one or 
-—most likely—multiple slave Locust nodes using the ``--slave`` flag, together with the 
+—most likely—multiple worker Locust nodes using the ``--worker`` flag, together with the
 ``--master-host`` (to specify the IP/hostname of the master node).
 
-A common set up is to run a single master on one machine, and then run **one slave instance per 
-processor core** on the slave machines.
+A common set up is to run a single master on one machine, and then run **one worker instance per
+processor core** on the worker machines.
 
 .. note::
-    Both the master and each slave machine, must have a copy of the locust test scripts 
+    Both the master and each worker machine, must have a copy of the locust test scripts
     when running Locust distributed. 
 
 .. note::
     It's recommended that you start a number of simulated users that are greater  than 
-    ``number of locust classes * number of slaves`` when running Locust distributed. 
+    ``number of locust classes * number of workers`` when running Locust distributed.
     
     Otherwise - due to the current implementation - 
     you might end up with a distribution of the  Locust classes that doesn't correspond to the 
-    Locust classes' ``weight`` attribute. And if the hatch rate is lower than the number of slave 
-    nodes, the hatching would occur in "bursts" where all slave node would hatch a single user and 
+    Locust classes' ``weight`` attribute. And if the hatch rate is lower than the number of worker
+    nodes, the hatching would occur in "bursts" where all worker node would hatch a single user and
     then sleep for multiple seconds, hatch another user, sleep and repeat.
 
 
@@ -38,9 +38,9 @@ To start locust in master mode::
 
     locust -f my_locustfile.py --master
 
-And then on each slave (replace ``192.168.0.14`` with IP of the master machine)::
+And then on each worker (replace ``192.168.0.14`` with IP of the master machine)::
 
-    locust -f my_locustfile.py --slave --master-host=192.168.0.14
+    locust -f my_locustfile.py --worker --master-host=192.168.0.14
 
 
 Options
@@ -52,22 +52,22 @@ Options
 Sets locust in master mode. The web interface will run on this node.
 
 
-``--slave``
+``--worker``
 -----------
 
-Sets locust in slave mode.
+Sets locust in worker mode.
 
 
 ``--master-host=X.X.X.X``
 -------------------------
 
-Optionally used together with ``--slave`` to set the hostname/IP of the master node (defaults 
+Optionally used together with ``--worker`` to set the hostname/IP of the master node (defaults
 to 127.0.0.1)
 
 ``--master-port=5557``
 ----------------------
 
-Optionally used together with ``--slave`` to set the port number of the master node (defaults to 5557).
+Optionally used together with ``--worker`` to set the port number of the master node (defaults to 5557).
 
 ``--master-bind-host=X.X.X.X``
 ------------------------------
@@ -81,10 +81,10 @@ will bind to. Defaults to * (all available interfaces).
 Optionally used together with ``--master``. Determines what network ports that the master node will
 listen to. Defaults to 5557.
 
-``--expect-slaves=X``
+``--expect-workers=X``
 ---------------------
 
-Used when starting the master node with ``--no-web``. The master node will then wait until X slave 
+Used when starting the master node with ``--no-web``. The master node will then wait until X worker
 nodes has connected before the test is started.
 
 

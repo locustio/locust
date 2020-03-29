@@ -131,20 +131,20 @@ To run Locust distributed across multiple processes we would start a master proc
     $ locust -f locust_files/my_locust_file.py --master
 
 
-and then we would start an arbitrary number of slave processes:
+and then we would start an arbitrary number of worker processes:
 
 .. code-block:: console
 
-    $ locust -f locust_files/my_locust_file.py --slave
+    $ locust -f locust_files/my_locust_file.py --worker
 
 
 If we want to run Locust distributed on multiple machines we would also have to specify the master host when
-starting the slaves (this is not needed when running Locust distributed on a single machine, since the master
+starting the workers (this is not needed when running Locust distributed on a single machine, since the master
 host defaults to 127.0.0.1):
 
 .. code-block:: console
 
-    $ locust -f locust_files/my_locust_file.py --slave --master-host=192.168.0.100
+    $ locust -f locust_files/my_locust_file.py --worker --master-host=192.168.0.100
 
 
 Parameters can also be set in a `config file <https://github.com/bw2/ConfigArgParse#config-file-syntax>`_ (locust.conf or ~/.locust.conf) or in env vars, prefixed by LOCUST\_
@@ -155,7 +155,7 @@ For example: (this will do the same thing as the previous command)
 
     # locust.conf in current directory
     locustfile locust_files/my_locust_file.py
-    slave
+    worker
 
 
 .. code-block:: console

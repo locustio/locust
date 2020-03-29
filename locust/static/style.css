@@ -80,7 +80,7 @@ a:hover {
     max-width: 165px;
     word-wrap: break-word;
 }
-.boxes .box_rps .value, .boxes .box_slaves .value {
+.boxes .box_rps .value, .boxes .box_workers .value {
     font-size: 32px;
 }
 .boxes .box_fail .value {

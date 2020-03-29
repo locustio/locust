@@ -649,7 +649,7 @@ def setup_distributed_stats_event_listeners(events, stats):
         data["errors"] =  stats.serialize_errors()
         stats.errors = {}
     
-    def on_slave_report(client_id, data):
+    def on_worker_report(client_id, data):
         for stats_data in data["stats"]:
             entry = StatsEntry.unserialize(stats_data)
             request_key = (entry.name, entry.method)
@@ -670,7 +670,7 @@ def setup_distributed_stats_event_listeners(events, stats):
         stats.total.extend(StatsEntry.unserialize(data["stats_total"]))
         if stats.total.last_request_timestamp and stats.total.last_request_timestamp > (old_last_request_timestamp or 0):
             # If we've entered a new second, we'll cache the response times. Note that there 
-            # might still be reports from other slave nodes - that contains requests for the same 
+            # might still be reports from other worker nodes - that contains requests for the same
             # time periods - that hasn't been received/accounted for yet. This will cause the cache to 
             # lag behind a second or two, but since StatsEntry.current_response_time_percentile() 
             # (which is what the response times cache is used for) uses an approximation of the 
@@ -678,7 +678,7 @@ def setup_distributed_stats_event_listeners(events, stats):
             stats.total._cache_response_times(int(stats.total.last_request_timestamp))
         
     events.report_to_master.add_listener(on_report_to_master)
-    events.slave_report.add_listener(on_slave_report)
+    events.worker_report.add_listener(on_worker_report)
 
 
 def print_stats(stats, current=True):
