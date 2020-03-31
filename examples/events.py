@@ -32,11 +32,11 @@ def locust_init(environment, web_ui, **kwargs):
     We need somewhere to store the stats.
     
     On the master node stats will contain the aggregated sum of all content-lengths,
-    while on the slave nodes this will be the sum of the content-lengths since the 
+    while on the worker nodes this will be the sum of the content-lengths since the
     last stats report was sent to the master
     """
     if web_ui:
-        # this code is only run on the master node (the web_ui instance doesn't exist on slaves)
+        # this code is only run on the master node (the web_ui instance doesn't exist on workers)
         @web_ui.app.route("/content-length")
         def total_content_length():
             """
@@ -54,18 +54,18 @@ def on_request_success(request_type, name, response_time, response_length):
 @events.report_to_master.add_listener
 def on_report_to_master(client_id, data):
     """
-    This event is triggered on the slave instances every time a stats report is
+    This event is triggered on the worker instances every time a stats report is
     to be sent to the locust master. It will allow us to add our extra content-length
-    data to the dict that is being sent, and then we clear the local stats in the slave.
+    data to the dict that is being sent, and then we clear the local stats in the worker.
     """
     data["content-length"] = stats["content-length"]
     stats["content-length"] = 0
 
-@events.slave_report.add_listener
-def on_slave_report(client_id, data):
+@events.worker_report.add_listener
+def on_worker_report(client_id, data):
     """
     This event is triggered on the master instance when a new stats report arrives
-    from a slave. Here we just add the content-length to the master's aggregated
+    from a worker. Here we just add the content-length to the master's aggregated
     stats dict.
     """
     stats["content-length"] += data["content-length"]

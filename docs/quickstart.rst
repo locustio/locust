@@ -15,9 +15,6 @@ Below is a quick little example of a simple **locustfile.py**:
     def login(l):
         l.client.post("/login", {"username":"ellen_key", "password":"education"})
 
-    def logout(l):
-        l.client.post("/logout", {"username":"ellen_key", "password":"education"})
-
     def index(l):
         l.client.get("/")
 
@@ -29,9 +26,6 @@ Below is a quick little example of a simple **locustfile.py**:
 
         def on_start(self):
             login(self)
-
-        def on_stop(self):
-            logout(self)
 
     class WebsiteUser(HttpLocust):
         task_set = UserBehavior
@@ -65,16 +59,9 @@ Another way we could declare tasks, which is usually more convenient, is to use 
         def on_start(self):
             """ on_start is called when a Locust start before any task is scheduled """
             self.login()
-
-        def on_stop(self):
-            """ on_stop is called when the TaskSet is stopping """
-            self.logout()
         
         def login(self):
             self.client.post("/login", {"username":"ellen_key", "password":"education"})
-        
-        def logout(self):
-            self.client.post("/logout", {"username":"ellen_key", "password":"education"})
         
         @task(2)
         def index(self):
@@ -131,20 +118,20 @@ To run Locust distributed across multiple processes we would start a master proc
     $ locust -f locust_files/my_locust_file.py --master
 
 
-and then we would start an arbitrary number of slave processes:
+and then we would start an arbitrary number of worker processes:
 
 .. code-block:: console
 
-    $ locust -f locust_files/my_locust_file.py --slave
+    $ locust -f locust_files/my_locust_file.py --worker
 
 
 If we want to run Locust distributed on multiple machines we would also have to specify the master host when
-starting the slaves (this is not needed when running Locust distributed on a single machine, since the master
+starting the workers (this is not needed when running Locust distributed on a single machine, since the master
 host defaults to 127.0.0.1):
 
 .. code-block:: console
 
-    $ locust -f locust_files/my_locust_file.py --slave --master-host=192.168.0.100
+    $ locust -f locust_files/my_locust_file.py --worker --master-host=192.168.0.100
 
 
 Parameters can also be set in a `config file <https://github.com/bw2/ConfigArgParse#config-file-syntax>`_ (locust.conf or ~/.locust.conf) or in env vars, prefixed by LOCUST\_
@@ -155,7 +142,7 @@ For example: (this will do the same thing as the previous command)
 
     # locust.conf in current directory
     locustfile locust_files/my_locust_file.py
-    slave
+    worker
 
 
 .. code-block:: console

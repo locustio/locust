@@ -41,7 +41,7 @@ Running Locust distributed without the web UI
 ---------------------------------------------
 
 If you want to :ref:`run Locust distributed <running-locust-distributed>` without the web UI, 
-you should specify the ``--expect-slaves`` option when starting the master node, to specify 
-the number of slave nodes that are expected to connect. It will then wait until that many slave 
+you should specify the ``--expect-workers`` option when starting the master node, to specify
+the number of worker nodes that are expected to connect. It will then wait until that many worker
 nodes have connected before starting the test.
 

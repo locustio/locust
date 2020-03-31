@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_CLEANUP, STATE_STOPPING, STATE_STOPPED, STATE_MISSING = ["ready", "hatching", "running", "cleanup", "stopping", "stopped", "missing"]
-SLAVE_REPORT_INTERVAL = 3.0
+WORKER_REPORT_INTERVAL = 3.0
 CPU_MONITOR_INTERVAL = 5.0
 HEARTBEAT_INTERVAL = 1
 HEARTBEAT_LIVENESS = 3
@@ -206,7 +206,7 @@ class LocustRunner(object):
             self.stats.clear_all()
             self.exceptions = {}
             self.cpu_warning_emitted = False
-            self.slave_cpu_warning_emitted = False
+            self.worker_cpu_warning_emitted = False
             self.environment.events.locust_start_hatching.fire()
 
         # Dynamically changing the locust count
@@ -299,7 +299,7 @@ class DistributedLocustRunner(LocustRunner):
         super().__init__(*args, **kwargs)
         setup_distributed_stats_event_listeners(self.environment.events, self.stats)
 
-class SlaveNode(object):
+class WorkerNode(object):
     def __init__(self, id, state=STATE_INIT, heartbeat_liveness=HEARTBEAT_LIVENESS):
         self.id = id
         self.state = state
@@ -311,10 +311,10 @@ class SlaveNode(object):
 class MasterLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, master_bind_host, master_bind_port, **kwargs):
         super().__init__(*args, **kwargs)
-        self.slave_cpu_warning_emitted = False
+        self.worker_cpu_warning_emitted = False
         self.target_user_count = None
 
-        class SlaveNodesDict(dict):
+        class WorkerNodesDict(dict):
             def get_by_state(self, state):
                 return [c for c in self.values() if c.state == state]
             
@@ -334,21 +334,21 @@ class MasterLocustRunner(DistributedLocustRunner):
             def running(self):
                 return self.get_by_state(STATE_RUNNING)
         
-        self.clients = SlaveNodesDict()
+        self.clients = WorkerNodesDict()
         self.server = rpc.Server(master_bind_host, master_bind_port)
         self.greenlet.spawn(self.heartbeat_worker).link_exception(callback=self.noop)
         self.greenlet.spawn(self.client_listener).link_exception(callback=self.noop)
 
-        # listener that gathers info on how many locust users the slaves has spawned
-        def on_slave_report(client_id, data):
+        # listener that gathers info on how many locust users the worker has spawned
+        def on_worker_report(client_id, data):
             if client_id not in self.clients:
-                logger.info("Discarded report from unrecognized slave %s", client_id)
+                logger.info("Discarded report from unrecognized worker %s", client_id)
                 return
 
             self.clients[client_id].user_count = data["user_count"]
-        self.environment.events.slave_report.add_listener(on_slave_report)
+        self.environment.events.worker_report.add_listener(on_worker_report)
         
-        # register listener that sends quit message to slave nodes
+        # register listener that sends quit message to worker nodes
         def on_quitting():
             self.quit()
         self.environment.events.quitting.add_listener(on_quitting)
@@ -359,28 +359,28 @@ class MasterLocustRunner(DistributedLocustRunner):
     
     def cpu_log_warning(self):
         warning_emitted = LocustRunner.cpu_log_warning(self)
-        if self.slave_cpu_warning_emitted:
-            logger.warning("CPU usage threshold was exceeded on slaves during the test!")
+        if self.worker_cpu_warning_emitted:
+            logger.warning("CPU usage threshold was exceeded on workers during the test!")
             warning_emitted = True
         return warning_emitted
 
     def start(self, locust_count, hatch_rate):
         self.target_user_count = locust_count
-        num_slaves = len(self.clients.ready) + len(self.clients.running) + len(self.clients.hatching)
-        if not num_slaves:
-            logger.warning("You are running in distributed mode but have no slave servers connected. "
-                           "Please connect slaves prior to swarming.")
+        num_workers = len(self.clients.ready) + len(self.clients.running) + len(self.clients.hatching)
+        if not num_workers:
+            logger.warning("You are running in distributed mode but have no worker servers connected. "
+                           "Please connect workers prior to swarming.")
             return
 
         self.hatch_rate = hatch_rate
-        slave_num_clients = locust_count // (num_slaves or 1)
-        slave_hatch_rate = float(hatch_rate) / (num_slaves or 1)
-        remaining = locust_count % num_slaves
+        worker_num_clients = locust_count // (num_workers or 1)
+        worker_hatch_rate = float(hatch_rate) / (num_workers or 1)
+        remaining = locust_count % num_workers
 
-        logger.info("Sending hatch jobs of %d locusts and %.2f hatch rate to %d ready clients" % (slave_num_clients, slave_hatch_rate, num_slaves))
+        logger.info("Sending hatch jobs of %d locusts and %.2f hatch rate to %d ready clients" % (worker_num_clients, worker_hatch_rate, num_workers))
 
-        if slave_hatch_rate > 100:
-            logger.warning("Your selected hatch rate is very high (>100/slave), and this is known to sometimes cause issues. Do you really need to ramp up that fast?")
+        if worker_hatch_rate > 100:
+            logger.warning("Your selected hatch rate is very high (>100/worker), and this is known to sometimes cause issues. Do you really need to ramp up that fast?")
 
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
@@ -389,8 +389,8 @@ class MasterLocustRunner(DistributedLocustRunner):
         
         for client in (self.clients.ready + self.clients.running + self.clients.hatching):
             data = {
-                "hatch_rate": slave_hatch_rate,
-                "num_clients": slave_num_clients,
+                "hatch_rate": worker_hatch_rate,
+                "num_clients": worker_num_clients,
                 "host": self.environment.host,
                 "stop_timeout": self.environment.stop_timeout,
             }
@@ -412,7 +412,7 @@ class MasterLocustRunner(DistributedLocustRunner):
     def quit(self):
         for client in self.clients.all:
             self.server.send_to_client(Message("quit", None, client.id))
-        gevent.sleep(0.5) # wait for final stats report from all slaves
+        gevent.sleep(0.5) # wait for final stats report from all workers
         self.greenlet.kill(block=True)
     
     def heartbeat_worker(self):
@@ -420,7 +420,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             gevent.sleep(HEARTBEAT_INTERVAL)
             for client in self.clients.all:
                 if client.heartbeat < 0 and client.state != STATE_MISSING:
-                    logger.info('Slave %s failed to send heartbeat, setting state to missing.' % str(client.id))
+                    logger.info('Worker %s failed to send heartbeat, setting state to missing.' % str(client.id))
                     client.state = STATE_MISSING
                     client.user_count = 0
                 else:
@@ -432,14 +432,14 @@ class MasterLocustRunner(DistributedLocustRunner):
             msg.node_id = client_id
             if msg.type == "client_ready":
                 id = msg.node_id
-                self.clients[id] = SlaveNode(id, heartbeat_liveness=HEARTBEAT_LIVENESS)
+                self.clients[id] = WorkerNode(id, heartbeat_liveness=HEARTBEAT_LIVENESS)
                 logger.info("Client %r reported as ready. Currently %i clients ready to swarm." % (id, len(self.clients.ready + self.clients.running + self.clients.hatching)))
                 if self.state == STATE_RUNNING or self.state == STATE_HATCHING:
                     # balance the load distribution when new client joins
                     self.start(self.target_user_count, self.hatch_rate)
-                ## emit a warning if the slave's clock seem to be out of sync with our clock
+                ## emit a warning if the worker's clock seem to be out of sync with our clock
                 #if abs(time() - msg.data["time"]) > 5.0:
-                #    warnings.warn("The slave node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
+                #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
             elif msg.type == "client_stopped":
                 del self.clients[msg.node_id]
                 logger.info("Removing %s client from running clients" % (msg.node_id))
@@ -450,11 +450,11 @@ class MasterLocustRunner(DistributedLocustRunner):
                     c.state = msg.data['state']
                     c.cpu_usage = msg.data['current_cpu_usage']
                     if not c.cpu_warning_emitted and c.cpu_usage > 90:
-                        self.slave_cpu_warning_emitted = True # used to fail the test in the end
+                        self.worker_cpu_warning_emitted = True # used to fail the test in the end
                         c.cpu_warning_emitted = True          # used to suppress logging for this node
-                        logger.warning("Slave %s exceeded cpu threshold (will only log this once per slave)" % (msg.node_id))
+                        logger.warning("Worker %s exceeded cpu threshold (will only log this once per worker)" % (msg.node_id))
             elif msg.type == "stats":
-                self.environment.events.slave_report.fire(client_id=msg.node_id, data=msg.data)
+                self.environment.events.worker_report.fire(client_id=msg.node_id, data=msg.data)
             elif msg.type == "hatching":
                 self.clients[msg.node_id].state = STATE_HATCHING
             elif msg.type == "hatch_complete":
@@ -474,10 +474,10 @@ class MasterLocustRunner(DistributedLocustRunner):
                 self.state = STATE_STOPPED
 
     @property
-    def slave_count(self):
+    def worker_count(self):
         return len(self.clients.ready) + len(self.clients.hatching) + len(self.clients.running)
 
-class SlaveLocustRunner(DistributedLocustRunner):
+class WorkerLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, master_host, master_port, **kwargs):
         super().__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + uuid4().hex
@@ -486,13 +486,13 @@ class SlaveLocustRunner(DistributedLocustRunner):
         self.greenlet.spawn(self.heartbeat).link_exception(callback=self.noop)
         self.greenlet.spawn(self.worker).link_exception(callback=self.noop)
         self.client.send(Message("client_ready", None, self.client_id))
-        self.slave_state = STATE_INIT
+        self.worker_state = STATE_INIT
         self.greenlet.spawn(self.stats_reporter).link_exception(callback=self.noop)
         
         # register listener for when all locust users have hatched, and report it to the master node
         def on_hatch_complete(user_count):
             self.client.send(Message("hatch_complete", {"count":user_count}, self.client_id))
-            self.slave_state = STATE_RUNNING
+            self.worker_state = STATE_RUNNING
         self.environment.events.hatch_complete.add_listener(on_hatch_complete)
         
         # register listener that adds the current number of spawned locusts to the report that is sent to the master node 
@@ -513,14 +513,14 @@ class SlaveLocustRunner(DistributedLocustRunner):
 
     def heartbeat(self):
         while True:
-            self.client.send(Message('heartbeat', {'state': self.slave_state, 'current_cpu_usage': self.current_cpu_usage}, self.client_id))
+            self.client.send(Message('heartbeat', {'state': self.worker_state, 'current_cpu_usage': self.current_cpu_usage}, self.client_id))
             gevent.sleep(HEARTBEAT_INTERVAL)
 
     def worker(self):
         while True:
             msg = self.client.recv()
             if msg.type == "hatch":
-                self.slave_state = STATE_HATCHING
+                self.worker_state = STATE_HATCHING
                 self.client.send(Message("hatching", None, self.client_id))
                 job = msg.data
                 self.hatch_rate = job["hatch_rate"]
@@ -534,7 +534,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))
                 self.client.send(Message("client_ready", None, self.client_id))
-                self.slave_state = STATE_INIT
+                self.worker_state = STATE_INIT
             elif msg.type == "quit":
                 logger.info("Got quit message from master, shutting down...")
                 self.stop()
@@ -549,7 +549,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 logger.error("Connection lost to master server. Aborting...")
                 break
             
-            gevent.sleep(SLAVE_REPORT_INTERVAL)
+            gevent.sleep(WORKER_REPORT_INTERVAL)
 
     def _send_stats(self):
         data = {}
