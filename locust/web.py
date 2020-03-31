@@ -73,15 +73,15 @@ class WebUI:
                 host = None
             
             return render_template("index.html",
-                                   state=environment.runner.state,
-                                   is_distributed=is_distributed,
-                                   user_count=environment.runner.user_count,
-                                   version=version,
-                                   host=host,
-                                   override_host_warning=override_host_warning,
-                                   worker_count=worker_count,
-                                   is_step_load=environment.step_load,
-                                   )
+                state=environment.runner.state,
+                is_distributed=is_distributed,
+                user_count=environment.runner.user_count,
+                version=version,
+                host=host,
+                override_host_warning=override_host_warning,
+                worker_count=worker_count,
+                is_step_load=environment.step_load,
+            )
         
         @app.route('/swarm', methods=["POST"])
         def swarm():

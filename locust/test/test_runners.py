@@ -658,14 +658,14 @@ class TestMasterRunner(LocustTestCase):
         self.assertEqual(2, exception["count"])
 
 
-class TestworkerLocustRunner(LocustTestCase):
+class TestWorkerLocustRunner(LocustTestCase):
     def setUp(self):
-        super(TestworkerLocustRunner, self).setUp()
+        super(TestWorkerLocustRunner, self).setUp()
         #self._report_to_master_event_handlers = [h for h in events.report_to_master._handlers]
         
     def tearDown(self):
         #events.report_to_master._handlers = self._report_to_master_event_handlers
-        super(TestworkerLocustRunner, self).tearDown()
+        super(TestWorkerLocustRunner, self).tearDown()
     
     def get_runner(self, environment=None, locust_classes=[]):
         if environment is None:

@@ -104,9 +104,9 @@ var sortBy = function(field, reverse, primer){
 // Sorting by column
 var alternate = false; //used by jqote2.min.js
 var sortAttribute = "name";
-var workerSortAttribute = "id";
+var WorkerSortAttribute = "id";
 var desc = false;
-var workerDesc = false;
+var WorkerDesc = false;
 var report;
 
 function renderTable(report) {
@@ -129,9 +129,9 @@ function renderTable(report) {
     $("#userCount").html(report.user_count);
 }
 
-function renderworkerTable(report) {
+function renderWorkerTable(report) {
     if (report.workers) {
-        var workers = (report.workers).sort(sortBy(workerSortAttribute, workerDesc));
+        var workers = (report.workers).sort(sortBy(WorkerSortAttribute, WorkerDesc));
         $("#workers tbody").empty();
         window.alternate = false;
         $("#workers tbody").jqoteapp(workers_tpl, workers);
@@ -149,9 +149,9 @@ $("#stats .stats_label").click(function(event) {
 
 $("#workers .stats_label").click(function(event) {
     event.preventDefault();
-    workerSortAttribute = $(this).attr("data-sortkey");
-    workerDesc = !workerDesc;
-    renderworkerTable(window.report);
+    WorkerSortAttribute = $(this).attr("data-sortkey");
+    WorkerDesc = !WorkerDesc;
+    renderWorkerTable(window.report);
 });
 
 // init charts
@@ -164,7 +164,7 @@ function updateStats() {
         window.report = report;
 
         renderTable(report);
-        renderworkerTable(report);
+        renderWorkerTable(report);
 
         if (report.state !== "stopped"){
             // get total stats row
