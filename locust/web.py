@@ -8,6 +8,8 @@ from collections import defaultdict
 from itertools import chain
 from time import time
 
+from flask_basicauth import BasicAuth
+
 try:
     # >= Py3.2
     from html import escape
@@ -209,5 +211,12 @@ def exceptions_csv():
     return response
 
 def start(locust, options):
+    if options.web_auth is not None:
+        credentials = options.web_auth.split(':')
+        if len(credentials) == 2:
+            app.config["BASIC_AUTH_USERNAME"] = credentials[0]
+            app.config["BASIC_AUTH_PASSWORD"] = credentials[1]
+            app.config["BASIC_AUTH_FORCE"] = True
+            BasicAuth(app)
     pywsgi.WSGIServer((options.web_host, options.port),
                       app, log=None).serve_forever()

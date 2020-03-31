@@ -287,6 +287,14 @@ def parse_options(args=None, default_config_files=['~/.locust.conf','locust.conf
         metavar='LocustClass',
     )
 
+    parser.add_argument(
+        '-B', '--web-auth',
+        type=str,
+        dest='web_auth',
+        default=None,
+        help='Set the Basic Auth for the UI (fmt: username:password)'
+    )
+
     return parser, parser.parse_args(args=args)
 
 
