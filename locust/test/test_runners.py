@@ -91,12 +91,11 @@ class TestLocustRunner(LocustTestCase):
         runners.CPU_MONITOR_INTERVAL = 2.0
         try:
             class CpuLocust(Locust):
-                wait_time = constant(0)
-                class task_set(TaskSet):
-                    @task
-                    def cpu_task(self):
-                        for i in range(1000000):
-                            _ = 3 / 2
+                wait_time = constant(0.001)
+                @task
+                def cpu_task(self):
+                    for i in range(1000000):
+                        _ = 3 / 2
             environment = Environment(
                 options=mocked_options(),
             )
