@@ -147,6 +147,11 @@ def setup_parser_arguments(parser):
         action='store_true',
         help="Set locust to run in distributed mode with this process as worker"
     )
+    parser.add_argument(
+        '--slave',
+        action='store_true',
+        help=configargparse.SUPPRESS
+    )
     # master host options
     parser.add_argument(
         '--master-host',
@@ -175,6 +180,11 @@ def setup_parser_arguments(parser):
         type=int,
         default=1,
         help="How many workers master should expect to connect before starting the test (only when --no-web used)."
+    )
+    parser.add_argument(
+        '--expect-slaves',
+        action='store_true',
+        help=configargparse.SUPPRESS
     )
     # if we should print stats in the console
     parser.add_argument(
