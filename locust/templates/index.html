@@ -28,9 +28,9 @@
                     <a href="#" class="edit_test">Edit</a>
                 </div>
                 {% if is_distributed %}
-                    <div class="top_box box_slaves" id="box_slaves">
-                        <div class="label">SLAVES</div>
-                        <div class="value" id="slaveCount">{{slave_count}}</div>
+                    <div class="top_box box_workers" id="box_workers">
+                        <div class="label">WORKERS</div>
+                        <div class="value" id="workerCount">{{worker_count}}</div>
                     </div>
                 {% endif %}
                 <div class="top_box box_rps box_running" id="box_rps">
@@ -113,7 +113,7 @@
                     <li><a href="#">Exceptions</a></li>
                     <li><a href="#">Download Data</a></li>
                     {% if is_distributed %}
-                    <li><a href="#">Slaves</a></li>
+                    <li><a href="#">Workers</a></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -175,12 +175,12 @@
                     </div>
                 </div>
                 <div style="display:none;">
-                    <table id="slaves">
+                    <table id="workers">
                         <thead>
                             <tr>
-                                <th class="stats_label" href="#" data-sortkey="id">Slave</th>
+                                <th class="stats_label" href="#" data-sortkey="id">Worker</th>
                                 <th class="stats_label" href="#" data-sortkey="state">State</th>
-                                <th class="stats_label numeric" href="#" data-sortkey="user_count" title="Number of users on this slave"># users</th>
+                                <th class="stats_label numeric" href="#" data-sortkey="user_count" title="Number of users on this worker"># users</th>
                                 <th class="stats_label numeric" href="#" data-sortkey="cpu_usage" title="CPU usage of process">CPU usage</th>
                             </tr>
                         </thead>
@@ -278,7 +278,7 @@
         <% alternate = !alternate; %>
         ]]>
     </script>
-    <script type="text/x-jqote-template" id="slave-template">
+    <script type="text/x-jqote-template" id="worker-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%> <%=(this.name == "Total" ? "total" : "")%>">
             <td><%= this.id %></td>

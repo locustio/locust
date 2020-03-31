@@ -147,23 +147,28 @@ def setup_parser_arguments(parser):
         action='store_true',
         help="Set locust to run in distributed mode with this process as master"
     )
-    # if locust should be run in distributed mode as slave
+    # if locust should be run in distributed mode as worker
+    parser.add_argument(
+        '--worker',
+        action='store_true',
+        help="Set locust to run in distributed mode with this process as worker"
+    )
     parser.add_argument(
         '--slave',
         action='store_true',
-        help="Set locust to run in distributed mode with this process as slave"
+        help=configargparse.SUPPRESS
     )
     # master host options
     parser.add_argument(
         '--master-host',
         default="127.0.0.1",
-        help="Host or IP address of locust master for distributed load testing. Only used when running with --slave. Defaults to 127.0.0.1."
+        help="Host or IP address of locust master for distributed load testing. Only used when running with --worker. Defaults to 127.0.0.1."
     )
     parser.add_argument(
         '--master-port',
         type=int,
         default=5557,
-        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --slave. Defaults to 5557."
+        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --worker. Defaults to 5557."
     )
     parser.add_argument(
         '--master-bind-host',
@@ -177,10 +182,15 @@ def setup_parser_arguments(parser):
         help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557."
     )
     parser.add_argument(
-        '--expect-slaves',
+        '--expect-workers',
         type=int,
         default=1,
-        help="How many slaves master should expect to connect before starting the test (only when --no-web used)."
+        help="How many workers master should expect to connect before starting the test (only when --no-web used)."
+    )
+    parser.add_argument(
+        '--expect-slaves',
+        action='store_true',
+        help=configargparse.SUPPRESS
     )
     # if we should print stats in the console
     parser.add_argument(
@@ -265,7 +275,7 @@ def setup_parser_arguments(parser):
     parser.add_argument(
         '--reset-stats',
         action='store_true',
-        help="Reset statistics once hatching has been completed. Should be set on both master and slaves when running in distributed mode",
+        help="Reset statistics once hatching has been completed. Should be set on both master and workers when running in distributed mode",
     )
     # List locust commands found in loaded locust files/source files
     parser.add_argument(

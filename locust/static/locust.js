@@ -48,7 +48,7 @@ $("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');
 var exceptions_tpl = $('#exceptions-template');
-var slaves_tpl = $('#slave-template');
+var workers_tpl = $('#worker-template');
 
 function setHostName(hostname) {
     hostname = hostname || "";
@@ -104,9 +104,9 @@ var sortBy = function(field, reverse, primer){
 // Sorting by column
 var alternate = false; //used by jqote2.min.js
 var sortAttribute = "name";
-var slaveSortAttribute = "id";
+var WorkerSortAttribute = "id";
 var desc = false;
-var slaveDesc = false;
+var WorkerDesc = false;
 var report;
 
 function renderTable(report) {
@@ -129,13 +129,13 @@ function renderTable(report) {
     $("#userCount").html(report.user_count);
 }
 
-function renderSlaveTable(report) {
-    if (report.slaves) {
-        var slaves = (report.slaves).sort(sortBy(slaveSortAttribute, slaveDesc));
-        $("#slaves tbody").empty();
+function renderWorkerTable(report) {
+    if (report.workers) {
+        var workers = (report.workers).sort(sortBy(WorkerSortAttribute, WorkerDesc));
+        $("#workers tbody").empty();
         window.alternate = false;
-        $("#slaves tbody").jqoteapp(slaves_tpl, slaves);
-        $("#slaveCount").html(slaves.length);
+        $("#workers tbody").jqoteapp(workers_tpl, workers);
+        $("#workerCount").html(workers.length);
     }
 }
 
@@ -147,11 +147,11 @@ $("#stats .stats_label").click(function(event) {
     renderTable(window.report);
 });
 
-$("#slaves .stats_label").click(function(event) {
+$("#workers .stats_label").click(function(event) {
     event.preventDefault();
-    slaveSortAttribute = $(this).attr("data-sortkey");
-    slaveDesc = !slaveDesc;
-    renderSlaveTable(window.report);
+    WorkerSortAttribute = $(this).attr("data-sortkey");
+    WorkerDesc = !WorkerDesc;
+    renderWorkerTable(window.report);
 });
 
 // init charts
@@ -164,7 +164,7 @@ function updateStats() {
         window.report = report;
 
         renderTable(report);
-        renderSlaveTable(report);
+        renderWorkerTable(report);
 
         if (report.state !== "stopped"){
             // get total stats row
