@@ -24,7 +24,7 @@ class WebsiteUser(HttpLocust):
     # Most task inter-arrival times approximate to exponential distributions
     # We will model this wait time as exponentially distributed with a mean of 1 second
     wait_time = lambda self: random.expovariate(1)
-    task_set = UserTasks
+    tasks = [UserTasks]
 
 def strictExp(min_wait,max_wait,mu=1):
     """
@@ -44,7 +44,7 @@ class StrictWebsiteUser(HttpLocust):
     """
     host = "http://127.0.0.1:8089"
     wait_time = lambda self: strictExp(3, 7)
-    task_set = UserTasks
+    tasks = [UserTasks]
 
 
 

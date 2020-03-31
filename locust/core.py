@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 def task(weight=1):
     """
-    Used as a convenience decorator to be able to declare tasks for a TaskSet 
+    Used as a convenience decorator to be able to declare tasks for a Locust or a TaskSet 
     inline in the class. Example::
     
         class ForumPage(TaskSet):
@@ -96,141 +96,35 @@ class NoClientWarningRaiser(object):
         raise LocustError("No client instantiated. Did you intend to inherit from HttpLocust?")
 
 
-class Locust(object):
+def get_tasks_from_base_classes(bases, class_dict):
     """
-    Represents a "user" which is to be hatched and attack the system that is to be load tested.
-    
-    The behaviour of this user is defined by the task_set attribute, which should point to a 
-    :py:class:`TaskSet <locust.core.TaskSet>` class.
-    
-    This class should usually be subclassed by a class that defines some kind of client. For 
-    example when load testing an HTTP system, you probably want to use the 
-    :py:class:`HttpLocust <locust.core.HttpLocust>` class.
+    Function used by both TaskSetMeta and LocustMeta for collecting all declared tasks 
+    on the TaskSet/Locust class and all it's base classes
     """
+    new_tasks = []
+    for base in bases:
+        if hasattr(base, "tasks") and base.tasks:
+            new_tasks += base.tasks
     
-    host = None
-    """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
-    
-    min_wait = None
-    """Deprecated: Use wait_time instead. Minimum waiting time between the execution of locust tasks"""
-    
-    max_wait = None
-    """Deprecated: Use wait_time instead. Maximum waiting time between the execution of locust tasks"""
-    
-    wait_time = None
-    """
-    Method that returns the time (in seconds) between the execution of locust tasks. 
-    Can be overridden for individual TaskSets.
-    
-    Example::
-    
-        from locust import Locust, between
-        class User(Locust):
-            wait_time = between(3, 25)
-    """
-    
-    wait_function = None
-    """
-    .. warning::
-    
-        DEPRECATED: Use wait_time instead. Note that the new wait_time method should return seconds and not milliseconds.
-    
-    Method that returns the time between the execution of locust tasks in milliseconds
-    """
-    
-    task_set = None
-    """TaskSet class that defines the execution behaviour of this locust"""
-
-    weight = 10
-    """Probability of locust being chosen. The higher the weight, the greater is the chance of it being chosen."""
+    if "tasks" in class_dict and class_dict["tasks"] is not None:
+        tasks = class_dict["tasks"]
+        if isinstance(tasks, dict):
+            tasks = tasks.items()
         
-    client = NoClientWarningRaiser()
-    _catch_exceptions = True
-    _setup_has_run = False  # Internal state to see if we have already run
-    _teardown_is_set = False  # Internal state to see if we have already run
-    _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
-    _state = False
+        for task in tasks:
+            if isinstance(task, tuple):
+                task, count = task
+                for i in range(count):
+                    new_tasks.append(task)
+            else:
+                new_tasks.append(task)
     
-    def __init__(self, environment):
-        super(Locust, self).__init__()
-        # check if deprecated wait API is used
-        deprecation.check_for_deprecated_wait_api(self)
-        
-        self.environment = environment
-        
-        with self._lock:
-            if hasattr(self, "setup") and self._setup_has_run is False:
-                self._set_setup_flag()
-                try:
-                    self.setup()
-                except Exception as e:
-                    self.environment.events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
-                    logger.error("%s\n%s", e, traceback.format_exc())
-            if hasattr(self, "teardown") and self._teardown_is_set is False:
-                self._set_teardown_flag()
-                self.environment.events.quitting.add_listener(self.teardown)
-
-    @classmethod
-    def _set_setup_flag(cls):
-        cls._setup_has_run = True
-
-    @classmethod
-    def _set_teardown_flag(cls):
-        cls._teardown_is_set = True
+    for item in class_dict.values():
+        if "locust_task_weight" in dir(item):
+            for i in range(0, item.locust_task_weight):
+                new_tasks.append(item)
     
-    def run(self, runner=None):
-        task_set_instance = self.task_set(self)
-        try:
-            task_set_instance.run()
-        except StopLocust:
-            pass
-        except (RescheduleTask, RescheduleTaskImmediately) as e:
-            raise LocustError("A task inside a Locust class' main TaskSet (`%s.task_set` of type `%s`) seems to have called interrupt() or raised an InterruptTaskSet exception. The interrupt() function is used to hand over execution to a parent TaskSet, and should never be called in the main TaskSet which a Locust class' task_set attribute points to." % (type(self).__name__, self.task_set.__name__)) from e
-        except GreenletExit as e:
-            if runner:
-                runner.state = STATE_CLEANUP
-            # Run the task_set on_stop method, if it has one
-            if hasattr(task_set_instance, "on_stop"):
-                task_set_instance.on_stop()
-            raise  # Maybe something relies on this except being raised?
-
-
-class HttpLocust(Locust):
-    """
-    Represents an HTTP "user" which is to be hatched and attack the system that is to be load tested.
-    
-    The behaviour of this user is defined by the task_set attribute, which should point to a 
-    :py:class:`TaskSet <locust.core.TaskSet>` class.
-    
-    This class creates a *client* attribute on instantiation which is an HTTP client with support 
-    for keeping a user session between requests.
-    """
-    
-    client = None
-    """
-    Instance of HttpSession that is created upon instantiation of Locust. 
-    The client support cookies, and therefore keeps the session between HTTP requests.
-    """
-
-    trust_env = False
-    """
-    Look for proxy settings will slow down the default http client.
-    It's the default behavior of the requests library.
-    We don't need this feature most of the time, so disable it by default.
-    """
-    
-    def __init__(self, *args, **kwargs):
-        super(HttpLocust, self).__init__(*args, **kwargs)
-        if self.host is None:
-            raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
-
-        session = HttpSession(
-            base_url=self.host, 
-            request_success=self.environment.events.request_success, 
-            request_failure=self.environment.events.request_failure,
-        )
-        session.trust_env = self.trust_env
-        self.client = session
+    return new_tasks
 
 
 class TaskSetMeta(type):
@@ -239,33 +133,10 @@ class TaskSetMeta(type):
     ratio using an {task:int} dict, or a [(task0,int), ..., (taskN,int)] list.
     """
     
-    def __new__(mcs, classname, bases, classDict):
-        new_tasks = []
-        for base in bases:
-            if hasattr(base, "tasks") and base.tasks:
-                new_tasks += base.tasks
-        
-        if "tasks" in classDict and classDict["tasks"] is not None:
-            tasks = classDict["tasks"]
-            if isinstance(tasks, dict):
-                tasks = tasks.items()
-            
-            for task in tasks:
-                if isinstance(task, tuple):
-                    task, count = task
-                    for i in range(count):
-                        new_tasks.append(task)
-                else:
-                    new_tasks.append(task)
-        
-        for item in classDict.values():
-            if hasattr(item, "locust_task_weight"):
-                for i in range(0, item.locust_task_weight):
-                    new_tasks.append(item)
-        
-        classDict["tasks"] = new_tasks
-        
-        return type.__new__(mcs, classname, bases, classDict)
+    def __new__(mcs, classname, bases, class_dict):
+        class_dict["tasks"] = get_tasks_from_base_classes(bases, class_dict)
+        return type.__new__(mcs, classname, bases, class_dict)
+
 
 class TaskSet(object, metaclass=TaskSetMeta):
     """
@@ -288,7 +159,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
     
     tasks = []
     """
-    List with python callables that represents a locust user task.
+    Collection of python callables and/or TaskSet classes that the Locust user(s) will run.
 
     If tasks is a list, the task to be performed will be picked randomly.
 
@@ -548,3 +419,194 @@ class TaskSequence(TaskSet):
         task = self.tasks[self._index]
         self._index = (self._index + 1) % len(self.tasks)
         return task
+
+
+class DefaultTaskSet(TaskSet):
+    """
+    Default root TaskSet that executes tasks in Locust.tasks.
+    It executes tasks declared directly on the Locust with the Locust user instance as the task argument.
+    """
+    def get_next_task(self):
+        return random.choice(self.locust.tasks)
+    
+    def execute_task(self, task, *args, **kwargs):
+        if hasattr(task, "tasks") and issubclass(task, TaskSet):
+            # task is  (nested) TaskSet class
+            task(self.locust).run(*args, **kwargs)
+        else:
+            # task is a function
+            task(self.locust, *args, **kwargs)
+
+
+class LocustMeta(type):
+    """
+    Meta class for the main Locust class. It's used to allow Locust classes to specify task execution 
+    ratio using an {task:int} dict, or a [(task0,int), ..., (taskN,int)] list.
+    """
+    def __new__(mcs, classname, bases, class_dict):
+        # gather any tasks that is declared on the class (or it's bases)
+        tasks = get_tasks_from_base_classes(bases, class_dict)   
+        class_dict["tasks"] = tasks
+        
+        if not class_dict.get("abstract"):
+            # Not a base class
+            class_dict["abstract"] = False
+        
+        return type.__new__(mcs, classname, bases, class_dict)
+
+
+class Locust(object, metaclass=LocustMeta):
+    """
+    Represents a "user" which is to be hatched and attack the system that is to be load tested.
+    
+    The behaviour of this user is defined by it's tasks. Tasks can be declared either directly on the 
+    class by using the :py:func:`@task decorator <locust.core.task>` on the methods, or by setting 
+    the :py:attr:`tasks attribute <locust.core.Locust.tasks>`.
+    
+    This class should usually be subclassed by a class that defines some kind of client. For 
+    example when load testing an HTTP system, you probably want to use the 
+    :py:class:`HttpLocust <locust.core.HttpLocust>` class.
+    """
+    
+    host = None
+    """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
+    
+    min_wait = None
+    """Deprecated: Use wait_time instead. Minimum waiting time between the execution of locust tasks"""
+    
+    max_wait = None
+    """Deprecated: Use wait_time instead. Maximum waiting time between the execution of locust tasks"""
+    
+    wait_time = None
+    """
+    Method that returns the time (in seconds) between the execution of locust tasks. 
+    Can be overridden for individual TaskSets.
+    
+    Example::
+    
+        from locust import Locust, between
+        class User(Locust):
+            wait_time = between(3, 25)
+    """
+    
+    wait_function = None
+    """
+    .. warning::
+    
+        DEPRECATED: Use wait_time instead. Note that the new wait_time method should return seconds and not milliseconds.
+    
+    Method that returns the time between the execution of locust tasks in milliseconds
+    """
+    
+    tasks = []
+    """
+    Collection of python callables and/or TaskSet classes that the Locust user(s) will run.
+
+    If tasks is a list, the task to be performed will be picked randomly.
+
+    If tasks is a *(callable,int)* list of two-tuples, or a  {callable:int} dict, 
+    the task to be performed will be picked randomly, but each task will be weighted 
+    according to it's corresponding int value. So in the following case *ThreadPage* will 
+    be fifteen times more likely to be picked than *write_post*::
+
+        class ForumPage(TaskSet):
+            tasks = {ThreadPage:15, write_post:1}
+    """
+
+    weight = 10
+    """Probability of locust being chosen. The higher the weight, the greater is the chance of it being chosen."""
+    
+    abstract = True
+    """If abstract is True it the class is meant to be subclassed (users of this class itself will not be spawned during a test)"""
+    
+    _task_set = DefaultTaskSet
+    """TaskSet class that defines the execution behaviour of this locust"""
+    
+    client = NoClientWarningRaiser()
+    _catch_exceptions = True
+    _setup_has_run = False  # Internal state to see if we have already run
+    _teardown_is_set = False  # Internal state to see if we have already run
+    _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
+    _state = False
+    
+    def __init__(self, environment):
+        super(Locust, self).__init__()
+        # check if deprecated wait API is used
+        deprecation.check_for_deprecated_wait_api(self)
+        
+        self.environment = environment
+        
+        with self._lock:
+            if hasattr(self, "setup") and self._setup_has_run is False:
+                self._set_setup_flag()
+                try:
+                    self.setup()
+                except Exception as e:
+                    self.environment.events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
+                    logger.error("%s\n%s", e, traceback.format_exc())
+            if hasattr(self, "teardown") and self._teardown_is_set is False:
+                self._set_teardown_flag()
+                self.environment.events.quitting.add_listener(self.teardown)
+
+    @classmethod
+    def _set_setup_flag(cls):
+        cls._setup_has_run = True
+
+    @classmethod
+    def _set_teardown_flag(cls):
+        cls._teardown_is_set = True
+    
+    def run(self, runner=None):
+        task_set_instance = self._task_set(self)
+        try:
+            task_set_instance.run()
+        except StopLocust:
+            pass
+        except GreenletExit as e:
+            if runner:
+                runner.state = STATE_CLEANUP
+            # Run the task_set on_stop method, if it has one
+            if hasattr(task_set_instance, "on_stop"):
+                task_set_instance.on_stop()
+            raise  # Maybe something relies on this except being raised?
+
+
+class HttpLocust(Locust):
+    """
+    Represents an HTTP "user" which is to be hatched and attack the system that is to be load tested.
+    
+    The behaviour of this user is defined by it's tasks. Tasks can be declared either directly on the 
+    class by using the :py:func:`@task decorator <locust.core.task>` on the methods, or by setting 
+    the :py:attr:`tasks attribute <locust.core.Locust.tasks>`.
+    
+    This class creates a *client* attribute on instantiation which is an HTTP client with support 
+    for keeping a user session between requests.
+    """
+    
+    abstract = True
+    
+    client = None
+    """
+    Instance of HttpSession that is created upon instantiation of Locust. 
+    The client support cookies, and therefore keeps the session between HTTP requests.
+    """
+
+    trust_env = False
+    """
+    Look for proxy settings will slow down the default http client.
+    It's the default behavior of the requests library.
+    We don't need this feature most of the time, so disable it by default.
+    """
+    
+    def __init__(self, *args, **kwargs):
+        super(HttpLocust, self).__init__(*args, **kwargs)
+        if self.host is None:
+            raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
+
+        session = HttpSession(
+            base_url=self.host, 
+            request_success=self.environment.events.request_success, 
+            request_failure=self.environment.events.request_failure,
+        )
+        session.trust_env = self.trust_env
+        self.client = session

@@ -382,7 +382,7 @@ class TestFastHttpCatchResponse(WebserverTestCase):
                     raise InterruptTaskSet()
         class MyLocust(FastHttpLocust):
             host = "http://127.0.0.1:%i" % self.port
-            task_set = MyTaskSet
+            tasks = [MyTaskSet]
         
         l = MyLocust(self.environment)
         ts = MyTaskSet(l)

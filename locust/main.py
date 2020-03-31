@@ -35,9 +35,7 @@ def is_locust(tup):
     return bool(
         inspect.isclass(item)
         and issubclass(item, Locust)
-        and hasattr(item, "task_set")
-        and getattr(item, "task_set")
-        and not name.startswith('_')
+        and item.abstract == False
     )
 
 

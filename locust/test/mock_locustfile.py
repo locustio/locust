@@ -26,7 +26,7 @@ class UserTasks(TaskSet):
 class LocustSubclass(HttpLocust):
     host = "http://127.0.0.1:8089"
     wait_time = between(2, 5)
-    task_set = UserTasks
+    tasks = [UserTasks]
 
 
 class NotLocustSubclass():

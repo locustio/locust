@@ -9,7 +9,7 @@ from locust import runners
 from locust.main import create_environment
 from locust.core import Locust, TaskSet, task
 from locust.env import Environment
-from locust.exception import LocustError
+from locust.exception import LocustError, StopLocust
 from locust.rpc import Message
 from locust.runners import LocustRunner, LocalLocustRunner, MasterLocustRunner, SlaveNode, \
      SlaveLocustRunner, STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_MISSING
@@ -143,6 +143,7 @@ class TestLocustRunner(LocustTestCase):
         triggered = [False]
         class BaseLocust(Locust):
             wait_time = constant(1)
+            @task
             class task_set(TaskSet):
                 @task
                 def trigger(self):
@@ -167,6 +168,7 @@ class TestLocustRunner(LocustTestCase):
             def setup(self):
                 User.setup_run_count += 1
                 raise Exception("some exception")
+            @task
             class task_set(TaskSet):
                 @task
                 def my_task(self):
@@ -192,6 +194,7 @@ class TestLocustRunner(LocustTestCase):
             task_run_count = 0
             locust_error_count = 0
             wait_time = constant(1)
+            @task
             class task_set(TaskSet):
                 def setup(self):
                     User.setup_run_count += 1
@@ -217,10 +220,9 @@ class TestLocustRunner(LocustTestCase):
     def test_change_user_count_during_hatching(self):
         class User(Locust):
             wait_time = constant(1)
-            class task_set(TaskSet):
-                @task
-                def my_task(self):
-                    pass
+            @task
+            def my_task(self):
+                pass
         
         environment = Environment(options=mocked_options())
         runner = LocalLocustRunner(environment, [User])
@@ -234,6 +236,7 @@ class TestLocustRunner(LocustTestCase):
     def test_reset_stats(self):
         class User(Locust):
             wait_time = constant(0)
+            @task
             class task_set(TaskSet):
                 @task
                 def my_task(self):
@@ -257,6 +260,7 @@ class TestLocustRunner(LocustTestCase):
     def test_no_reset_stats(self):
         class User(Locust):
             wait_time = constant(0)
+            @task
             class task_set(TaskSet):
                 @task
                 def my_task(self):
@@ -510,7 +514,7 @@ class TestMasterRunner(LocustTestCase):
                 pass
             
         class MyTestLocust(Locust):
-            task_set = MyTaskSet
+            tasks = [MyTaskSet]
             wait_time = constant(0.1)
         
         environment = Environment(options=mocked_options())
@@ -596,10 +600,9 @@ class TestMasterRunner(LocustTestCase):
             pass
         
         class MyLocust(Locust):
-            class task_set(TaskSet):
-                @task
-                def will_error(self):
-                    raise HeyAnException(":(")
+            @task
+            def will_error(self):
+                raise HeyAnException(":(")
         
         runner = LocalLocustRunner(self.environment, [MyLocust])
         
@@ -634,19 +637,18 @@ class TestMasterRunner(LocustTestCase):
             
             @task(1)
             def will_stop(self):
-                self.interrupt()
+                raise StopLocust()
         
         class MyLocust(Locust):
             wait_time = constant(0.01)
-            task_set = MyTaskSet
+            tasks = [MyTaskSet]
         
         runner = LocalLocustRunner(self.environment, [MyLocust])
         l = MyLocust(self.environment)
         
-        l.task_set._task_queue = [l.task_set.will_error, l.task_set.will_stop]
-        self.assertRaises(LocustError, l.run) # make sure HeyAnException isn't raised
-        l.task_set._task_queue = [l.task_set.will_error, l.task_set.will_stop]
-        self.assertRaises(LocustError, l.run) # make sure HeyAnException isn't raised
+        # make sure HeyAnException isn't raised
+        l.run()
+        l.run()
         # make sure we got two entries in the error log
         self.assertEqual(2, len(self.mocked_log.error))
         
@@ -675,13 +677,12 @@ class TestSlaveLocustRunner(LocustTestCase):
     def test_slave_stop_timeout(self):
         class MyTestLocust(Locust):
             _test_state = 0
-            class task_set(TaskSet):
-                wait_time = constant(0)
-                @task
-                def the_task(self):
-                    MyTestLocust._test_state = 1
-                    gevent.sleep(0.2)
-                    MyTestLocust._test_state = 2
+            wait_time = constant(0)
+            @task
+            def the_task(self):
+                MyTestLocust._test_state = 1
+                gevent.sleep(0.2)
+                MyTestLocust._test_state = 2
         
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             environment = Environment(options=mocked_options())
@@ -711,13 +712,12 @@ class TestSlaveLocustRunner(LocustTestCase):
     def test_slave_without_stop_timeout(self):
         class MyTestLocust(Locust):
             _test_state = 0
-            class task_set(TaskSet):
-                wait_time = constant(0)
-                @task
-                def the_task(self):
-                    MyTestLocust._test_state = 1
-                    gevent.sleep(0.2)
-                    MyTestLocust._test_state = 2
+            wait_time = constant(0)
+            @task
+            def the_task(self):
+                MyTestLocust._test_state = 1
+                gevent.sleep(0.2)
+                MyTestLocust._test_state = 2
 
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             options = mocked_options()
@@ -802,7 +802,7 @@ class TestStopTimeout(LocustTestCase):
                 MyTaskSet.state = "third" # should only run when run time + stop_timeout is > short_time * 2
 
         class MyTestLocust(Locust):
-            task_set = MyTaskSet
+            tasks = [MyTaskSet]
             wait_time = constant(0)
         
         options = mocked_options()
@@ -849,7 +849,7 @@ class TestStopTimeout(LocustTestCase):
                 MyTaskSet.my_task_run = True
 
         class MyTestLocust(Locust):
-            task_set = MyTaskSet
+            tasks = [MyTaskSet]
             wait_time = constant(0)
         
         environment = create_environment(mocked_options())
@@ -870,7 +870,7 @@ class TestStopTimeout(LocustTestCase):
                 pass
 
         class MyTestLocust(Locust):
-            task_set = MyTaskSet
+            tasks = [MyTaskSet]
             wait_time = between(1, 1)
 
         options = mocked_options()
@@ -901,7 +901,7 @@ class TestStopTimeout(LocustTestCase):
             tasks = [MySubTaskSet]
         
         class MyTestLocust(Locust):
-            task_set = MyTaskSet
+            tasks = [MyTaskSet]
 
         environment = create_environment(mocked_options())
         environment.stop_timeout = short_time
@@ -930,7 +930,7 @@ class TestStopTimeout(LocustTestCase):
                 MyTaskSet.state = "third" # should only run when run time + stop_timeout is > short_time * 2
 
         class MyTestLocust(Locust):
-            task_set = MyTaskSet
+            tasks = [MyTaskSet]
             wait_time = constant(0)
         
         environment = create_environment(mocked_options())
