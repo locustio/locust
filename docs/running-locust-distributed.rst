@@ -53,7 +53,7 @@ Sets locust in master mode. The web interface will run on this node.
 
 
 ``--worker``
------------
+------------
 
 Sets locust in worker mode.
 
@@ -82,7 +82,7 @@ Optionally used together with ``--master``. Determines what network ports that t
 listen to. Defaults to 5557.
 
 ``--expect-workers=X``
----------------------
+----------------------
 
 Used when starting the master node with ``--no-web``. The master node will then wait until X worker
 nodes has connected before the test is started.
