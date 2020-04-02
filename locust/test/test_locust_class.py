@@ -134,27 +134,6 @@ class TestTaskSet(LocustTestCase):
         MyLocust(self.environment).run()
         self.assertEqual(1, state[0])
 
-    def test_locust_on_start(self):
-        class MyLocust(Locust):
-            t1_executed = False
-            t2_executed = False
-    
-            def on_start(self):
-                self.t1()
-    
-            def t1(self):
-                self.t1_executed = True
-    
-            @task
-            def t2(self):
-                self.t2_executed = True
-                raise StopLocust()
-    
-        l = MyLocust(self.environment)
-        l.run()
-        self.assertTrue(l.t1_executed)
-        self.assertTrue(l.t2_executed)
-
     def test_on_start(self):
         class MyTasks(TaskSet):
             t1_executed = False
@@ -393,6 +372,27 @@ class TestLocustClass(LocustTestCase):
         User(self.environment)
         User(self.environment)
         self.assertEqual(1, User.setup_run_count)
+    
+    def test_locust_on_start(self):
+        class MyLocust(Locust):
+            t1_executed = False
+            t2_executed = False
+    
+            def on_start(self):
+                self.t1()
+    
+            def t1(self):
+                self.t1_executed = True
+    
+            @task
+            def t2(self):
+                self.t2_executed = True
+                raise StopLocust()
+    
+        l = MyLocust(self.environment)
+        l.run()
+        self.assertTrue(l.t1_executed)
+        self.assertTrue(l.t2_executed)
 
 
 class TestWebLocustClass(WebserverTestCase):
