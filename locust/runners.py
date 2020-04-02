@@ -9,7 +9,6 @@ from time import time
 
 import gevent
 import psutil
-from gevent import GreenletExit
 from gevent.pool import Group
 
 from .rpc import Message, rpc
@@ -24,7 +23,6 @@ CPU_MONITOR_INTERVAL = 5.0
 HEARTBEAT_INTERVAL = 1
 HEARTBEAT_LIVENESS = 3
 
-LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING = ["running", "waiting", "stopping"]
 
 class LocustRunner(object):
     def __init__(self, environment, locust_classes):
@@ -135,15 +133,10 @@ class LocustRunner(object):
                     self.environment.events.hatch_complete.fire(user_count=len(self.locusts))
                     return
 
-                locust = bucket.pop(random.randint(0, len(bucket)-1))
-                occurrence_count[locust.__name__] += 1
-                new_locust = locust(self.environment)
-                def start_locust(_):
-                    try:
-                        new_locust.run(runner=self)
-                    except GreenletExit:
-                        pass
-                self.locusts.spawn(start_locust, new_locust)
+                locust_class = bucket.pop(random.randint(0, len(bucket)-1))
+                occurrence_count[locust_class.__name__] += 1
+                new_locust = locust_class(self.environment)
+                new_locust.start(self.locusts)
                 if len(self.locusts) % 10 == 0:
                     logger.debug("%i locusts hatched" % len(self.locusts))
                 if bucket:
@@ -161,36 +154,32 @@ class LocustRunner(object):
         bucket = self.weight_locusts(kill_count)
         kill_count = len(bucket)
         logger.info("Killing %i locusts" % kill_count)
-        dying = []
+        to_kill = []
         for g in self.locusts:
             for l in bucket:
-                if l == type(g.args[0]):
-                    dying.append(g)
+                user = g.args[0]
+                if l == type(user):
+                    to_kill.append(user)
                     bucket.remove(l)
                     break
-        self.kill_locust_greenlets(dying)
+        self.kill_locust_instances(to_kill)
         self.environment.events.hatch_complete.fire(user_count=self.user_count)
     
-    def kill_locust_greenlets(self, greenlets):
-        """
-        Kill running locust greenlets. If environment.stop_timeout is set, we try to stop the 
-        Locust users gracefully
-        """
+    
+    def kill_locust_instances(self, users):
         if self.environment.stop_timeout:
             dying = Group()
-            for g in greenlets:
-                locust = g.args[0]
-                if locust._state == LOCUST_STATE_WAITING:
-                    self.locusts.killone(g)
-                else:
-                    locust._state = LOCUST_STATE_STOPPING
-                    dying.add(g)
+            for user in users:
+                if not user.stop(self.locusts, force=False):
+                    # Locust.stop() returns False if the greenlet was not killed, so we'll need
+                    # to add it's greenlet to our dying Group so we can wait for it to finish it's task
+                    dying.add(user._greenlet)
             if not dying.join(timeout=self.environment.stop_timeout):
                 logger.info("Not all locusts finished their tasks & terminated in %s seconds. Killing them..." % self.environment.stop_timeout)
             dying.kill(block=True)
         else:
-            for g in greenlets:
-                self.locusts.killone(g)
+            for user in users:
+                user.stop(self.locusts, force=True)
         
     def monitor_cpu(self):
         process = psutil.Process()
@@ -252,10 +241,11 @@ class LocustRunner(object):
             gevent.sleep(step_duration)
 
     def stop(self):
+        self.state = STATE_CLEANUP
         # if we are currently hatching locusts we need to kill the hatching greenlet first
         if self.hatching_greenlet and not self.hatching_greenlet.ready():
             self.hatching_greenlet.kill(block=True)
-        self.kill_locust_greenlets([g for g in self.locusts])
+        self.kill_locust_instances([g.args[0] for g in self.locusts])
         self.state = STATE_STOPPED
         self.cpu_log_warning()
         self.environment.events.locust_stop_hatching.fire()

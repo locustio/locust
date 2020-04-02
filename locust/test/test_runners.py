@@ -901,11 +901,12 @@ class TestStopTimeout(LocustTestCase):
         
         class MyTestLocust(Locust):
             tasks = [MyTaskSet]
+            wait_time = constant(0)
 
         environment = create_environment(mocked_options())
         environment.stop_timeout = short_time
         runner = LocalLocustRunner(environment, [MyTestLocust])
-        runner.start(1, 1)
+        runner.start(1, 1, wait=True)
         gevent.sleep(0)
         timeout = gevent.Timeout(short_time)
         timeout.start()
