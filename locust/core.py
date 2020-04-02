@@ -559,6 +559,8 @@ class Locust(object, metaclass=LocustMeta):
     def run(self, runner=None):
         task_set_instance = self._task_set(self)
         try:
+            if hasattr(self, "on_start"):
+                self.on_start()
             task_set_instance.run()
         except StopLocust:
             pass
