@@ -158,6 +158,68 @@ class TestTaskSet(LocustTestCase):
         self.assertRaises(RescheduleTask, lambda: l.run())
         self.assertTrue(l.t1_executed)
         self.assertTrue(l.t2_executed)
+    
+    def test_on_stop_interrupt(self):
+        class MyTasks(TaskSet):
+            t2_executed = False
+            on_stop_executed = False
+    
+            def on_stop(self):
+                self.on_stop_executed = True
+    
+            @task
+            def t2(self):
+                self.t2_executed = True
+                self.interrupt(reschedule=False)
+        
+        ts = MyTasks(self.locust)
+        self.assertRaises(RescheduleTask, lambda: ts.run())
+        self.assertTrue(ts.t2_executed)
+        self.assertTrue(ts.on_stop_executed)
+    
+    def test_on_stop_interrupt_reschedule(self):
+        class MyTasks(TaskSet):
+            t2_executed = False
+            on_stop_executed = False
+
+            def on_stop(self):
+                self.on_stop_executed = True
+
+            @task
+            def t2(self):
+                self.t2_executed = True
+                self.interrupt(reschedule=True)
+
+        ts = MyTasks(self.locust)
+        self.assertRaises(RescheduleTaskImmediately, lambda: ts.run())
+        self.assertTrue(ts.t2_executed)
+        self.assertTrue(ts.on_stop_executed)
+    
+    def test_on_stop_when_locust_stops(self):
+        class MyTasks(TaskSet):
+            def on_stop(self):
+                self.locust.on_stop_executed = True
+
+            @task
+            def t2(self):
+                self.locust.t2_executed = True
+        
+        class MyUser(Locust):
+            t2_executed = False
+            on_stop_executed = False
+            
+            tasks = [MyTasks]
+            wait_time = constant(0.1)
+        
+        group = Group()
+        user = MyUser(self.environment)
+        user.start(group)
+        sleep(0.05)
+        user.stop(group)
+        sleep(0)
+        
+        self.assertTrue(user.t2_executed)
+        self.assertTrue(user.on_stop_executed)
 
     def test_schedule_task(self):
         self.t1_executed = False
@@ -396,6 +458,24 @@ class TestLocustClass(LocustTestCase):
         l = MyLocust(self.environment)
         l.run()
         self.assertTrue(l.t1_executed)
+        self.assertTrue(l.t2_executed)
+    
+    def test_locust_on_stop(self):
+        class MyLocust(Locust):
+            on_stop_executed = False
+            t2_executed = True
+
+            def on_stop(self):
+                self.on_stop_executed = True
+
+            @task
+            def t2(self):
+                self.t2_executed = True
+                raise StopLocust()
+
+        l = MyLocust(self.environment)
+        l.run()
+        self.assertTrue(l.on_stop_executed)
         self.assertTrue(l.t2_executed)
     
     def test_locust_start(self):

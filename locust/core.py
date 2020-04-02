@@ -255,13 +255,24 @@ class TaskSet(object, metaclass=TaskSetMeta):
     def _set_teardown_flag(cls):
         cls._teardown_is_set = True
 
+    def on_start(self):
+        """
+        Hook for end-user scripts for running code when a Locust user starts running
+        """
+        pass
+    
+    def on_stop(self):
+        """
+        Hook for end-user scripts for running code when a Locust user stops running
+        """
+        pass
+
     def run(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
         
         try:
-            if hasattr(self, "on_start"):
-                self.on_start()
+            self.on_start()
         except InterruptTaskSet as e:
             if e.reschedule:
                 raise RescheduleTaskImmediately(e.reschedule).with_traceback(sys.exc_info()[2])
@@ -283,13 +294,13 @@ class TaskSet(object, metaclass=TaskSetMeta):
                 else:
                     self.wait()
             except InterruptTaskSet as e:
+                self.on_stop()
                 if e.reschedule:
                     raise RescheduleTaskImmediately(e.reschedule) from e
                 else:
                     raise RescheduleTask(e.reschedule) from e
-            except StopLocust:
-                raise
-            except GreenletExit:
+            except (StopLocust, GreenletExit):
+                self.on_stop()
                 raise
             except Exception as e:
                 self.locust.environment.events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
@@ -560,18 +571,29 @@ class Locust(object, metaclass=LocustMeta):
     def _set_teardown_flag(cls):
         cls._teardown_is_set = True
     
+    def on_start(self):
+        """
+        Hook for end-user scripts for running code when a Locust user starts running
+        """
+        pass
+    
+    def on_stop(self):
+        """
+        Hook for end-user scripts for running code when a Locust user stops running
+        """
+        pass
+    
     def run(self):
         self._state = LOCUST_STATE_RUNNING
         task_set_instance = self._task_set(self)
         try:
-            if hasattr(self, "on_start"):
-                # run the task_set on_start method, if it has one
-                self.on_start()
+            # run the task_set on_start method, if it has one
+            self.on_start()
+            
             task_set_instance.run()
         except (GreenletExit, StopLocust) as e:
-            if hasattr(self, "on_stop"):
-                # run the task_set on_stop method, if it has one
-                self.on_stop()
+            # run the on_stop method, if it has one
+            self.on_stop()
     
     def start(self, gevent_group):
         """
