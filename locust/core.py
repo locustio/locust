@@ -585,7 +585,7 @@ class Locust(object, metaclass=LocustMeta):
         """
         def run_locust(user):
             """
-            Main function gor Locust user greenlet. It's important that this function takes the locust 
+            Main function for Locust user greenlet. It's important that this function takes the locust 
             instance as argument, since we use greenlet_instance.args[0] to retrieve a reference to the 
             locust instance.
             """
