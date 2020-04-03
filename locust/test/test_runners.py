@@ -900,11 +900,12 @@ class TestStopTimeout(LocustTestCase):
         
         class MyTestLocust(Locust):
             tasks = [MyTaskSet]
+            wait_time = constant(0)
 
         environment = create_environment(mocked_options())
         environment.stop_timeout = short_time
         runner = LocalLocustRunner(environment, [MyTestLocust])
-        runner.start(1, 1)
+        runner.start(1, 1, wait=True)
         gevent.sleep(0)
         timeout = gevent.Timeout(short_time)
         timeout.start()
@@ -915,6 +916,35 @@ class TestStopTimeout(LocustTestCase):
             self.fail("Got Timeout exception. Interrupted locusts should exit immediately during stop_timeout.")
         finally:
             timeout.cancel()
+    
+    def test_stop_timeout_with_interrupt_no_reschedule(self):
+        state = [0]
+        class MySubTaskSet(TaskSet):
+            @task
+            def a_task(self):
+                gevent.sleep(0.1)
+                state[0] = 1
+                self.interrupt(reschedule=False)
+        
+        class MyTestLocust(Locust):
+            tasks = [MySubTaskSet]
+            wait_time = constant(3)
+
+        environment = create_environment(mocked_options())
+        environment.stop_timeout = 0.3
+        runner = LocalLocustRunner(environment, [MyTestLocust])
+        runner.start(1, 1, wait=True)
+        gevent.sleep(0)
+        timeout = gevent.Timeout(0.11)
+        timeout.start()
+        try:
+            runner.quit()
+            runner.greenlet.join()
+        except gevent.Timeout:
+            self.fail("Got Timeout exception. Interrupted locusts should exit immediately during stop_timeout.")
+        finally:
+            timeout.cancel()
+        self.assertEqual(1, state[0])
     
     def test_kill_locusts_with_stop_timeout(self):
         short_time = 0.05

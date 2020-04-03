@@ -17,11 +17,13 @@ monkey.patch_all()
 from .clients import HttpSession
 from .exception import (InterruptTaskSet, LocustError, RescheduleTask,
                         RescheduleTaskImmediately, StopLocust, MissingWaitTimeError)
-from .runners import STATE_CLEANUP, LOCUST_STATE_RUNNING, LOCUST_STATE_STOPPING, LOCUST_STATE_WAITING
 from .util import deprecation
 
 
 logger = logging.getLogger(__name__)
+
+
+LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING = ["running", "waiting", "stopping"]
 
 
 def task(weight=1):
@@ -253,13 +255,24 @@ class TaskSet(object, metaclass=TaskSetMeta):
     def _set_teardown_flag(cls):
         cls._teardown_is_set = True
 
+    def on_start(self):
+        """
+        Hook for end-user scripts for running code when a Locust user starts running
+        """
+        pass
+    
+    def on_stop(self):
+        """
+        Hook for end-user scripts for running code when a Locust user stops running
+        """
+        pass
+
     def run(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
         
         try:
-            if hasattr(self, "on_start"):
-                self.on_start()
+            self.on_start()
         except InterruptTaskSet as e:
             if e.reschedule:
                 raise RescheduleTaskImmediately(e.reschedule).with_traceback(sys.exc_info()[2])
@@ -272,27 +285,22 @@ class TaskSet(object, metaclass=TaskSetMeta):
                     self.schedule_task(self.get_next_task())
                 
                 try:
-                    if self.locust._state == LOCUST_STATE_STOPPING:
-                        raise GreenletExit()
+                    self._check_stop_condition()
                     self.execute_next_task()
-                    if self.locust._state == LOCUST_STATE_STOPPING:
-                        raise GreenletExit()
                 except RescheduleTaskImmediately:
-                    if self.locust._state == LOCUST_STATE_STOPPING:
-                        raise GreenletExit()
                     pass
                 except RescheduleTask:
                     self.wait()
                 else:
                     self.wait()
             except InterruptTaskSet as e:
+                self.on_stop()
                 if e.reschedule:
                     raise RescheduleTaskImmediately(e.reschedule) from e
                 else:
                     raise RescheduleTask(e.reschedule) from e
-            except StopLocust:
-                raise
-            except GreenletExit:
+            except (StopLocust, GreenletExit):
+                self.on_stop()
                 raise
             except Exception as e:
                 self.locust.environment.events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
@@ -361,12 +369,18 @@ class TaskSet(object, metaclass=TaskSetMeta):
             ))
     
     def wait(self):
+        self._check_stop_condition()
         self.locust._state = LOCUST_STATE_WAITING
         self._sleep(self.wait_time())
+        self._check_stop_condition()
         self.locust._state = LOCUST_STATE_RUNNING
 
     def _sleep(self, seconds):
         gevent.sleep(seconds)
+    
+    def _check_stop_condition(self):
+        if self.locust._state == LOCUST_STATE_STOPPING:
+            raise StopLocust()
     
     def interrupt(self, reschedule=True):
         """
@@ -527,7 +541,8 @@ class Locust(object, metaclass=LocustMeta):
     _setup_has_run = False  # Internal state to see if we have already run
     _teardown_is_set = False  # Internal state to see if we have already run
     _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
-    _state = False
+    _state = None
+    _greenlet = None
     
     def __init__(self, environment):
         super(Locust, self).__init__()
@@ -556,21 +571,70 @@ class Locust(object, metaclass=LocustMeta):
     def _set_teardown_flag(cls):
         cls._teardown_is_set = True
     
-    def run(self, runner=None):
+    def on_start(self):
+        """
+        Hook for end-user scripts for running code when a Locust user starts running
+        """
+        pass
+    
+    def on_stop(self):
+        """
+        Hook for end-user scripts for running code when a Locust user stops running
+        """
+        pass
+    
+    def run(self):
+        self._state = LOCUST_STATE_RUNNING
         task_set_instance = DefaultTaskSet(self)
         try:
-            if hasattr(self, "on_start"):
-                self.on_start()
+            # run the task_set on_start method, if it has one
+            self.on_start()
+            
             task_set_instance.run()
-        except StopLocust:
-            pass
-        except GreenletExit as e:
-            if runner:
-                runner.state = STATE_CLEANUP
-            # Run the task_set on_stop method, if it has one
-            if hasattr(task_set_instance, "on_stop"):
-                task_set_instance.on_stop()
-            raise  # Maybe something relies on this except being raised?
+        except (GreenletExit, StopLocust) as e:
+            # run the on_stop method, if it has one
+            self.on_stop()
+    
+    def start(self, gevent_group):
+        """
+        Start a greenlet that runs this locust instance. 
+        
+        *Arguments*:
+        
+        * gevent_group:  gevent.pool.Group instance where the greenlet will be spawned.
+        
+        Returns the spawned greenlet.
+        """
+        def run_locust(user):
+            """
+            Main function for Locust user greenlet. It's important that this function takes the locust 
+            instance as argument, since we use greenlet_instance.args[0] to retrieve a reference to the 
+            locust instance.
+            """
+            user.run()
+        self._greenlet = gevent_group.spawn(run_locust, self)
+        return self._greenlet
+    
+    def stop(self, gevent_group, force=False):
+        """
+        Stop the locust user greenlet that exists in the gevent_group. 
+        This method is not meant to be called from within of the Locust's greenlet. 
+        
+        *Arguments*:
+        
+        * gevent_group:  gevent.pool.Group instance where the greenlet will be spawned.
+        * force: If False (the default) the stopping is done gracefully by setting the state to LOCUST_STATE_STOPPING 
+                 which will make the Locust instance stop once any currently running task is complete and on_stop 
+                 methods are called. If force is True the greenlet will be killed immediately.
+        
+        Returns True if the greenlet was killed immediately, otherwise False
+        """
+        if force or self._state == LOCUST_STATE_WAITING:
+            gevent_group.killone(self._greenlet)
+            return True
+        elif self._state == LOCUST_STATE_RUNNING:
+            self._state = LOCUST_STATE_STOPPING
+            return False
 
 
 class HttpLocust(Locust):
