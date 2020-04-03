@@ -586,6 +586,7 @@ class HttpLocust(Locust):
     """
     
     abstract = True
+    """If abstract is True it the class is meant to be subclassed (users of this class itself will not be spawned during a test)"""
     
     client = None
     """
