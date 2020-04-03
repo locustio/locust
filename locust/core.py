@@ -452,6 +452,9 @@ class LocustMeta(type):
             # Not a base class
             class_dict["abstract"] = False
         
+        # check if class uses deprecated task_set attribute
+        deprecation.check_for_deprecated_task_set_attribute(class_dict)
+        
         return type.__new__(mcs, classname, bases, class_dict)
 
 
