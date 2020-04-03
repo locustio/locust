@@ -519,9 +519,6 @@ class Locust(object, metaclass=LocustMeta):
     abstract = True
     """If abstract is True it the class is meant to be subclassed (users of this class itself will not be spawned during a test)"""
     
-    _task_set = DefaultTaskSet
-    """TaskSet class that defines the execution behaviour of this locust"""
-    
     client = NoClientWarningRaiser()
     _catch_exceptions = True
     _setup_has_run = False  # Internal state to see if we have already run
@@ -557,7 +554,7 @@ class Locust(object, metaclass=LocustMeta):
         cls._teardown_is_set = True
     
     def run(self, runner=None):
-        task_set_instance = self._task_set(self)
+        task_set_instance = DefaultTaskSet(self)
         try:
             if hasattr(self, "on_start"):
                 self.on_start()
