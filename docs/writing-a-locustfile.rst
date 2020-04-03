@@ -474,6 +474,14 @@ Example:
         self.client.get("/blog?id=%i" % i, name="/blog?id=[id]")
 
 
+HTTP Proxy settings
+-------------------
+To improve performance, we configure requests to not look for HTTP proxy settings in the environment by setting 
+requests.Session's trust_env attribute to ``False``. If you don't want this you can manually set 
+``locust_instance.client.trust_env`` to ``True``. For further details, refer to the 
+`documentation of requests <https://requests.readthedocs.io/en/master/api/#requests.Session.trust_env>`_.
+
+
 How to structure your test code
 ================================
 
