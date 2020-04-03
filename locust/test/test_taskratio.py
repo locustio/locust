@@ -22,9 +22,9 @@ class TestTaskRatio(unittest.TestCase):
                     pass
         
         class User(Locust):
-            task_set = Tasks
+            tasks = [Tasks]
         
-        ratio_dict = get_task_ratio_dict(User.task_set.tasks, total=True)
+        ratio_dict = get_task_ratio_dict(Tasks.tasks, total=True)
         
         self.assertEqual({
             'SubTasks': {
@@ -49,18 +49,40 @@ class TestTaskRatio(unittest.TestCase):
 
         class UnlikelyLocust(Locust):
             weight = 1
-            task_set = Tasks
+            tasks = [Tasks]
 
         class MoreLikelyLocust(Locust):
             weight = 3
-            task_set = Tasks
+            tasks = [Tasks]
 
         ratio_dict = get_task_ratio_dict([UnlikelyLocust, MoreLikelyLocust], total=True)
-
-        self.assertEqual({
-               'UnlikelyLocust':   {'tasks': {'task1': {'ratio': 0.25*0.25}, 'task3': {'ratio': 0.25*0.75}}, 'ratio': 0.25},
-               'MoreLikelyLocust': {'tasks': {'task1': {'ratio': 0.75*0.25}, 'task3': {'ratio': 0.75*0.75}}, 'ratio': 0.75}
-               }, ratio_dict)
-        unlikely = ratio_dict['UnlikelyLocust']['tasks']
-        likely = ratio_dict['MoreLikelyLocust']['tasks']
+        
+        self.assertDictEqual({
+            'UnlikelyLocust':   {
+                'ratio': 0.25,
+                'tasks': {
+                    'Tasks': {
+                        'tasks': {
+                            'task1': {'ratio': 0.25*0.25}, 
+                            'task3': {'ratio': 0.25*0.75},
+                            }, 
+                        'ratio': 0.25
+                    }
+                },
+            },
+            'MoreLikelyLocust': {
+                'ratio': 0.75,
+                'tasks': {
+                    'Tasks': {
+                        'tasks': {
+                            'task1': {'ratio': 0.75*0.25}, 
+                            'task3': {'ratio': 0.75*0.75},
+                        }, 
+                        'ratio': 0.75,
+                    },
+                },
+            }
+        }, ratio_dict)
+        unlikely = ratio_dict['UnlikelyLocust']['tasks']['Tasks']['tasks']
+        likely = ratio_dict['MoreLikelyLocust']['tasks']['Tasks']['tasks']
         assert unlikely['task1']['ratio'] + unlikely['task3']['ratio'] + likely['task1']['ratio'] + likely['task3']['ratio'] == 1

@@ -15,10 +15,14 @@ Here is an example of a Locust class, **XmlRpcLocust**, which provides an XML-RP
 
 .. literalinclude:: ../examples/custom_xmlrpc_client/xmlrpc_locustfile.py
 
-If you've written Locust tests before, you'll recognize the class called *ApiUser* which is a normal 
-Locust class that has a *TaskSet* class with *tasks* in its *task_set* attribute. However, the *ApiUser* 
-inherits from *XmlRpcLocust* that you can see right above ApiUser. The *XmlRpcLocust* class provides an 
-instance of XmlRpcClient under the *client* attribute. The *XmlRpcClient* is a wrapper around the standard 
+If you've written Locust tests before, you'll recognize the class called ``ApiUser`` which is a normal 
+Locust class that has a couple of tasks declared. However, the ``ApiUser`` inherits from 
+``XmlRpcLocust`` that you can see right above ``ApiUser``. The ``XmlRpcLocust`` is marked as abstract 
+using ``abstract = True`` which means that Locust till not try to create simulated users from that class 
+(only of classes that extends it). ``XmlRpcLocust`` provides an instance of XmlRpcClient under the 
+``client`` attribute. 
+
+The ``XmlRpcClient`` is a wrapper around the standard 
 library's :py:class:`xmlrpc.client.ServerProxy`. It  basically just proxies the function calls, but with the 
 important addition of firing :py:attr:`locust.event.Events.request_success` and :py:attr:`locust.event.Events.request_failure` 
 events, which will record all calls in Locust's statistics.
