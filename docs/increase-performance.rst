@@ -43,21 +43,20 @@ Subclass FastHttpLocust instead of HttpLocust::
     the default HttpLocust that uses python-requests. Therefore FastHttpLocust might not work as a 
     drop-in replacement for HttpLocust, depending on how the HttpClient is used.
 
-.. note::
-
-    You can set the following properties on your FastHttpLocust subclass to alter its behaviour:
-
-    | network_timeout (default 60.0)
-    | connection_timeout (default 60.0)
-    | max_redirects (default 5, meaning 4 redirects)
-    | max_retries (default 1, meaning zero retries)
-    | insecure (default True, meaning ignore ssl failures)
 
 API
 ===
 
+
+FastHttpLocust class
+--------------------
+
+.. autoclass:: locust.contrib.fasthttp.FastHttpLocust
+    :members: network_timeout, connection_timeout, max_redirects, max_retries, insecure
+
+
 FastHttpSession class
-=====================
+---------------------
 
 .. autoclass:: locust.contrib.fasthttp.FastHttpSession
     :members: request, get, post, delete, put, head, options, patch

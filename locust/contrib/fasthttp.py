@@ -49,10 +49,12 @@ def _construct_basic_auth_str(username, password):
 
 class FastHttpLocust(Locust):
     """
-    Represents an HTTP "user" which is to be hatched and attack the system that is to be load tested.
+    FastHttpLocust uses a different HTTP client (geventhttpclient) compared to HttpLocust (python-requests).
+    It's significantly faster, but not as capable.
     
-    The behaviour of this user is defined by the task_set attribute, which should point to a 
-    :py:class:`TaskSet <locust.core.TaskSet>` class.
+    The behaviour of this user is defined by it's tasks. Tasks can be declared either directly on the 
+    class by using the :py:func:`@task decorator <locust.core.task>` on the methods, or by setting 
+    the :py:attr:`tasks attribute <locust.core.Locust.tasks>`.
     
     This class creates a *client* attribute on instantiation which is an HTTP client with support 
     for keeping a user session between requests.
@@ -64,13 +66,23 @@ class FastHttpLocust(Locust):
     The client support cookies, and therefore keeps the session between HTTP requests.
     """
     
-    # various UserAgent settings. Change these in your subclass to alter FastHttpLocust's behaviour. 
+    # Below are various UserAgent settings. Change these in your subclass to alter FastHttpLocust's behaviour. 
     # It needs to be done before FastHttpLocust is instantiated, changing them later will have no effect
+    
     network_timeout: float = 60.0
+    """Parameter passed to FastHttpSession"""
+    
     connection_timeout: float = 60.0
+    """Parameter passed to FastHttpSession"""
+    
     max_redirects: int = 5
+    """Parameter passed to FastHttpSession. Default 5, meaning 4 redirects."""
+    
     max_retries: int = 1
+    """Parameter passed to FastHttpSession. Default 1, meaning zero retries."""
+    
     insecure: bool = True
+    """Parameter passed to FastHttpSession. Default True, meaning no SSL verification."""
 
     def __init__(self, environment):
         super().__init__(environment)
