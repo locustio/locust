@@ -12,13 +12,6 @@ A locust class represents one user (or a swarming locust if you will). Locust wi
 instance of the locust class for each user that is being simulated. There are a few attributes that 
 a locust class should typically define. 
 
-The *task_set* attribute
-------------------------
-
-The :py:attr:`task_set <locust.core.Locust.task_set>` attribute should point to a 
-:py:class:`TaskSet <locust.core.TaskSet>` class which defines the behaviour of the user and 
-is described in more detail below.
-
 The *wait_time* attribute
 -------------------------
 
@@ -100,52 +93,52 @@ Usually, this is specified in Locust's web UI or on the command line, using the
 If one declares a host attribute in the locust class, it will be used in the case when no :code:`--host` 
 is specified on the command line or in the web request.
 
+The *tasks* attribute
+---------------------
 
-TaskSet class
-=============
+A Locust class can have tasks declared as methods under it using the :py:func:`@task <locust.core.task>` decorator, but one can also 
+specify tasks using the *tasks* attribute which is descibed in more details :ref:`below <tasks-attribute>`.
 
-If the Locust class represents a swarming locust, you could say that the TaskSet class represents 
-the brain of the locust. Each Locust class must have a *task_set* attribute set, that points to 
-a TaskSet.
 
-A TaskSet is, like its name suggests, a collection of tasks. These tasks are normal python callables 
-and—if we were load-testing an auction website—could do stuff like "loading the start page", 
-"searching for some product" and "making a bid". 
+Tasks
+=====
 
-When a load test is started, each instance of the spawned Locust classes will start executing their 
-TaskSet. What happens then is that each TaskSet will pick one of its tasks and call it. It will then 
-wait a number of seconds, specified by the Locust class' *wait_time* method (unless a *wait_time* 
-method has been declared directly on the TaskSet, in which case it will use its own method instead). 
-Then it will again pick a new task to be called, wait again, and so on.
+When a load test is started, an instance of a Locust class will be created for each simulated user 
+and they will start running within their own green thread. When these users run they pick tasks that 
+they execute, sleeps for awhile, and then picks a new task and so on. 
+
+The tasks are normal python callables and — if we were load-testing an auction website — they could do 
+stuff like "loading the start page", "searching for some product", "making a bid", etc. 
 
 Declaring tasks
 ---------------
 
-The typical way of declaring tasks for a TaskSet it to use the :py:meth:`task <locust.core.task>` decorator.
+The typical way of declaring tasks for a Locust class (or a TaskSet) it to use the 
+:py:meth:`task <locust.core.task>` decorator.
 
 Here is an example:
 
 .. code-block:: python
 
-    from locust import Locust, TaskSet, task
-    
-    class MyTaskSet(TaskSet):
+    from locust import Locust, task
+    from locust.wait_time import constant
+
+    class MyLocust(Locust):
+        wait_time = constant(1)
+        
         @task
         def my_task(self):
-            print("Locust instance (%r) executing my_task" % (self.locust))
-    
-    class MyLocust(Locust):
-        task_set = MyTaskSet
+            print("Locust instance (%r) executing my_task" % self)
 
 **@task** takes an optional weight argument that can be used to specify the task's execution ratio. In 
-the following example *task2* will be executed twice as much as *task1*:
+the following example *task2* will have twice the chance of being picked as *task1*:
 
 .. code-block:: python
     
-    from locust import Locust, TaskSet, task
+    from locust import Locust, task
     from locust.wait_time import between
     
-    class MyTaskSet(TaskSet):
+    class MyLocust(Locust):
         wait_time = between(5, 15)
         
         @task(3)
@@ -155,128 +148,176 @@ the following example *task2* will be executed twice as much as *task1*:
         @task(6)
         def task2(self):
             pass
-    
-    class MyLocust(Locust):
-        task_set = MyTaskSet
 
+
+.. _tasks-attribute:
 
 tasks attribute
 ---------------
 
 Using the @task decorator to declare tasks is a convenience, and usually the best way to do 
-it. However, it's also possible to define the tasks of a TaskSet by setting the 
-:py:attr:`tasks <locust.core.TaskSet.tasks>` attribute (using the @task decorator will actually 
+it. However, it's also possible to define the tasks of a Locust or TaskSet by setting the 
+:py:attr:`tasks <locust.core.Locust.tasks>` attribute (using the @task decorator will actually 
 just populate the *tasks* attribute).
 
-The *tasks* attribute is either a list of python callables, or a *<callable : int>* dict. 
-The tasks are python callables that receive one argument—the TaskSet class instance that is executing 
-the task. Here is an extremely simple example of a locustfile (this locustfile won't actually load test anything):
+The *tasks* attribute is either a list of Task, or a *<Task : int>* dict, where Task is either a 
+python callable or a TaskSet class (more on that below). If the task is a normal python function they 
+receive a single argument which is the Locust instance that is executing the task.
+
+Here is an example of a locust task declared as a normal python function:
 
 .. code-block:: python
 
-    from locust import Locust, TaskSet
+    from locust import Locust, constant
     
     def my_task(l):
         pass
     
-    class MyTaskSet(TaskSet):
-        tasks = [my_task]
-    
     class MyLocust(Locust):
-        task_set = MyTaskSet
+        tasks = [my_task]
+        wait_time = constant(1)
 
 
 If the tasks attribute is specified as a list, each time a task is to be performed, it will be randomly 
-chosen from the *tasks* attribute. If however, *tasks* is a dict—with callables as keys and ints 
-as values—the task that is to be executed will be chosen at random but with the int as ratio. So 
+chosen from the *tasks* attribute. If however, *tasks* is a dict — with callables as keys and ints 
+as values — the task that is to be executed will be chosen at random but with the int as ratio. So 
 with a tasks that looks like this::
 
     {my_task: 3, another_task: 1}
 
-*my_task* would be 3 times more likely to be executed than *another_task*.
+*my_task* would be 3 times more likely to be executed than *another_task*. 
 
-TaskSets can be nested
-----------------------
+Internally the above dict will actually be expanded into a list (and the ``tasks`` attribute is updated) 
+that looks like this::
 
-A very important property of TaskSets is that they can be nested, because real websites are usually 
-built up in an hierarchical way, with multiple sub-sections. Nesting TaskSets will therefore allow 
-us to define a behaviour that simulates users in a more realistic way. For example 
-we could define TaskSets with the following structure:
+    [my_task, my_task, my_task, another_task]
 
-* Main user behaviour
+and then Python's ``random.choice()`` is used pick tasks from the list.
 
- * Index page
- * Forum page
- 
-  * Read thread
-  
-   * Reply
-   
-  * New thread
-  * View next page
-  
- * Browse categories
- 
-  * Watch movie
-  * Filter movies
-  
- * About page
 
-The way you nest TaskSets is just like when you specify a task using the **tasks** attribute, but 
-instead of referring to a python function, you refer to another TaskSet:
+
+TaskSet class
+=============
+
+Since real websites are usually built up in an hierarchical way, with multiple sub-sections, 
+locust has the TaskSet class. A locust task can not only be a Python callable, but also a 
+TaskSet class. A TaskSet is a collection of locust tasks that will be executed much like the 
+tasks declared directly on a Locust class, with the user sleeping in between task executions. 
+Here's a short example of a locustfile that has a TaskSet:
 
 .. code-block:: python
 
-    class ForumPage(TaskSet):
-        @task(20)
-        def read_thread(self):
+    from locust import Locust, TaskSet, between
+    
+    class ForumSection(TaskSet):
+        @task(10)
+        def view_thread(self):
             pass
         
         @task(1)
-        def new_thread(self):
+        def create_thread(self):
             pass
         
-        @task(5)
+        @task(1)
         def stop(self):
             self.interrupt()
     
-    class UserBehaviour(TaskSet):
-        tasks = {ForumPage:10}
+    class LoggedInUser(Locust):
+        wait_time = between(5, 120)
+        tasks = {ForumSection:2}
         
         @task
-        def index(self):
+        def index_page(self):
             pass
 
-So in the above example, if the ForumPage would get selected for execution when the UserBehaviour 
-TaskSet is executing, then the ForumPage TaskSet would start executing. The ForumPage TaskSet 
-would then pick one of its own tasks, execute it, wait, and so on. 
-
-There is one important thing to note about the above example, and that is the call to 
-self.interrupt() in the ForumPage's stop method. What this does is essentially to 
-stop executing the ForumPage task set and the execution will continue in the UserBehaviour instance. 
-If we didn't have a call to the :py:meth:`interrupt() <locust.core.TaskSet.interrupt>` method 
-somewhere in ForumPage, the Locust would never stop running the ForumPage task once it has started. 
-But by having the interrupt function, we can—together with task weighting—define how likely it 
-is that a simulated user leaves the forum.
-
-It's also possible to declare a nested TaskSet, inline in a class, using the 
-:py:meth:`@task <locust.core.task>` decorator, just like when declaring normal tasks:
+A TaskSet can also be inlined directly under a Locust/TaskSet class using the @task decorator:
 
 .. code-block:: python
 
-    class MyTaskSet(TaskSet):
+    class MyUser(Locust):
+        @task(1)
+        class MyTaskSet(TaskSet):
+            ...
+
+
+The tasks of a TaskSet class can be other TaskSet classes, allowing them to be nested any number 
+of levels. This allows us to define a behaviour that simulates users in a more realistic way. 
+For example we could define TaskSets with the following structure::
+
+    - Main user behaviour
+      - Index page
+      - Forum page
+        - Read thread
+          - Reply
+        - New thread
+        - View next page
+      - Browse categories
+        - Watch movie
+        - Filter movies
+      - About page
+
+When a running Locust thread picks a TaskSet class for execution an instance of this class will 
+be created and execution will then go into this TaskSet. What happens then is that one of the 
+TaskSet's tasks will be picked and executed, and then the thread will sleep for a duration specified 
+by the Locust's wait_time function (unless a ``wait_time`` function has been declared directly on 
+the TaskSet class, in which case it'll use that function instead), then pick a new task from the 
+TaskSet's tasks, wait again, and so on.
+
+
+
+Interrupting a TaskSet
+----------------------
+
+One important thing to know about TaskSets is that they will never stop executing their tasks, and 
+hand over execution back to their parent Locust/TaskSet, by themselves. This has to be done by the 
+developer by calling the :py:meth:`TaskSet.interrupt() <locust.core.TaskSet.interrupt>` method. 
+
+.. autofunction:: locust.core.TaskSet.interrupt
+    :noindex:
+
+In the following example, if we didn't have the stop task that calls ``self.interrupt()``, the 
+simulated user would never stop running tasks from the Forum taskset once it has went into it:
+
+.. code-block:: python
+
+    class RegisteredUser(Locust):
         @task
-        class SubTaskSet(TaskSet):
-            @task
-            def my_task(self):
+        class Forum(TaskSet):
+            @task(5)
+            def view_thread(self):
                 pass
+            
+            @task(1)
+            def stop(self):
+                self.interrupt()
+        
+        @task
+        def frontpage(self):
+            pass
+
+Using the interrupt function, we can — together with task weighting — define how likely it 
+is that a simulated user leaves the forum.
+
+
+Differences between tasks in TaskSet and Locust classes
+-------------------------------------------------------
+
+One difference for tasks residing under a TaskSet, compared to tasks residing directly under a Locust, 
+is that the argument that they are passed when executed (``self`` for tasks declared as methods with 
+the :py:func:`@task <locust.core.task>` decorator) is a reference to the TaskSet instance, instead of 
+the Locust user instance. The Locust instance can be accessed from within a TaskSet instance through the 
+:py:attr:`TaskSet.locust <locust.core.TaskSet.locust>`. TaskSets also contains a convenience 
+:py:attr:`client <locust.core.TaskSet.client>` attribute that refers to the client attribute on the 
+Locust instance.
+
 
 Referencing the Locust instance, or the parent TaskSet instance
 ---------------------------------------------------------------
 
 A TaskSet instance will have the attribute :py:attr:`locust <locust.core.TaskSet.locust>` point to 
 its Locust instance, and the attribute :py:attr:`parent <locust.core.TaskSet.parent>` point to its 
-parent TaskSet (it will point to the Locust instance, in the base TaskSet).
+parent TaskSet instance.
+
 
 
 TaskSequence class
@@ -303,6 +344,8 @@ To define this order you should do the following:
 
 In the above example, the order is defined to execute first_task, then second_task and lastly the third_task for 10 times.
 As you can see, you can compose :py:meth:`@seq_task <locust.core.seq_task>` with :py:meth:`@task <locust.core.task>` decorator, and of course you can also nest TaskSets within TaskSequences and vice versa.
+
+.. _on-start-on-stop:
 
 Setups, Teardowns, on_start, and on_stop
 ========================================
@@ -363,9 +406,11 @@ with two URLs; **/** and **/about/**:
 
 .. code-block:: python
 
-    from locust import HttpLocust, TaskSet, task, between
+    from locust import HttpLocust, task, between
     
-    class MyTaskSet(TaskSet):
+    class MyLocust(HttpLocust):
+        wait_time = between(5, 15)
+        
         @task(2)
         def index(self):
             self.client.get("/")
@@ -373,18 +418,9 @@ with two URLs; **/** and **/about/**:
         @task(1)
         def about(self):
             self.client.get("/about/")
-    
-    class MyLocust(HttpLocust):
-        task_set = MyTaskSet
-        wait_time = between(5, 15)
 
 Using the above Locust class, each simulated user will wait between 5 and 15 seconds 
 between the requests, and **/** will be requested twice as much as **/about/**.
-
-The attentive reader will find it odd that we can reference the HttpSession instance 
-using *self.client* inside the TaskSet, and not *self.locust.client*. We can do this 
-because the :py:class:`TaskSet <locust.core.TaskSet>` class has a convenience property 
-called client that simply returns self.locust.client.
 
 
 Using the HTTP client
@@ -457,6 +493,8 @@ be reported as a success in the statistics:
             response.success()
 
 
+.. _name-parameter:
+
 Grouping requests to URLs with dynamic parameters
 -------------------------------------------------
 
@@ -472,6 +510,14 @@ Example:
     # Statistics for these requests will be grouped under: /blog/?id=[id]
     for i in range(10):
         self.client.get("/blog?id=%i" % i, name="/blog?id=[id]")
+
+
+HTTP Proxy settings
+-------------------
+To improve performance, we configure requests to not look for HTTP proxy settings in the environment by setting 
+requests.Session's trust_env attribute to ``False``. If you don't want this you can manually set 
+``locust_instance.client.trust_env`` to ``True``. For further details, refer to the 
+`documentation of requests <https://requests.readthedocs.io/en/master/api/#requests.Session.trust_env>`_.
 
 
 How to structure your test code
@@ -515,7 +561,7 @@ A project with multiple different locustfiles could also keep them in a separate
   * ``requirements.txt``
 
 
-With any ofthe above project structure, your locustfile can import common libraries using:
+With any of the above project structure, your locustfile can import common libraries using:
 
 .. code-block:: python
 

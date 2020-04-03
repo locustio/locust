@@ -466,6 +466,9 @@ class LocustMeta(type):
             # Not a base class
             class_dict["abstract"] = False
         
+        # check if class uses deprecated task_set attribute
+        deprecation.check_for_deprecated_task_set_attribute(class_dict)
+        
         return type.__new__(mcs, classname, bases, class_dict)
 
 
@@ -533,9 +536,6 @@ class Locust(object, metaclass=LocustMeta):
     abstract = True
     """If abstract is True it the class is meant to be subclassed (users of this class itself will not be spawned during a test)"""
     
-    _task_set = DefaultTaskSet
-    """TaskSet class that defines the execution behaviour of this locust"""
-    
     client = NoClientWarningRaiser()
     _catch_exceptions = True
     _setup_has_run = False  # Internal state to see if we have already run
@@ -585,7 +585,7 @@ class Locust(object, metaclass=LocustMeta):
     
     def run(self):
         self._state = LOCUST_STATE_RUNNING
-        task_set_instance = self._task_set(self)
+        task_set_instance = DefaultTaskSet(self)
         try:
             # run the task_set on_start method, if it has one
             self.on_start()
@@ -650,18 +650,12 @@ class HttpLocust(Locust):
     """
     
     abstract = True
+    """If abstract is True it the class is meant to be subclassed (users of this class itself will not be spawned during a test)"""
     
     client = None
     """
     Instance of HttpSession that is created upon instantiation of Locust. 
     The client support cookies, and therefore keeps the session between HTTP requests.
-    """
-
-    trust_env = False
-    """
-    Look for proxy settings will slow down the default http client.
-    It's the default behavior of the requests library.
-    We don't need this feature most of the time, so disable it by default.
     """
     
     def __init__(self, *args, **kwargs):
@@ -674,5 +668,5 @@ class HttpLocust(Locust):
             request_success=self.environment.events.request_success, 
             request_failure=self.environment.events.request_failure,
         )
-        session.trust_env = self.trust_env
+        session.trust_env = False
         self.client = session

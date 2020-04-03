@@ -5,90 +5,96 @@ Quick start
 Example locustfile.py
 =====================
 
+When using Locust you define the behaviour of users in Python code, and then you have the ability to 
+simulate any number of those users while gathering request statistic. The entrypoint for defining the 
+user behaviour is the `locustfile.py`.
+
+.. note::
+
+    The ``locustfile.py`` is a normal Python file that will get imported by Locust. Within it you 
+    can import modules just as you would in any python code.
+    
+    The file can be named something else and specified with the `-f` flag to the ``locust`` command.
+
 Below is a quick little example of a simple **locustfile.py**:
 
-
 .. code-block:: python
-
-    from locust import HttpLocust, TaskSet, between
-
-    def login(l):
-        l.client.post("/login", {"username":"ellen_key", "password":"education"})
-
-    def index(l):
-        l.client.get("/")
-
-    def profile(l):
-        l.client.get("/profile")
-
-    class UserBehavior(TaskSet):
-        tasks = {index: 2, profile: 1}
-
-        def on_start(self):
-            login(self)
-
+    
+    import random
+    from locust import HttpLocust, task, between
+    
     class WebsiteUser(HttpLocust):
-        task_set = UserBehavior
-        wait_time = between(5.0, 9.0)
-
-
-Here we define a number of Locust tasks, which are normal Python callables that take one argument 
-(a :py:class:`Locust <locust.core.Locust>` class instance). These tasks are gathered under a
-:py:class:`TaskSet <locust.core.TaskSet>` class in the *tasks* attribute. Then we have a
-:py:class:`HttpLocust <locust.core.HttpLocust>` class which represents a user, where we define how
-long a simulated user should wait between executing tasks, as well as what
-:py:class:`TaskSet <locust.core.TaskSet>` class should define the user's \"behaviour\". 
-:py:class:`TaskSet <locust.core.TaskSet>` classes can be nested.
-
-The :py:class:`HttpLocust <locust.core.HttpLocust>` class inherits from the
-:py:class:`Locust <locust.core.Locust>` class, and it adds a client attribute which is an instance of
-:py:class:`HttpSession <locust.clients.HttpSession>` that can be used to make HTTP requests.
-
-By default, we stop looking for proxy settings to improve performance. If you really want the test requests
-go through a HTTP proxy, you can inherit from the :py:class:`HttpLocust <locust.core.HttpLocust>` class and
-set the trust_env field to True. For further details, refer to the documentation of requests.
-
-Another way we could declare tasks, which is usually more convenient, is to use the
-``@task`` decorator. The following code is equivalent to the above:
-
-.. code-block:: python
-
-    from locust import HttpLocust, TaskSet, task, between
-
-    class UserBehaviour(TaskSet):
-        def on_start(self):
-            """ on_start is called when a Locust start before any task is scheduled """
-            self.login()
-        
-        def login(self):
-            self.client.post("/login", {"username":"ellen_key", "password":"education"})
+        wait_time = between(5, 9)
         
         @task(2)
         def index(self):
             self.client.get("/")
         
         @task(1)
-        def profile(self):
-            self.client.get("/profile")
-    
-    class WebsiteUser(HttpLocust):
-        task_set = UserBehaviour
-        wait_time = between(5, 9)
+        def view_post(self):
+            post_id = random.randint(1, 10000)
+            self.client.get("/post?id=%i" % post_id, name="/post?id=[post-id]")
+        
+        def on_start(self):
+            """ on_start is called when a Locust start before any task is scheduled """
+            self.login()
+        
+        def login(self):
+            self.client.post("/login", {"username":"ellen_key", "password":"education"})
 
-The :py:class:`Locust <locust.core.Locust>` class (as well as :py:class:`HttpLocust <locust.core.HttpLocust>`
-since it's a subclass) also allows one to specify the wait time between the execution of tasks 
-(:code:`wait_time = between(5, 9)`) as well as other user behaviours.
-With the between function the time is randomly chosen uniformly between the specified min and max values, 
-but any user-defined time distributions can be used by setting *wait_time* to any arbitrary function. 
-For example, for an exponentially distributed wait time with average of 1 second:
+
+Let's break it down:
+--------------------
 
 .. code-block:: python
 
-    import random
-    
     class WebsiteUser(HttpLocust):
-        task_set = UserBehaviour
-        wait_time = lambda self: random.expovariate(1)
+
+Here we define a class for the users that we will be simulating. It inherits from 
+:py:class:`HttpLocust <locust.core.HttpLocust>` which gives each user a ``client`` attribute, 
+which is an instance of :py:class:`HttpSession <locust.clients.HttpSession>`, that 
+can be used to make HTTP requests to the target system that we want to load test. When a test starts 
+locust will create an instance of this class for every user that it simulates, and each of these 
+users will start running within their own green gevent thread.
+
+.. code-block:: python
+
+    wait_time = between(5, 9)
+
+Our class defines a ``wait_time`` function that will make the simulated users wait between 5 and 9 seconds after each task 
+is executed. 
+
+.. code-block:: python
+
+    @task(2)
+    def index(self):
+        self.client.get("/")
+    
+    @task(1)
+    def view_post(self):
+        ...
+
+We've also declared two tasks by decorating two methods with ``@task`` and given them 
+different weights (2 and 1). When a simulated user of this type runs it'll pick one of either ``index`` 
+or ``view_post`` - with twice the chance of picking ``index`` - call that method and then pick a duration 
+uniformly between 5 and 9 and just sleep for that duration. After it's wait time it'll pick a new task 
+and keep repeating that.
+
+.. code-block:: python
+
+    post_id = random.randint(1, 10000)
+    self.client.get("/post?id=%i" % post_id, name="/post?id=[post-id]")
+
+In the ``view_post`` task we load a dynamic URL by using a query parameter that is a number picked at random between 
+1 and 10000. In order to not get 10k entries in Locust's statistics - since the stats is grouped on the URL - we use 
+the :ref:`name parameter <name-parameter>` to group all those requests under an entry named ``"/post?id=[post-id]"`` instead.
+
+.. code-block:: python
+
+    def on_start(self):
+
+Additionally we've declared a `on_start` method. A method with this name will be called for each simulated 
+user when they start. For more info see :ref:`on-start-on-stop`.
 
 
 Start Locust

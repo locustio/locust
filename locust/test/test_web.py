@@ -185,10 +185,9 @@ class TestWebUI(LocustTestCase):
     def test_swarm_host_value_specified(self):
         class MyLocust(Locust):
             wait_time = constant(1)
-            class task_set(TaskSet):
-                @task(1)
-                def my_task(self):
-                    pass
+            @task(1)
+            def my_task(self):
+                pass
         self.environment.locust_classes = [MyLocust]
         response = requests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port, 
@@ -201,10 +200,9 @@ class TestWebUI(LocustTestCase):
     def test_swarm_host_value_not_specified(self):
         class MyLocust(Locust):
             wait_time = constant(1)
-            class task_set(TaskSet):
-                @task(1)
-                def my_task(self):
-                    pass
+            @task(1)
+            def my_task(self):
+                pass
         self.runner.locust_classes = [MyLocust]
         response = requests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port, 
@@ -248,10 +246,9 @@ class TestWebUI(LocustTestCase):
     def test_swarm_in_step_load_mode(self):
         class MyLocust(Locust):
             wait_time = constant(1)
-            class task_set(TaskSet):
-                @task(1)
-                def my_task(self):
-                    pass
+            @task(1)
+            def my_task(self):
+                pass
         self.environment.locust_classes = [MyLocust]
         self.environment.step_load = True
         response = requests.post(

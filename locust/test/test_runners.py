@@ -111,7 +111,7 @@ class TestLocustRunner(LocustTestCase):
     def test_weight_locusts(self):
         maxDiff = 2048
         class BaseLocust(Locust):
-            class task_set(TaskSet): pass
+            pass
         class L1(BaseLocust):
             weight = 101
         class L2(BaseLocust):
@@ -126,7 +126,7 @@ class TestLocustRunner(LocustTestCase):
 
     def test_weight_locusts_fewer_amount_than_locust_classes(self):
         class BaseLocust(Locust):
-            class task_set(TaskSet): pass
+            pass
         class L1(BaseLocust):
             weight = 101
         class L2(BaseLocust):
@@ -748,10 +748,9 @@ class TestWorkerLocustRunner(LocustTestCase):
     def test_change_user_count_during_hatching(self):
         class User(Locust):
             wait_time = constant(1)
-            class task_set(TaskSet):
-                @task
-                def my_task(self):
-                    pass
+            @task
+            def my_task(self):
+                pass
         
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             options = mocked_options()
