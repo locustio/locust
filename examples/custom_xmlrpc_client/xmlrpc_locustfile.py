@@ -1,7 +1,7 @@
 import time
 from xmlrpc.client import ServerProxy, Fault
 
-from locust import Locust, TaskSet, events, task, between
+from locust import Locust, task, between
 
 
 class XmlRpcClient(ServerProxy):
@@ -36,6 +36,7 @@ class XmlRpcLocust(Locust):
     This is the abstract Locust class which should be subclassed. It provides an XML-RPC client
     that can be used to make XML-RPC requests that will be tracked in Locust's statistics.
     """
+    abstract = True
     def __init__(self, *args, **kwargs):
         super(XmlRpcLocust, self).__init__(*args, **kwargs)
         self.client = XmlRpcClient(self.host)
@@ -43,15 +44,13 @@ class XmlRpcLocust(Locust):
 
 
 class ApiUser(XmlRpcLocust):
-    
     host = "http://127.0.0.1:8877/"
     wait_time = between(0.1, 1)
     
-    class task_set(TaskSet):
-        @task(10)
-        def get_time(self):
-            self.client.get_time()
-        
-        @task(5)
-        def get_random_number(self):
-            self.client.get_random_number(0, 100)
+    @task(10)
+    def get_time(self):
+        self.client.get_time()
+    
+    @task(5)
+    def get_random_number(self):
+        self.client.get_random_number(0, 100)

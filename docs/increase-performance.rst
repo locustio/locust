@@ -24,17 +24,15 @@ How to use FastHttpLocust
 
 Subclass FastHttpLocust instead of HttpLocust::
 
-    from locust import TaskSet, task, between
+    from locust import task, between
     from locust.contrib.fasthttp import FastHttpLocust
     
-    class MyTaskSet(TaskSet):
+    class MyLocust(FastHttpLocust):
+        wait_time = between(1, 60)
+        
         @task
         def index(self):
             response = self.client.get("/")
-    
-    class MyLocust(FastHttpLocust):
-        task_set = MyTaskSet
-        wait_time = between(1, 60)
 
 
 .. note::
