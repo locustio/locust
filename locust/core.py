@@ -5,8 +5,6 @@ import traceback
 from time import time
 
 import gevent
-import gevent.lock
-
 from gevent import GreenletExit, monkey
 
 # The monkey patching must run before requests is imported, or else 
@@ -207,10 +205,6 @@ class TaskSet(object, metaclass=TaskSetMeta):
     instantiated. Useful for nested TaskSet classes.
     """
 
-    _setup_has_run = False  # Internal state to see if we have already run
-    _teardown_is_set = False  # Internal state to see if we have already run
-    _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
-
     def __init__(self, parent):
         # check if deprecated wait API is used
         deprecation.check_for_deprecated_wait_api(self)
@@ -234,26 +228,6 @@ class TaskSet(object, metaclass=TaskSetMeta):
             self.max_wait = self.locust.max_wait
         if not self.wait_function:
             self.wait_function = self.locust.wait_function
-
-        with self._lock:
-            if hasattr(self, "setup") and self._setup_has_run is False:
-                self._set_setup_flag()
-                try:
-                    self.setup()
-                except Exception as e:
-                    self.locust.environment.events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
-                    logger.error("%s\n%s", e, traceback.format_exc())
-            if hasattr(self, "teardown") and self._teardown_is_set is False:
-                self._set_teardown_flag()
-                self.environment.events.quitting.add_listener(self.teardown)
-
-    @classmethod
-    def _set_setup_flag(cls):
-        cls._setup_has_run = True
-
-    @classmethod
-    def _set_teardown_flag(cls):
-        cls._teardown_is_set = True
 
     def on_start(self):
         """
@@ -538,9 +512,6 @@ class Locust(object, metaclass=LocustMeta):
     
     client = NoClientWarningRaiser()
     _catch_exceptions = True
-    _setup_has_run = False  # Internal state to see if we have already run
-    _teardown_is_set = False  # Internal state to see if we have already run
-    _lock = gevent.lock.Semaphore()  # Lock to make sure setup is only run once
     _state = None
     _greenlet = None
     
@@ -548,28 +519,7 @@ class Locust(object, metaclass=LocustMeta):
         super(Locust, self).__init__()
         # check if deprecated wait API is used
         deprecation.check_for_deprecated_wait_api(self)
-        
         self.environment = environment
-        
-        with self._lock:
-            if hasattr(self, "setup") and self._setup_has_run is False:
-                self._set_setup_flag()
-                try:
-                    self.setup()
-                except Exception as e:
-                    self.environment.events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
-                    logger.error("%s\n%s", e, traceback.format_exc())
-            if hasattr(self, "teardown") and self._teardown_is_set is False:
-                self._set_teardown_flag()
-                self.environment.events.quitting.add_listener(self.teardown)
-
-    @classmethod
-    def _set_setup_flag(cls):
-        cls._setup_has_run = True
-
-    @classmethod
-    def _set_teardown_flag(cls):
-        cls._teardown_is_set = True
     
     def on_start(self):
         """
