@@ -158,63 +158,46 @@ class TestLocustRunner(LocustTestCase):
         self.assertTrue(g2.dead)
         self.assertTrue(triggered[0])
     
-    def test_setup_method_exception(self):
+    def test_start_event(self):
         class User(Locust):
-            setup_run_count = 0
-            task_run_count = 0
-            locust_error_count = 0
             wait_time = constant(1)
-            def setup(self):
-                User.setup_run_count += 1
-                raise Exception("some exception")
+            task_run_count = 0
             @task
-            class task_set(TaskSet):
-                @task
-                def my_task(self):
-                    User.task_run_count += 1
+            def my_task(self):
+                User.task_run_count += 1
+        
+        test_start_run = [0]
         
         environment = Environment(options=mocked_options())
-        
-        def on_locust_error(*args, **kwargs):
-            User.locust_error_count += 1
-        environment.events.locust_error.add_listener(on_locust_error)
+        def on_test_start(*args, **kwargs):
+            test_start_run[0] += 1
+        environment.events.test_start.add_listener(on_test_start)
         
         runner = LocalLocustRunner(environment, locust_classes=[User])
         runner.start(locust_count=3, hatch_rate=3, wait=False)
         runner.hatching_greenlet.get(timeout=3)
         
-        self.assertEqual(1, User.setup_run_count)
-        self.assertEqual(1, User.locust_error_count)
+        self.assertEqual(1, test_start_run[0])
         self.assertEqual(3, User.task_run_count)
     
-    def test_taskset_setup_method_exception(self):
+    def test_stop_event(self):
         class User(Locust):
-            setup_run_count = 0
-            task_run_count = 0
-            locust_error_count = 0
             wait_time = constant(1)
             @task
-            class task_set(TaskSet):
-                def setup(self):
-                    User.setup_run_count += 1
-                    raise Exception("some exception")
-                @task
-                def my_task(self):
-                    User.task_run_count += 1
-        
+            def my_task(self):
+                pass
+
+        test_stop_run = [0]
         environment = Environment(options=mocked_options())
-        
-        def on_locust_error(*args, **kwargs):
-            User.locust_error_count += 1
-        environment.events.locust_error.add_listener(on_locust_error)
-        
+        def on_test_stop(*args, **kwargs):
+            test_stop_run[0] += 1
+        environment.events.test_stop.add_listener(on_test_stop)
+
         runner = LocalLocustRunner(environment, locust_classes=[User])
         runner.start(locust_count=3, hatch_rate=3, wait=False)
-        runner.hatching_greenlet.get(timeout=3)
-        
-        self.assertEqual(1, User.setup_run_count)
-        self.assertEqual(1, User.locust_error_count)
-        self.assertEqual(3, User.task_run_count)
+        self.assertEqual(0, test_stop_run[0])
+        runner.stop()
+        self.assertEqual(1, test_stop_run[0])
     
     def test_change_user_count_during_hatching(self):
         class User(Locust):
@@ -505,6 +488,49 @@ class TestMasterRunner(LocustTestCase):
             master.start(locust_count=5,hatch_rate=5)
 
             self.assertEqual(3, len(server.outbox))
+    
+    def test_start_event(self):
+        """
+        Tests that test_start event is fired
+        """
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner()
+            
+            run_count = [0]
+            @self.environment.events.test_start.add_listener
+            def on_test_start(*a, **kw):
+                run_count[0] += 1            
+            
+            for i in range(5):
+                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+            
+            master.start(7, 7)
+            self.assertEqual(5, len(server.outbox))
+            self.assertEqual(1, run_count[0])
+            
+            # change number of users and check that test_start isn't fired again
+            master.start(7, 7)
+            self.assertEqual(1, run_count[0])
+    
+    def test_stop_event(self):
+        """
+        Tests that test_stop event is fired
+        """
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner()
+            
+            run_count = [0]
+            @self.environment.events.test_stop.add_listener
+            def on_test_stop(*a, **kw):
+                run_count[0] += 1            
+            
+            for i in range(5):
+                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+            
+            master.start(7, 7)
+            self.assertEqual(5, len(server.outbox))
+            master.stop()
+            self.assertEqual(1, run_count[0])  
 
     def test_spawn_zero_locusts(self):
         class MyTaskSet(TaskSet):
@@ -685,6 +711,10 @@ class TestWorkerLocustRunner(LocustTestCase):
         
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             environment = Environment(options=mocked_options())
+            test_start_run = [False]
+            @environment.events.test_start.add_listener
+            def on_test_start(**kw):
+                test_start_run[0] = True
             worker = self.get_runner(environment=environment, locust_classes=[MyTestLocust])
             self.assertEqual(1, len(client.outbox))
             self.assertEqual("client_ready", client.outbox[0].type)
@@ -707,6 +737,8 @@ class TestWorkerLocustRunner(LocustTestCase):
             worker.locusts.join()
             # check that locust user got to finish
             self.assertEqual(2, MyTestLocust._test_state)
+            # make sure the test_start was never fired on the worker
+            self.assertFalse(test_start_run[0])
     
     def test_worker_without_stop_timeout(self):
         class MyTestLocust(Locust):

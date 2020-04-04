@@ -196,7 +196,6 @@ class LocustRunner(object):
             self.exceptions = {}
             self.cpu_warning_emitted = False
             self.worker_cpu_warning_emitted = False
-            self.environment.events.locust_start_hatching.fire()
 
         # Dynamically changing the locust count
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
@@ -248,7 +247,6 @@ class LocustRunner(object):
         self.kill_locust_instances([g.args[0] for g in self.locusts])
         self.state = STATE_STOPPED
         self.cpu_log_warning()
-        self.environment.events.locust_stop_hatching.fire()
     
     def quit(self):
         self.stop()
@@ -278,10 +276,19 @@ class LocalLocustRunner(LocustRunner):
     def start(self, locust_count, hatch_rate, wait=False):
         if hatch_rate > 100:
             logger.warning("Your selected hatch rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?")
+        
+        if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
+            # if we're not already running we'll fire the test_start event
+            self.environment.events.test_start.fire(environment=self.environment)
+        
         if self.hatching_greenlet:
             # kill existing hatching_greenlet before we start a new one
             self.hatching_greenlet.kill(block=True)
         self.hatching_greenlet = self.greenlet.spawn(lambda: super(LocalLocustRunner, self).start(locust_count, hatch_rate, wait=wait))
+    
+    def stop(self):
+        super().stop()
+        self.environment.events.test_stop.fire(environment=self.environment)
 
 
 class DistributedLocustRunner(LocustRunner):
@@ -375,7 +382,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
             self.exceptions = {}
-            self.environment.events.master_start_hatching.fire()
+            self.environment.events.test_start.fire(environment=self.environment)
         
         for client in (self.clients.ready + self.clients.running + self.clients.hatching):
             data = {
@@ -397,9 +404,13 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.state = STATE_STOPPING
         for client in self.clients.all:
             self.server.send_to_client(Message("stop", None, client.id))
-        self.environment.events.master_stop_hatching.fire()
+        self.environment.events.test_stop.fire(environment=self.environment)
     
     def quit(self):
+        if self.state in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
+            # fire test_stop event if state isn't already stopped
+            self.environment.events.test_stop.fire(environment=self.environment)
+            
         for client in self.clients.all:
             self.server.send_to_client(Message("quit", None, client.id))
         gevent.sleep(0.5) # wait for final stats report from all workers
