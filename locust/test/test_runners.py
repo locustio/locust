@@ -9,7 +9,7 @@ from locust import runners
 from locust.main import create_environment
 from locust.core import Locust, TaskSet, task
 from locust.env import Environment
-from locust.exception import LocustError, StopLocust
+from locust.exception import LocustError, RPCError, StopLocust
 from locust.rpc import Message
 from locust.runners import LocustRunner, LocalLocustRunner, MasterLocustRunner, WorkerNode, \
      WorkerLocustRunner, STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_MISSING
@@ -17,6 +17,8 @@ from locust.stats import RequestStats
 from locust.test.testcases import LocustTestCase
 from locust.wait_time import between, constant
 
+NETWORK_BROKEN = "network broken"
+UNHANDLED_EXCEPTION = "unhandled exception"
 
 def mocked_rpc():
     class MockedRpcServerClient(object):
@@ -30,10 +32,15 @@ def mocked_rpc():
         def mocked_send(cls, message):
             cls.queue.put(message.serialize())
             sleep(0)
-        
+
         def recv(self):
             results = self.queue.get()
-            return Message.unserialize(results)
+            msg = Message.unserialize(results)
+            if msg.data == NETWORK_BROKEN:
+                raise RPCError()
+            if msg.data == UNHANDLED_EXCEPTION:
+                raise HeyAnException()
+            return msg
         
         def send(self, message):
             self.outbox.append(message)
@@ -44,7 +51,14 @@ def mocked_rpc():
         def recv_from_client(self):
             results = self.queue.get()
             msg = Message.unserialize(results)
+            if msg.data == NETWORK_BROKEN:
+                raise RPCError()
+            if msg.data == UNHANDLED_EXCEPTION:
+                raise HeyAnException()
             return msg.node_id, msg
+
+        def close(self):
+            raise RPCError()
 
     return MockedRpcServerClient
 
@@ -62,10 +76,13 @@ class mocked_options(object):
         self.heartbeat_interval = 1
         self.stop_timeout = None
         self.step_load = True
+        self.connection_broken = False
 
     def reset_stats(self):
         pass
 
+class HeyAnException(Exception):
+    pass
 
 class TestLocustRunner(LocustTestCase):
     def assert_locust_class_distribution(self, expected_distribution, classes):
@@ -291,6 +308,7 @@ class TestMasterRunner(LocustTestCase):
         super(TestMasterRunner, self).setUp()
         #self._worker_report_event_handlers = [h for h in events.worker_report._handlers]
         self.environment.options = mocked_options()
+
         class MyTestLocust(Locust):
             pass
         
@@ -595,9 +613,6 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(10, num_clients, "Total number of locusts that would have been spawned for second step is not 10")
 
     def test_exception_in_task(self):
-        class HeyAnException(Exception):
-            pass
-        
         class MyLocust(Locust):
             @task
             def will_error(self):
@@ -619,8 +634,6 @@ class TestMasterRunner(LocustTestCase):
     
     def test_exception_is_catched(self):
         """ Test that exceptions are stored, and execution continues """
-        class HeyAnException(Exception):
-            pass
         
         class MyTaskSet(TaskSet):
             def __init__(self, *a, **kw):
@@ -658,6 +671,19 @@ class TestMasterRunner(LocustTestCase):
         self.assertTrue("HeyAnException" in exception["traceback"])
         self.assertEqual(2, exception["count"])
 
+    def test_master_reset_connection(self):
+        """ Test that connection will be reset when network issues found """
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner()
+            server.mocked_send(Message("client_ready", NETWORK_BROKEN, "fake_client"))
+            sleep(3)
+            assert master.connection_broken == True
+            server.mocked_send(Message("client_ready", None, "fake_client"))
+            sleep(3)
+            assert master.connection_broken == False
+            server.mocked_send(Message("client_ready", UNHANDLED_EXCEPTION, "fake_client"))
+            sleep(3)
+            assert master.connection_broken == False
 
 class TestWorkerLocustRunner(LocustTestCase):
     def setUp(self):
@@ -776,7 +802,6 @@ class TestWorkerLocustRunner(LocustTestCase):
             worker.hatching_greenlet.join()
             self.assertEqual(9, len(worker.locusts))
             worker.quit()
-
 
 class TestMessageSerializing(unittest.TestCase):
     def test_message_serialize(self):

@@ -14,6 +14,8 @@ from gevent.pool import Group
 from .rpc import Message, rpc
 from .stats import RequestStats, setup_distributed_stats_event_listeners
 
+from .exception import RPCError
+
 logger = logging.getLogger(__name__)
 
 
@@ -22,6 +24,7 @@ WORKER_REPORT_INTERVAL = 3.0
 CPU_MONITOR_INTERVAL = 5.0
 HEARTBEAT_INTERVAL = 1
 HEARTBEAT_LIVENESS = 3
+FALLBACK_INTERVAL = 5
 
 
 class LocustRunner(object):
@@ -50,6 +53,7 @@ class LocustRunner(object):
         
         self.environment.events.request_success.add_listener(on_request_success)
         self.environment.events.request_failure.add_listener(on_request_failure)
+        self.connection_broken = False
 
         # register listener that resets stats when hatching is complete
         def on_hatch_complete(user_count):
@@ -303,6 +307,8 @@ class MasterLocustRunner(DistributedLocustRunner):
         super().__init__(*args, **kwargs)
         self.worker_cpu_warning_emitted = False
         self.target_user_count = None
+        self.master_bind_host = master_bind_host
+        self.master_bind_port = master_bind_port
 
         class WorkerNodesDict(dict):
             def get_by_state(self, state):
@@ -408,6 +414,9 @@ class MasterLocustRunner(DistributedLocustRunner):
     def heartbeat_worker(self):
         while True:
             gevent.sleep(HEARTBEAT_INTERVAL)
+            if self.connection_broken:
+                self.reset_connection()
+                continue
             for client in self.clients.all:
                 if client.heartbeat < 0 and client.state != STATE_MISSING:
                     logger.info('Worker %s failed to send heartbeat, setting state to missing.' % str(client.id))
@@ -416,9 +425,24 @@ class MasterLocustRunner(DistributedLocustRunner):
                 else:
                     client.heartbeat -= 1
 
+    def reset_connection(self):
+        logger.info("Reset connection to slave")
+        try:
+            self.server.close()
+            self.server = rpc.Server(self.master_bind_host, self.master_bind_port)
+        except RPCError as e:
+            logger.error("Temporay failure when resetting connection: %s, will retry later." % ( e ) )
+
     def client_listener(self):
         while True:
-            client_id, msg = self.server.recv_from_client()
+            try: 
+                client_id, msg = self.server.recv_from_client()
+            except RPCError as e:
+                logger.error("RPCError found when receiving from client: %s" % ( e ) )
+                self.connection_broken = True
+                gevent.sleep(FALLBACK_INTERVAL)
+                continue
+            self.connection_broken = False
             msg.node_id = client_id
             if msg.type == "client_ready":
                 id = msg.node_id
@@ -471,7 +495,8 @@ class WorkerLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, master_host, master_port, **kwargs):
         super().__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + uuid4().hex
-        
+        self.master_host = master_host
+        self.master_port = master_port
         self.client = rpc.Client(master_host, master_port, self.client_id)
         self.greenlet.spawn(self.heartbeat).link_exception(callback=self.noop)
         self.greenlet.spawn(self.worker).link_exception(callback=self.noop)
@@ -503,12 +528,28 @@ class WorkerLocustRunner(DistributedLocustRunner):
 
     def heartbeat(self):
         while True:
-            self.client.send(Message('heartbeat', {'state': self.worker_state, 'current_cpu_usage': self.current_cpu_usage}, self.client_id))
+            try:
+                self.client.send(Message('heartbeat', {'state': self.worker_state, 'current_cpu_usage': self.current_cpu_usage}, self.client_id))
+            except RPCError as e:
+                logger.error("RPCError found when sending heartbeat: %s" % ( e ) )
+                self.reset_connection()
             gevent.sleep(HEARTBEAT_INTERVAL)
+
+    def reset_connection(self):
+        logger.info("Reset connection to master")
+        try:
+            self.client.close()
+            self.client = rpc.Client(self.master_host, self.master_port, self.client_id)
+        except RPCError as e:
+            logger.error("Temporary failure when resetting connection: %s, will retry later." % ( e ) )
 
     def worker(self):
         while True:
-            msg = self.client.recv()
+            try:
+                msg = self.client.recv()
+            except RPCError as e:
+                logger.error("RPCError found when receiving from master: %s" % ( e ) )
+                continue
             if msg.type == "hatch":
                 self.worker_state = STATE_HATCHING
                 self.client.send(Message("hatching", None, self.client_id))
@@ -535,10 +576,8 @@ class WorkerLocustRunner(DistributedLocustRunner):
         while True:
             try:
                 self._send_stats()
-            except:
-                logger.error("Connection lost to master server. Aborting...")
-                break
-            
+            except RPCError as e:
+                logger.error("Temporary connection lost to master server: %s, will retry later." % (e))            
             gevent.sleep(WORKER_REPORT_INTERVAL)
 
     def _send_stats(self):

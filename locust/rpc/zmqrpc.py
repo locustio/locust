@@ -1,7 +1,9 @@
 import zmq.green as zmq
-
 from .protocol import Message
 from locust.util.exception_handler import retry
+from locust.exception import RPCError
+import zmq.error as zmqerr
+import msgpack.exceptions as msgerr
 
 class BaseSocket(object):
     def __init__(self, sock_type):
@@ -13,24 +15,41 @@ class BaseSocket(object):
     
     @retry()
     def send(self, msg):
-        self.socket.send(msg.serialize())
+        try:
+            self.socket.send(msg.serialize(), zmq.NOBLOCK)
+        except zmqerr.ZMQError as e:
+            raise RPCError("ZMQ sent failure") from e
 
     @retry()
     def send_to_client(self, msg):
-        self.socket.send_multipart([msg.node_id.encode(), msg.serialize()])
+        try:
+            self.socket.send_multipart([msg.node_id.encode(), msg.serialize()])
+        except zmqerr.ZMQError as e:
+            raise RPCError("ZMQ sent failure") from e
 
-    @retry()
     def recv(self):
-        data = self.socket.recv()
-        msg = Message.unserialize(data)
+        try:
+            data = self.socket.recv()
+            msg = Message.unserialize(data)
+        except msgerr.ExtraData as e:
+            raise RPCError("ZMQ interrupted message") from e
+        except zmqerr.ZMQError as e:
+            raise RPCError("ZMQ network broken") from e
         return msg
 
-    @retry()
     def recv_from_client(self):
-        data = self.socket.recv_multipart()
-        addr = data[0].decode()
-        msg = Message.unserialize(data[1])
+        try:
+            data = self.socket.recv_multipart()
+            addr = data[0].decode()
+            msg = Message.unserialize(data[1])
+        except (UnicodeDecodeError, msgerr.ExtraData) as e:
+            raise RPCError("ZMQ interrupted message") from e
+        except zmqerr.ZMQError as e:
+            raise RPCError("ZMQ network broken") from e
         return addr, msg
+
+    def close(self):
+        self.socket.close()
 
 class Server(BaseSocket):
     def __init__(self, host, port):
@@ -38,12 +57,14 @@ class Server(BaseSocket):
         if port == 0:
             self.port = self.socket.bind_to_random_port("tcp://%s" % host)
         else:
-            self.socket.bind("tcp://%s:%i" % (host, port))
-            self.port = port
+            try:
+                self.socket.bind("tcp://%s:%i" % (host, port))
+                self.port = port
+            except zmqerr.ZMQError as e:
+                raise RPCError("Socket bind failure: %s" % (e) )
 
 class Client(BaseSocket):
     def __init__(self, host, port, identity):
         BaseSocket.__init__(self, zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, identity.encode())
         self.socket.connect("tcp://%s:%i" % (host, port))
-        

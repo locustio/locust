@@ -37,3 +37,10 @@ class RescheduleTaskImmediately(Exception):
     """
     When raised in a Locust task, another locust task will be rescheduled immediately
     """
+
+class RPCError(Exception):
+    """
+    Exception that shows bad or broken network.
+
+    When raised from zmqrpc, RPC should be reestablished.
+    """
