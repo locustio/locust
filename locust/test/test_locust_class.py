@@ -430,15 +430,6 @@ class TestTaskSet(LocustTestCase):
 
 
 class TestLocustClass(LocustTestCase):
-    def test_setup_method(self):
-        class User(Locust):
-            setup_run_count = 0
-            def setup(self):
-                User.setup_run_count += 1
-        User(self.environment)
-        User(self.environment)
-        self.assertEqual(1, User.setup_run_count)
-    
     def test_locust_on_start(self):
         class MyLocust(Locust):
             t1_executed = False

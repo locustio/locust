@@ -111,28 +111,7 @@ class Events:
     *quitting* is fired when the locust process is exiting
     """
     
-    master_start_hatching = EventHook
     """
-    *master_start_hatching* is fired when we initiate the hatching process on the master.
-    
-    This event is especially useful to detect when the 'start' button is clicked on the web ui.
-    """
-    
-    master_stop_hatching = EventHook
-    """
-    *master_stop_hatching* is fired when terminate the hatching process on the master.
-    
-    This event is especially useful to detect when the 'stop' button is clicked on the web ui.
-    """
-    
-    locust_start_hatching = EventHook
-    """
-    *locust_start_hatching* is fired when we initiate the hatching process on any locust worker.
-    """
-    
-    locust_stop_hatching = EventHook
-    """
-    *locust_stop_hatching* is fired when terminate the hatching process on any locust worker.
     """
     
     init = EventHook
@@ -153,6 +132,19 @@ class Events:
     
     Event is fired with the following arguments:
     * *parser*: ArgumentParser instance
+    """
+    
+    test_start = EventHook
+    """
+    *test_start* is fired when a new load test is started. It's not fired again if the number of 
+    Locust users change during a test. When running locust distributed the event is only fired 
+    on the master node and not on each worker node. 
+    """
+    
+    test_stop = EventHook
+    """
+    *test_stop* is fired when a load test is stopped. When running locust distributed the event 
+    is only fired on the master node and not on each worker node.
     """
     
     def __init__(self):
