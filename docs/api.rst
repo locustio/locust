@@ -27,16 +27,12 @@ task decorator
 
 .. autofunction:: locust.core.task
 
-TaskSequence class
-==================
+SequentialTaskSet class
+=======================
 
-.. autoclass:: locust.core.TaskSequence
+.. autoclass:: locust.sequential_taskset.SequentialTaskSet
     :members: locust, parent, wait_time, client, tasks, interrupt, schedule_task
 
-seq_task decorator
-==================
-
-.. autofunction:: locust.core.seq_task
 
 .. _wait_time_functions:
 
