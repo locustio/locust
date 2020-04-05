@@ -4,8 +4,28 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
-In development (master)
-=======================
+1.0 (In development)
+====================
+
+Breaking changes
+----------------
+
+* Removed ``Locust.setup``, ``Locust.teardown``, ``TaskSet.setup`` and ``TaskSet.teardown`` hooks. If you want to 
+  run code at the start or end of a test, instead you should use the :py:attr:`test_start <locust.event.Events.test_start>`
+  and :py:attr:`test_stop <locust.event.Events.test_stop>` events:
+  
+  .. code-block:: python
+  
+      from locust import events
+      
+      @events.test_start.add_listener
+      def on_test_start(**kw):
+          print("test is starting")
+        
+      @events.test_stop.add_listener
+      def on_test_start(**kw):
+          print("test is stopping")
+
 
 0.14.0
 ======
