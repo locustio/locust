@@ -18,7 +18,6 @@ from locust.test.testcases import LocustTestCase
 from locust.wait_time import between, constant
 
 NETWORK_BROKEN = "network broken"
-UNHANDLED_EXCEPTION = "unhandled exception"
 
 def mocked_rpc():
     class MockedRpcServerClient(object):
@@ -38,8 +37,6 @@ def mocked_rpc():
             msg = Message.unserialize(results)
             if msg.data == NETWORK_BROKEN:
                 raise RPCError()
-            if msg.data == UNHANDLED_EXCEPTION:
-                raise HeyAnException()
             return msg
         
         def send(self, message):
@@ -53,8 +50,6 @@ def mocked_rpc():
             msg = Message.unserialize(results)
             if msg.data == NETWORK_BROKEN:
                 raise RPCError()
-            if msg.data == UNHANDLED_EXCEPTION:
-                raise HeyAnException()
             return msg.node_id, msg
 
         def close(self):
@@ -699,17 +694,17 @@ class TestMasterRunner(LocustTestCase):
 
     def test_master_reset_connection(self):
         """ Test that connection will be reset when network issues found """
-        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = self.get_runner()
-            server.mocked_send(Message("client_ready", NETWORK_BROKEN, "fake_client"))
-            sleep(3)
-            assert master.connection_broken == True
-            server.mocked_send(Message("client_ready", None, "fake_client"))
-            sleep(3)
-            assert master.connection_broken == False
-            server.mocked_send(Message("client_ready", UNHANDLED_EXCEPTION, "fake_client"))
-            sleep(3)
-            assert master.connection_broken == False
+        with mock.patch("locust.runners.FALLBACK_INTERVAL", new=0.1):
+            with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+                master = self.get_runner()
+                self.assertEqual(0, len(master.clients))
+                server.mocked_send(Message("client_ready", NETWORK_BROKEN, "fake_client"))
+                self.assertTrue(master.connection_broken)
+                server.mocked_send(Message("client_ready", None, "fake_client"))
+                sleep(0.2)
+                self.assertFalse(master.connection_broken)
+                self.assertEqual(1, len(master.clients))
+                master.quit()
 
 class TestWorkerLocustRunner(LocustTestCase):
     def setUp(self):
