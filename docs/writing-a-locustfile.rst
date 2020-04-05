@@ -359,44 +359,40 @@ and then it will start over at ``first_task`` again.
 
 .. _on-start-on-stop:
 
-Setups, Teardowns, on_start, and on_stop
-========================================
 
-Locust optionally supports :py:class:`Locust <locust.core.Locust>` level :py:meth:`setup <locust.core.Locust.setup>` and :py:meth:`teardown <locust.core.Locust.teardown>`,
-:py:class:`TaskSet <locust.core.TaskSet>` level :py:meth:`setup <locust.core.Locust.setup>` and :py:meth:`teardown <locust.core.Locust.teardown>`,
-and :py:class:`TaskSet <locust.core.TaskSet>` :py:meth:`on_start <locust.core.TaskSet.on_start>` and :py:meth:`on_stop <locust.core.TaskSet.on_stop>`
+on_start and on_stop methods
+============================
 
-Setups and Teardowns
---------------------
+Locust and TaskSet classes can declare an :py:meth:`on_start <locust.core.Locust.on_start>` method and/or
+:py:meth:`on_stop <locust.core.TaskSet.on_stop>` method. A Locust user will call it's 
+:py:meth:`on_start <locust.core.Locust.on_start>` method when it starts running, and it's 
+:py:meth:`on_stop <locust.core.Locust.on_stop>` method when it stops running. For a TaskSet, the 
+:py:meth:`on_start <locust.core.TaskSet.on_start>` method is called when a simulated user starts executing 
+that TaskSet, and :py:meth:`on_stop <locust.core.TaskSet.on_stop>` is called when the simulated user stops 
+executing that TaskSet (when :py:meth:`interrupt() <locust.core.TaskSet.interrupt>` is called, or the locust 
+user is killed).
 
-:py:meth:`setup <locust.core.Locust.setup>` and :py:meth:`teardown <locust.core.Locust.teardown>`, whether it's run on :py:class:`Locust <locust.core.Locust>` or :py:class:`TaskSet <locust.core.TaskSet>`, are methods that are run only once.
-:py:meth:`setup <locust.core.Locust.setup>` is run before tasks start running, while :py:meth:`teardown <locust.core.Locust.teardown>` is run after all tasks have finished and Locust is exiting.
-This enables you to perform some preparation before tasks start running (like creating a database) and to clean up before the Locust quits (like deleting the database).
 
-To use, simply declare a :py:meth:`setup <locust.core.Locust.setup>` and/or :py:meth:`teardown <locust.core.Locust.teardown>` on the :py:class:`Locust <locust.core.Locust>` or :py:class:`TaskSet <locust.core.TaskSet>` class.
-These methods will be run for you.
+test_start and test_stop events
+===============================
 
-The on_start and on_stop methods
-----------------------------------
+If you need to run some code at the start or stop of a load test, you should use the 
+:py:attr:`test_start <locust.event.Events.test_start>` and :py:attr:`test_stop <locust.event.Events.test_stop>` 
+events. You can set up listeners for these events at the module level of your locustfile:
 
-A TaskSet class can declare an :py:meth:`on_start <locust.core.TaskSet.on_start>` method or an :py:meth:`on_stop <locust.core.TaskSet.on_stop>` method.
-The :py:meth:`on_start <locust.core.TaskSet.on_start>` method is called when a simulated user starts executing that TaskSet class,
-while the :py:meth:`on_stop <locust.core.TaskSet.on_stop` method is called when the TaskSet is stopped.
+.. code-block:: python
 
-Order of events
----------------
+    from locust import events
+    
+    @events.test_start.add_listener
+    def on_test_start(**kwargs):
+        print("A new test is starting")
+    
+    @events.test_stop.add_listener
+    def on_test_stop(**kwargs):
+        print("A new test is ending")
 
-Since many setup and cleanup operations are dependent on each other, here is the order which they are run:
-
-1. Locust setup (once)
-2. TaskSet setup (once)
-3. TaskSet on_start (every time a user starts executing a new TaskSet)
-4. TaskSet tasks...
-5. TaskSet on_stop (every time a user stops executing a TaskSet, either to run a different one or at shutdown)
-6. TaskSet teardown (once)
-7. Locust teardown (once)
-
-In general, the setup and teardown methods should be complementary.
+When running Locust distributed the ``on_start`` and ``on_stop`` events will only be fired in the master node.
 
 
 Making HTTP requests

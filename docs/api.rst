@@ -7,7 +7,7 @@ Locust class
 ============
 
 .. autoclass:: locust.core.Locust
-    :members: wait_time, tasks, weight, abstract
+    :members: wait_time, tasks, weight, abstract, on_start, on_stop
 
 HttpLocust class
 ================
@@ -20,7 +20,7 @@ TaskSet class
 =============
 
 .. autoclass:: locust.core.TaskSet
-    :members: locust, parent, wait_time, client, tasks, interrupt, schedule_task
+    :members: locust, parent, wait_time, client, tasks, interrupt, schedule_task, on_start, on_stop
 
 task decorator
 ==============
@@ -31,7 +31,7 @@ SequentialTaskSet class
 =======================
 
 .. autoclass:: locust.sequential_taskset.SequentialTaskSet
-    :members: locust, parent, wait_time, client, tasks, interrupt, schedule_task
+    :members: locust, parent, wait_time, client, tasks, interrupt, schedule_task, on_start, on_stop
 
 
 .. _wait_time_functions:
