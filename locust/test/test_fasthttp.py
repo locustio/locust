@@ -1,3 +1,6 @@
+import socket
+import gevent
+
 from locust.core import task, TaskSet
 from locust.contrib.fasthttp import FastHttpSession, FastHttpLocust
 from locust.exception import CatchResponseError, InterruptTaskSet, ResponseError
@@ -270,7 +273,13 @@ class TestFastHttpLocustClass(WebserverTestCase):
             host = "http://127.0.0.1:%i" % self.port
 
         l = MyLocust(self.environment)
-        l.client.get("/redirect?url=/redirect&delay=5.0")
+        
+        timeout = gevent.Timeout(seconds=0.6, exception=AssertionError("Request took longer than 0.6 even though FastHttpLocust.network_timeout was set to 0.5"))
+        timeout.start()
+        r = l.client.get("/redirect?url=/redirect&delay=5.0")
+        timeout.cancel()
+        
+        self.assertTrue(isinstance(r.error.original, socket.timeout))
         self.assertEqual(1, self.runner.stats.get("/redirect?url=/redirect&delay=5.0", "GET").num_failures)
 
     def test_max_redirect_setting(self):
