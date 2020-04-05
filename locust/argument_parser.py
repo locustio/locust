@@ -310,19 +310,20 @@ def setup_parser_arguments(parser):
     other_group.add_argument(
         '--show-task-ratio',
         action='store_true',
-        help="print table of the locust classes' task execution ratio"
+        help="Print table of the locust classes' task execution ratio"
     )
     # Display ratio table of all tasks in JSON format
     other_group.add_argument(
         '--show-task-ratio-json',
         action='store_true',
-        help="print json data of the locust classes' task execution ratio"
+        help="Print json data of the locust classes' task execution ratio"
     )
     # Version number (optparse gives you --version but we have to do it
     # ourselves to get -V too. sigh)
     other_group.add_argument(
         '--version', '-V',
         action='version',
+        help="Show program's version number and exit",
         version='%(prog)s {}'.format(version),
     )
     # set the exit code to post on errors
@@ -330,7 +331,7 @@ def setup_parser_arguments(parser):
         '--exit-code-on-error',
         type=int,
         default=1,
-        help="sets the exit code to post on error"
+        help="Sets the process exit code to use when a test result contain any failure or error"
     )
     other_group.add_argument(
         '-s', '--stop-timeout',
