@@ -10,6 +10,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 Breaking changes
 ----------------
 
+* The option for running Locust without the Web UI has been renamed from ``--no-web`` to ``--headless``.
 * Removed ``Locust.setup``, ``Locust.teardown``, ``TaskSet.setup`` and ``TaskSet.teardown`` hooks. If you want to 
   run code at the start or end of a test, you should instead use the :py:attr:`test_start <locust.event.Events.test_start>`
   and :py:attr:`test_stop <locust.event.Events.test_stop>` events:

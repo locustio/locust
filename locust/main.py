@@ -206,8 +206,8 @@ def main():
     main_greenlet = runner.greenlet
     
     if options.run_time:
-        if not options.no_web:
-            logger.error("The --run-time argument can only be used together with --no-web")
+        if not options.headless:
+            logger.error("The --run-time argument can only be used together with --headless")
             sys.exit(1)
         if options.worker:
             logger.error("--run-time should be specified on the master node, and not on worker nodes")
@@ -225,7 +225,7 @@ def main():
             gevent.spawn_later(options.run_time, timelimit_stop)
     
     # start Web UI
-    if not options.no_web and not options.worker:
+    if not options.headless and not options.worker:
         # spawn web greenlet
         logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.web_port))
         web_ui = WebUI(environment=environment)
@@ -237,7 +237,7 @@ def main():
     # need access to the Environment, Runner or WebUI
     environment.events.init.fire(environment=environment, runner=runner, web_ui=web_ui)    
     
-    if options.no_web:
+    if options.headless:
         # headless mode
         if options.master:
             # what for worker nodes to connect
@@ -256,7 +256,7 @@ def main():
         spawn_run_time_limit_greenlet()
 
     stats_printer_greenlet = None
-    if not options.only_summary and (options.print_stats or (options.no_web and not options.worker)):
+    if not options.only_summary and (options.print_stats or (options.headless and not options.worker)):
         # spawn stats printing greenlet
         stats_printer_greenlet = gevent.spawn(stats_printer(runner.stats))
 

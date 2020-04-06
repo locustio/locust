@@ -133,19 +133,19 @@ def setup_parser_arguments(parser):
         type=int,
         dest='num_clients',
         default=1,
-        help="Number of concurrent Locust users. Only used together with --no-web"
+        help="Number of concurrent Locust users. Only used together with --headless"
     )
     # User hatch rate
     parser.add_argument(
         '-r', '--hatch-rate',
         type=float,
         default=1,
-        help="The rate per second in which clients are spawned. Only used together with --no-web"
+        help="The rate per second in which clients are spawned. Only used together with --headless"
     )
     # Time limit of the test run
     parser.add_argument(
         '-t', '--run-time',
-        help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --no-web"
+        help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --headless"
     )
     # List locust commands found in loaded locust files/source files
     parser.add_argument(
@@ -169,9 +169,9 @@ def setup_parser_arguments(parser):
     )
     # if we should print stats in the console
     web_ui_group.add_argument(
-        '--no-web',
+        '--headless',
         action='store_true',
-        help="Disable the web interface, and instead start running the test immediately. Requires -c and -t to be specified."
+        help="Disable the web interface, and instead start the load test immediately. Requires -c and -t to be specified."
     )
     
     master_worker_group = parser.add_argument_group(
@@ -222,7 +222,7 @@ def setup_parser_arguments(parser):
         '--expect-workers',
         type=int,
         default=1,
-        help="How many workers master should expect to connect before starting the test (only when --no-web used)."
+        help="How many workers master should expect to connect before starting the test (only when --headless used)."
     )
     master_worker_group.add_argument(
         '--expect-slaves',

@@ -84,7 +84,7 @@ listen to. Defaults to 5557.
 ``--expect-workers=X``
 ----------------------
 
-Used when starting the master node with ``--no-web``. The master node will then wait until X worker
+Used when starting the master node with ``--headless``. The master node will then wait until X worker
 nodes has connected before the test is started.
 
 

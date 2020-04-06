@@ -853,7 +853,7 @@ def stats_history_csv(stats, stats_history_enabled=False, csv_for_web_ui=False):
     """Returns the Aggregated stats entry every interval"""
     # csv_for_web_ui boolean returns the header along with the stats history row so that
     # it can be returned as a csv for download on the web ui. Otherwise when run with
-    # the '--no-web' option we write the header first and then append the file with stats
+    # the '--headless' option we write the header first and then append the file with stats
     # entries every interval.
     if csv_for_web_ui:
         rows = [stats_history_csv_header()]
