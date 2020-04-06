@@ -41,7 +41,7 @@ app.root_path = os.path.dirname(os.path.abspath(__file__))
 auth = BasicAuth()
 
 
-def basic_auth_if_enabled(view_func):
+def auth_required_if_enabled(view_func):
     @wraps(view_func)
     def wrapper(*args, **kwargs):
         if app.config["BASIC_AUTH_ENABLED"]:
@@ -56,7 +56,7 @@ def basic_auth_if_enabled(view_func):
 
 
 @app.route('/')
-@basic_auth_if_enabled
+@auth_required_if_enabled
 def index():
     is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
     if is_distributed:
@@ -93,7 +93,7 @@ def index():
     )
 
 @app.route('/swarm', methods=["POST"])
-@basic_auth_if_enabled
+@auth_required_if_enabled
 def swarm():
     assert request.method == "POST"
     is_step_load = runners.locust_runner.step_load
@@ -112,20 +112,20 @@ def swarm():
     return jsonify({'success': True, 'message': 'Swarming started', 'host': runners.locust_runner.host})
 
 @app.route('/stop')
-@basic_auth_if_enabled
+@auth_required_if_enabled
 def stop():
     runners.locust_runner.stop()
     return jsonify({'success':True, 'message': 'Test stopped'})
 
 @app.route("/stats/reset")
-@basic_auth_if_enabled
+@auth_required_if_enabled
 def reset_stats():
     runners.locust_runner.stats.reset_all()
     runners.locust_runner.exceptions = {}
     return "ok"
 
 @app.route("/stats/requests/csv")
-@basic_auth_if_enabled
+@auth_required_if_enabled
 def request_stats_csv():
     response = make_response(requests_csv())
     file_name = "requests_{0}.csv".format(time())
@@ -135,7 +135,7 @@ def request_stats_csv():
     return response
 
 @app.route("/stats/stats_history/csv")
-@basic_auth_if_enabled
+@auth_required_if_enabled
 def stats_history_stats_csv():
     response = make_response(stats_history_csv(False, True))
     file_name = "stats_history_{0}.csv".format(time())
@@ -145,7 +145,7 @@ def stats_history_stats_csv():
     return response
 
 @app.route("/stats/failures/csv")
-@basic_auth_if_enabled
+@auth_required_if_enabled
 def failures_stats_csv():
     response = make_response(failures_csv())
     file_name = "failures_{0}.csv".format(time())
@@ -155,7 +155,7 @@ def failures_stats_csv():
     return response
 
 @app.route('/stats/requests')
-@basic_auth_if_enabled
+@auth_required_if_enabled
 @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
 def request_stats():
     stats = []
@@ -205,7 +205,7 @@ def request_stats():
     return jsonify(report)
 
 @app.route("/exceptions")
-@basic_auth_if_enabled
+@auth_required_if_enabled
 def exceptions():
     return jsonify({
         'exceptions': [
@@ -219,7 +219,7 @@ def exceptions():
     })
 
 @app.route("/exceptions/csv")
-@basic_auth_if_enabled
+@auth_required_if_enabled
 def exceptions_csv():
     data = StringIO()
     writer = csv.writer(data)
