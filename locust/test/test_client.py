@@ -61,7 +61,7 @@ class TestHttpSession(WebserverTestCase):
     
     def test_slow_redirect(self):
         s = self.get_client()
-        url = "/redirect?url=/redirect?delay=0.5"
+        url = "/redirect?url=/redirect&delay=0.5"
         r = s.get(url)
         stats = self.runner.stats.get(url, method="GET")
         self.assertEqual(1, stats.num_requests)

@@ -68,7 +68,7 @@ def constant_uniform(wait_time):
     tasks will be maintined.
 
     Statistically, a constant inter-arrival time between tasks will be maintained
-    regardless of number of threads and slaves, given that task run time is less than
+    regardless of number of threads and workers, given that task run time is less than
     specified wait_time.
     
     In the following example the task will always be executed once every second, no matter 
@@ -88,14 +88,14 @@ def constant_uniform(wait_time):
     def wait_time_func(self):
 
         locust_id = self.id
-        n_locusts = runners.locust_runner.user_count
+        n_locusts = self.environment.runner.user_count
         locust_offset = wait_time / n_locusts * locust_id
 
-        slave_offset = 0
-        if (type(runners.locust_runner) == runners.SlaveLocustRunner):
-            slave_offset = runners.locust_runner.timeslot_ratio * wait_time / n_locusts
+        worker_offset = 0
+        if (type(self.environment.runner) == runners.WorkerLocustRunner):
+            worker_offset = self.environment.runner.timeslot_ratio * wait_time / n_locusts
 
-        wall_clock = monotonic() + slave_offset + locust_offset
+        wall_clock = monotonic() + worker_offset + locust_offset
         since_last_trigger = wall_clock % wait_time
 
         time_remaining = max(0, wait_time - since_last_trigger)
@@ -136,17 +136,18 @@ def poisson(lambda_value):
         return lambda_value * math.exp(-lambda_value * x)
 
     def wait_time_func(self):
+
         locust_id = self.id
-        n_locusts = runners.locust_runner.user_count
+        n_locusts = self.environment.runner.user_count
         locust_offset = wait_time / n_locusts * locust_id
 
-        slave_offset = 0
-        if (type(runners.locust_runner) == runners.SlaveLocustRunner):
-            slave_offset = runners.locust_runner.timeslot_ratio * wait_time / n_locusts
+        worker_offset = 0
+        if (type(self.environment.runner) == runners.WorkerLocustRunner):
+            worker_offset = self.environment.runner.timeslot_ratio * wait_time / n_locusts
 
         next_trigger_target = random_exponential(lambda_value) + lambda_value
 
-        wall_clock = monotonic() + slave_offset + locust_offset
+        wall_clock = monotonic() + worker_offset + locust_offset
         since_last_trigger = wall_clock % wait_time
 
         time_remaining = max(0, next_trigger_target - since_last_trigger)

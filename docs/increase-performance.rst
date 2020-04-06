@@ -24,17 +24,15 @@ How to use FastHttpLocust
 
 Subclass FastHttpLocust instead of HttpLocust::
 
-    from locust import TaskSet, task, between
+    from locust import task, between
     from locust.contrib.fasthttp import FastHttpLocust
     
-    class MyTaskSet(TaskSet):
+    class MyLocust(FastHttpLocust):
+        wait_time = between(1, 60)
+        
         @task
         def index(self):
             response = self.client.get("/")
-    
-    class MyLocust(FastHttpLocust):
-        task_set = MyTaskSet
-        wait_time = between(1, 60)
 
 
 .. note::
@@ -43,20 +41,23 @@ Subclass FastHttpLocust instead of HttpLocust::
     the default HttpLocust that uses python-requests. Therefore FastHttpLocust might not work as a 
     drop-in replacement for HttpLocust, depending on how the HttpClient is used.
 
-.. note::
-
-    SSL domain check is turned off in the FastHttpLocust's client implementation. So it will let through 
-    invalid SSL certificates without complaining.
-
 
 API
 ===
 
+
+FastHttpLocust class
+--------------------
+
+.. autoclass:: locust.contrib.fasthttp.FastHttpLocust
+    :members: network_timeout, connection_timeout, max_redirects, max_retries, insecure
+
+
 FastHttpSession class
-=====================
+---------------------
 
 .. autoclass:: locust.contrib.fasthttp.FastHttpSession
-    :members: __init__, request, get, post, delete, put, head, options, patch
+    :members: request, get, post, delete, put, head, options, patch
 
 .. autoclass:: locust.contrib.fasthttp.FastResponse
-    :members: content, text, headers
+    :members: content, text, json, headers

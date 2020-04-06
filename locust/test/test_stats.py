@@ -255,7 +255,7 @@ class TestRequestStats(unittest.TestCase):
         """
         Serialize a RequestStats instance, then serialize it through a Message, 
         and unserialize the whole thing again. This is done "IRL" when stats are sent 
-        from slaves to master.
+        from workers to master.
         """
         s1 = StatsEntry(self.stats, "test", "GET")
         s1.log(10, 0)
@@ -296,11 +296,10 @@ class TestWriteStatCSVs(LocustTestCase):
             task_run_count = 0
             locust_error_count = 0
             wait_time = locust.wait_time.constant(1)
-
-            class task_set(TaskSet):
-                @task
-                def my_task(self):
-                    User.task_run_count += 1
+            @task
+            def my_task(self):
+                User.task_run_count += 1
+        
         self.environment = Environment(options=mocked_options())
         locust.runners.locust_runner = locust.runners.LocalLocustRunner(self.environment, [User])
         self.remove_file_if_exists(self.STATS_FILENAME)

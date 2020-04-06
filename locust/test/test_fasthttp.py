@@ -1,3 +1,6 @@
+import socket
+import gevent
+
 from locust.core import task, TaskSet
 from locust.contrib.fasthttp import FastHttpSession, FastHttpLocust
 from locust.exception import CatchResponseError, InterruptTaskSet, ResponseError
@@ -53,7 +56,7 @@ class TestFastHttpSession(WebserverTestCase):
     
     def test_slow_redirect(self):
         s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
-        url = "/redirect?url=/redirect?delay=0.5"
+        url = "/redirect?url=/redirect&delay=0.5"
         r = s.get(url)
         stats = self.runner.stats.get(url, method="GET")
         self.assertEqual(1, stats.num_requests)
@@ -104,6 +107,10 @@ class TestFastHttpSession(WebserverTestCase):
             set(r.headers["allow"].split(", ")),
         )
 
+    def test_json_payload(self):
+        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        r = s.post("/request_method", json={"foo": "bar"})
+        self.assertEqual(200, r.status_code)
 
 class TestRequestStatsWithWebserver(WebserverTestCase):
     def test_request_stats_content_length(self):
@@ -260,6 +267,38 @@ class TestFastHttpLocustClass(WebserverTestCase):
         self.assertEqual(1, self.runner.stats.get("/redirect", "GET").num_requests)
         self.assertEqual(0, self.runner.stats.get("/ultra_fast", "GET").num_requests)
     
+    def test_network_timeout_setting(self):
+        class MyLocust(FastHttpLocust):
+            network_timeout = 0.5
+            host = "http://127.0.0.1:%i" % self.port
+
+        l = MyLocust(self.environment)
+        
+        timeout = gevent.Timeout(seconds=0.6, exception=AssertionError("Request took longer than 0.6 even though FastHttpLocust.network_timeout was set to 0.5"))
+        timeout.start()
+        r = l.client.get("/redirect?url=/redirect&delay=5.0")
+        timeout.cancel()
+        
+        self.assertTrue(isinstance(r.error.original, socket.timeout))
+        self.assertEqual(1, self.runner.stats.get("/redirect?url=/redirect&delay=5.0", "GET").num_failures)
+
+    def test_max_redirect_setting(self):
+        class MyLocust(FastHttpLocust):
+            max_redirects = 1 # max_redirects and max_retries are funny names, because they are actually max attempts
+            host = "http://127.0.0.1:%i" % self.port
+
+        l = MyLocust(self.environment)
+        l.client.get("/redirect")
+        self.assertEqual(1, self.runner.stats.get("/redirect", "GET").num_failures)
+
+    def test_slow_redirect(self):
+        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        url = "/redirect?url=/redirect&delay=0.5"
+        r = s.get(url)
+        stats = self.runner.stats.get(url, method="GET")
+        self.assertEqual(1, stats.num_requests)
+        self.assertGreater(stats.avg_response_time, 500)
+
     def test_client_basic_auth(self):
         class MyLocust(FastHttpLocust):
             host = "http://127.0.0.1:%i" % self.port
@@ -352,7 +391,7 @@ class TestFastHttpCatchResponse(WebserverTestCase):
                     raise InterruptTaskSet()
         class MyLocust(FastHttpLocust):
             host = "http://127.0.0.1:%i" % self.port
-            task_set = MyTaskSet
+            tasks = [MyTaskSet]
         
         l = MyLocust(self.environment)
         ts = MyTaskSet(l)

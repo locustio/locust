@@ -19,16 +19,16 @@ class TestLoadLocustfile(LocustTestCase):
             pass
         
         class MyHttpLocust(HttpLocust):
-            task_set = MyTaskSet
+            tasks = [MyTaskSet]
         
         class MyLocust(Locust):
-            task_set = MyTaskSet
+            tasks = [MyTaskSet]
         
         self.assertTrue(main.is_locust(("MyHttpLocust", MyHttpLocust)))
         self.assertTrue(main.is_locust(("MyLocust", MyLocust)))
         
         class ThriftLocust(Locust):
-            pass
+            abstract = True
         
         self.assertFalse(main.is_locust(("ThriftLocust", ThriftLocust)))
     

@@ -39,7 +39,7 @@ class BrowseDocumentationSequence(TaskSequence):
 
 
 class AwesomeUser(HttpLocust):
-    task_set = BrowseDocumentationSequence
+    tasks = [BrowseDocumentationSequence]
     host = "https://docs.locust.io/en/latest/"
 
     # we assume someone who is browsing the Locust docs,

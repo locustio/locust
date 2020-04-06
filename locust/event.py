@@ -72,7 +72,7 @@ class Events:
     
     report_to_master = EventHook
     """
-    *report_to_master* is used when Locust is running in --slave mode. It can be used to attach
+    *report_to_master* is used when Locust is running in --worker mode. It can be used to attach
     data to the dicts that are regularly sent to the master. It's fired regularly when a report
     is to be sent to the master server.
     
@@ -84,17 +84,17 @@ class Events:
     * *data*: Data dict that can be modified in order to attach data that should be sent to the master.
     """
     
-    slave_report = EventHook
+    worker_report = EventHook
     """
-    *slave_report* is used when Locust is running in --master mode and is fired when the master
-    server receives a report from a Locust slave server.
+    *worker_report* is used when Locust is running in --master mode and is fired when the master
+    server receives a report from a Locust worker server.
     
-    This event can be used to aggregate data from the locust slave servers.
+    This event can be used to aggregate data from the locust worker servers.
     
     Event is fired with following arguments:
     
-    * *client_id*: Client id of the reporting locust slave
-    * *data*: Data dict with the data from the slave node
+    * *client_id*: Client id of the reporting worker
+    * *data*: Data dict with the data from the worker node
     """
     
     hatch_complete = EventHook
@@ -111,28 +111,7 @@ class Events:
     *quitting* is fired when the locust process is exiting
     """
     
-    master_start_hatching = EventHook
     """
-    *master_start_hatching* is fired when we initiate the hatching process on the master.
-    
-    This event is especially useful to detect when the 'start' button is clicked on the web ui.
-    """
-    
-    master_stop_hatching = EventHook
-    """
-    *master_stop_hatching* is fired when terminate the hatching process on the master.
-    
-    This event is especially useful to detect when the 'stop' button is clicked on the web ui.
-    """
-    
-    locust_start_hatching = EventHook
-    """
-    *locust_start_hatching* is fired when we initiate the hatching process on any locust worker.
-    """
-    
-    locust_stop_hatching = EventHook
-    """
-    *locust_stop_hatching* is fired when terminate the hatching process on any locust worker.
     """
     
     init = EventHook
@@ -153,6 +132,19 @@ class Events:
     
     Event is fired with the following arguments:
     * *parser*: ArgumentParser instance
+    """
+    
+    test_start = EventHook
+    """
+    *test_start* is fired when a new load test is started. It's not fired again if the number of 
+    Locust users change during a test. When running locust distributed the event is only fired 
+    on the master node and not on each worker node. 
+    """
+    
+    test_stop = EventHook
+    """
+    *test_stop* is fired when a load test is stopped. When running locust distributed the event 
+    is only fired on the master node and not on each worker node.
     """
     
     def __init__(self):

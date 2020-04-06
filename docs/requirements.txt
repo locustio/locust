@@ -1,1 +1,2 @@
-sphinx_rtd_theme
+sphinx-rtd-theme
+-e git+https://github.com/readthedocs/readthedocs-sphinx-search#egg=sphinx-search
