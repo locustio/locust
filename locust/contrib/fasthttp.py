@@ -66,6 +66,8 @@ class FastHttpLocust(Locust):
     The client support cookies, and therefore keeps the session between HTTP requests.
     """
     
+    abstract = True
+    
     # Below are various UserAgent settings. Change these in your subclass to alter FastHttpLocust's behaviour. 
     # It needs to be done before FastHttpLocust is instantiated, changing them later will have no effect
     

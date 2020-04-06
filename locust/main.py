@@ -27,11 +27,10 @@ _internals = [Locust, HttpLocust]
 version = locust.__version__
 
 
-def is_locust(tup):
+def is_locust(item):
     """
-    Takes (name, object) tuple, returns True if it's a public Locust subclass.
+    Check if a variable is a runnable (non-abstract) Locust class
     """
-    name, item = tup
     return bool(
         inspect.isclass(item)
         and issubclass(item, Locust)
@@ -86,7 +85,7 @@ def load_locustfile(path):
         sys.path.insert(index + 1, directory)
         del sys.path[0]
     # Return our two-tuple
-    locusts = dict(filter(is_locust, vars(imported).items()))
+    locusts = {name:value for name, value in vars(imported).items() if is_locust(value)}
     return imported.__doc__, locusts
 
 
