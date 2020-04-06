@@ -512,6 +512,9 @@ class MasterLocustRunner(DistributedLocustRunner):
                 if msg.node_id in self.clients:
                     del self.clients[msg.node_id]
                     logger.info("Client %r quit. Currently %i clients connected." % (msg.node_id, len(self.clients.ready)))
+                    if self.state == STATE_RUNNING or self.state == STATE_HATCHING:
+                        # balance the load distribution when a client quits
+                        self.start(self.target_user_count, self.hatch_rate)
                 self.broadcast_timeslots()
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
