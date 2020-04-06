@@ -10,12 +10,13 @@ import locust
 from locust.core import HttpLocust, TaskSet, task, Locust
 from locust.env import Environment
 from locust.inspectlocust import get_task_ratio_dict
+from locust.runners import MasterLocustRunner
 from locust.rpc.protocol import Message
 from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_response_time_dicts, stats_writer
 from locust.test.testcases import LocustTestCase
 
 from .testcases import WebserverTestCase
-from .test_runners import mocked_options
+from .test_runners import mocked_options, mocked_rpc
 
 
 class TestRequestStats(unittest.TestCase):
@@ -366,6 +367,29 @@ class TestWriteStatCSVs(LocustTestCase):
             self.assertEqual("Aggregated", rows[1]["Name"])
             self.assertEqual("/", rows[2]["Name"])
             self.assertEqual("Aggregated", rows[3]["Name"])
+    
+    def test_csv_stats_on_master_from_aggregated_stats(self):
+        # Failing test for: https://github.com/locustio/locust/issues/1315
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = MasterLocustRunner(self.environment, [], master_bind_host="*", master_bind_port=0)
+            server.mocked_send(Message("client_ready", None, "fake_client"))
+            
+            master.stats.get("/", "GET").log(100, 23455)
+            master.stats.get("/", "GET").log(800, 23455)
+            master.stats.get("/", "GET").log(700, 23455)
+            
+            data = {"user_count":1}
+            self.environment.events.report_to_master.fire(client_id="fake_client", data=data)
+            master.stats.clear_all()
+            
+            server.mocked_send(Message("stats", data, "fake_client"))
+            s = master.stats.get("/", "GET")
+            self.assertEqual(700, s.median_response_time)
+            
+            locust.stats.write_csv_files(master.stats, self.STATS_BASE_NAME, full_history=True)
+            self.assertTrue(os.path.exists(self.STATS_FILENAME))
+            self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
+            self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
 
 
 class TestStatsEntryResponseTimesCache(unittest.TestCase):
