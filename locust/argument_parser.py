@@ -305,7 +305,7 @@ def setup_parser_arguments(parser):
     )
     
     
-    other_group = parser.add_argument_group("Other options", "Various other options")
+    other_group = parser.add_argument_group("Other options")
     # Display ratio table of all tasks
     other_group.add_argument(
         '--show-task-ratio',
