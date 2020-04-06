@@ -8,6 +8,7 @@ import sys
 import time
 
 import gevent
+from flask_basicauth import BasicAuth
 
 import locust
 

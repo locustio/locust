@@ -357,7 +357,13 @@ def setup_parser_arguments(parser):
         metavar='LocustClass',
         help="Optionally specify which Locust classes that should be used (available Locust classes can be listed with -l or --list)",
     )
-
+    parser.add_argument(
+        '-B', '--web-auth',
+        type=str,
+        dest='web_auth',
+        default=None,
+        help='Set the Basic Auth for the UI (fmt: username:password)'
+    )
 
 def get_parser(default_config_files=DEFAULT_CONFIG_FILES):
     # get a parser that is only able to parse the -f argument

@@ -5,8 +5,10 @@ import json
 import logging
 import os.path
 from collections import defaultdict
+from functools import wraps
 from itertools import chain
 from time import time
+from flask_basicauth import BasicAuth
 
 try:
     # >= Py3.2
@@ -45,8 +47,23 @@ class WebUI:
         self.app = app
         app.debug = True
         app.root_path = os.path.dirname(os.path.abspath(__file__))
+        app.config["BASIC_AUTH_ENABLED"] = False
+        self.auth = BasicAuth()
+
+        def auth_required_if_enabled(view_func):
+            @wraps(view_func)
+            def wrapper(*args, **kwargs):
+                if app.config["BASIC_AUTH_ENABLED"]:
+                    if self.auth.authenticate():
+                        return view_func(*args, **kwargs)
+                    else:
+                        return self.auth.challenge()
+                else:
+                    return view_func(*args, **kwargs)
+            return wrapper
         
         @app.route('/')
+        @auth_required_if_enabled
         def index():
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
@@ -84,6 +101,7 @@ class WebUI:
             )
         
         @app.route('/swarm', methods=["POST"])
+        @auth_required_if_enabled
         def swarm():
             assert request.method == "POST"
             locust_count = int(request.form["locust_count"])
@@ -101,17 +119,20 @@ class WebUI:
             return jsonify({'success': True, 'message': 'Swarming started', 'host': environment.host})
         
         @app.route('/stop')
+        @auth_required_if_enabled
         def stop():
             environment.runner.stop()
             return jsonify({'success':True, 'message': 'Test stopped'})
         
         @app.route("/stats/reset")
+        @auth_required_if_enabled
         def reset_stats():
             environment.runner.stats.reset_all()
             environment.runner.exceptions = {}
             return "ok"
             
         @app.route("/stats/requests/csv")
+        @auth_required_if_enabled
         def request_stats_csv():
             response = make_response(requests_csv(self.environment.runner.stats))
             file_name = "requests_{0}.csv".format(time())
@@ -121,6 +142,7 @@ class WebUI:
             return response
         
         @app.route("/stats/stats_history/csv")
+        @auth_required_if_enabled
         def stats_history_stats_csv():
             response = make_response(stats_history_csv(self.environment.runner.stats, False, True))
             file_name = "stats_history_{0}.csv".format(time())
@@ -130,6 +152,7 @@ class WebUI:
             return response
         
         @app.route("/stats/failures/csv")
+        @auth_required_if_enabled
         def failures_stats_csv():
             response = make_response(failures_csv(self.environment.runner.stats))
             file_name = "failures_{0}.csv".format(time())
@@ -139,6 +162,7 @@ class WebUI:
             return response
         
         @app.route('/stats/requests')
+        @auth_required_if_enabled
         @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
         def request_stats():
             stats = []
@@ -193,6 +217,7 @@ class WebUI:
             return jsonify(report)
         
         @app.route("/exceptions")
+        @auth_required_if_enabled
         def exceptions():
             return jsonify({
                 'exceptions': [
@@ -206,6 +231,7 @@ class WebUI:
             })
         
         @app.route("/exceptions/csv")
+        @auth_required_if_enabled
         def exceptions_csv():
             data = StringIO()
             writer = csv.writer(data)
