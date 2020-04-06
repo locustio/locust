@@ -319,6 +319,7 @@ its Locust instance, and the attribute :py:attr:`parent <locust.core.TaskSet.par
 parent TaskSet instance.
 
 
+.. _sequential-taskset:
 
 SequentialTaskSet class
 =======================

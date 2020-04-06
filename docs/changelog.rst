@@ -26,6 +26,7 @@ Breaking changes
       @events.test_stop.add_listener
       def on_test_start(**kw):
           print("test is stopping")
+* ``TaskSequence`` and ``@seq_task`` has been replaced with :ref:`SequentialTaskSet <sequential-taskset>`.
 
 
 0.14.0
