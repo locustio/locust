@@ -10,10 +10,10 @@ from .mock_locustfile import mock_locustfile
 
 class TestLoadLocustfile(LocustTestCase):
     def test_is_locust(self):
-        self.assertFalse(main.is_locust(("Locust", Locust)))
-        self.assertFalse(main.is_locust(("HttpLocust", HttpLocust)))
-        self.assertFalse(main.is_locust(("random_dict", {})))
-        self.assertFalse(main.is_locust(("random_list", [])))
+        self.assertFalse(main.is_locust(Locust))
+        self.assertFalse(main.is_locust(HttpLocust))
+        self.assertFalse(main.is_locust({}))
+        self.assertFalse(main.is_locust([]))
         
         class MyTaskSet(TaskSet):
             pass
@@ -24,13 +24,13 @@ class TestLoadLocustfile(LocustTestCase):
         class MyLocust(Locust):
             tasks = [MyTaskSet]
         
-        self.assertTrue(main.is_locust(("MyHttpLocust", MyHttpLocust)))
-        self.assertTrue(main.is_locust(("MyLocust", MyLocust)))
+        self.assertTrue(main.is_locust(MyHttpLocust))
+        self.assertTrue(main.is_locust(MyLocust))
         
         class ThriftLocust(Locust):
             abstract = True
         
-        self.assertFalse(main.is_locust(("ThriftLocust", ThriftLocust)))
+        self.assertFalse(main.is_locust(ThriftLocust))
     
     def test_load_locust_file_from_absolute_path(self):
         with mock_locustfile() as mocked:

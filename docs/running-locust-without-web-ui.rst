@@ -5,11 +5,11 @@ Running Locust without the web UI
 =================================
 
 You can run locust without the web UI - for example if you want to run it in some automated flow, 
-like a CI server - by using the ``--no-web`` flag together with ``-c`` and ``-r``:
+like a CI server - by using the ``--headless`` flag together with ``-c`` and ``-r``:
 
 .. code-block:: console
 
-    $ locust -f locust_files/my_locust_file.py --no-web -c 1000 -r 100
+    $ locust -f locust_files/my_locust_file.py --headless -c 1000 -r 100
 
 ``-c`` specifies the number of Locust users to spawn, and ``-r`` specifies the hatch rate 
 (number of users to spawn per second).
@@ -22,7 +22,7 @@ If you want to specify the run time for a test, you can do that with ``--run-tim
 
 .. code-block:: console
 
-    $ locust -f --no-web -c 1000 -r 100 --run-time 1h30m
+    $ locust -f --headless -c 1000 -r 100 --run-time 1h30m
 
 Locust will shutdown once the time is up.
 
@@ -33,7 +33,7 @@ By default, locust will stop your tasks immediately. If you want to allow your t
 
 .. code-block:: console
 
-    $ locust -f --no-web -c 1000 -r 100 --run-time 1h30m --stop-timeout 99
+    $ locust -f --headless -c 1000 -r 100 --run-time 1h30m --stop-timeout 99
 
 .. _running-locust-distributed-without-web-ui:
 

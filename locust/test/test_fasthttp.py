@@ -4,6 +4,7 @@ import gevent
 from locust.core import task, TaskSet
 from locust.contrib.fasthttp import FastHttpSession, FastHttpLocust
 from locust.exception import CatchResponseError, InterruptTaskSet, ResponseError
+from locust.main import is_locust
 from .testcases import WebserverTestCase
 
 
@@ -175,6 +176,10 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
 
 
 class TestFastHttpLocustClass(WebserverTestCase):
+    def test_is_abstract(self):
+        self.assertTrue(FastHttpLocust.abstract)
+        self.assertFalse(is_locust(FastHttpLocust))
+        
     def test_get_request(self):
         self.response = ""
         def t1(l):

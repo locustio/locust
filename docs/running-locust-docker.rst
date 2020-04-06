@@ -56,7 +56,7 @@ To run in standalone mode without the web UI, you can use the ``LOCUST_OPTS`` en
 
 .. code-block:: console
 
-    docker run --volume $PWD/dir/of/locustfile:/mnt/locust -e LOCUSTFILE_PATH=/mnt/locust/locustfile.py -e TARGET_URL=https://abc.com -e LOCUST_OPTS="--clients=10 --no-web --run-time=600" locustio/locust
+    docker run --volume $PWD/dir/of/locustfile:/mnt/locust -e LOCUSTFILE_PATH=/mnt/locust/locustfile.py -e TARGET_URL=https://abc.com -e LOCUST_OPTS="--clients=10 --headless --run-time=600" locustio/locust
 
 
 If you are Kubernetes user, you can use the `Helm chart <https://github.com/helm/charts/tree/master/stable/locust>`_ to scale and run locust.

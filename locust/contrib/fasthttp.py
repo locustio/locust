@@ -85,7 +85,7 @@ class FastHttpLocust(Locust):
     """Parameter passed to FastHttpSession. Default True, meaning no SSL verification."""
 
     abstract = True 
-    """dont register this as a locust"""
+    """Dont register this as a locust that can be run by itself"""
 
     def __init__(self, environment):
         super().__init__(environment)

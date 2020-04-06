@@ -39,7 +39,7 @@ If you want to run Locust in step load mode without the web UI, you can do that 
 
 .. code-block:: console
 
-    $ locust -f --no-web -c 1000 -r 100 --run-time 1h30m --step-load --step-clients 300 --step-time 20m
+    $ locust -f --headless -c 1000 -r 100 --run-time 1h30m --step-load --step-clients 300 --step-time 20m
 
 Locust will swarm the clients by step and shutdown once the time is up.
 

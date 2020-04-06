@@ -7,11 +7,11 @@ You may wish to consume your Locust results via a CSV file. In this case, there 
 First, when running Locust with the web UI, you can retrieve CSV files under the Download Data tab. 
 
 Secondly, you can run Locust with a flag which will periodically save two CSV files. This is particularly useful
-if you plan on running Locust in an automated way with the ``--no-web`` flag:
+if you plan on running Locust in an automated way with the ``--headless`` flag:
 
 .. code-block:: console
 
-    $ locust -f examples/basic.py --csv=example --no-web -t10m
+    $ locust -f examples/basic.py --csv=example --headless -t10m
 
 The files will be named ``example_response_times.csv`` and ``example_stats.csv`` (when using ``--csv=example``) and mirror Locust's built in stat pages.
 
