@@ -472,15 +472,23 @@ class TestMasterRunner(LocustTestCase):
             self.assertTrue("zeh_fake_client1" in master.clients, "Could not find fake client in master instance's clients dict")
             
             master.start(100, 20)
-            self.assertEqual(1, len(server.outbox))
+            self.assertEqual(1*2, len(server.outbox))
             client_id, msg = server.outbox.pop()
             self.assertEqual(100, msg.data["num_clients"])
             self.assertEqual(20, msg.data["hatch_rate"])
-            
+            client_id, msg = server.outbox.pop()
+            self.assertEqual("timeslot_ratio", msg.type)
+
             # let another worker connect
             server.mocked_send(Message("client_ready", None, "zeh_fake_client2"))
             self.assertEqual(2, len(master.clients))
-            self.assertEqual(2, len(server.outbox))
+            self.assertEqual(2*2, len(server.outbox))
+
+            client_id, msg = server.outbox.pop()
+            self.assertEqual("timeslot_ratio", msg.type)
+            client_id, msg = server.outbox.pop()
+            self.assertEqual("timeslot_ratio", msg.type)
+
             client_id, msg = server.outbox.pop()
             self.assertEqual(50, msg.data["num_clients"])
             self.assertEqual(10, msg.data["hatch_rate"])
@@ -516,9 +524,10 @@ class TestMasterRunner(LocustTestCase):
             
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
-            
+            n_timeslots = 5*(5+1)/2
+
             master.start(7, 7)
-            self.assertEqual(5, len(server.outbox))
+            self.assertEqual(n_timeslots + 5, len(server.outbox))
             self.assertEqual(1, run_count[0])
             
             # change number of users and check that test_start isn't fired again
@@ -539,9 +548,10 @@ class TestMasterRunner(LocustTestCase):
             
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
-            
+            n_timeslots = 5*(5+1)/2
+
             master.start(7, 7)
-            self.assertEqual(5, len(server.outbox))
+            self.assertEqual(n_timeslots + 5, len(server.outbox))
             master.stop()
             self.assertEqual(1, run_count[0])  
 
@@ -578,12 +588,15 @@ class TestMasterRunner(LocustTestCase):
             master = self.get_runner()
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
-            
+            n_timeslots = 5*(5+1)/2
+
             master.start(7, 7)
-            self.assertEqual(5, len(server.outbox))
+            self.assertEqual(n_timeslots + 5, len(server.outbox))
             
             num_clients = 0
             for _, msg in server.outbox:
+                if msg.type == "timeslot_ratio":
+                    continue
                 num_clients += msg.data["num_clients"]
             
             self.assertEqual(7, num_clients, "Total number of locusts that would have been spawned is not 7")
@@ -593,12 +606,15 @@ class TestMasterRunner(LocustTestCase):
             master = self.get_runner()
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
-            
+            n_timeslots = 5*(5+1)/2
+
             master.start(2, 2)
-            self.assertEqual(5, len(server.outbox))
-            
+            self.assertEqual(n_timeslots + 5, len(server.outbox))
+
             num_clients = 0
             for _, msg in server.outbox:
+                if msg.type == "timeslot_ratio":
+                    continue
                 num_clients += msg.data["num_clients"]
             
             self.assertEqual(2, num_clients, "Total number of locusts that would have been spawned is not 2")
@@ -608,17 +624,20 @@ class TestMasterRunner(LocustTestCase):
             master = self.get_runner()
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+            n_timeslots = 5*(5+1)/2
 
             # start a new swarming in Step Load mode: total locust count of 10, hatch rate of 2, step locust count of 5, step duration of 2s
             master.start_stepload(10, 2, 5, 2)
 
             # make sure the first step run is started
             sleep(0.5)
-            self.assertEqual(5, len(server.outbox))
+            self.assertEqual(n_timeslots + 5, len(server.outbox))
 
             num_clients = 0
             end_of_last_step = len(server.outbox)
             for _, msg in server.outbox:
+                if msg.type == "timeslot_ratio":
+                    continue
                 num_clients += msg.data["num_clients"]
             
             self.assertEqual(5, num_clients, "Total number of locusts that would have been spawned for first step is not 5")
