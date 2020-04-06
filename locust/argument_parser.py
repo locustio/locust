@@ -198,20 +198,20 @@ def setup_parser_arguments(parser):
         action='store_true',
         help="Disable the web interface, and instead start running the test immediately. Requires -c and -t to be specified."
     )
-    # Number of clients
+    # Number of users
     parser.add_argument(
-        '-c', '--clients',
+        '-u', '--users',
         type=int,
-        dest='num_clients',
+        dest='num_users',
         default=1,
-        help="Number of concurrent Locust users. Only used together with --no-web"
+        help="Number of concurrent users. Only used together with --no-web"
     )
-    # Client hatch rate
+    # User hatch rate
     parser.add_argument(
         '-r', '--hatch-rate',
         type=float,
         default=1,
-        help="The rate per second in which clients are spawned. Only used together with --no-web"
+        help="The rate per second in which users are spawned. Only used together with --no-web"
     )
     # Time limit of the test run
     parser.add_argument(
@@ -230,14 +230,14 @@ def setup_parser_arguments(parser):
     parser.add_argument(
         '--step-load',
         action='store_true',
-        help="Enable Step Load mode to monitor how performance metrics varies when user load increases. Requires --step-clients and --step-time to be specified."
+        help="Enable Step Load mode to monitor how performance metrics varies when user load increases. Requires --step-users and --step-time to be specified."
     )
-    # Number of clients to incease by Step
+    # Number of users to incease by Step
     parser.add_argument(
-        '--step-clients',
+        '--step-users',
         type=int,
         default=1,
-        help="Client count to increase by step in Step Load mode. Only used together with --step-load"
+        help="User count to increase by step in Step Load mode. Only used together with --step-load"
     )
     # Time limit of each step
     parser.add_argument(
