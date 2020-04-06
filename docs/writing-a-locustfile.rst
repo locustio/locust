@@ -320,30 +320,42 @@ parent TaskSet instance.
 
 
 
-TaskSequence class
-==================
+SequentialTaskSet class
+=======================
 
-TaskSequence class is a TaskSet but its tasks will be executed in order.
-To define this order you should do the following:
+:py:class:`SequentialTaskSet <locust.sequential_taskset.SequentialTaskSet>` is a TaskSet but its 
+tasks will be executed in the order that they are declared. Weights are ignored for tasks on a 
+SequentialTaskSet class. Ofcourse you can also nest SequentialTaskSet within TaskSet and vice versa.
 
 .. code-block:: python
-
-    class MyTaskSequence(TaskSequence):
-        @seq_task(1)
+    
+    def function_task(taskset):
+        pass
+    
+    class SequenceOfTasks(SequentialTaskSet):
+        @task
         def first_task(self):
             pass
-
-        @seq_task(2)
+        
+        tasks = [functon_task]
+        
+        @task
         def second_task(self):
             pass
 
-        @seq_task(3)
-        @task(10)
+        @task
         def third_task(self):
             pass
 
-In the above example, the order is defined to execute first_task, then second_task and lastly the third_task for 10 times.
-As you can see, you can compose :py:meth:`@seq_task <locust.core.seq_task>` with :py:meth:`@task <locust.core.task>` decorator, and of course you can also nest TaskSets within TaskSequences and vice versa.
+In the above example, the tasks are executed in the order of declaration: 
+
+1. ``first_task``
+2. ``function_task``
+3. ``second_task``
+4. ``third_task``
+
+and then it will start over at ``first_task`` again.
+
 
 .. _on-start-on-stop:
 
