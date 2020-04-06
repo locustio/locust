@@ -30,7 +30,7 @@ class TestWebUI(LocustTestCase):
 
         self.web_ui = WebUI(self.environment)
         self.web_ui.app.view_functions["request_stats"].clear_cache()
-        self.web_ui.app.config["BASIC_AUTH_ENABLAED"] = False
+        self.web_ui.app.config["BASIC_AUTH_ENABLED"] = False
         gevent.spawn(lambda: self.web_ui.start("127.0.0.1", 0))
         gevent.sleep(0.01)
         self.web_port = self.web_ui.server.server_port
