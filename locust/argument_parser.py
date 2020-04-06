@@ -174,60 +174,68 @@ def setup_parser_arguments(parser):
         help="Disable the web interface, and instead start the load test immediately. Requires -c and -t to be specified."
     )
     
-    master_worker_group = parser.add_argument_group(
-        "Master/Worker options", 
-        "Options for running Locust distributed",
+    master_group = parser.add_argument_group(
+        "Master options", 
+        "Options for running a Locust Master node when running Locust distributed. A Master node need Worker nodes that connect to it before it can run load tests.",
     )
     # if locust should be run in distributed mode as master
-    master_worker_group.add_argument(
+    master_group.add_argument(
         '--master',
         action='store_true',
         help="Set locust to run in distributed mode with this process as master"
     )
-    # if locust should be run in distributed mode as worker
-    master_worker_group.add_argument(
-        '--worker',
-        action='store_true',
-        help="Set locust to run in distributed mode with this process as worker"
-    )
-    master_worker_group.add_argument(
-        '--slave',
-        action='store_true',
-        help=configargparse.SUPPRESS
-    )
-    # master host options
-    master_worker_group.add_argument(
-        '--master-host',
-        default="127.0.0.1",
-        help="Host or IP address of locust master for distributed load testing. Only used when running with --worker. Defaults to 127.0.0.1."
-    )
-    master_worker_group.add_argument(
-        '--master-port',
-        type=int,
-        default=5557,
-        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --worker. Defaults to 5557."
-    )
-    master_worker_group.add_argument(
+    master_group.add_argument(
         '--master-bind-host',
         default="*",
         help="Interfaces (hostname, ip) that locust master should bind to. Only used when running with --master. Defaults to * (all available interfaces)."
     )
-    master_worker_group.add_argument(
+    master_group.add_argument(
         '--master-bind-port',
         type=int,
         default=5557,
         help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557."
     )
-    master_worker_group.add_argument(
+    master_group.add_argument(
         '--expect-workers',
         type=int,
         default=1,
         help="How many workers master should expect to connect before starting the test (only when --headless used)."
     )
-    master_worker_group.add_argument(
+    master_group.add_argument(
         '--expect-slaves',
         action='store_true',
         help=configargparse.SUPPRESS
+    )
+    
+    worker_group = parser.add_argument_group(
+        "Worker options", 
+        textwrap.dedent("""
+            Options for running a Locust Worker node when running Locust distributed. 
+            Only the LOCUSTFILE (-f option) need to be specified when starting a Worker, since other options such as -c, -r, -t are specified on the Master node.
+        """),
+    )
+    # if locust should be run in distributed mode as worker
+    worker_group.add_argument(
+        '--worker',
+        action='store_true',
+        help="Set locust to run in distributed mode with this process as worker"
+    )
+    worker_group.add_argument(
+        '--slave',
+        action='store_true',
+        help=configargparse.SUPPRESS
+    )
+    # master host options
+    worker_group.add_argument(
+        '--master-host',
+        default="127.0.0.1",
+        help="Host or IP address of locust master for distributed load testing. Only used when running with --worker. Defaults to 127.0.0.1."
+    )
+    worker_group.add_argument(
+        '--master-port',
+        type=int,
+        default=5557,
+        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --worker. Defaults to 5557."
     )
     
     stats_group = parser.add_argument_group("Request statistics options")
