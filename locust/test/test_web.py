@@ -265,30 +265,26 @@ class TestWebUIAuth(LocustTestCase):
         super(TestWebUIAuth, self).setUp()
 
         parser = get_parser(default_config_files=[])
-        self.environment.options = parser.parse_args([])
+        self.environment.options = parser.parse_args(["--web-auth", "john:doe"])
         self.runner = LocustRunner(self.environment, [])
         self.stats = self.runner.stats
-
-        self.web_ui = WebUI(self.environment)
+        self.web_ui = WebUI(self.environment, self.environment.options.web_auth)
         self.web_ui.app.view_functions["request_stats"].clear_cache()
-        self.setUpBasicAuth()
         gevent.spawn(lambda: self.web_ui.start("127.0.0.1", 0))
         gevent.sleep(0.01)
         self.web_port = self.web_ui.server.server_port
-
-    def setUpBasicAuth(self):
-        self.web_ui.app.config["BASIC_AUTH_ENABLED"] = True
-        self.web_ui.app.config["BASIC_AUTH_USERNAME"] = "john"
-        self.web_ui.app.config["BASIC_AUTH_PASSWORD"] = "doe"
-        auth = BasicAuth()
-        auth.init_app(self.web_ui.app)
 
     def tearDown(self):
         super(TestWebUIAuth, self).tearDown()
         self.web_ui.stop()
         self.runner.quit()
 
-    def test_index_with_basic_auth_enabled(self):
+    def test_index_with_basic_auth_enabled_correct_credentials(self):
         self.assertEqual(200, requests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port, auth=('john', 'doe')).status_code)
+
+    def test_index_with_basic_auth_enabled_incorrect_credentials(self):
         self.assertEqual(401, requests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port,
                                            auth=('john', 'invalid')).status_code)
+
+    def test_index_with_basic_auth_enabled_blank_credentials(self):
+        self.assertEqual(401, requests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port).status_code)

@@ -4,6 +4,7 @@ import csv
 import json
 import logging
 import os.path
+import sys
 from collections import defaultdict
 from functools import wraps
 from itertools import chain
@@ -38,17 +39,30 @@ DEFAULT_CACHE_TIME = 2.0
 
 class WebUI:
     server = None
-    """Refernce to pyqsgi.WSGIServer once it's started"""
+    """Reference to pyqsgi.WSGIServer once it's started"""
     
-    def __init__(self, environment):
+    def __init__(self, environment, web_auth=None):
         environment.web_ui = self
         self.environment = environment
         app = Flask(__name__)
         self.app = app
         app.debug = True
         app.root_path = os.path.dirname(os.path.abspath(__file__))
-        app.config["BASIC_AUTH_ENABLED"] = False
-        self.auth = BasicAuth()
+        self.app.config["BASIC_AUTH_ENABLED"] = False
+        self.auth = None
+
+        if web_auth is not None:
+            credentials = web_auth.split(':')
+            if len(credentials) == 2:
+                self.app.config["BASIC_AUTH_USERNAME"] = credentials[0]
+                self.app.config["BASIC_AUTH_PASSWORD"] = credentials[1]
+                self.app.config["BASIC_AUTH_ENABLED"] = True
+                self.auth = BasicAuth()
+                self.auth.init_app(self.app)
+            else:
+                sys.stderr.write("The credentials need to provided in the format username:password\n")
+                sys.exit(1)
+
 
         def auth_required_if_enabled(view_func):
             @wraps(view_func)
