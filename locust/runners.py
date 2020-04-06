@@ -500,7 +500,13 @@ class MasterLocustRunner(DistributedLocustRunner):
 
 class WorkerLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, master_host, master_port, **kwargs):
+        # Create a new RequestStats with use_response_times_cache set to False to save some memory
+        # and CPU cycles. We need to create the new RequestStats before we call super() (since int's
+        # used in the constructor of DistributedLocustRunner)
+        self.stats = RequestStats(use_response_times_cache=False)
+        
         super().__init__(*args, **kwargs)
+        
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         self.master_host = master_host
         self.master_port = master_port
