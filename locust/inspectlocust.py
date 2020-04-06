@@ -1,6 +1,6 @@
 import inspect
 
-from .core import Locust, TaskSet
+from .core import User, TaskSet
 from .log import console_logger
 
 
@@ -37,7 +37,7 @@ def get_task_ratio_dict(tasks, total=False, parent_ratio=1.0):
     for locust, ratio in ratio_percent.items():
         d = {"ratio":ratio}
         if inspect.isclass(locust):
-            if issubclass(locust, (Locust, TaskSet)):
+            if issubclass(locust, (User, TaskSet)):
                 T = locust.tasks
             if total:
                 d["tasks"] = get_task_ratio_dict(T, total, ratio)

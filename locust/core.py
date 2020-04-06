@@ -214,7 +214,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
         
         if isinstance(parent, TaskSet):
             self.locust = parent.locust
-        elif isinstance(parent, Locust):
+        elif isinstance(parent, User):
             self.locust = parent
         else:
             raise LocustError("TaskSet should be called with Locust instance or TaskSet instance as first argument")
@@ -447,7 +447,7 @@ class LocustMeta(type):
         return type.__new__(mcs, classname, bases, class_dict)
 
 
-class Locust(object, metaclass=LocustMeta):
+class User(object, metaclass=LocustMeta):
     """
     Represents a "user" which is to be hatched and attack the system that is to be load tested.
     
@@ -517,7 +517,7 @@ class Locust(object, metaclass=LocustMeta):
     _greenlet = None
     
     def __init__(self, environment):
-        super(Locust, self).__init__()
+        super(User, self).__init__()
         # check if deprecated wait API is used
         deprecation.check_for_deprecated_wait_api(self)
         self.environment = environment
@@ -588,7 +588,7 @@ class Locust(object, metaclass=LocustMeta):
             return False
 
 
-class HttpLocust(Locust):
+class HttpLocust(User):
     """
     Represents an HTTP "user" which is to be hatched and attack the system that is to be load tested.
     

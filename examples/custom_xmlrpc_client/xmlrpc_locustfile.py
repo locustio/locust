@@ -1,7 +1,7 @@
 import time
 from xmlrpc.client import ServerProxy, Fault
 
-from locust import Locust, task, between
+from locust import User, task, between
 
 
 class XmlRpcClient(ServerProxy):
@@ -31,7 +31,7 @@ class XmlRpcClient(ServerProxy):
         return wrapper
 
 
-class XmlRpcLocust(Locust):
+class XmlRpcLocust(User):
     """
     This is the abstract Locust class which should be subclassed. It provides an XML-RPC client
     that can be used to make XML-RPC requests that will be tracked in Locust's statistics.

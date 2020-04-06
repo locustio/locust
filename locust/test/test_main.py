@@ -3,14 +3,14 @@ import os
 from locust import main
 from locust.argument_parser import parse_options
 from locust.main import create_environment
-from locust.core import HttpLocust, Locust, TaskSet
+from locust.core import HttpLocust, User, TaskSet
 from .testcases import LocustTestCase
 from .mock_locustfile import mock_locustfile
 
 
 class TestLoadLocustfile(LocustTestCase):
     def test_is_locust(self):
-        self.assertFalse(main.is_locust(("Locust", Locust)))
+        self.assertFalse(main.is_locust(("Locust", User)))
         self.assertFalse(main.is_locust(("HttpLocust", HttpLocust)))
         self.assertFalse(main.is_locust(("random_dict", {})))
         self.assertFalse(main.is_locust(("random_list", [])))
@@ -21,13 +21,13 @@ class TestLoadLocustfile(LocustTestCase):
         class MyHttpLocust(HttpLocust):
             tasks = [MyTaskSet]
         
-        class MyLocust(Locust):
+        class MyLocust(User):
             tasks = [MyTaskSet]
         
         self.assertTrue(main.is_locust(("MyHttpLocust", MyHttpLocust)))
         self.assertTrue(main.is_locust(("MyLocust", MyLocust)))
         
-        class ThriftLocust(Locust):
+        class ThriftLocust(User):
             abstract = True
         
         self.assertFalse(main.is_locust(("ThriftLocust", ThriftLocust)))

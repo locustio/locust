@@ -10,7 +10,7 @@ import requests
 
 from locust import constant
 from locust.argument_parser import get_parser
-from locust.core import Locust, TaskSet, task
+from locust.core import User, TaskSet, task
 from locust.env import Environment
 from locust.runners import LocustRunner
 from locust.web import WebUI
@@ -183,7 +183,7 @@ class TestWebUI(LocustTestCase):
         self.assertEqual(2, int(rows[1][0]), "Exception count should be 2")
 
     def test_swarm_host_value_specified(self):
-        class MyLocust(Locust):
+        class MyLocust(User):
             wait_time = constant(1)
             @task(1)
             def my_task(self):
@@ -198,7 +198,7 @@ class TestWebUI(LocustTestCase):
         self.assertEqual(self.environment.host, "https://localhost")
 
     def test_swarm_host_value_not_specified(self):
-        class MyLocust(Locust):
+        class MyLocust(User):
             wait_time = constant(1)
             @task(1)
             def my_task(self):
@@ -213,7 +213,7 @@ class TestWebUI(LocustTestCase):
         self.assertEqual(self.environment.host, None)
     
     def test_host_value_from_locust_class(self):
-        class MyLocust(Locust):
+        class MyLocust(User):
             host = "http://example.com"
         self.environment.runner.locust_classes = [MyLocust]
         response = requests.get("http://127.0.0.1:%i/" % self.web_port)
@@ -222,9 +222,9 @@ class TestWebUI(LocustTestCase):
         self.assertNotIn("setting this will override the host on all Locust classes", response.content.decode("utf-8"))
     
     def test_host_value_from_multiple_locust_classes(self):
-        class MyLocust(Locust):
+        class MyLocust(User):
             host = "http://example.com"
-        class MyLocust2(Locust):
+        class MyLocust2(User):
             host = "http://example.com"
         self.environment.runner.locust_classes = [MyLocust, MyLocust2]
         response = requests.get("http://127.0.0.1:%i/" % self.web_port)
@@ -233,9 +233,9 @@ class TestWebUI(LocustTestCase):
         self.assertNotIn("setting this will override the host on all Locust classes", response.content.decode("utf-8"))
     
     def test_host_value_from_multiple_locust_classes_different_hosts(self):
-        class MyLocust(Locust):
+        class MyLocust(User):
             host = None
-        class MyLocust2(Locust):
+        class MyLocust2(User):
             host = "http://example.com"
         self.environment.runner.locust_classes = [MyLocust, MyLocust2]
         response = requests.get("http://127.0.0.1:%i/" % self.web_port)
@@ -244,7 +244,7 @@ class TestWebUI(LocustTestCase):
         self.assertIn("setting this will override the host on all Locust classes", response.content.decode("utf-8"))
 
     def test_swarm_in_step_load_mode(self):
-        class MyLocust(Locust):
+        class MyLocust(User):
             wait_time = constant(1)
             @task(1)
             def my_task(self):

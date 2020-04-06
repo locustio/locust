@@ -1,6 +1,6 @@
 import unittest
 
-from locust.core import Locust, TaskSet, task
+from locust.core import User, TaskSet, task
 from locust.inspectlocust import get_task_ratio_dict
 
 
@@ -21,7 +21,7 @@ class TestTaskRatio(unittest.TestCase):
                 def task2(self):
                     pass
         
-        class User(Locust):
+        class MyUser(User):
             tasks = [Tasks]
         
         ratio_dict = get_task_ratio_dict(Tasks.tasks, total=True)
@@ -47,11 +47,11 @@ class TestTaskRatio(unittest.TestCase):
             def task3(self):
                 pass
 
-        class UnlikelyLocust(Locust):
+        class UnlikelyLocust(User):
             weight = 1
             tasks = [Tasks]
 
-        class MoreLikelyLocust(Locust):
+        class MoreLikelyLocust(User):
             weight = 3
             tasks = [Tasks]
 

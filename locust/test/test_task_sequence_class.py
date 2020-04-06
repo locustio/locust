@@ -1,5 +1,5 @@
 from locust import InterruptTaskSet, ResponseError
-from locust.core import HttpLocust, Locust, TaskSequence, seq_task, task
+from locust.core import HttpLocust, User, TaskSequence, seq_task, task
 from locust.exception import (CatchResponseError, LocustError, RescheduleTask,
                               RescheduleTaskImmediately)
 from locust.wait_time import between, constant
@@ -10,10 +10,10 @@ class TestTaskSet(LocustTestCase):
     def setUp(self):
         super(TestTaskSet, self).setUp()
 
-        class User(Locust):
+        class MyUser(User):
             host = "127.0.0.1"
             wait_time = between(0.001, 0.1)
-        self.locust = User(self.environment)
+        self.locust = MyUser(self.environment)
 
     def test_task_sequence_with_list(self):
         def t1(l):
