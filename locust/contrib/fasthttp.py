@@ -66,8 +66,6 @@ class FastHttpLocust(Locust):
     The client support cookies, and therefore keeps the session between HTTP requests.
     """
     
-    abstract = True
-    
     # Below are various UserAgent settings. Change these in your subclass to alter FastHttpLocust's behaviour. 
     # It needs to be done before FastHttpLocust is instantiated, changing them later will have no effect
     
@@ -87,7 +85,7 @@ class FastHttpLocust(Locust):
     """Parameter passed to FastHttpSession. Default True, meaning no SSL verification."""
 
     abstract = True 
-    """dont register this as a locust"""
+    """Dont register this as a locust that can be run by itself"""
 
     def __init__(self, environment):
         super().__init__(environment)
