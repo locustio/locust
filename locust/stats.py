@@ -739,22 +739,22 @@ def stats_printer(stats):
             gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
     return stats_printer_func
 
-def stats_writer(stats, base_filepath, stats_history_enabled=False):
+def stats_writer(stats, base_filepath, full_history=False):
     """Writes the csv files for the locust run."""
     with open(base_filepath + '_stats_history.csv', 'w') as f:
         f.write(stats_history_csv_header())
     while True:
-        write_stat_csvs(stats, base_filepath, stats_history_enabled)
+        write_csv_files(stats, base_filepath, full_history)
         gevent.sleep(CSV_STATS_INTERVAL_SEC)
 
 
-def write_stat_csvs(stats, base_filepath, stats_history_enabled=False):
+def write_csv_files(stats, base_filepath, full_history=False):
     """Writes the requests, distribution, and failures csvs."""
     with open(base_filepath + '_stats.csv', 'w') as f:
         f.write(requests_csv(stats))
 
     with open(base_filepath + '_stats_history.csv', 'a') as f:
-        f.write(stats_history_csv(stats, stats_history_enabled) + "\n")
+        f.write(stats_history_csv(stats, full_history) + "\n")
 
     with open(base_filepath + '_failures.csv', 'w') as f:
         f.write(failures_csv(stats))

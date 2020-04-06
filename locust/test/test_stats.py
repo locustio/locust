@@ -1,9 +1,11 @@
+import csv
 import time
 import unittest
 import re
 import os
 
 import gevent
+import mock
 import locust
 from locust.core import HttpLocust, TaskSet, task, Locust
 from locust.env import Environment
@@ -316,19 +318,55 @@ class TestWriteStatCSVs(LocustTestCase):
         if os.path.exists(filename):
             os.remove(filename)
 
-    def test_write_stat_csvs(self):
-        locust.stats.write_stat_csvs(self.runner.stats, self.STATS_BASE_NAME)
+    def test_write_csv_files(self):
+        locust.stats.write_csv_files(self.runner.stats, self.STATS_BASE_NAME)
+        self.assertTrue(os.path.exists(self.STATS_FILENAME))
+        self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
+        self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
+    
+    def test_write_csv_files_full_history(self):
+        locust.stats.write_csv_files(self.runner.stats, self.STATS_BASE_NAME, full_history=True)
         self.assertTrue(os.path.exists(self.STATS_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
     
     def test_csv_stats_writer(self):
-        greenlet = gevent.spawn(stats_writer, self.runner.stats, self.STATS_BASE_NAME)
-        gevent.sleep(0.2)
-        gevent.kill(greenlet)
-        self.assertTrue(os.path.exists(self.STATS_FILENAME))
-        self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
-        self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
+        with mock.patch("locust.stats.CSV_STATS_INTERVAL_SEC", new=0.2):
+            greenlet = gevent.spawn(stats_writer, self.runner.stats, self.STATS_BASE_NAME)
+            gevent.sleep(0.21)
+            gevent.kill(greenlet)
+            self.assertTrue(os.path.exists(self.STATS_FILENAME))
+            self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
+            self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
+            
+            with open(self.STATS_HISTORY_FILENAME) as f:
+                reader = csv.DictReader(f)
+                rows = [r for r in reader]
+            
+            self.assertEqual(2, len(rows))
+            self.assertEqual("Aggregated", rows[0]["Name"])
+            self.assertEqual("Aggregated", rows[1]["Name"])
+    
+    def test_csv_stats_writer_full_history(self):
+        self.runner.stats.log_request("GET", "/", 10, content_length=666)
+        with mock.patch("locust.stats.CSV_STATS_INTERVAL_SEC", new=0.2):
+            greenlet = gevent.spawn(stats_writer, self.runner.stats, self.STATS_BASE_NAME, full_history=True)
+            gevent.sleep(0.21)
+            gevent.kill(greenlet)
+            self.assertTrue(os.path.exists(self.STATS_FILENAME))
+            self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
+            self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
+            
+            with open(self.STATS_HISTORY_FILENAME) as f:
+                reader = csv.DictReader(f)
+                rows = [r for r in reader]
+            
+            self.assertEqual(4, len(rows))
+            self.assertEqual("/", rows[0]["Name"])
+            self.assertEqual("Aggregated", rows[1]["Name"])
+            self.assertEqual("/", rows[2]["Name"])
+            self.assertEqual("Aggregated", rows[3]["Name"])
+
 
 class TestStatsEntryResponseTimesCache(unittest.TestCase):
     def setUp(self, *args, **kwargs):
