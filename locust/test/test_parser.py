@@ -46,3 +46,10 @@ class TestParser(unittest.TestCase):
         self.assertEqual(options.web_host, 'webhost_from_config')
         self.assertEqual(options.locustfile, 'locustfile_from_env')
         self.assertEqual(options.host, 'host_from_args') # overridden
+
+    def test_web_auth(self):
+        args = [
+            "--web-auth", "hello:bye"
+        ]
+        opts = self.parser.parse_args(args)
+        self.assertEqual(opts.web_auth, "hello:bye")
