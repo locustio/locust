@@ -6,6 +6,7 @@ import traceback
 
 import gevent
 import requests
+from flask_basicauth import BasicAuth
 from gevent import pywsgi
 
 from locust import events, runners, stats, web
@@ -216,3 +217,38 @@ class TestWebUI(LocustTestCase):
         response = requests.post("http://127.0.0.1:%i/swarm" % self.web_port, SWARM_DATA_WITH_STEP_LOAD)
         self.assertEqual(200, response.status_code)
         self.assertIn("Step Load Mode", response.text)
+
+
+class TestWebUIAuth(LocustTestCase):
+    def setUp(self):
+        super(TestWebUIAuth, self).setUp()
+
+        stats.global_stats.clear_all()
+        parser = parse_options(default_config_files=[])[0]
+        self.options = parser.parse_args([])
+        runners.locust_runner = LocustRunner([], self.options)
+
+        web.request_stats.clear_cache()
+        self.setUpBasicAuth()
+        self._web_ui_server = pywsgi.WSGIServer(('127.0.0.1', 0), web.app, log=None)
+        gevent.spawn(lambda: self._web_ui_server.serve_forever())
+        gevent.sleep(0.01)
+        self.web_port = self._web_ui_server.server_port
+
+    def setUpBasicAuth(self):
+        web.app.config["BASIC_AUTH_ENABLED"] = True
+        web.app.config["BASIC_AUTH_USERNAME"] = "john"
+        web.app.config["BASIC_AUTH_PASSWORD"] = "doe"
+        auth = BasicAuth()
+        auth.init_app(web.app)
+
+    def tearDown(self):
+        super(TestWebUIAuth, self).tearDown()
+        runners.locust_runner = None
+        self._web_ui_server.stop()
+
+    def test_index_with_basic_auth_enabled(self):
+        self.assertEqual(200, requests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port, auth=('john', 'doe')).status_code)
+        self.assertEqual(401, requests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port,
+                                           auth=('john', 'invalid')).status_code)
+
