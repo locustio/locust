@@ -751,25 +751,25 @@ def stats_printer(stats):
             gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
     return stats_printer_func
 
-def stats_writer(stats, base_filepath, full_history=False):
+def stats_writer(environment, base_filepath, full_history=False):
     """Writes the csv files for the locust run."""
     with open(base_filepath + '_stats_history.csv', 'w') as f:
         f.write(stats_history_csv_header())
     while True:
-        write_csv_files(stats, base_filepath, full_history)
+        write_csv_files(environment, base_filepath, full_history)
         gevent.sleep(CSV_STATS_INTERVAL_SEC)
 
 
-def write_csv_files(stats, base_filepath, full_history=False):
+def write_csv_files(environment, base_filepath, full_history=False):
     """Writes the requests, distribution, and failures csvs."""
     with open(base_filepath + '_stats.csv', 'w') as f:
-        f.write(requests_csv(stats))
+        f.write(requests_csv(environment.runner.stats))
 
     with open(base_filepath + '_stats_history.csv', 'a') as f:
-        f.write(stats_history_csv(stats, full_history) + "\n")
+        f.write(stats_history_csv(environment, full_history) + "\n")
 
     with open(base_filepath + '_failures.csv', 'w') as f:
-        f.write(failures_csv(stats))
+        f.write(failures_csv(environment.runner.stats))
 
 
 def sort_stats(stats):
@@ -831,13 +831,15 @@ def requests_csv(stats):
         ))
     return "\n".join(rows)
 
+
 def stats_history_csv_header():
     """Headers for the stats history CSV"""
 
     return ','.join((
+        '"Timestamp"',
+        '"User count"',
         '"Type"',
         '"Name"',
-        '"Timestamp"',
         '"# requests"',
         '"# failures"',
         '"Requests/s"',
@@ -861,12 +863,13 @@ def stats_history_csv_header():
         '"100%"'
     )) + '\n'
 
-def stats_history_csv(stats, all_entries=False):
+def stats_history_csv(environment, all_entries=False):
     """
     Return a string of CSV rows with the *current* stats. By default only includes the 
     Aggregated stats entry, but if all_entries is set to True, a row for each entry will 
     will be included.
     """
+    stats = environment.runner.stats
     timestamp = int(time.time())
     stats_entries = []
     if all_entries:
@@ -880,10 +883,11 @@ def stats_history_csv(stats, all_entries=False):
         else:
             percentile_str = ','.join(['"N/A"'] * len(PERCENTILES_TO_REPORT))
 
-        rows.append('"%s","%s","%s",%i,%i,%.2f,%.2f,%i,%i,%i,%.2f,%.2f,%s' % (
+        rows.append('"%i","%i","%s","%s",%i,%i,%.2f,%.2f,%i,%i,%i,%.2f,%.2f,%s' % (
+            timestamp,
+            environment.runner.user_count,
             s.method,
             s.name,
-            timestamp,
             s.num_requests,
             s.num_failures,
             s.current_rps,
