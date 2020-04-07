@@ -4,12 +4,12 @@ import csv
 import json
 import logging
 import os.path
-import sys
 from collections import defaultdict
 from functools import wraps
 from itertools import chain
 from time import time
 from flask_basicauth import BasicAuth
+from .exception import AuthCredentialsError
 
 try:
     # >= Py3.2
@@ -57,16 +57,15 @@ class WebUI:
         self.auth = None
 
         if auth_credentials is not None:
-            try:
-                credentials = auth_credentials.split(':')
+            credentials = auth_credentials.split(':')
+            if len(credentials) == 2:
                 self.app.config["BASIC_AUTH_USERNAME"] = credentials[0]
                 self.app.config["BASIC_AUTH_PASSWORD"] = credentials[1]
                 self.app.config["BASIC_AUTH_ENABLED"] = True
                 self.auth = BasicAuth()
                 self.auth.init_app(self.app)
-            except (ValueError, IndexError):
-                logger.error("Credentials in --web-auth need to be in the format username:password")
-                sys.exit(1)
+            else:
+                raise AuthCredentialsError
 
 
 

@@ -22,6 +22,7 @@ from .stats import (print_error_report, print_percentile_stats, print_stats,
                     stats_printer, stats_writer, write_csv_files)
 from .util.timespan import parse_timespan
 from .web import WebUI
+from .exception import AuthCredentialsError
 
 _internals = [Locust, HttpLocust]
 version = locust.__version__
@@ -226,9 +227,13 @@ def main():
     # start Web UI
     if not options.headless and not options.worker:
         # spawn web greenlet
-        logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.web_port))
-        web_ui = WebUI(environment=environment, auth_credentials=options.web_auth)
-        main_greenlet = gevent.spawn(web_ui.start, host=options.web_host, port=options.web_port)
+        try:
+            logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.web_port))
+            web_ui = WebUI(environment=environment, auth_credentials=options.web_auth)
+            main_greenlet = gevent.spawn(web_ui.start, host=options.web_host, port=options.web_port)
+        except AuthCredentialsError:
+            logger.error("Credentials in --web-auth need to be in the format username:password")
+            sys.exit(1)
     else:
         web_ui = None
     
