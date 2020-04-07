@@ -172,6 +172,13 @@ greeted with something like this:
 
 .. image:: images/webui-splash-screenshot.png
 
-If you :ref:`run Locust in Step Load Mode <running-locust-in-step-load-mode>`, then you should be greeted with Locust UI like this:
 
-.. image:: images/webui-stepload-screenshot.png
+Locust Command Line Interface
+=============================
+
+.. code-block:: console
+
+    $ locust --help
+
+.. literalinclude:: cli-help-output.txt
+    :language: console

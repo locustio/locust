@@ -3,6 +3,7 @@ locust.wpr
 locust.egg-info/**
 locustio.egg-info/**
 docs/_build/**
+docs/cli-help-output.txt
 mock.*.egg
 dist/**
 .idea/**
