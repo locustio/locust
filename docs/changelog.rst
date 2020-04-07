@@ -27,6 +27,8 @@ Breaking changes
       def on_test_start(**kw):
           print("test is stopping")
 * ``TaskSequence`` and ``@seq_task`` has been replaced with :ref:`SequentialTaskSet <sequential-taskset>`.
+* A ``User count`` column has been added to the history stats CSV file, and the column order has been changed 
+  (``Timestamp`` is now the first column).
 
 
 0.14.0
