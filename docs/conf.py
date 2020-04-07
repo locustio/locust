@@ -9,6 +9,17 @@
 # serve to show the default value.
 
 import os
+import subprocess
+
+
+
+# Run command `locust --help` and store output in cli-help-output.txt which is included in the docs
+cli_help_output_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "cli-help-output.txt")
+print("Running `locust --help` command and storing output in %s" % cli_help_output_file)
+help_output = subprocess.check_output(["locust", "--help"]).decode("utf-8")
+with open(cli_help_output_file, "w") as f:
+    f.write(help_output)
+
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
