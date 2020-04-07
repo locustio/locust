@@ -358,7 +358,7 @@ def setup_parser_arguments(parser):
         help="Optionally specify which Locust classes that should be used (available Locust classes can be listed with -l or --list)",
     )
     parser.add_argument(
-        '-B', '--web-auth',
+        '--web-auth',
         type=str,
         dest='web_auth',
         default=None,

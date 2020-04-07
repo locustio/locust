@@ -41,7 +41,7 @@ class WebUI:
     server = None
     """Reference to pyqsgi.WSGIServer once it's started"""
     
-    def __init__(self, environment, web_auth=None):
+    def __init__(self, environment, auth_credentials=None):
         environment.web_ui = self
         self.environment = environment
         app = Flask(__name__)
@@ -51,33 +51,23 @@ class WebUI:
         self.app.config["BASIC_AUTH_ENABLED"] = False
         self.auth = None
 
-        if web_auth is not None:
-            credentials = web_auth.split(':')
-            if len(credentials) == 2:
+        if auth_credentials is not None:
+            try:
+                credentials = auth_credentials.split(':')
                 self.app.config["BASIC_AUTH_USERNAME"] = credentials[0]
                 self.app.config["BASIC_AUTH_PASSWORD"] = credentials[1]
                 self.app.config["BASIC_AUTH_ENABLED"] = True
                 self.auth = BasicAuth()
                 self.auth.init_app(self.app)
-            else:
-                sys.stderr.write("The credentials need to provided in the format username:password\n")
+            except (ValueError, IndexError):
+                logger.error("Credentials in --web-auth need to be in the format username:password")
                 sys.exit(1)
 
 
-        def auth_required_if_enabled(view_func):
-            @wraps(view_func)
-            def wrapper(*args, **kwargs):
-                if app.config["BASIC_AUTH_ENABLED"]:
-                    if self.auth.authenticate():
-                        return view_func(*args, **kwargs)
-                    else:
-                        return self.auth.challenge()
-                else:
-                    return view_func(*args, **kwargs)
-            return wrapper
+
         
         @app.route('/')
-        @auth_required_if_enabled
+        @self.auth_required_if_enabled
         def index():
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
@@ -115,7 +105,7 @@ class WebUI:
             )
         
         @app.route('/swarm', methods=["POST"])
-        @auth_required_if_enabled
+        @self.auth_required_if_enabled
         def swarm():
             assert request.method == "POST"
             locust_count = int(request.form["locust_count"])
@@ -133,20 +123,20 @@ class WebUI:
             return jsonify({'success': True, 'message': 'Swarming started', 'host': environment.host})
         
         @app.route('/stop')
-        @auth_required_if_enabled
+        @self.auth_required_if_enabled
         def stop():
             environment.runner.stop()
             return jsonify({'success':True, 'message': 'Test stopped'})
         
         @app.route("/stats/reset")
-        @auth_required_if_enabled
+        @self.auth_required_if_enabled
         def reset_stats():
             environment.runner.stats.reset_all()
             environment.runner.exceptions = {}
             return "ok"
             
         @app.route("/stats/requests/csv")
-        @auth_required_if_enabled
+        @self.auth_required_if_enabled
         def request_stats_csv():
             response = make_response(requests_csv(self.environment.runner.stats))
             file_name = "requests_{0}.csv".format(time())
@@ -156,7 +146,7 @@ class WebUI:
             return response
         
         @app.route("/stats/stats_history/csv")
-        @auth_required_if_enabled
+        @self.auth_required_if_enabled
         def stats_history_stats_csv():
             response = make_response(stats_history_csv(self.environment.runner.stats, False, True))
             file_name = "stats_history_{0}.csv".format(time())
@@ -166,7 +156,7 @@ class WebUI:
             return response
         
         @app.route("/stats/failures/csv")
-        @auth_required_if_enabled
+        @self.auth_required_if_enabled
         def failures_stats_csv():
             response = make_response(failures_csv(self.environment.runner.stats))
             file_name = "failures_{0}.csv".format(time())
@@ -176,7 +166,7 @@ class WebUI:
             return response
         
         @app.route('/stats/requests')
-        @auth_required_if_enabled
+        @self.auth_required_if_enabled
         @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
         def request_stats():
             stats = []
@@ -231,7 +221,7 @@ class WebUI:
             return jsonify(report)
         
         @app.route("/exceptions")
-        @auth_required_if_enabled
+        @self.auth_required_if_enabled
         def exceptions():
             return jsonify({
                 'exceptions': [
@@ -245,7 +235,7 @@ class WebUI:
             })
         
         @app.route("/exceptions/csv")
-        @auth_required_if_enabled
+        @self.auth_required_if_enabled
         def exceptions_csv():
             data = StringIO()
             writer = csv.writer(data)
@@ -268,3 +258,16 @@ class WebUI:
     
     def stop(self):
         self.server.stop()
+
+    def auth_required_if_enabled(self, view_func):
+        @wraps(view_func)
+        def wrapper(*args, **kwargs):
+            if self.app.config["BASIC_AUTH_ENABLED"]:
+                if self.auth.authenticate():
+                    return view_func(*args, **kwargs)
+                else:
+                    return self.auth.challenge()
+            else:
+                return view_func(*args, **kwargs)
+
+        return wrapper

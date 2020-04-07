@@ -227,7 +227,7 @@ def main():
     if not options.headless and not options.worker:
         # spawn web greenlet
         logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.web_port))
-        web_ui = WebUI(environment=environment, web_auth=options.web_auth)
+        web_ui = WebUI(environment=environment, auth_credentials=options.web_auth)
         main_greenlet = gevent.spawn(web_ui.start, host=options.web_host, port=options.web_port)
     else:
         web_ui = None
