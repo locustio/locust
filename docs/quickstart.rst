@@ -81,9 +81,11 @@ uniformly between 5 and 9 and just sleep for that duration. After it's wait time
 and keep repeating that.
 
 .. code-block:: python
+    :emphasize-lines: 3,3
 
-    post_id = random.randint(1, 10000)
-    self.client.get("/post?id=%i" % post_id, name="/post?id=[post-id]")
+    def view_post(self):
+        post_id = random.randint(1, 10000)
+        self.client.get("/post?id=%i" % post_id, name="/post?id=[post-id]")
 
 In the ``view_post`` task we load a dynamic URL by using a query parameter that is a number picked at random between 
 1 and 10000. In order to not get 10k entries in Locust's statistics - since the stats is grouped on the URL - we use 
