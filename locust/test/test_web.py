@@ -108,11 +108,6 @@ class TestWebUI(LocustTestCase):
         response = requests.get("http://127.0.0.1:%i/stats/requests/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
 
-    def test_request_stats_history_csv(self):
-        self.stats.log_request("GET", "/test2", 120, 5612)
-        response = requests.get("http://127.0.0.1:%i/stats/stats_history/csv" % self.web_port)
-        self.assertEqual(200, response.status_code)
-
     def test_failure_stats_csv(self):
         self.stats.log_error("GET", "/", Exception("Error1337"))
         response = requests.get("http://127.0.0.1:%i/stats/failures/csv" % self.web_port)

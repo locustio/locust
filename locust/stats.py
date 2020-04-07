@@ -861,24 +861,19 @@ def stats_history_csv_header():
         '"100%"'
     )) + '\n'
 
-def stats_history_csv(stats, stats_history_enabled=False, csv_for_web_ui=False):
-    """Returns the Aggregated stats entry every interval"""
-    # csv_for_web_ui boolean returns the header along with the stats history row so that
-    # it can be returned as a csv for download on the web ui. Otherwise when run with
-    # the '--headless' option we write the header first and then append the file with stats
-    # entries every interval.
-    if csv_for_web_ui:
-        rows = [stats_history_csv_header()]
-    else:
-        rows = []
-
+def stats_history_csv(stats, all_entries=False):
+    """
+    Return a string of CSV rows with the *current* stats. By default only includes the 
+    Aggregated stats entry, but if all_entries is set to True, a row for each entry will 
+    will be included.
+    """
     timestamp = int(time.time())
-    stats_entries_per_iteration = []
-
-    if stats_history_enabled:
-        stats_entries_per_iteration = sort_stats(stats.entries)
-
-    for s in chain(stats_entries_per_iteration, [stats.total]):
+    stats_entries = []
+    if all_entries:
+        stats_entries = sort_stats(stats.entries)
+    
+    rows = []
+    for s in chain(stats_entries, [stats.total]):
         if s.num_requests:
             percentile_str = ','.join([
                 str(int(s.get_current_response_time_percentile(x) or 0)) for x in PERCENTILES_TO_REPORT])
