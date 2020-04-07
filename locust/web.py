@@ -42,6 +42,11 @@ class WebUI:
     """Reference to pyqsgi.WSGIServer once it's started"""
     
     def __init__(self, environment, auth_credentials=None):
+        """
+        auth_credentials is the value of the argument --web-auth.
+        If provided, it will enable basic auth for the webui with
+        all the routes protected by default.
+        """
         environment.web_ui = self
         self.environment = environment
         app = Flask(__name__)
