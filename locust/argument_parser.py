@@ -178,7 +178,7 @@ def setup_parser_arguments(parser):
         type=str,
         dest='web_auth',
         default=None,
-        help='Set the Basic Auth for the UI (fmt: username:password)'
+        help='Turn on Basic Auth for the web interface. Should be supplied in the following format: username:password'
     )
     
     master_group = parser.add_argument_group(
