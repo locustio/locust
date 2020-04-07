@@ -19,7 +19,7 @@ from .inspectlocust import get_task_ratio_dict, print_task_ratio
 from .log import console_logger, setup_logging
 from .runners import LocalLocustRunner, MasterLocustRunner, WorkerLocustRunner
 from .stats import (print_error_report, print_percentile_stats, print_stats,
-                    stats_printer, stats_writer, write_stat_csvs)
+                    stats_printer, stats_writer, write_csv_files)
 from .util.timespan import parse_timespan
 from .web import WebUI
 
@@ -260,7 +260,7 @@ def main():
         stats_printer_greenlet = gevent.spawn(stats_printer(runner.stats))
 
     if options.csvfilebase:
-        gevent.spawn(stats_writer, runner.stats, options.csvfilebase, options.stats_history_enabled)
+        gevent.spawn(stats_writer, runner.stats, options.csvfilebase, full_history=options.stats_history_enabled)
 
     
     def shutdown(code=0):
@@ -278,7 +278,7 @@ def main():
         print_stats(runner.stats, current=False)
         print_percentile_stats(runner.stats)
         if options.csvfilebase:
-            write_stat_csvs(runner.stats, options.csvfilebase, options.stats_history_enabled)
+            write_csv_files(runner.stats, options.csvfilebase, options.stats_history_enabled)
         print_error_report(runner.stats)
         sys.exit(code)
     
