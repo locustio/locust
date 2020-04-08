@@ -49,6 +49,7 @@ setup(
         "geventhttpclient-wheels==1.3.1.dev3",
         "ConfigArgParse>=1.0",
         "psutil>=5.6.7",
+        "Flask-BasicAuth==0.2.0"
     ],
     test_suite="locust.test",
     tests_require=['mock'],
