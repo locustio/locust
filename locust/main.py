@@ -227,13 +227,14 @@ def main():
     # start Web UI
     if not options.headless and not options.worker:
         # spawn web greenlet
+        logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.web_port))
         try:
-            logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.web_port))
             web_ui = WebUI(environment=environment, auth_credentials=options.web_auth)
-            main_greenlet = gevent.spawn(web_ui.start, host=options.web_host, port=options.web_port)
         except AuthCredentialsError:
-            logger.error("Credentials in --web-auth need to be in the format username:password")
+            logger.error("Credentials supplied with --web-auth should have the format: username:password")
             sys.exit(1)
+        else:
+            main_greenlet = gevent.spawn(web_ui.start, host=options.web_host, port=options.web_port)
     else:
         web_ui = None
     
