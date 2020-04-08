@@ -2,16 +2,16 @@
 # browsing the Locust documentation on https://docs.locust.io/
 
 import random
-from locust import HttpLocust, TaskSequence, seq_task, task, between
+from locust import HttpLocust, SequentialTaskSet, task, between
 from pyquery import PyQuery
 
 
-class BrowseDocumentationSequence(TaskSequence):
+class BrowseDocumentationSequence(SequentialTaskSet):
     def on_start(self):
         self.urls_on_current_page = self.toc_urls = None
 
     # assume all users arrive at the index page
-    @seq_task(1)
+    @task
     def index_page(self):
         r = self.client.get("/")
         pq = PyQuery(r.content)
@@ -20,8 +20,7 @@ class BrowseDocumentationSequence(TaskSequence):
             l.attrib["href"] for l in link_elements
         ]
 
-    @seq_task(2)
-    @task(50)
+    @task
     def load_page(self, url=None):
         url = random.choice(self.toc_urls)
         r = self.client.get(url)
@@ -31,8 +30,7 @@ class BrowseDocumentationSequence(TaskSequence):
             l.attrib["href"] for l in link_elements
         ]
 
-    @seq_task(3)
-    @task(30)
+    @task
     def load_sub_page(self):
         url = random.choice(self.urls_on_current_page)
         r = self.client.get(url)

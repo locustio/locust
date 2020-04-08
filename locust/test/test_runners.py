@@ -281,6 +281,58 @@ class TestLocustRunner(LocustTestCase):
         self.assertEqual(env, runner.environment)
 
 
+class TestMasterWorkerRunners(LocustTestCase):
+    def test_distributed_integration_run(self):
+        """
+        Full integration test that starts both a MasterLocustRunner and three WorkerLocustRunner instances 
+        and makes sure that their stats is sent to the Master.
+        """
+        class TestUser(Locust):
+            wait_time = constant(0.1)
+            _catch_exceptions = False
+            @task
+            def incr_stats(l):
+                l.environment.events.request_success.fire(
+                    request_type="GET",
+                    name="/",
+                    response_time=1337,
+                    response_length=666,
+                )
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            # start a Master runner
+            master_env = Environment()
+            master = MasterLocustRunner(master_env, [TestUser], master_bind_host="*", master_bind_port=0)
+            sleep(0)
+            # start 3 Worker runners
+            workers = []
+            for i in range(3):
+                worker_env = Environment()
+                worker = WorkerLocustRunner(worker_env, [TestUser], master_host="127.0.0.1", master_port=master.server.port)
+                workers.append(worker)
+            
+            # give workers time to connect
+            sleep(0.1)
+            # issue start command that should trigger TestUsers to be spawned in the Workers
+            master.start(6, hatch_rate=1000)
+            sleep(0.1)
+            # check that slave nodes have started locusts
+            for worker in workers:
+                self.assertEqual(2, worker.user_count)
+            # give time for users to generate stats, and stats to be sent to master
+            sleep(1)
+            master.quit()
+            # make sure users are killed
+            for worker in workers:
+                self.assertEqual(0, worker.user_count)
+        
+        # check that stats are present in master
+        self.assertGreater(
+            master_env.runner.stats.total.num_requests, 
+            20, 
+            "For some reason the master node's stats has not come in",
+        )
+
+
 class TestMasterRunner(LocustTestCase):
     def setUp(self):
         super(TestMasterRunner, self).setUp()

@@ -86,10 +86,19 @@ def diff_response_time_dicts(latest, old):
 
 
 class RequestStats(object):
-    def __init__(self):
+    """
+    Class that holds the request statistics.
+    """
+    def __init__(self, use_response_times_cache=True):
+        """
+        The value of use_response_times_cache will be set for each StatsEntry() when they are created.
+        Settings it to False saves some memory and CPU cycles which we can do on worker nodes where 
+        the response_times_cache is not needed.
+        """
+        self.use_response_times_cache = use_response_times_cache
         self.entries = {}
         self.errors = {}
-        self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=True)
+        self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
     
     @property
     def num_requests(self):
@@ -133,7 +142,7 @@ class RequestStats(object):
         """
         entry = self.entries.get((name, method))
         if not entry:
-            entry = StatsEntry(self, name, method, True)
+            entry = StatsEntry(self, name, method, use_response_times_cache=self.use_response_times_cache)
             self.entries[(name, method)] = entry
         return entry
     
@@ -150,7 +159,7 @@ class RequestStats(object):
         """
         Remove all stats entries and errors
         """
-        self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=True)
+        self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
         self.entries = {}
         self.errors = {}
     
@@ -391,6 +400,10 @@ class StatsEntry(object):
         Extend the data from the current StatsEntry with the stats from another
         StatsEntry instance. 
         """
+        # save the old last_request_timestamp, to see if we should store a new copy
+        # of the response times in the response times cache
+        old_last_request_timestamp = self.last_request_timestamp
+        
         if self.last_request_timestamp is not None and other.last_request_timestamp is not None:
             self.last_request_timestamp = max(self.last_request_timestamp, other.last_request_timestamp)
         elif other.last_request_timestamp is not None:
@@ -415,6 +428,17 @@ class StatsEntry(object):
             self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) + other.num_reqs_per_sec[key]
         for key in other.num_fail_per_sec:
             self.num_fail_per_sec[key] = self.num_fail_per_sec.get(key, 0) + other.num_fail_per_sec[key]
+        
+        if self.use_response_times_cache:
+            # If we've entered a new second, we'll cache the response times. Note that there 
+            # might still be reports from other worker nodes - that contains requests for the same
+            # time periods - that hasn't been received/accounted for yet. This will cause the cache to 
+            # lag behind a second or two, but since StatsEntry.current_response_time_percentile() 
+            # (which is what the response times cache is used for) uses an approximation of the 
+            # last 10 seconds anyway, it should be fine to ignore this. 
+            last_time = self.last_request_timestamp and int(self.last_request_timestamp) or None
+            if last_time and last_time > (old_last_request_timestamp and int(old_last_request_timestamp) or 0):
+                self._cache_response_times(last_time)
     
     def serialize(self):
         return {
@@ -654,7 +678,7 @@ def setup_distributed_stats_event_listeners(events, stats):
             entry = StatsEntry.unserialize(stats_data)
             request_key = (entry.name, entry.method)
             if not request_key in stats.entries:
-                stats.entries[request_key] = StatsEntry(stats, entry.name, entry.method)
+                stats.entries[request_key] = StatsEntry(stats, entry.name, entry.method, use_response_times_cache=True)
             stats.entries[request_key].extend(entry)
     
         for error_key, error in data["errors"].items():
@@ -663,19 +687,7 @@ def setup_distributed_stats_event_listeners(events, stats):
             else:
                 stats.errors[error_key].occurrences += error["occurrences"]
         
-        # save the old last_request_timestamp, to see if we should store a new copy
-        # of the response times in the response times cache
-        old_last_request_timestamp = stats.total.last_request_timestamp
-        # update the total StatsEntry
         stats.total.extend(StatsEntry.unserialize(data["stats_total"]))
-        if stats.total.last_request_timestamp and stats.total.last_request_timestamp > (old_last_request_timestamp or 0):
-            # If we've entered a new second, we'll cache the response times. Note that there 
-            # might still be reports from other worker nodes - that contains requests for the same
-            # time periods - that hasn't been received/accounted for yet. This will cause the cache to 
-            # lag behind a second or two, but since StatsEntry.current_response_time_percentile() 
-            # (which is what the response times cache is used for) uses an approximation of the 
-            # last 10 seconds anyway, it should be fine to ignore this. 
-            stats.total._cache_response_times(int(stats.total.last_request_timestamp))
         
     events.report_to_master.add_listener(on_report_to_master)
     events.worker_report.add_listener(on_worker_report)
@@ -739,25 +751,25 @@ def stats_printer(stats):
             gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
     return stats_printer_func
 
-def stats_writer(stats, base_filepath, stats_history_enabled=False):
+def stats_writer(environment, base_filepath, full_history=False):
     """Writes the csv files for the locust run."""
     with open(base_filepath + '_stats_history.csv', 'w') as f:
         f.write(stats_history_csv_header())
     while True:
-        write_stat_csvs(stats, base_filepath, stats_history_enabled)
+        write_csv_files(environment, base_filepath, full_history)
         gevent.sleep(CSV_STATS_INTERVAL_SEC)
 
 
-def write_stat_csvs(stats, base_filepath, stats_history_enabled=False):
+def write_csv_files(environment, base_filepath, full_history=False):
     """Writes the requests, distribution, and failures csvs."""
     with open(base_filepath + '_stats.csv', 'w') as f:
-        f.write(requests_csv(stats))
+        f.write(requests_csv(environment.runner.stats))
 
     with open(base_filepath + '_stats_history.csv', 'a') as f:
-        f.write(stats_history_csv(stats, stats_history_enabled) + "\n")
+        f.write(stats_history_csv(environment, full_history) + "\n")
 
     with open(base_filepath + '_failures.csv', 'w') as f:
-        f.write(failures_csv(stats))
+        f.write(failures_csv(environment.runner.stats))
 
 
 def sort_stats(stats):
@@ -819,13 +831,15 @@ def requests_csv(stats):
         ))
     return "\n".join(rows)
 
+
 def stats_history_csv_header():
     """Headers for the stats history CSV"""
 
     return ','.join((
+        '"Timestamp"',
+        '"User count"',
         '"Type"',
         '"Name"',
-        '"Timestamp"',
         '"# requests"',
         '"# failures"',
         '"Requests/s"',
@@ -849,34 +863,31 @@ def stats_history_csv_header():
         '"100%"'
     )) + '\n'
 
-def stats_history_csv(stats, stats_history_enabled=False, csv_for_web_ui=False):
-    """Returns the Aggregated stats entry every interval"""
-    # csv_for_web_ui boolean returns the header along with the stats history row so that
-    # it can be returned as a csv for download on the web ui. Otherwise when run with
-    # the '--no-web' option we write the header first and then append the file with stats
-    # entries every interval.
-    if csv_for_web_ui:
-        rows = [stats_history_csv_header()]
-    else:
-        rows = []
-
+def stats_history_csv(environment, all_entries=False):
+    """
+    Return a string of CSV rows with the *current* stats. By default only includes the 
+    Aggregated stats entry, but if all_entries is set to True, a row for each entry will 
+    will be included.
+    """
+    stats = environment.runner.stats
     timestamp = int(time.time())
-    stats_entries_per_iteration = []
-
-    if stats_history_enabled:
-        stats_entries_per_iteration = sort_stats(stats.entries)
-
-    for s in chain(stats_entries_per_iteration, [stats.total]):
+    stats_entries = []
+    if all_entries:
+        stats_entries = sort_stats(stats.entries)
+    
+    rows = []
+    for s in chain(stats_entries, [stats.total]):
         if s.num_requests:
             percentile_str = ','.join([
                 str(int(s.get_current_response_time_percentile(x) or 0)) for x in PERCENTILES_TO_REPORT])
         else:
             percentile_str = ','.join(['"N/A"'] * len(PERCENTILES_TO_REPORT))
 
-        rows.append('"%s","%s","%s",%i,%i,%.2f,%.2f,%i,%i,%i,%.2f,%.2f,%s' % (
+        rows.append('"%i","%i","%s","%s",%i,%i,%.2f,%.2f,%i,%i,%i,%.2f,%.2f,%s' % (
+            timestamp,
+            environment.runner.user_count,
             s.method,
             s.name,
-            timestamp,
             s.num_requests,
             s.num_failures,
             s.current_rps,

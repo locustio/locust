@@ -26,13 +26,6 @@ class TestParser(unittest.TestCase):
         opts = self.parser.parse_args(args)
         self.assertEqual(opts.reset_stats, True)
 
-    def test_should_accept_legacy_no_reset_stats(self):
-        args = [
-            "--no-reset-stats"
-        ]
-        opts = self.parser.parse_args(args)
-        self.assertEqual(opts.reset_stats, False)
-
     def test_skip_log_setup(self):
         args = [
             "--skip-log-setup"

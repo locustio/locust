@@ -1,5 +1,7 @@
+import argparse
 import os
 import sys
+import textwrap
 
 import configargparse
 
@@ -59,7 +61,15 @@ def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG
         default_config_files=default_config_files, 
         auto_env_var_prefix="LOCUST_", 
         add_env_var_help=False,
+        add_config_file_help=False,
         add_help=add_help,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        usage=argparse.SUPPRESS,
+        description=textwrap.dedent("""
+            Usage: locust [OPTIONS] [LocustClass ...]
+            
+        """),
+        #epilog="",
     )
     parser.add_argument(
         '-f', '--locustfile',
@@ -82,7 +92,7 @@ def parse_locustfile_option(args=None):
         default=False,
     )
     parser.add_argument(
-        '-V', '--version',
+        '--version', '-V',
         action='store_true',
         default=False,
     )
@@ -112,170 +122,30 @@ def setup_parser_arguments(parser):
     Takes a configargparse.ArgumentParser as argument and calls it's add_argument 
     for each of the supported arguments
     """
+    parser._optionals.title = "Common options"
     parser.add_argument(
         '-H', '--host',
         help="Host to load test in the following format: http://10.21.32.33"
     )
+    # Number of Locust users
     parser.add_argument(
-        '--web-host',
-        default="",
-        help="Host to bind the web interface to. Defaults to '' (all interfaces)"
-    )
-    parser.add_argument(
-        '-P', '--web-port',
+        '-c', '--clients',
         type=int,
-        default=8089,
-        help="Port on which to run web host"
-    )
-    # A file that contains the current request stats.
-    parser.add_argument(
-        '--csv', '--csv-base-name',
-        dest='csvfilebase',
-        help="Store current request stats to files in CSV format.",
-    )
-    # Adds each stats entry at every iteration to the _stats_history.csv file.
-    parser.add_argument(
-        '--csv-full-history',
-        action='store_true',
-        default=False,
-        dest='stats_history_enabled',
-        help="Store each stats entry in CSV format to _stats_history.csv file",
-    )
-    # if locust should be run in distributed mode as master
-    parser.add_argument(
-        '--master',
-        action='store_true',
-        help="Set locust to run in distributed mode with this process as master"
-    )
-    # if locust should be run in distributed mode as worker
-    parser.add_argument(
-        '--worker',
-        action='store_true',
-        help="Set locust to run in distributed mode with this process as worker"
-    )
-    parser.add_argument(
-        '--slave',
-        action='store_true',
-        help=configargparse.SUPPRESS
-    )
-    # master host options
-    parser.add_argument(
-        '--master-host',
-        default="127.0.0.1",
-        help="Host or IP address of locust master for distributed load testing. Only used when running with --worker. Defaults to 127.0.0.1."
-    )
-    parser.add_argument(
-        '--master-port',
-        type=int,
-        default=5557,
-        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --worker. Defaults to 5557."
-    )
-    parser.add_argument(
-        '--master-bind-host',
-        default="*",
-        help="Interfaces (hostname, ip) that locust master should bind to. Only used when running with --master. Defaults to * (all available interfaces)."
-    )
-    parser.add_argument(
-        '--master-bind-port',
-        type=int,
-        default=5557,
-        help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557."
-    )
-    parser.add_argument(
-        '--expect-workers',
-        type=int,
+        dest='num_clients',
         default=1,
-        help="How many workers master should expect to connect before starting the test (only when --no-web used)."
-    )
-    parser.add_argument(
-        '--expect-slaves',
-        action='store_true',
-        help=configargparse.SUPPRESS
-    )
-    # if we should print stats in the console
-    parser.add_argument(
-        '--no-web',
-        action='store_true',
-        help="Disable the web interface, and instead start running the test immediately. Requires -c and -t to be specified."
-    )
-    # Number of users
-    parser.add_argument(
-        '-u', '--users',
-        type=int,
-        dest='num_users',
-        default=1,
-        help="Number of concurrent users. Only used together with --no-web"
+        help="Number of concurrent Locust users. Only used together with --headless"
     )
     # User hatch rate
     parser.add_argument(
         '-r', '--hatch-rate',
         type=float,
         default=1,
-        help="The rate per second in which users are spawned. Only used together with --no-web"
+        help="The rate per second in which clients are spawned. Only used together with --headless"
     )
     # Time limit of the test run
     parser.add_argument(
         '-t', '--run-time',
-        help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --no-web"
-    )
-    # skip logging setup
-    parser.add_argument(
-        '--skip-log-setup',
-        action='store_true',
-        dest='skip_log_setup',
-        default=False,
-        help="Disable Locust's logging setup. Instead, the configuration is provided by the Locust test or Python defaults."
-    )
-    # Enable Step Load mode
-    parser.add_argument(
-        '--step-load',
-        action='store_true',
-        help="Enable Step Load mode to monitor how performance metrics varies when user load increases. Requires --step-users and --step-time to be specified."
-    )
-    # Number of users to incease by Step
-    parser.add_argument(
-        '--step-users',
-        type=int,
-        default=1,
-        help="User count to increase by step in Step Load mode. Only used together with --step-load"
-    )
-    # Time limit of each step
-    parser.add_argument(
-        '--step-time',
-        help="Step duration in Step Load mode, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --step-load"
-    )
-    # log level
-    parser.add_argument(
-        '--loglevel', '-L',
-        default='INFO',
-        help="Choose between DEBUG/INFO/WARNING/ERROR/CRITICAL. Default is INFO.",
-    )
-    # log file
-    parser.add_argument(
-        '--logfile',
-        help="Path to log file. If not set, log will go to stdout/stderr",
-    )
-    # if we should print stats in the console
-    parser.add_argument(
-        '--print-stats',
-        action='store_true',
-        help="Print stats in the console"
-    )
-    # only print summary stats
-    parser.add_argument(
-       '--only-summary',
-       action='store_true',
-       help='Only print the summary stats'
-    )
-    parser.add_argument(
-        '--no-reset-stats',
-        action='store_true',
-        help="[DEPRECATED] Do not reset statistics once hatching has been completed. This is now the default behavior. See --reset-stats to disable",
-    )
-    parser.add_argument(
-        '--reset-stats',
-        action='store_true',
-        help="Reset statistics once hatching has been completed. Should be set on both master and workers when running in distributed mode",
+        help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --headless"
     )
     # List locust commands found in loaded locust files/source files
     parser.add_argument(
@@ -284,33 +154,194 @@ def setup_parser_arguments(parser):
         dest='list_commands',
         help="Show list of possible locust classes and exit"
     )
+    
+    web_ui_group = parser.add_argument_group("Web UI options")
+    web_ui_group.add_argument(
+        '--web-host',
+        default="",
+        help="Host to bind the web interface to. Defaults to '' (all interfaces)"
+    )
+    web_ui_group.add_argument(
+        '--web-port', '-P',
+        type=int,
+        default=8089,
+        help="Port on which to run web host"
+    )
+    # if we should print stats in the console
+    web_ui_group.add_argument(
+        '--headless',
+        action='store_true',
+        help="Disable the web interface, and instead start the load test immediately. Requires -c and -t to be specified."
+    )
+    
+    master_group = parser.add_argument_group(
+        "Master options", 
+        "Options for running a Locust Master node when running Locust distributed. A Master node need Worker nodes that connect to it before it can run load tests.",
+    )
+    # if locust should be run in distributed mode as master
+    master_group.add_argument(
+        '--master',
+        action='store_true',
+        help="Set locust to run in distributed mode with this process as master"
+    )
+    master_group.add_argument(
+        '--master-bind-host',
+        default="*",
+        help="Interfaces (hostname, ip) that locust master should bind to. Only used when running with --master. Defaults to * (all available interfaces)."
+    )
+    master_group.add_argument(
+        '--master-bind-port',
+        type=int,
+        default=5557,
+        help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557."
+    )
+    master_group.add_argument(
+        '--expect-workers',
+        type=int,
+        default=1,
+        help="How many workers master should expect to connect before starting the test (only when --headless used)."
+    )
+    master_group.add_argument(
+        '--expect-slaves',
+        action='store_true',
+        help=configargparse.SUPPRESS
+    )
+    
+    worker_group = parser.add_argument_group(
+        "Worker options", 
+        textwrap.dedent("""
+            Options for running a Locust Worker node when running Locust distributed. 
+            Only the LOCUSTFILE (-f option) need to be specified when starting a Worker, since other options such as -c, -r, -t are specified on the Master node.
+        """),
+    )
+    # if locust should be run in distributed mode as worker
+    worker_group.add_argument(
+        '--worker',
+        action='store_true',
+        help="Set locust to run in distributed mode with this process as worker"
+    )
+    worker_group.add_argument(
+        '--slave',
+        action='store_true',
+        help=configargparse.SUPPRESS
+    )
+    # master host options
+    worker_group.add_argument(
+        '--master-host',
+        default="127.0.0.1",
+        help="Host or IP address of locust master for distributed load testing. Only used when running with --worker. Defaults to 127.0.0.1."
+    )
+    worker_group.add_argument(
+        '--master-port',
+        type=int,
+        default=5557,
+        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --worker. Defaults to 5557."
+    )
+    
+    stats_group = parser.add_argument_group("Request statistics options")
+    # A file that contains the current request stats.
+    stats_group.add_argument(
+        '--csv', '--csv-base-name',
+        dest='csvfilebase',
+        help="Store current request stats to files in CSV format.",
+    )
+    # Adds each stats entry at every iteration to the _stats_history.csv file.
+    stats_group.add_argument(
+        '--csv-full-history',
+        action='store_true',
+        default=False,
+        dest='stats_history_enabled',
+        help="Store each stats entry in CSV format to _stats_history.csv file",
+    )    
+    # if we should print stats in the console
+    stats_group.add_argument(
+        '--print-stats',
+        action='store_true',
+        help="Print stats in the console"
+    )
+    # only print summary stats
+    stats_group.add_argument(
+       '--only-summary',
+       action='store_true',
+       help='Only print the summary stats'
+    )
+    stats_group.add_argument(
+        '--reset-stats',
+        action='store_true',
+        help="Reset statistics once hatching has been completed. Should be set on both master and workers when running in distributed mode",
+    )
+    
+    log_group = parser.add_argument_group("Logging options")
+    # skip logging setup
+    log_group.add_argument(
+        '--skip-log-setup',
+        action='store_true',
+        dest='skip_log_setup',
+        default=False,
+        help="Disable Locust's logging setup. Instead, the configuration is provided by the Locust test or Python defaults."
+    )
+    # log level
+    log_group.add_argument(
+        '--loglevel', '-L',
+        default='INFO',
+        help="Choose between DEBUG/INFO/WARNING/ERROR/CRITICAL. Default is INFO.",
+    )
+    # log file
+    log_group.add_argument(
+        '--logfile',
+        help="Path to log file. If not set, log will go to stdout/stderr",
+    )
+    
+    step_load_group = parser.add_argument_group("Step load options")
+    # Enable Step Load mode
+    step_load_group.add_argument(
+        '--step-load',
+        action='store_true',
+        help="Enable Step Load mode to monitor how performance metrics varies when user load increases. Requires --step-clients and --step-time to be specified."
+    )
+    # Number of clients to incease by Step
+    step_load_group.add_argument(
+        '--step-clients',
+        type=int,
+        default=1,
+        help="Client count to increase by step in Step Load mode. Only used together with --step-load"
+    )
+    # Time limit of each step
+    step_load_group.add_argument(
+        '--step-time',
+        help="Step duration in Step Load mode, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --step-load"
+    )
+    
+    
+    other_group = parser.add_argument_group("Other options")
     # Display ratio table of all tasks
-    parser.add_argument(
+    other_group.add_argument(
         '--show-task-ratio',
         action='store_true',
-        help="print table of the locust classes' task execution ratio"
+        help="Print table of the locust classes' task execution ratio"
     )
     # Display ratio table of all tasks in JSON format
-    parser.add_argument(
+    other_group.add_argument(
         '--show-task-ratio-json',
         action='store_true',
-        help="print json data of the locust classes' task execution ratio"
+        help="Print json data of the locust classes' task execution ratio"
     )
     # Version number (optparse gives you --version but we have to do it
     # ourselves to get -V too. sigh)
-    parser.add_argument(
-        '-V', '--version',
+    other_group.add_argument(
+        '--version', '-V',
         action='version',
+        help="Show program's version number and exit",
         version='%(prog)s {}'.format(version),
     )
     # set the exit code to post on errors
-    parser.add_argument(
+    other_group.add_argument(
         '--exit-code-on-error',
         type=int,
         default=1,
-        help="sets the exit code to post on error"
+        help="Sets the process exit code to use when a test result contain any failure or error"
     )
-    parser.add_argument(
+    other_group.add_argument(
         '-s', '--stop-timeout',
         action='store',
         type=int,
@@ -318,10 +349,13 @@ def setup_parser_arguments(parser):
         default=None,
         help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. This parameter only needs to be specified for the master process when running Locust distributed."
     )
-    parser.add_argument(
+    
+    locust_classes_group = parser.add_argument_group("Locust user classes")
+    locust_classes_group.add_argument(
         'locust_classes',
         nargs='*',
         metavar='LocustClass',
+        help="Optionally specify which Locust classes that should be used (available Locust classes can be listed with -l or --list)",
     )
 
 
