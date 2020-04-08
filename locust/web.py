@@ -64,10 +64,7 @@ class WebUI:
                 self.auth = BasicAuth()
                 self.auth.init_app(self.app)
             else:
-                raise AuthCredentialsError
-
-
-
+                raise AuthCredentialsError("Invalid auth_credentials. It should be a string in the following format: 'user.pass'")
 
         @app.route('/')
         @self.auth_required_if_enabled
