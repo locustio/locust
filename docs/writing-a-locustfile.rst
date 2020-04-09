@@ -393,7 +393,7 @@ events. You can set up listeners for these events at the module level of your lo
     def on_test_stop(**kwargs):
         print("A new test is ending")
 
-When running Locust distributed the ``on_start`` and ``on_stop`` events will only be fired in the master node.
+When running Locust distributed the ``test_start`` and ``test_stop`` events will only be fired in the master node.
 
 
 Making HTTP requests
