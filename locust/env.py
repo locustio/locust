@@ -32,6 +32,12 @@ class Environment:
     before killing them hard.
     """
     
+    catch_exceptions = True
+    """
+    If True exceptions that happen within running users will be catched (and reported in UI/console).
+    If False, exeptions will be raised.
+    """
+    
     master_host = "127.0.0.1"
     """Hostname of master node that the worker should connect to"""
     
@@ -52,6 +58,7 @@ class Environment:
         reset_stats=False, 
         step_load=False, 
         stop_timeout=None,
+        catch_exceptions=True,
     ):
         if events:
             self.events = events
@@ -63,4 +70,5 @@ class Environment:
         self.reset_stats = reset_stats
         self.step_load = step_load
         self.stop_timeout = stop_timeout
+        self.catch_exceptions = catch_exceptions
         

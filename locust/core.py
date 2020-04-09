@@ -250,7 +250,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
                 raise
             except Exception as e:
                 self.locust.environment.events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
-                if self.locust._catch_exceptions:
+                if self.locust.environment.catch_exceptions:
                     logger.error("%s\n%s", e, traceback.format_exc())
                     self.wait()
                 else:
@@ -452,7 +452,6 @@ class Locust(object, metaclass=LocustMeta):
     """If abstract is True it the class is meant to be subclassed (users of this class itself will not be spawned during a test)"""
     
     client = NoClientWarningRaiser()
-    _catch_exceptions = True
     _state = None
     _greenlet = None
     

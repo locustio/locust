@@ -18,7 +18,6 @@ class TestTaskSet(LocustTestCase):
         
         class User(Locust):
             host = "127.0.0.1"
-        self.environment = Environment()
         self.locust = User(self.environment)
     
     def test_task_ratio(self):
@@ -40,9 +39,8 @@ class TestTaskSet(LocustTestCase):
             tasks = None
 
         class User(Locust):
-            wait_time = constant(0)
+            wait_time = constant(0.5)
             tasks = [MyTasks]
-            _catch_exceptions = False
         
         l = MyTasks(User(self.environment))
         self.assertRaisesRegex(Exception, "No tasks defined.*", l.run)

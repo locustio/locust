@@ -127,7 +127,7 @@ class LocustTestCase(unittest.TestCase):
         del sys.argv[1:]
         
         locust.events = Events()
-        self.environment = Environment(events=locust.events)
+        self.environment = Environment(events=locust.events, catch_exceptions=False)
         self.runner = LocustRunner(self.environment, [])
         
         # When running the tests in Python 3 we get warnings about unclosed sockets. 
