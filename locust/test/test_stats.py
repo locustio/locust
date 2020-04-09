@@ -405,14 +405,14 @@ class TestCsvStats(LocustTestCase):
         self.assertEqual(6, len(rows))
         for i in range(3):
             row = rows.pop(0)
-            self.assertEqual("%i" % (i + 1), row["User count"])
+            self.assertEqual("%i" % (i + 1), row["User Count"])
             self.assertEqual("/", row["Name"])
-            self.assertEqual("%i" % (i + 1), row["# requests"])
+            self.assertEqual("%i" % (i + 1), row["Total Request Count"])
             self.assertGreaterEqual(int(row["Timestamp"]), start_time)
             row = rows.pop(0)
-            self.assertEqual("%i" % (i + 1), row["User count"])
+            self.assertEqual("%i" % (i + 1), row["User Count"])
             self.assertEqual("Aggregated", row["Name"])
-            self.assertEqual("%i" % (i + 1), row["# requests"])
+            self.assertEqual("%i" % (i + 1), row["Total Request Count"])
             self.assertGreaterEqual(int(row["Timestamp"]), start_time)
 
 
