@@ -58,6 +58,10 @@ def request_header_test():
 def manipulate():
     return str(request.form.get("arg", ""))
 
+@app.route("/get_arg", methods=["GET"])
+def get_arg():
+    return request.args.get("arg")
+
 @app.route("/fail")
 def failed_request():
     return "This response failed", 500
