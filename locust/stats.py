@@ -787,7 +787,7 @@ def requests_csv(stats):
             '"Request Count"',
             '"Failure Count"',
             '"Median Response Time"',
-            '"Average response Time"',
+            '"Average Response Time"',
             '"Min Response Time"',
             '"Max Response Time"',
             '"Average Content Size"',
