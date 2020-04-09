@@ -784,15 +784,15 @@ def requests_csv(stats):
         ",".join([
             '"Type"',
             '"Name"',
-            '"# requests"',
-            '"# failures"',
-            '"Median response time"',
-            '"Average response time"',
-            '"Min response time"',
-            '"Max response time"',
+            '"Request Count"',
+            '"Failure Count"',
+            '"Median Response Time"',
+            '"Average response Time"',
+            '"Min Response Time"',
+            '"Max Response Time"',
             '"Average Content Size"',
             '"Requests/s"',
-            '"Requests Failed/s"',
+            '"Failures/s"',
             '"50%"',
             '"66%"',
             '"75%"',
@@ -803,7 +803,7 @@ def requests_csv(stats):
             '"99%"',
             '"99.9%"',
             '"99.99%"',
-            '"99.999"',
+            '"99.999%"',
             '"100%"'
         ])
     ]
@@ -837,18 +837,11 @@ def stats_history_csv_header():
 
     return ','.join((
         '"Timestamp"',
-        '"User count"',
+        '"User Count"',
         '"Type"',
         '"Name"',
-        '"# requests"',
-        '"# failures"',
         '"Requests/s"',
-        '"Requests Failed/s"',
-        '"Median response time"',
-        '"Average response time"',
-        '"Min response time"',
-        '"Max response time"',
-        '"Average Content Size"',
+        '"Failures/s"',
         '"50%"',
         '"66%"',
         '"75%"',
@@ -859,8 +852,15 @@ def stats_history_csv_header():
         '"99%"',
         '"99.9%"',
         '"99.99%"',
-        '"99.999"',
-        '"100%"'
+        '"99.999%"',
+        '"100%"',
+        '"Total Request Count"',
+        '"Total Failure Count"',
+        '"Total Median Response Time"',
+        '"Total Average Response Time"',
+        '"Total Min Response Time"',
+        '"Total Max Response Time"',
+        '"Total Average Content Size"',
     )) + '\n'
 
 def stats_history_csv(environment, all_entries=False):
@@ -883,21 +883,21 @@ def stats_history_csv(environment, all_entries=False):
         else:
             percentile_str = ','.join(['"N/A"'] * len(PERCENTILES_TO_REPORT))
 
-        rows.append('"%i","%i","%s","%s",%i,%i,%.2f,%.2f,%i,%i,%i,%.2f,%.2f,%s' % (
+        rows.append('"%i","%i","%s","%s",%i,%i,%s,%.2f,%.2f,%i,%i,%i,%.2f,%.2f' % (
             timestamp,
             environment.runner.user_count,
-            s.method,
+            s.method or "",
             s.name,
-            s.num_requests,
-            s.num_failures,
             s.current_rps,
             s.current_fail_per_sec,
+            percentile_str,
+            s.num_requests,
+            s.num_failures,
             s.median_response_time,
             s.avg_response_time,
             s.min_response_time or 0,
             s.max_response_time,
             s.avg_content_length,
-            percentile_str
         ))
 
     return "\n".join(rows)
