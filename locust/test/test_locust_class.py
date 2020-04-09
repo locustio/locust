@@ -428,6 +428,21 @@ class TestTaskSet(LocustTestCase):
 
 
 class TestLocustClass(LocustTestCase):
+    def test_locust_wait(self):
+        log = []
+        class TestUser(Locust):
+            wait_time = constant(0.01)
+            @task
+            def t(self):
+                log.append(0)
+                self.wait()
+                log.append(1)
+                raise StopLocust()
+        
+        l = TestUser(self.environment)
+        l.run()
+        self.assertEqual([0,1], log)
+    
     def test_locust_on_start(self):
         class MyLocust(Locust):
             t1_executed = False

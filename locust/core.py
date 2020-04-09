@@ -315,6 +315,15 @@ class TaskSet(object, metaclass=TaskSetMeta):
             ))
     
     def wait(self):
+        """
+        Make the running locust user sleep for a duration defined by the Locust.wait_time 
+        function (or TaskSet.wait_time function if it's been defined). 
+        
+        The user can also be killed gracefully while it's sleeping so calling this 
+        method within a task makes it possible for a user to be killed mid-task even if you've 
+        set a stop_timeout. If this behavour is not desired you should make the user wait using 
+        gevent.sleep() instead.
+        """
         self._check_stop_condition()
         self.locust._state = LOCUST_STATE_WAITING
         self._sleep(self.wait_time())
@@ -454,6 +463,7 @@ class Locust(object, metaclass=LocustMeta):
     client = NoClientWarningRaiser()
     _state = None
     _greenlet = None
+    _taskset_instance = None
     
     def __init__(self, environment):
         super(Locust, self).__init__()
@@ -475,15 +485,27 @@ class Locust(object, metaclass=LocustMeta):
     
     def run(self):
         self._state = LOCUST_STATE_RUNNING
-        task_set_instance = DefaultTaskSet(self)
+        self._taskset_instance = DefaultTaskSet(self)
         try:
             # run the task_set on_start method, if it has one
             self.on_start()
             
-            task_set_instance.run()
+            self._taskset_instance.run()
         except (GreenletExit, StopLocust) as e:
             # run the on_stop method, if it has one
             self.on_stop()
+    
+    def wait(self):
+        """
+        Make the running locust user sleep for a duration defined by the Locust.wait_time 
+        function. 
+        
+        The user can also be killed gracefully while it's sleeping so calling this 
+        method within a task makes it possible for a user to be killed mid-task even if you've 
+        set a stop_timeout. If this behavour is not desired you should make the user wait using 
+        gevent.sleep() instead.
+        """
+        self._taskset_instance.wait()
     
     def start(self, gevent_group):
         """
