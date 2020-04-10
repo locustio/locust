@@ -6,4 +6,4 @@ from .wait_time import between, constant, constant_pacing
 
 events = Events()
 
-__version__ = "0.14.5"
+__version__ = "1.0.0"
