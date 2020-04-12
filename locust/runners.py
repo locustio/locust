@@ -287,6 +287,8 @@ class LocalLocustRunner(LocustRunner):
         self.hatching_greenlet = self.greenlet.spawn(lambda: super(LocalLocustRunner, self).start(locust_count, hatch_rate, wait=wait))
     
     def stop(self):
+        if self.state == STATE_STOPPED:
+            return
         super().stop()
         self.environment.events.test_stop.fire(environment=self.environment)
 
@@ -409,7 +411,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.environment.events.test_stop.fire(environment=self.environment)
     
     def quit(self):
-        if self.state in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
+        if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
             # fire test_stop event if state isn't already stopped
             self.environment.events.test_stop.fire(environment=self.environment)
             

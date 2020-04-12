@@ -211,6 +211,45 @@ class TestLocustRunner(LocustTestCase):
         runner.stop()
         self.assertEqual(1, test_stop_run[0])
     
+    def test_stop_event_quit(self):
+        class User(Locust):
+            wait_time = constant(1)
+            @task
+            def my_task(self):
+                pass
+
+        test_stop_run = [0]
+        environment = Environment(options=mocked_options())
+        def on_test_stop(*args, **kwargs):
+            test_stop_run[0] += 1
+        environment.events.test_stop.add_listener(on_test_stop)
+
+        runner = LocalLocustRunner(environment, locust_classes=[User])
+        runner.start(locust_count=3, hatch_rate=3, wait=False)
+        self.assertEqual(0, test_stop_run[0])
+        runner.quit()
+        self.assertEqual(1, test_stop_run[0])
+    
+    def test_stop_event_stop_and_quit(self):
+        class User(Locust):
+            wait_time = constant(1)
+            @task
+            def my_task(self):
+                pass
+
+        test_stop_run = [0]
+        environment = Environment(options=mocked_options())
+        def on_test_stop(*args, **kwargs):
+            test_stop_run[0] += 1
+        environment.events.test_stop.add_listener(on_test_stop)
+
+        runner = LocalLocustRunner(environment, locust_classes=[User])
+        runner.start(locust_count=3, hatch_rate=3, wait=False)
+        self.assertEqual(0, test_stop_run[0])
+        runner.stop()
+        runner.quit()
+        self.assertEqual(1, test_stop_run[0])
+    
     def test_change_user_count_during_hatching(self):
         class User(Locust):
             wait_time = constant(1)
@@ -575,6 +614,13 @@ class TestMasterRunner(LocustTestCase):
             # change number of users and check that test_start isn't fired again
             master.start(7, 7)
             self.assertEqual(1, run_count[0])
+            
+            # stop and start to make sure test_start is fired again
+            master.stop()
+            master.start(3, 3)
+            self.assertEqual(2, run_count[0])
+            
+            master.quit()
     
     def test_stop_event(self):
         """
@@ -594,7 +640,35 @@ class TestMasterRunner(LocustTestCase):
             master.start(7, 7)
             self.assertEqual(5, len(server.outbox))
             master.stop()
-            self.assertEqual(1, run_count[0])  
+            self.assertEqual(1, run_count[0])
+            
+            run_count[0] = 0
+            for i in range(5):
+                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+            master.start(7, 7)
+            master.stop()
+            master.quit()
+            self.assertEqual(1, run_count[0])
+    
+    def test_stop_event_quit(self):
+        """
+        Tests that test_stop event is fired when quit() is called directly
+        """
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner()
+            
+            run_count = [0]
+            @self.environment.events.test_stop.add_listener
+            def on_test_stop(*a, **kw):
+                run_count[0] += 1            
+            
+            for i in range(5):
+                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+            
+            master.start(7, 7)
+            self.assertEqual(5, len(server.outbox))
+            master.quit()
+            self.assertEqual(1, run_count[0])
 
     def test_spawn_zero_locusts(self):
         class MyTaskSet(TaskSet):
