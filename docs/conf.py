@@ -101,6 +101,14 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     html_theme = 'sphinx_rtd_theme'
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
+
+# Custom CSS overrides
+html_static_path = ["_static"]
+html_context = {
+    "css_files": ["_static/theme-overrides.css"],
+}
+
+
 # HTML theme
 #html_theme = "haiku"
 
