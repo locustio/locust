@@ -405,10 +405,11 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.state = STATE_HATCHING
 
     def stop(self):
-        self.state = STATE_STOPPING
-        for client in self.clients.all:
-            self.server.send_to_client(Message("stop", None, client.id))
-        self.environment.events.test_stop.fire(environment=self.environment)
+        if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
+            self.state = STATE_STOPPING
+            for client in self.clients.all:
+                self.server.send_to_client(Message("stop", None, client.id))
+            self.environment.events.test_stop.fire(environment=self.environment)
     
     def quit(self):
         if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
