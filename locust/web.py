@@ -1,40 +1,30 @@
 # -*- coding: utf-8 -*-
 
 import csv
-import json
 import logging
 import os.path
-from collections import defaultdict
 from functools import wraps
+from html import escape
+from io import StringIO
 from itertools import chain
 from time import time
-from flask_basicauth import BasicAuth
-from .exception import AuthCredentialsError
-
-try:
-    # >= Py3.2
-    from html import escape
-except ImportError:
-    # < Py3.2
-    from cgi import escape
 
 from flask import Flask, make_response, jsonify, render_template, request
+from flask_basicauth import BasicAuth
 from gevent import pywsgi
 
 from locust import __version__ as version
-from io import StringIO
-
-from . import runners
+from .exception import AuthCredentialsError
 from .runners import MasterLocustRunner
-from .stats import failures_csv, median_from_dict, requests_csv, sort_stats
+from .stats import failures_csv, requests_csv, sort_stats
 from .util.cache import memoize
 from .util.rounding import proper_round
 from .util.timespan import parse_timespan
 
+
 logger = logging.getLogger(__name__)
 
 DEFAULT_CACHE_TIME = 2.0
-
 
 
 class WebUI:
