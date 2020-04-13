@@ -491,6 +491,8 @@ class MasterLocustRunner(DistributedLocustRunner):
                 if msg.node_id in self.clients:
                     del self.clients[msg.node_id]
                     logger.info("Client %r quit. Currently %i clients connected." % (msg.node_id, len(self.clients.ready)))
+                    if self.worker_count == 0:
+                        self.stop()
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
 
