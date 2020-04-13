@@ -25,7 +25,7 @@ from locust import __version__ as version
 from io import StringIO
 
 from . import runners
-from .runners import MasterLocustRunner
+from .runners import MasterLocustRunner, STATE_STOPPING, STATE_STOPPED
 from .stats import failures_csv, median_from_dict, requests_csv, sort_stats
 from .util.cache import memoize
 from .util.rounding import proper_round
@@ -125,8 +125,11 @@ class WebUI:
         @app.route('/stop')
         @self.auth_required_if_enabled
         def stop():
-            environment.runner.stop()
-            return jsonify({'success':True, 'message': 'Test stopped'})
+            if environment.runner.state in [STATE_STOPPING, STATE_STOPPED]:
+                return jsonify({'success':True, 'message': f"Test already {environment.runner.state}"})
+            else:
+                environment.runner.stop()
+                return jsonify({'success':True, 'message': 'Test stopped'})
         
         @app.route("/stats/reset")
         @self.auth_required_if_enabled
