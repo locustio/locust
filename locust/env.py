@@ -1,4 +1,8 @@
 from .event import Events
+from .exception import RunnerAlreadyExistsError
+from .stats import RequestStats
+from .runners import LocalLocustRunner, MasterLocustRunner, WorkerLocustRunner
+from .web import WebUI
 
 
 class Environment:
@@ -8,14 +12,17 @@ class Environment:
     See :ref:`events` for available events.
     """
     
+    locust_classes = []
+    """Locust User classes that the runner will run"""
+    
+    stats = None
+    """Reference to RequestStats instance"""
+    
     runner = None
     """Reference to the LocustRunner instance"""
     
     web_ui = None
     """Reference to the WebUI instance"""
-    
-    options = None
-    """Parsed command line options"""
     
     host = None
     """Base URL of the target system"""
@@ -39,9 +46,9 @@ class Environment:
     """
     
     def  __init__(
-        self, 
+        self, *,
+        locust_classes=[],
         events=None, 
-        options=None, 
         host=None, 
         reset_stats=False, 
         step_load=False, 
@@ -53,10 +60,66 @@ class Environment:
         else:
             self.events = Events()
         
-        self.options = options
+        self.locust_classes = locust_classes
+        self.stats = RequestStats()
         self.host = host
         self.reset_stats = reset_stats
         self.step_load = step_load
         self.stop_timeout = stop_timeout
         self.catch_exceptions = catch_exceptions
+    
+    def _create_runner(self, runner_class, *args, **kwargs):
+        if self.runner is not None:
+            raise RunnerAlreadyExistsError("Environment.runner already exists (%s)" % self.runner)
+        self.runner = runner_class(self, *args, **kwargs)
+        return self.runner
+    
+    def create_local_runner(self):
+        """
+        Create a LocalLocustRunner instance for this Environment
+        """
+        return self._create_runner(LocalLocustRunner, locust_classes=self.locust_classes)
         
+    def create_master_runner(self, master_bind_host="*", master_bind_port=5557):
+        """
+        Create a MasterLocustRunner instance for this Environment
+        
+        Arguments:
+        master_bind_host: Interface/host that the master should use for incoming worker connections. 
+                          Defaults to "*" which means all interfaces.
+        master_bind_port: Port that the master should listen for incoming worker connections on
+        """
+        return self._create_runner(
+            MasterLocustRunner,
+            locust_classes=self.locust_classes,
+            master_bind_host=master_bind_host,
+            master_bind_port=master_bind_port,
+        )
+    
+    def create_worker_runner(self, master_host, master_port):
+        """
+        Create a WorkerLocustRunner instance for this Environment
+        
+        Arguments:
+        master_host: Host/IP of a running master node
+        master_port: Port on master node to connect to
+        """
+        # Create a new RequestStats with use_response_times_cache set to False to save some memory
+        # and CPU cycles, since the response_times_cache is not needed for Worker nodes
+        self.stats = RequestStats(use_response_times_cache=False)
+        return self._create_runner(
+            WorkerLocustRunner,
+            locust_classes=self.locust_classes,
+            master_host=master_host,
+            master_port=master_port,
+        )
+    
+    def create_web_ui(self, auth_credentials=None):
+        """
+        Creates a WebUI instance for this Environment
+        
+        Arguments:
+        auth_credentials: If provided (in format "username:password") basic auth will be enabled
+        """
+        self.web_ui = WebUI(self, auth_credentials=auth_credentials)
+        return self.web_ui

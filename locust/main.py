@@ -16,11 +16,9 @@ from .core import HttpLocust, Locust
 from .env import Environment
 from .inspectlocust import get_task_ratio_dict, print_task_ratio
 from .log import console_logger, setup_logging
-from .runners import LocalLocustRunner, MasterLocustRunner, WorkerLocustRunner
 from .stats import (print_error_report, print_percentile_stats, print_stats,
                     stats_printer, stats_writer, write_csv_files)
 from .util.timespan import parse_timespan
-from .web import WebUI
 from .exception import AuthCredentialsError
 
 _internals = [Locust, HttpLocust]
@@ -89,14 +87,14 @@ def load_locustfile(path):
     return imported.__doc__, locusts
 
 
-def create_environment(options, events=None):
+def create_environment(locust_classes, options, events=None):
     """
     Create an Environment instance from options
     """
     return Environment(
+        locust_classes=locust_classes,
         events=events,
         host=options.host,
-        options=options,
         reset_stats=options.reset_stats,
         step_load=options.step_load,
         stop_timeout=options.stop_timeout,
@@ -148,7 +146,7 @@ def main():
         locust_classes = list(locusts.values())
     
     # create locust Environment
-    environment = create_environment(options, events=locust.events)
+    environment = create_environment(locust_classes, options, events=locust.events)
     
     if options.show_task_ratio:
         console_logger.info("\n Task ratio per locust class")
@@ -181,25 +179,18 @@ def main():
             sys.exit(1)
     
     if options.master:
-        runner = MasterLocustRunner(
-            environment, 
-            locust_classes,
-            master_bind_host=options.master_bind_host,
+        runner = environment.create_master_runner(
+            master_bind_host=options.master_bind_host, 
             master_bind_port=options.master_bind_port,
         )
     elif options.worker:
         try:
-            runner = WorkerLocustRunner(
-                environment, 
-                locust_classes,
-                master_host=options.master_host,
-                master_port=options.master_port,
-            )
+            runner = environment.create_worker_runner(options.master_host, options.master_port)
         except socket.error as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
     else:
-        runner = LocalLocustRunner(environment, locust_classes)
+        runner = environment.create_local_runner()
     
     # main_greenlet is pointing to runners.greenlet by default, it will point the web greenlet later if in web mode
     main_greenlet = runner.greenlet
@@ -228,7 +219,7 @@ def main():
         # spawn web greenlet
         logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.web_port))
         try:
-            web_ui = WebUI(environment=environment, auth_credentials=options.web_auth)
+            web_ui = environment.create_web_ui(auth_credentials=options.web_auth)
         except AuthCredentialsError:
             logger.error("Credentials supplied with --web-auth should have the format: username:password")
             sys.exit(1)

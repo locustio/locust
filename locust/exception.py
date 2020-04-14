@@ -51,3 +51,6 @@ class AuthCredentialsError(ValueError):
     are not in the correct format
     """
     pass
+
+class RunnerAlreadyExistsError(Exception):
+    pass

@@ -360,7 +360,8 @@ class TestCsvStats(LocustTestCase):
     def test_csv_stats_on_master_from_aggregated_stats(self):
         # Failing test for: https://github.com/locustio/locust/issues/1315
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = MasterLocustRunner(self.environment, [], master_bind_host="*", master_bind_port=0)
+            environment = Environment()
+            master = environment.create_master_runner(master_bind_host="*", master_bind_port=0)
             server.mocked_send(Message("client_ready", None, "fake_client"))
             
             master.stats.get("/", "GET").log(100, 23455)
@@ -368,14 +369,14 @@ class TestCsvStats(LocustTestCase):
             master.stats.get("/", "GET").log(700, 23455)
             
             data = {"user_count":1}
-            self.environment.events.report_to_master.fire(client_id="fake_client", data=data)
+            environment.events.report_to_master.fire(client_id="fake_client", data=data)
             master.stats.clear_all()
             
             server.mocked_send(Message("stats", data, "fake_client"))
             s = master.stats.get("/", "GET")
             self.assertEqual(700, s.median_response_time)
             
-            locust.stats.write_csv_files(self.environment, self.STATS_BASE_NAME, full_history=True)
+            locust.stats.write_csv_files(environment, self.STATS_BASE_NAME, full_history=True)
             self.assertTrue(os.path.exists(self.STATS_FILENAME))
             self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
             self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
@@ -388,11 +389,12 @@ class TestCsvStats(LocustTestCase):
             @task
             def t(self):
                 self.environment.runner.stats.log_request("GET", "/", 10, 10)
-        runner = LocalLocustRunner(self.environment, [TestUser])
+        environment = Environment(locust_classes=[TestUser])
+        runner = environment.create_local_runner()
         runner.start(3, 5) # spawn a user every 0.2 second
         gevent.sleep(0.1)
         
-        greenlet = gevent.spawn(stats_writer, self.environment, self.STATS_BASE_NAME, full_history=True)
+        greenlet = gevent.spawn(stats_writer, environment, self.STATS_BASE_NAME, full_history=True)
         gevent.sleep(0.6)
         gevent.kill(greenlet)
         

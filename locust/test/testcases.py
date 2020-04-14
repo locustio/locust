@@ -132,7 +132,7 @@ class LocustTestCase(unittest.TestCase):
         
         locust.events = Events()
         self.environment = Environment(events=locust.events, catch_exceptions=False)
-        self.runner = LocustRunner(self.environment, [])
+        self.runner = self.environment.create_local_runner()
         
         # When running the tests in Python 3 we get warnings about unclosed sockets. 
         # This causes tests that depends on calls to sys.stderr to fail, so we'll 

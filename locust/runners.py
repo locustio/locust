@@ -29,7 +29,6 @@ FALLBACK_INTERVAL = 5
 
 class LocustRunner(object):
     def __init__(self, environment, locust_classes):
-        environment.runner = self
         self.environment = environment
         self.locust_classes = locust_classes
         self.locusts = Group()
@@ -41,7 +40,6 @@ class LocustRunner(object):
         self.cpu_warning_emitted = False
         self.greenlet.spawn(self.monitor_cpu)
         self.exceptions = {}
-        self.stats = RequestStats()
         
         # set up event listeners for recording requests
         def on_request_success(request_type, name, response_time, response_length, **kwargs):
@@ -67,6 +65,10 @@ class LocustRunner(object):
         # don't leave any stray greenlets if runner is removed
         if self.greenlet and len(self.greenlet) > 0:
             self.greenlet.kill(block=False)
+    
+    @property
+    def stats(self):
+        return self.environment.stats
     
     @property
     def errors(self):
@@ -501,14 +503,8 @@ class MasterLocustRunner(DistributedLocustRunner):
         return len(self.clients.ready) + len(self.clients.hatching) + len(self.clients.running)
 
 class WorkerLocustRunner(DistributedLocustRunner):
-    def __init__(self, *args, master_host, master_port, **kwargs):
-        # Create a new RequestStats with use_response_times_cache set to False to save some memory
-        # and CPU cycles. We need to create the new RequestStats before we call super() (since int's
-        # used in the constructor of DistributedLocustRunner)
-        self.stats = RequestStats(use_response_times_cache=False)
-        
-        super().__init__(*args, **kwargs)
-        
+    def __init__(self, environment, *args, master_host, master_port, **kwargs):
+        super().__init__(environment, *args, **kwargs)
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         self.master_host = master_host
         self.master_port = master_port

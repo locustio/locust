@@ -25,8 +25,7 @@ class TestWebUI(LocustTestCase):
 
         parser = get_parser(default_config_files=[])
         self.environment.options = parser.parse_args([])
-        self.runner = LocustRunner(self.environment, [])
-        self.stats = self.runner.stats
+        self.stats = self.environment.stats
 
         self.web_ui = WebUI(self.environment)
         self.web_ui.app.view_functions["request_stats"].clear_cache()
