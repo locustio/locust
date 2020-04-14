@@ -389,17 +389,12 @@ class TestMasterRunner(LocustTestCase):
     def get_runner(self):
         return MasterLocustRunner(self.environment, [], master_bind_host="*", master_bind_port=5557)
 
-    def mocked_heartbeat(self, server, client_names):
-        for client_name in client_names:
-            server.mocked_send(Message('heartbeat', {'state': STATE_RUNNING, 'current_cpu_usage': 50}, client_name))
-
-    def sleep_with_mocked_heartbeat(self, seconds, server, client_names):
+    def sleep_with_given_heartbeat(self, seconds, heartbeat):
         start = time()
         while time() - start < seconds:
-            self.mocked_heartbeat(server, client_names)
-            sleep(min(HEARTBEAT_INTERVAL, time() - start))
-        self.mocked_heartbeat(server, client_names)
- 
+            heartbeat()
+            sleep(min(HEARTBEAT_INTERVAL, seconds - time() + start))
+
 
     def test_worker_connect(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
@@ -745,17 +740,18 @@ class TestMasterRunner(LocustTestCase):
     def test_spawn_locusts_in_stepload_mode(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner()
-            client_names = []
             for i in range(5):
-                client_name = f"fake_client{i}"
-                client_names.append(client_name)
-                server.mocked_send(Message("client_ready", None, client_name))
+                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+
+            def heartbeat():
+                for i in range(5):
+                    server.mocked_send(Message("heartbeat", {'state': STATE_RUNNING, 'current_cpu_usage': 50}, "fake_client%i" % i))
 
             # start a new swarming in Step Load mode: total locust count of 10, hatch rate of 2, step locust count of 5, step duration of 2s
             master.start_stepload(10, 2, 5, 2)
 
             # make sure the first step run is started
-            self.sleep_with_mocked_heartbeat(0.5, server, client_names)
+            self.sleep_with_given_heartbeat(0.5, heartbeat)
             self.assertEqual(5, len(server.outbox))
 
             num_clients = 0
@@ -766,7 +762,7 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(5, num_clients, "Total number of locusts that would have been spawned for first step is not 5")
 
             # make sure the first step run is complete
-            self.sleep_with_mocked_heartbeat(2, server, client_names)
+            self.sleep_with_given_heartbeat(2, heartbeat)
 
             num_clients = 0
             idx = end_of_last_step
