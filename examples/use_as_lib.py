@@ -1,10 +1,8 @@
 import gevent
-from locust import HttpLocust, TaskSet, task, between
-from locust.runners import LocalLocustRunner
+from locust import HttpLocust, task, between
 from locust.env import Environment
 from locust.stats import stats_printer
 from locust.log import setup_logging
-from locust.web import WebUI
 
 setup_logging("INFO", None)
 
