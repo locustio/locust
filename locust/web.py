@@ -115,11 +115,9 @@ class WebUI:
         @app.route('/stop')
         @self.auth_required_if_enabled
         def stop():
-            if environment.runner.state in [STATE_STOPPING, STATE_STOPPED]:
-                return jsonify({'success':True, 'message': f"Test already {environment.runner.state}"})
-            else:
+            if environment.runner.state not in [STATE_STOPPING, STATE_STOPPED]:
                 environment.runner.stop()
-                return jsonify({'success':True, 'message': 'Test stopped'})
+            return jsonify({'success':True, 'message': 'Test stopped'})
         
         @app.route("/stats/reset")
         @self.auth_required_if_enabled
