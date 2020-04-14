@@ -298,7 +298,7 @@ def main():
     def sig_term_handler():
         logger.info("Got SIGTERM signal")
         shutdown(0)
-    gevent.signal(signal.SIGTERM, sig_term_handler)
+    gevent.signal_handler(signal.SIGTERM, sig_term_handler)
     
     try:
         logger.info("Starting Locust %s" % version)
