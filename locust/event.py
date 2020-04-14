@@ -24,7 +24,7 @@ class EventHook(object):
     def remove_listener(self, handler):
         self._handlers.remove(handler)
 
-    def fire(self, reverse=False, **kwargs):
+    def fire(self, *, reverse=False, **kwargs):
         if reverse:
             handlers = reversed(self._handlers)
         else:
