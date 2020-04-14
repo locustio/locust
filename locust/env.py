@@ -84,10 +84,9 @@ class Environment:
         """
         Create a MasterLocustRunner instance for this Environment
         
-        Arguments:
-        master_bind_host: Interface/host that the master should use for incoming worker connections. 
-                          Defaults to "*" which means all interfaces.
-        master_bind_port: Port that the master should listen for incoming worker connections on
+        :param master_bind_host: Interface/host that the master should use for incoming worker connections. 
+                                 Defaults to "*" which means all interfaces.
+        :param master_bind_port: Port that the master should listen for incoming worker connections on
         """
         return self._create_runner(
             MasterLocustRunner,
@@ -100,9 +99,8 @@ class Environment:
         """
         Create a WorkerLocustRunner instance for this Environment
         
-        Arguments:
-        master_host: Host/IP of a running master node
-        master_port: Port on master node to connect to
+        :param master_host: Host/IP of a running master node
+        :param master_port: Port on master node to connect to
         """
         # Create a new RequestStats with use_response_times_cache set to False to save some memory
         # and CPU cycles, since the response_times_cache is not needed for Worker nodes
@@ -118,11 +116,10 @@ class Environment:
         """
         Creates a WebUI instance for this Environment and start running the web server
         
-        Arguments:
-        host: Host/interface that the web server should accept connections to. Defaults to "*"
-              which means all interfaces
-        port: Port that the web server should listen to
-        auth_credentials: If provided (in format "username:password") basic auth will be enabled
+        :param host: Host/interface that the web server should accept connections to. Defaults to "*"
+                     which means all interfaces
+        :param port: Port that the web server should listen to
+        :param auth_credentials: If provided (in format "username:password") basic auth will be enabled
         """
         self.web_ui = WebUI(self, host, port, auth_credentials=auth_credentials)
         return self.web_ui
