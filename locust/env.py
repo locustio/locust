@@ -38,18 +38,6 @@ class Environment:
     If False, exeptions will be raised.
     """
     
-    master_host = "127.0.0.1"
-    """Hostname of master node that the worker should connect to"""
-    
-    master_port = 5557
-    """Port of master node that the worker should connect to. Defaults to 5557."""
-    
-    master_bind_host = "*"
-    """Hostname/interfaces that the master node should expect workers to connect to. Defaults to '*' which means all interfaces."""
-    
-    master_bind_port = 5557    
-    """Port that the master node should listen to and expect workers to connect to. Defaults to 5557."""
-    
     def  __init__(
         self, 
         events=None, 
