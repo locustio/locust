@@ -35,7 +35,7 @@ gevent.spawn(stats_printer(env.stats))
 runner.start(1, hatch_rate=10)
 
 # in 60 seconds stop the runner
-gevent.spawn_later(10, lambda: runner.quit())
+gevent.spawn_later(60, lambda: runner.quit())
 
 # wait for the greenlets
 runner.greenlet.join()
