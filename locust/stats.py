@@ -7,7 +7,9 @@ from itertools import chain
 import gevent
 
 from .exception import StopLocust
-from .log import console_logger
+
+import logging
+console_logger = logging.getLogger("locust.stats_logger")
 
 STATS_NAME_WIDTH = 60
 STATS_TYPE_WIDTH = 20

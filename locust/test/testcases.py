@@ -15,7 +15,6 @@ from flask import (Flask, Response, make_response, redirect, request,
 import locust
 from locust.event import Events
 from locust.env import Environment
-from locust.log import console_logger
 from locust.runners import LocustRunner
 from locust.test.mock_logging import MockedLoggingHandler
 
@@ -148,11 +147,8 @@ class LocustTestCase(unittest.TestCase):
         # set up mocked logging handler
         self._logger_class = MockedLoggingHandler()
         self._logger_class.setLevel(logging.INFO)
-        console_logger.propagate = True
         self._root_log_handlers = [h for h in logging.root.handlers]
-        self._console_log_handlers = [h for h in console_logger.handlers]
         [logging.root.removeHandler(h) for h in logging.root.handlers]
-        [console_logger.removeHandler(h) for h in console_logger.handlers]
         logging.root.addHandler(self._logger_class)
         logging.root.setLevel(logging.INFO)
         self.mocked_log = MockedLoggingHandler
@@ -161,9 +157,7 @@ class LocustTestCase(unittest.TestCase):
         # restore logging class
         logging.root.removeHandler(self._logger_class)
         [logging.root.addHandler(h) for h in self._root_log_handlers]
-        [console_logger.addHandler(h) for h in self._console_log_handlers]
         self.mocked_log.reset()
-        console_logger.propagate = False
 
 
 class WebserverTestCase(LocustTestCase):
