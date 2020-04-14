@@ -1,6 +1,6 @@
 FROM python:3.6-alpine as builder
 
-RUN apk --no-cache add g++ zeromq-dev libffi-dev
+RUN apk --no-cache add g++ zeromq-dev libffi-dev file make gcc musl-dev
 COPY . /src
 WORKDIR /src
 RUN pip install .
