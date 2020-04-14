@@ -114,12 +114,15 @@ class Environment:
             master_port=master_port,
         )
     
-    def create_web_ui(self, auth_credentials=None):
+    def create_web_ui(self, host="*", port=8089, auth_credentials=None):
         """
-        Creates a WebUI instance for this Environment
+        Creates a WebUI instance for this Environment and start running the web server
         
         Arguments:
+        host: Host/interface that the web server should accept connections to. Defaults to "*"
+              which means all interfaces
+        port: Port that the web server should listen to
         auth_credentials: If provided (in format "username:password") basic auth will be enabled
         """
-        self.web_ui = WebUI(self, auth_credentials=auth_credentials)
+        self.web_ui = WebUI(self, host, port, auth_credentials=auth_credentials)
         return self.web_ui

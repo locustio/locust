@@ -9,6 +9,7 @@ from io import StringIO
 from itertools import chain
 from time import time
 
+import gevent
 from flask import Flask, make_response, jsonify, render_template, request
 from flask_basicauth import BasicAuth
 from gevent import pywsgi
@@ -31,19 +32,28 @@ class WebUI:
     server = None
     """Reference to pyqsgi.WSGIServer once it's started"""
     
-    def __init__(self, environment, auth_credentials=None):
+    def __init__(self, environment, host, port, auth_credentials=None):
         """
-        If auth_credentials is provided, it will enable basic auth with all the routes protected by default.
-        Should be supplied in the format: "user:pass".
+        Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
+        
+        Arguments:
+        environment: Reference to the curren Locust Environment
+        host: Host/interface that the web server should accept connections to
+        port: Port that the web server should listen to
+        auth_credentials:  If provided, it will enable basic auth with all the routes protected by default.
+                           Should be supplied in the format: "user:pass".
         """
         environment.web_ui = self
         self.environment = environment
+        self.host = host
+        self.port = port
         app = Flask(__name__)
         self.app = app
         app.debug = True
         app.root_path = os.path.dirname(os.path.abspath(__file__))
         self.app.config["BASIC_AUTH_ENABLED"] = False
         self.auth = None
+        self.greenlet = None
 
         if auth_credentials is not None:
             credentials = auth_credentials.split(':')
@@ -231,9 +241,12 @@ class WebUI:
             response.headers["Content-type"] = "text/csv"
             response.headers["Content-disposition"] = disposition
             return response
+        
+        # start the web server
+        self.greenlet = gevent.spawn(self.start)
 
-    def start(self, host, port):
-        self.server = pywsgi.WSGIServer((host, port), self.app, log=None)
+    def start(self):
+        self.server = pywsgi.WSGIServer((self.host, self.port), self.app, log=None)
         self.server.serve_forever()
     
     def stop(self):

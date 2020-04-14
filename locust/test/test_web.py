@@ -27,10 +27,8 @@ class TestWebUI(LocustTestCase):
         self.environment.options = parser.parse_args([])
         self.stats = self.environment.stats
 
-        self.web_ui = WebUI(self.environment)
+        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0)
         self.web_ui.app.view_functions["request_stats"].clear_cache()
-        self.web_ui.app.config["BASIC_AUTH_ENABLED"] = False
-        gevent.spawn(lambda: self.web_ui.start("127.0.0.1", 0))
         gevent.sleep(0.01)
         self.web_port = self.web_ui.server.server_port
     
@@ -44,10 +42,9 @@ class TestWebUI(LocustTestCase):
     
     def test_web_ui_no_runner(self):
         env = Environment()
-        web_ui = WebUI(env)
+        web_ui = WebUI(env, "127.0.0.1", 0)
+        gevent.sleep(0.01)
         try:
-            gevent.spawn(lambda: web_ui.start("127.0.0.1", 0))
-            gevent.sleep(0.01)
             response = requests.get("http://127.0.0.1:%i/" % web_ui.server.server_port)
             self.assertEqual(500, response.status_code)
             self.assertEqual("Error: Locust Environment does not have any runner", response.text)
@@ -259,12 +256,11 @@ class TestWebUIAuth(LocustTestCase):
         super(TestWebUIAuth, self).setUp()
 
         parser = get_parser(default_config_files=[])
-        self.environment.options = parser.parse_args(["--web-auth", "john:doe"])
+        options = parser.parse_args(["--web-auth", "john:doe"])
         self.runner = LocustRunner(self.environment, [])
         self.stats = self.runner.stats
-        self.web_ui = WebUI(self.environment, self.environment.options.web_auth)
+        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, auth_credentials=options.web_auth)
         self.web_ui.app.view_functions["request_stats"].clear_cache()
-        gevent.spawn(lambda: self.web_ui.start("127.0.0.1", 0))
         gevent.sleep(0.01)
         self.web_port = self.web_ui.server.server_port
 
