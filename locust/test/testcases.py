@@ -15,7 +15,6 @@ from flask import (Flask, Response, make_response, redirect, request,
 import locust
 from locust.event import Events
 from locust.env import Environment
-from locust.runners import LocustRunner
 from locust.test.mock_logging import MockedLoggingHandler
 
 
