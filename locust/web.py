@@ -29,8 +29,31 @@ DEFAULT_CACHE_TIME = 2.0
 
 
 class WebUI:
+    """
+    Sets up and runs a Flask web app that can start and stop load tests using the 
+    :attr:`environment.runner <locust.env.Environment.runner>` as well as show the load test statistics 
+    in :attr:`environment.stats <locust.env.Environment.stats>`
+    """
+    
+    app = None
+    """
+    Reference to the :class:`flask.Flask` app. Can be used to add additional web routes and customize
+    the Flask app in other various ways. Example::
+    
+        from flask import request
+        
+        @web_ui.app.route("/my_custom_route")
+        def my_custom_route():
+            return "your IP is: %s" % request.remote_addr
+    """
+    
+    greenlet = None
+    """
+    Greenlet of the running web server
+    """
+    
     server = None
-    """Reference to pyqsgi.WSGIServer once it's started"""
+    """Reference to the :class:`pyqsgi.WSGIServer` instance"""
     
     def __init__(self, environment, host, port, auth_credentials=None):
         """
@@ -250,9 +273,21 @@ class WebUI:
         self.server.serve_forever()
     
     def stop(self):
+        """
+        Stop the running web server
+        """
         self.server.stop()
 
     def auth_required_if_enabled(self, view_func):
+        """
+        Decorator that can be used on custom route methods that will turn on Basic Auth 
+        authentication if the ``--web-auth`` flag is used. Example::
+        
+            @web_ui.app.route("/my_custom_route")
+            @web_ui.auth_required_if_enabled
+            def my_custom_route():
+                return "custom response"
+        """
         @wraps(view_func)
         def wrapper(*args, **kwargs):
             if self.app.config["BASIC_AUTH_ENABLED"]:

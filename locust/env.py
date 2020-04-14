@@ -19,7 +19,7 @@ class Environment:
     """Reference to RequestStats instance"""
     
     runner = None
-    """Reference to the LocustRunner instance"""
+    """Reference to the :class:`LocustRunner <locust.runners.LocustRunner>` instance"""
     
     web_ui = None
     """Reference to the WebUI instance"""
@@ -76,13 +76,13 @@ class Environment:
     
     def create_local_runner(self):
         """
-        Create a LocalLocustRunner instance for this Environment
+        Create a :class:`LocalLocustRunner <locust.runners.LocalLocustRunner>` instance for this Environment
         """
         return self._create_runner(LocalLocustRunner, locust_classes=self.locust_classes)
         
     def create_master_runner(self, master_bind_host="*", master_bind_port=5557):
         """
-        Create a MasterLocustRunner instance for this Environment
+        Create a :class:`MasterLocustRunner <locust.runners.MasterLocustRunner>` instance for this Environment
         
         :param master_bind_host: Interface/host that the master should use for incoming worker connections. 
                                  Defaults to "*" which means all interfaces.
@@ -97,7 +97,7 @@ class Environment:
     
     def create_worker_runner(self, master_host, master_port):
         """
-        Create a WorkerLocustRunner instance for this Environment
+        Create a :class:`WorkerLocustRunner <locust.runners.WorkerLocustRunner>` instance for this Environment
         
         :param master_host: Host/IP of a running master node
         :param master_port: Port on master node to connect to
@@ -114,7 +114,7 @@ class Environment:
     
     def create_web_ui(self, host="*", port=8089, auth_credentials=None):
         """
-        Creates a WebUI instance for this Environment and start running the web server
+        Creates a :class:`WebUI <locust.web.WebUI>` instance for this Environment and start running the web server
         
         :param host: Host/interface that the web server should accept connections to. Defaults to "*"
                      which means all interfaces
