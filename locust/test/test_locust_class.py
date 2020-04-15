@@ -2,7 +2,7 @@ import gevent
 from gevent import sleep
 from gevent.pool import Group
 
-from locust import InterruptTaskSet, ResponseError
+from locust.exception import InterruptTaskSet, ResponseError
 from locust.core import HttpLocust, Locust, TaskSet, task
 from locust.env import Environment
 from locust.exception import (CatchResponseError, LocustError, RescheduleTask,
