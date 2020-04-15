@@ -1,9 +1,8 @@
 import random
 import time
 
-from locust.core import Locust, TaskSet
+from locust import Locust, TaskSet, between, constant, constant_pacing
 from locust.exception import MissingWaitTimeError
-from locust.wait_time import between, constant, constant_pacing
 
 from .testcases import LocustTestCase
 
