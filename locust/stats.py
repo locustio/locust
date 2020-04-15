@@ -7,7 +7,9 @@ from itertools import chain
 import gevent
 
 from .exception import StopLocust
-from .log import console_logger
+
+import logging
+console_logger = logging.getLogger("locust.stats_logger")
 
 STATS_NAME_WIDTH = 60
 STATS_TYPE_WIDTH = 20
@@ -91,9 +93,10 @@ class RequestStats(object):
     """
     def __init__(self, use_response_times_cache=True):
         """
-        The value of use_response_times_cache will be set for each StatsEntry() when they are created.
-        Settings it to False saves some memory and CPU cycles which we can do on worker nodes where 
-        the response_times_cache is not needed.
+        :param use_response_times_cache: The value of use_response_times_cache will be set for each StatsEntry()
+                                         when they are created. Settings it to False saves some memory and CPU 
+                                         cycles which we can do on Worker nodes where the response_times_cache 
+                                         is not needed.
         """
         self.use_response_times_cache = use_response_times_cache
         self.entries = {}

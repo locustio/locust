@@ -276,12 +276,10 @@ class TaskSet(object, metaclass=TaskSetMeta):
         """
         Add a task to the Locust's task execution queue.
         
-        *Arguments*:
-        
-        * task_callable: Locust task to schedule.
-        * args: Arguments that will be passed to the task callable.
-        * kwargs: Dict of keyword arguments that will be passed to the task callable.
-        * first: Optional keyword argument. If True, the task will be put first in the queue.
+        :param task_callable: Locust task to schedule.
+        :param args: Arguments that will be passed to the task callable.
+        :param kwargs: Dict of keyword arguments that will be passed to the task callable.
+        :param first: Optional keyword argument. If True, the task will be put first in the queue.
         """
         task = {"callable":task_callable, "args":args or [], "kwargs":kwargs or {}}
         if first:
@@ -511,11 +509,9 @@ class Locust(object, metaclass=LocustMeta):
         """
         Start a greenlet that runs this locust instance. 
         
-        *Arguments*:
-        
-        * gevent_group:  gevent.pool.Group instance where the greenlet will be spawned.
-        
-        Returns the spawned greenlet.
+        :param gevent_group: Group instance where the greenlet will be spawned.
+        :type gevent_group: gevent.pool.Group
+        :returns: The spawned greenlet.
         """
         def run_locust(user):
             """
@@ -532,14 +528,12 @@ class Locust(object, metaclass=LocustMeta):
         Stop the locust user greenlet that exists in the gevent_group. 
         This method is not meant to be called from within the Locust's greenlet. 
         
-        *Arguments*:
-        
-        * gevent_group:  gevent.pool.Group instance where the greenlet will be spawned.
-        * force: If False (the default) the stopping is done gracefully by setting the state to LOCUST_STATE_STOPPING 
-                 which will make the Locust instance stop once any currently running task is complete and on_stop 
-                 methods are called. If force is True the greenlet will be killed immediately.
-        
-        Returns True if the greenlet was killed immediately, otherwise False
+        :param gevent_group: Group instance where the greenlet will be spawned.
+        :type gevent_group: gevent.pool.Group
+        :param force: If False (the default) the stopping is done gracefully by setting the state to LOCUST_STATE_STOPPING 
+                      which will make the Locust instance stop once any currently running task is complete and on_stop 
+                      methods are called. If force is True the greenlet will be killed immediately.
+        :returns: True if the greenlet was killed immediately, otherwise False
         """
         if force or self._state == LOCUST_STATE_WAITING:
             gevent_group.killone(self._greenlet)

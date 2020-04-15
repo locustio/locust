@@ -11,6 +11,7 @@ import gevent
 import psutil
 from gevent.pool import Group
 
+from .log import greenlet_exception_logger
 from .rpc import Message, rpc
 from .stats import RequestStats, setup_distributed_stats_event_listeners
 
@@ -27,6 +28,9 @@ HEARTBEAT_LIVENESS = 3
 FALLBACK_INTERVAL = 5
 
 
+greenlet_exception_handler = greenlet_exception_logger(logger)
+
+
 class LocustRunner(object):
     def __init__(self, environment, locust_classes):
         environment.runner = self
@@ -39,7 +43,7 @@ class LocustRunner(object):
         self.stepload_greenlet = None
         self.current_cpu_usage = 0
         self.cpu_warning_emitted = False
-        self.greenlet.spawn(self.monitor_cpu)
+        self.greenlet.spawn(self.monitor_cpu).link_exception(greenlet_exception_handler)
         self.exceptions = {}
         self.stats = RequestStats()
         
@@ -230,6 +234,7 @@ class LocustRunner(object):
         logger.info("Start a new swarming in Step Load mode: total locust count of %d, hatch rate of %d, step locust count of %d, step duration of %d " % (locust_count, hatch_rate, step_locust_count, step_duration))
         self.state = STATE_INIT
         self.stepload_greenlet = self.greenlet.spawn(self.stepload_worker, hatch_rate, step_locust_count, step_duration)
+        self.stepload_greenlet.link_exception(greenlet_exception_handler)
 
     def stepload_worker(self, hatch_rate, step_clients_growth, step_duration):
         current_num_clients = 0
@@ -285,6 +290,7 @@ class LocalLocustRunner(LocustRunner):
             # kill existing hatching_greenlet before we start a new one
             self.hatching_greenlet.kill(block=True)
         self.hatching_greenlet = self.greenlet.spawn(lambda: super(LocalLocustRunner, self).start(locust_count, hatch_rate, wait=wait))
+        self.hatching_greenlet.link_exception(greenlet_exception_handler)
     
     def stop(self):
         if self.state == STATE_STOPPED:
@@ -341,8 +347,8 @@ class MasterLocustRunner(DistributedLocustRunner):
         
         self.clients = WorkerNodesDict()
         self.server = rpc.Server(master_bind_host, master_bind_port)
-        self.greenlet.spawn(self.heartbeat_worker)
-        self.greenlet.spawn(self.client_listener)
+        self.greenlet.spawn(self.heartbeat_worker).link_exception(greenlet_exception_handler)
+        self.greenlet.spawn(self.client_listener).link_exception(greenlet_exception_handler)
 
         # listener that gathers info on how many locust users the worker has spawned
         def on_worker_report(client_id, data):
@@ -526,11 +532,11 @@ class WorkerLocustRunner(DistributedLocustRunner):
         self.master_host = master_host
         self.master_port = master_port
         self.client = rpc.Client(master_host, master_port, self.client_id)
-        self.greenlet.spawn(self.heartbeat)
-        self.greenlet.spawn(self.worker)
+        self.greenlet.spawn(self.heartbeat).link_exception(greenlet_exception_handler)
+        self.greenlet.spawn(self.worker).link_exception(greenlet_exception_handler)
         self.client.send(Message("client_ready", None, self.client_id))
         self.worker_state = STATE_INIT
-        self.greenlet.spawn(self.stats_reporter)
+        self.greenlet.spawn(self.stats_reporter).link_exception(greenlet_exception_handler)
         
         # register listener for when all locust users have hatched, and report it to the master node
         def on_hatch_complete(user_count):
@@ -589,6 +595,7 @@ class WorkerLocustRunner(DistributedLocustRunner):
                     # kill existing hatching greenlet before we launch new one
                     self.hatching_greenlet.kill(block=True)
                 self.hatching_greenlet = self.greenlet.spawn(lambda: self.start(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
+                self.hatching_greenlet.link_exception(greenlet_exception_handler)
             elif msg.type == "stop":
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))
