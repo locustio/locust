@@ -15,7 +15,7 @@ from gevent import pywsgi
 
 from locust import __version__ as version
 from .exception import AuthCredentialsError
-from .runners import MasterLocustRunner, STATE_STOPPED, STATE_STOPPING
+from .runners import MasterLocustRunner
 from .stats import failures_csv, requests_csv, sort_stats
 from .util.cache import memoize
 from .util.rounding import proper_round
@@ -115,8 +115,7 @@ class WebUI:
         @app.route('/stop')
         @self.auth_required_if_enabled
         def stop():
-            if environment.runner.state not in [STATE_STOPPING, STATE_STOPPED]:
-                environment.runner.stop()
+            environment.runner.stop()
             return jsonify({'success':True, 'message': 'Test stopped'})
         
         @app.route("/stats/reset")
