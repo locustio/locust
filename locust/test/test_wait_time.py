@@ -47,8 +47,9 @@ class TestWaitTime(LocustTestCase):
             pass
         self.assertEqual(0, User(self.environment).wait_time())
         self.assertEqual(0, TaskSet1(User(self.environment)).wait_time())
+        taskset = TaskSet1(User(self.environment))
         start_time = time.time()
-        TaskSet1(User(self.environment)).wait()
+        taskset.wait()
         self.assertLess(time.time() - start_time, 0.002)
     
     def test_constant_pacing(self):
