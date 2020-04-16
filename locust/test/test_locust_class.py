@@ -3,12 +3,11 @@ from gevent import sleep
 from gevent.pool import Group
 
 from locust.exception import InterruptTaskSet, ResponseError
-from locust.core import HttpLocust, Locust, TaskSet, task
+from locust import HttpLocust, Locust, TaskSet, task, between, constant
 from locust.env import Environment
 from locust.exception import (CatchResponseError, LocustError, RescheduleTask,
                               RescheduleTaskImmediately, StopLocust)
 
-from locust.wait_time import between, constant
 from .testcases import LocustTestCase, WebserverTestCase
 
 

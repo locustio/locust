@@ -120,8 +120,7 @@ Here is an example:
 
 .. code-block:: python
 
-    from locust import Locust, task
-    from locust.wait_time import constant
+    from locust import Locust, task, constant
 
     class MyLocust(Locust):
         wait_time = constant(1)
@@ -135,8 +134,7 @@ the following example *task2* will have twice the chance of being picked as *tas
 
 .. code-block:: python
     
-    from locust import Locust, task
-    from locust.wait_time import between
+    from locust import Locust, task, between
     
     class MyLocust(Locust):
         wait_time = between(5, 15)
