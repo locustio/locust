@@ -21,22 +21,22 @@ class User(HttpLocust):
 
 # setup Environment and Runner
 env = Environment(locust_classes=[User])
-runner = env.create_local_runner()
+env.create_local_runner()
 
 # start a WebUI instance
-web_ui = env.create_web_ui("127.0.0.1", 8089)
+env.create_web_ui("127.0.0.1", 8089)
 
 # start a greenlet that periodically outputs the current stats
 gevent.spawn(stats_printer(env.stats))
 
 # start the test
-runner.start(1, hatch_rate=10)
+env.runner.start(1, hatch_rate=10)
 
 # in 60 seconds stop the runner
-gevent.spawn_later(60, lambda: runner.quit())
+gevent.spawn_later(60, lambda: env.runner.quit())
 
 # wait for the greenlets
-runner.greenlet.join()
+env.runner.greenlet.join()
 
 # stop the web server for good measures
-web_ui.stop()
+env.web_ui.stop()
