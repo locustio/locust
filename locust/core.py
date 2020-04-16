@@ -367,7 +367,7 @@ class DefaultTaskSet(TaskSet):
             task(self.locust, *args, **kwargs)
 
 
-class LocustMeta(type):
+class UserMeta(type):
     """
     Meta class for the main Locust class. It's used to allow Locust classes to specify task execution 
     ratio using an {task:int} dict, or a [(task0,int), ..., (taskN,int)] list.
@@ -387,7 +387,7 @@ class LocustMeta(type):
         return type.__new__(mcs, classname, bases, class_dict)
 
 
-class User(object, metaclass=LocustMeta):
+class User(object, metaclass=UserMeta):
     """
     Represents a "user" which is to be hatched and attack the system that is to be load tested.
     
