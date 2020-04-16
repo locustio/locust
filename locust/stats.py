@@ -542,7 +542,8 @@ class StatsEntry(object):
         # that it's ordered by preference by starting to add t-10, then t-11, t-9, t-12, t-8, 
         # and so on
         acceptable_timestamps = []
-        for i in range(9):
+        acceptable_timestamps.append(t-CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW)
+        for i in range(1, 9):
             acceptable_timestamps.append(t-CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW-i)
             acceptable_timestamps.append(t-CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW+i)
         
