@@ -451,10 +451,9 @@ class MasterLocustRunner(DistributedLocustRunner):
                     if self.worker_count - len(self.clients.missing) <= 0:
                         logger.info("The last worker went missing, stopping test.")
                         self.stop()
+                        self.check_stopped()
                 else:
                     client.heartbeat -= 1
-
-            self.check_stopped()
 
     def reset_connection(self):
         logger.info("Reset connection to slave")

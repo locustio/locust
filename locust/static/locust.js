@@ -5,7 +5,6 @@ $(window).ready(function() {
 });
 
 function appearStopped() {
-    $("body").attr("class", "stopped");
     $(".box_stop").hide();
     $("a.new_test").show();
     $("a.edit_test").hide();
@@ -15,6 +14,7 @@ function appearStopped() {
 $("#box_stop a.stop-button").click(function(event) {
     event.preventDefault();
     $.get($(this).attr("href"));
+    $("body").attr("class", "stopped");
     appearStopped()
 });
 
@@ -178,7 +178,7 @@ function updateStats() {
             responseTimeChart.addValue([report.current_response_time_percentile_50, report.current_response_time_percentile_95]);
             usersChart.addValue([report.user_count]);
         } else {
-            appearStopped()
+            appearStopped();
         }
 
         setTimeout(updateStats, 2000);
