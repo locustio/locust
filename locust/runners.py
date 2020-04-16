@@ -391,6 +391,10 @@ class MasterLocustRunner(DistributedLocustRunner):
             @property
             def running(self):
                 return self.get_by_state(STATE_RUNNING)
+
+            @property
+            def missing(self):
+                return self.get_by_state(STATE_MISSING)
         
         self.clients = WorkerNodesDict()
         self.server = rpc.Server(master_bind_host, master_bind_port)
@@ -462,10 +466,11 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.state = STATE_HATCHING
 
     def stop(self):
-        self.state = STATE_STOPPING
-        for client in self.clients.all:
-            self.server.send_to_client(Message("stop", None, client.id))
-        self.environment.events.test_stop.fire(environment=self.environment)
+        if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
+            self.state = STATE_STOPPING
+            for client in self.clients.all:
+                self.server.send_to_client(Message("stop", None, client.id))
+            self.environment.events.test_stop.fire(environment=self.environment)
     
     def quit(self):
         if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
@@ -476,6 +481,11 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.server.send_to_client(Message("quit", None, client.id))
         gevent.sleep(0.5) # wait for final stats report from all workers
         self.greenlet.kill(block=True)
+
+    def check_stopped(self):
+        if not self.state == STATE_INIT and all(map(lambda x: x.state != STATE_RUNNING and x.state != STATE_HATCHING, self.clients.all)):
+            self.state = STATE_STOPPED
+
     
     def heartbeat_worker(self):
         while True:
@@ -483,11 +493,16 @@ class MasterLocustRunner(DistributedLocustRunner):
             if self.connection_broken:
                 self.reset_connection()
                 continue
+
             for client in self.clients.all:
                 if client.heartbeat < 0 and client.state != STATE_MISSING:
                     logger.info('Worker %s failed to send heartbeat, setting state to missing.' % str(client.id))
                     client.state = STATE_MISSING
                     client.user_count = 0
+                    if self.worker_count - len(self.clients.missing) <= 0:
+                        logger.info("The last worker went missing, stopping test.")
+                        self.stop()
+                        self.check_stopped()
                 else:
                     client.heartbeat -= 1
 
@@ -547,11 +562,14 @@ class MasterLocustRunner(DistributedLocustRunner):
                 if msg.node_id in self.clients:
                     del self.clients[msg.node_id]
                     logger.info("Client %r quit. Currently %i clients connected." % (msg.node_id, len(self.clients.ready)))
+                    if self.worker_count - len(self.clients.missing) <= 0:
+                        logger.info("The last worker quit, stopping test.")
+                        self.stop()
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
 
-            if not self.state == STATE_INIT and all(map(lambda x: x.state != STATE_RUNNING and x.state != STATE_HATCHING, self.clients.all)):
-                self.state = STATE_STOPPED
+            self.check_stopped()
+
 
     @property
     def worker_count(self):

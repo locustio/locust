@@ -139,8 +139,8 @@ a:hover {
 }
 .hatching .boxes .box_running {display: block;}
 .running .boxes .box_running {display: block;}
-.stopped .boxes .box_running {display: block;}
-.stopped .boxes .box_stop {display: none;}
+.stopped .boxes .box_running, .stopping .boxes .box_running {display: block;}
+.stopped .boxes .box_stop, .stopping .boxes .box_stop {display: none;}
 
 .container {
     max-width: 1800px;
@@ -206,7 +206,7 @@ a:hover {
 }
 
 
-.stopped .start {
+.stopped .start, .stopping .start {
     display: none;
     border-radius: 5px;
     -moz-border-radius: 5px;
@@ -216,7 +216,7 @@ a:hover {
     box-shadow: 0 0 60px rgba(0,0,0,0.3);
 }
 
-.stopped .edit {display: none;}
+.stopped .edit, .stopping .edit {display: none;}
 .running .edit, .hatching .edit {
     display: none;
     border-radius: 5px;
@@ -232,25 +232,25 @@ a:hover {
 .ready .start {display: block;}
 
 .running .status, .hatching .status {display: block;}
-.stopped .status {display: block;}
+.stopped .status, .stopping .status {display: block;}
 .ready .status {display: none;}
 
-.stopped .boxes .edit_test, .ready .boxes .edit_test {display: none;}
-.stopped .boxes .user_count, .ready .boxes .user_count {display: none;}
+.stopped .boxes .edit_test, .stopping .boxes .edit_test, .ready .boxes .edit_test {display: none;}
+.stopped .boxes .user_count, .stopping .boxes .user_count, .ready .boxes .user_count {display: none;}
 
 .running a.new_test, .ready a.new_test, .hatching a.new_test {display: none;}
 .running a.new_test {display: none;}
-.stopped a.new_test {display: block;}
+.stopped a.new_test, .stopping a.new_test {display: block;}
 
 .start a.close_link, .edit a.close_link{
     position: absolute;
     right: 10px;
     top: 10px;
 }
-.stopped .start a.close_link {display: inline;}
+.stopped .start a.close_link, .stopping .start a.close_link {display: inline;}
 .running .start a.close_link, .ready .start a.close_link, .hatching .start a.close_link  {display: none;}
 
-.stopped .edit a.close_link, .ready .edit a.close_link {display: none;}
+.stopped .edit a.close_link, .stopping .edit a.close_link, .ready .edit a.close_link {display: none;}
 .running .edit a.close_link, .hatching .edit a.close_link {display: inline;}
 
 .stats_label {
@@ -461,7 +461,7 @@ ul.tabs li a.current:after {
 }
 
 .running .hostname, .hatching .hostname {display: block;}
-.stopped .hostname {display: block;}
+.stopped .hostname, .stopping .hostname {display: block;}
 .ready .hostname {display: none;}
 
 .footer {

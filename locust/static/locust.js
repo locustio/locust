@@ -4,14 +4,18 @@ $(window).ready(function() {
     }
 });
 
-$("#box_stop a.stop-button").click(function(event) {
-    event.preventDefault();
-    $.get($(this).attr("href"));
-    $("body").attr("class", "stopped");
+function appearStopped() {
     $(".box_stop").hide();
     $("a.new_test").show();
     $("a.edit_test").hide();
     $(".user_count").hide();
+}
+
+$("#box_stop a.stop-button").click(function(event) {
+    event.preventDefault();
+    $.get($(this).attr("href"));
+    $("body").attr("class", "stopped");
+    appearStopped()
 });
 
 $("#box_stop a.reset-button").click(function(event) {
@@ -173,6 +177,8 @@ function updateStats() {
             rpsChart.addValue([total.current_rps, total.current_fail_per_sec]);
             responseTimeChart.addValue([report.current_response_time_percentile_50, report.current_response_time_percentile_95]);
             usersChart.addValue([report.user_count]);
+        } else {
+            appearStopped();
         }
 
         setTimeout(updateStats, 2000);
