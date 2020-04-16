@@ -11,17 +11,15 @@ import gevent
 
 import locust
 
-from .event import Events
 from .argument_parser import parse_locustfile_option, parse_options
 from .core import HttpLocust, User
 from .env import Environment
 from .inspectlocust import get_task_ratio_dict, print_task_ratio
-from .log import console_logger, setup_logging
-from .runners import LocalLocustRunner, MasterLocustRunner, WorkerLocustRunner
+from .log import setup_logging, greenlet_exception_logger
 from .stats import (print_error_report, print_percentile_stats, print_stats,
                     stats_printer, stats_writer, write_csv_files)
 from .util.timespan import parse_timespan
-from .web import WebUI
+from .exception import AuthCredentialsError
 
 _internals = [User, HttpLocust]
 version = locust.__version__
@@ -89,14 +87,14 @@ def load_locustfile(path):
     return imported.__doc__, locusts
 
 
-def create_environment(options, events=None):
+def create_environment(locust_classes, options, events=None):
     """
     Create an Environment instance from options
     """
     return Environment(
+        locust_classes=locust_classes,
         events=events,
         host=options.host,
-        options=options,
         reset_stats=options.reset_stats,
         step_load=options.step_load,
         stop_timeout=options.stop_timeout,
@@ -120,14 +118,19 @@ def main():
     
     # setup logging
     if not options.skip_log_setup:
-        setup_logging(options.loglevel, options.logfile)
+        if options.loglevel.upper() in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
+            setup_logging(options.loglevel, options.logfile)
+        else:
+            sys.stderr.write("Invalid --loglevel. Valid values are: DEBUG/INFO/WARNING/ERROR/CRITICAL\n")
+            sys.exit(1)
 
     logger = logging.getLogger(__name__)
+    greenlet_exception_handler = greenlet_exception_logger(logger)
 
     if options.list_commands:
-        console_logger.info("Available Locusts:")
+        print("Available Locusts:")
         for name in locusts:
-            console_logger.info("    " + name)
+            print("    " + name)
         sys.exit(0)
 
     if not locusts:
@@ -148,14 +151,14 @@ def main():
         locust_classes = list(locusts.values())
     
     # create locust Environment
-    environment = create_environment(options, events=locust.events)
+    environment = create_environment(locust_classes, options, events=locust.events)
     
     if options.show_task_ratio:
-        console_logger.info("\n Task ratio per locust class")
-        console_logger.info( "-" * 80)
+        print("\n Task ratio per locust class")
+        print( "-" * 80)
         print_task_ratio(locust_classes)
-        console_logger.info("\n Total task ratio")
-        console_logger.info("-" * 80)
+        print("\n Total task ratio")
+        print("-" * 80)
         print_task_ratio(locust_classes, total=True)
         sys.exit(0)
     if options.show_task_ratio_json:
@@ -164,7 +167,7 @@ def main():
             "per_class": get_task_ratio_dict(locust_classes), 
             "total": get_task_ratio_dict(locust_classes, total=True)
         }
-        console_logger.info(dumps(task_data))
+        print(dumps(task_data))
         sys.exit(0)
 
     if options.step_time:
@@ -181,25 +184,18 @@ def main():
             sys.exit(1)
     
     if options.master:
-        runner = MasterLocustRunner(
-            environment, 
-            locust_classes,
-            master_bind_host=options.master_bind_host,
+        runner = environment.create_master_runner(
+            master_bind_host=options.master_bind_host, 
             master_bind_port=options.master_bind_port,
         )
     elif options.worker:
         try:
-            runner = WorkerLocustRunner(
-                environment, 
-                locust_classes,
-                master_host=options.master_host,
-                master_port=options.master_port,
-            )
+            runner = environment.create_worker_runner(options.master_host, options.master_port)
         except socket.error as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
     else:
-        runner = LocalLocustRunner(environment, locust_classes)
+        runner = environment.create_local_runner()
     
     # main_greenlet is pointing to runners.greenlet by default, it will point the web greenlet later if in web mode
     main_greenlet = runner.greenlet
@@ -221,14 +217,20 @@ def main():
             def timelimit_stop():
                 logger.info("Time limit reached. Stopping Locust.")
                 runner.quit()
-            gevent.spawn_later(options.run_time, timelimit_stop)
+            gevent.spawn_later(options.run_time, timelimit_stop).link_exception(greenlet_exception_handler)
     
     # start Web UI
     if not options.headless and not options.worker:
         # spawn web greenlet
         logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.web_port))
-        web_ui = WebUI(environment=environment)
-        main_greenlet = gevent.spawn(web_ui.start, host=options.web_host, port=options.web_port)
+        try:
+            web_ui = environment.create_web_ui(auth_credentials=options.web_auth)
+        except AuthCredentialsError:
+            logger.error("Credentials supplied with --web-auth should have the format: username:password")
+            sys.exit(1)
+        else:
+            main_greenlet = gevent.spawn(web_ui.start, host=options.web_host, port=options.web_port)
+            main_greenlet.link_exception(greenlet_exception_handler)
     else:
         web_ui = None
     
@@ -258,9 +260,10 @@ def main():
     if not options.only_summary and (options.print_stats or (options.headless and not options.worker)):
         # spawn stats printing greenlet
         stats_printer_greenlet = gevent.spawn(stats_printer(runner.stats))
+        stats_printer_greenlet.link_exception(greenlet_exception_handler)
 
     if options.csvfilebase:
-        gevent.spawn(stats_writer, environment, options.csvfilebase, full_history=options.stats_history_enabled)
+        gevent.spawn(stats_writer, environment, options.csvfilebase, full_history=options.stats_history_enabled).link_exception(greenlet_exception_handler)
 
     
     def shutdown(code=0):
@@ -286,7 +289,7 @@ def main():
     def sig_term_handler():
         logger.info("Got SIGTERM signal")
         shutdown(0)
-    gevent.signal(signal.SIGTERM, sig_term_handler)
+    gevent.signal_handler(signal.SIGTERM, sig_term_handler)
     
     try:
         logger.info("Starting Locust %s" % version)

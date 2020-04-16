@@ -1,7 +1,6 @@
 import inspect
 
 from .core import User, TaskSet
-from .log import console_logger
 
 
 def print_task_ratio(locusts, total=False, level=0, parent_ratio=1.0):
@@ -12,7 +11,7 @@ def _print_task_ratio(x, level=0):
     for k, v in x.items():
         padding = 2*" "*level
         ratio = v.get('ratio', 1)
-        console_logger.info(" %-10s %-50s" % (padding + "%-6.1f" % (ratio*100), padding + k))
+        print(" %-10s %-50s" % (padding + "%-6.1f" % (ratio*100), padding + k))
         if 'tasks' in v:
             _print_task_ratio(v['tasks'], level + 1)
 

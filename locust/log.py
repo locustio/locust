@@ -1,61 +1,69 @@
 import logging
+import logging.config
 import socket
-import sys
 
-host = socket.gethostname()
+HOSTNAME = socket.gethostname()
 
-def setup_logging(loglevel, logfile):
-    numeric_level = getattr(logging, loglevel.upper(), None)
-    if numeric_level is None:
-        raise ValueError("Invalid log level: %s" % loglevel)
 
-    log_format = "[%(asctime)s] {0}/%(levelname)s/%(name)s: %(message)s".format(host)
-    logging.basicConfig(level=numeric_level, filename=logfile, format=log_format)
+def setup_logging(loglevel, logfile=None):
+    loglevel = loglevel.upper()
+    
+    LOGGING_CONFIG = {
+        "version": 1,
+        "formatters": {
+            "default": {
+                "format": "[%(asctime)s] {0}/%(levelname)s/%(name)s: %(message)s".format(HOSTNAME),
+            },
+            "plain": {
+                "format": "%(message)s",
+            },
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "default",
+            },
+            "console_plain": {
+                "class": "logging.StreamHandler",
+                "formatter": "plain",
+            },
+        },
+        "loggers": {
+            "locust": {
+                "handlers": ["console"],
+                "level": loglevel,
+                "propagate": False,
+            },
+            "locust.stats_logger": {
+                "handlers": ["console_plain"],
+                "level": "INFO",
+                "propagate": False,
+            },
+        },
+        "root": {
+            "handlers": ["console"],
+            "level": loglevel,
+        },
+    }
+    if logfile:
+        # if a file has been specified add a file logging handler and set 
+        # the locust and root loggers to use it
+        LOGGING_CONFIG["handlers"]["file"] = {
+            "class": "logging.FileHandler",
+            "filename": logfile,
+            "formatter": "default",
+        }
+        LOGGING_CONFIG["loggers"]["locust"]["handlers"] = ["file"]
+        LOGGING_CONFIG["root"]["handlers"] = ["file"]
+    
+    logging.config.dictConfig(LOGGING_CONFIG)
 
-    sys.stderr = StdErrWrapper()
-    sys.stdout = StdOutWrapper()
 
-stdout_logger = logging.getLogger("stdout")
-stderr_logger = logging.getLogger("stderr")
-
-class StdOutWrapper(object):
+def greenlet_exception_logger(logger, level=logging.CRITICAL):
     """
-    Wrapper for stdout
+    Return a function that can be used as argument to Greenlet.link_exception() that will log the 
+    unhandled exception to the given logger.
     """
-    def write(self, s):
-        stdout_logger.info(s.strip())
-
-    def isatty(self):
-        return False
-
-    def flush(self, *args, **kwargs):
-        """No-op for wrapper"""
-        pass
-
-class StdErrWrapper(object):
-    """
-    Wrapper for stderr
-    """
-    def write(self, s):
-        stderr_logger.error(s.strip())
-
-    def isatty(self):
-        return False
-
-    def flush(self, *args, **kwargs):
-        """No-op for wrapper"""
-        pass
-
-# set up logger for the statistics tables
-console_logger = logging.getLogger("console_logger")
-# create console handler
-sh = logging.StreamHandler()
-sh.setLevel(logging.INFO)
-# formatter that doesn't include anything but the message
-sh.setFormatter(logging.Formatter('%(message)s'))
-console_logger.addHandler(sh)
-console_logger.propagate = False
-
-# configure python-requests log level
-requests_log = logging.getLogger("requests")
-requests_log.setLevel(logging.WARNING)
+    def exception_handler(greenlet):
+        logger.log(level, "Unhandled exception in greenlet: %s", greenlet, exc_info=greenlet.exc_info)
+    return exception_handler

@@ -1,6 +1,7 @@
 from requests.exceptions import (InvalidSchema, InvalidURL, MissingSchema,
                                  RequestException)
 
+
 from locust.clients import HttpSession
 from locust.env import Environment
 from .testcases import WebserverTestCase
@@ -115,3 +116,9 @@ class TestHttpSession(WebserverTestCase):
         self.environment.events.request_failure.add_listener(on_error)
         s.request('get', '/wrong_url/01', name='replaced_url_name')
         self.assertIn('for url: replaced_url_name', str(kwargs['exception']))
+    
+    def test_get_with_params(self):
+        s = self.get_client()
+        r = s.get("/get_arg", params={"arg":"test_123"})
+        self.assertEqual(200, r.status_code)
+        self.assertEqual("test_123", r.text)

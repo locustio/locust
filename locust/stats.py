@@ -7,7 +7,9 @@ from itertools import chain
 import gevent
 
 from .exception import StopLocust
-from .log import console_logger
+
+import logging
+console_logger = logging.getLogger("locust.stats_logger")
 
 STATS_NAME_WIDTH = 60
 STATS_TYPE_WIDTH = 20
@@ -91,9 +93,10 @@ class RequestStats(object):
     """
     def __init__(self, use_response_times_cache=True):
         """
-        The value of use_response_times_cache will be set for each StatsEntry() when they are created.
-        Settings it to False saves some memory and CPU cycles which we can do on worker nodes where 
-        the response_times_cache is not needed.
+        :param use_response_times_cache: The value of use_response_times_cache will be set for each StatsEntry()
+                                         when they are created. Settings it to False saves some memory and CPU 
+                                         cycles which we can do on Worker nodes where the response_times_cache 
+                                         is not needed.
         """
         self.use_response_times_cache = use_response_times_cache
         self.entries = {}
@@ -763,13 +766,13 @@ def stats_writer(environment, base_filepath, full_history=False):
 def write_csv_files(environment, base_filepath, full_history=False):
     """Writes the requests, distribution, and failures csvs."""
     with open(base_filepath + '_stats.csv', 'w') as f:
-        f.write(requests_csv(environment.runner.stats))
+        f.write(requests_csv(environment.stats))
 
     with open(base_filepath + '_stats_history.csv', 'a') as f:
         f.write(stats_history_csv(environment, full_history) + "\n")
 
     with open(base_filepath + '_failures.csv', 'w') as f:
-        f.write(failures_csv(environment.runner.stats))
+        f.write(failures_csv(environment.stats))
 
 
 def sort_stats(stats):
@@ -784,15 +787,15 @@ def requests_csv(stats):
         ",".join([
             '"Type"',
             '"Name"',
-            '"# requests"',
-            '"# failures"',
-            '"Median response time"',
-            '"Average response time"',
-            '"Min response time"',
-            '"Max response time"',
+            '"Request Count"',
+            '"Failure Count"',
+            '"Median Response Time"',
+            '"Average Response Time"',
+            '"Min Response Time"',
+            '"Max Response Time"',
             '"Average Content Size"',
             '"Requests/s"',
-            '"Requests Failed/s"',
+            '"Failures/s"',
             '"50%"',
             '"66%"',
             '"75%"',
@@ -803,7 +806,7 @@ def requests_csv(stats):
             '"99%"',
             '"99.9%"',
             '"99.99%"',
-            '"99.999"',
+            '"99.999%"',
             '"100%"'
         ])
     ]
@@ -837,18 +840,11 @@ def stats_history_csv_header():
 
     return ','.join((
         '"Timestamp"',
-        '"User count"',
+        '"User Count"',
         '"Type"',
         '"Name"',
-        '"# requests"',
-        '"# failures"',
         '"Requests/s"',
-        '"Requests Failed/s"',
-        '"Median response time"',
-        '"Average response time"',
-        '"Min response time"',
-        '"Max response time"',
-        '"Average Content Size"',
+        '"Failures/s"',
         '"50%"',
         '"66%"',
         '"75%"',
@@ -859,8 +855,15 @@ def stats_history_csv_header():
         '"99%"',
         '"99.9%"',
         '"99.99%"',
-        '"99.999"',
-        '"100%"'
+        '"99.999%"',
+        '"100%"',
+        '"Total Request Count"',
+        '"Total Failure Count"',
+        '"Total Median Response Time"',
+        '"Total Average Response Time"',
+        '"Total Min Response Time"',
+        '"Total Max Response Time"',
+        '"Total Average Content Size"',
     )) + '\n'
 
 def stats_history_csv(environment, all_entries=False):
@@ -869,7 +872,7 @@ def stats_history_csv(environment, all_entries=False):
     Aggregated stats entry, but if all_entries is set to True, a row for each entry will 
     will be included.
     """
-    stats = environment.runner.stats
+    stats = environment.stats
     timestamp = int(time.time())
     stats_entries = []
     if all_entries:
@@ -883,21 +886,21 @@ def stats_history_csv(environment, all_entries=False):
         else:
             percentile_str = ','.join(['"N/A"'] * len(PERCENTILES_TO_REPORT))
 
-        rows.append('"%i","%i","%s","%s",%i,%i,%.2f,%.2f,%i,%i,%i,%.2f,%.2f,%s' % (
+        rows.append('"%i","%i","%s","%s",%.2f,%.2f,%s,%i,%i,%i,%i,%i,%i,%i' % (
             timestamp,
             environment.runner.user_count,
-            s.method,
+            s.method or "",
             s.name,
-            s.num_requests,
-            s.num_failures,
             s.current_rps,
             s.current_fail_per_sec,
+            percentile_str,
+            s.num_requests,
+            s.num_failures,
             s.median_response_time,
             s.avg_response_time,
             s.min_response_time or 0,
             s.max_response_time,
             s.avg_content_length,
-            percentile_str
         ))
 
     return "\n".join(rows)

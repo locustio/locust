@@ -2,13 +2,12 @@ import gevent
 from gevent import sleep
 from gevent.pool import Group
 
-from locust import InterruptTaskSet, ResponseError
-from locust.core import HttpLocust, TaskSet, task, User
+from locust.exception import InterruptTaskSet, ResponseError
+from locust import HttpLocust, User, TaskSet, task, between, constant
 from locust.env import Environment
 from locust.exception import (CatchResponseError, LocustError, RescheduleTask,
                               RescheduleTaskImmediately, StopLocust)
 
-from locust.wait_time import between, constant
 from .testcases import LocustTestCase, WebserverTestCase
 
 
@@ -18,9 +17,8 @@ class TestTaskSet(LocustTestCase):
         
         class MyUser(User):
             host = "127.0.0.1"
-        self.environment = Environment()
         self.locust = MyUser(self.environment)
-    
+
     def test_task_ratio(self):
         t1 = lambda l: None
         t2 = lambda l: None
@@ -40,9 +38,8 @@ class TestTaskSet(LocustTestCase):
             tasks = None
 
         class MyUser(User):
-            wait_time = constant(0)
+            wait_time = constant(0.5)
             tasks = [MyTasks]
-            _catch_exceptions = False
         
         l = MyTasks(MyUser(self.environment))
         self.assertRaisesRegex(Exception, "No tasks defined.*", l.run)
@@ -430,6 +427,21 @@ class TestTaskSet(LocustTestCase):
 
 
 class TestLocustClass(LocustTestCase):
+    def test_locust_wait(self):
+        log = []
+        class TestUser(User):
+            wait_time = constant(0.01)
+            @task
+            def t(self):
+                log.append(0)
+                self.wait()
+                log.append(1)
+                raise StopLocust()
+
+        l = TestUser(self.environment)
+        l.run()
+        self.assertEqual([0,1], log)
+
     def test_locust_on_start(self):
         class MyLocust(User):
             t1_executed = False

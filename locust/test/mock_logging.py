@@ -6,9 +6,14 @@ class MockedLoggingHandler(logging.Handler):
     warning = []
     info = []
     error = []
+    critical = []
 
     def emit(self, record):
-        getattr(self.__class__, record.levelname.lower()).append(record.getMessage())
+        if record.exc_info:
+            value = {"message":record.getMessage(), "exc_info":record.exc_info}
+        else:
+            value = record.getMessage()
+        getattr(self.__class__, record.levelname.lower()).append(value)
 
     @classmethod
     def reset(cls):

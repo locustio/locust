@@ -44,3 +44,13 @@ class RPCError(Exception):
 
     When raised from zmqrpc, RPC should be reestablished.
     """
+
+class AuthCredentialsError(ValueError):
+    """
+    Exception when the auth credentials provided
+    are not in the correct format
+    """
+    pass
+
+class RunnerAlreadyExistsError(Exception):
+    pass

@@ -61,7 +61,7 @@ def task(weight=1):
 class NoClientWarningRaiser(object):
     """
     The purpose of this class is to emit a sensible error message for old test scripts that 
-    inherits from Locust, and expects there to be an HTTP client under the client attribute.
+    inherit from Locust, and expects there to be an HTTP client under the client attribute.
     """
     def __getattr__(self, _):
         raise LocustError("No client instantiated. Did you intend to inherit from HttpLocust?")
@@ -70,7 +70,7 @@ class NoClientWarningRaiser(object):
 def get_tasks_from_base_classes(bases, class_dict):
     """
     Function used by both TaskSetMeta and LocustMeta for collecting all declared tasks 
-    on the TaskSet/Locust class and all it's base classes
+    on the TaskSet/Locust class and all its base classes
     """
     new_tasks = []
     for base in bases:
@@ -114,14 +114,14 @@ class TaskSet(object, metaclass=TaskSetMeta):
     Class defining a set of tasks that a Locust user will execute. 
     
     When a TaskSet starts running, it will pick a task from the *tasks* attribute, 
-    execute it, and then sleep for the number of seconds returned by it's *wait_time* 
+    execute it, and then sleep for the number of seconds returned by its *wait_time*
     function. If no wait_time method has been declared on the TaskSet, it'll call the 
     wait_time function on the Locust by default. It will then schedule another task 
     for execution and so on.
     
     TaskSets can be nested, which means that a TaskSet's *tasks* attribute can contain 
-    another TaskSet. If the nested TaskSet it scheduled to be executed, it will be 
-    instantiated and called from the current executing TaskSet. Execution in the
+    another TaskSet. If the nested TaskSet is scheduled to be executed, it will be
+    instantiated and called from the currently executing TaskSet. Execution in the
     currently running TaskSet will then be handed over to the nested TaskSet which will 
     continue to run until it throws an InterruptTaskSet exception, which is done when 
     :py:meth:`TaskSet.interrupt() <locust.core.TaskSet.interrupt>` is called. (execution 
@@ -134,9 +134,9 @@ class TaskSet(object, metaclass=TaskSetMeta):
 
     If tasks is a list, the task to be performed will be picked randomly.
 
-    If tasks is a *(callable,int)* list of two-tuples, or a  {callable:int} dict, 
+    If tasks is a *(callable,int)* list of two-tuples, or a {callable:int} dict, 
     the task to be performed will be picked randomly, but each task will be weighted 
-    according to it's corresponding int value. So in the following case *ThreadPage* will 
+    according to its corresponding int value. So in the following case, *ThreadPage* will 
     be fifteen times more likely to be picked than *write_post*::
 
         class ForumPage(TaskSet):
@@ -177,9 +177,6 @@ class TaskSet(object, metaclass=TaskSetMeta):
     """
 
     def __init__(self, parent):
-        # check if deprecated wait API is used
-        deprecation.check_for_deprecated_wait_api(self)
-        
         self._task_queue = []
         self._time_start = time()
         
@@ -208,7 +205,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
     
     def on_stop(self):
         """
-        Called when a Locust user stops executing this TaskSet. E.g. when Taskset.interrupt() is called 
+        Called when a Locust user stops executing this TaskSet. E.g. when TaskSet.interrupt() is called
         or when the user is killed
         """
         pass
@@ -250,7 +247,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
                 raise
             except Exception as e:
                 self.locust.environment.events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
-                if self.locust._catch_exceptions:
+                if self.locust.environment.catch_exceptions:
                     logger.error("%s\n%s", e, traceback.format_exc())
                     self.wait()
                 else:
@@ -276,12 +273,10 @@ class TaskSet(object, metaclass=TaskSetMeta):
         """
         Add a task to the Locust's task execution queue.
         
-        *Arguments*:
-        
-        * task_callable: Locust task to schedule
-        * args: Arguments that will be passed to the task callable
-        * kwargs: Dict of keyword arguments that will be passed to the task callable.
-        * first: Optional keyword argument. If True, the task will be put first in the queue.
+        :param task_callable: Locust task to schedule.
+        :param args: Arguments that will be passed to the task callable.
+        :param kwargs: Dict of keyword arguments that will be passed to the task callable.
+        :param first: Optional keyword argument. If True, the task will be put first in the queue.
         """
         task = {"callable":task_callable, "args":args or [], "kwargs":kwargs or {}}
         if first:
@@ -315,6 +310,15 @@ class TaskSet(object, metaclass=TaskSetMeta):
             ))
     
     def wait(self):
+        """
+        Make the running locust user sleep for a duration defined by the Locust.wait_time
+        function (or TaskSet.wait_time function if it's been defined).
+
+        The user can also be killed gracefully while it's sleeping, so calling this
+        method within a task makes it possible for a user to be killed mid-task, even if you've
+        set a stop_timeout. If this behavour is not desired you should make the user wait using
+        gevent.sleep() instead.
+        """
         self._check_stop_condition()
         self.locust._state = LOCUST_STATE_WAITING
         self._sleep(self.wait_time())
@@ -333,10 +337,10 @@ class TaskSet(object, metaclass=TaskSetMeta):
         Interrupt the TaskSet and hand over execution control back to the parent TaskSet.
         
         If *reschedule* is True (default), the parent Locust will immediately re-schedule,
-        and execute, a new task
+        and execute, a new task.
         
         This method should not be called by the root TaskSet (the one that is immediately, 
-        attached to the Locust class' *task_set* attribute), but rather in nested TaskSet
+        attached to the Locust class's *task_set* attribute), but rather in nested TaskSet
         classes further down the hierarchy.
         """
         raise InterruptTaskSet(reschedule)
@@ -391,8 +395,8 @@ class User(object, metaclass=UserMeta):
     """
     Represents a "user" which is to be hatched and attack the system that is to be load tested.
     
-    The behaviour of this user is defined by it's tasks. Tasks can be declared either directly on the 
-    class by using the :py:func:`@task decorator <locust.core.task>` on the methods, or by setting 
+    The behaviour of this user is defined by its tasks. Tasks can be declared either directly on the
+    class by using the :py:func:`@task decorator <locust.core.task>` on methods, or by setting
     the :py:attr:`tasks attribute <locust.core.Locust.tasks>`.
     
     This class should usually be subclassed by a class that defines some kind of client. For 
@@ -436,9 +440,9 @@ class User(object, metaclass=UserMeta):
 
     If tasks is a list, the task to be performed will be picked randomly.
 
-    If tasks is a *(callable,int)* list of two-tuples, or a  {callable:int} dict, 
+    If tasks is a *(callable,int)* list of two-tuples, or a {callable:int} dict, 
     the task to be performed will be picked randomly, but each task will be weighted 
-    according to it's corresponding int value. So in the following case *ThreadPage* will 
+    according to its corresponding int value. So in the following case, *ThreadPage* will 
     be fifteen times more likely to be picked than *write_post*::
 
         class ForumPage(TaskSet):
@@ -446,20 +450,18 @@ class User(object, metaclass=UserMeta):
     """
 
     weight = 10
-    """Probability of locust being chosen. The higher the weight, the greater is the chance of it being chosen."""
+    """Probability of locust being chosen. The higher the weight, the greater the chance of it being chosen."""
     
     abstract = True
-    """If abstract is True it the class is meant to be subclassed (users of this class itself will not be spawned during a test)"""
+    """If abstract is True, the class is meant to be subclassed, and users will not choose this locust during a test"""
     
     client = NoClientWarningRaiser()
-    _catch_exceptions = True
     _state = None
     _greenlet = None
-    
+    _taskset_instance = None
+
     def __init__(self, environment):
         super(User, self).__init__()
-        # check if deprecated wait API is used
-        deprecation.check_for_deprecated_wait_api(self)
         self.environment = environment
     
     def on_start(self):
@@ -476,30 +478,40 @@ class User(object, metaclass=UserMeta):
     
     def run(self):
         self._state = LOCUST_STATE_RUNNING
-        task_set_instance = DefaultTaskSet(self)
+        self._taskset_instance = DefaultTaskSet(self)
         try:
             # run the task_set on_start method, if it has one
             self.on_start()
             
-            task_set_instance.run()
+            self._taskset_instance.run()
         except (GreenletExit, StopLocust) as e:
             # run the on_stop method, if it has one
             self.on_stop()
     
+    def wait(self):
+        """
+        Make the running locust user sleep for a duration defined by the Locust.wait_time
+        function.
+
+        The user can also be killed gracefully while it's sleeping, so calling this
+        method within a task makes it possible for a user to be killed mid-task even if you've
+        set a stop_timeout. If this behavour is not desired, you should make the user wait using
+        gevent.sleep() instead.
+        """
+        self._taskset_instance.wait()
+
     def start(self, gevent_group):
         """
         Start a greenlet that runs this locust instance. 
         
-        *Arguments*:
-        
-        * gevent_group:  gevent.pool.Group instance where the greenlet will be spawned.
-        
-        Returns the spawned greenlet.
+        :param gevent_group: Group instance where the greenlet will be spawned.
+        :type gevent_group: gevent.pool.Group
+        :returns: The spawned greenlet.
         """
         def run_locust(user):
             """
             Main function for Locust user greenlet. It's important that this function takes the locust 
-            instance as argument, since we use greenlet_instance.args[0] to retrieve a reference to the 
+            instance as an argument, since we use greenlet_instance.args[0] to retrieve a reference to the
             locust instance.
             """
             user.run()
@@ -509,16 +521,14 @@ class User(object, metaclass=UserMeta):
     def stop(self, gevent_group, force=False):
         """
         Stop the locust user greenlet that exists in the gevent_group. 
-        This method is not meant to be called from within of the Locust's greenlet. 
+        This method is not meant to be called from within the Locust's greenlet.
         
-        *Arguments*:
-        
-        * gevent_group:  gevent.pool.Group instance where the greenlet will be spawned.
-        * force: If False (the default) the stopping is done gracefully by setting the state to LOCUST_STATE_STOPPING 
-                 which will make the Locust instance stop once any currently running task is complete and on_stop 
-                 methods are called. If force is True the greenlet will be killed immediately.
-        
-        Returns True if the greenlet was killed immediately, otherwise False
+        :param gevent_group: Group instance where the greenlet will be spawned.
+        :type gevent_group: gevent.pool.Group
+        :param force: If False (the default) the stopping is done gracefully by setting the state to LOCUST_STATE_STOPPING
+                      which will make the Locust instance stop once any currently running task is complete and on_stop
+                      methods are called. If force is True the greenlet will be killed immediately.
+        :returns: True if the greenlet was killed immediately, otherwise False
         """
         if force or self._state == LOCUST_STATE_WAITING:
             gevent_group.killone(self._greenlet)
@@ -532,8 +542,8 @@ class HttpLocust(User):
     """
     Represents an HTTP "user" which is to be hatched and attack the system that is to be load tested.
     
-    The behaviour of this user is defined by it's tasks. Tasks can be declared either directly on the 
-    class by using the :py:func:`@task decorator <locust.core.task>` on the methods, or by setting 
+    The behaviour of this user is defined by its tasks. Tasks can be declared either directly on the
+    class by using the :py:func:`@task decorator <locust.core.task>` on methods, or by setting
     the :py:attr:`tasks attribute <locust.core.Locust.tasks>`.
     
     This class creates a *client* attribute on instantiation which is an HTTP client with support 
@@ -541,12 +551,12 @@ class HttpLocust(User):
     """
     
     abstract = True
-    """If abstract is True it the class is meant to be subclassed (users of this class itself will not be spawned during a test)"""
+    """If abstract is True, the class is meant to be subclassed, and users will not choose this locust during a test"""
     
     client = None
     """
     Instance of HttpSession that is created upon instantiation of Locust. 
-    The client support cookies, and therefore keeps the session between HTTP requests.
+    The client supports cookies, and therefore keeps the session between HTTP requests.
     """
     
     def __init__(self, *args, **kwargs):
