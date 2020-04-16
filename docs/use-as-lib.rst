@@ -2,45 +2,41 @@
 Using Locust as a library
 ==========================
 
-It's possible to use Locust as a library instead of running Locust by invoking the ``locust`` command.
+It's possible to use Locust as a library, instead of running Locust using the ``locust`` command.
 
-Here's an example::
+To run Locust as a library you need to create an :py:class:`Environment <locust.env.Environment>` instance:
 
-    import gevent
-    from locust import HttpLocust, TaskSet, task, between
-    from locust.runners import LocalLocustRunner
+.. code-block:: python
+
     from locust.env import Environment
-    from locust.stats import stats_printer
-    from locust.log import setup_logging
-    from locust.web import WebUI
     
-    setup_logging("INFO", None)
-    
-    
-    class User(HttpLocust):
-        wait_time = between(1, 3)
-        host = "https://docs.locust.io"
-        
-        class task_set(TaskSet):
-            @task
-            def my_task(self):
-                self.client.get("/")
-            
-            @task
-            def task_404(self):
-                self.client.get("/non-existing-path")
-    
-    # setup Environment and Runner
-    env = Environment()
-    runner = LocalLocustRunner(environment=env, locust_classes=[User])
-    # start a WebUI instance
-    web_ui = WebUI(environment=env)
-    gevent.spawn(lambda: web_ui.start("127.0.0.1", 8089))
-    
-    # start a greenlet that periodically outputs the current stats
-    gevent.spawn(stats_printer(env.stats))
-    
-    # start the test
-    runner.start(1, hatch_rate=10)
-    # wait for the greenlets (indefinitely)
-    runner.greenlet.join()
+    env = Environment(locust_classes=[MyTestUser])
+
+The :py:class:`Environment <locust.env.Environment>` instance's 
+:py:meth:`create_local_runner <locust.env.Environment.create_local_runner>`, 
+:py:meth:`create_master_runner <locust.env.Environment.create_master_runner>` or 
+:py:meth:`create_worker_runner <locust.env.Environment.create_worker_runner> can then be used to start a 
+:py:class:`LocustRunner <locust.runners.LocustRunner>` instance, which can be used to start a load test:
+
+.. code-block:: python
+
+    env.create_local_runner()
+    env.runner.start(5000, hatch_rate=20)
+    env.runner.greenlet.join()
+
+We could also use the :py:class:`Environment <locust.env.Environment>` instance's 
+:py:meth:`create_web_ui <locust.env.Environment.create_web_ui>` method to start a Web UI that can be used 
+to view the stats, and to control the runner (e.g. start and stop load tests):
+
+.. code-block:: python
+
+    env.create_local_runner()
+    env.create_web_ui()
+    env.web_ui.greenlet.join()
+
+
+Full example
+============
+
+.. literalinclude:: ../examples/use_as_lib.py
+    :language: python

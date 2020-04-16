@@ -32,10 +32,17 @@ greenlet_exception_handler = greenlet_exception_logger(logger)
 
 
 class LocustRunner(object):
-    def __init__(self, environment, locust_classes):
-        environment.runner = self
+    """
+    Orchestrates the load test by starting and stopping the locust users.
+    
+    Use one of the :meth:`create_local_runner <locust.env.Environment.create_local_runner>`, 
+    :meth:`create_master_runner <locust.env.Environment.create_master_runner>` or 
+    :meth:`create_worker_runner <locust.env.Environment.create_worker_runner>` methods on
+    the :class:`Environment <locust.env.Environment>` instance to create a runner of the 
+    desired type.
+    """
+    def __init__(self, environment):
         self.environment = environment
-        self.locust_classes = locust_classes
         self.locusts = Group()
         self.greenlet = Group()
         self.state = STATE_INIT
@@ -45,7 +52,6 @@ class LocustRunner(object):
         self.cpu_warning_emitted = False
         self.greenlet.spawn(self.monitor_cpu).link_exception(greenlet_exception_handler)
         self.exceptions = {}
-        self.stats = RequestStats()
         
         # set up event listeners for recording requests
         def on_request_success(request_type, name, response_time, response_length, **kwargs):
@@ -73,11 +79,22 @@ class LocustRunner(object):
             self.greenlet.kill(block=False)
     
     @property
+    def locust_classes(self):
+        return self.environment.locust_classes
+    
+    @property
+    def stats(self):
+        return self.environment.stats
+    
+    @property
     def errors(self):
         return self.stats.errors
     
     @property
     def user_count(self):
+        """
+        :returns: Number of currently running locust users
+        """
         return len(self.locusts)
 
     def cpu_log_warning(self):
@@ -199,6 +216,15 @@ class LocustRunner(object):
             gevent.sleep(CPU_MONITOR_INTERVAL)
 
     def start(self, locust_count, hatch_rate, wait=False):
+        """
+        Start running a load test
+        
+        :param locust_count: Number of locust users to start
+        :param hatch_rate: Number of locust users to spawn per second
+        :param wait: If True calls to this method will block until all users are spawned.
+                     If False (the default), a greenlet that spawns the users will be 
+                     started and the call to this method will return immediately.
+        """
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
             self.exceptions = {}
@@ -248,6 +274,9 @@ class LocustRunner(object):
             gevent.sleep(step_duration)
 
     def stop(self):
+        """
+        Stop a running load test by killing all running locusts
+        """
         self.state = STATE_CLEANUP
         # if we are currently hatching locusts we need to kill the hatching greenlet first
         if self.hatching_greenlet and not self.hatching_greenlet.ready():
@@ -257,6 +286,9 @@ class LocustRunner(object):
         self.cpu_log_warning()
     
     def quit(self):
+        """
+        Stop any running load test and kill all greenlets for the runner
+        """
         self.stop()
         self.greenlet.kill(block=True)
 
@@ -269,8 +301,14 @@ class LocustRunner(object):
 
 
 class LocalLocustRunner(LocustRunner):
-    def __init__(self, environment, locust_classes):
-        super(LocalLocustRunner, self).__init__(environment, locust_classes)
+    """
+    Runner for running single process load test
+    """
+    def __init__(self, environment):
+        """
+        :param environment: Environment instance
+        """
+        super(LocalLocustRunner, self).__init__(environment)
 
         # register listener thats logs the exception for the local runner
         def on_locust_error(locust_instance, exception, tb):
@@ -314,8 +352,21 @@ class WorkerNode(object):
         self.cpu_warning_emitted = False
 
 class MasterLocustRunner(DistributedLocustRunner):
-    def __init__(self, *args, master_bind_host, master_bind_port, **kwargs):
-        super().__init__(*args, **kwargs)
+    """
+    Runner used to run distributed load tests across multiple processes and/or machines.
+    
+    MasterLocustRunner doesn't spawn any locust user greenlets itself. Instead it expects 
+    :class:`WorkerLocustRunners <WorkerLocustRunner>` to connect to it, which it will then direct 
+    to start and stop locust user greenlets. Stats sent back from the 
+    :class:`WorkerLocustRunners <WorkerLocustRunner>` will aggregated.
+    """
+    def __init__(self, environment, master_bind_host, master_bind_port):
+        """
+        :param environment: Environment instance
+        :param master_bind_host: Host/interface to use for incoming worker connections
+        :param master_bind_port: Port to use for incoming worker connections
+        """
+        super().__init__(environment)
         self.worker_cpu_warning_emitted = False
         self.target_user_count = None
         self.master_bind_host = master_bind_host
@@ -525,14 +576,21 @@ class MasterLocustRunner(DistributedLocustRunner):
         return len(self.clients.ready) + len(self.clients.hatching) + len(self.clients.running)
 
 class WorkerLocustRunner(DistributedLocustRunner):
-    def __init__(self, *args, master_host, master_port, **kwargs):
-        # Create a new RequestStats with use_response_times_cache set to False to save some memory
-        # and CPU cycles. We need to create the new RequestStats before we call super() (since int's
-        # used in the constructor of DistributedLocustRunner)
-        self.stats = RequestStats(use_response_times_cache=False)
-        
-        super().__init__(*args, **kwargs)
-        
+    """
+    Runner used to run distributed load tests across multiple processes and/or machines.
+    
+    WorkerLocustRunner connects to a :class:`MasterLocustRunner` from which it'll receive 
+    instructions to start and stop locust user greenlets. The WorkerLocustRunner will preiodically 
+    take the stats generated by the running users and send back to the :class:`MasterLocustRunner`.
+    """
+    
+    def __init__(self, environment, master_host, master_port):
+        """
+        :param environment: Environment instance
+        :param master_host: Host/IP to use for connection to the master
+        :param master_port: Port to use for connecting to the master
+        """
+        super().__init__(environment)
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         self.master_host = master_host
         self.master_port = master_port

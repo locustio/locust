@@ -105,3 +105,23 @@ The event hooks are instances of the **locust.events.EventHook** class:
 
     It's highly recommended that you add a wildcard keyword argument in your event listeners
     to prevent your code from breaking if new arguments are added in a future version.
+
+
+Locust Runner classes
+=====================
+
+.. autoclass:: locust.runners.LocustRunner
+    :members: start, stop, quit, user_count
+
+.. autoclass:: locust.runners.LocalLocustRunner
+
+.. autoclass:: locust.runners.MasterLocustRunner
+
+.. autoclass:: locust.runners.WorkerLocustRunner
+
+
+Web UI class
+============
+
+.. autoclass:: locust.web.WebUI
+    :members:

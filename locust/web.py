@@ -9,6 +9,7 @@ from io import StringIO
 from itertools import chain
 from time import time
 
+import gevent
 from flask import Flask, make_response, jsonify, render_template, request
 from flask_basicauth import BasicAuth
 from gevent import pywsgi
@@ -28,22 +29,54 @@ DEFAULT_CACHE_TIME = 2.0
 
 
 class WebUI:
-    server = None
-    """Reference to pyqsgi.WSGIServer once it's started"""
+    """
+    Sets up and runs a Flask web app that can start and stop load tests using the 
+    :attr:`environment.runner <locust.env.Environment.runner>` as well as show the load test statistics 
+    in :attr:`environment.stats <locust.env.Environment.stats>`
+    """
     
-    def __init__(self, environment, auth_credentials=None):
+    app = None
+    """
+    Reference to the :class:`flask.Flask` app. Can be used to add additional web routes and customize
+    the Flask app in other various ways. Example::
+    
+        from flask import request
+        
+        @web_ui.app.route("/my_custom_route")
+        def my_custom_route():
+            return "your IP is: %s" % request.remote_addr
+    """
+    
+    greenlet = None
+    """
+    Greenlet of the running web server
+    """
+    
+    server = None
+    """Reference to the :class:`pyqsgi.WSGIServer` instance"""
+    
+    def __init__(self, environment, host, port, auth_credentials=None):
         """
-        If auth_credentials is provided, it will enable basic auth with all the routes protected by default.
-        Should be supplied in the format: "user:pass".
+        Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
+        
+        Arguments:
+        environment: Reference to the curren Locust Environment
+        host: Host/interface that the web server should accept connections to
+        port: Port that the web server should listen to
+        auth_credentials:  If provided, it will enable basic auth with all the routes protected by default.
+                           Should be supplied in the format: "user:pass".
         """
         environment.web_ui = self
         self.environment = environment
+        self.host = host
+        self.port = port
         app = Flask(__name__)
         self.app = app
         app.debug = True
         app.root_path = os.path.dirname(os.path.abspath(__file__))
         self.app.config["BASIC_AUTH_ENABLED"] = False
         self.auth = None
+        self.greenlet = None
 
         if auth_credentials is not None:
             credentials = auth_credentials.split(':')
@@ -231,15 +264,30 @@ class WebUI:
             response.headers["Content-type"] = "text/csv"
             response.headers["Content-disposition"] = disposition
             return response
+        
+        # start the web server
+        self.greenlet = gevent.spawn(self.start)
 
-    def start(self, host, port):
-        self.server = pywsgi.WSGIServer((host, port), self.app, log=None)
+    def start(self):
+        self.server = pywsgi.WSGIServer((self.host, self.port), self.app, log=None)
         self.server.serve_forever()
     
     def stop(self):
+        """
+        Stop the running web server
+        """
         self.server.stop()
 
     def auth_required_if_enabled(self, view_func):
+        """
+        Decorator that can be used on custom route methods that will turn on Basic Auth 
+        authentication if the ``--web-auth`` flag is used. Example::
+        
+            @web_ui.app.route("/my_custom_route")
+            @web_ui.auth_required_if_enabled
+            def my_custom_route():
+                return "custom response"
+        """
         @wraps(view_func)
         def wrapper(*args, **kwargs):
             if self.app.config["BASIC_AUTH_ENABLED"]:

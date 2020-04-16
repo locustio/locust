@@ -766,13 +766,13 @@ def stats_writer(environment, base_filepath, full_history=False):
 def write_csv_files(environment, base_filepath, full_history=False):
     """Writes the requests, distribution, and failures csvs."""
     with open(base_filepath + '_stats.csv', 'w') as f:
-        f.write(requests_csv(environment.runner.stats))
+        f.write(requests_csv(environment.stats))
 
     with open(base_filepath + '_stats_history.csv', 'a') as f:
         f.write(stats_history_csv(environment, full_history) + "\n")
 
     with open(base_filepath + '_failures.csv', 'w') as f:
-        f.write(failures_csv(environment.runner.stats))
+        f.write(failures_csv(environment.stats))
 
 
 def sort_stats(stats):
@@ -872,7 +872,7 @@ def stats_history_csv(environment, all_entries=False):
     Aggregated stats entry, but if all_entries is set to True, a row for each entry will 
     will be included.
     """
-    stats = environment.runner.stats
+    stats = environment.stats
     timestamp = int(time.time())
     stats_entries = []
     if all_entries:
