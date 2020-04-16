@@ -52,6 +52,7 @@ class LocustRunner(object):
         self.cpu_warning_emitted = False
         self.greenlet.spawn(self.monitor_cpu).link_exception(greenlet_exception_handler)
         self.exceptions = {}
+        self.target_user_count = None
         
         # set up event listeners for recording requests
         def on_request_success(request_type, name, response_time, response_length, **kwargs):
@@ -230,6 +231,7 @@ class LocustRunner(object):
             self.exceptions = {}
             self.cpu_warning_emitted = False
             self.worker_cpu_warning_emitted = False
+            self.target_user_count = locust_count
 
         # Dynamically changing the locust count
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
@@ -317,6 +319,7 @@ class LocalLocustRunner(LocustRunner):
         self.environment.events.locust_error.add_listener(on_locust_error)
 
     def start(self, locust_count, hatch_rate, wait=False):
+        self.target_user_count = locust_count
         if hatch_rate > 100:
             logger.warning("Your selected hatch rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?")
         
@@ -368,7 +371,6 @@ class MasterLocustRunner(DistributedLocustRunner):
         """
         super().__init__(environment)
         self.worker_cpu_warning_emitted = False
-        self.target_user_count = None
         self.master_bind_host = master_bind_host
         self.master_bind_port = master_bind_port
 
@@ -652,6 +654,7 @@ class WorkerLocustRunner(DistributedLocustRunner):
                 self.client.send(Message("hatching", None, self.client_id))
                 job = msg.data
                 self.hatch_rate = job["hatch_rate"]
+                self.target_user_count = job["num_clients"]
                 self.environment.host = job["host"]
                 self.environment.stop_timeout = job["stop_timeout"]
                 if self.hatching_greenlet:
