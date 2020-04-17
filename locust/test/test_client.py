@@ -4,6 +4,7 @@ from requests.exceptions import (InvalidSchema, InvalidURL, MissingSchema,
 
 from locust.clients import HttpSession
 from locust.env import Environment
+from locust.exception import ResponseError
 from .testcases import WebserverTestCase
 
 
@@ -122,3 +123,69 @@ class TestHttpSession(WebserverTestCase):
         r = s.get("/get_arg", params={"arg":"test_123"})
         self.assertEqual(200, r.status_code)
         self.assertEqual("test_123", r.text)
+    
+    def test_catch_response_fail_successful_request(self):
+        s = self.get_client()
+        with s.get("/ultra_fast", catch_response=True) as r:
+            r.failure("nope")
+        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_requests)
+        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_failures)
+    
+    def test_catch_response_pass_failed_request(self):
+        s = self.get_client()
+        with s.get("/fail", catch_response=True) as r:
+            r.success()
+        self.assertEqual(1, self.environment.stats.total.num_requests)
+        self.assertEqual(0, self.environment.stats.total.num_failures)    
+    
+    def test_catch_response_multiple_failure_and_success(self):
+        s = self.get_client()
+        with s.get("/ultra_fast", catch_response=True) as r:
+            r.failure("nope")
+            r.success()
+            r.failure("nooo")
+            r.success()
+        self.assertEqual(1, self.environment.stats.total.num_requests)
+        self.assertEqual(0, self.environment.stats.total.num_failures)
+    
+    def test_catch_response_pass_failed_request_with_other_exception_within_block(self):
+        class OtherException(Exception):
+            pass
+        
+        s = self.get_client()
+        try:
+            with s.get("/fail", catch_response=True) as r:
+                r.success()
+                raise OtherException("wtf")
+        except OtherException as e:
+            pass
+        else:
+            self.fail("OtherException should have been raised")
+        
+        self.assertEqual(1, self.environment.stats.total.num_requests)
+        self.assertEqual(0, self.environment.stats.total.num_failures)
+    
+    def test_catch_response_response_error(self):
+        s = self.get_client()
+        try:
+            with s.get("/fail", catch_response=True) as r:
+                raise ResponseError("response error")
+        except ResponseError as e:
+            self.fail("ResponseError should have be raised")
+        
+        self.assertEqual(1, self.environment.stats.total.num_requests)
+        self.assertEqual(1, self.environment.stats.total.num_failures)
+    
+    def test_catch_response_default_success(self):
+        s = self.get_client()
+        with s.get("/ultra_fast", catch_response=True) as r:
+            pass
+        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_requests)
+        self.assertEqual(0, self.environment.stats.get("/ultra_fast", "GET").num_failures)
+    
+    def test_catch_response_default_fail(self):
+        s = self.get_client()
+        with s.get("/fail", catch_response=True) as r:
+            pass
+        self.assertEqual(1, self.environment.stats.total.num_requests)
+        self.assertEqual(1, self.environment.stats.total.num_failures)   
