@@ -3,8 +3,6 @@ import os
 import socket
 import subprocess
 import textwrap
-from contextlib import contextmanager
-from tempfile import NamedTemporaryFile
 from logging import getLogger
 
 import gevent
@@ -12,16 +10,7 @@ import gevent
 from locust import log
 from locust.log import greenlet_exception_logger
 from .testcases import LocustTestCase
-
-
-@contextmanager
-def temporary_file(content, suffix="_locustfile.py"):
-    f = NamedTemporaryFile(suffix=suffix, delete=False)
-    f.write(content.encode("utf-8"))
-    f.close()
-    yield f.name
-    if os.path.exists(f.name):
-        os.remove(f.name)
+from .util import temporary_file
 
 
 class TestGreenletExceptionLogger(LocustTestCase):
