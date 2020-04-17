@@ -135,16 +135,6 @@ def setup_parser_arguments(parser):
         default=1,
         help="Number of concurrent Locust users. Only used together with --headless"
     )
-    parser.add_argument(
-        '-u', '--users',
-        action='store_true',
-        help=configargparse.SUPPRESS
-    )
-    parser.add_argument(
-        '-c', '--clients',
-        action='store_true',
-        help=configargparse.SUPPRESS
-    )
     # User hatch rate
     parser.add_argument(
         '-r', '--hatch-rate',
