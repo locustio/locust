@@ -1,4 +1,6 @@
 import os
+import subprocess
+from unittest import TestCase
 
 from locust import main
 from locust.argument_parser import parse_options
@@ -66,4 +68,17 @@ class TestLoadLocustfile(LocustTestCase):
         env = create_environment([], options)
         self.assertEqual(None, env.host)
         self.assertFalse(env.reset_stats)
+
+
+class LocustProcessIntegrationTest(TestCase):
+    def test_help_arg(self):
+        output = subprocess.check_output(
+            ["locust", "--help"], 
+            stderr=subprocess.STDOUT,
+        ).decode("utf-8").strip()
+        self.assertTrue(output.startswith("Usage: locust [OPTIONS] [LocustClass ...]"))
+        self.assertIn("Common options:", output)
+        self.assertIn("-f LOCUSTFILE, --locustfile LOCUSTFILE", output)
+        self.assertIn("Logging options:", output)
+        self.assertIn("--skip-log-setup      Disable Locust's logging setup.", output)
 
