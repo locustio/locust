@@ -224,13 +224,12 @@ def main():
         # spawn web greenlet
         logger.info("Starting web monitor at http://%s:%s" % (options.web_host or "*", options.web_port))
         try:
-            web_ui = environment.create_web_ui(auth_credentials=options.web_auth)
+            web_ui = environment.create_web_ui(host=options.web_host, port=options.web_port, auth_credentials=options.web_auth)
         except AuthCredentialsError:
             logger.error("Credentials supplied with --web-auth should have the format: username:password")
             sys.exit(1)
         else:
-            main_greenlet = gevent.spawn(web_ui.start, host=options.web_host, port=options.web_port)
-            main_greenlet.link_exception(greenlet_exception_handler)
+            web_ui.greenlet.link_exception(greenlet_exception_handler)
     else:
         web_ui = None
     
