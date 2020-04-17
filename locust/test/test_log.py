@@ -52,7 +52,7 @@ class TestLoggingOptions(LocustTestCase):
                 "-r", "1",
                 "-t", "1",
                 "--headless",
-            ], stderr=subprocess.STDOUT).decode("utf-8")
+            ], stderr=subprocess.STDOUT, timeout=10).decode("utf-8")
         
         self.assertIn(
             "%s/INFO/locust.main: Run time limit set to 1 seconds" % socket.gethostname(),
@@ -94,7 +94,7 @@ class TestLoggingOptions(LocustTestCase):
                 "-t", "1",
                 "--headless",
                 "--skip-log-setup",
-            ], stderr=subprocess.STDOUT).decode("utf-8")
+            ], stderr=subprocess.STDOUT, timeout=10).decode("utf-8")
         self.assertEqual("running my_task", output.strip())
     
     def test_log_to_file(self):
@@ -119,7 +119,7 @@ class TestLoggingOptions(LocustTestCase):
                         "-t", "1",
                         "--headless",
                         "--logfile", log_file_path,
-                    ], stderr=subprocess.STDOUT).decode("utf-8")
+                    ], stderr=subprocess.STDOUT, timeout=10).decode("utf-8")
                 except subprocess.CalledProcessError as e:
                     raise AssertionError("Running locust command failed. Output was:\n\n%s" % e.stdout.decode("utf-8")) from e
                 
