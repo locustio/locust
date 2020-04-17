@@ -44,9 +44,9 @@ class TestLoggingOptions(LocustTestCase):
     def test_logging_output(self):
         with temporary_file(textwrap.dedent("""
             import logging
-            from locust import Locust, task, constant
+            from locust import User, task, constant
             
-            class MyLocust(Locust):
+            class MyLocust(User):
                 wait_time = constant(2)
                 @task
                 def my_task(self):
@@ -56,7 +56,7 @@ class TestLoggingOptions(LocustTestCase):
             output = subprocess.check_output([
                 "locust", 
                 "-f", file_path, 
-                "-c", "1",
+                "-u", "1",
                 "-r", "1",
                 "-t", "1",
                 "--headless",
@@ -86,9 +86,9 @@ class TestLoggingOptions(LocustTestCase):
     
     def test_skip_logging(self):
         with temporary_file(textwrap.dedent("""
-            from locust import Locust, task, constant
+            from locust import User, task, constant
             
-            class MyLocust(Locust):
+            class MyLocust(User):
                 wait_time = constant(2)
                 @task
                 def my_task(self):
@@ -97,7 +97,7 @@ class TestLoggingOptions(LocustTestCase):
             output = subprocess.check_output([
                 "locust", 
                 "-f", file_path, 
-                "-c", "1",
+                "-u", "1",
                 "-r", "1",
                 "-t", "1",
                 "--headless",
@@ -108,9 +108,9 @@ class TestLoggingOptions(LocustTestCase):
     def test_log_to_file(self):
         with temporary_file(textwrap.dedent("""
             import logging
-            from locust import Locust, task, constant
+            from locust import User, task, constant
             
-            class MyLocust(Locust):
+            class MyLocust(User):
                 wait_time = constant(2)
                 @task
                 def my_task(self):
@@ -122,7 +122,7 @@ class TestLoggingOptions(LocustTestCase):
                     output = subprocess.check_output([
                         "locust", 
                         "-f", file_path, 
-                        "-c", "1",
+                        "-u", "1",
                         "-r", "1",
                         "-t", "1",
                         "--headless",
