@@ -11,6 +11,7 @@ import gevent
 
 import locust
 
+from . import log
 from .argument_parser import parse_locustfile_option, parse_options
 from .core import HttpLocust, Locust
 from .env import Environment
