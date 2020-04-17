@@ -9,6 +9,7 @@ from logging import getLogger
 
 import gevent
 
+from locust import log
 from locust.log import greenlet_exception_logger
 from .testcases import LocustTestCase
 
@@ -27,6 +28,7 @@ class TestGreenletExceptionLogger(LocustTestCase):
     # Gevent outputs all unhandled exceptions to stderr, so we'll suppress that in this test
     @mock.patch("sys.stderr.write")
     def test_greenlet_exception_logger(self, mocked_stderr):
+        self.assertFalse(log.unhandled_greenlet_exception)
         def thread():
             raise ValueError("Boom!?")
         logger = getLogger("greenlet_test_logger")
@@ -38,6 +40,7 @@ class TestGreenletExceptionLogger(LocustTestCase):
         self.assertIn("Unhandled exception in greenlet: ", msg["message"])
         self.assertTrue(isinstance(msg["exc_info"][1], ValueError))
         self.assertIn("Boom!?", str(msg["exc_info"][1]))
+        self.assertTrue(log.unhandled_greenlet_exception)
 
 
 class TestLoggingOptions(LocustTestCase):

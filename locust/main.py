@@ -295,7 +295,9 @@ def main():
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
         code = 0
-        if len(runner.errors) or len(runner.exceptions):
+        if log.unhandled_greenlet_exception:
+            code = 2
+        elif len(runner.errors) or len(runner.exceptions):
             code = options.exit_code_on_error
         shutdown(code=code)
     except KeyboardInterrupt as e:

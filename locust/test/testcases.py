@@ -13,6 +13,7 @@ from flask import (Flask, Response, make_response, redirect, request,
                    send_file, stream_with_context)
 
 import locust
+from locust import log
 from locust.event import Events
 from locust.env import Environment
 from locust.test.mock_logging import MockedLoggingHandler
@@ -151,6 +152,9 @@ class LocustTestCase(unittest.TestCase):
         logging.root.addHandler(self._logger_class)
         logging.root.setLevel(logging.INFO)
         self.mocked_log = MockedLoggingHandler
+        
+        # set unandled exception flag to False
+        log.unhandled_greenlet_exception = False
                       
     def tearDown(self):
         # restore logging class
