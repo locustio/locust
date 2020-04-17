@@ -29,6 +29,7 @@ Below is a quick little example of a simple **locustfile.py**:
         @task(2)
         def index(self):
             self.client.get("/")
+            self.client.get("/ajax-notifications/")
         
         @task(1)
         def view_post(self):
@@ -53,7 +54,7 @@ Let's break it down:
 Here we define a class for the users that we will be simulating. It inherits from 
 :py:class:`HttpLocust <locust.core.HttpLocust>` which gives each user a ``client`` attribute, 
 which is an instance of :py:class:`HttpSession <locust.clients.HttpSession>`, that 
-can be used to make HTTP requests to the target system that we want to load test. When a test starts 
+can be used to make HTTP requests to the target system that we want to load test. When a test starts, 
 locust will create an instance of this class for every user that it simulates, and each of these 
 users will start running within their own green gevent thread.
 
@@ -69,6 +70,7 @@ is executed.
     @task(2)
     def index(self):
         self.client.get("/")
+        self.client.get("/ajax-notifications/")
     
     @task(1)
     def view_post(self):
