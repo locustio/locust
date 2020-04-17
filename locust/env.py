@@ -110,7 +110,7 @@ class Environment:
             master_port=master_port,
         )
     
-    def create_web_ui(self, host="", port=8089, auth_credentials=None):
+    def create_web_ui(self, host="*", port=8089, auth_credentials=None):
         """
         Creates a :class:`WebUI <locust.web.WebUI>` instance for this Environment and start running the web server
         
