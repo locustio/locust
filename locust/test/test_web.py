@@ -12,7 +12,7 @@ from locust import constant
 from locust.argument_parser import get_parser
 from locust.core import User, task
 from locust.env import Environment
-from locust.runners import LocustRunner
+from locust.runners import Runner
 from locust.web import WebUI
 
 from .testcases import LocustTestCase
@@ -256,7 +256,7 @@ class TestWebUIAuth(LocustTestCase):
 
         parser = get_parser(default_config_files=[])
         options = parser.parse_args(["--web-auth", "john:doe"])
-        self.runner = LocustRunner(self.environment)
+        self.runner = Runner(self.environment)
         self.stats = self.runner.stats
         self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, auth_credentials=options.web_auth)
         self.web_ui.app.view_functions["request_stats"].clear_cache()

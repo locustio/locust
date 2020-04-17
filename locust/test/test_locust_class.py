@@ -87,12 +87,12 @@ class TestTaskSet(LocustTestCase):
         self.assertEqual(3, len([t for t in l.tasks if t.__name__ == MyLocust.t2.__name__]))
     
     def test_tasks_on_abstract_locust(self):
-        class AbstractLocust(User):
+        class AbstractUser(User):
             abstract = True
             @task(2)
             def t1(self):
                 pass
-        class MyLocust(AbstractLocust):
+        class MyLocust(AbstractUser):
             @task(3)
             def t2(self):
                 pass
@@ -102,7 +102,7 @@ class TestTaskSet(LocustTestCase):
 
     def test_taskset_on_abstract_locust(self):
         v = [0]
-        class AbstractLocust(User):
+        class AbstractUser(User):
             abstract = True
             @task
             class task_set(TaskSet):
@@ -110,7 +110,7 @@ class TestTaskSet(LocustTestCase):
                 def t1(self):
                     v[0] = 1
                     raise StopLocust()
-        class MyLocust(AbstractLocust):
+        class MyLocust(AbstractUser):
             pass
         l = MyLocust(self.environment)
         # check that the Locust can be run

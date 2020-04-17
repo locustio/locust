@@ -16,7 +16,7 @@ from gevent import pywsgi
 
 from locust import __version__ as version
 from .exception import AuthCredentialsError
-from .runners import MasterLocustRunner
+from .runners import MasterRunner
 from .stats import failures_csv, requests_csv, sort_stats
 from .util.cache import memoize
 from .util.rounding import proper_round
@@ -95,7 +95,7 @@ class WebUI:
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             
-            is_distributed = isinstance(environment.runner, MasterLocustRunner)
+            is_distributed = isinstance(environment.runner, MasterRunner)
             if is_distributed:
                 worker_count = environment.runner.worker_count
             else:
@@ -220,7 +220,7 @@ class WebUI:
                 report["current_response_time_percentile_95"] = environment.runner.stats.total.get_current_response_time_percentile(0.95)
                 report["current_response_time_percentile_50"] = environment.runner.stats.total.get_current_response_time_percentile(0.5)
             
-            is_distributed = isinstance(environment.runner, MasterLocustRunner)
+            is_distributed = isinstance(environment.runner, MasterRunner)
             if is_distributed:
                 workers = []
                 for worker in environment.runner.clients.values():
