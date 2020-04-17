@@ -229,7 +229,8 @@ def main():
             logger.error("Credentials supplied with --web-auth should have the format: username:password")
             sys.exit(1)
         else:
-            web_ui.greenlet.link_exception(greenlet_exception_handler)
+            main_greenlet = web_ui.greenlet
+            main_greenlet.link_exception(greenlet_exception_handler)
     else:
         web_ui = None
     
