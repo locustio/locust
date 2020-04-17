@@ -16,6 +16,7 @@ from gevent import pywsgi
 
 from locust import __version__ as version
 from .exception import AuthCredentialsError
+from .log import greenlet_exception_logger
 from .runners import MasterLocustRunner
 from .stats import failures_csv, requests_csv, sort_stats
 from .util.cache import memoize
@@ -24,6 +25,7 @@ from .util.timespan import parse_timespan
 
 
 logger = logging.getLogger(__name__)
+greenlet_exception_handler = greenlet_exception_logger(logger)
 
 DEFAULT_CACHE_TIME = 2.0
 
@@ -267,6 +269,7 @@ class WebUI:
         
         # start the web server
         self.greenlet = gevent.spawn(self.start)
+        self.greenlet.link_exception(greenlet_exception_handler)
 
     def start(self):
         self.server = pywsgi.WSGIServer((self.host, self.port), self.app, log=None)

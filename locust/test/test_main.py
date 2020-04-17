@@ -1,13 +1,19 @@
 import os
+import signal
 import subprocess
+import textwrap
 from unittest import TestCase
+from subprocess import PIPE
+
+import gevent
 
 from locust import main
 from locust.argument_parser import parse_options
 from locust.main import create_environment
 from locust.core import HttpLocust, Locust, TaskSet
-from .testcases import LocustTestCase
 from .mock_locustfile import mock_locustfile
+from .testcases import LocustTestCase
+from .util import temporary_file
 
 
 class TestLoadLocustfile(LocustTestCase):
@@ -75,10 +81,30 @@ class LocustProcessIntegrationTest(TestCase):
         output = subprocess.check_output(
             ["locust", "--help"], 
             stderr=subprocess.STDOUT,
+            timeout=5,
         ).decode("utf-8").strip()
         self.assertTrue(output.startswith("Usage: locust [OPTIONS] [LocustClass ...]"))
         self.assertIn("Common options:", output)
         self.assertIn("-f LOCUSTFILE, --locustfile LOCUSTFILE", output)
         self.assertIn("Logging options:", output)
         self.assertIn("--skip-log-setup      Disable Locust's logging setup.", output)
+    
+    def test_webserver(self):
+        with temporary_file(content=textwrap.dedent("""
+            from locust import Locust, task, constant, events
+            class TestUser(Locust):
+                wait_time = constant(3)
+                @task
+                def my_task():
+                    print("running my_task()")
+        """)) as file_path:
+            proc = subprocess.Popen(["locust", "-f", file_path], stdout=PIPE, stderr=PIPE)
+            gevent.sleep(1)
+            proc.send_signal(signal.SIGTERM)
+            stdout, stderr = proc.communicate()
+            self.assertEqual(0, proc.returncode)
+            stderr = stderr.decode("utf-8")
+            self.assertIn("Starting web monitor at", stderr)
+            self.assertIn("Starting Locust", stderr)
+            self.assertIn("Shutting down (exit code 0), bye", stderr)
 
