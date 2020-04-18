@@ -9,6 +9,9 @@ from .testcases import WebserverTestCase
 
 
 class TestFastHttpSession(WebserverTestCase):
+    def get_client(self):
+        return FastHttpSession(self.environment, base_url="http://127.0.0.1:%i" % self.port)
+    
     def test_get(self):
         s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
         r = s.get("/ultra_fast")
@@ -112,6 +115,62 @@ class TestFastHttpSession(WebserverTestCase):
         s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
         r = s.post("/request_method", json={"foo": "bar"})
         self.assertEqual(200, r.status_code)
+    
+    def test_catch_response_fail_successful_request(self):
+        s = self.get_client()
+        with s.get("/ultra_fast", catch_response=True) as r:
+            r.failure("nope")
+        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_requests)
+        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_failures)
+    
+    def test_catch_response_pass_failed_request(self):
+        s = self.get_client()
+        with s.get("/fail", catch_response=True) as r:
+            r.success()
+        self.assertEqual(1, self.environment.stats.total.num_requests)
+        self.assertEqual(0, self.environment.stats.total.num_failures)    
+    
+    def test_catch_response_multiple_failure_and_success(self):
+        s = self.get_client()
+        with s.get("/ultra_fast", catch_response=True) as r:
+            r.failure("nope")
+            r.success()
+            r.failure("nooo")
+            r.success()
+        self.assertEqual(1, self.environment.stats.total.num_requests)
+        self.assertEqual(0, self.environment.stats.total.num_failures)
+    
+    def test_catch_response_pass_failed_request_with_other_exception_within_block(self):
+        class OtherException(Exception):
+            pass
+        
+        s = self.get_client()
+        try:
+            with s.get("/fail", catch_response=True) as r:
+                r.success()
+                raise OtherException("wtf")
+        except OtherException as e:
+            pass
+        else:
+            self.fail("OtherException should have been raised")
+        
+        self.assertEqual(1, self.environment.stats.total.num_requests)
+        self.assertEqual(0, self.environment.stats.total.num_failures)
+    
+    def test_catch_response_default_success(self):
+        s = self.get_client()
+        with s.get("/ultra_fast", catch_response=True) as r:
+            pass
+        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_requests)
+        self.assertEqual(0, self.environment.stats.get("/ultra_fast", "GET").num_failures)
+    
+    def test_catch_response_default_fail(self):
+        s = self.get_client()
+        with s.get("/fail", catch_response=True) as r:
+            pass
+        self.assertEqual(1, self.environment.stats.total.num_requests)
+        self.assertEqual(1, self.environment.stats.total.num_failures)   
+
 
 class TestRequestStatsWithWebserver(WebserverTestCase):
     def test_request_stats_content_length(self):
