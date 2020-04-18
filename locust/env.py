@@ -110,7 +110,7 @@ class Environment:
             master_port=master_port,
         )
     
-    def create_web_ui(self, host="", port=8089, auth_credentials=None):
+    def create_web_ui(self, host="", port=8089, auth_credentials=None, num_clients=None, hatch_rate=None, step_clients=None, step_time=None):
         """
         Creates a :class:`WebUI <locust.web.WebUI>` instance for this Environment and start running the web server
         
@@ -119,5 +119,5 @@ class Environment:
         :param port: Port that the web server should listen to
         :param auth_credentials: If provided (in format "username:password") basic auth will be enabled
         """
-        self.web_ui = WebUI(self, host, port, auth_credentials=auth_credentials)
+        self.web_ui = WebUI(self, host, port, auth_credentials=auth_credentials, num_clients=num_clients, hatch_rate=hatch_rate, step_clients=step_clients, step_time=step_time)
         return self.web_ui
