@@ -3,30 +3,21 @@ import os
 import socket
 import subprocess
 import textwrap
-from contextlib import contextmanager
-from tempfile import NamedTemporaryFile
 from logging import getLogger
 
 import gevent
 
+from locust import log
 from locust.log import greenlet_exception_logger
 from .testcases import LocustTestCase
-
-
-@contextmanager
-def temporary_file(content, suffix="_locustfile.py"):
-    f = NamedTemporaryFile(suffix=suffix, delete=False)
-    f.write(content.encode("utf-8"))
-    f.close()
-    yield f.name
-    if os.path.exists(f.name):
-        os.remove(f.name)
+from .util import temporary_file
 
 
 class TestGreenletExceptionLogger(LocustTestCase):
     # Gevent outputs all unhandled exceptions to stderr, so we'll suppress that in this test
     @mock.patch("sys.stderr.write")
     def test_greenlet_exception_logger(self, mocked_stderr):
+        self.assertFalse(log.unhandled_greenlet_exception)
         def thread():
             raise ValueError("Boom!?")
         logger = getLogger("greenlet_test_logger")
@@ -38,6 +29,7 @@ class TestGreenletExceptionLogger(LocustTestCase):
         self.assertIn("Unhandled exception in greenlet: ", msg["message"])
         self.assertTrue(isinstance(msg["exc_info"][1], ValueError))
         self.assertIn("Boom!?", str(msg["exc_info"][1]))
+        self.assertTrue(log.unhandled_greenlet_exception)
 
 
 class TestLoggingOptions(LocustTestCase):
@@ -60,7 +52,7 @@ class TestLoggingOptions(LocustTestCase):
                 "-r", "1",
                 "-t", "1",
                 "--headless",
-            ], stderr=subprocess.STDOUT).decode("utf-8")
+            ], stderr=subprocess.STDOUT, timeout=10).decode("utf-8")
         
         self.assertIn(
             "%s/INFO/locust.main: Run time limit set to 1 seconds" % socket.gethostname(),
@@ -102,7 +94,7 @@ class TestLoggingOptions(LocustTestCase):
                 "-t", "1",
                 "--headless",
                 "--skip-log-setup",
-            ], stderr=subprocess.STDOUT).decode("utf-8")
+            ], stderr=subprocess.STDOUT, timeout=10).decode("utf-8")
         self.assertEqual("running my_task", output.strip())
     
     def test_log_to_file(self):
@@ -127,7 +119,7 @@ class TestLoggingOptions(LocustTestCase):
                         "-t", "1",
                         "--headless",
                         "--logfile", log_file_path,
-                    ], stderr=subprocess.STDOUT).decode("utf-8")
+                    ], stderr=subprocess.STDOUT, timeout=10).decode("utf-8")
                 except subprocess.CalledProcessError as e:
                     raise AssertionError("Running locust command failed. Output was:\n\n%s" % e.stdout.decode("utf-8")) from e
                 

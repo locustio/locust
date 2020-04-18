@@ -4,6 +4,10 @@ import socket
 
 HOSTNAME = socket.gethostname()
 
+# Global flag that we set to True if any unhandled exception occurs in a greenlet
+# Used by main.py to set the process return code to non-zero
+unhandled_greenlet_exception = False
+
 
 def setup_logging(loglevel, logfile=None):
     loglevel = loglevel.upper()
@@ -66,4 +70,6 @@ def greenlet_exception_logger(logger, level=logging.CRITICAL):
     """
     def exception_handler(greenlet):
         logger.log(level, "Unhandled exception in greenlet: %s", greenlet, exc_info=greenlet.exc_info)
+        global unhandled_greenlet_exception
+        unhandled_greenlet_exception = True
     return exception_handler
