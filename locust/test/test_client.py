@@ -171,7 +171,7 @@ class TestHttpSession(WebserverTestCase):
             with s.get("/fail", catch_response=True) as r:
                 raise ResponseError("response error")
         except ResponseError as e:
-            self.fail("ResponseError should have be raised")
+            self.fail("ResponseError should not have been raised")
         
         self.assertEqual(1, self.environment.stats.total.num_requests)
         self.assertEqual(1, self.environment.stats.total.num_failures)
