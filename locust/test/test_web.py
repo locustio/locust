@@ -9,7 +9,7 @@ import gevent
 import requests
 
 from locust import constant
-from locust.argument_parser import get_parser
+from locust.argument_parser import get_parser, parse_options
 from locust.core import Locust, task
 from locust.env import Environment
 from locust.runners import LocustRunner
@@ -51,6 +51,19 @@ class TestWebUI(LocustTestCase):
             web_ui.stop()
     
     def test_index(self):
+        self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % self.web_port).status_code)
+
+    def test_index_with_options(self):
+        self.environment.parsed_options = parse_options(["-r", "10"])
+        self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % self.web_port).status_code)
+
+        self.environment.parsed_options = parse_options(["-c", "10"])
+        self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % self.web_port).status_code)
+
+        self.environment.parsed_options = parse_options(["--step-time", "10"])
+        self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % self.web_port).status_code)
+
+        self.environment.parsed_options = parse_options(["--step-clients", "10"])
         self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % self.web_port).status_code)
     
     def test_stats_no_data(self):

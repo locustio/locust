@@ -118,10 +118,6 @@ class WebUI:
             else:
                 host = None
 
-            options = {'num_clients':None, 'hatch_rate':None, 'step_clients':None, 'step_time':None}
-            if environment.parsed_options is not None:
-                options = vars(environment.parsed_options)
-            
             return render_template("index.html",
                 state=environment.runner.state,
                 is_distributed=is_distributed,
@@ -129,10 +125,10 @@ class WebUI:
                 version=version,
                 host=host,
                 override_host_warning=override_host_warning,
-                num_clients=options['num_clients'],
-                hatch_rate=options['hatch_rate'],
-                step_clients=options['step_clients'],
-                step_time=options['step_time'],
+                num_clients=environment.parsed_options.num_clients,
+                hatch_rate=environment.parsed_options.hatch_rate,
+                step_clients=environment.parsed_options.step_clients,
+                step_time=environment.parsed_options.step_time,
                 worker_count=worker_count,
                 is_step_load=environment.step_load,
             )

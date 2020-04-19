@@ -1,3 +1,4 @@
+from .argument_parser import parse_options
 from .event import Events
 from .exception import RunnerAlreadyExistsError
 from .stats import RequestStats
@@ -45,7 +46,7 @@ class Environment:
     If False, exeptions will be raised.
     """
 
-    parsed_options = None
+    parsed_options = parse_options(args=[])
     """Reference to the namespace that stores the parsed command line arguments"""
     
     def  __init__(
@@ -57,7 +58,7 @@ class Environment:
         step_load=False, 
         stop_timeout=None,
         catch_exceptions=True,
-        parsed_options=None,
+        parsed_options=parse_options(args=[]),
     ):
         if events:
             self.events = events
