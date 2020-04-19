@@ -92,7 +92,7 @@ class LocustProcessIntegrationTest(TestCase):
     def test_webserver(self):
         with temporary_file(content=textwrap.dedent("""
             from locust import Locust, task, constant, events
-            class TestUser(Locust):
+            class TestUser(User):
                 wait_time = constant(3)
                 @task
                 def my_task():
