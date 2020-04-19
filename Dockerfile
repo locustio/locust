@@ -17,3 +17,6 @@ EXPOSE 8089 5557
 
 USER locust
 CMD ["./docker_start.sh"]
+
+# turn off python output buffering
+ENV PYTHONUNBUFFERED=1
