@@ -110,7 +110,7 @@ class Environment:
             master_port=master_port,
         )
     
-    def create_web_ui(self, host="", port=8089, auth_credentials=None, num_clients=None, hatch_rate=None, step_clients=None, step_time=None):
+    def create_web_ui(self, host="", port=8089, auth_credentials=None, ui_num_clients=None, ui_hatch_rate=None, ui_step_clients=None, ui_step_time=None):
         """
         Creates a :class:`WebUI <locust.web.WebUI>` instance for this Environment and start running the web server
         
@@ -118,6 +118,10 @@ class Environment:
                      which means all interfaces
         :param port: Port that the web server should listen to
         :param auth_credentials: If provided (in format "username:password") basic auth will be enabled
+        :param ui_num_clients: Value to populate the 'Total Number of users to Simulate' field of the ui.
+        :param ui_hatch_rate: Value to populate the 'Hatch Rate' field of the ui.
+        :param ui_step_client: Value to populate the 'Number of users to increase by step' field of the ui.
+        :param ui_step_duration: Value to populate the 'Step duration' field of the ui.
         """
-        self.web_ui = WebUI(self, host, port, auth_credentials=auth_credentials, num_clients=num_clients, hatch_rate=hatch_rate, step_clients=step_clients, step_time=step_time)
+        self.web_ui = WebUI(self, host, port, auth_credentials=auth_credentials, ui_num_clients=ui_num_clients, ui_hatch_rate=ui_hatch_rate, ui_step_clients=ui_step_clients, ui_step_time=ui_step_time)
         return self.web_ui
