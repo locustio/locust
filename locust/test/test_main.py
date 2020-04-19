@@ -6,6 +6,7 @@ from unittest import TestCase
 from subprocess import PIPE
 
 import gevent
+import requests
 
 from locust import main
 from locust.argument_parser import parse_options
@@ -108,3 +109,15 @@ class LocustProcessIntegrationTest(TestCase):
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shutting down (exit code 0), bye", stderr)
 
+    def test_web_options(self):
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen(
+                    ["locust",
+                        "-f", mocked.file_path,
+                        "--web-host", "127.0.0.1",
+                        "--web-port", "8090"],
+                    stdout=PIPE, stderr=PIPE
+                    )
+            gevent.sleep(0.5)
+            self.assertEqual(200, requests.get("http://127.0.0.1:8090/").status_code)
+            proc.terminate()
