@@ -57,7 +57,7 @@ class WebUI:
     server = None
     """Reference to the :class:`pyqsgi.WSGIServer` instance"""
     
-    def __init__(self, environment, host, port, auth_credentials=None, ui_num_clients=None, ui_hatch_rate=None, ui_step_clients=None, ui_step_time=None):
+    def __init__(self, environment, host, port, auth_credentials=None):
         """
         Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
         
@@ -72,10 +72,6 @@ class WebUI:
         self.environment = environment
         self.host = host
         self.port = port
-        self.ui_num_clients = ui_num_clients
-        self.ui_hatch_rate = ui_hatch_rate
-        self.ui_step_clients = ui_step_clients
-        self.ui_step_time = ui_step_time
         app = Flask(__name__)
         self.app = app
         app.debug = True
@@ -121,6 +117,10 @@ class WebUI:
                     host = None
             else:
                 host = None
+
+            options = {'num_clients':None, 'hatch_rate':None, 'step_clients':None, 'step_time':None}
+            if environment.parsed_options is not None:
+                options = vars(environment.parsed_options)
             
             return render_template("index.html",
                 state=environment.runner.state,
@@ -129,10 +129,10 @@ class WebUI:
                 version=version,
                 host=host,
                 override_host_warning=override_host_warning,
-                ui_num_clients=self.ui_num_clients,
-                ui_hatch_rate=self.ui_hatch_rate,
-                ui_step_clients=self.ui_step_clients,
-                ui_step_time=self.ui_step_time,
+                num_clients=options['num_clients'],
+                hatch_rate=options['hatch_rate'],
+                step_clients=options['step_clients'],
+                step_time=options['step_time'],
                 worker_count=worker_count,
                 is_step_load=environment.step_load,
             )
