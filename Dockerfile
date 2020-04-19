@@ -16,7 +16,7 @@ RUN chmod +x docker_start.sh
 EXPOSE 8089 5557
 
 USER locust
-CMD ["./docker_start.sh"]
+ENTRYPOINT ["locust"]
 
 # turn off python output buffering
 ENV PYTHONUNBUFFERED=1
