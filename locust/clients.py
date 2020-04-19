@@ -185,7 +185,7 @@ class ResponseContextManager(LocustResponse):
     :py:meth:`failure <locust.clients.ResponseContextManager.failure>`.
     """
     
-    _is_reported = False
+    _manual_result = None
     
     def __init__(self, response, request_success, request_failure):
         # copy data from response to this object
@@ -197,24 +197,48 @@ class ResponseContextManager(LocustResponse):
         return self
     
     def __exit__(self, exc, value, traceback):
-        if self._is_reported:
+        if self._manual_result is not None:
+            if self._manual_result == True:
+                self._report_success()
+            elif isinstance(self._manual_result, Exception):
+                self._report_failure(self._manual_result)
+            
             # if the user has already manually marked this response as failure or success
             # we can ignore the default haviour of letting the response code determine the outcome
             return exc is None
         
         if exc:
             if isinstance(value, ResponseError):
-                self.failure(value)
+                self._report_failure(value)
             else:
+                # we want other unknown exceptions to be raised
                 return False
         else:
             try:
                 self.raise_for_status()
             except requests.exceptions.RequestException as e:
-                self.failure(e)
+                self._report_failure(e)
             else:
-                self.success()
+                self._report_success()
+        
         return True
+    
+    def _report_success(self):
+        self._request_success.fire(
+            request_type=self.locust_request_meta["method"],
+            name=self.locust_request_meta["name"],
+            response_time=self.locust_request_meta["response_time"],
+            response_length=self.locust_request_meta["content_size"],
+        )
+    
+    def _report_failure(self, exc):
+        self._request_failure.fire(
+            request_type=self.locust_request_meta["method"],
+            name=self.locust_request_meta["name"],
+            response_time=self.locust_request_meta["response_time"],
+            response_length=self.locust_request_meta["content_size"],
+            exception=exc,
+        )
     
     def success(self):
         """
@@ -226,13 +250,7 @@ class ResponseContextManager(LocustResponse):
                 if response.status_code == 404:
                     response.success()
         """
-        self._request_success.fire(
-            request_type=self.locust_request_meta["method"],
-            name=self.locust_request_meta["name"],
-            response_time=self.locust_request_meta["response_time"],
-            response_length=self.locust_request_meta["content_size"],
-        )
-        self._is_reported = True
+        self._manual_result = True
     
     def failure(self, exc):
         """
@@ -249,12 +267,4 @@ class ResponseContextManager(LocustResponse):
         """
         if isinstance(exc, str):
             exc = CatchResponseError(exc)
-        
-        self._request_failure.fire(
-            request_type=self.locust_request_meta["method"],
-            name=self.locust_request_meta["name"],
-            response_time=self.locust_request_meta["response_time"],
-            response_length=self.locust_request_meta["content_size"],
-            exception=exc,
-        )
-        self._is_reported = True
+        self._manual_result = exc
