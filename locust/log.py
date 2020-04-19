@@ -14,6 +14,7 @@ def setup_logging(loglevel, logfile=None):
     
     LOGGING_CONFIG = {
         "version": 1,
+        "disable_existing_loggers": False,
         "formatters": {
             "default": {
                 "format": "[%(asctime)s] {0}/%(levelname)s/%(name)s: %(message)s".format(HOSTNAME),
