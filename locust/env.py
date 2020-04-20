@@ -120,7 +120,7 @@ class Environment:
         """
         Creates a :class:`WebUI <locust.web.WebUI>` instance for this Environment and start running the web server
         
-        :param host: Host/interface that the web server should accept connections to. Defaults to "*"
+        :param host: Host/interface that the web server should accept connections to. Defaults to ""
                      which means all interfaces
         :param port: Port that the web server should listen to
         :param auth_credentials: If provided (in format "username:password") basic auth will be enabled

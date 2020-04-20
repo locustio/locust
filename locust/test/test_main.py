@@ -1,4 +1,5 @@
 import os
+import platform
 import signal
 import subprocess
 import textwrap
@@ -6,6 +7,7 @@ from unittest import TestCase
 from subprocess import PIPE
 
 import gevent
+import requests
 
 from locust import main
 from locust.argument_parser import parse_options
@@ -13,7 +15,7 @@ from locust.main import create_environment
 from locust.core import HttpLocust, Locust, TaskSet
 from .mock_locustfile import mock_locustfile
 from .testcases import LocustTestCase
-from .util import temporary_file
+from .util import temporary_file, get_free_tcp_port
 
 
 class TestLoadLocustfile(LocustTestCase):
@@ -77,6 +79,15 @@ class TestLoadLocustfile(LocustTestCase):
 
 
 class LocustProcessIntegrationTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.timeout = gevent.Timeout(10)
+        self.timeout.start()
+    
+    def tearDown(self):
+        self.timeout.cancel()
+        super().tearDown()
+    
     def test_help_arg(self):
         output = subprocess.check_output(
             ["locust", "--help"], 
@@ -121,3 +132,31 @@ class LocustProcessIntegrationTest(TestCase):
                     ).decode("utf-8").strip()
             self.assertIn("Hatching and swarming 1 users at the rate 1 users/s", output)
 
+    def test_web_options(self):
+        port = get_free_tcp_port()
+        if platform.system() == "Darwin":
+            # MacOS only sets up the loopback interface for 127.0.0.1 and not for 127.*.*.*
+            interface = "127.0.0.1"
+        else:
+            interface = "127.0.0.2"
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen([
+                "locust",
+                "-f", mocked.file_path,
+                "--web-host", interface,
+                "--web-port", str(port)
+            ], stdout=PIPE, stderr=PIPE)
+            gevent.sleep(0.5)
+            self.assertEqual(200, requests.get("http://%s:%i/" % (interface, port), timeout=1).status_code)
+            proc.terminate()
+            
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen([
+                "locust",
+                "-f", mocked.file_path,
+                "--web-host", "*",
+                "--web-port", str(port),
+            ], stdout=PIPE, stderr=PIPE)
+            gevent.sleep(0.5)
+            self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % port, timeout=1).status_code)
+            proc.terminate()
