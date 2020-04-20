@@ -5,13 +5,13 @@ Running Locust without the web UI
 =================================
 
 You can run locust without the web UI - for example if you want to run it in some automated flow, 
-like a CI server - by using the ``--headless`` flag together with ``-c`` and ``-r``:
+like a CI server - by using the ``--headless`` flag together with ``-u`` and ``-r``:
 
 .. code-block:: console
 
     $ locust -f locust_files/my_locust_file.py --headless -c 1000 -r 100
 
-``-c`` specifies the number of Locust users to spawn, and ``-r`` specifies the hatch rate 
+``-u`` specifies the number of Users to spawn, and ``-r`` specifies the hatch rate
 (number of users to spawn per second).
 
 

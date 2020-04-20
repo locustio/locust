@@ -21,9 +21,9 @@ Below is a quick little example of a simple **locustfile.py**:
 .. code-block:: python
     
     import random
-    from locust import HttpLocust, task, between
+    from locust import HttpUser, task, between
     
-    class WebsiteUser(HttpLocust):
+    class WebsiteUser(HttpUser):
         wait_time = between(5, 9)
         
         @task(2)
@@ -37,7 +37,7 @@ Below is a quick little example of a simple **locustfile.py**:
             self.client.get("/post?id=%i" % post_id, name="/post?id=[post-id]")
         
         def on_start(self):
-            """ on_start is called when a Locust start before any task is scheduled """
+            """ on_start is called when a User starts before any task is scheduled """
             self.login()
         
         def login(self):
@@ -49,10 +49,10 @@ Let's break it down:
 
 .. code-block:: python
 
-    class WebsiteUser(HttpLocust):
+    class WebsiteUser(HttpUser):
 
 Here we define a class for the users that we will be simulating. It inherits from 
-:py:class:`HttpLocust <locust.core.HttpLocust>` which gives each user a ``client`` attribute, 
+:py:class:`HttpUser <locust.core.HttpUser>` which gives each user a ``client`` attribute,
 which is an instance of :py:class:`HttpSession <locust.clients.HttpSession>`, that 
 can be used to make HTTP requests to the target system that we want to load test. When a test starts, 
 locust will create an instance of this class for every user that it simulates, and each of these 

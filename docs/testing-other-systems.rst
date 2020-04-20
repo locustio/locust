@@ -7,19 +7,19 @@ any request/response based system, by writing a custom client that triggers
 :py:attr:`request_success <locust.event.Events.request_success>` and 
 :py:attr:`request_failure <locust.event.Events.request_failure>` events.
 
-Sample XML-RPC Locust client
+Sample XML-RPC User client
 ============================
 
-Here is an example of a Locust class, **XmlRpcLocust**, which provides an XML-RPC client, 
-**XmlRpcClient**, and tracks all requests made:
+Here is an example of a Locust class, **XmlRpcUser**, which provides an XML-RPC client,
+**XmlRpcUser**, and tracks all requests made:
 
 .. literalinclude:: ../examples/custom_xmlrpc_client/xmlrpc_locustfile.py
 
 If you've written Locust tests before, you'll recognize the class called ``ApiUser`` which is a normal 
-Locust class that has a couple of tasks declared. However, the ``ApiUser`` inherits from 
-``XmlRpcLocust`` that you can see right above ``ApiUser``. The ``XmlRpcLocust`` is marked as abstract 
+User class that has a couple of tasks declared. However, the ``ApiUser`` inherits from
+``XmlRpcUser`` that you can see right above ``ApiUser``. The ``XmlRpcUser`` is marked as abstract
 using ``abstract = True`` which means that Locust till not try to create simulated users from that class 
-(only of classes that extends it). ``XmlRpcLocust`` provides an instance of XmlRpcClient under the 
+(only of classes that extends it). ``XmlRpcUser`` provides an instance of XmlRpcClient under the
 ``client`` attribute. 
 
 The ``XmlRpcClient`` is a wrapper around the standard 

@@ -16,7 +16,7 @@ The :py:class:`Environment <locust.env.Environment>` instance's
 :py:meth:`create_local_runner <locust.env.Environment.create_local_runner>`, 
 :py:meth:`create_master_runner <locust.env.Environment.create_master_runner>` or 
 :py:meth:`create_worker_runner <locust.env.Environment.create_worker_runner> can then be used to start a 
-:py:class:`LocustRunner <locust.runners.LocustRunner>` instance, which can be used to start a load test:
+:py:class:`Runner <locust.runners.LocustRunner>` instance, which can be used to start a load test:
 
 .. code-block:: python
 
