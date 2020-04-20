@@ -9,9 +9,11 @@ def temporary_file(content, suffix="_locustfile.py"):
     f = NamedTemporaryFile(suffix=suffix, delete=False)
     f.write(content.encode("utf-8"))
     f.close()
-    yield f.name
-    if os.path.exists(f.name):
-        os.remove(f.name)
+    try:
+        yield f.name
+    finally:
+        if os.path.exists(f.name):
+            os.remove(f.name)
 
 
 def get_free_tcp_port():
