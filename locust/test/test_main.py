@@ -127,13 +127,12 @@ class LocustProcessIntegrationTest(TestCase):
         else:
             interface = "127.0.0.2"
         with mock_locustfile() as mocked:
-            proc = subprocess.Popen(
-                    ["locust",
-                        "-f", mocked.file_path,
-                        "--web-host", interface,
-                        "--web-port", str(port)],
-                    stdout=PIPE, stderr=PIPE
-                    )
+            proc = subprocess.Popen([
+                "locust",
+                "-f", mocked.file_path,
+                "--web-host", interface,
+                "--web-port", str(port)
+            ], stdout=PIPE, stderr=PIPE)
             gevent.sleep(0.5)
             self.assertEqual(200, requests.get("http://%s:%i/" % (interface, port), timeout=1).status_code)
             proc.terminate()
