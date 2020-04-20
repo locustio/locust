@@ -77,7 +77,7 @@ class TestWebUI(LocustTestCase):
                 if html_name_to_test == html_name:
                     self.assertEqual(html_to_option[html_name][1], start_value)
                     self.assertEqual(html_to_option[html_name][1], edit_value)
-h               else:
+                else:
                     self.assertEqual('', start_value)
                     self.assertEqual('', edit_value)
     
