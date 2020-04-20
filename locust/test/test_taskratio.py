@@ -47,18 +47,18 @@ class TestTaskRatio(unittest.TestCase):
             def task3(self):
                 pass
 
-        class UnlikelyLocust(User):
+        class UnlikelyUser(User):
             weight = 1
             tasks = [Tasks]
 
-        class MoreLikelyLocust(User):
+        class MoreLikelyUser(User):
             weight = 3
             tasks = [Tasks]
 
-        ratio_dict = get_task_ratio_dict([UnlikelyLocust, MoreLikelyLocust], total=True)
+        ratio_dict = get_task_ratio_dict([UnlikelyUser, MoreLikelyUser], total=True)
         
         self.assertDictEqual({
-            'UnlikelyLocust':   {
+            'UnlikelyUser':   {
                 'ratio': 0.25,
                 'tasks': {
                     'Tasks': {
@@ -70,7 +70,7 @@ class TestTaskRatio(unittest.TestCase):
                     }
                 },
             },
-            'MoreLikelyLocust': {
+            'MoreLikelyUser': {
                 'ratio': 0.75,
                 'tasks': {
                     'Tasks': {
@@ -83,6 +83,6 @@ class TestTaskRatio(unittest.TestCase):
                 },
             }
         }, ratio_dict)
-        unlikely = ratio_dict['UnlikelyLocust']['tasks']['Tasks']['tasks']
-        likely = ratio_dict['MoreLikelyLocust']['tasks']['Tasks']['tasks']
+        unlikely = ratio_dict['UnlikelyUser']['tasks']['Tasks']['tasks']
+        likely = ratio_dict['MoreLikelyUser']['tasks']['Tasks']['tasks']
         assert unlikely['task1']['ratio'] + unlikely['task3']['ratio'] + likely['task1']['ratio'] + likely['task3']['ratio'] == 1

@@ -33,7 +33,7 @@ class HttpSession(requests.Session):
     the methods for making requests (get, post, delete, put, head, options, patch, request) 
     can now take a *url* argument that's only the path part of the URL, in which case the host 
     part of the URL will be prepended with the HttpSession.base_url which is normally inherited
-    from a Locust class' host property.
+    from a User class' host property.
     
     Each of the methods for making requests also takes two additional optional arguments which 
     are Locust specific and doesn't exist in python-requests. These are:

@@ -12,7 +12,7 @@ class MissingWaitTimeError(LocustError):
 
 class InterruptTaskSet(Exception):
     """
-    Exception that will interrupt a Locust when thrown inside a task
+    Exception that will interrupt a User when thrown inside a task
     """
     
     def __init__(self, reschedule=True):
@@ -22,7 +22,7 @@ class InterruptTaskSet(Exception):
         """
         self.reschedule = reschedule
 
-class StopLocust(Exception):
+class StopUser(Exception):
     pass
 
 class RescheduleTask(Exception):
@@ -35,7 +35,7 @@ class RescheduleTask(Exception):
 
 class RescheduleTaskImmediately(Exception):
     """
-    When raised in a Locust task, another locust task will be rescheduled immediately
+    When raised in a User task, another User task will be rescheduled immediately
     """
 
 class RPCError(Exception):

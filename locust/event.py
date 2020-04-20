@@ -63,11 +63,11 @@ class Events:
     
     locust_error = EventHook
     """
-    Fired when an exception occurs inside the execution of a Locust class.
+    Fired when an exception occurs inside the execution of a User class.
     
     Event arguments:
     
-    :param locust_instance: Locust class instance where the exception occurred
+    :param locust_instance: User class instance where the exception occurred
     :param exception: Exception that was thrown
     :param tb: Traceback object (from sys.exc_info()[2])
     """
@@ -137,7 +137,7 @@ class Events:
     test_start = EventHook
     """
     Fired when a new load test is started. It's not fired again if the number of 
-    Locust users change during a test. When running locust distributed the event is only fired 
+    users change during a test. When running locust distributed the event is only fired 
     on the master node and not on each worker node. 
     """
     

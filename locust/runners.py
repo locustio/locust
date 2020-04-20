@@ -126,7 +126,7 @@ class Runner(object):
             residuals[locust] = amount * percent - round(amount * percent)
         if len(bucket) < amount:
             # We got too few locust classes in the bucket, so we need to create a few extra locusts,
-            # and we do this by iterating over each of the Locust classes - starting with the one
+            # and we do this by iterating over each of the User classes - starting with the one
             # where the residual from the rounding was the largest - and creating one of each until
             # we get the correct amount
             for locust in [l for l, r in sorted(residuals.items(), key=lambda x:x[1], reverse=True)][:amount-len(bucket)]:
@@ -197,7 +197,7 @@ class Runner(object):
             dying = Group()
             for user in users:
                 if not user.stop(self.locusts, force=False):
-                    # Locust.stop() returns False if the greenlet was not killed, so we'll need
+                    # User.stop() returns False if the greenlet was not killed, so we'll need
                     # to add it's greenlet to our dying Group so we can wait for it to finish it's task
                     dying.add(user._greenlet)
             if not dying.join(timeout=self.environment.stop_timeout):
@@ -359,9 +359,9 @@ class MasterRunner(DistributedRunner):
     Runner used to run distributed load tests across multiple processes and/or machines.
     
     MasterRunner doesn't spawn any locust user greenlets itself. Instead it expects
-    :class:`WorkerLocustRunners <WorkerRunner>` to connect to it, which it will then direct
+    :class:`WorkerRunners <WorkerRunner>` to connect to it, which it will then direct
     to start and stop locust user greenlets. Stats sent back from the 
-    :class:`WorkerLocustRunners <WorkerRunner>` will aggregated.
+    :class:`WorkerRunners <WorkerRunner>` will aggregated.
     """
     def __init__(self, environment, master_bind_host, master_bind_port):
         """

@@ -1,5 +1,5 @@
-from locust import HttpLocust, TaskSet, task, between
-from locust.contrib.fasthttp import FastHttpLocust
+from locust import HttpUser, TaskSet, task, between
+from locust.contrib.fasthttp import FastHttpUser
 
 
 class UserTasks(TaskSet):
@@ -12,9 +12,9 @@ class UserTasks(TaskSet):
         self.client.get("/stats/requests")
 
     
-class WebsiteUser(FastHttpLocust):
+class WebsiteUser(FastHttpUser):
     """
-    Locust user class that does requests to the locust web server running on localhost,
+    User class that does requests to the locust web server running on localhost,
     using the fast HTTP client
     """
     host = "http://127.0.0.1:8089"

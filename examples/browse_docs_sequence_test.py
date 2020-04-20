@@ -2,7 +2,7 @@
 # browsing the Locust documentation on https://docs.locust.io/
 
 import random
-from locust import HttpLocust, SequentialTaskSet, task, between
+from locust import HttpUser, SequentialTaskSet, task, between
 from pyquery import PyQuery
 
 
@@ -36,7 +36,7 @@ class BrowseDocumentationSequence(SequentialTaskSet):
         r = self.client.get(url)
 
 
-class AwesomeUser(HttpLocust):
+class AwesomeUser(HttpUser):
     tasks = [BrowseDocumentationSequence]
     host = "https://docs.locust.io/en/latest/"
 

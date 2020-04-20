@@ -31,19 +31,19 @@ class XmlRpcClient(ServerProxy):
         return wrapper
 
 
-class XmlRpcLocust(User):
+class XmlRpcUser(User):
     """
-    This is the abstract Locust class which should be subclassed. It provides an XML-RPC client
+    This is the abstract User class which should be subclassed. It provides an XML-RPC client
     that can be used to make XML-RPC requests that will be tracked in Locust's statistics.
     """
     abstract = True
     def __init__(self, *args, **kwargs):
-        super(XmlRpcLocust, self).__init__(*args, **kwargs)
+        super(XmlRpcUser, self).__init__(*args, **kwargs)
         self.client = XmlRpcClient(self.host)
         self.client._locust_environment = self.environment
 
 
-class ApiUser(XmlRpcLocust):
+class ApiUser(XmlRpcUser):
     host = "http://127.0.0.1:8877/"
     wait_time = between(0.1, 1)
     

@@ -10,7 +10,7 @@ import gevent
 from locust import main
 from locust.argument_parser import parse_options
 from locust.main import create_environment
-from locust.core import HttpLocust, User, TaskSet
+from locust.core import HttpUser, User, TaskSet
 from .mock_locustfile import mock_locustfile
 from .testcases import LocustTestCase
 from .util import temporary_file
@@ -19,20 +19,20 @@ from .util import temporary_file
 class TestLoadLocustfile(LocustTestCase):
     def test_is_locust(self):
         self.assertFalse(main.is_locust(User))
-        self.assertFalse(main.is_locust(HttpLocust))
+        self.assertFalse(main.is_locust(HttpUser))
         self.assertFalse(main.is_locust({}))
         self.assertFalse(main.is_locust([]))
         
         class MyTaskSet(TaskSet):
             pass
         
-        class MyHttpLocust(HttpLocust):
+        class MyHttpUser(HttpUser):
             tasks = [MyTaskSet]
         
         class MyLocust(User):
             tasks = [MyTaskSet]
         
-        self.assertTrue(main.is_locust(MyHttpLocust))
+        self.assertTrue(main.is_locust(MyHttpUser))
         self.assertTrue(main.is_locust(MyLocust))
         
         class ThriftLocust(User):
@@ -43,8 +43,8 @@ class TestLoadLocustfile(LocustTestCase):
     def test_load_locust_file_from_absolute_path(self):
         with mock_locustfile() as mocked:
             docstring, locusts = main.load_locustfile(mocked.file_path)
-            self.assertIn('LocustSubclass', locusts)
-            self.assertNotIn('NotLocustSubclass', locusts)
+            self.assertIn('UserSubclass', locusts)
+            self.assertNotIn('NotUserSubclass', locusts)
 
     def test_load_locust_file_from_relative_path(self):
         with mock_locustfile() as mocked:
@@ -58,8 +58,8 @@ class TestLoadLocustfile(LocustTestCase):
         with mock_locustfile() as mocked:
             docstring, locusts = main.load_locustfile(mocked.file_path)
             self.assertEqual("This is a mock locust file for unit testing", docstring)
-            self.assertIn('LocustSubclass', locusts)
-            self.assertNotIn('NotLocustSubclass', locusts)
+            self.assertIn('UserSubclass', locusts)
+            self.assertNotIn('NotUserSubclass', locusts)
     
     def test_create_environment(self):
         options = parse_options(args=[
@@ -91,7 +91,7 @@ class LocustProcessIntegrationTest(TestCase):
 
     def test_webserver(self):
         with temporary_file(content=textwrap.dedent("""
-            from locust import Locust, task, constant, events
+            from locust import User, task, constant, events
             class TestUser(User):
                 wait_time = constant(3)
                 @task

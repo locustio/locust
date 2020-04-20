@@ -19,7 +19,7 @@ class Environment:
     """Reference to RequestStats instance"""
     
     runner = None
-    """Reference to the :class:`LocustRunner <locust.runners.LocustRunner>` instance"""
+    """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
     
     web_ui = None
     """Reference to the WebUI instance"""
@@ -96,7 +96,7 @@ class Environment:
     
     def create_worker_runner(self, master_host, master_port):
         """
-        Create a :class:`WorkerLocustRunner <locust.runners.WorkerLocustRunner>` instance for this Environment
+        Create a :class:`WorkerRunner <locust.runners.WorkerRunner>` instance for this Environment
         
         :param master_host: Host/IP of a running master node
         :param master_port: Port on master node to connect to

@@ -1,4 +1,4 @@
-from locust import HttpLocust, TaskSet, task, events, between
+from locust import HttpUser, TaskSet, task, events, between
 
 from gevent.lock import Semaphore
 
@@ -20,7 +20,7 @@ class UserTasks(TaskSet):
     def index(self):
         self.client.get("/")
     
-class WebsiteUser(HttpLocust):
+class WebsiteUser(HttpUser):
     host = "http://127.0.0.1:8089"
     wait_time = between(2, 5)
     tasks = [UserTasks]

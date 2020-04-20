@@ -13,7 +13,7 @@ import locust
 
 from . import log
 from .argument_parser import parse_locustfile_option, parse_options
-from .core import HttpLocust, User
+from .core import HttpUser, User
 from .env import Environment
 from .inspectlocust import get_task_ratio_dict, print_task_ratio
 from .log import setup_logging, greenlet_exception_logger
@@ -22,13 +22,13 @@ from .stats import (print_error_report, print_percentile_stats, print_stats,
 from .util.timespan import parse_timespan
 from .exception import AuthCredentialsError
 
-_internals = [User, HttpLocust]
+_internals = [User, HttpUser]
 version = locust.__version__
 
 
 def is_locust(item):
     """
-    Check if a variable is a runnable (non-abstract) Locust class
+    Check if a variable is a runnable (non-abstract) User class
     """
     return bool(
         inspect.isclass(item)
