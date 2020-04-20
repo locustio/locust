@@ -78,6 +78,15 @@ class TestLoadLocustfile(LocustTestCase):
 
 
 class LocustProcessIntegrationTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.timeout = gevent.Timeout(10)
+        self.timeout.start()
+    
+    def tearDowwn():
+        self.timeout.cancel()
+        super().tearDown()
+    
     def test_help_arg(self):
         output = subprocess.check_output(
             ["locust", "--help"], 
