@@ -28,6 +28,9 @@ Breaking changes
           print("test is stopping")
 * ``TaskSequence`` and ``@seq_task`` has been replaced with :ref:`SequentialTaskSet <sequential-taskset>`.
 * A ``User count`` column has been added to the history stats CSV file. The column order and column names has been changed.
+* The official docker image no longer uses a shell script with a bunch of special environment variables to configure how 
+  how locust is started. Instead, the ``locust`` command is now set as ``ENTRYPOINT`` of the docker image. See
+  :ref:`running-locust-docker` for more info.
 
 
 0.14.0
