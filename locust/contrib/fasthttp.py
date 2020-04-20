@@ -84,6 +84,9 @@ class FastHttpLocust(Locust):
     insecure: bool = True
     """Parameter passed to FastHttpSession. Default True, meaning no SSL verification."""
 
+    redirect_resonse_codes = None
+    """Override for redirect_response_codes for FastHttpSession"""
+
     abstract = True 
     """Dont register this as a locust that can be run by itself"""
 
@@ -94,7 +97,9 @@ class FastHttpLocust(Locust):
         if not re.match(r"^https?://[^/]+", self.host, re.I):
             raise LocustError("Invalid host (`%s`), must be a valid base URL. E.g. http://example.com" % self.host)
         
-        self.client = FastHttpSession(self.environment, base_url=self.host, network_timeout=type(self).network_timeout, connection_timeout=type(self).connection_timeout, max_redirects=type(self).max_redirects, max_retries=type(self).max_retries, insecure=type(self).insecure)
+        self.client: FastHttpSession = FastHttpSession(self.environment, base_url=self.host, network_timeout=self.network_timeout, connection_timeout=self.connection_timeout, max_redirects=self.max_redirects, max_retries=self.max_retries, insecure=self.insecure)
+        if self.redirect_resonse_codes is not None:
+            self.client.client.redirect_resonse_codes = self.redirect_resonse_codes
 
 
 class FastHttpSession(object):
