@@ -20,7 +20,7 @@ class User(HttpUser):
         self.client.get("/non-existing-path")
 
 # setup Environment and Runner
-env = Environment(locust_classes=[User])
+env = Environment(user_classes=[User])
 env.create_local_runner()
 
 # start a WebUI instance

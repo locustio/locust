@@ -12,7 +12,7 @@ class Environment:
     See :ref:`events` for available events.
     """
     
-    locust_classes = []
+    user_classes = []
     """Locust User classes that the runner will run"""
     
     stats = None
@@ -47,7 +47,7 @@ class Environment:
     
     def  __init__(
         self, *,
-        locust_classes=[],
+        user_classes=[],
         events=None, 
         host=None, 
         reset_stats=False, 
@@ -60,7 +60,7 @@ class Environment:
         else:
             self.events = Events()
         
-        self.locust_classes = locust_classes
+        self.user_classes = user_classes
         self.stats = RequestStats()
         self.host = host
         self.reset_stats = reset_stats

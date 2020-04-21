@@ -88,12 +88,12 @@ def load_locustfile(path):
     return imported.__doc__, locusts
 
 
-def create_environment(locust_classes, options, events=None):
+def create_environment(user_classes, options, events=None):
     """
     Create an Environment instance from options
     """
     return Environment(
-        locust_classes=locust_classes,
+        user_classes=user_classes,
         events=events,
         host=options.host,
         reset_stats=options.reset_stats,
@@ -138,35 +138,35 @@ def main():
         logger.error("No Locust class found!")
         sys.exit(1)
 
-    # make sure specified Locust exists
-    if options.locust_classes:
-        missing = set(options.locust_classes) - set(locusts.keys())
+    # make sure specified User exists
+    if options.user_classes:
+        missing = set(options.user_classes) - set(locusts.keys())
         if missing:
-            logger.error("Unknown Locust(s): %s\n" % (", ".join(missing)))
+            logger.error("Unknown User(s): %s\n" % (", ".join(missing)))
             sys.exit(1)
         else:
-            names = set(options.locust_classes) & set(locusts.keys())
-            locust_classes = [locusts[n] for n in names]
+            names = set(options.user_classes) & set(locusts.keys())
+            user_classes = [locusts[n] for n in names]
     else:
         # list() call is needed to consume the dict_view object in Python 3
-        locust_classes = list(locusts.values())
+        user_classes = list(locusts.values())
     
     # create locust Environment
-    environment = create_environment(locust_classes, options, events=locust.events)
+    environment = create_environment(user_classes, options, events=locust.events)
     
     if options.show_task_ratio:
         print("\n Task ratio per locust class")
         print( "-" * 80)
-        print_task_ratio(locust_classes)
+        print_task_ratio(user_classes)
         print("\n Total task ratio")
         print("-" * 80)
-        print_task_ratio(locust_classes, total=True)
+        print_task_ratio(user_classes, total=True)
         sys.exit(0)
     if options.show_task_ratio_json:
         from json import dumps
         task_data = {
-            "per_class": get_task_ratio_dict(locust_classes), 
-            "total": get_task_ratio_dict(locust_classes, total=True)
+            "per_class": get_task_ratio_dict(user_classes),
+            "total": get_task_ratio_dict(user_classes, total=True)
         }
         print(dumps(task_data))
         sys.exit(0)

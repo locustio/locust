@@ -80,8 +80,8 @@ class Runner(object):
             self.greenlet.kill(block=False)
     
     @property
-    def locust_classes(self):
-        return self.environment.locust_classes
+    def user_classes(self):
+        return self.environment.user_classes
     
     @property
     def stats(self):
@@ -111,9 +111,9 @@ class Runner(object):
         returns a list "bucket" with the weighted locusts
         """
         bucket = []
-        weight_sum = sum([locust.weight for locust in self.locust_classes])
+        weight_sum = sum([locust.weight for locust in self.user_classes])
         residuals = {}
-        for locust in self.locust_classes:
+        for locust in self.user_classes:
             if self.environment.host is not None:
                 locust.host = self.environment.host
 
@@ -146,7 +146,7 @@ class Runner(object):
         
         existing_count = len(self.locusts)
         logger.info("Hatching and swarming %i users at the rate %g users/s (%i users already running)..." % (spawn_count, hatch_rate, existing_count))
-        occurrence_count = dict([(l.__name__, 0) for l in self.locust_classes])
+        occurrence_count = dict([(l.__name__, 0) for l in self.user_classes])
         
         def hatch():
             sleep_time = 1.0 / hatch_rate

@@ -10,7 +10,7 @@ To run Locust as a library you need to create an :py:class:`Environment <locust.
 
     from locust.env import Environment
     
-    env = Environment(locust_classes=[MyTestUser])
+    env = Environment(user_classes=[MyTestUser])
 
 The :py:class:`Environment <locust.env.Environment>` instance's 
 :py:meth:`create_local_runner <locust.env.Environment.create_local_runner>`, 

@@ -362,12 +362,12 @@ def setup_parser_arguments(parser):
         help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. This parameter only needs to be specified for the master process when running Locust distributed."
     )
     
-    locust_classes_group = parser.add_argument_group("Locust user classes")
-    locust_classes_group.add_argument(
-        'locust_classes',
+    user_classes_group = parser.add_argument_group("User classes")
+    user_classes_group.add_argument(
+        'user_classes',
         nargs='*',
-        metavar='LocustClass',
-        help="Optionally specify which Locust classes that should be used (available Locust classes can be listed with -l or --list)",
+        metavar='UserClass',
+        help="Optionally specify which User classes that should be used (available User classes can be listed with -l or --list)",
     )
 
 def get_parser(default_config_files=DEFAULT_CONFIG_FILES):

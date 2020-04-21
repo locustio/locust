@@ -29,11 +29,11 @@ class TestLoadLocustfile(LocustTestCase):
         class MyHttpUser(HttpUser):
             tasks = [MyTaskSet]
         
-        class MyLocust(User):
+        class MyUser(User):
             tasks = [MyTaskSet]
         
         self.assertTrue(main.is_locust(MyHttpUser))
-        self.assertTrue(main.is_locust(MyLocust))
+        self.assertTrue(main.is_locust(MyUser))
         
         class ThriftLocust(User):
             abstract = True
