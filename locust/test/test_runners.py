@@ -1201,7 +1201,7 @@ class TestStopTimeout(LocustTestCase):
         timeout.start()
         try:
             runner.stop_users(1)
-            runner.locusts.join()
+            runner.user_greenlets.join()
         except gevent.Timeout:
             self.fail("Got Timeout exception. Some locusts must have kept runnining after iteration finish")
         finally:
