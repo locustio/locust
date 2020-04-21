@@ -108,7 +108,7 @@ def main():
     locustfile = parse_locustfile_option()
     
     # import the locustfile
-    docstring, locusts = load_locustfile(locustfile)
+    docstring, users = load_locustfile(locustfile)
     
     # parse all command line options
     options = parse_options()
@@ -129,27 +129,27 @@ def main():
     greenlet_exception_handler = greenlet_exception_logger(logger)
 
     if options.list_commands:
-        print("Available Locusts:")
-        for name in locusts:
+        print("Available Users:")
+        for name in users:
             print("    " + name)
         sys.exit(0)
 
-    if not locusts:
-        logger.error("No Locust class found!")
+    if not users:
+        logger.error("No User class found!")
         sys.exit(1)
 
     # make sure specified User exists
     if options.user_classes:
-        missing = set(options.user_classes) - set(locusts.keys())
+        missing = set(options.user_classes) - set(users.keys())
         if missing:
             logger.error("Unknown User(s): %s\n" % (", ".join(missing)))
             sys.exit(1)
         else:
-            names = set(options.user_classes) & set(locusts.keys())
-            user_classes = [locusts[n] for n in names]
+            names = set(options.user_classes) & set(users.keys())
+            user_classes = [users[n] for n in names]
     else:
         # list() call is needed to consume the dict_view object in Python 3
-        user_classes = list(locusts.values())
+        user_classes = list(users.values())
     
     # create locust Environment
     environment = create_environment(user_classes, options, events=locust.events)

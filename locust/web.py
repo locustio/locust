@@ -111,8 +111,8 @@ class WebUI:
                 if len(all_hosts) == 1:
                     host = list(all_hosts)[0]
                 else:
-                    # since we have mulitple Locust classes with different host attributes, we'll
-                    # inform that specifying host will override the host for all Locust classes
+                    # since we have mulitple User classes with different host attributes, we'll
+                    # inform that specifying host will override the host for all User classes
                     override_host_warning = True
                     host = None
             else:

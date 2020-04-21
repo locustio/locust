@@ -61,7 +61,7 @@ class Events:
     :param exception: Exception instance that was thrown
     """
     
-    locust_error = EventHook
+    user_error = EventHook
     """
     Fired when an exception occurs inside the execution of a User class.
     

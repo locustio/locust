@@ -13,7 +13,7 @@ class Environment:
     """
     
     user_classes = []
-    """Locust User classes that the runner will run"""
+    """User classes that the runner will run"""
     
     stats = None
     """Reference to RequestStats instance"""
