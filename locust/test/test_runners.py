@@ -161,11 +161,11 @@ class TestLocustRunner(LocustTestCase):
                     triggered[0] = True
         runner = Environment(user_classes=[BaseUser]).create_local_runner()
         runner.spawn_users(2, hatch_rate=2, wait=False)
-        self.assertEqual(2, len(runner.locusts))
-        g1 = list(runner.locusts)[0]
-        g2 = list(runner.locusts)[1]
+        self.assertEqual(2, len(runner.user_greenlets))
+        g1 = list(runner.user_greenlets)[0]
+        g2 = list(runner.user_greenlets)[1]
         runner.stop_users(2)
-        self.assertEqual(0, len(runner.locusts))
+        self.assertEqual(0, len(runner.user_greenlets))
         self.assertTrue(g1.dead)
         self.assertTrue(g2.dead)
         self.assertTrue(triggered[0])
@@ -263,7 +263,7 @@ class TestLocustRunner(LocustTestCase):
         sleep(0.6)
         runner.start(user_count=5, hatch_rate=5, wait=False)
         runner.hatching_greenlet.join()
-        self.assertEqual(5, len(runner.users))
+        self.assertEqual(5, len(runner.user_greenlets))
         runner.quit()
     
     def test_reset_stats(self):
@@ -916,13 +916,13 @@ class TestWorkerRunner(LocustTestCase):
             # wait for worker to hatch locusts
             self.assertIn("hatching", [m.type for m in client.outbox])
             worker.hatching_greenlet.join()
-            self.assertEqual(1, len(worker.users))
+            self.assertEqual(1, len(worker.user_greenlets))
             # check that locust has started running
             gevent.sleep(0.01)
             self.assertEqual(1, MyTestUser._test_state)
             # send stop message
             client.mocked_send(Message("stop", None, "dummy_client_id"))
-            worker.users.join()
+            worker.user_greenlets.join()
             # check that locust user got to finish
             self.assertEqual(2, MyTestUser._test_state)
             # make sure the test_start was never fired on the worker
@@ -953,13 +953,13 @@ class TestWorkerRunner(LocustTestCase):
             # wait for worker to hatch locusts
             self.assertIn("hatching", [m.type for m in client.outbox])
             worker.hatching_greenlet.join()
-            self.assertEqual(1, len(worker.users))
+            self.assertEqual(1, len(worker.user_greenlets))
             # check that locust has started running
             gevent.sleep(0.01)
             self.assertEqual(1, MyTestUser._test_state)
             # send stop message
             client.mocked_send(Message("stop", None, "dummy_client_id"))
-            worker.users.join()
+            worker.user_greenlets.join()
             # check that locust user did not get to finish
             self.assertEqual(1, MyTestUser._test_state)
     
@@ -990,7 +990,7 @@ class TestWorkerRunner(LocustTestCase):
             }, "dummy_client_id"))
             sleep(0)
             worker.hatching_greenlet.join()
-            self.assertEqual(9, len(worker.users))
+            self.assertEqual(9, len(worker.user_greenlets))
             worker.quit()
 
 class TestMessageSerializing(unittest.TestCase):

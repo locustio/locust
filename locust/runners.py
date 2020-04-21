@@ -43,7 +43,7 @@ class Runner(object):
     """
     def __init__(self, environment):
         self.environment = environment
-        self.users = Group()
+        self.user_greenlets = Group()
         self.greenlet = Group()
         self.state = STATE_INIT
         self.hatching_greenlet = None
@@ -96,7 +96,7 @@ class Runner(object):
         """
         :returns: Number of currently running users
         """
-        return len(self.users)
+        return len(self.user_greenlets)
 
     def cpu_log_warning(self):
         """Called at the end of the test to repeat the warning & return the status"""
@@ -144,7 +144,7 @@ class Runner(object):
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
             self.state = STATE_HATCHING
         
-        existing_count = len(self.users)
+        existing_count = len(self.user_greenlets)
         logger.info("Hatching and swarming %i users at the rate %g users/s (%i users already running)..." % (spawn_count, hatch_rate, existing_count))
         occurrence_count = dict([(l.__name__, 0) for l in self.user_classes])
         
@@ -156,21 +156,21 @@ class Runner(object):
                         ", ".join(["%s: %d" % (name, count) for name, count in occurrence_count.items()]), 
                         existing_count,
                     ))
-                    self.environment.events.hatch_complete.fire(user_count=len(self.users))
+                    self.environment.events.hatch_complete.fire(user_count=len(self.user_greenlets))
                     return
 
                 user_class = bucket.pop(random.randint(0, len(bucket)-1))
                 occurrence_count[user_class.__name__] += 1
                 new_user = user_class(self.environment)
-                new_user.start(self.users)
-                if len(self.users) % 10 == 0:
-                    logger.debug("%i users hatched" % len(self.users))
+                new_user.start(self.user_greenlets)
+                if len(self.user_greenlets) % 10 == 0:
+                    logger.debug("%i users hatched" % len(self.user_greenlets))
                 if bucket:
                     gevent.sleep(sleep_time)
         
         hatch()
         if wait:
-            self.users.join()
+            self.user_greenlets.join()
             logger.info("All users stopped\n")
 
     def stop_users(self, user_count):
@@ -181,7 +181,7 @@ class Runner(object):
         user_count = len(bucket)
         logger.info("Stopping %i users" % user_count)
         to_stop = []
-        for g in self.users:
+        for g in self.user_greenlets:
             for l in bucket:
                 user = g.args[0]
                 if l == type(user):
@@ -196,7 +196,7 @@ class Runner(object):
         if self.environment.stop_timeout:
             stopping = Group()
             for user in users:
-                if not user.stop(self.users, force=False):
+                if not user.stop(self.user_greenlets, force=False):
                     # User.stop() returns False if the greenlet was not stopped, so we'll need
                     # to add it's greenlet to our stopping Group so we can wait for it to finish it's task
                     stopping.add(user._greenlet)
@@ -205,7 +205,7 @@ class Runner(object):
             stopping.kill(block=True)
         else:
             for user in users:
-                user.stop(self.users, force=True)
+                user.stop(self.user_greenlets, force=True)
         
     def monitor_cpu(self):
         process = psutil.Process()
@@ -283,7 +283,7 @@ class Runner(object):
         # if we are currently hatching users we need to kill the hatching greenlet first
         if self.hatching_greenlet and not self.hatching_greenlet.ready():
             self.hatching_greenlet.kill(block=True)
-        self.stop_user_instances([g.args[0] for g in self.users])
+        self.stop_user_instances([g.args[0] for g in self.user_greenlets])
         self.state = STATE_STOPPED
         self.cpu_log_warning()
     
