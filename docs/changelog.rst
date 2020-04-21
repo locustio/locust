@@ -33,6 +33,13 @@ Breaking changes
   :ref:`running-locust-docker` for more info.
 
 
+Other fixes and improvements
+----------------------------
+
+* If the number of users and hatch rate are specified on command line, it's now used to pre-populate the input fields in 
+  the Web UI.
+
+
 0.14.0
 ======
 
