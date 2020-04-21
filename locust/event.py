@@ -67,7 +67,7 @@ class Events:
     
     Event arguments:
     
-    :param locust_instance: User class instance where the exception occurred
+    :param user_instance: User class instance where the exception occurred
     :param exception: Exception that was thrown
     :param tb: Traceback object (from sys.exc_info()[2])
     """
