@@ -99,6 +99,7 @@ def create_environment(locust_classes, options, events=None):
         reset_stats=options.reset_stats,
         step_load=options.step_load,
         stop_timeout=options.stop_timeout,
+        parsed_options=options
     )
 
 
@@ -246,12 +247,20 @@ def main():
     if options.headless:
         # headless mode
         if options.master:
-            # what for worker nodes to connect
+            # wait for worker nodes to connect
             while len(runner.clients.ready) < options.expect_workers:
                 logging.info("Waiting for workers to be ready, %s of %s connected",
                              len(runner.clients.ready), options.expect_workers)
                 time.sleep(1)
         if not options.worker:
+            # apply headless mode defaults
+            if options.num_clients is None:
+                options.num_clients = 1
+            if options.hatch_rate is None:
+                options.hatch_rate = 1
+            if options.step_clients is None:
+                options.step_clients = 1
+
             # start the test
             if options.step_time:
                 runner.start_stepload(options.num_clients, options.hatch_rate, options.step_clients, options.step_time)
