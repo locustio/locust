@@ -355,6 +355,15 @@ class TestFastHttpUserClass(WebserverTestCase):
         l.client.get("/redirect")
         self.assertEqual(1, self.runner.stats.get("/redirect", "GET").num_failures)
 
+    def test_allow_redirects_override(self):
+        class MyLocust(FastHttpLocust):
+            host = "http://127.0.0.1:%i" % self.port
+        l = MyLocust(self.environment)
+        resp = l.client.get("/redirect", allow_redirects=False)
+        self.assertEqual("http://127.0.0.1:%i/ultra_fast" % self.port, resp.headers['location'])
+        resp = l.client.get("/redirect") # ensure redirect still works
+        self.assertFalse("location" in resp.headers)
+        
     def test_slow_redirect(self):
         s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
         url = "/redirect?url=/redirect&delay=0.5"

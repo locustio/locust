@@ -1,3 +1,4 @@
+from .argument_parser import parse_options
 from .event import Events
 from .exception import RunnerAlreadyExistsError
 from .stats import RequestStats
@@ -44,6 +45,9 @@ class Environment:
     If True exceptions that happen within running users will be catched (and reported in UI/console).
     If False, exeptions will be raised.
     """
+
+    parsed_options = parse_options(args=[])
+    """Reference to the namespace that stores the parsed command line arguments"""
     
     def  __init__(
         self, *,
@@ -54,6 +58,7 @@ class Environment:
         step_load=False, 
         stop_timeout=None,
         catch_exceptions=True,
+        parsed_options=parse_options(args=[]),
     ):
         if events:
             self.events = events
@@ -67,6 +72,7 @@ class Environment:
         self.step_load = step_load
         self.stop_timeout = stop_timeout
         self.catch_exceptions = catch_exceptions
+        self.parsed_options = parsed_options
     
     def _create_runner(self, runner_class, *args, **kwargs):
         if self.runner is not None:
@@ -114,7 +120,7 @@ class Environment:
         """
         Creates a :class:`WebUI <locust.web.WebUI>` instance for this Environment and start running the web server
         
-        :param host: Host/interface that the web server should accept connections to. Defaults to "*"
+        :param host: Host/interface that the web server should accept connections to. Defaults to ""
                      which means all interfaces
         :param port: Port that the web server should listen to
         :param auth_credentials: If provided (in format "username:password") basic auth will be enabled

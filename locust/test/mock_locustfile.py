@@ -51,5 +51,7 @@ def mock_locustfile(filename_prefix="mock_locustfile", content=MOCK_LOUCSTFILE_C
     with open(mocked.file_path, 'w') as file:
         file.write(content)
     
-    yield mocked
-    os.remove(mocked.file_path)
+    try:
+        yield mocked
+    finally:
+        os.remove(mocked.file_path)

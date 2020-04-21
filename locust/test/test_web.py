@@ -7,9 +7,10 @@ from io import StringIO
 
 import gevent
 import requests
+from pyquery import PyQuery as pq
 
 from locust import constant
-from locust.argument_parser import get_parser
+from locust.argument_parser import get_parser, parse_options
 from locust.core import User, task
 from locust.env import Environment
 from locust.runners import Runner
@@ -52,7 +53,34 @@ class TestWebUI(LocustTestCase):
     
     def test_index(self):
         self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % self.web_port).status_code)
-    
+
+    def test_index_with_hatch_options(self):
+        html_to_option = {
+                'locust_count':['-c','100'],
+                'hatch_rate':['-r','10.0'],
+                'step_locust_count':['--step-clients','20'],
+                'step_duration':['--step-time','15'],
+                }
+        self.environment.step_load = True
+        for html_name_to_test in html_to_option.keys():
+            # Test that setting each hatch option individually populates the corresponding field in the html, and none of the others
+            self.environment.parsed_options = parse_options(html_to_option[html_name_to_test])
+
+            response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+            self.assertEqual(200, response.status_code)
+
+            d = pq(response.content.decode('utf-8'))
+
+            for html_name in html_to_option.keys():
+                start_value = d(f'.start [name={html_name}]').attr('value')
+                edit_value = d(f'.edit [name={html_name}]').attr('value')
+                if html_name_to_test == html_name:
+                    self.assertEqual(html_to_option[html_name][1], start_value)
+                    self.assertEqual(html_to_option[html_name][1], edit_value)
+                else:
+                    self.assertEqual('', start_value)
+                    self.assertEqual('', edit_value)
+
     def test_stats_no_data(self):
         self.assertEqual(200, requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).status_code)
     

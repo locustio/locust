@@ -159,7 +159,7 @@ def setup_parser_arguments(parser):
     web_ui_group.add_argument(
         '--web-host',
         default="",
-        help="Host to bind the web interface to. Defaults to '' (all interfaces)"
+        help="Host to bind the web interface to. Defaults to '*' (all interfaces)"
     )
     web_ui_group.add_argument(
         '--web-port', '-P',
@@ -382,6 +382,8 @@ def get_parser(default_config_files=DEFAULT_CONFIG_FILES):
 
 def parse_options(args=None):
     parser = get_parser()
+    if 'LOCUST_MASTER_SERVICE' in os.environ and not isinstance(os.environ.get('LOCUST_MASTER_PORT', 0), int):
+        sys.stderr.write("Are you running in kubernetes? If you have a container called LOCUST_MASTER, kubernetes will set an env var called LOCUST_MASTER_PORT which will collide with locust's --master-port setting. Please rename your container.\n")
     # parse command line and return options
     options = parser.parse_args(args=args)
     return options
