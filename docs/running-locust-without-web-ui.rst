@@ -9,7 +9,7 @@ like a CI server - by using the ``--headless`` flag together with ``-u`` and ``-
 
 .. code-block:: console
 
-    $ locust -f locust_files/my_locust_file.py --headless -c 1000 -r 100
+    $ locust -f locust_files/my_locust_file.py --headless -u 1000 -r 100
 
 ``-u`` specifies the number of Users to spawn, and ``-r`` specifies the hatch rate
 (number of users to spawn per second).
@@ -22,7 +22,7 @@ If you want to specify the run time for a test, you can do that with ``--run-tim
 
 .. code-block:: console
 
-    $ locust -f --headless -c 1000 -r 100 --run-time 1h30m
+    $ locust -f --headless -u 1000 -r 100 --run-time 1h30m
 
 Locust will shutdown once the time is up.
 
@@ -33,7 +33,7 @@ By default, locust will stop your tasks immediately. If you want to allow your t
 
 .. code-block:: console
 
-    $ locust -f --headless -c 1000 -r 100 --run-time 1h30m --stop-timeout 99
+    $ locust -f --headless -u 1000 -r 100 --run-time 1h30m --stop-timeout 99
 
 .. _running-locust-distributed-without-web-ui:
 
