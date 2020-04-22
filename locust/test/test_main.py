@@ -146,7 +146,7 @@ class LocustProcessIntegrationTest(TestCase):
                 "--web-host", interface,
                 "--web-port", str(port)
             ], stdout=PIPE, stderr=PIPE)
-            gevent.sleep(0.5)
+            gevent.sleep(1)
             self.assertEqual(200, requests.get("http://%s:%i/" % (interface, port), timeout=1).status_code)
             proc.terminate()
             
@@ -157,6 +157,6 @@ class LocustProcessIntegrationTest(TestCase):
                 "--web-host", "*",
                 "--web-port", str(port),
             ], stdout=PIPE, stderr=PIPE)
-            gevent.sleep(0.5)
+            gevent.sleep(1)
             self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % port, timeout=1).status_code)
             proc.terminate()
