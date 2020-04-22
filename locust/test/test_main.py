@@ -19,11 +19,11 @@ from .util import temporary_file, get_free_tcp_port
 
 
 class TestLoadLocustfile(LocustTestCase):
-    def test_is_locust(self):
-        self.assertFalse(main.is_locust(User))
-        self.assertFalse(main.is_locust(HttpUser))
-        self.assertFalse(main.is_locust({}))
-        self.assertFalse(main.is_locust([]))
+    def test_is_user_class(self):
+        self.assertFalse(main.is_user_class(User))
+        self.assertFalse(main.is_user_class(HttpUser))
+        self.assertFalse(main.is_user_class({}))
+        self.assertFalse(main.is_user_class([]))
         
         class MyTaskSet(TaskSet):
             pass
@@ -34,34 +34,34 @@ class TestLoadLocustfile(LocustTestCase):
         class MyUser(User):
             tasks = [MyTaskSet]
         
-        self.assertTrue(main.is_locust(MyHttpUser))
-        self.assertTrue(main.is_locust(MyUser))
+        self.assertTrue(main.is_user_class(MyHttpUser))
+        self.assertTrue(main.is_user_class(MyUser))
         
         class ThriftLocust(User):
             abstract = True
         
-        self.assertFalse(main.is_locust(ThriftLocust))
+        self.assertFalse(main.is_user_class(ThriftLocust))
     
     def test_load_locust_file_from_absolute_path(self):
         with mock_locustfile() as mocked:
-            docstring, locusts = main.load_locustfile(mocked.file_path)
-            self.assertIn('UserSubclass', locusts)
-            self.assertNotIn('NotUserSubclass', locusts)
+            docstring, user_classes = main.load_locustfile(mocked.file_path)
+            self.assertIn('UserSubclass', user_classes)
+            self.assertNotIn('NotUserSubclass', user_classes)
 
     def test_load_locust_file_from_relative_path(self):
         with mock_locustfile() as mocked:
-            docstring, locusts = main.load_locustfile(os.path.join('./locust/test/', mocked.filename))
+            docstring, user_classes = main.load_locustfile(os.path.join('./locust/test/', mocked.filename))
 
     def test_load_locust_file_with_a_dot_in_filename(self):
         with mock_locustfile(filename_prefix="mocked.locust.file") as mocked:
-            docstring, locusts = main.load_locustfile(mocked.file_path)
+            docstring, user_classes = main.load_locustfile(mocked.file_path)
     
-    def test_return_docstring_and_locusts(self):
+    def test_return_docstring_and_user_classes(self):
         with mock_locustfile() as mocked:
-            docstring, locusts = main.load_locustfile(mocked.file_path)
+            docstring, user_classes = main.load_locustfile(mocked.file_path)
             self.assertEqual("This is a mock locust file for unit testing", docstring)
-            self.assertIn('UserSubclass', locusts)
-            self.assertNotIn('NotUserSubclass', locusts)
+            self.assertIn('UserSubclass', user_classes)
+            self.assertNotIn('NotUserSubclass', user_classes)
     
     def test_create_environment(self):
         options = parse_options(args=[

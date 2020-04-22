@@ -26,7 +26,7 @@ _internals = [User, HttpUser]
 version = locust.__version__
 
 
-def is_locust(item):
+def is_user_class(item):
     """
     Check if a variable is a runnable (non-abstract) User class
     """
@@ -84,8 +84,8 @@ def load_locustfile(path):
         sys.path.insert(index + 1, directory)
         del sys.path[0]
     # Return our two-tuple
-    locusts = {name:value for name, value in vars(imported).items() if is_locust(value)}
-    return imported.__doc__, locusts
+    user_classes = {name:value for name, value in vars(imported).items() if is_user_class(value)}
+    return imported.__doc__, user_classes
 
 
 def create_environment(user_classes, options, events=None):
@@ -109,7 +109,7 @@ def main():
     locustfile = parse_locustfile_option()
     
     # import the locustfile
-    docstring, users = load_locustfile(locustfile)
+    docstring, user_classes = load_locustfile(locustfile)
     
     # parse all command line options
     options = parse_options()
@@ -131,26 +131,26 @@ def main():
 
     if options.list_commands:
         print("Available Users:")
-        for name in users:
+        for name in user_classes:
             print("    " + name)
         sys.exit(0)
 
-    if not users:
+    if not user_classes:
         logger.error("No User class found!")
         sys.exit(1)
 
     # make sure specified User exists
     if options.user_classes:
-        missing = set(options.user_classes) - set(users.keys())
+        missing = set(options.user_classes) - set(user_classes.keys())
         if missing:
             logger.error("Unknown User(s): %s\n" % (", ".join(missing)))
             sys.exit(1)
         else:
-            names = set(options.user_classes) & set(users.keys())
-            user_classes = [users[n] for n in names]
+            names = set(options.user_classes) & set(user_classes.keys())
+            user_classes = [user_classes[n] for n in names]
     else:
         # list() call is needed to consume the dict_view object in Python 3
-        user_classes = list(users.values())
+        user_classes = list(user_classes.values())
     
     # create locust Environment
     environment = create_environment(user_classes, options, events=locust.events)
