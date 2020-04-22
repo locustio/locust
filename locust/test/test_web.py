@@ -56,9 +56,9 @@ class TestWebUI(LocustTestCase):
 
     def test_index_with_hatch_options(self):
         html_to_option = {
-                'locust_count':['-u','100'],
+                'user_count':['-u','100'],
                 'hatch_rate':['-r','10.0'],
-                'step_locust_count':['--step-users','20'],
+                'step_user_count':['--step-users','20'],
                 'step_duration':['--step-time','15'],
                 }
         self.environment.step_load = True
@@ -210,7 +210,7 @@ class TestWebUI(LocustTestCase):
         self.environment.user_classes = [MyUser]
         response = requests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port, 
-            data={"locust_count": 5, "hatch_rate": 5, "host": "https://localhost"},
+            data={"user_count": 5, "hatch_rate": 5, "host": "https://localhost"},
         )
         self.assertEqual(200, response.status_code)
         self.assertEqual("https://localhost", response.json()["host"])
@@ -225,7 +225,7 @@ class TestWebUI(LocustTestCase):
         self.environment.user_classes = [MyUser]
         response = requests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port, 
-            data={'locust_count': 5, 'hatch_rate': 5},
+            data={'user_count': 5, 'hatch_rate': 5},
         )
         self.assertEqual(200, response.status_code)
         self.assertEqual(None, response.json()["host"])
@@ -272,7 +272,7 @@ class TestWebUI(LocustTestCase):
         self.environment.step_load = True
         response = requests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
-            data={"locust_count":5, "hatch_rate":2, "step_locust_count":2, "step_duration": "2m"}
+            data={"user_count":5, "hatch_rate":2, "step_user_count":2, "step_duration": "2m"}
         )
         self.assertEqual(200, response.status_code)
         self.assertIn("Step Load Mode", response.text)

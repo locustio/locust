@@ -58,8 +58,8 @@
             <div class="padder">
                 <h2>Start new Locust swarm</h2>
                 <form action="./swarm" method="POST" id="swarm_form">
-                    <label for="locust_count">Number of total users to simulate</label>
-                    <input type="text" name="locust_count" id="locust_count" class="val" value="{{ num_users or "" }}"/><br>
+                    <label for="user_count">Number of total users to simulate</label>
+                    <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="hatch_rate" class="val" value="{{ hatch_rate or "" }}"/><br>
                     <label for="host">
@@ -70,8 +70,8 @@
                     </label>
                     <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or "" }}"/><br>
                     {% if is_step_load %}
-                    <label for="step_locust_count">Number of users to increase by step</label>
-                    <input type="text" name="step_locust_count" id="step_locust_count" class="val" value="{{ step_users or "" }}"/><br>
+                    <label for="step_user_count">Number of users to increase by step</label>
+                    <input type="text" name="step_user_count" id="step_user_count" class="val" value="{{ step_users or "" }}"/><br>
                     <label for="step_duration">Step duration <span style="color:#8a8a8a;">(300s, 20m, 3h, 1h30m, etc.)</span></label>
                     <input type="text" name="step_duration" id="step_duration" class="val" value="{{ step_time or "" }}"/><br>
                     {% endif %}
@@ -88,13 +88,13 @@
             <div class="padder">
                 <h2>Change the locust count</h2>
                 <form action="./swarm" method="POST" id="edit_form">
-                    <label for="locust_count">Number of users to simulate</label>
-                    <input type="text" name="locust_count" id="new_locust_count" class="val"  value="{{ num_users or "" }}"/><br>
+                    <label for="new_user_count">Number of users to simulate</label>
+                    <input type="text" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "" }}"/><br>
                     <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                     <input type="text" name="hatch_rate" id="new_hatch_rate" class="val"  value="{{ hatch_rate or "" }}"/><br>
                     {% if is_step_load %}
-                    <label for="step_locust_count">Number of users to increase by step</label>
-                    <input type="text" name="step_locust_count" id="step_locust_count" class="val"  value="{{ step_users or "" }}"/><br>
+                    <label for="step_user_count">Number of users to increase by step</label>
+                    <input type="text" name="step_user_count" id="step_user_count" class="val"  value="{{ step_users or "" }}"/><br>
                     <label for="step_duration">Step duration <span style="color:#8a8a8a;">(300s, 20m, 3h, 1h30m, etc.)</span></label>
                     <input type="text" name="step_duration" id="step_duration" class="val"  value="{{ step_time or "" }}"/><br>
                     {% endif %}

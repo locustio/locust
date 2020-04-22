@@ -137,18 +137,18 @@ class WebUI:
         @self.auth_required_if_enabled
         def swarm():
             assert request.method == "POST"
-            locust_count = int(request.form["locust_count"])
+            user_count = int(request.form["user_count"])
             hatch_rate = float(request.form["hatch_rate"])
             if (request.form.get("host")):
                 environment.host = str(request.form["host"])
         
             if environment.step_load:
-                step_locust_count = int(request.form["step_locust_count"])
+                step_user_count = int(request.form["step_user_count"])
                 step_duration = parse_timespan(str(request.form["step_duration"]))
-                environment.runner.start_stepload(locust_count, hatch_rate, step_locust_count, step_duration)
+                environment.runner.start_stepload(user_count, hatch_rate, step_user_count, step_duration)
                 return jsonify({'success': True, 'message': 'Swarming started in Step Load Mode', 'host': environment.host})
             
-            environment.runner.start(locust_count, hatch_rate)
+            environment.runner.start(user_count, hatch_rate)
             return jsonify({'success': True, 'message': 'Swarming started', 'host': environment.host})
         
         @app.route('/stop')
