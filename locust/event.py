@@ -101,7 +101,7 @@ class Events:
     
     hatch_complete = EventHook
     """
-    Fired when all locust users has been spawned.
+    Fired when all simulated users has been spawned.
     
     Event arguments:
     

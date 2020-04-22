@@ -450,10 +450,10 @@ class User(object, metaclass=UserMeta):
     """
 
     weight = 10
-    """Probability of locust being chosen. The higher the weight, the greater the chance of it being chosen."""
+    """Probability of user class being chosen. The higher the weight, the greater the chance of it being chosen."""
     
     abstract = True
-    """If abstract is True, the class is meant to be subclassed, and users will not choose this locust during a test"""
+    """If abstract is True, the class is meant to be subclassed, and locust will not spawn users of this class during a test."""
     
     client = NoClientWarningRaiser()
     _state = None
