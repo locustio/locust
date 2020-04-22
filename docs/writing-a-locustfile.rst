@@ -2,15 +2,15 @@
 Writing a locustfile
 ======================
 
-A locustfile is a normal python file. The only requirement is that it declares at least one class—
-let's call it the locust class—that inherits from the class Locust. 
+A locustfile is a normal python file. The only requirement is that it declares at least one class —
+let's call it the user class — that inherits from the class :py:class:`User <locust.core.User>`. 
 
-The Locust class
+The User class
 ================
 
-A locust class represents one user (or a swarming locust if you will). Locust will spawn (hatch) one 
-instance of the locust class for each user that is being simulated. There are a few attributes that 
-a locust class should typically define. 
+A user class represents one user (or a swarming locust if you will). Locust will spawn (hatch) one 
+instance of the User class for each user that is being simulated. There are a few attributes that 
+a User class should typically define. 
 
 The *wait_time* attribute
 -------------------------
@@ -61,9 +61,9 @@ following User class would start sleeping for one second and then one, two, thre
 The *weight* attribute
 ----------------------
 
-If more than one locust class exists in the file, and no locusts are specified on the command line,
-each new spawn will choose randomly from the existing locusts. Otherwise, you can specify which locusts
-to use from the same file like so:
+If more than one user class exists in the file, and no user classes are specified on the command line,
+Locust will spawn an equal number of each of the user classes. You can also specify which of the 
+user classes to use from the same locustfile by passing them as command line arguments:
 
 .. code-block:: console
 
@@ -90,7 +90,7 @@ The host attribute is a URL prefix (i.e. "http://google.com") to the host that i
 Usually, this is specified in Locust's web UI or on the command line, using the 
 :code:`--host` option, when locust is started. 
 
-If one declares a host attribute in the locust class, it will be used in the case when no :code:`--host` 
+If one declares a host attribute in the user class, it will be used in the case when no :code:`--host` 
 is specified on the command line or in the web request.
 
 The *tasks* attribute

@@ -216,7 +216,7 @@ def setup_parser_arguments(parser):
         "Worker options", 
         textwrap.dedent("""
             Options for running a Locust Worker node when running Locust distributed. 
-            Only the LOCUSTFILE (-f option) need to be specified when starting a Worker, since other options such as -c, -r, -t are specified on the Master node.
+            Only the LOCUSTFILE (-f option) need to be specified when starting a Worker, since other options such as -u, -r, -t are specified on the Master node.
         """),
     )
     # if locust should be run in distributed mode as worker

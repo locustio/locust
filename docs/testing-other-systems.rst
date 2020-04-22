@@ -10,7 +10,7 @@ any request/response based system, by writing a custom client that triggers
 Sample XML-RPC User client
 ============================
 
-Here is an example of a Locust class, **XmlRpcUser**, which provides an XML-RPC client,
+Here is an example of a User class, **XmlRpcUser**, which provides an XML-RPC client,
 **XmlRpcUser**, and tracks all requests made:
 
 .. literalinclude:: ../examples/custom_xmlrpc_client/xmlrpc_locustfile.py
