@@ -94,7 +94,7 @@ class LocustProcessIntegrationTest(TestCase):
             stderr=subprocess.STDOUT,
             timeout=5,
         ).decode("utf-8").strip()
-        self.assertTrue(output.startswith("Usage: locust [OPTIONS] [LocustClass ...]"))
+        self.assertTrue(output.startswith("Usage: locust [OPTIONS] [UserClass ...]"))
         self.assertIn("Common options:", output)
         self.assertIn("-f LOCUSTFILE, --locustfile LOCUSTFILE", output)
         self.assertIn("Logging options:", output)
