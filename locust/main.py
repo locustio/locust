@@ -254,12 +254,12 @@ def main():
                 time.sleep(1)
         if not options.worker:
             # apply headless mode defaults
-            if options.num_clients is None:
-                options.num_clients = 1
+            if options.num_users is None:
+                options.num_users = 1
             if options.hatch_rate is None:
                 options.hatch_rate = 1
-            if options.step_clients is None:
-                options.step_clients = 1
+            if options.step_users is None:
+                options.step_users = 1
 
             # start the test
             if options.step_time:

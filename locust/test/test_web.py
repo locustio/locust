@@ -56,9 +56,9 @@ class TestWebUI(LocustTestCase):
 
     def test_index_with_hatch_options(self):
         html_to_option = {
-                'locust_count':['-c','100'],
+                'locust_count':['-u','100'],
                 'hatch_rate':['-r','10.0'],
-                'step_locust_count':['--step-clients','20'],
+                'step_locust_count':['--step-users','20'],
                 'step_duration':['--step-time','15'],
                 }
         self.environment.step_load = True

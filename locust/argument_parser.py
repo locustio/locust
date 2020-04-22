@@ -132,14 +132,12 @@ def setup_parser_arguments(parser):
         '-u', '--users',
         type=int,
         dest='num_users',
-        default=1,
         help="Number of concurrent Locust users. Only used together with --headless"
     )
     # User hatch rate
     parser.add_argument(
         '-r', '--hatch-rate',
         type=float,
-        default=1,
         help="The rate per second in which users are spawned. Only used together with --headless"
     )
     # Time limit of the test run
@@ -171,7 +169,7 @@ def setup_parser_arguments(parser):
     web_ui_group.add_argument(
         '--headless',
         action='store_true',
-        help="Disable the web interface, and instead start the load test immediately. Requires -c and -t to be specified."
+        help="Disable the web interface, and instead start the load test immediately. Requires -u and -t to be specified."
     )
     web_ui_group.add_argument(
         '--web-auth',
@@ -304,13 +302,12 @@ def setup_parser_arguments(parser):
     step_load_group.add_argument(
         '--step-load',
         action='store_true',
-        help="Enable Step Load mode to monitor how performance metrics varies when user load increases. Requires --step-clients and --step-time to be specified."
+        help="Enable Step Load mode to monitor how performance metrics varies when user load increases. Requires --step-users and --step-time to be specified."
     )
     # Number of users to increase by Step
     step_load_group.add_argument(
         '--step-users',
         type=int,
-        default=1,
         help="User count to increase by step in Step Load mode. Only used together with --step-load"
     )
     step_load_group.add_argument(

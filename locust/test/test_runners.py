@@ -63,7 +63,7 @@ def mocked_rpc():
 class mocked_options(object):
     def __init__(self):
         self.hatch_rate = 5
-        self.num_clients = 5
+        self.num_users = 5
         self.host = '/'
         self.master_host = 'localhost'
         self.master_port = 5557
@@ -602,7 +602,7 @@ class TestMasterRunner(LocustTestCase):
             master.start(100, 20)
             self.assertEqual(1, len(server.outbox))
             client_id, msg = server.outbox.pop()
-            self.assertEqual(100, msg.data["num_clients"])
+            self.assertEqual(100, msg.data["num_users"])
             self.assertEqual(20, msg.data["hatch_rate"])
             
             # let another worker connect
@@ -610,10 +610,10 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(2, len(master.clients))
             self.assertEqual(2, len(server.outbox))
             client_id, msg = server.outbox.pop()
-            self.assertEqual(50, msg.data["num_clients"])
+            self.assertEqual(50, msg.data["num_users"])
             self.assertEqual(10, msg.data["hatch_rate"])
             client_id, msg = server.outbox.pop()
-            self.assertEqual(50, msg.data["num_clients"])
+            self.assertEqual(50, msg.data["num_users"])
             self.assertEqual(10, msg.data["hatch_rate"])
     
     def test_sends_hatch_data_to_ready_running_hatching_workers(self):
@@ -745,11 +745,11 @@ class TestMasterRunner(LocustTestCase):
             master.start(7, 7)
             self.assertEqual(5, len(server.outbox))
             
-            num_clients = 0
+            num_users = 0
             for _, msg in server.outbox:
-                num_clients += msg.data["num_clients"]
+                num_users += msg.data["num_users"]
             
-            self.assertEqual(7, num_clients, "Total number of locusts that would have been spawned is not 7")
+            self.assertEqual(7, num_users, "Total number of locusts that would have been spawned is not 7")
     
     def test_spawn_fewer_locusts_than_workers(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
@@ -760,11 +760,11 @@ class TestMasterRunner(LocustTestCase):
             master.start(2, 2)
             self.assertEqual(5, len(server.outbox))
             
-            num_clients = 0
+            num_users = 0
             for _, msg in server.outbox:
-                num_clients += msg.data["num_clients"]
+                num_users += msg.data["num_users"]
             
-            self.assertEqual(2, num_clients, "Total number of locusts that would have been spawned is not 2")
+            self.assertEqual(2, num_users, "Total number of locusts that would have been spawned is not 2")
     
     def test_spawn_locusts_in_stepload_mode(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
@@ -779,22 +779,22 @@ class TestMasterRunner(LocustTestCase):
             sleep(0.5)
             self.assertEqual(5, len(server.outbox))
 
-            num_clients = 0
+            num_users = 0
             end_of_last_step = len(server.outbox)
             for _, msg in server.outbox:
-                num_clients += msg.data["num_clients"]
+                num_users += msg.data["num_users"]
             
-            self.assertEqual(5, num_clients, "Total number of locusts that would have been spawned for first step is not 5")
+            self.assertEqual(5, num_users, "Total number of locusts that would have been spawned for first step is not 5")
 
             # make sure the first step run is complete
             sleep(2)
-            num_clients = 0
+            num_users = 0
             idx = end_of_last_step
             while idx < len(server.outbox):
                 msg = server.outbox[idx][1]
-                num_clients += msg.data["num_clients"]
+                num_users += msg.data["num_users"]
                 idx += 1
-            self.assertEqual(10, num_clients, "Total number of locusts that would have been spawned for second step is not 10")
+            self.assertEqual(10, num_users, "Total number of locusts that would have been spawned for second step is not 10")
 
     def test_exception_in_task(self):
         class MyUser(User):
@@ -908,7 +908,7 @@ class TestWorkerRunner(LocustTestCase):
             self.assertEqual("client_ready", client.outbox[0].type)
             client.mocked_send(Message("hatch", {
                 "hatch_rate": 1,
-                "num_clients": 1,
+                "num_users": 1,
                 "host": "",
                 "stop_timeout": 1,
             }, "dummy_client_id"))
@@ -945,7 +945,7 @@ class TestWorkerRunner(LocustTestCase):
             self.assertEqual("client_ready", client.outbox[0].type)
             client.mocked_send(Message("hatch", {
                 "hatch_rate": 1,
-                "num_clients": 1,
+                "num_users": 1,
                 "host": "",
                 "stop_timeout": None,
             }, "dummy_client_id"))
@@ -976,7 +976,7 @@ class TestWorkerRunner(LocustTestCase):
             
             client.mocked_send(Message("hatch", {
                 "hatch_rate": 5,
-                "num_clients": 10,
+                "num_users": 10,
                 "host": "",
                 "stop_timeout": None,
             }, "dummy_client_id"))
@@ -984,7 +984,7 @@ class TestWorkerRunner(LocustTestCase):
             self.assertEqual(STATE_HATCHING, worker.state)
             client.mocked_send(Message("hatch", {
                 "hatch_rate": 5,
-                "num_clients": 9,
+                "num_users": 9,
                 "host": "",
                 "stop_timeout": None,
             }, "dummy_client_id"))
