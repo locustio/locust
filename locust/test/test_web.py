@@ -231,7 +231,7 @@ class TestWebUI(LocustTestCase):
         self.assertEqual(None, response.json()["host"])
         self.assertEqual(self.environment.host, None)
     
-    def test_host_value_from_locust_class(self):
+    def test_host_value_from_user_class(self):
         class MyUser(User):
             host = "http://example.com"
         self.environment.user_classes = [MyUser]
