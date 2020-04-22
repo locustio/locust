@@ -167,7 +167,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
     if not set on the TaskSet.
     """
 
-    locust = None
+    user = None
     """Will refer to the root User class instance when the TaskSet has been instantiated"""
 
     parent = None
@@ -181,9 +181,9 @@ class TaskSet(object, metaclass=TaskSetMeta):
         self._time_start = time()
         
         if isinstance(parent, TaskSet):
-            self.locust = parent.locust
+            self.user = parent.user
         elif isinstance(parent, User):
-            self.locust = parent
+            self.user = parent
         else:
             raise LocustError("TaskSet should be called with User instance or TaskSet instance as first argument")
 
@@ -191,11 +191,11 @@ class TaskSet(object, metaclass=TaskSetMeta):
         
         # if this class doesn't have a min_wait, max_wait or wait_function defined, copy it from Locust
         if not self.min_wait:
-            self.min_wait = self.locust.min_wait
+            self.min_wait = self.user.min_wait
         if not self.max_wait:
-            self.max_wait = self.locust.max_wait
+            self.max_wait = self.user.max_wait
         if not self.wait_function:
-            self.wait_function = self.locust.wait_function
+            self.wait_function = self.user.wait_function
 
     def on_start(self):
         """
@@ -246,8 +246,8 @@ class TaskSet(object, metaclass=TaskSetMeta):
                 self.on_stop()
                 raise
             except Exception as e:
-                self.locust.environment.events.user_error.fire(user_instance=self, exception=e, tb=sys.exc_info()[2])
-                if self.locust.environment.catch_exceptions:
+                self.user.environment.events.user_error.fire(user_instance=self, exception=e, tb=sys.exc_info()[2])
+                if self.user.environment.catch_exceptions:
                     logger.error("%s\n%s", e, traceback.format_exc())
                     self.wait()
                 else:
@@ -299,13 +299,13 @@ class TaskSet(object, metaclass=TaskSetMeta):
             class Tasks(TaskSet):
                 wait_time = between(3, 25)
         """
-        if self.locust.wait_time:
-            return self.locust.wait_time()
+        if self.user.wait_time:
+            return self.user.wait_time()
         elif self.min_wait is not None and self.max_wait is not None:
             return random.randint(self.min_wait, self.max_wait) / 1000.0
         else:
             raise MissingWaitTimeError("You must define a wait_time method on either the %s or %s class" % (
-                type(self.locust).__name__, 
+                type(self.user).__name__, 
                 type(self).__name__,
             ))
     
@@ -320,16 +320,16 @@ class TaskSet(object, metaclass=TaskSetMeta):
         gevent.sleep() instead.
         """
         self._check_stop_condition()
-        self.locust._state = LOCUST_STATE_WAITING
+        self.user._state = LOCUST_STATE_WAITING
         self._sleep(self.wait_time())
         self._check_stop_condition()
-        self.locust._state = LOCUST_STATE_RUNNING
+        self.user._state = LOCUST_STATE_RUNNING
 
     def _sleep(self, seconds):
         gevent.sleep(seconds)
     
     def _check_stop_condition(self):
-        if self.locust._state == LOCUST_STATE_STOPPING:
+        if self.user._state == LOCUST_STATE_STOPPING:
             raise StopUser()
     
     def interrupt(self, reschedule=True):
@@ -351,7 +351,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
         Reference to the :py:attr:`client <locust.core.User.client>` attribute of the root
         User instance.
         """
-        return self.locust.client
+        return self.user.client
 
 
 class DefaultTaskSet(TaskSet):
@@ -360,15 +360,15 @@ class DefaultTaskSet(TaskSet):
     It executes tasks declared directly on the Locust with the user instance as the task argument.
     """
     def get_next_task(self):
-        return random.choice(self.locust.tasks)
+        return random.choice(self.user.tasks)
     
     def execute_task(self, task, *args, **kwargs):
         if hasattr(task, "tasks") and issubclass(task, TaskSet):
             # task is  (nested) TaskSet class
-            task(self.locust).run(*args, **kwargs)
+            task(self.user).run(*args, **kwargs)
         else:
             # task is a function
-            task(self.locust, *args, **kwargs)
+            task(self.user, *args, **kwargs)
 
 
 class UserMeta(type):

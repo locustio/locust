@@ -15,11 +15,11 @@ class UserTasks(TaskSet):
     # but it might be convenient to use the @task decorator
     @task
     def index(self):
-        self.locust.client.get("/")
+        self.user.client.get("/")
     
     @task
     def index_other_host(self):
-        self.locust.api_client.get("/stats/requests")
+        self.user.api_client.get("/stats/requests")
     
 class WebsiteUser(MultipleHostsUser):
     """

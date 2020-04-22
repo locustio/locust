@@ -20,7 +20,7 @@ TaskSet class
 =============
 
 .. autoclass:: locust.core.TaskSet
-    :members: locust, parent, wait_time, client, tasks, interrupt, schedule_task, on_start, on_stop, wait
+    :members: user, parent, wait_time, client, tasks, interrupt, schedule_task, on_start, on_stop, wait
 
 task decorator
 ==============
@@ -31,7 +31,7 @@ SequentialTaskSet class
 =======================
 
 .. autoclass:: locust.sequential_taskset.SequentialTaskSet
-    :members: locust, parent, wait_time, client, tasks, interrupt, schedule_task, on_start, on_stop
+    :members: user, parent, wait_time, client, tasks, interrupt, schedule_task, on_start, on_stop
 
 
 .. _wait_time_functions:

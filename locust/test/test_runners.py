@@ -273,7 +273,7 @@ class TestLocustRunner(LocustTestCase):
             class task_set(TaskSet):
                 @task
                 def my_task(self):
-                    self.locust.environment.events.request_success.fire(
+                    self.user.environment.events.request_success.fire(
                         request_type="GET",
                         name="/test",
                         response_time=666,
@@ -297,7 +297,7 @@ class TestLocustRunner(LocustTestCase):
             class task_set(TaskSet):
                 @task
                 def my_task(self):
-                    self.locust.environment.events.request_success.fire(
+                    self.user.environment.events.request_success.fire(
                         request_type="GET",
                         name="/test",
                         response_time=666,

@@ -195,11 +195,11 @@ class TestTaskSet(LocustTestCase):
     def test_on_stop_when_locust_stops(self):
         class MyTasks(TaskSet):
             def on_stop(self):
-                self.locust.on_stop_executed = True
+                self.user.on_stop_executed = True
 
             @task
             def t2(self):
-                self.locust.t2_executed = True
+                self.user.t2_executed = True
         
         class MyUser(User):
             t2_executed = False
@@ -330,7 +330,7 @@ class TestTaskSet(LocustTestCase):
             constant(1)
             @task()
             def a_task(self):
-                self.locust.sub_locust_task_executed = True
+                self.user.sub_locust_task_executed = True
                 self.interrupt()
             
         class MyTaskSet(TaskSet):
@@ -349,7 +349,7 @@ class TestTaskSet(LocustTestCase):
                 wait_time = constant(0.001)
                 @task()
                 def a_task(self):
-                    self.locust.sub_locust_task_executed = True
+                    self.user.sub_locust_task_executed = True
                     self.interrupt()
         
         self.sub_locust_task_executed = False
@@ -363,8 +363,8 @@ class TestTaskSet(LocustTestCase):
             wait_time = constant(0.001)
             @task()
             def a_task(self):
-                self.locust.sub_taskset_args = self.args
-                self.locust.sub_taskset_kwargs = self.kwargs
+                self.user.sub_taskset_args = self.args
+                self.user.sub_taskset_kwargs = self.kwargs
                 self.interrupt()
         class MyTaskSet(TaskSet):
             sub_locust_args = None
