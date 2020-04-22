@@ -83,18 +83,18 @@ class HeyAnException(Exception):
 
 class TestLocustRunner(LocustTestCase):
     def assert_locust_class_distribution(self, expected_distribution, classes):
-        # Construct a {LocustClass => count} dict from a list of locust classes
+        # Construct a {UserClass => count} dict from a list of user classes
         distribution = {}
-        for locust_class in classes:
-            if not locust_class in distribution:
-                distribution[locust_class] = 0
-            distribution[locust_class] += 1
+        for user_class in classes:
+            if not user_class in distribution:
+                distribution[user_class] = 0
+            distribution[user_class] += 1
         expected_str = str({k.__name__:v for k,v in expected_distribution.items()})
         actual_str = str({k.__name__:v for k,v in distribution.items()})
         self.assertEqual(
             expected_distribution,
             distribution,
-            "Expected a locust class distribution of %s but found %s" % (
+            "Expected a User class distribution of %s but found %s" % (
                 expected_str,
                 actual_str,
             ),

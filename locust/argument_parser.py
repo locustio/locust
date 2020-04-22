@@ -150,7 +150,7 @@ def setup_parser_arguments(parser):
         '-l', '--list',
         action='store_true',
         dest='list_commands',
-        help="Show list of possible locust classes and exit"
+        help="Show list of possible User classes and exit"
     )
     
     web_ui_group = parser.add_argument_group("Web UI options")
@@ -327,13 +327,13 @@ def setup_parser_arguments(parser):
     other_group.add_argument(
         '--show-task-ratio',
         action='store_true',
-        help="Print table of the locust classes' task execution ratio"
+        help="Print table of the User classes' task execution ratio"
     )
     # Display ratio table of all tasks in JSON format
     other_group.add_argument(
         '--show-task-ratio-json',
         action='store_true',
-        help="Print json data of the locust classes' task execution ratio"
+        help="Print json data of the User classes' task execution ratio"
     )
     # Version number (optparse gives you --version but we have to do it
     # ourselves to get -V too. sigh)

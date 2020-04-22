@@ -238,7 +238,7 @@ class TestWebUI(LocustTestCase):
         response = requests.get("http://127.0.0.1:%i/" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertIn("http://example.com", response.content.decode("utf-8"))
-        self.assertNotIn("setting this will override the host on all Locust classes", response.content.decode("utf-8"))
+        self.assertNotIn("setting this will override the host on all User classes", response.content.decode("utf-8"))
     
     def test_host_value_from_multiple_user_classes(self):
         class MyUser(User):
@@ -249,7 +249,7 @@ class TestWebUI(LocustTestCase):
         response = requests.get("http://127.0.0.1:%i/" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertIn("http://example.com", response.content.decode("utf-8"))
-        self.assertNotIn("setting this will override the host on all Locust classes", response.content.decode("utf-8"))
+        self.assertNotIn("setting this will override the host on all User classes", response.content.decode("utf-8"))
     
     def test_host_value_from_multiple_user_classes_different_hosts(self):
         class MyUser(User):
@@ -260,7 +260,7 @@ class TestWebUI(LocustTestCase):
         response = requests.get("http://127.0.0.1:%i/" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertNotIn("http://example.com", response.content.decode("utf-8"))
-        self.assertIn("setting this will override the host on all Locust classes", response.content.decode("utf-8"))
+        self.assertIn("setting this will override the host on all User classes", response.content.decode("utf-8"))
 
     def test_swarm_in_step_load_mode(self):
         class MyUser(User):

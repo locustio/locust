@@ -156,7 +156,7 @@ def main():
     environment = create_environment(user_classes, options, events=locust.events)
     
     if options.show_task_ratio:
-        print("\n Task ratio per locust class")
+        print("\n Task ratio per User class")
         print( "-" * 80)
         print_task_ratio(user_classes)
         print("\n Total task ratio")
