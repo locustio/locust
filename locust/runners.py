@@ -437,11 +437,11 @@ class MasterRunner(DistributedRunner):
             return
 
         self.hatch_rate = hatch_rate
-        worker_num_clients = user_count // (num_workers or 1)
+        worker_num_users = user_count // (num_workers or 1)
         worker_hatch_rate = float(hatch_rate) / (num_workers or 1)
         remaining = user_count % num_workers
 
-        logger.info("Sending hatch jobs of %d users and %.2f hatch rate to %d ready clients" % (worker_num_clients, worker_hatch_rate, num_workers))
+        logger.info("Sending hatch jobs of %d users and %.2f hatch rate to %d ready clients" % (worker_num_users, worker_hatch_rate, num_workers))
 
         if worker_hatch_rate > 100:
             logger.warning("Your selected hatch rate is very high (>100/worker), and this is known to sometimes cause issues. Do you really need to ramp up that fast?")
@@ -454,7 +454,7 @@ class MasterRunner(DistributedRunner):
         for client in (self.clients.ready + self.clients.running + self.clients.hatching):
             data = {
                 "hatch_rate": worker_hatch_rate,
-                "num_users": worker_num_clients,
+                "num_users": worker_num_users,
                 "host": self.environment.host,
                 "stop_timeout": self.environment.stop_timeout,
             }
