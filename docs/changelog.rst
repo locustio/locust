@@ -7,8 +7,18 @@ For full details of the Locust changelog, please see https://github.com/locustio
 1.0 (In development)
 ====================
 
-Breaking changes
-----------------
+This version contains some breaking changes.
+
+Locust class renamed to User
+----------------------------
+
+We've renamed the ``Locust`` and ``HttpLocust`` classes to ``User`` and ``HttpUser``. The ``locust`` attribute on 
+:py:class:`TaskSet <locust.core.TaskSet>` instances has been renamed to :py:attr:`user <locust.core.TaskSet.user>`.
+
+
+
+Other breaking changes
+----------------------
 
 * The option for running Locust without the Web UI has been renamed from ``--no-web`` to ``--headless``.
 * Removed ``Locust.setup``, ``Locust.teardown``, ``TaskSet.setup`` and ``TaskSet.teardown`` hooks. If you want to 
