@@ -304,7 +304,7 @@ One difference for tasks residing under a TaskSet, compared to tasks residing di
 is that the argument that they are passed when executed (``self`` for tasks declared as methods with 
 the :py:func:`@task <locust.core.task>` decorator) is a reference to the TaskSet instance, instead of 
 the User instance. The User instance can be accessed from within a TaskSet instance through the
-:py:attr:`TaskSet.locust <locust.core.TaskSet.locust>`. TaskSets also contains a convenience 
+:py:attr:`TaskSet.user <locust.core.TaskSet.user>`. TaskSets also contains a convenience 
 :py:attr:`client <locust.core.TaskSet.client>` attribute that refers to the client attribute on the 
 User instance.
 
@@ -312,7 +312,7 @@ User instance.
 Referencing the User instance, or the parent TaskSet instance
 ---------------------------------------------------------------
 
-A TaskSet instance will have the attribute :py:attr:`locust <locust.core.TaskSet.locust>` point to 
+A TaskSet instance will have the attribute :py:attr:`locust <locust.core.TaskSet.user>` point to 
 its User instance, and the attribute :py:attr:`parent <locust.core.TaskSet.parent>` point to its
 parent TaskSet instance.
 
@@ -400,7 +400,7 @@ So far, we've only covered the task scheduling part of a User. In order to actua
 a system we need to make HTTP requests. To help us do this, the :py:class:`HttpLocust <locust.core.HttpUser>`
 class exists. When using this class, each instance gets a 
 :py:attr:`client <locust.core.User.client>` attribute which will be an instance of
-:py:attr:`HttpSession <locust.core.client.HttpSession>` which can be used to make HTTP requests.
+:py:attr:`HttpSession <locust.clients.HttpSession>` which can be used to make HTTP requests.
 
 .. autoclass:: locust.core.HttpUser
     :members: client
@@ -445,7 +445,7 @@ instance's TaskSet instances so that it's easy to retrieve the client and make H
 tasks.
 
 Here's a simple example that makes a GET request to the */about* path (in this case we assume *self* 
-is an instance of a :py:class:`TaskSet <locust.core.TaskSet>` or :py:class:`HttpUser <locust.core.Locust>`
+is an instance of a :py:class:`TaskSet <locust.core.TaskSet>` or :py:class:`HttpUser <locust.core.HttpUser>`
 class:
 
 .. code-block:: python

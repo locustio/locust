@@ -7,7 +7,7 @@ Locust comes with a number of events hooks that can be used to extend Locust in 
 Event hooks live on the Environment instance under the :py:attr:`events <locust.env.Environment.events>` 
 attribute. However, since the Environment instance hasn't been created when locustfiles are imported,  
 the events object can also be accessed at the module level of the locustfile through the 
-:py:attr:`locust.events` variable.
+:py:obj:`locust.events` variable.
 
 Here's an example on how to set up an event listener::
 
