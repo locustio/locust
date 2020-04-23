@@ -1,7 +1,7 @@
 import random
 import time
 
-from locust import Locust, TaskSet, between, constant, constant_pacing
+from locust import User, TaskSet, between, constant, constant_pacing
 from locust.exception import MissingWaitTimeError
 
 from .testcases import LocustTestCase
@@ -9,14 +9,14 @@ from .testcases import LocustTestCase
 
 class TestWaitTime(LocustTestCase):
     def test_between(self):
-        class User(Locust):
+        class MyUser(User):
             wait_time = between(3, 9)
         class TaskSet1(TaskSet):
             pass
         class TaskSet2(TaskSet):
             wait_time = between(20.0, 21.0)
         
-        u = User(self.environment)
+        u = MyUser(self.environment)
         ts1 = TaskSet1(u)
         ts2 = TaskSet2(u)
         for i in range(100):
@@ -32,33 +32,33 @@ class TestWaitTime(LocustTestCase):
             self.assertLessEqual(w, 21)
     
     def test_constant(self):
-        class User(Locust):
+        class MyUser(User):
             wait_time = constant(13)
         class TaskSet1(TaskSet):
             pass
-        self.assertEqual(13, User(self.environment).wait_time())
-        self.assertEqual(13, TaskSet1(User(self.environment)).wait_time())
+        self.assertEqual(13, MyUser(self.environment).wait_time())
+        self.assertEqual(13, TaskSet1(MyUser(self.environment)).wait_time())
     
     def test_constant_zero(self):
-        class User(Locust):
+        class MyUser(User):
             wait_time = constant(0)
         class TaskSet1(TaskSet):
             pass
-        self.assertEqual(0, User(self.environment).wait_time())
-        self.assertEqual(0, TaskSet1(User(self.environment)).wait_time())
-        taskset = TaskSet1(User(self.environment))
+        self.assertEqual(0, MyUser(self.environment).wait_time())
+        self.assertEqual(0, TaskSet1(MyUser(self.environment)).wait_time())
+        taskset = TaskSet1(MyUser(self.environment))
         start_time = time.time()
         taskset.wait()
         self.assertLess(time.time() - start_time, 0.002)
     
     def test_constant_pacing(self):
-        class User(Locust):
+        class MyUser(User):
             wait_time = constant_pacing(0.1)
         class TS(TaskSet):
             pass
-        ts = TS(User(self.environment))
+        ts = TS(MyUser(self.environment))
         
-        ts2 = TS(User(self.environment))      
+        ts2 = TS(MyUser(self.environment))
         
         previous_time = time.time()
         for i in range(7):
@@ -71,9 +71,9 @@ class TestWaitTime(LocustTestCase):
             _ = ts2.wait_time()
 
     def test_missing_wait_time(self):
-        class User(Locust):
+        class MyUser(User):
             pass
         class TS(TaskSet):
             pass
-        self.assertRaises(MissingWaitTimeError, lambda: TS(User(self.environment)).wait_time())
+        self.assertRaises(MissingWaitTimeError, lambda: TS(MyUser(self.environment)).wait_time())
 

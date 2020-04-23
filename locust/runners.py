@@ -31,9 +31,9 @@ FALLBACK_INTERVAL = 5
 greenlet_exception_handler = greenlet_exception_logger(logger)
 
 
-class LocustRunner(object):
+class Runner(object):
     """
-    Orchestrates the load test by starting and stopping the locust users.
+    Orchestrates the load test by starting and stopping the users.
     
     Use one of the :meth:`create_local_runner <locust.env.Environment.create_local_runner>`, 
     :meth:`create_master_runner <locust.env.Environment.create_master_runner>` or 
@@ -43,7 +43,7 @@ class LocustRunner(object):
     """
     def __init__(self, environment):
         self.environment = environment
-        self.locusts = Group()
+        self.user_greenlets = Group()
         self.greenlet = Group()
         self.state = STATE_INIT
         self.hatching_greenlet = None
@@ -80,8 +80,8 @@ class LocustRunner(object):
             self.greenlet.kill(block=False)
     
     @property
-    def locust_classes(self):
-        return self.environment.locust_classes
+    def user_classes(self):
+        return self.environment.user_classes
     
     @property
     def stats(self):
@@ -94,9 +94,9 @@ class LocustRunner(object):
     @property
     def user_count(self):
         """
-        :returns: Number of currently running locust users
+        :returns: Number of currently running users
         """
-        return len(self.locusts)
+        return len(self.user_greenlets)
 
     def cpu_log_warning(self):
         """Called at the end of the test to repeat the warning & return the status"""
@@ -105,107 +105,107 @@ class LocustRunner(object):
             return True
         return False
 
-    def weight_locusts(self, amount):
+    def weight_users(self, amount):
         """
-        Distributes the amount of locusts for each WebLocust-class according to it's weight
-        returns a list "bucket" with the weighted locusts
+        Distributes the amount of users for each WebLocust-class according to it's weight
+        returns a list "bucket" with the weighted users
         """
         bucket = []
-        weight_sum = sum([locust.weight for locust in self.locust_classes])
+        weight_sum = sum([user.weight for user in self.user_classes])
         residuals = {}
-        for locust in self.locust_classes:
+        for user in self.user_classes:
             if self.environment.host is not None:
-                locust.host = self.environment.host
+                user.host = self.environment.host
 
-            # create locusts depending on weight
-            percent = locust.weight / float(weight_sum)
-            num_locusts = int(round(amount * percent))
-            bucket.extend([locust for x in range(num_locusts)])
+            # create users depending on weight
+            percent = user.weight / float(weight_sum)
+            num_users = int(round(amount * percent))
+            bucket.extend([user for x in range(num_users)])
             # used to keep track of the amount of rounding was done if we need
             # to add/remove some instances from bucket
-            residuals[locust] = amount * percent - round(amount * percent)
+            residuals[user] = amount * percent - round(amount * percent)
         if len(bucket) < amount:
-            # We got too few locust classes in the bucket, so we need to create a few extra locusts,
-            # and we do this by iterating over each of the Locust classes - starting with the one
+            # We got too few User classes in the bucket, so we need to create a few extra users,
+            # and we do this by iterating over each of the User classes - starting with the one
             # where the residual from the rounding was the largest - and creating one of each until
             # we get the correct amount
-            for locust in [l for l, r in sorted(residuals.items(), key=lambda x:x[1], reverse=True)][:amount-len(bucket)]:
-                bucket.append(locust)
+            for user in [l for l, r in sorted(residuals.items(), key=lambda x:x[1], reverse=True)][:amount-len(bucket)]:
+                bucket.append(user)
         elif len(bucket) > amount:
-            # We've got too many locusts due to rounding errors so we need to remove some
-            for locust in [l for l, r in sorted(residuals.items(), key=lambda x:x[1])][:len(bucket)-amount]:
-                bucket.remove(locust)
+            # We've got too many users due to rounding errors so we need to remove some
+            for user in [l for l, r in sorted(residuals.items(), key=lambda x:x[1])][:len(bucket)-amount]:
+                bucket.remove(user)
 
         return bucket
 
-    def spawn_locusts(self, spawn_count, hatch_rate, wait=False):
-        bucket = self.weight_locusts(spawn_count)
+    def spawn_users(self, spawn_count, hatch_rate, wait=False):
+        bucket = self.weight_users(spawn_count)
         spawn_count = len(bucket)
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
             self.state = STATE_HATCHING
         
-        existing_count = len(self.locusts)
+        existing_count = len(self.user_greenlets)
         logger.info("Hatching and swarming %i users at the rate %g users/s (%i users already running)..." % (spawn_count, hatch_rate, existing_count))
-        occurrence_count = dict([(l.__name__, 0) for l in self.locust_classes])
+        occurrence_count = dict([(l.__name__, 0) for l in self.user_classes])
         
         def hatch():
             sleep_time = 1.0 / hatch_rate
             while True:
                 if not bucket:
-                    logger.info("All locusts hatched: %s (%i already running)" % (
+                    logger.info("All users hatched: %s (%i already running)" % (
                         ", ".join(["%s: %d" % (name, count) for name, count in occurrence_count.items()]), 
                         existing_count,
                     ))
-                    self.environment.events.hatch_complete.fire(user_count=len(self.locusts))
+                    self.environment.events.hatch_complete.fire(user_count=len(self.user_greenlets))
                     return
 
-                locust_class = bucket.pop(random.randint(0, len(bucket)-1))
-                occurrence_count[locust_class.__name__] += 1
-                new_locust = locust_class(self.environment)
-                new_locust.start(self.locusts)
-                if len(self.locusts) % 10 == 0:
-                    logger.debug("%i locusts hatched" % len(self.locusts))
+                user_class = bucket.pop(random.randint(0, len(bucket)-1))
+                occurrence_count[user_class.__name__] += 1
+                new_user = user_class(self.environment)
+                new_user.start(self.user_greenlets)
+                if len(self.user_greenlets) % 10 == 0:
+                    logger.debug("%i users hatched" % len(self.user_greenlets))
                 if bucket:
                     gevent.sleep(sleep_time)
         
         hatch()
         if wait:
-            self.locusts.join()
-            logger.info("All locusts dead\n")
+            self.user_greenlets.join()
+            logger.info("All users stopped\n")
 
-    def kill_locusts(self, kill_count):
+    def stop_users(self, user_count):
         """
-        Kill a kill_count of weighted locusts from the Group() object in self.locusts
+        Stop a stop_count of weighted users from the Group() object in self.users
         """
-        bucket = self.weight_locusts(kill_count)
-        kill_count = len(bucket)
-        logger.info("Killing %i locusts" % kill_count)
-        to_kill = []
-        for g in self.locusts:
+        bucket = self.weight_users(user_count)
+        user_count = len(bucket)
+        logger.info("Stopping %i users" % user_count)
+        to_stop = []
+        for g in self.user_greenlets:
             for l in bucket:
                 user = g.args[0]
                 if l == type(user):
-                    to_kill.append(user)
+                    to_stop.append(user)
                     bucket.remove(l)
                     break
-        self.kill_locust_instances(to_kill)
+        self.stop_user_instances(to_stop)
         self.environment.events.hatch_complete.fire(user_count=self.user_count)
     
     
-    def kill_locust_instances(self, users):
+    def stop_user_instances(self, users):
         if self.environment.stop_timeout:
-            dying = Group()
+            stopping = Group()
             for user in users:
-                if not user.stop(self.locusts, force=False):
-                    # Locust.stop() returns False if the greenlet was not killed, so we'll need
-                    # to add it's greenlet to our dying Group so we can wait for it to finish it's task
-                    dying.add(user._greenlet)
-            if not dying.join(timeout=self.environment.stop_timeout):
-                logger.info("Not all locusts finished their tasks & terminated in %s seconds. Killing them..." % self.environment.stop_timeout)
-            dying.kill(block=True)
+                if not user.stop(self.user_greenlets, force=False):
+                    # User.stop() returns False if the greenlet was not stopped, so we'll need
+                    # to add it's greenlet to our stopping Group so we can wait for it to finish it's task
+                    stopping.add(user._greenlet)
+            if not stopping.join(timeout=self.environment.stop_timeout):
+                logger.info("Not all users finished their tasks & terminated in %s seconds. Stopping them..." % self.environment.stop_timeout)
+            stopping.kill(block=True)
         else:
             for user in users:
-                user.stop(self.locusts, force=True)
+                user.stop(self.user_greenlets, force=True)
         
     def monitor_cpu(self):
         process = psutil.Process()
@@ -216,12 +216,12 @@ class LocustRunner(object):
                 self.cpu_warning_emitted = True
             gevent.sleep(CPU_MONITOR_INTERVAL)
 
-    def start(self, locust_count, hatch_rate, wait=False):
+    def start(self, user_count, hatch_rate, wait=False):
         """
         Start running a load test
         
-        :param locust_count: Number of locust users to start
-        :param hatch_rate: Number of locust users to spawn per second
+        :param user_count: Number of users to start
+        :param hatch_rate: Number of users to spawn per second
         :param wait: If True calls to this method will block until all users are spawned.
                      If False (the default), a greenlet that spawns the users will be 
                      started and the call to this method will return immediately.
@@ -231,59 +231,59 @@ class LocustRunner(object):
             self.exceptions = {}
             self.cpu_warning_emitted = False
             self.worker_cpu_warning_emitted = False
-            self.target_user_count = locust_count
+            self.target_user_count = user_count
 
-        # Dynamically changing the locust count
+        # Dynamically changing the user count
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
             self.state = STATE_HATCHING
-            if self.user_count > locust_count:
-                # Kill some locusts
-                kill_count = self.user_count - locust_count
-                self.kill_locusts(kill_count)
-            elif self.user_count < locust_count:
-                # Spawn some locusts
-                spawn_count = locust_count - self.user_count
-                self.spawn_locusts(spawn_count=spawn_count, hatch_rate=hatch_rate)
+            if self.user_count > user_count:
+                # Stop some users
+                stop_count = self.user_count - user_count
+                self.stop_users(stop_count)
+            elif self.user_count < user_count:
+                # Spawn some users
+                spawn_count = user_count - self.user_count
+                self.spawn_users(spawn_count=spawn_count, hatch_rate=hatch_rate)
             else:
                 self.environment.events.hatch_complete.fire(user_count=self.user_count)
         else:
             self.hatch_rate = hatch_rate
-            self.spawn_locusts(locust_count, hatch_rate=hatch_rate, wait=wait)
+            self.spawn_users(user_count, hatch_rate=hatch_rate, wait=wait)
 
-    def start_stepload(self, locust_count, hatch_rate, step_locust_count, step_duration):
-        if locust_count < step_locust_count:
-            logger.error("Invalid parameters: total locust count of %d is smaller than step locust count of %d" % (locust_count, step_locust_count))
+    def start_stepload(self, user_count, hatch_rate, step_user_count, step_duration):
+        if user_count < step_user_count:
+            logger.error("Invalid parameters: total user count of %d is smaller than step user count of %d" % (user_count, step_user_count))
             return
-        self.total_clients = locust_count
+        self.total_users = user_count
         
         if self.stepload_greenlet:
             logger.info("There is an ongoing swarming in Step Load mode, will stop it now.")
             self.stepload_greenlet.kill()
-        logger.info("Start a new swarming in Step Load mode: total locust count of %d, hatch rate of %d, step locust count of %d, step duration of %d " % (locust_count, hatch_rate, step_locust_count, step_duration))
+        logger.info("Start a new swarming in Step Load mode: total user count of %d, hatch rate of %d, step user count of %d, step duration of %d " % (user_count, hatch_rate, step_user_count, step_duration))
         self.state = STATE_INIT
-        self.stepload_greenlet = self.greenlet.spawn(self.stepload_worker, hatch_rate, step_locust_count, step_duration)
+        self.stepload_greenlet = self.greenlet.spawn(self.stepload_worker, hatch_rate, step_user_count, step_duration)
         self.stepload_greenlet.link_exception(greenlet_exception_handler)
 
-    def stepload_worker(self, hatch_rate, step_clients_growth, step_duration):
-        current_num_clients = 0
+    def stepload_worker(self, hatch_rate, step_users_growth, step_duration):
+        current_num_users = 0
         while self.state == STATE_INIT or self.state == STATE_HATCHING or self.state == STATE_RUNNING:
-            current_num_clients += step_clients_growth
-            if current_num_clients > int(self.total_clients):
+            current_num_users += step_users_growth
+            if current_num_users > int(self.total_users):
                 logger.info('Step Load is finished.')
                 break
-            self.start(current_num_clients, hatch_rate)
-            logger.info('Step loading: start hatch job of %d locust.' % (current_num_clients))
+            self.start(current_num_users, hatch_rate)
+            logger.info('Step loading: start hatch job of %d user.' % (current_num_users))
             gevent.sleep(step_duration)
 
     def stop(self):
         """
-        Stop a running load test by killing all running locusts
+        Stop a running load test by stopping all running users
         """
         self.state = STATE_CLEANUP
-        # if we are currently hatching locusts we need to kill the hatching greenlet first
+        # if we are currently hatching users we need to kill the hatching greenlet first
         if self.hatching_greenlet and not self.hatching_greenlet.ready():
             self.hatching_greenlet.kill(block=True)
-        self.kill_locust_instances([g.args[0] for g in self.locusts])
+        self.stop_user_instances([g.args[0] for g in self.user_greenlets])
         self.state = STATE_STOPPED
         self.cpu_log_warning()
     
@@ -302,7 +302,7 @@ class LocustRunner(object):
         self.exceptions[key] = row
 
 
-class LocalLocustRunner(LocustRunner):
+class LocalRunner(Runner):
     """
     Runner for running single process load test
     """
@@ -310,16 +310,16 @@ class LocalLocustRunner(LocustRunner):
         """
         :param environment: Environment instance
         """
-        super(LocalLocustRunner, self).__init__(environment)
+        super(LocalRunner, self).__init__(environment)
 
         # register listener thats logs the exception for the local runner
-        def on_locust_error(locust_instance, exception, tb):
+        def on_user_error(user_instance, exception, tb):
             formatted_tb = "".join(traceback.format_tb(tb))
             self.log_exception("local", str(exception), formatted_tb)
-        self.environment.events.locust_error.add_listener(on_locust_error)
+        self.environment.events.user_error.add_listener(on_user_error)
 
-    def start(self, locust_count, hatch_rate, wait=False):
-        self.target_user_count = locust_count
+    def start(self, user_count, hatch_rate, wait=False):
+        self.target_user_count = user_count
         if hatch_rate > 100:
             logger.warning("Your selected hatch rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?")
         
@@ -330,7 +330,7 @@ class LocalLocustRunner(LocustRunner):
         if self.hatching_greenlet:
             # kill existing hatching_greenlet before we start a new one
             self.hatching_greenlet.kill(block=True)
-        self.hatching_greenlet = self.greenlet.spawn(lambda: super(LocalLocustRunner, self).start(locust_count, hatch_rate, wait=wait))
+        self.hatching_greenlet = self.greenlet.spawn(lambda: super(LocalRunner, self).start(user_count, hatch_rate, wait=wait))
         self.hatching_greenlet.link_exception(greenlet_exception_handler)
     
     def stop(self):
@@ -340,7 +340,7 @@ class LocalLocustRunner(LocustRunner):
         self.environment.events.test_stop.fire(environment=self.environment)
 
 
-class DistributedLocustRunner(LocustRunner):
+class DistributedRunner(Runner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         setup_distributed_stats_event_listeners(self.environment.events, self.stats)
@@ -354,14 +354,14 @@ class WorkerNode(object):
         self.cpu_usage = 0
         self.cpu_warning_emitted = False
 
-class MasterLocustRunner(DistributedLocustRunner):
+class MasterRunner(DistributedRunner):
     """
     Runner used to run distributed load tests across multiple processes and/or machines.
     
-    MasterLocustRunner doesn't spawn any locust user greenlets itself. Instead it expects 
-    :class:`WorkerLocustRunners <WorkerLocustRunner>` to connect to it, which it will then direct 
-    to start and stop locust user greenlets. Stats sent back from the 
-    :class:`WorkerLocustRunners <WorkerLocustRunner>` will aggregated.
+    MasterRunner doesn't spawn any user greenlets itself. Instead it expects
+    :class:`WorkerRunners <WorkerRunner>` to connect to it, which it will then direct
+    to start and stop user greenlets. Stats sent back from the
+    :class:`WorkerRunners <WorkerRunner>` will aggregated.
     """
     def __init__(self, environment, master_bind_host, master_bind_port):
         """
@@ -403,7 +403,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         self.greenlet.spawn(self.heartbeat_worker).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.client_listener).link_exception(greenlet_exception_handler)
 
-        # listener that gathers info on how many locust users the worker has spawned
+        # listener that gathers info on how many users the worker has spawned
         def on_worker_report(client_id, data):
             if client_id not in self.clients:
                 logger.info("Discarded report from unrecognized worker %s", client_id)
@@ -422,14 +422,14 @@ class MasterLocustRunner(DistributedLocustRunner):
         return sum([c.user_count for c in self.clients.values()])
     
     def cpu_log_warning(self):
-        warning_emitted = LocustRunner.cpu_log_warning(self)
+        warning_emitted = Runner.cpu_log_warning(self)
         if self.worker_cpu_warning_emitted:
             logger.warning("CPU usage threshold was exceeded on workers during the test!")
             warning_emitted = True
         return warning_emitted
 
-    def start(self, locust_count, hatch_rate):
-        self.target_user_count = locust_count
+    def start(self, user_count, hatch_rate):
+        self.target_user_count = user_count
         num_workers = len(self.clients.ready) + len(self.clients.running) + len(self.clients.hatching)
         if not num_workers:
             logger.warning("You are running in distributed mode but have no worker servers connected. "
@@ -437,11 +437,11 @@ class MasterLocustRunner(DistributedLocustRunner):
             return
 
         self.hatch_rate = hatch_rate
-        worker_num_clients = locust_count // (num_workers or 1)
+        worker_num_users = user_count // (num_workers or 1)
         worker_hatch_rate = float(hatch_rate) / (num_workers or 1)
-        remaining = locust_count % num_workers
+        remaining = user_count % num_workers
 
-        logger.info("Sending hatch jobs of %d locusts and %.2f hatch rate to %d ready clients" % (worker_num_clients, worker_hatch_rate, num_workers))
+        logger.info("Sending hatch jobs of %d users and %.2f hatch rate to %d ready clients" % (worker_num_users, worker_hatch_rate, num_workers))
 
         if worker_hatch_rate > 100:
             logger.warning("Your selected hatch rate is very high (>100/worker), and this is known to sometimes cause issues. Do you really need to ramp up that fast?")
@@ -454,13 +454,13 @@ class MasterLocustRunner(DistributedLocustRunner):
         for client in (self.clients.ready + self.clients.running + self.clients.hatching):
             data = {
                 "hatch_rate": worker_hatch_rate,
-                "num_clients": worker_num_clients,
+                "num_users": worker_num_users,
                 "host": self.environment.host,
                 "stop_timeout": self.environment.stop_timeout,
             }
 
             if remaining > 0:
-                data["num_clients"] += 1
+                data["num_users"] += 1
                 remaining -= 1
 
             self.server.send_to_client(Message("hatch", data, client.id))
@@ -577,13 +577,13 @@ class MasterLocustRunner(DistributedLocustRunner):
     def worker_count(self):
         return len(self.clients.ready) + len(self.clients.hatching) + len(self.clients.running)
 
-class WorkerLocustRunner(DistributedLocustRunner):
+class WorkerRunner(DistributedRunner):
     """
     Runner used to run distributed load tests across multiple processes and/or machines.
     
-    WorkerLocustRunner connects to a :class:`MasterLocustRunner` from which it'll receive 
-    instructions to start and stop locust user greenlets. The WorkerLocustRunner will preiodically 
-    take the stats generated by the running users and send back to the :class:`MasterLocustRunner`.
+    WorkerRunner connects to a :class:`MasterRunner` from which it'll receive
+    instructions to start and stop user greenlets. The WorkerRunner will preiodically
+    take the stats generated by the running users and send back to the :class:`MasterRunner`.
     """
     
     def __init__(self, environment, master_host, master_port):
@@ -603,13 +603,13 @@ class WorkerLocustRunner(DistributedLocustRunner):
         self.worker_state = STATE_INIT
         self.greenlet.spawn(self.stats_reporter).link_exception(greenlet_exception_handler)
         
-        # register listener for when all locust users have hatched, and report it to the master node
+        # register listener for when all users have hatched, and report it to the master node
         def on_hatch_complete(user_count):
             self.client.send(Message("hatch_complete", {"count":user_count}, self.client_id))
             self.worker_state = STATE_RUNNING
         self.environment.events.hatch_complete.add_listener(on_hatch_complete)
         
-        # register listener that adds the current number of spawned locusts to the report that is sent to the master node 
+        # register listener that adds the current number of spawned users to the report that is sent to the master node
         def on_report_to_master(client_id, data):
             data["user_count"] = self.user_count
         self.environment.events.report_to_master.add_listener(on_report_to_master)
@@ -619,11 +619,11 @@ class WorkerLocustRunner(DistributedLocustRunner):
             self.client.send(Message("quit", None, self.client_id))
         self.environment.events.quitting.add_listener(on_quitting)
 
-        # register listener thats sends locust exceptions to master
-        def on_locust_error(locust_instance, exception, tb):
+        # register listener thats sends user exceptions to master
+        def on_user_error(user_instance, exception, tb):
             formatted_tb = "".join(traceback.format_tb(tb))
             self.client.send(Message("exception", {"msg" : str(exception), "traceback" : formatted_tb}, self.client_id))
-        self.environment.events.locust_error.add_listener(on_locust_error)
+        self.environment.events.user_error.add_listener(on_user_error)
 
     def heartbeat(self):
         while True:
@@ -654,13 +654,13 @@ class WorkerLocustRunner(DistributedLocustRunner):
                 self.client.send(Message("hatching", None, self.client_id))
                 job = msg.data
                 self.hatch_rate = job["hatch_rate"]
-                self.target_user_count = job["num_clients"]
+                self.target_user_count = job["num_users"]
                 self.environment.host = job["host"]
                 self.environment.stop_timeout = job["stop_timeout"]
                 if self.hatching_greenlet:
                     # kill existing hatching greenlet before we launch new one
                     self.hatching_greenlet.kill(block=True)
-                self.hatching_greenlet = self.greenlet.spawn(lambda: self.start(locust_count=job["num_clients"], hatch_rate=job["hatch_rate"]))
+                self.hatching_greenlet = self.greenlet.spawn(lambda: self.start(user_count=job["num_users"], hatch_rate=job["hatch_rate"]))
                 self.hatching_greenlet.link_exception(greenlet_exception_handler)
             elif msg.type == "stop":
                 self.stop()

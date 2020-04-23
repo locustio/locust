@@ -6,7 +6,7 @@ from itertools import chain
 
 import gevent
 
-from .exception import StopLocust
+from .exception import StopUser
 
 import logging
 console_logger = logging.getLogger("locust.stats_logger")

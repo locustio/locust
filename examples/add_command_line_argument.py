@@ -1,4 +1,4 @@
-from locust import HttpLocust, TaskSet, task, between
+from locust import HttpUser, TaskSet, task, between
 from locust import events
 
 
@@ -14,9 +14,9 @@ def _(environment, **kw):
     print("Custom argument supplied: %s" % environment.options.custom_argument)
 
 
-class WebsiteUser(HttpLocust):
+class WebsiteUser(HttpUser):
     """
-    Locust user class that does requests to the locust web server running on localhost
+    User class that does requests to the locust web server running on localhost
     """
     host = "http://127.0.0.1:8089"
     wait_time = between(2, 5)

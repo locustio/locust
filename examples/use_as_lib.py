@@ -1,5 +1,5 @@
 import gevent
-from locust import HttpLocust, task, between
+from locust import HttpUser, task, between
 from locust.env import Environment
 from locust.stats import stats_printer
 from locust.log import setup_logging
@@ -7,7 +7,7 @@ from locust.log import setup_logging
 setup_logging("INFO", None)
 
 
-class User(HttpLocust):
+class User(HttpUser):
     wait_time = between(1, 3)
     host = "https://docs.locust.io"
 
@@ -20,7 +20,7 @@ class User(HttpLocust):
         self.client.get("/non-existing-path")
 
 # setup Environment and Runner
-env = Environment(locust_classes=[User])
+env = Environment(user_classes=[User])
 env.create_local_runner()
 
 # start a WebUI instance

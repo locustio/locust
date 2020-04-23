@@ -12,56 +12,56 @@ import requests
 from locust import main
 from locust.argument_parser import parse_options
 from locust.main import create_environment
-from locust.core import HttpLocust, Locust, TaskSet
+from locust.core import HttpUser, User, TaskSet
 from .mock_locustfile import mock_locustfile
 from .testcases import LocustTestCase
 from .util import temporary_file, get_free_tcp_port
 
 
 class TestLoadLocustfile(LocustTestCase):
-    def test_is_locust(self):
-        self.assertFalse(main.is_locust(Locust))
-        self.assertFalse(main.is_locust(HttpLocust))
-        self.assertFalse(main.is_locust({}))
-        self.assertFalse(main.is_locust([]))
+    def test_is_user_class(self):
+        self.assertFalse(main.is_user_class(User))
+        self.assertFalse(main.is_user_class(HttpUser))
+        self.assertFalse(main.is_user_class({}))
+        self.assertFalse(main.is_user_class([]))
         
         class MyTaskSet(TaskSet):
             pass
         
-        class MyHttpLocust(HttpLocust):
+        class MyHttpUser(HttpUser):
             tasks = [MyTaskSet]
         
-        class MyLocust(Locust):
+        class MyUser(User):
             tasks = [MyTaskSet]
         
-        self.assertTrue(main.is_locust(MyHttpLocust))
-        self.assertTrue(main.is_locust(MyLocust))
+        self.assertTrue(main.is_user_class(MyHttpUser))
+        self.assertTrue(main.is_user_class(MyUser))
         
-        class ThriftLocust(Locust):
+        class ThriftLocust(User):
             abstract = True
         
-        self.assertFalse(main.is_locust(ThriftLocust))
+        self.assertFalse(main.is_user_class(ThriftLocust))
     
     def test_load_locust_file_from_absolute_path(self):
         with mock_locustfile() as mocked:
-            docstring, locusts = main.load_locustfile(mocked.file_path)
-            self.assertIn('LocustSubclass', locusts)
-            self.assertNotIn('NotLocustSubclass', locusts)
+            docstring, user_classes = main.load_locustfile(mocked.file_path)
+            self.assertIn('UserSubclass', user_classes)
+            self.assertNotIn('NotUserSubclass', user_classes)
 
     def test_load_locust_file_from_relative_path(self):
         with mock_locustfile() as mocked:
-            docstring, locusts = main.load_locustfile(os.path.join('./locust/test/', mocked.filename))
+            docstring, user_classes = main.load_locustfile(os.path.join('./locust/test/', mocked.filename))
 
     def test_load_locust_file_with_a_dot_in_filename(self):
         with mock_locustfile(filename_prefix="mocked.locust.file") as mocked:
-            docstring, locusts = main.load_locustfile(mocked.file_path)
+            docstring, user_classes = main.load_locustfile(mocked.file_path)
     
-    def test_return_docstring_and_locusts(self):
+    def test_return_docstring_and_user_classes(self):
         with mock_locustfile() as mocked:
-            docstring, locusts = main.load_locustfile(mocked.file_path)
+            docstring, user_classes = main.load_locustfile(mocked.file_path)
             self.assertEqual("This is a mock locust file for unit testing", docstring)
-            self.assertIn('LocustSubclass', locusts)
-            self.assertNotIn('NotLocustSubclass', locusts)
+            self.assertIn('UserSubclass', user_classes)
+            self.assertNotIn('NotUserSubclass', user_classes)
     
     def test_create_environment(self):
         options = parse_options(args=[
@@ -90,20 +90,20 @@ class LocustProcessIntegrationTest(TestCase):
     
     def test_help_arg(self):
         output = subprocess.check_output(
-            ["locust", "--help"], 
+            ["locust", "--help"],
             stderr=subprocess.STDOUT,
             timeout=5,
         ).decode("utf-8").strip()
-        self.assertTrue(output.startswith("Usage: locust [OPTIONS] [LocustClass ...]"))
+        self.assertTrue(output.startswith("Usage: locust [OPTIONS] [UserClass ...]"))
         self.assertIn("Common options:", output)
         self.assertIn("-f LOCUSTFILE, --locustfile LOCUSTFILE", output)
         self.assertIn("Logging options:", output)
         self.assertIn("--skip-log-setup      Disable Locust's logging setup.", output)
-    
+
     def test_webserver(self):
         with temporary_file(content=textwrap.dedent("""
-            from locust import Locust, task, constant, events
-            class TestUser(Locust):
+            from locust import User, task, constant, events
+            class TestUser(User):
                 wait_time = constant(3)
                 @task
                 def my_task():
@@ -146,7 +146,7 @@ class LocustProcessIntegrationTest(TestCase):
                 "--web-host", interface,
                 "--web-port", str(port)
             ], stdout=PIPE, stderr=PIPE)
-            gevent.sleep(0.5)
+            gevent.sleep(1)
             self.assertEqual(200, requests.get("http://%s:%i/" % (interface, port), timeout=1).status_code)
             proc.terminate()
             
@@ -157,6 +157,6 @@ class LocustProcessIntegrationTest(TestCase):
                 "--web-host", "*",
                 "--web-port", str(port),
             ], stdout=PIPE, stderr=PIPE)
-            gevent.sleep(0.5)
+            gevent.sleep(1)
             self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % port, timeout=1).status_code)
             proc.terminate()

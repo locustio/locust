@@ -22,11 +22,11 @@ processor core** on the worker machines.
 
 .. note::
     It's recommended that you start a number of simulated users that are greater  than 
-    ``number of locust classes * number of workers`` when running Locust distributed.
+    ``number of user classes * number of workers`` when running Locust distributed.
     
     Otherwise - due to the current implementation - 
-    you might end up with a distribution of the  Locust classes that doesn't correspond to the 
-    Locust classes' ``weight`` attribute. And if the hatch rate is lower than the number of worker
+    you might end up with a distribution of the  User classes that doesn't correspond to the
+    User classes' ``weight`` attribute. And if the hatch rate is lower than the number of worker
     nodes, the hatching would occur in "bursts" where all worker node would hatch a single user and
     then sleep for multiple seconds, hatch another user, sleep and repeat.
 

@@ -35,7 +35,7 @@ class SequentialTaskSetMeta(TaskSetMeta):
 
 class SequentialTaskSet(TaskSet, metaclass=SequentialTaskSetMeta):
     """
-    Class defining a sequence of tasks that a Locust user will execute.
+    Class defining a sequence of tasks that a User will execute.
     
     Works like TaskSet, but task weight is ignored, and all tasks are executed in order. Tasks can 
     either be specified by setting the *tasks* attribute to a list of tasks, or by declaring tasks 

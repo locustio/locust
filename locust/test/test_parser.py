@@ -58,20 +58,20 @@ class TestArgumentParser(LocustTestCase):
     def test_parse_options(self):
         options = parse_options(args=[
             "-f", "locustfile.py",
-            "-c", "100",
+            "-u", "100",
             "-r", "10",
             "-t", "5m",
             "--reset-stats",
             "--stop-timeout", "5",
-            "MyLocustClass",
+            "MyUserClass",
         ])
         self.assertEqual("locustfile.py", options.locustfile)
-        self.assertEqual(100, options.num_clients)
+        self.assertEqual(100, options.num_users)
         self.assertEqual(10, options.hatch_rate)
         self.assertEqual("5m", options.run_time)
         self.assertTrue(options.reset_stats)
         self.assertEqual(5, options.stop_timeout)
-        self.assertEqual(["MyLocustClass"], options.locust_classes)
+        self.assertEqual(["MyUserClass"], options.user_classes)
         # check default arg
         self.assertEqual(8089, options.web_port)
     
@@ -79,12 +79,12 @@ class TestArgumentParser(LocustTestCase):
         with mock_locustfile() as mocked:
             locustfile = parse_locustfile_option(args=[
                 "-f", mocked.file_path,
-                "-c", "100",
+                "-u", "100",
                 "-r", "10",
                 "-t", "5m",
                 "--reset-stats",
                 "--stop-timeout", "5",
-                "MyLocustClass",
+                "MyUserClass",
             ])
             self.assertEqual(mocked.file_path, locustfile)
             locustfile = parse_locustfile_option(args=[
@@ -97,13 +97,13 @@ class TestArgumentParser(LocustTestCase):
             with mock.patch("sys.stderr", new=StringIO()):
                 parse_options(args=[
                     "-f", "something.py",
-                    "-c", "100",
+                    "-u", "100",
                     "-r", "10",
                     "-t", "5m",
                     "--reset-stats",
                     "--stop-timeout", "5",
                     "--unknown-flag", 
-                    "MyLocustClass",
+                    "MyUserClass",
                 ])
     
     def test_custom_argument(self):
@@ -120,11 +120,11 @@ class TestArgumentParser(LocustTestCase):
             )
         
         options = parse_options(args=[
-            "-c", "666",
+            "-u", "666",
             "--custom-bool-arg",
             "--custom-string-arg", "HEJ",
         ])
-        self.assertEqual(666, options.num_clients)
+        self.assertEqual(666, options.num_users)
         self.assertEqual("HEJ", options.custom_string_arg)
         self.assertTrue(options.custom_bool_arg)
     

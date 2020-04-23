@@ -1,6 +1,6 @@
 $(window).ready(function() {
-    if($("#locust_count").length > 0) {
-        $("#locust_count").focus().select();
+    if($("#user_count").length > 0) {
+        $("#user_count").focus().select();
     }
 });
 
@@ -26,13 +26,13 @@ $("#box_stop a.reset-button").click(function(event) {
 $("#new_test").click(function(event) {
     event.preventDefault();
     $("#start").show();
-    $("#locust_count").focus().select();
+    $("#user_count").focus().select();
 });
 
 $(".edit_test").click(function(event) {
     event.preventDefault();
     $("#edit").show();
-    $("#new_locust_count").focus().select();
+    $("#new_user_count").focus().select();
 });
 
 $(".close_link").click(function(event) {

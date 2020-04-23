@@ -7,7 +7,7 @@ import os
 import gevent
 import mock
 import locust
-from locust import HttpLocust, TaskSet, task, Locust, constant
+from locust import HttpUser, TaskSet, task, User, constant
 from locust.env import Environment
 from locust.inspectlocust import get_task_ratio_dict
 from locust.rpc.protocol import Message
@@ -382,12 +382,12 @@ class TestCsvStats(LocustTestCase):
     @mock.patch("locust.stats.CSV_STATS_INTERVAL_SEC", new=0.2)
     def test_user_count_in_csv_history_stats(self):
         start_time = int(time.time())
-        class TestUser(Locust):
+        class TestUser(User):
             wait_time = constant(10)
             @task
             def t(self):
                 self.environment.runner.stats.log_request("GET", "/", 10, 10)
-        environment = Environment(locust_classes=[TestUser])
+        environment = Environment(user_classes=[TestUser])
         runner = environment.create_local_runner()
         runner.start(3, 5) # spawn a user every 0.2 second
         gevent.sleep(0.1)
@@ -564,9 +564,9 @@ class TestStatsEntry(unittest.TestCase):
 class TestRequestStatsWithWebserver(WebserverTestCase):
     def setUp(self):
         super().setUp()
-        class MyLocust(HttpLocust):
+        class MyUser(HttpUser):
             host = "http://127.0.0.1:%i" % self.port
-        self.locust = MyLocust(self.environment)
+        self.locust = MyUser(self.environment)
     
     def test_request_stats_content_length(self):
         self.locust.client.get("/ultra_fast")
@@ -597,10 +597,10 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         self.assertEqual(1, self.runner.stats.get("/put", "PUT").num_requests)
     
     def test_request_connection_error(self):
-        class MyLocust(HttpLocust):
+        class MyUser(HttpUser):
             host = "http://localhost:1"
         
-        locust = MyLocust(self.environment)
+        locust = MyUser(self.environment)
         response = locust.client.get("/", timeout=0.1)
         self.assertEqual(response.status_code, 0)
         self.assertEqual(1, self.runner.stats.get("/", "GET").num_failures)

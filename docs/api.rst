@@ -3,16 +3,16 @@ API
 ###
 
 
-Locust class
+User class
 ============
 
-.. autoclass:: locust.core.Locust
+.. autoclass:: locust.core.User
     :members: wait_time, tasks, weight, abstract, on_start, on_stop, wait
 
-HttpLocust class
+HttpUser class
 ================
 
-.. autoclass:: locust.core.HttpLocust
+.. autoclass:: locust.core.HttpUser
     :members: wait_time, tasks, client, abstract
 
 
@@ -20,7 +20,7 @@ TaskSet class
 =============
 
 .. autoclass:: locust.core.TaskSet
-    :members: locust, parent, wait_time, client, tasks, interrupt, schedule_task, on_start, on_stop, wait
+    :members: user, parent, wait_time, client, tasks, interrupt, schedule_task, on_start, on_stop, wait
 
 task decorator
 ==============
@@ -31,7 +31,7 @@ SequentialTaskSet class
 =======================
 
 .. autoclass:: locust.sequential_taskset.SequentialTaskSet
-    :members: locust, parent, wait_time, client, tasks, interrupt, schedule_task, on_start, on_stop
+    :members: user, parent, wait_time, client, tasks, interrupt, schedule_task, on_start, on_stop
 
 
 .. _wait_time_functions:
@@ -107,17 +107,17 @@ The event hooks are instances of the **locust.events.EventHook** class:
     to prevent your code from breaking if new arguments are added in a future version.
 
 
-Locust Runner classes
+Runner classes
 =====================
 
-.. autoclass:: locust.runners.LocustRunner
+.. autoclass:: locust.runners.Runner
     :members: start, stop, quit, user_count
 
-.. autoclass:: locust.runners.LocalLocustRunner
+.. autoclass:: locust.runners.LocalRunner
 
-.. autoclass:: locust.runners.MasterLocustRunner
+.. autoclass:: locust.runners.MasterRunner
 
-.. autoclass:: locust.runners.WorkerLocustRunner
+.. autoclass:: locust.runners.WorkerRunner
 
 
 Web UI class

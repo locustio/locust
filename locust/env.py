@@ -2,7 +2,7 @@ from .argument_parser import parse_options
 from .event import Events
 from .exception import RunnerAlreadyExistsError
 from .stats import RequestStats
-from .runners import LocalLocustRunner, MasterLocustRunner, WorkerLocustRunner
+from .runners import LocalRunner, MasterRunner, WorkerRunner
 from .web import WebUI
 
 
@@ -13,14 +13,14 @@ class Environment:
     See :ref:`events` for available events.
     """
     
-    locust_classes = []
-    """Locust User classes that the runner will run"""
+    user_classes = []
+    """User classes that the runner will run"""
     
     stats = None
     """Reference to RequestStats instance"""
     
     runner = None
-    """Reference to the :class:`LocustRunner <locust.runners.LocustRunner>` instance"""
+    """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
     
     web_ui = None
     """Reference to the WebUI instance"""
@@ -51,7 +51,7 @@ class Environment:
     
     def  __init__(
         self, *,
-        locust_classes=[],
+        user_classes=[],
         events=None, 
         host=None, 
         reset_stats=False, 
@@ -65,7 +65,7 @@ class Environment:
         else:
             self.events = Events()
         
-        self.locust_classes = locust_classes
+        self.user_classes = user_classes
         self.stats = RequestStats()
         self.host = host
         self.reset_stats = reset_stats
@@ -82,27 +82,27 @@ class Environment:
     
     def create_local_runner(self):
         """
-        Create a :class:`LocalLocustRunner <locust.runners.LocalLocustRunner>` instance for this Environment
+        Create a :class:`LocalRunner <locust.runners.LocalRunner>` instance for this Environment
         """
-        return self._create_runner(LocalLocustRunner)
+        return self._create_runner(LocalRunner)
         
     def create_master_runner(self, master_bind_host="*", master_bind_port=5557):
         """
-        Create a :class:`MasterLocustRunner <locust.runners.MasterLocustRunner>` instance for this Environment
+        Create a :class:`MasterRunner <locust.runners.MasterRunner>` instance for this Environment
         
         :param master_bind_host: Interface/host that the master should use for incoming worker connections. 
                                  Defaults to "*" which means all interfaces.
         :param master_bind_port: Port that the master should listen for incoming worker connections on
         """
         return self._create_runner(
-            MasterLocustRunner,
+            MasterRunner,
             master_bind_host=master_bind_host,
             master_bind_port=master_bind_port,
         )
     
     def create_worker_runner(self, master_host, master_port):
         """
-        Create a :class:`WorkerLocustRunner <locust.runners.WorkerLocustRunner>` instance for this Environment
+        Create a :class:`WorkerRunner <locust.runners.WorkerRunner>` instance for this Environment
         
         :param master_host: Host/IP of a running master node
         :param master_port: Port on master node to connect to
@@ -111,7 +111,7 @@ class Environment:
         # and CPU cycles, since the response_times_cache is not needed for Worker nodes
         self.stats = RequestStats(use_response_times_cache=False)
         return self._create_runner(
-            WorkerLocustRunner,
+            WorkerRunner,
             master_host=master_host,
             master_port=master_port,
         )

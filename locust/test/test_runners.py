@@ -8,12 +8,12 @@ from gevent.queue import Queue
 import locust
 from locust import runners, between, constant
 from locust.main import create_environment
-from locust.core import Locust, TaskSet, task
+from locust.core import User, TaskSet, task
 from locust.env import Environment
-from locust.exception import RPCError, StopLocust
+from locust.exception import RPCError, StopUser
 from locust.rpc import Message
 
-from locust.runners import LocalLocustRunner, WorkerNode, WorkerLocustRunner, \
+from locust.runners import LocalRunner, WorkerNode, WorkerRunner, \
      STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_MISSING, STATE_STOPPED
 from locust.stats import RequestStats
 from locust.test.testcases import LocustTestCase
@@ -63,7 +63,7 @@ def mocked_rpc():
 class mocked_options(object):
     def __init__(self):
         self.hatch_rate = 5
-        self.num_clients = 5
+        self.num_users = 5
         self.host = '/'
         self.master_host = 'localhost'
         self.master_port = 5557
@@ -83,18 +83,18 @@ class HeyAnException(Exception):
 
 class TestLocustRunner(LocustTestCase):
     def assert_locust_class_distribution(self, expected_distribution, classes):
-        # Construct a {LocustClass => count} dict from a list of locust classes
+        # Construct a {UserClass => count} dict from a list of user classes
         distribution = {}
-        for locust_class in classes:
-            if not locust_class in distribution:
-                distribution[locust_class] = 0
-            distribution[locust_class] += 1
+        for user_class in classes:
+            if not user_class in distribution:
+                distribution[user_class] = 0
+            distribution[user_class] += 1
         expected_str = str({k.__name__:v for k,v in expected_distribution.items()})
         actual_str = str({k.__name__:v for k,v in distribution.items()})
         self.assertEqual(
             expected_distribution,
             distribution,
-            "Expected a locust class distribution of %s but found %s" % (
+            "Expected a User class distribution of %s but found %s" % (
                 expected_str,
                 actual_str,
             ),
@@ -104,16 +104,16 @@ class TestLocustRunner(LocustTestCase):
         _monitor_interval = runners.CPU_MONITOR_INTERVAL
         runners.CPU_MONITOR_INTERVAL = 2.0
         try:
-            class CpuLocust(Locust):
+            class CpuUser(User):
                 wait_time = constant(0.001)
                 @task
                 def cpu_task(self):
                     for i in range(1000000):
                         _ = 3 / 2
-            environment = Environment(locust_classes=[CpuLocust])
-            runner = LocalLocustRunner(environment)
+            environment = Environment(user_classes=[CpuUser])
+            runner = LocalRunner(environment)
             self.assertFalse(runner.cpu_warning_emitted)
-            runner.spawn_locusts(1, 1, wait=False)
+            runner.spawn_users(1, 1, wait=False)
             sleep(2.5)
             runner.quit()
             self.assertTrue(runner.cpu_warning_emitted)
@@ -122,158 +122,158 @@ class TestLocustRunner(LocustTestCase):
 
     def test_weight_locusts(self):
         maxDiff = 2048
-        class BaseLocust(Locust):
+        class BaseUser(User):
             pass
-        class L1(BaseLocust):
+        class L1(BaseUser):
             weight = 101
-        class L2(BaseLocust):
+        class L2(BaseUser):
             weight = 99
-        class L3(BaseLocust):
+        class L3(BaseUser):
             weight = 100
 
-        runner = Environment(locust_classes=[L1, L2, L3]).create_local_runner()
-        self.assert_locust_class_distribution({L1:10, L2:9, L3:10}, runner.weight_locusts(29))
-        self.assert_locust_class_distribution({L1:10, L2:10, L3:10}, runner.weight_locusts(30))
-        self.assert_locust_class_distribution({L1:11, L2:10, L3:10}, runner.weight_locusts(31))
+        runner = Environment(user_classes=[L1, L2, L3]).create_local_runner()
+        self.assert_locust_class_distribution({L1:10, L2:9, L3:10}, runner.weight_users(29))
+        self.assert_locust_class_distribution({L1:10, L2:10, L3:10}, runner.weight_users(30))
+        self.assert_locust_class_distribution({L1:11, L2:10, L3:10}, runner.weight_users(31))
 
-    def test_weight_locusts_fewer_amount_than_locust_classes(self):
-        class BaseLocust(Locust):
+    def test_weight_locusts_fewer_amount_than_user_classes(self):
+        class BaseUser(User):
             pass
-        class L1(BaseLocust):
+        class L1(BaseUser):
             weight = 101
-        class L2(BaseLocust):
+        class L2(BaseUser):
             weight = 99
-        class L3(BaseLocust):
+        class L3(BaseUser):
             weight = 100
 
-        runner = Environment(locust_classes=[L1, L2, L3]).create_local_runner()
-        self.assertEqual(1, len(runner.weight_locusts(1)))
-        self.assert_locust_class_distribution({L1:1},  runner.weight_locusts(1))
+        runner = Environment(user_classes=[L1, L2, L3]).create_local_runner()
+        self.assertEqual(1, len(runner.weight_users(1)))
+        self.assert_locust_class_distribution({L1:1}, runner.weight_users(1))
     
     def test_kill_locusts(self):
         triggered = [False]
-        class BaseLocust(Locust):
+        class BaseUser(User):
             wait_time = constant(1)
             @task
             class task_set(TaskSet):
                 @task
                 def trigger(self):
                     triggered[0] = True
-        runner = Environment(locust_classes=[BaseLocust]).create_local_runner()
-        runner.spawn_locusts(2, hatch_rate=2, wait=False)
-        self.assertEqual(2, len(runner.locusts))
-        g1 = list(runner.locusts)[0]
-        g2 = list(runner.locusts)[1]
-        runner.kill_locusts(2)
-        self.assertEqual(0, len(runner.locusts))
+        runner = Environment(user_classes=[BaseUser]).create_local_runner()
+        runner.spawn_users(2, hatch_rate=2, wait=False)
+        self.assertEqual(2, len(runner.user_greenlets))
+        g1 = list(runner.user_greenlets)[0]
+        g2 = list(runner.user_greenlets)[1]
+        runner.stop_users(2)
+        self.assertEqual(0, len(runner.user_greenlets))
         self.assertTrue(g1.dead)
         self.assertTrue(g2.dead)
         self.assertTrue(triggered[0])
     
     def test_start_event(self):
-        class User(Locust):
+        class MyUser(User):
             wait_time = constant(1)
             task_run_count = 0
             @task
             def my_task(self):
-                User.task_run_count += 1
+                MyUser.task_run_count += 1
         
         test_start_run = [0]
         
-        environment = Environment(locust_classes=[User])
+        environment = Environment(user_classes=[MyUser])
         def on_test_start(*args, **kwargs):
             test_start_run[0] += 1
         environment.events.test_start.add_listener(on_test_start)
         
-        runner = LocalLocustRunner(environment)
-        runner.start(locust_count=3, hatch_rate=3, wait=False)
+        runner = LocalRunner(environment)
+        runner.start(user_count=3, hatch_rate=3, wait=False)
         runner.hatching_greenlet.get(timeout=3)
         
         self.assertEqual(1, test_start_run[0])
-        self.assertEqual(3, User.task_run_count)
+        self.assertEqual(3, MyUser.task_run_count)
     
     def test_stop_event(self):
-        class User(Locust):
+        class MyUser(User):
             wait_time = constant(1)
             @task
             def my_task(self):
                 pass
 
         test_stop_run = [0]
-        environment = Environment(locust_classes=[User])
+        environment = Environment(user_classes=[User])
         def on_test_stop(*args, **kwargs):
             test_stop_run[0] += 1
         environment.events.test_stop.add_listener(on_test_stop)
 
-        runner = LocalLocustRunner(environment)
-        runner.start(locust_count=3, hatch_rate=3, wait=False)
+        runner = LocalRunner(environment)
+        runner.start(user_count=3, hatch_rate=3, wait=False)
         self.assertEqual(0, test_stop_run[0])
         runner.stop()
         self.assertEqual(1, test_stop_run[0])
     
     def test_stop_event_quit(self):
-        class User(Locust):
+        class MyUser(User):
             wait_time = constant(1)
             @task
             def my_task(self):
                 pass
 
         test_stop_run = [0]
-        environment = Environment(locust_classes=[User])
+        environment = Environment(user_classes=[User])
         def on_test_stop(*args, **kwargs):
             test_stop_run[0] += 1
         environment.events.test_stop.add_listener(on_test_stop)
 
-        runner = LocalLocustRunner(environment)
-        runner.start(locust_count=3, hatch_rate=3, wait=False)
+        runner = LocalRunner(environment)
+        runner.start(user_count=3, hatch_rate=3, wait=False)
         self.assertEqual(0, test_stop_run[0])
         runner.quit()
         self.assertEqual(1, test_stop_run[0])
-    
+
     def test_stop_event_stop_and_quit(self):
-        class User(Locust):
+        class MyUser(User):
             wait_time = constant(1)
             @task
             def my_task(self):
                 pass
 
         test_stop_run = [0]
-        environment = Environment(locust_classes=[User])
+        environment = Environment(user_classes=[MyUser])
         def on_test_stop(*args, **kwargs):
             test_stop_run[0] += 1
         environment.events.test_stop.add_listener(on_test_stop)
 
-        runner = LocalLocustRunner(environment)
-        runner.start(locust_count=3, hatch_rate=3, wait=False)
+        runner = LocalRunner(environment)
+        runner.start(user_count=3, hatch_rate=3, wait=False)
         self.assertEqual(0, test_stop_run[0])
         runner.stop()
         runner.quit()
         self.assertEqual(1, test_stop_run[0])
-    
+
     def test_change_user_count_during_hatching(self):
-        class User(Locust):
+        class MyUser(User):
             wait_time = constant(1)
             @task
             def my_task(self):
                 pass
         
-        environment = Environment(locust_classes=[User])
-        runner = LocalLocustRunner(environment)
-        runner.start(locust_count=10, hatch_rate=5, wait=False)
+        environment = Environment(user_classes=[MyUser])
+        runner = LocalRunner(environment)
+        runner.start(user_count=10, hatch_rate=5, wait=False)
         sleep(0.6)
-        runner.start(locust_count=5, hatch_rate=5, wait=False)
+        runner.start(user_count=5, hatch_rate=5, wait=False)
         runner.hatching_greenlet.join()
-        self.assertEqual(5, len(runner.locusts))
+        self.assertEqual(5, len(runner.user_greenlets))
         runner.quit()
     
     def test_reset_stats(self):
-        class User(Locust):
+        class MyUser(User):
             wait_time = constant(0)
             @task
             class task_set(TaskSet):
                 @task
                 def my_task(self):
-                    self.locust.environment.events.request_success.fire(
+                    self.user.environment.events.request_success.fire(
                         request_type="GET",
                         name="/test",
                         response_time=666,
@@ -281,9 +281,9 @@ class TestLocustRunner(LocustTestCase):
                     )
                     sleep(2)
         
-        environment = Environment(locust_classes=[User], reset_stats=True)
-        runner = LocalLocustRunner(environment)
-        runner.start(locust_count=6, hatch_rate=12, wait=False)
+        environment = Environment(user_classes=[MyUser], reset_stats=True)
+        runner = LocalRunner(environment)
+        runner.start(user_count=6, hatch_rate=12, wait=False)
         sleep(0.25)
         self.assertGreaterEqual(runner.stats.get("/test", "GET").num_requests, 3)
         sleep(0.3)
@@ -291,13 +291,13 @@ class TestLocustRunner(LocustTestCase):
         runner.quit()
         
     def test_no_reset_stats(self):
-        class User(Locust):
+        class MyUser(User):
             wait_time = constant(0)
             @task
             class task_set(TaskSet):
                 @task
                 def my_task(self):
-                    self.locust.environment.events.request_success.fire(
+                    self.user.environment.events.request_success.fire(
                         request_type="GET",
                         name="/test",
                         response_time=666,
@@ -305,9 +305,9 @@ class TestLocustRunner(LocustTestCase):
                     )                    
                     sleep(2)
         
-        environment = Environment(reset_stats=False, locust_classes=[User])
-        runner = LocalLocustRunner(environment)
-        runner.start(locust_count=6, hatch_rate=12, wait=False)
+        environment = Environment(reset_stats=False, user_classes=[MyUser])
+        runner = LocalRunner(environment)
+        runner.start(user_count=6, hatch_rate=12, wait=False)
         sleep(0.25)
         self.assertGreaterEqual(runner.stats.get("/test", "GET").num_requests, 3)
         sleep(0.3)
@@ -324,10 +324,10 @@ class TestLocustRunner(LocustTestCase):
 class TestMasterWorkerRunners(LocustTestCase):
     def test_distributed_integration_run(self):
         """
-        Full integration test that starts both a MasterLocustRunner and three WorkerLocustRunner instances 
+        Full integration test that starts both a MasterRunner and three WorkerRunner instances 
         and makes sure that their stats is sent to the Master.
         """
-        class TestUser(Locust):
+        class TestUser(User):
             wait_time = constant(0.1)
             @task
             def incr_stats(l):
@@ -339,13 +339,13 @@ class TestMasterWorkerRunners(LocustTestCase):
                 )
         with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
             # start a Master runner
-            master_env = Environment(locust_classes=[TestUser])
+            master_env = Environment(user_classes=[TestUser])
             master = master_env.create_master_runner("*", 0)
             sleep(0)
             # start 3 Worker runners
             workers = []
             for i in range(3):
-                worker_env = Environment(locust_classes=[TestUser])
+                worker_env = Environment(user_classes=[TestUser])
                 worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
                 workers.append(worker)
             
@@ -602,7 +602,7 @@ class TestMasterRunner(LocustTestCase):
             master.start(100, 20)
             self.assertEqual(1, len(server.outbox))
             client_id, msg = server.outbox.pop()
-            self.assertEqual(100, msg.data["num_clients"])
+            self.assertEqual(100, msg.data["num_users"])
             self.assertEqual(20, msg.data["hatch_rate"])
             
             # let another worker connect
@@ -610,10 +610,10 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(2, len(master.clients))
             self.assertEqual(2, len(server.outbox))
             client_id, msg = server.outbox.pop()
-            self.assertEqual(50, msg.data["num_clients"])
+            self.assertEqual(50, msg.data["num_users"])
             self.assertEqual(10, msg.data["hatch_rate"])
             client_id, msg = server.outbox.pop()
-            self.assertEqual(50, msg.data["num_clients"])
+            self.assertEqual(50, msg.data["num_users"])
             self.assertEqual(10, msg.data["hatch_rate"])
     
     def test_sends_hatch_data_to_ready_running_hatching_workers(self):
@@ -626,7 +626,7 @@ class TestMasterRunner(LocustTestCase):
             master.clients[1].state = STATE_INIT
             master.clients[2].state = STATE_HATCHING
             master.clients[3].state = STATE_RUNNING
-            master.start(locust_count=5,hatch_rate=5)
+            master.start(user_count=5, hatch_rate=5)
 
             self.assertEqual(3, len(server.outbox))
     
@@ -652,14 +652,14 @@ class TestMasterRunner(LocustTestCase):
             # change number of users and check that test_start isn't fired again
             master.start(7, 7)
             self.assertEqual(1, run_count[0])
-            
+
             # stop and start to make sure test_start is fired again
             master.stop()
             master.start(3, 3)
             self.assertEqual(2, run_count[0])
-            
+
             master.quit()
-    
+
     def test_stop_event(self):
         """
         Tests that test_stop event is fired
@@ -679,7 +679,7 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(5, len(server.outbox))
             master.stop()
             self.assertEqual(1, run_count[0])
-            
+
             run_count[0] = 0
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
@@ -687,22 +687,22 @@ class TestMasterRunner(LocustTestCase):
             master.stop()
             master.quit()
             self.assertEqual(1, run_count[0])
-    
+
     def test_stop_event_quit(self):
         """
         Tests that test_stop event is fired when quit() is called directly
         """
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner()
-            
+
             run_count = [0]
             @self.environment.events.test_stop.add_listener
             def on_test_stop(*a, **kw):
-                run_count[0] += 1            
-            
+                run_count[0] += 1
+
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
-            
+
             master.start(7, 7)
             self.assertEqual(5, len(server.outbox))
             master.quit()
@@ -714,12 +714,12 @@ class TestMasterRunner(LocustTestCase):
             def my_task(self):
                 pass
             
-        class MyTestLocust(Locust):
+        class MyTestUser(User):
             tasks = [MyTaskSet]
             wait_time = constant(0.1)
         
-        environment = Environment(locust_classes=[MyTestLocust])
-        runner = LocalLocustRunner(environment)
+        environment = Environment(user_classes=[MyTestUser])
+        runner = LocalRunner(environment)
         
         timeout = gevent.Timeout(2.0)
         timeout.start()
@@ -745,11 +745,11 @@ class TestMasterRunner(LocustTestCase):
             master.start(7, 7)
             self.assertEqual(5, len(server.outbox))
             
-            num_clients = 0
+            num_users = 0
             for _, msg in server.outbox:
-                num_clients += msg.data["num_clients"]
+                num_users += msg.data["num_users"]
             
-            self.assertEqual(7, num_clients, "Total number of locusts that would have been spawned is not 7")
+            self.assertEqual(7, num_users, "Total number of locusts that would have been spawned is not 7")
     
     def test_spawn_fewer_locusts_than_workers(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
@@ -760,11 +760,11 @@ class TestMasterRunner(LocustTestCase):
             master.start(2, 2)
             self.assertEqual(5, len(server.outbox))
             
-            num_clients = 0
+            num_users = 0
             for _, msg in server.outbox:
-                num_clients += msg.data["num_clients"]
+                num_users += msg.data["num_users"]
             
-            self.assertEqual(2, num_clients, "Total number of locusts that would have been spawned is not 2")
+            self.assertEqual(2, num_users, "Total number of locusts that would have been spawned is not 2")
     
     def test_spawn_locusts_in_stepload_mode(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
@@ -779,33 +779,33 @@ class TestMasterRunner(LocustTestCase):
             sleep(0.5)
             self.assertEqual(5, len(server.outbox))
 
-            num_clients = 0
+            num_users = 0
             end_of_last_step = len(server.outbox)
             for _, msg in server.outbox:
-                num_clients += msg.data["num_clients"]
+                num_users += msg.data["num_users"]
             
-            self.assertEqual(5, num_clients, "Total number of locusts that would have been spawned for first step is not 5")
+            self.assertEqual(5, num_users, "Total number of locusts that would have been spawned for first step is not 5")
 
             # make sure the first step run is complete
             sleep(2)
-            num_clients = 0
+            num_users = 0
             idx = end_of_last_step
             while idx < len(server.outbox):
                 msg = server.outbox[idx][1]
-                num_clients += msg.data["num_clients"]
+                num_users += msg.data["num_users"]
                 idx += 1
-            self.assertEqual(10, num_clients, "Total number of locusts that would have been spawned for second step is not 10")
+            self.assertEqual(10, num_users, "Total number of locusts that would have been spawned for second step is not 10")
 
     def test_exception_in_task(self):
-        class MyLocust(Locust):
+        class MyUser(User):
             @task
             def will_error(self):
                 raise HeyAnException(":(")
         
-        self.environment.locust_classes = [MyLocust]
+        self.environment.user_classes = [MyUser]
         runner = self.environment.create_local_runner()
         
-        l = MyLocust(self.environment)
+        l = MyUser(self.environment)
         
         self.assertRaises(HeyAnException, l.run)
         self.assertRaises(HeyAnException, l.run)
@@ -833,17 +833,17 @@ class TestMasterRunner(LocustTestCase):
             
             @task(1)
             def will_stop(self):
-                raise StopLocust()
+                raise StopUser()
         
-        class MyLocust(Locust):
+        class MyUser(User):
             wait_time = constant(0.01)
             tasks = [MyTaskSet]
         
         # set config to catch exceptions in locust users
         self.environment.catch_exceptions = True
-        self.environment.locust_classes = [MyLocust]
-        runner = LocalLocustRunner(self.environment)
-        l = MyLocust(self.environment)
+        self.environment.user_classes = [MyUser]
+        runner = LocalRunner(self.environment)
+        l = MyUser(self.environment)
         
         # make sure HeyAnException isn't raised
         l.run()
@@ -872,30 +872,30 @@ class TestMasterRunner(LocustTestCase):
                 self.assertEqual(1, len(master.clients))
                 master.quit()
 
-class TestWorkerLocustRunner(LocustTestCase):
+class TestWorkerRunner(LocustTestCase):
     def setUp(self):
-        super(TestWorkerLocustRunner, self).setUp()
+        super(TestWorkerRunner, self).setUp()
         #self._report_to_master_event_handlers = [h for h in events.report_to_master._handlers]
         
     def tearDown(self):
         #events.report_to_master._handlers = self._report_to_master_event_handlers
-        super(TestWorkerLocustRunner, self).tearDown()
+        super(TestWorkerRunner, self).tearDown()
     
-    def get_runner(self, environment=None, locust_classes=[]):
+    def get_runner(self, environment=None, user_classes=[]):
         if environment is None:
             environment = self.environment
-        environment.locust_classes = locust_classes
-        return WorkerLocustRunner(environment, master_host="localhost", master_port=5557)
+        environment.user_classes = user_classes
+        return WorkerRunner(environment, master_host="localhost", master_port=5557)
     
     def test_worker_stop_timeout(self):
-        class MyTestLocust(Locust):
+        class MyTestUser(User):
             _test_state = 0
             wait_time = constant(0)
             @task
             def the_task(self):
-                MyTestLocust._test_state = 1
+                MyTestUser._test_state = 1
                 gevent.sleep(0.2)
-                MyTestLocust._test_state = 2
+                MyTestUser._test_state = 2
         
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             environment = Environment()
@@ -903,12 +903,12 @@ class TestWorkerLocustRunner(LocustTestCase):
             @environment.events.test_start.add_listener
             def on_test_start(**kw):
                 test_start_run[0] = True
-            worker = self.get_runner(environment=environment, locust_classes=[MyTestLocust])
+            worker = self.get_runner(environment=environment, user_classes=[MyTestUser])
             self.assertEqual(1, len(client.outbox))
             self.assertEqual("client_ready", client.outbox[0].type)
             client.mocked_send(Message("hatch", {
                 "hatch_rate": 1,
-                "num_clients": 1,
+                "num_users": 1,
                 "host": "",
                 "stop_timeout": 1,
             }, "dummy_client_id"))
@@ -916,36 +916,36 @@ class TestWorkerLocustRunner(LocustTestCase):
             # wait for worker to hatch locusts
             self.assertIn("hatching", [m.type for m in client.outbox])
             worker.hatching_greenlet.join()
-            self.assertEqual(1, len(worker.locusts))
+            self.assertEqual(1, len(worker.user_greenlets))
             # check that locust has started running
             gevent.sleep(0.01)
-            self.assertEqual(1, MyTestLocust._test_state)
+            self.assertEqual(1, MyTestUser._test_state)
             # send stop message
             client.mocked_send(Message("stop", None, "dummy_client_id"))
-            worker.locusts.join()
+            worker.user_greenlets.join()
             # check that locust user got to finish
-            self.assertEqual(2, MyTestLocust._test_state)
+            self.assertEqual(2, MyTestUser._test_state)
             # make sure the test_start was never fired on the worker
             self.assertFalse(test_start_run[0])
     
     def test_worker_without_stop_timeout(self):
-        class MyTestLocust(Locust):
+        class MyTestUser(User):
             _test_state = 0
             wait_time = constant(0)
             @task
             def the_task(self):
-                MyTestLocust._test_state = 1
+                MyTestUser._test_state = 1
                 gevent.sleep(0.2)
-                MyTestLocust._test_state = 2
+                MyTestUser._test_state = 2
 
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             environment = Environment(stop_timeout=None)
-            worker = self.get_runner(environment=environment, locust_classes=[MyTestLocust])
+            worker = self.get_runner(environment=environment, user_classes=[MyTestUser])
             self.assertEqual(1, len(client.outbox))
             self.assertEqual("client_ready", client.outbox[0].type)
             client.mocked_send(Message("hatch", {
                 "hatch_rate": 1,
-                "num_clients": 1,
+                "num_users": 1,
                 "host": "",
                 "stop_timeout": None,
             }, "dummy_client_id"))
@@ -953,18 +953,18 @@ class TestWorkerLocustRunner(LocustTestCase):
             # wait for worker to hatch locusts
             self.assertIn("hatching", [m.type for m in client.outbox])
             worker.hatching_greenlet.join()
-            self.assertEqual(1, len(worker.locusts))
+            self.assertEqual(1, len(worker.user_greenlets))
             # check that locust has started running
             gevent.sleep(0.01)
-            self.assertEqual(1, MyTestLocust._test_state)
+            self.assertEqual(1, MyTestUser._test_state)
             # send stop message
             client.mocked_send(Message("stop", None, "dummy_client_id"))
-            worker.locusts.join()
+            worker.user_greenlets.join()
             # check that locust user did not get to finish
-            self.assertEqual(1, MyTestLocust._test_state)
+            self.assertEqual(1, MyTestUser._test_state)
     
     def test_change_user_count_during_hatching(self):
-        class User(Locust):
+        class MyUser(User):
             wait_time = constant(1)
             @task
             def my_task(self):
@@ -972,11 +972,11 @@ class TestWorkerLocustRunner(LocustTestCase):
         
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             environment = Environment()
-            worker = self.get_runner(environment=environment, locust_classes=[User])
+            worker = self.get_runner(environment=environment, user_classes=[MyUser])
             
             client.mocked_send(Message("hatch", {
                 "hatch_rate": 5,
-                "num_clients": 10,
+                "num_users": 10,
                 "host": "",
                 "stop_timeout": None,
             }, "dummy_client_id"))
@@ -984,13 +984,13 @@ class TestWorkerLocustRunner(LocustTestCase):
             self.assertEqual(STATE_HATCHING, worker.state)
             client.mocked_send(Message("hatch", {
                 "hatch_rate": 5,
-                "num_clients": 9,
+                "num_users": 9,
                 "host": "",
                 "stop_timeout": None,
             }, "dummy_client_id"))
             sleep(0)
             worker.hatching_greenlet.join()
-            self.assertEqual(9, len(worker.locusts))
+            self.assertEqual(9, len(worker.user_greenlets))
             worker.quit()
 
 class TestMessageSerializing(unittest.TestCase):
@@ -1014,11 +1014,11 @@ class TestStopTimeout(LocustTestCase):
                 gevent.sleep(short_time)
                 MyTaskSet.state = "third" # should only run when run time + stop_timeout is > short_time * 2
 
-        class MyTestLocust(Locust):
+        class MyTestUser(User):
             tasks = [MyTaskSet]
             wait_time = constant(0)
         
-        environment = Environment(locust_classes=[MyTestLocust])
+        environment = Environment(user_classes=[MyTestUser])
         runner = environment.create_local_runner()
         runner.start(1, 1, wait=False)
         gevent.sleep(short_time / 2)
@@ -1026,7 +1026,7 @@ class TestStopTimeout(LocustTestCase):
         self.assertEqual("first", MyTaskSet.state)
 
         # exit with timeout
-        environment = Environment(locust_classes=[MyTestLocust], stop_timeout=short_time/2)
+        environment = Environment(user_classes=[MyTestUser], stop_timeout=short_time / 2)
         runner = environment.create_local_runner()
         runner.start(1, 1, wait=False)
         gevent.sleep(short_time)
@@ -1034,7 +1034,7 @@ class TestStopTimeout(LocustTestCase):
         self.assertEqual("second", MyTaskSet.state)
         
         # allow task iteration to complete, with some margin
-        environment = Environment(locust_classes=[MyTestLocust], stop_timeout=short_time*3)
+        environment = Environment(user_classes=[MyTestUser], stop_timeout=short_time * 3)
         runner = environment.create_local_runner()
         runner.start(1, 1, wait=False)
         gevent.sleep(short_time)
@@ -1062,11 +1062,11 @@ class TestStopTimeout(LocustTestCase):
             def my_task(self):
                 MyTaskSet.my_task_run = True
 
-        class MyTestLocust(Locust):
+        class MyTestUser(User):
             tasks = [MyTaskSet]
             wait_time = constant(0)
         
-        environment = create_environment([MyTestLocust], mocked_options())
+        environment = create_environment([MyTestUser], mocked_options())
         environment.stop_timeout = short_time
         runner = environment.create_local_runner()
         runner.start(1, 1)
@@ -1083,11 +1083,11 @@ class TestStopTimeout(LocustTestCase):
             def my_task(self):
                 pass
 
-        class MyTestLocust(Locust):
+        class MyTestUser(User):
             tasks = [MyTaskSet]
             wait_time = between(1, 1)
 
-        environment = Environment(locust_classes=[MyTestLocust], stop_timeout=short_time)
+        environment = Environment(user_classes=[MyTestUser], stop_timeout=short_time)
         runner = environment.create_local_runner()
         runner.start(1, 1)
         gevent.sleep(short_time) # sleep to make sure locust has had time to start waiting
@@ -1112,11 +1112,11 @@ class TestStopTimeout(LocustTestCase):
         class MyTaskSet(TaskSet):
             tasks = [MySubTaskSet]
         
-        class MyTestLocust(Locust):
+        class MyTestUser(User):
             tasks = [MyTaskSet]
             wait_time = constant(0)
 
-        environment = create_environment([MyTestLocust], mocked_options())
+        environment = create_environment([MyTestUser], mocked_options())
         environment.stop_timeout = short_time
         runner = environment.create_local_runner()
         runner.start(1, 1, wait=True)
@@ -1140,11 +1140,11 @@ class TestStopTimeout(LocustTestCase):
                 state[0] = 1
                 self.interrupt(reschedule=False)
         
-        class MyTestLocust(Locust):
+        class MyTestUser(User):
             tasks = [MySubTaskSet]
             wait_time = constant(3)
 
-        environment = create_environment([MyTestLocust], mocked_options())
+        environment = create_environment([MyTestUser], mocked_options())
         environment.stop_timeout = 0.3
         runner = environment.create_local_runner()
         runner.start(1, 1, wait=True)
@@ -1171,15 +1171,15 @@ class TestStopTimeout(LocustTestCase):
                 gevent.sleep(short_time)
                 MyTaskSet.state = "third" # should only run when run time + stop_timeout is > short_time * 2
 
-        class MyTestLocust(Locust):
+        class MyTestUser(User):
             tasks = [MyTaskSet]
             wait_time = constant(0)
         
-        environment = create_environment([MyTestLocust], mocked_options())
+        environment = create_environment([MyTestUser], mocked_options())
         runner = environment.create_local_runner()
         runner.start(1, 1)
         gevent.sleep(short_time / 2)
-        runner.kill_locusts(1)
+        runner.stop_users(1)
         self.assertEqual("first", MyTaskSet.state)
         runner.quit()
         environment.runner = None
@@ -1188,11 +1188,11 @@ class TestStopTimeout(LocustTestCase):
         runner = environment.create_local_runner()
         runner.start(1, 1)
         gevent.sleep(short_time)
-        runner.kill_locusts(1)
+        runner.stop_users(1)
         self.assertEqual("second", MyTaskSet.state)
         runner.quit()
         environment.runner = None
-        
+
         environment.stop_timeout = short_time * 3 # allow task iteration to complete, with some margin
         runner = environment.create_local_runner()
         runner.start(1, 1)
@@ -1200,8 +1200,8 @@ class TestStopTimeout(LocustTestCase):
         timeout = gevent.Timeout(short_time * 2)
         timeout.start()
         try:
-            runner.kill_locusts(1)
-            runner.locusts.join()
+            runner.stop_users(1)
+            runner.user_greenlets.join()
         except gevent.Timeout:
             self.fail("Got Timeout exception. Some locusts must have kept runnining after iteration finish")
         finally:

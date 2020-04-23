@@ -16,7 +16,7 @@ from gevent.timeout import Timeout
 from geventhttpclient.useragent import UserAgent, CompatRequest, CompatResponse, ConnectionError
 from geventhttpclient.response import HTTPConnectionClosed
 
-from locust.core import Locust
+from locust.core import User
 from locust.exception import LocustError, CatchResponseError, ResponseError
 from locust.env import Environment
 
@@ -47,14 +47,14 @@ def _construct_basic_auth_str(username, password):
     return 'Basic ' + b64encode(b':'.join((username, password))).strip().decode("ascii")
 
 
-class FastHttpLocust(Locust):
+class FastHttpUser(User):
     """
-    FastHttpLocust uses a different HTTP client (geventhttpclient) compared to HttpLocust (python-requests).
+    FastHttpUser uses a different HTTP client (geventhttpclient) compared to HttpUser (python-requests).
     It's significantly faster, but not as capable.
     
     The behaviour of this user is defined by it's tasks. Tasks can be declared either directly on the 
     class by using the :py:func:`@task decorator <locust.core.task>` on the methods, or by setting 
-    the :py:attr:`tasks attribute <locust.core.Locust.tasks>`.
+    the :py:attr:`tasks attribute <locust.core.User.tasks>`.
     
     This class creates a *client* attribute on instantiation which is an HTTP client with support 
     for keeping a user session between requests.
@@ -62,12 +62,12 @@ class FastHttpLocust(Locust):
     
     client = None
     """
-    Instance of HttpSession that is created upon instantiation of Locust. 
+    Instance of HttpSession that is created upon instantiation of User. 
     The client support cookies, and therefore keeps the session between HTTP requests.
     """
     
-    # Below are various UserAgent settings. Change these in your subclass to alter FastHttpLocust's behaviour. 
-    # It needs to be done before FastHttpLocust is instantiated, changing them later will have no effect
+    # Below are various UserAgent settings. Change these in your subclass to alter FastHttpUser's behaviour.
+    # It needs to be done before FastHttpUser is instantiated, changing them later will have no effect
     
     network_timeout: float = 60.0
     """Parameter passed to FastHttpSession"""
@@ -85,12 +85,12 @@ class FastHttpLocust(Locust):
     """Parameter passed to FastHttpSession. Default True, meaning no SSL verification."""
 
     abstract = True 
-    """Dont register this as a locust that can be run by itself"""
+    """Dont register this as a User class that can be run by itself"""
 
     def __init__(self, environment):
         super().__init__(environment)
         if self.host is None:
-            raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
+            raise LocustError("You must specify the base host. Either in the host attribute in the User class, or on the command line using the --host option.")
         if not re.match(r"^https?://[^/]+", self.host, re.I):
             raise LocustError("Invalid host (`%s`), must be a valid base URL. E.g. http://example.com" % self.host)
         

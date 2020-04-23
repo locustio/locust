@@ -1,7 +1,7 @@
-from locust import HttpLocust, TaskSet, task, between
+from locust import HttpUser, TaskSet, task, between
 
 
-class WebsiteUser(HttpLocust):
+class WebsiteUser(HttpUser):
     """
     Example of the ability of inline nested TaskSet classes
     """

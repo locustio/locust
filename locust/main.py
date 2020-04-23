@@ -13,7 +13,7 @@ import locust
 
 from . import log
 from .argument_parser import parse_locustfile_option, parse_options
-from .core import HttpLocust, Locust
+from .core import HttpUser, User
 from .env import Environment
 from .inspectlocust import get_task_ratio_dict, print_task_ratio
 from .log import setup_logging, greenlet_exception_logger
@@ -22,17 +22,17 @@ from .stats import (print_error_report, print_percentile_stats, print_stats,
 from .util.timespan import parse_timespan
 from .exception import AuthCredentialsError
 
-_internals = [Locust, HttpLocust]
+_internals = [User, HttpUser]
 version = locust.__version__
 
 
-def is_locust(item):
+def is_user_class(item):
     """
-    Check if a variable is a runnable (non-abstract) Locust class
+    Check if a variable is a runnable (non-abstract) User class
     """
     return bool(
         inspect.isclass(item)
-        and issubclass(item, Locust)
+        and issubclass(item, User)
         and item.abstract == False
     )
 
@@ -84,16 +84,16 @@ def load_locustfile(path):
         sys.path.insert(index + 1, directory)
         del sys.path[0]
     # Return our two-tuple
-    locusts = {name:value for name, value in vars(imported).items() if is_locust(value)}
-    return imported.__doc__, locusts
+    user_classes = {name:value for name, value in vars(imported).items() if is_user_class(value)}
+    return imported.__doc__, user_classes
 
 
-def create_environment(locust_classes, options, events=None):
+def create_environment(user_classes, options, events=None):
     """
     Create an Environment instance from options
     """
     return Environment(
-        locust_classes=locust_classes,
+        user_classes=user_classes,
         events=events,
         host=options.host,
         reset_stats=options.reset_stats,
@@ -109,7 +109,7 @@ def main():
     locustfile = parse_locustfile_option()
     
     # import the locustfile
-    docstring, locusts = load_locustfile(locustfile)
+    docstring, user_classes = load_locustfile(locustfile)
     
     # parse all command line options
     options = parse_options()
@@ -130,44 +130,44 @@ def main():
     greenlet_exception_handler = greenlet_exception_logger(logger)
 
     if options.list_commands:
-        print("Available Locusts:")
-        for name in locusts:
+        print("Available Users:")
+        for name in user_classes:
             print("    " + name)
         sys.exit(0)
 
-    if not locusts:
-        logger.error("No Locust class found!")
+    if not user_classes:
+        logger.error("No User class found!")
         sys.exit(1)
 
-    # make sure specified Locust exists
-    if options.locust_classes:
-        missing = set(options.locust_classes) - set(locusts.keys())
+    # make sure specified User exists
+    if options.user_classes:
+        missing = set(options.user_classes) - set(user_classes.keys())
         if missing:
-            logger.error("Unknown Locust(s): %s\n" % (", ".join(missing)))
+            logger.error("Unknown User(s): %s\n" % (", ".join(missing)))
             sys.exit(1)
         else:
-            names = set(options.locust_classes) & set(locusts.keys())
-            locust_classes = [locusts[n] for n in names]
+            names = set(options.user_classes) & set(user_classes.keys())
+            user_classes = [user_classes[n] for n in names]
     else:
         # list() call is needed to consume the dict_view object in Python 3
-        locust_classes = list(locusts.values())
+        user_classes = list(user_classes.values())
     
     # create locust Environment
-    environment = create_environment(locust_classes, options, events=locust.events)
+    environment = create_environment(user_classes, options, events=locust.events)
     
     if options.show_task_ratio:
-        print("\n Task ratio per locust class")
+        print("\n Task ratio per User class")
         print( "-" * 80)
-        print_task_ratio(locust_classes)
+        print_task_ratio(user_classes)
         print("\n Total task ratio")
         print("-" * 80)
-        print_task_ratio(locust_classes, total=True)
+        print_task_ratio(user_classes, total=True)
         sys.exit(0)
     if options.show_task_ratio_json:
         from json import dumps
         task_data = {
-            "per_class": get_task_ratio_dict(locust_classes), 
-            "total": get_task_ratio_dict(locust_classes, total=True)
+            "per_class": get_task_ratio_dict(user_classes),
+            "total": get_task_ratio_dict(user_classes, total=True)
         }
         print(dumps(task_data))
         sys.exit(0)
@@ -254,18 +254,18 @@ def main():
                 time.sleep(1)
         if not options.worker:
             # apply headless mode defaults
-            if options.num_clients is None:
-                options.num_clients = 1
+            if options.num_users is None:
+                options.num_users = 1
             if options.hatch_rate is None:
                 options.hatch_rate = 1
-            if options.step_clients is None:
-                options.step_clients = 1
+            if options.step_users is None:
+                options.step_users = 1
 
             # start the test
             if options.step_time:
-                runner.start_stepload(options.num_clients, options.hatch_rate, options.step_clients, options.step_time)
+                runner.start_stepload(options.num_users, options.hatch_rate, options.step_users, options.step_time)
             else:
-                runner.start(options.num_clients, options.hatch_rate)
+                runner.start(options.num_users, options.hatch_rate)
     
     if options.run_time:
         spawn_run_time_limit_greenlet()

@@ -66,7 +66,7 @@ def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG
         formatter_class=argparse.RawDescriptionHelpFormatter,
         usage=argparse.SUPPRESS,
         description=textwrap.dedent("""
-            Usage: locust [OPTIONS] [LocustClass ...]
+            Usage: locust [OPTIONS] [UserClass ...]
             
         """),
         #epilog="",
@@ -129,16 +129,16 @@ def setup_parser_arguments(parser):
     )
     # Number of Locust users
     parser.add_argument(
-        '-c', '--clients',
+        '-u', '--users',
         type=int,
-        dest='num_clients',
-        help="Number of concurrent Locust users."
+        dest='num_users',
+        help="Number of concurrent Locust users. Only used together with --headless"
     )
     # User hatch rate
     parser.add_argument(
         '-r', '--hatch-rate',
         type=float,
-        help="The rate per second in which clients are spawned."
+        help="The rate per second in which users are spawned. Only used together with --headless"
     )
     # Time limit of the test run
     parser.add_argument(
@@ -150,7 +150,7 @@ def setup_parser_arguments(parser):
         '-l', '--list',
         action='store_true',
         dest='list_commands',
-        help="Show list of possible locust classes and exit"
+        help="Show list of possible User classes and exit"
     )
     
     web_ui_group = parser.add_argument_group("Web UI options")
@@ -169,7 +169,7 @@ def setup_parser_arguments(parser):
     web_ui_group.add_argument(
         '--headless',
         action='store_true',
-        help="Disable the web interface, and instead start the load test immediately. Requires -c and -t to be specified."
+        help="Disable the web interface, and instead start the load test immediately. Requires -u and -t to be specified."
     )
     web_ui_group.add_argument(
         '--web-auth',
@@ -216,7 +216,7 @@ def setup_parser_arguments(parser):
         "Worker options", 
         textwrap.dedent("""
             Options for running a Locust Worker node when running Locust distributed. 
-            Only the LOCUSTFILE (-f option) need to be specified when starting a Worker, since other options such as -c, -r, -t are specified on the Master node.
+            Only the LOCUSTFILE (-f option) need to be specified when starting a Worker, since other options such as -u, -r, -t are specified on the Master node.
         """),
     )
     # if locust should be run in distributed mode as worker
@@ -302,13 +302,18 @@ def setup_parser_arguments(parser):
     step_load_group.add_argument(
         '--step-load',
         action='store_true',
-        help="Enable Step Load mode to monitor how performance metrics varies when user load increases. Requires --step-clients and --step-time to be specified."
+        help="Enable Step Load mode to monitor how performance metrics varies when user load increases. Requires --step-users and --step-time to be specified."
     )
-    # Number of clients to incease by Step
+    # Number of users to increase by Step
+    step_load_group.add_argument(
+        '--step-users',
+        type=int,
+        help="User count to increase by step in Step Load mode. Only used together with --step-load"
+    )
     step_load_group.add_argument(
         '--step-clients',
-        type=int,
-        help="Client count to increase by step in Step Load mode. Only used together with --step-load"
+        action='store_true',
+        help=configargparse.SUPPRESS
     )
     # Time limit of each step
     step_load_group.add_argument(
@@ -322,13 +327,13 @@ def setup_parser_arguments(parser):
     other_group.add_argument(
         '--show-task-ratio',
         action='store_true',
-        help="Print table of the locust classes' task execution ratio"
+        help="Print table of the User classes' task execution ratio"
     )
     # Display ratio table of all tasks in JSON format
     other_group.add_argument(
         '--show-task-ratio-json',
         action='store_true',
-        help="Print json data of the locust classes' task execution ratio"
+        help="Print json data of the User classes' task execution ratio"
     )
     # Version number (optparse gives you --version but we have to do it
     # ourselves to get -V too. sigh)
@@ -354,12 +359,12 @@ def setup_parser_arguments(parser):
         help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. This parameter only needs to be specified for the master process when running Locust distributed."
     )
     
-    locust_classes_group = parser.add_argument_group("Locust user classes")
-    locust_classes_group.add_argument(
-        'locust_classes',
+    user_classes_group = parser.add_argument_group("User classes")
+    user_classes_group.add_argument(
+        'user_classes',
         nargs='*',
-        metavar='LocustClass',
-        help="Optionally specify which Locust classes that should be used (available Locust classes can be listed with -l or --list)",
+        metavar='UserClass',
+        help="Optionally specify which User classes that should be used (available User classes can be listed with -l or --list)",
     )
 
 def get_parser(default_config_files=DEFAULT_CONFIG_FILES):

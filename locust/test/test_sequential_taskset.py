@@ -1,4 +1,4 @@
-from locust import Locust, task, constant
+from locust import User, task, constant
 from locust.sequential_taskset import SequentialTaskSet
 from locust.exception import RescheduleTask
 from .testcases import LocustTestCase
@@ -7,10 +7,10 @@ from .testcases import LocustTestCase
 class TestTaskSet(LocustTestCase):
     def setUp(self):
         super(TestTaskSet, self).setUp()
-        class User(Locust):
+        class MyUser(User):
             host = "127.0.0.1"
             wait_time = constant(0)
-        self.locust = User(self.environment)
+        self.locust = MyUser(self.environment)
 
     def test_task_sequence_with_list(self):
         log = []
