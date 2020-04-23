@@ -5,11 +5,10 @@ What is Locust?
 Locust is an easy-to-use, distributed, user load testing tool. It is intended for load-testing web sites
 (or other systems) and figuring out how many concurrent users a system can handle.
 
-The idea is that during a test, a swarm of `locusts <http://en.wikipedia.org/wiki/Locust>`_ 
-will attack your website. The behavior of each 
-locust (or test user if you will) is defined by you and the swarming process is monitored from a 
-web UI in real-time. This will help you battle test and identify bottlenecks in your code before 
-letting real users in.
+The idea is that during a test, a swarm of `locust <http://en.wikipedia.org/wiki/Locust>`_ users
+will attack your website. The behavior of each user is defined by you using Python code, and the 
+swarming process is monitored from a web UI in real-time. This will help you battle test and identify 
+bottlenecks in your code before letting real users in.
 
 Locust is completely event-based, and therefore it's possible to support thousands of concurrent
 users on a single machine. In contrast to many other event-based apps it doesn't use callbacks. 

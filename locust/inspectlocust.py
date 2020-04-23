@@ -3,8 +3,8 @@ import inspect
 from .core import User, TaskSet
 
 
-def print_task_ratio(locusts, total=False, level=0, parent_ratio=1.0):
-    d = get_task_ratio_dict(locusts, total=total, parent_ratio=parent_ratio)
+def print_task_ratio(user_classes, total=False, level=0, parent_ratio=1.0):
+    d = get_task_ratio_dict(user_classes, total=total, parent_ratio=parent_ratio)
     _print_task_ratio(d)
 
 def _print_task_ratio(x, level=0):

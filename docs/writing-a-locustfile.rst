@@ -69,7 +69,7 @@ user classes to use from the same locustfile by passing them as command line arg
 
     $ locust -f locust_file.py WebUser MobileUser
 
-If you wish to make one of these locusts execute more often you can set a weight attribute on those
+If you wish to simulate more users of a certain type you can set a weight attribute on those
 classes. Say for example, web users are three times more likely than mobile users:
 
 .. code-block:: python
