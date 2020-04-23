@@ -37,7 +37,7 @@ With the following locustfile, each user would wait between 5 and 15 seconds bet
             print("executing my_task")
     
     class MyUser(User):
-        task_set = MyTaskSet
+        tasks = [MyTaskSet]
         wait_time = between(5, 15)
 
 The wait_time method should return a number of seconds (or fraction of a second) and can also 
