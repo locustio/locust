@@ -387,6 +387,11 @@ def setup_parser_arguments(parser):
         metavar='UserClass',
         help="Optionally specify which User classes that should be used (available User classes can be listed with -l or --list)",
     )
+    user_classes_group.add_argument(
+        '--marks', '-m',
+        nargs='*',
+        dest='marks',
+    )
 
 def get_parser(default_config_files=DEFAULT_CONFIG_FILES):
     # get a parser that is only able to parse the -f argument
