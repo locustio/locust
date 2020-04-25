@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 import csv
 import json
+import os
 import sys
 import traceback
+from datetime import datetime, timedelta
 from io import StringIO
+from tempfile import NamedTemporaryFile
 
 import gevent
 import requests
@@ -305,3 +308,71 @@ class TestWebUIAuth(LocustTestCase):
 
     def test_index_with_basic_auth_enabled_blank_credentials(self):
         self.assertEqual(401, requests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port).status_code)
+
+
+class TestWebUIWithTLS(LocustTestCase):
+
+    def _create_tls_cert(self):
+        """ Generate a TLS cert and private key to serve over https """
+        from cryptography import x509
+        from cryptography.x509.oid import NameOID
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.backends import default_backend
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import rsa
+
+        key = rsa.generate_private_key(public_exponent=2**16+1, key_size=2048, backend=default_backend())
+        name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "127.0.0.1")])
+        now = datetime.utcnow()
+        cert = (
+            x509.CertificateBuilder()
+            .subject_name(name)
+            .issuer_name(name)
+            .public_key(key.public_key())
+            .serial_number(1000)
+            .not_valid_before(now)
+            .not_valid_after(now + timedelta(days=10*365))
+            .sign(key, hashes.SHA256(), default_backend())
+        )
+        cert_pem = cert.public_bytes(encoding=serialization.Encoding.PEM)
+        key_pem = key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+
+        return cert_pem, key_pem
+
+    def setUp(self):
+        super(TestWebUIWithTLS, self).setUp()
+        tls_cert, tls_key = self._create_tls_cert()
+        self.tls_cert_file = NamedTemporaryFile(delete=False)
+        self.tls_key_file = NamedTemporaryFile(delete=False)
+        with open(self.tls_cert_file.name, 'w') as f:
+            f.write(tls_cert.decode())
+        with open(self.tls_key_file.name, 'w') as f:
+            f.write(tls_key.decode())
+
+        parser = get_parser(default_config_files=[])
+        options = parser.parse_args([
+            "--tls-cert", self.tls_cert_file.name,
+            "--tls-key", self.tls_key_file.name,
+        ])
+        self.runner = Runner(self.environment)
+        self.stats = self.runner.stats
+        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, tls_cert=options.tls_cert, tls_key=options.tls_key)
+        gevent.sleep(0.01)
+        self.web_port = self.web_ui.server.server_port
+
+    def tearDown(self):
+        super(TestWebUIWithTLS, self).tearDown()
+        self.web_ui.stop()
+        self.runner.quit()
+        os.unlink(self.tls_cert_file.name)
+        os.unlink(self.tls_key_file.name)
+
+    def test_index_with_https(self):
+        # Suppress only the single warning from urllib3 needed.
+        from urllib3.exceptions import InsecureRequestWarning
+        requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+        self.assertEqual(200, requests.get("https://127.0.0.1:%i/" % self.web_port, verify=False).status_code)

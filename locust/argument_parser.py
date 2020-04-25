@@ -178,6 +178,16 @@ def setup_parser_arguments(parser):
         default=None,
         help='Turn on Basic Auth for the web interface. Should be supplied in the following format: username:password'
     )
+    web_ui_group.add_argument(
+        '--tls-cert',
+        default="",
+        help="Optional path to TLS certificate to use to serve over HTTPS"
+    )
+    web_ui_group.add_argument(
+        '--tls-key',
+        default="",
+        help="Optional path to TLS private key to use to serve over HTTPS"
+    )
     
     master_group = parser.add_argument_group(
         "Master options", 
