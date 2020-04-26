@@ -15,6 +15,9 @@ class Environment:
     user_classes = []
     """User classes that the runner will run"""
     
+    marks = None
+    """If set, the runner will only run tasks that are marked by marks in this list"""
+
     stats = None
     """Reference to RequestStats instance"""
     
@@ -51,6 +54,7 @@ class Environment:
     def  __init__(
         self, *,
         user_classes=[],
+        marks=None,
         events=None, 
         host=None, 
         reset_stats=False, 
@@ -65,6 +69,7 @@ class Environment:
             self.events = Events()
         
         self.user_classes = user_classes
+        self.marks = marks
         self.stats = RequestStats()
         self.host = host
         self.reset_stats = reset_stats

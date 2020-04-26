@@ -57,17 +57,17 @@ def task(weight=1):
     else:
         return decorator_func
 
-def mark(mark_name='marked'):
+def mark(mark_name=None):
     def decorator_func(func):
-        if 'locust_mark_names' in func.__dict__:
+        if 'locust_mark_names' not in func.__dict__:
+            func.locust_mark_names = ['marked']
+        if mark_name is not None:
             func.locust_mark_names.append(mark_name)
-        else:
-            func.locust_mark_names = [mark_name]
         return func
 
     if callable(mark_name):
         func = mark_name
-        mark_name = 'marked'
+        mark_name = None
         return decorator_func(func)
     else:
         return decorator_func
@@ -211,15 +211,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
         if not self.wait_function:
             self.wait_function = self.user.wait_function
 
-        if self.user.environment.parsed_options.marks is not None:
-            new_tasks = []
-            for task in self.tasks:
-                print(dir(task))
-                if 'locust_mark_names' in dir(task):
-                    mark_intersection = [m for m in task.locust_mark_names if m in self.user.environment.parsed_options.marks]
-                    if len(mark_intersection) > 0:
-                        new_tasks.append(task)
-            self.tasks = new_tasks
+        self.apply_marks()
 
     def on_start(self):
         """
@@ -311,7 +303,25 @@ class TaskSet(object, metaclass=TaskSetMeta):
     def get_next_task(self):
         if not self.tasks:
             raise Exception("No tasks defined. use the @task decorator or set the tasks property of the TaskSet")
-        return random.choice(self.tasks)
+        if not self.marked_tasks:
+            self.interrupt(reschedule=False)
+        return random.choice(self.marked_tasks)
+
+    def apply_marks(self, marks=None):
+        if marks is None:
+            marks = self.user.environment.marks
+
+        if marks is None:
+            self.marked_tasks = self.tasks
+        else:
+            new_tasks = []
+            for task in self.tasks:
+                if 'locust_mark_names' in dir(task):
+                    mark_intersection = [m for m in task.locust_mark_names if m in self.user.environment.marks]
+                    if len(mark_intersection) > 0:
+                        new_tasks.append(task)
+            self.marked_tasks = new_tasks
+
     
     def wait_time(self):
         """
