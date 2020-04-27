@@ -75,6 +75,9 @@ Other breaking changes
 Other fixes and improvements
 ----------------------------
 
+* It's now possible to protect the Web UI with Basic Auth using hte ``--web-auth`` command line argument.
+* The Web UI can now be served over HTTPS by specifying a TLS certificate and key with the ``--tls-cert`` 
+  and ``--tls-key`` command line arguments.
 * If the number of users and hatch rate are specified on command line, it's now used to pre-populate the input fields in 
   the Web UI.
 
