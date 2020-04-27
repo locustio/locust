@@ -233,7 +233,12 @@ def main():
             else:
                 web_host = options.web_host
             web_ui = environment.create_web_ui(
-                host=web_host, port=options.web_port, auth_credentials=options.web_auth, tls_cert=options.tls_cert, tls_key=options.tls_key)
+                host=web_host, 
+                port=options.web_port, 
+                auth_credentials=options.web_auth, 
+                tls_cert=options.tls_cert, 
+                tls_key=options.tls_key,
+            )
         except AuthCredentialsError:
             logger.error("Credentials supplied with --web-auth should have the format: username:password")
             sys.exit(1)
