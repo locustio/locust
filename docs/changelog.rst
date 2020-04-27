@@ -79,6 +79,12 @@ Other fixes and improvements
   the Web UI.
 
 
+0.14.6
+======
+
+* Fix bug when running with latest Gevent version, and pinned the latest version
+
+
 0.14.0
 ======
 
