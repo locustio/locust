@@ -53,8 +53,9 @@ setup(
     ],
     test_suite="locust.test",
     tests_require=[
+        'cryptography',
         'mock',
-        'pyquery'
+        'pyquery',
         ],
     entry_points={
         'console_scripts': [

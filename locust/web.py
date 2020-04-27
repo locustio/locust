@@ -57,7 +57,7 @@ class WebUI:
     server = None
     """Reference to the :class:`pyqsgi.WSGIServer` instance"""
     
-    def __init__(self, environment, host, port, auth_credentials=None):
+    def __init__(self, environment, host, port, auth_credentials=None, tls_cert=None, tls_key=None):
         """
         Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
         
@@ -67,11 +67,15 @@ class WebUI:
         port: Port that the web server should listen to
         auth_credentials:  If provided, it will enable basic auth with all the routes protected by default.
                            Should be supplied in the format: "user:pass".
+        tls_cert: A path to a TLS certificate
+        tls_key: A path to a TLS private key
         """
         environment.web_ui = self
         self.environment = environment
         self.host = host
         self.port = port
+        self.tls_cert = tls_cert
+        self.tls_key = tls_key
         app = Flask(__name__)
         self.app = app
         app.debug = True
@@ -276,7 +280,10 @@ class WebUI:
         self.greenlet.link_exception(greenlet_exception_handler)
 
     def start(self):
-        self.server = pywsgi.WSGIServer((self.host, self.port), self.app, log=None)
+        if self.tls_cert and self.tls_key:
+            self.server = pywsgi.WSGIServer((self.host, self.port), self.app, log=None, keyfile=self.tls_key, certfile=self.tls_cert)
+        else:
+            self.server = pywsgi.WSGIServer((self.host, self.port), self.app, log=None)
         self.server.serve_forever()
     
     def stop(self):
