@@ -124,6 +124,10 @@ class Environment:
                      which means all interfaces
         :param port: Port that the web server should listen to
         :param auth_credentials: If provided (in format "username:password") basic auth will be enabled
+        :param tls_cert: An optional path (str) to a TLS cert. If this is provided the web UI will be
+                         served over HTTPS
+        :param tls_key: An optional path (str) to a TLS private key. If this is provided the web UI will be
+                        served over HTTPS
         """
         self.web_ui = WebUI(self, host, port, auth_credentials=auth_credentials, tls_cert=tls_cert, tls_key=tls_key)
         return self.web_ui
