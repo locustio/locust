@@ -39,6 +39,7 @@ Running your Locust tests
 .. toctree ::
     :maxdepth: 1
 
+    configuration
     running-locust-distributed
     running-locust-docker
     running-locust-without-web-ui

@@ -4,6 +4,7 @@ locust.egg-info/**
 locustio.egg-info/**
 docs/_build/**
 docs/cli-help-output.txt
+docs/env-options.rst
 mock.*.egg
 dist/**
 .idea/**
