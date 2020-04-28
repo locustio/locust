@@ -58,12 +58,16 @@ def task(weight=1):
         return decorator_func
 
 def mark(mark_name=None):
-    def decorator_func(func):
-        if 'locust_mark_names' not in func.__dict__:
-            func.locust_mark_names = ['marked']
-        if mark_name is not None:
-            func.locust_mark_names.append(mark_name)
-        return func
+
+    def decorator_func(decorated):
+        if issubclass(type(decorated), TaskSetMeta):
+            decorated.tasks = list(map(mark(mark_name), decorated.tasks))
+        else:
+            if 'locust_mark_names' not in decorated.__dict__:
+                decorated.locust_mark_names = ['marked']
+            if mark_name is not None:
+                decorated.locust_mark_names.append(mark_name)
+        return decorated
 
     if callable(mark_name):
         func = mark_name
@@ -320,6 +324,9 @@ class TaskSet(object, metaclass=TaskSetMeta):
                     mark_intersection = [m for m in task.locust_mark_names if m in self.user.environment.marks]
                     if len(mark_intersection) > 0:
                         new_tasks.append(task)
+                elif issubclass(type(task), TaskSetMeta):
+                    new_tasks.append(task)
+
             self.marked_tasks = new_tasks
 
     
@@ -393,9 +400,6 @@ class DefaultTaskSet(TaskSet):
     Default root TaskSet that executes tasks in User.tasks.
     It executes tasks declared directly on the Locust with the user instance as the task argument.
     """
-    def get_next_task(self):
-        return random.choice(self.user.tasks)
-    
     def execute_task(self, task, *args, **kwargs):
         if hasattr(task, "tasks") and issubclass(task, TaskSet):
             # task is  (nested) TaskSet class
@@ -513,6 +517,8 @@ class User(object, metaclass=UserMeta):
     def run(self):
         self._state = LOCUST_STATE_RUNNING
         self._taskset_instance = DefaultTaskSet(self)
+        self._taskset_instance.tasks = self.tasks
+        self._taskset_instance.apply_marks()
         try:
             # run the task_set on_start method, if it has one
             self.on_start()
