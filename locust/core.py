@@ -58,6 +58,28 @@ def task(weight=1):
         return decorator_func
 
 def mark(mark_name=None):
+    """
+    Decorator for marking tasks and TaskSets with the given mark name. You can then limit
+    the test to only execute tasks that are marked with any of the marks provided by the
+    --marks command-line argument. Example::
+
+        class ForumPage(TaskSet):
+            @mark('thread')
+            @task(100)
+            def read_thread(self):
+                pass
+
+            @mark('thread')
+            @mark('post')
+            @task(7)
+            def create_thread(self):
+                pass
+
+            @mark('post')
+            @task(11)
+            def comment(self):
+                pass
+    """
 
     def decorator_func(decorated):
         if issubclass(type(decorated), TaskSetMeta):
@@ -69,6 +91,14 @@ def mark(mark_name=None):
                 decorated.locust_mark_set.add(mark_name)
         return decorated
 
+    """
+    Check if mark was used without parentheses (not called), like this::
+
+        @mark
+        @task(1)
+        def my_task()
+            pass
+    """
     if callable(mark_name):
         func = mark_name
         mark_name = None
@@ -323,9 +353,8 @@ class TaskSet(object, metaclass=TaskSetMeta):
             self.interrupt(reschedule=False)
         return random.choice(self.marked_tasks)
 
-    def apply_marks(self, marks=None):
-        if marks is None:
-            marks = self.user.environment.marks
+    def apply_marks(self):
+        marks = self.user.environment.marks
 
         if marks is None:
             self.marked_tasks = self.tasks
@@ -333,7 +362,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
             new_tasks = []
             for task in self.tasks:
                 if 'locust_mark_set' in dir(task):
-                    mark_intersection = task.locust_mark_set & set(self.user.environment.marks)
+                    mark_intersection = task.locust_mark_set & set(marks)
                     if len(mark_intersection) > 0:
                         new_tasks.append(task)
 

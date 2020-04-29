@@ -193,6 +193,74 @@ that looks like this::
 and then Python's ``random.choice()`` is used pick tasks from the list.
 
 
+.. _marking-tasks:
+
+Marking tasks
+-------------
+
+By marking tasks using the `mark <locust.core.mark>` decorator, you can be picky about what tasks
+are executed during the test using the :code:`--marks` argument. Consider the following example:
+
+.. code-block:: python
+
+    from locust import User, constant, task, mark
+
+    class MyUser(User):
+        wait_time = constant(1)
+
+        @mark('mark1')
+        @task
+        def task1(self):
+            pass
+
+        @mark('mark1')
+        @mark('mark2')
+        @task
+        def task2(self):
+            pass
+
+        @mark('mark3')
+        @task
+        def task3(self):
+            pass
+
+        @task
+        def task4(self):
+            pass
+
+If you started this test with :code:`--marks mark1`, only *task1* and *task2* would be executed
+during the test. If you started it with :code:`--marks mark2 mark3`, only *task2* and *task3*
+would be executed.
+
+Every task that is marked also receives the :code:`marked` mark. So, starting the test with
+:code:`--marks marked` would actually run *task1*, *task2*, and *task3*.
+
+Furthermore, providing the argument for the mark name is actually optional, and so are the
+parentheses:
+
+.. code-block:: python
+
+    from locust import User, constant, task, mark
+
+    class MyUser(User):
+        wait_time = constant(1)
+
+        @mark
+        @task
+        def task1(self):
+            pass
+
+        @mark()
+        @task
+        def task2(self):
+            pass
+
+        @task
+        def task3(self):
+            pass
+
+Running this example with :code:`--marks marked` will only execute *task1* and *task2*.
+
 
 TaskSet class
 =============
@@ -312,9 +380,21 @@ User instance.
 Referencing the User instance, or the parent TaskSet instance
 ---------------------------------------------------------------
 
-A TaskSet instance will have the attribute :py:attr:`locust <locust.core.TaskSet.user>` point to 
+A TaskSet instance will have the attribute :py:attr:`user <locust.core.TaskSet.user>` point to
 its User instance, and the attribute :py:attr:`parent <locust.core.TaskSet.parent>` point to its
 parent TaskSet instance.
+
+
+Marks and TaskSets
+------------------
+You can mark TaskSets using the `mark <locust.core.mark>` decorator in a similar way to normal tasks,
+as described `above <marking-tasks>`, but there are some nuances worth mentioning. If you mark a task
+within a nested TaskSet, locust will execute that task even if the TaskSet isn't marked. So, there's
+no need to mark both a task and its TaskSet. In fact, this would be redundant, as the only thing
+marking TaskSet does is mark every task defined within that TaskSet. In other words, the way that
+locust determines whether or not a TaskSet should be executed is not by looking at the marks assigned to
+the TaskSet, but instead looking at the marks assigned to each task within that TaskSet recursively.
+
 
 
 .. _sequential-taskset:
