@@ -12,3 +12,6 @@ release: build
 
 build_docs:
 	sphinx-build -b html docs/ docs/_build/
+
+changelog:
+	python generate_changelog.py
