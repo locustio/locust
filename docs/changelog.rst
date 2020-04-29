@@ -85,16 +85,37 @@ Other breaking changes
   how locust is started. Instead, the ``locust`` command is now set as ``ENTRYPOINT`` of the docker image. See
   :ref:`running-locust-docker` for more info.
 * Command line option ``--csv-base-name`` has been removed, since it was just an alias for ``--csv``.
+* The way Locust handles logging has been changed. We no longer wrap stdout (and stderr) to automatically make print 
+  statements go into the log. ``print()`` statements now only goes to stdout. To add custom entries to the log, one 
+  should now use the Python logging module:
+  
+  .. code-block:: python
+  
+      import logging
+      logging.info("custom logging message)
+  
+  For more info see :ref:`logging`
 
 
-Other fixes and improvements
-----------------------------
+Web UI improvements
+-------------------
 
 * It's now possible to protect the Web UI with Basic Auth using hte ``--web-auth`` command line argument.
 * The Web UI can now be served over HTTPS by specifying a TLS certificate and key with the ``--tls-cert`` 
   and ``--tls-key`` command line arguments.
 * If the number of users and hatch rate are specified on command line, it's now used to pre-populate the input fields in 
   the Web UI.
+
+
+
+Other fixes and improvements
+----------------------------
+
+* The code base has been refactored to make it possible to run :ref:`Locust as a python lib <use-as-lib>`. 
+* It's now possible to call ``response.failure()`` or ``response.success()`` multiple times when using 
+  the ``catch_response=True`` in the HTTP clients. Only the last call to ``success``/``failure`` will count.
+* The ``--help`` output has been improved by grouping related options together.
+
 
 
 0.14.6
