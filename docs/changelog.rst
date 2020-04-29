@@ -63,6 +63,8 @@ See the :ref:`configuration` documentation for a full list of available :ref:`en
 Other breaking changes
 ----------------------
 
+* The master/slave terminology has been changed to master/worker. Therefore the command line arguments ``--slave`` and
+  ``--expect-slaves`` has been renamed to ``--worker`` and ``--expect-workers``.
 * The option for running Locust without the Web UI has been renamed from ``--no-web`` to ``--headless``.
 * Removed ``Locust.setup``, ``Locust.teardown``, ``TaskSet.setup`` and ``TaskSet.teardown`` hooks. If you want to 
   run code at the start or end of a test, you should instead use the :py:attr:`test_start <locust.event.Events.test_start>`
