@@ -1,6 +1,84 @@
-# Change Log
+# Changelog
+
+## [1.0b1](https://github.com/locustio/locust/tree/1.0b1) (2020-04-29)
+
+[Full Changelog](https://github.com/locustio/locust/compare/0.14.6...1.0b1)
+
+**Fixed bugs:**
+
+- DUBUG not working master br [\#1337](https://github.com/locustio/locust/issues/1337)
+- Docker image: worker mode not starting correctly [\#1322](https://github.com/locustio/locust/issues/1322)
+- Can't run Locust distributed with --csv-full-history  [\#1315](https://github.com/locustio/locust/issues/1315)
+- Exception throws on attempt to report request results to master [\#1293](https://github.com/locustio/locust/issues/1293)
+- Can't access web interface [\#1288](https://github.com/locustio/locust/issues/1288)
+- Web page is confused when I shutdown the only slave [\#1279](https://github.com/locustio/locust/issues/1279)
+- \[Documentation\] Bleeding Edge link is broken [\#1278](https://github.com/locustio/locust/issues/1278)
+- Locust Web Dashboard Charts, Slaves sections not working after certain time [\#1276](https://github.com/locustio/locust/issues/1276)
+- Connection pool is full, discarding connection | 'Connection aborted.', RemoteDisconnected\('Remote end closed connection without response [\#1263](https://github.com/locustio/locust/issues/1263)
+- \[Nested TaskSet\] Child TaskSet's on\_stop method is not called when GreenletExit [\#1206](https://github.com/locustio/locust/issues/1206)
+
+**Closed issues:**
+
+- "Order of events" clarification [\#1349](https://github.com/locustio/locust/issues/1349)
+- resp.failure\(\) shouldnt immediately log a failed request, just mark it a such [\#1335](https://github.com/locustio/locust/issues/1335)
+- Change CSV column names [\#1317](https://github.com/locustio/locust/issues/1317)
+- More information in csv reports [\#1292](https://github.com/locustio/locust/issues/1292)
+- Remove @seq\_task and instead add a SequentialTaskSet class [\#1286](https://github.com/locustio/locust/issues/1286)
+- Change how logging is handled [\#1285](https://github.com/locustio/locust/issues/1285)
+- Remove the Locust.setup and Locust.teardown hooks in favour of adding test\_start and test\_stop events [\#1284](https://github.com/locustio/locust/issues/1284)
+- Rename Locust to User/LocustUser [\#1283](https://github.com/locustio/locust/issues/1283)
+- Clean up among the command line arguments [\#1282](https://github.com/locustio/locust/issues/1282)
+- Rename and restructure Locust/TaskSet [\#1264](https://github.com/locustio/locust/issues/1264)
+- Docker image should not require TARGET\_URL [\#1247](https://github.com/locustio/locust/issues/1247)
+- Add `allow\_redirects` option to FastHttpSession.request [\#1238](https://github.com/locustio/locust/issues/1238)
+- Retrieve failures.csv in --no-web mode [\#1237](https://github.com/locustio/locust/issues/1237)
+- command line arguments for clients and spawn rate should populate ui in the same way as url [\#1186](https://github.com/locustio/locust/issues/1186)
+- How to run test programatically [\#222](https://github.com/locustio/locust/issues/222)
+- Alternative terminology for "slave" [\#220](https://github.com/locustio/locust/issues/220)
+
+**Merged pull requests:**
+
+- Environment variable configuration changes [\#1355](https://github.com/locustio/locust/pull/1355) ([heyman](https://github.com/heyman))
+- Add CLI params for TLS cert and key - serves over HTTPS [\#1354](https://github.com/locustio/locust/pull/1354) ([mattdodge](https://github.com/mattdodge))
+- Add allow\_redirects parameter to FastHttpLocust.client.request\(\). Fixes \#1238 [\#1344](https://github.com/locustio/locust/pull/1344) ([cyberw](https://github.com/cyberw))
+- Give better error message when kubernetes env vars collide with locust's [\#1343](https://github.com/locustio/locust/pull/1343) ([cyberw](https://github.com/cyberw))
+- Fix web options [\#1340](https://github.com/locustio/locust/pull/1340) ([Trouv](https://github.com/Trouv))
+- Populate UI fields with -c, -r, --step-clients, and --step-time options [\#1339](https://github.com/locustio/locust/pull/1339) ([Trouv](https://github.com/Trouv))
+- Remove docker\_start.sh and set locust as entrypoint for official Docker image [\#1338](https://github.com/locustio/locust/pull/1338) ([heyman](https://github.com/heyman))
+- Allow multiple calls to response.failure\(\) or response.success\(\) within the same with block [\#1336](https://github.com/locustio/locust/pull/1336) ([heyman](https://github.com/heyman))
+- Removed double consideration of same timestamp [\#1332](https://github.com/locustio/locust/pull/1332) ([Oribow](https://github.com/Oribow))
+- Make all LocustRunners aware of their target\_user\_count, not just MasterLocustRunner [\#1331](https://github.com/locustio/locust/pull/1331) ([cyberw](https://github.com/cyberw))
+- Import wait functions from locust instead of locust.wait\_time [\#1330](https://github.com/locustio/locust/pull/1330) ([cyberw](https://github.com/cyberw))
+- Stop exposing exceptions on locust module, remove old wait api \(step 1 of fixing \#1328\) [\#1329](https://github.com/locustio/locust/pull/1329) ([cyberw](https://github.com/cyberw))
+- Add Runners, WebUI and Environment to the public API [\#1327](https://github.com/locustio/locust/pull/1327) ([heyman](https://github.com/heyman))
+- Update main.py about gevent.signal\(\) [\#1326](https://github.com/locustio/locust/pull/1326) ([YUFEIZED](https://github.com/YUFEIZED))
+- Improve how we do logging [\#1325](https://github.com/locustio/locust/pull/1325) ([heyman](https://github.com/heyman))
+- Worker quitting then stopping via web UI bug fix [\#1324](https://github.com/locustio/locust/pull/1324) ([Trouv](https://github.com/Trouv))
+- Fixed some spelling/grammar on docstrings in core.py [\#1323](https://github.com/locustio/locust/pull/1323) ([Trouv](https://github.com/Trouv))
+- Add User count to CSV history stats [\#1316](https://github.com/locustio/locust/pull/1316) ([heyman](https://github.com/heyman))
+- Rename locust to user [\#1314](https://github.com/locustio/locust/pull/1314) ([anuj-ssharma](https://github.com/anuj-ssharma))
+- Add basic auth for webui [\#1313](https://github.com/locustio/locust/pull/1313) ([anuj-ssharma](https://github.com/anuj-ssharma))
+- Group related command line options together [\#1311](https://github.com/locustio/locust/pull/1311) ([heyman](https://github.com/heyman))
+- Replace TaskSequence and @seq\_task with SequentialTaskSet [\#1310](https://github.com/locustio/locust/pull/1310) ([heyman](https://github.com/heyman))
+- Replace locust setup teardown with events [\#1309](https://github.com/locustio/locust/pull/1309) ([heyman](https://github.com/heyman))
+- Decouple Runner and Locust code by introducing Locust.start and Locust.stop methods [\#1306](https://github.com/locustio/locust/pull/1306) ([heyman](https://github.com/heyman))
+- Allow tasks to be declared directly under Locust classes [\#1304](https://github.com/locustio/locust/pull/1304) ([heyman](https://github.com/heyman))
+- ensure the connection between master and slave in heartbeat [\#1280](https://github.com/locustio/locust/pull/1280) ([delulu](https://github.com/delulu))
+
+## [0.14.6](https://github.com/locustio/locust/tree/0.14.6) (2020-02-25)
+
+[Full Changelog](https://github.com/locustio/locust/compare/0.14.5...0.14.6)
+
+**Closed issues:**
+
+- Fix simple typo: betwen -\> between [\#1268](https://github.com/locustio/locust/issues/1268)
+
+**Merged pull requests:**
+
+- Fix simple typo: betwen -\> between [\#1269](https://github.com/locustio/locust/pull/1269) ([timgates42](https://github.com/timgates42))
 
 ## [0.14.5](https://github.com/locustio/locust/tree/0.14.5) (2020-02-25)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.14.4...0.14.5)
 
 **Fixed bugs:**
@@ -19,6 +97,7 @@
 - Remove six and other 2.7 compatibility code [\#1253](https://github.com/locustio/locust/pull/1253) ([cyberw](https://github.com/cyberw))
 
 ## [0.14.4](https://github.com/locustio/locust/tree/0.14.4) (2020-02-03)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.14.3...0.14.4)
 
 **Fixed bugs:**
@@ -26,15 +105,19 @@
 - FastHttpLocust times out when HttpLocust does not [\#1246](https://github.com/locustio/locust/issues/1246)
 
 ## [0.14.3](https://github.com/locustio/locust/tree/0.14.3) (2020-02-03)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.14.2...0.14.3)
 
 ## [0.14.2](https://github.com/locustio/locust/tree/0.14.2) (2020-02-03)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.14.1...0.14.2)
 
 ## [0.14.1](https://github.com/locustio/locust/tree/0.14.1) (2020-02-03)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.14.0...0.14.1)
 
 ## [0.14.0](https://github.com/locustio/locust/tree/0.14.0) (2020-02-03)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.13.5...0.14.0)
 
 **Fixed bugs:**
@@ -50,7 +133,6 @@
 - Locust should warn if CPU usage is too high [\#1161](https://github.com/locustio/locust/issues/1161)
 - Support Step Load Pattern \(up & down\) [\#1001](https://github.com/locustio/locust/issues/1001)
 - Provide a way to specify locust counts and hatch rate per locust class [\#683](https://github.com/locustio/locust/issues/683)
-- Alternative terminology for "slave" [\#220](https://github.com/locustio/locust/issues/220)
 
 **Merged pull requests:**
 
@@ -71,6 +153,7 @@
 - Allow min\_wait and max\_wait times of 0 [\#1199](https://github.com/locustio/locust/pull/1199) ([Aresius423](https://github.com/Aresius423))
 
 ## [0.13.5](https://github.com/locustio/locust/tree/0.13.5) (2019-12-17)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.13.4...0.13.5)
 
 **Fixed bugs:**
@@ -86,13 +169,16 @@
 - Get encoding from content-type header instead of autodetecting using chardet \(which is slow\) [\#1194](https://github.com/locustio/locust/pull/1194) ([cyberw](https://github.com/cyberw))
 
 ## [0.13.4](https://github.com/locustio/locust/tree/0.13.4) (2019-12-16)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.13.3...0.13.4)
 
 ## [0.13.3](https://github.com/locustio/locust/tree/0.13.3) (2019-12-13)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.13.2...0.13.3)
 
 **Fixed bugs:**
 
+- Time response graph is not working on master/slave configuration [\#1182](https://github.com/locustio/locust/issues/1182)
 - Unable to properly connect multiple slaves,  master  [\#1176](https://github.com/locustio/locust/issues/1176)
 - Zero exit code on exception [\#1172](https://github.com/locustio/locust/issues/1172)
 - `--stop-timeout` is not respected when changing number of running Users in distributed mode [\#1162](https://github.com/locustio/locust/issues/1162)
@@ -108,8 +194,10 @@
 - Add toolbox control for for downloading chart as png [\#1165](https://github.com/locustio/locust/pull/1165) ([skivis](https://github.com/skivis))
 - Allow locust to get SIGTERM\(aka Ctrl+C\) messages. [\#1159](https://github.com/locustio/locust/pull/1159) ([turgayozgur](https://github.com/turgayozgur))
 - Stats: New argument "--csv-full-history" appends stats entries every interval in a new "\_stats\_history.csv" File [\#1146](https://github.com/locustio/locust/pull/1146) ([mehta-ankit](https://github.com/mehta-ankit))
+- Support Step Load Pattern [\#1002](https://github.com/locustio/locust/pull/1002) ([delulu](https://github.com/delulu))
 
 ## [0.13.2](https://github.com/locustio/locust/tree/0.13.2) (2019-11-18)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.13.1...0.13.2)
 
 **Fixed bugs:**
@@ -122,6 +210,7 @@
 - Add charts for number of failures in the Web UI [\#952](https://github.com/locustio/locust/issues/952)
 
 ## [0.13.1](https://github.com/locustio/locust/tree/0.13.1) (2019-11-16)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.13.0...0.13.1)
 
 **Fixed bugs:**
@@ -140,6 +229,7 @@
 - Revert "update build\_url function in Locust HttpSession " [\#1148](https://github.com/locustio/locust/pull/1148) ([vstepanov-lohika-tix](https://github.com/vstepanov-lohika-tix))
 
 ## [0.13.0](https://github.com/locustio/locust/tree/0.13.0) (2019-11-14)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.12.2...0.13.0)
 
 **Fixed bugs:**
@@ -177,11 +267,11 @@
 - Add errors grouping for dynamic endpoint [\#993](https://github.com/locustio/locust/pull/993) ([dduleba](https://github.com/dduleba))
 - add 90th %ile to the stats page [\#945](https://github.com/locustio/locust/pull/945) ([myzhan](https://github.com/myzhan))
 - Make stdout/stderr wrappers identify themselves as not being a tty [\#929](https://github.com/locustio/locust/pull/929) ([michaelboulton](https://github.com/michaelboulton))
-- Use uuid4 to generate slave client\_id [\#895](https://github.com/locustio/locust/pull/895) ([mattbailey](https://github.com/mattbailey))
 - Specify host in web ui [\#523](https://github.com/locustio/locust/pull/523) ([PayscaleNateW](https://github.com/PayscaleNateW))
 - make sure the current working dir is in the sys.path [\#484](https://github.com/locustio/locust/pull/484) ([pwnage101](https://github.com/pwnage101))
 
 ## [0.12.2](https://github.com/locustio/locust/tree/0.12.2) (2019-10-26)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.12.1...0.12.2)
 
 **Fixed bugs:**
@@ -246,12 +336,14 @@
 - Add an option \(--stop-timeout\) to allow tasks to finish running their iteration before exiting  [\#1099](https://github.com/locustio/locust/pull/1099) ([cyberw](https://github.com/cyberw))
 - Allow None response time for requests [\#1088](https://github.com/locustio/locust/pull/1088) ([cyberw](https://github.com/cyberw))
 - Fixed issue with Total Requests Per Second plot [\#1060](https://github.com/locustio/locust/pull/1060) ([williamlhunter](https://github.com/williamlhunter))
+- Tox: Add flake8 tests to find Python syntax errors and undefined names [\#1039](https://github.com/locustio/locust/pull/1039) ([cclauss](https://github.com/cclauss))
 - Fix frontend bugs. [\#822](https://github.com/locustio/locust/pull/822) ([omittones](https://github.com/omittones))
 - Switch from using optparse to argparse for command line arguments [\#769](https://github.com/locustio/locust/pull/769) ([jdufresne](https://github.com/jdufresne))
 - Allow skipping the logging setup [\#738](https://github.com/locustio/locust/pull/738) ([Exide](https://github.com/Exide))
 - Added link to an Ansible role as a 3rd party tool. [\#704](https://github.com/locustio/locust/pull/704) ([tinx](https://github.com/tinx))
 
 ## [0.12.1](https://github.com/locustio/locust/tree/0.12.1) (2019-10-18)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.12.0...0.12.1)
 
 **Fixed bugs:**
@@ -269,6 +361,7 @@
 - Resolve time import error in exception\_handler [\#1095](https://github.com/locustio/locust/pull/1095) ([ajt89](https://github.com/ajt89))
 
 ## [0.12.0](https://github.com/locustio/locust/tree/0.12.0) (2019-10-01)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.11.1...0.12.0)
 
 **Fixed bugs:**
@@ -353,14 +446,12 @@
 - drop Python 3.4 support [\#1072](https://github.com/locustio/locust/pull/1072) ([cgoldberg](https://github.com/cgoldberg))
 - Typo fix [\#1051](https://github.com/locustio/locust/pull/1051) ([natanlao](https://github.com/natanlao))
 - stop looking for proxy settings [\#1046](https://github.com/locustio/locust/pull/1046) ([myzhan](https://github.com/myzhan))
-- Tox: Add flake8 tests to find Python syntax errors and undefined names [\#1039](https://github.com/locustio/locust/pull/1039) ([cclauss](https://github.com/cclauss))
 - Use print\(\) function in both Python 2 and Python 3 [\#1038](https://github.com/locustio/locust/pull/1038) ([cclauss](https://github.com/cclauss))
 - Travis CI: The sudo tag is now depricated in Travis CI [\#1037](https://github.com/locustio/locust/pull/1037) ([cclauss](https://github.com/cclauss))
 - Ensure that the last samples get sent by slave and received by master. [\#1025](https://github.com/locustio/locust/pull/1025) ([cyberw](https://github.com/cyberw))
 - Fix grammatical error in statistic reporting [\#1024](https://github.com/locustio/locust/pull/1024) ([MaxVanDeursen](https://github.com/MaxVanDeursen))
 - FastHttpLocust [\#1014](https://github.com/locustio/locust/pull/1014) ([skivis](https://github.com/skivis))
 - Fix for the examples regarding semaphore\_wait.py [\#1008](https://github.com/locustio/locust/pull/1008) ([ryan-WORK](https://github.com/ryan-WORK))
-- Support Step Load Pattern [\#1002](https://github.com/locustio/locust/pull/1002) ([delulu](https://github.com/delulu))
 - Reset exceptions and failures when stats are reset [\#1000](https://github.com/locustio/locust/pull/1000) ([ajt89](https://github.com/ajt89))
 - Add failures csv download [\#999](https://github.com/locustio/locust/pull/999) ([ajt89](https://github.com/ajt89))
 - Correct fail ratio calculation. Fixes \#991. [\#994](https://github.com/locustio/locust/pull/994) ([genericmoniker](https://github.com/genericmoniker))
@@ -368,6 +459,7 @@
 - Geventhttpclientmergeconflicts [\#838](https://github.com/locustio/locust/pull/838) ([SpencerPinegar](https://github.com/SpencerPinegar))
 
 ## [0.11.1](https://github.com/locustio/locust/tree/0.11.1) (2019-03-19)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.11.0...0.11.1)
 
 **Closed issues:**
@@ -380,9 +472,16 @@
 - Add "stopping" state. [\#982](https://github.com/locustio/locust/pull/982) ([solowalker27](https://github.com/solowalker27))
 
 ## [0.11.0](https://github.com/locustio/locust/tree/0.11.0) (2019-03-14)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.10.0...0.11.0)
 
+**Merged pull requests:**
+
+- add retry in zmqrpc [\#973](https://github.com/locustio/locust/pull/973) ([delulu](https://github.com/delulu))
+- fix inconsistency in zmqrpc [\#972](https://github.com/locustio/locust/pull/972) ([delulu](https://github.com/delulu))
+
 ## [0.10.0](https://github.com/locustio/locust/tree/0.10.0) (2019-03-13)
+
 [Full Changelog](https://github.com/locustio/locust/compare/0.9.0...0.10.0)
 
 **Fixed bugs:**
@@ -438,8 +537,6 @@
 **Merged pull requests:**
 
 - remove references to submitting feature requests [\#975](https://github.com/locustio/locust/pull/975) ([cgoldberg](https://github.com/cgoldberg))
-- add retry in zmqrpc [\#973](https://github.com/locustio/locust/pull/973) ([delulu](https://github.com/delulu))
-- fix inconsistency in zmqrpc [\#972](https://github.com/locustio/locust/pull/972) ([delulu](https://github.com/delulu))
 - balance/recover the load distribution when new slave joins [\#970](https://github.com/locustio/locust/pull/970) ([delulu](https://github.com/delulu))
 - Ui headings [\#963](https://github.com/locustio/locust/pull/963) ([cgoldberg](https://github.com/cgoldberg))
 - better horizontal scrolling [\#962](https://github.com/locustio/locust/pull/962) ([myzhan](https://github.com/myzhan))
@@ -455,12 +552,14 @@
 - fix About link [\#914](https://github.com/locustio/locust/pull/914) ([cgoldberg](https://github.com/cgoldberg))
 - Fixed \#903 to allow requests/sec UI column to display. [\#908](https://github.com/locustio/locust/pull/908) ([devmonkey22](https://github.com/devmonkey22))
 - Update browse\_docs\_sequence\_test [\#904](https://github.com/locustio/locust/pull/904) ([Realsid](https://github.com/Realsid))
+- Use uuid4 to generate slave client\_id [\#895](https://github.com/locustio/locust/pull/895) ([mattbailey](https://github.com/mattbailey))
 - Python37 [\#885](https://github.com/locustio/locust/pull/885) ([cgoldberg](https://github.com/cgoldberg))
 - Official Docker image and documentation V2 [\#882](https://github.com/locustio/locust/pull/882) ([spayeur207](https://github.com/spayeur207))
 - Fix links to changelog in changelog [\#877](https://github.com/locustio/locust/pull/877) ([dmand](https://github.com/dmand))
 - Fix Sphinx build warnings [\#875](https://github.com/locustio/locust/pull/875) ([jdufresne](https://github.com/jdufresne))
 
 ## [0.9.0](https://github.com/locustio/locust/tree/0.9.0) (2018-09-01)
+
 [Full Changelog](https://github.com/locustio/locust/compare/v0.8.1...0.9.0)
 
 **Fixed bugs:**
@@ -612,6 +711,7 @@
 - Make UI URL links relative [\#692](https://github.com/locustio/locust/pull/692) ([karol-brejna-i](https://github.com/karol-brejna-i))
 - Small python 3 syntax improvement in docs [\#676](https://github.com/locustio/locust/pull/676) ([miki725](https://github.com/miki725))
 - \#331:  Use rounded\_response\_time for min/max/total response times [\#558](https://github.com/locustio/locust/pull/558) ([jude](https://github.com/jude))
+- Refactored stats code and display median as well as 95% percentile response times in web UI's charts [\#549](https://github.com/locustio/locust/pull/549) ([heyman](https://github.com/heyman))
 - Added a slaves-tab to show the id, status and number of users running on each slave. [\#305](https://github.com/locustio/locust/pull/305) ([TZer0](https://github.com/TZer0))
 - expand and re-order documentation index [\#779](https://github.com/locustio/locust/pull/779) ([cgoldberg](https://github.com/cgoldberg))
 - drop unitt2 and use tox in 'make test' target [\#772](https://github.com/locustio/locust/pull/772) ([cgoldberg](https://github.com/cgoldberg))
@@ -628,6 +728,7 @@
 - Remove --num-requests/-n in favor of --run-time/-t [\#656](https://github.com/locustio/locust/pull/656) ([heyman](https://github.com/heyman))
 
 ## [v0.8.1](https://github.com/locustio/locust/tree/v0.8.1) (2017-09-19)
+
 [Full Changelog](https://github.com/locustio/locust/compare/v0.8...v0.8.1)
 
 **Closed issues:**
@@ -636,14 +737,10 @@
 - make test is failing on 0.7 tags due to Flask 0.12 [\#637](https://github.com/locustio/locust/issues/637)
 - num-requests bug [\#512](https://github.com/locustio/locust/issues/512)
 - Run the tests for the specified time [\#196](https://github.com/locustio/locust/issues/196)
-- Proclaim Locust HTTP only [\#17](https://github.com/locustio/locust/issues/17)
 - Remove support for plain sockets for master/slave communication [\#14](https://github.com/locustio/locust/issues/14)
 
-**Merged pull requests:**
-
-- Refactored stats code and display median as well as 95% percentile response times in web UI's charts [\#549](https://github.com/locustio/locust/pull/549) ([heyman](https://github.com/heyman))
-
 ## [v0.8](https://github.com/locustio/locust/tree/v0.8) (2017-09-19)
+
 [Full Changelog](https://github.com/locustio/locust/compare/v0.8a3...v0.8)
 
 **Closed issues:**
@@ -657,6 +754,7 @@
 - find locustfile in the root directory [\#609](https://github.com/locustio/locust/pull/609) ([arthurdarcet](https://github.com/arthurdarcet))
 
 ## [v0.8a3](https://github.com/locustio/locust/tree/v0.8a3) (2017-09-15)
+
 [Full Changelog](https://github.com/locustio/locust/compare/v0.8a1...v0.8a3)
 
 **Fixed bugs:**
@@ -826,6 +924,7 @@
 - Allow --no-web together with --master for automation [\#333](https://github.com/locustio/locust/pull/333) ([undera](https://github.com/undera))
 
 ## [v0.8a1](https://github.com/locustio/locust/tree/v0.8a1) (2016-11-24)
+
 [Full Changelog](https://github.com/locustio/locust/compare/v0.7.5...v0.8a1)
 
 **Closed issues:**
@@ -891,6 +990,7 @@
 - Python 3 support [\#363](https://github.com/locustio/locust/pull/363) ([pmdarrow](https://github.com/pmdarrow))
 
 ## [v0.7.5](https://github.com/locustio/locust/tree/v0.7.5) (2016-05-31)
+
 [Full Changelog](https://github.com/locustio/locust/compare/v0.7.4...v0.7.5)
 
 **Closed issues:**
@@ -902,6 +1002,7 @@
 - Python 3 support [\#279](https://github.com/locustio/locust/issues/279)
 
 ## [v0.7.4](https://github.com/locustio/locust/tree/v0.7.4) (2016-05-17)
+
 [Full Changelog](https://github.com/locustio/locust/compare/v0.7.3...v0.7.4)
 
 **Fixed bugs:**
@@ -980,6 +1081,7 @@
 - Introduce docs for increasing the max number of open files limit [\#298](https://github.com/locustio/locust/pull/298) ([ericandrewlewis](https://github.com/ericandrewlewis))
 
 ## [v0.7.3](https://github.com/locustio/locust/tree/v0.7.3) (2015-05-30)
+
 [Full Changelog](https://github.com/locustio/locust/compare/v0.7.2...v0.7.3)
 
 **Closed issues:**
@@ -1028,6 +1130,7 @@
 - recieve -\> receive; locsutfile -\> locustfile [\#183](https://github.com/locustio/locust/pull/183) ([stevetjoa](https://github.com/stevetjoa))
 
 ## [v0.7.2](https://github.com/locustio/locust/tree/v0.7.2) (2014-09-25)
+
 [Full Changelog](https://github.com/locustio/locust/compare/v0.7.1...v0.7.2)
 
 **Closed issues:**
@@ -1067,6 +1170,7 @@
 - Exit 1 when errors are found [\#155](https://github.com/locustio/locust/pull/155) ([jpotter](https://github.com/jpotter))
 
 ## [v0.7.1](https://github.com/locustio/locust/tree/v0.7.1) (2014-04-29)
+
 [Full Changelog](https://github.com/locustio/locust/compare/v0.7...v0.7.1)
 
 **Closed issues:**
@@ -1088,6 +1192,7 @@
 - Fix task ratio [\#125](https://github.com/locustio/locust/pull/125) ([sanga](https://github.com/sanga))
 
 ## [v0.7](https://github.com/locustio/locust/tree/v0.7) (2014-01-20)
+
 [Full Changelog](https://github.com/locustio/locust/compare/v0.6.2...v0.7)
 
 **Fixed bugs:**
@@ -1129,6 +1234,7 @@
 - Locust web interface not starting on Windows [\#57](https://github.com/locustio/locust/issues/57)
 - Web interface doesn't work [\#56](https://github.com/locustio/locust/issues/56)
 - Unit tests LocustRunner\(s\) and distributed mode [\#20](https://github.com/locustio/locust/issues/20)
+- Proclaim Locust HTTP only [\#17](https://github.com/locustio/locust/issues/17)
 
 **Merged pull requests:**
 
@@ -1153,6 +1259,7 @@
 - Added argument to options parser indicating on which port to run the web UI [\#54](https://github.com/locustio/locust/pull/54) ([manova](https://github.com/manova))
 
 ## [v0.6.2](https://github.com/locustio/locust/tree/v0.6.2) (2013-01-10)
+
 [Full Changelog](https://github.com/locustio/locust/compare/v0.6.1...v0.6.2)
 
 **Closed issues:**
@@ -1166,6 +1273,7 @@
 - Add parent to TaskSet to enable state sharing among hierarchical TaskSets [\#50](https://github.com/locustio/locust/pull/50) ([daubman](https://github.com/daubman))
 
 ## [v0.6.1](https://github.com/locustio/locust/tree/v0.6.1) (2012-12-04)
+
 [Full Changelog](https://github.com/locustio/locust/compare/v0.6...v0.6.1)
 
 **Closed issues:**
@@ -1173,6 +1281,7 @@
 - Locust throwing error when reaching  NUM\_REQUESTS parameter [\#47](https://github.com/locustio/locust/issues/47)
 
 ## [v0.6](https://github.com/locustio/locust/tree/v0.6) (2012-11-29)
+
 [Full Changelog](https://github.com/locustio/locust/compare/v0.5.1...v0.6)
 
 **Fixed bugs:**
@@ -1198,6 +1307,7 @@
 - Addfix [\#36](https://github.com/locustio/locust/pull/36) ([jukart](https://github.com/jukart))
 
 ## [v0.5.1](https://github.com/locustio/locust/tree/v0.5.1) (2012-07-01)
+
 [Full Changelog](https://github.com/locustio/locust/compare/v0.5...v0.5.1)
 
 **Closed issues:**
@@ -1205,6 +1315,7 @@
 - loglevel and logfile don't seem to work [\#25](https://github.com/locustio/locust/issues/25)
 
 ## [v0.5](https://github.com/locustio/locust/tree/v0.5) (2012-07-01)
+
 [Full Changelog](https://github.com/locustio/locust/compare/v0.4...v0.5)
 
 **Closed issues:**
@@ -1222,6 +1333,9 @@
 - fix continuous resetting on of stats in master+slaves mode [\#19](https://github.com/locustio/locust/pull/19) ([pedronis](https://github.com/pedronis))
 
 ## [v0.4](https://github.com/locustio/locust/tree/v0.4) (2011-12-05)
+
+[Full Changelog](https://github.com/locustio/locust/compare/117a61cfd1bba9ad10c8b680a574fcf32f6f46be...v0.4)
+
 **Fixed bugs:**
 
 - Total RPS counter does not work [\#9](https://github.com/locustio/locust/issues/9)
@@ -1241,4 +1355,4 @@
 
 
 
-\* *This Change Log was automatically generated by [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator)*
+\* *This Changelog was automatically generated by [github_changelog_generator](https://github.com/github-changelog-generator/github-changelog-generator)*
