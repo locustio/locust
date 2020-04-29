@@ -144,21 +144,20 @@ host defaults to 127.0.0.1):
     $ locust -f locust_files/my_locust_file.py --worker --master-host=192.168.0.100
 
 
-Parameters can also be set in a `config file <https://github.com/bw2/ConfigArgParse#config-file-syntax>`_ (locust.conf or ~/.locust.conf) or in env vars, prefixed by LOCUST\_
+Parameters can also be set as :ref:`environment variables <environment-variables>`, or in a 
+`config file <https://github.com/bw2/ConfigArgParse#config-file-syntax>`_ (``locust.conf`` or ``~/.locust.conf``).
 
 For example: (this will do the same thing as the previous command)
+
+.. code-block:: console
+
+    $ LOCUST_MASTER_NODE_HOST=192.168.0.100 locust
 
 .. code-block::
 
     # locust.conf in current directory
     locustfile locust_files/my_locust_file.py
     worker
-
-
-.. code-block:: console
-
-    $ LOCUST_MASTER_HOST=192.168.0.100 locust
-
 
 .. note::
 
@@ -175,12 +174,7 @@ greeted with something like this:
 .. image:: images/webui-splash-screenshot.png
 
 
-Locust Command Line Interface
-=============================
+Locust Command Line Interface & Configuration
+=============================================
 
-.. code-block:: console
-
-    $ locust --help
-
-.. literalinclude:: cli-help-output.txt
-    :language: console
+For a full list of available command line options see :ref:`configuration`.

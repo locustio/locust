@@ -45,6 +45,20 @@ attribute instead:
         tasks = [MyTaskSet]
 
 
+Environment variables changed
+-----------------------------
+
+The following changes has been made to the configuration environment variables
+
+* ``LOCUST_MASTER`` has been renamed to ``LOCUST_MODE_MASTER`` (in order to make it less likely to get variable name collisions 
+  when running Locust in Kubernetes/K8s which automatically adds environment variables depending on service/pod names).
+* ``LOCUST_SLAVE`` has been renamed to ``LOCUST_MODE_WORKER``.
+* ``LOCUST_MASTER_PORT`` has been renamed to ``LOCUST_MASTER_NODE_PORT``.
+* ``LOCUST_MASTER_HOST`` has been renamed to ``LOCUST_MASTER_NODE_HOST``.
+* ``CSVFILEBASE`` has been renamed to ``LOCUST_CSV``.
+
+See the :ref:`configuration` documentation for a full list of available :ref:`environment variables <environment-variables>`.
+
 
 Other breaking changes
 ----------------------
@@ -70,6 +84,7 @@ Other breaking changes
 * The official docker image no longer uses a shell script with a bunch of special environment variables to configure how 
   how locust is started. Instead, the ``locust`` command is now set as ``ENTRYPOINT`` of the docker image. See
   :ref:`running-locust-docker` for more info.
+* Command line option ``--csv-base-name`` has been removed, since it was just an alias for ``--csv``.
 
 
 Other fixes and improvements
