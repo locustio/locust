@@ -4,8 +4,8 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
-1.0 (In development)
-====================
+1.0b1
+=====
 
 This version contains some breaking changes.
 
