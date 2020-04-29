@@ -63,10 +63,10 @@ def mark(mark_name=None):
         if issubclass(type(decorated), TaskSetMeta):
             decorated.tasks = list(map(mark(mark_name), decorated.tasks))
         else:
-            if 'locust_mark_names' not in decorated.__dict__:
-                decorated.locust_mark_names = set(['marked'])
+            if 'locust_mark_set' not in decorated.__dict__:
+                decorated.locust_mark_set = set(['marked'])
             if mark_name is not None:
-                decorated.locust_mark_names.add(mark_name)
+                decorated.locust_mark_set.add(mark_name)
         return decorated
 
     if callable(mark_name):
@@ -127,16 +127,16 @@ class TaskSetMeta(type):
         return type.__new__(mcs, classname, bases, class_dict)
 
     @property
-    def locust_mark_names(cls):
+    def locust_mark_set(cls):
         result = set()
         for task in cls.tasks:
-            if 'locust_mark_names' in dir(task):
-                result |= task.locust_mark_names
+            if 'locust_mark_set' in dir(task):
+                result |= task.locust_mark_set
         return result
 
     def __dir__(cls):
         normal_dir = type.__dir__(cls)
-        normal_dir.append('locust_mark_names')
+        normal_dir.append('locust_mark_set')
         return normal_dir
 
 class TaskSet(object, metaclass=TaskSetMeta):
@@ -332,8 +332,8 @@ class TaskSet(object, metaclass=TaskSetMeta):
         else:
             new_tasks = []
             for task in self.tasks:
-                if 'locust_mark_names' in dir(task):
-                    mark_intersection = task.locust_mark_names & set(self.user.environment.marks)
+                if 'locust_mark_set' in dir(task):
+                    mark_intersection = task.locust_mark_set & set(self.user.environment.marks)
                     if len(mark_intersection) > 0:
                         new_tasks.append(task)
 
