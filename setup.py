@@ -41,7 +41,7 @@ setup(
     zip_safe=False,
     python_requires=">=3.6",
     install_requires=[
-        "gevent==1.5.0",
+        "gevent>=1.5.0",
         "flask>=0.10.1", 
         "requests>=2.9.1", 
         "msgpack>=0.6.2", 
@@ -49,7 +49,7 @@ setup(
         "geventhttpclient-wheels==1.3.1.dev3",
         "ConfigArgParse>=1.0",
         "psutil>=5.6.7",
-        "Flask-BasicAuth==0.2.0"
+        "Flask-BasicAuth>=0.2.0"
     ],
     test_suite="locust.test",
     tests_require=[
