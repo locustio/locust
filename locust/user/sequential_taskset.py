@@ -1,5 +1,5 @@
-from locust.user.task import TaskSet, TaskSetMeta
-from .exception import LocustError
+from locust.exception import LocustError
+from .task import TaskSet, TaskSetMeta
 
 
 class SequentialTaskSetMeta(TaskSetMeta):
