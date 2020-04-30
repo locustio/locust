@@ -77,6 +77,30 @@ class TestLoadLocustfile(LocustTestCase):
         self.assertEqual(None, env.host)
         self.assertFalse(env.reset_stats)
 
+    def test_specify_config_file(self):
+        with temporary_file(textwrap.dedent("""
+            host = localhost  # With "="
+            u 100             # Short form
+            hatch-rate 5      # long form
+            headless          # boolean
+        """), suffix=".conf") as conf_file_path:
+            options = parse_options(args=[
+                "--config", conf_file_path,
+            ])
+            self.assertEqual(conf_file_path, options.config)
+            self.assertEqual("localhost", options.host)
+            self.assertEqual(100, options.num_users)
+            self.assertEqual(5, options.hatch_rate)
+            self.assertTrue(options.headless)
+
+    def test_command_line_arguments_override_config_file(self):
+        with temporary_file("host=from_file", suffix=".conf") as conf_file_path:
+            options = parse_options(args=[
+                "--config", conf_file_path,
+                "--host", "from_args",
+            ])
+            self.assertEqual("from_args", options.host)
+
 
 class LocustProcessIntegrationTest(TestCase):
     def setUp(self):
