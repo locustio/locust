@@ -563,7 +563,7 @@ class User(object, metaclass=UserMeta):
             self.on_start()
             
             self._taskset_instance.run()
-        except (GreenletExit, StopUser) as e:
+        except (GreenletExit, StopUser, RescheduleTask) as e:
             # run the on_stop method, if it has one
             self.on_stop()
     
