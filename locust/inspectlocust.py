@@ -1,6 +1,6 @@
 import inspect
 
-from .core import User, TaskSet
+from .user import User, TaskSet
 
 
 def print_task_ratio(user_classes, total=False, level=0, parent_ratio=1.0):

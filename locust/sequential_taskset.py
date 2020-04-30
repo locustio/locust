@@ -1,4 +1,4 @@
-from .core import TaskSet, TaskSetMeta
+from locust.user.task import TaskSet, TaskSetMeta
 from .exception import LocustError
 
 

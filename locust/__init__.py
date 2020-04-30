@@ -1,4 +1,5 @@
-from .core import HttpUser, User, TaskSet, task
+from .user.task import task, TaskSet
+from .user.users import HttpUser, User
 from .event import Events
 from .sequential_taskset import SequentialTaskSet
 from .wait_time import between, constant, constant_pacing

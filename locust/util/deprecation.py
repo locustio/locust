@@ -6,7 +6,7 @@ warnings.filterwarnings('always', category=DeprecationWarning, module="locust")
 
 
 def check_for_deprecated_task_set_attribute(class_dict):
-    from locust.core import TaskSet
+    from locust.user.task import TaskSet
     if "task_set" in class_dict:
         task_set = class_dict["task_set"]
         if issubclass(task_set, TaskSet) and not hasattr(task_set, "locust_task_weight"):
