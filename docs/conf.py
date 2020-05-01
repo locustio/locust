@@ -26,7 +26,7 @@ save_locust_help_output()
 
 # Generate RST table with help/descriptions for all available environment variables
 def save_locust_env_variables():
-    env_options_output_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "env-options.rst")
+    env_options_output_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "config-options.rst")
     print("Generating RST table for Locust environment variables and storing in %s" % env_options_output_file)
     parser = get_empty_argument_parser()
     setup_parser_arguments(parser)
@@ -34,8 +34,9 @@ def save_locust_env_variables():
     for action in parser._actions:
         if action.env_var:
             table_data.append((
-                action.env_var, 
                 ", ".join(["``%s``" % c for c in action.option_strings]), 
+                "``%s``" % action.env_var, 
+                ", ".join(["``%s``" % c for c in parser.get_possible_config_keys(action) if not c.startswith("--")]),
                 action.help,
             ))
     colsizes = [max(len(r[i]) for r in table_data) for i in range(len(table_data[0]))]
@@ -43,7 +44,7 @@ def save_locust_env_variables():
     rows = [formatter.format(*row) for row in table_data]
     edge = formatter.format(*['=' * c for c in colsizes])
     divider = formatter.format(*['-' * c for c in colsizes])
-    headline = formatter.format(*["Name", "Command line option", "Description"])
+    headline = formatter.format(*["Command line", "Environment", "Config file", "Description"])
     output = "\n".join([
         edge,
         headline,
