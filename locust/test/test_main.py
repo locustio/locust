@@ -101,6 +101,16 @@ class TestLoadLocustfile(LocustTestCase):
             ])
             self.assertEqual("from_args", options.host)
 
+    def test_locustfile_can_be_set_in_config_file(self):
+        with temporary_file(
+            "locustfile my_locust_file.py",
+            suffix=".conf",
+        ) as conf_file_path:
+            options = parse_options(args=[
+                "--config", conf_file_path,
+            ])
+            self.assertEqual("my_locust_file.py", options.locustfile)
+
 
 class LocustProcessIntegrationTest(TestCase):
     def setUp(self):
