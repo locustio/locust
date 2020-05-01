@@ -12,4 +12,4 @@ from .user.wait_time import between, constant, constant_pacing
 from .event import Events as _Events
 events = _Events()
 
-__version__ = "1.0b1"
+__version__ = "1.0b2"
