@@ -144,8 +144,10 @@ host defaults to 127.0.0.1):
     $ locust -f locust_files/my_locust_file.py --worker --master-host=192.168.0.100
 
 
-Parameters can also be set as :ref:`environment variables <environment-variables>`, or in a 
-`config file <https://github.com/bw2/ConfigArgParse#config-file-syntax>`_ (``locust.conf`` or ``~/.locust.conf``).
+Parameters can also be set as :ref:`environment variables <environment-variables>`, or in a
+`config file <https://github.com/bw2/ConfigArgParse#config-file-syntax>`_.
+Locust will look for ``locust.conf`` or ``~/.locust.conf`` by default, or a file may be specified
+with the ``--config`` flag.
 
 For example: (this will do the same thing as the previous command)
 
