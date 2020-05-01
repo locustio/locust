@@ -152,11 +152,19 @@ def setup_parser_arguments(parser):
         dest='list_commands',
         help="Show list of possible User classes and exit",
     )
-    parser.add_argument(
-        '-i', '--tags',
+
+    tag_group = parser.add_argument_group("Tag options")
+    tag_group.add_argument(
+        '-i', '--include-tags',
         nargs='*',
         metavar='TAG',
-        help="List of tags that limits the test to only execute tasks with any matching tags"
+        help="List of tags to include in the test, so only tasks with any matching tags will be executed"
+    )
+    tag_group.add_argument(
+        '-e', '--exclude-tags',
+        nargs='*',
+        metavar='TAG',
+        help="List of tags to exclude from the test, so only tasks with no matching tags will be executed"
     )
     
     web_ui_group = parser.add_argument_group("Web UI options")

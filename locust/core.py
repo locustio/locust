@@ -85,10 +85,11 @@ def tag(tag_name=None):
         if issubclass(type(decorated), TaskSetMeta):
             decorated.tasks = list(map(tag(tag_name), decorated.tasks))
         else:
-            if 'locust_tag_set' not in decorated.__dict__:
-                decorated.locust_tag_set = set(['tagged'])
+            if 'locust_tag_union' not in decorated.__dict__ or 'locust_tag_intersection' not in decorated.__dict__:
+                decorated.locust_tag_union = decorated.locust_tag_intersection = set(['tagged'])
             if tag_name is not None:
-                decorated.locust_tag_set.add(tag_name)
+                decorated.locust_tag_union.add(tag_name)
+                decorated.locust_tag_intersection.add(tag_name)
         return decorated
 
     """
@@ -157,16 +158,30 @@ class TaskSetMeta(type):
         return type.__new__(mcs, classname, bases, class_dict)
 
     @property
-    def locust_tag_set(cls):
+    def locust_tag_union(cls):
         result = set()
         for task in cls.tasks:
-            if 'locust_tag_set' in dir(task):
-                result |= task.locust_tag_set
+            if 'locust_tag_union' in dir(task):
+                result |= task.locust_tag_union
         return result
+
+    @property
+    def locust_tag_intersection(cls):
+        result = None
+        for task in cls.tasks:
+            if 'locust_tag_intersection' in dir(task):
+                if result is None:
+                    result = task.locust_tag_intersection
+                else:
+                    result &= task.locust_tag_intersection
+            else:
+                result = set()
+                break
+        return set() if result is None else result
 
     def __dir__(cls):
         normal_dir = type.__dir__(cls)
-        normal_dir.append('locust_tag_set')
+        normal_dir.extend(['locust_tag_union', 'locust_tag_intersection'])
         return normal_dir
 
 class TaskSet(object, metaclass=TaskSetMeta):
@@ -345,7 +360,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
             self._task_queue.insert(0, task)
         else:
             self._task_queue.append(task)
-    
+
     def get_next_task(self):
         if not self.tasks:
             raise Exception("No tasks defined. use the @task decorator or set the tasks property of the TaskSet")
@@ -354,21 +369,33 @@ class TaskSet(object, metaclass=TaskSetMeta):
         return random.choice(self.tagged_tasks)
 
     def apply_tags(self):
-        tags = self.user.environment.tags
+        include = self.user.environment.include_tags
+        exclude = self.user.environment.exclude_tags
 
-        if tags is None:
-            self.tagged_tasks = self.tasks
+        new_tasks = []
+        if include is None:
+            new_tasks = self.tasks
         else:
-            new_tasks = []
             for task in self.tasks:
-                if 'locust_tag_set' in dir(task):
-                    tag_intersection = task.locust_tag_set & set(tags)
-                    if len(tag_intersection) > 0:
+                if 'locust_tag_union' in dir(task):
+                    tags_match = len(task.locust_tag_union & set(include)) > 0
+                    if tags_match:
                         new_tasks.append(task)
+        self.tagged_tasks = new_tasks
 
-            self.tagged_tasks = new_tasks
+        new_tasks = []
+        if exclude is None:
+            new_tasks = self.tagged_tasks
+        else:
+            for task in self.tagged_tasks:
+                if 'locust_tag_intersection' in dir(task):
+                    tags_match = len(task.locust_tag_intersection & set(exclude)) > 0
+                    if not tags_match:
+                        new_tasks.append(task)
+                else:
+                    new_tasks.append(task)
+        self.tagged_tasks = new_tasks
 
-    
     def wait_time(self):
         """
         Method that returns the time (in seconds) between the execution of tasks. 
