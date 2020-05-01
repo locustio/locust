@@ -4,8 +4,8 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
-1.0b1
-=====
+1.0 (in development, 1.0b1 released)
+====================================
 
 This version contains some breaking changes.
 
@@ -113,6 +113,7 @@ Web UI improvements
 Other fixes and improvements
 ----------------------------
 
+* Added ``--config`` command line option for specifying a :ref:`configuration file <configuration-file>` path
 * The code base has been refactored to make it possible to run :ref:`Locust as a python lib <use-as-lib>`. 
 * It's now possible to call ``response.failure()`` or ``response.success()`` multiple times when using 
   the ``catch_response=True`` in the HTTP clients. Only the last call to ``success``/``failure`` will count.
