@@ -41,12 +41,12 @@ class User(object, metaclass=UserMeta):
     Represents a "user" which is to be hatched and attack the system that is to be load tested.
     
     The behaviour of this user is defined by its tasks. Tasks can be declared either directly on the
-    class by using the :py:func:`@task decorator <locust.core.task>` on methods, or by setting
-    the :py:attr:`tasks attribute <locust.core.User.tasks>`.
+    class by using the :py:func:`@task decorator <locust.task>` on methods, or by setting
+    the :py:attr:`tasks attribute <locust.User.tasks>`.
     
     This class should usually be subclassed by a class that defines some kind of client. For 
     example when load testing an HTTP system, you probably want to use the 
-    :py:class:`HttpUser <locust.core.HttpUser>` class.
+    :py:class:`HttpUser <locust.HttpUser>` class.
     """
     
     host = None
@@ -188,8 +188,8 @@ class HttpUser(User):
     Represents an HTTP "user" which is to be hatched and attack the system that is to be load tested.
     
     The behaviour of this user is defined by its tasks. Tasks can be declared either directly on the
-    class by using the :py:func:`@task decorator <locust.core.task>` on methods, or by setting
-    the :py:attr:`tasks attribute <locust.core.User.tasks>`.
+    class by using the :py:func:`@task decorator <locust.task>` on methods, or by setting
+    the :py:attr:`tasks attribute <locust.User.tasks>`.
     
     This class creates a *client* attribute on instantiation which is an HTTP client with support 
     for keeping a user session between requests.

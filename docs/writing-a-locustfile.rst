@@ -3,7 +3,7 @@ Writing a locustfile
 ======================
 
 A locustfile is a normal python file. The only requirement is that it declares at least one class —
-let's call it the user class — that inherits from the class :py:class:`User <locust.core.User>`. 
+let's call it the user class — that inherits from the class :py:class:`User <locust.User>`. 
 
 The User class
 ================
@@ -16,7 +16,7 @@ The *wait_time* attribute
 -------------------------
 
 In addition to the *task_set* attribute, one should also declare a 
-:py:attr:`wait_time <locust.core.User.wait_time>` method. It's used to determine
+:py:attr:`wait_time <locust.User.wait_time>` method. It's used to determine
 for how long a simulated user will wait between executing tasks. Locust comes with a few built in 
 functions that return a few common wait_time methods.
 
@@ -96,7 +96,7 @@ is specified on the command line or in the web request.
 The *tasks* attribute
 ---------------------
 
-A User class can have tasks declared as methods under it using the :py:func:`@task <locust.core.task>` decorator, but one can also
+A User class can have tasks declared as methods under it using the :py:func:`@task <locust.task>` decorator, but one can also
 specify tasks using the *tasks* attribute which is described in more details :ref:`below <tasks-attribute>`.
 
 
@@ -114,7 +114,7 @@ Declaring tasks
 ---------------
 
 The typical way of declaring tasks for a User class (or a TaskSet) it to use the
-:py:meth:`task <locust.core.task>` decorator.
+:py:meth:`task <locust.task>` decorator.
 
 Here is an example:
 
@@ -155,7 +155,7 @@ tasks attribute
 
 Using the @task decorator to declare tasks is a convenience, and usually the best way to do 
 it. However, it's also possible to define the tasks of a User or TaskSet by setting the
-:py:attr:`tasks <locust.core.User.tasks>` attribute (using the @task decorator will actually
+:py:attr:`tasks <locust.User.tasks>` attribute (using the @task decorator will actually
 just populate the *tasks* attribute).
 
 The *tasks* attribute is either a list of Task, or a *<Task : int>* dict, where Task is either a 
@@ -268,9 +268,9 @@ Interrupting a TaskSet
 
 One important thing to know about TaskSets is that they will never stop executing their tasks, and 
 hand over execution back to their parent User/TaskSet, by themselves. This has to be done by the
-developer by calling the :py:meth:`TaskSet.interrupt() <locust.core.TaskSet.interrupt>` method. 
+developer by calling the :py:meth:`TaskSet.interrupt() <locust.TaskSet.interrupt>` method. 
 
-.. autofunction:: locust.core.TaskSet.interrupt
+.. autofunction:: locust.TaskSet.interrupt
     :noindex:
 
 In the following example, if we didn't have the stop task that calls ``self.interrupt()``, the 
@@ -302,18 +302,18 @@ Differences between tasks in TaskSet and User classes
 
 One difference for tasks residing under a TaskSet, compared to tasks residing directly under a User,
 is that the argument that they are passed when executed (``self`` for tasks declared as methods with 
-the :py:func:`@task <locust.core.task>` decorator) is a reference to the TaskSet instance, instead of 
+the :py:func:`@task <locust.task>` decorator) is a reference to the TaskSet instance, instead of 
 the User instance. The User instance can be accessed from within a TaskSet instance through the
-:py:attr:`TaskSet.user <locust.core.TaskSet.user>`. TaskSets also contains a convenience 
-:py:attr:`client <locust.core.TaskSet.client>` attribute that refers to the client attribute on the 
+:py:attr:`TaskSet.user <locust.TaskSet.user>`. TaskSets also contains a convenience 
+:py:attr:`client <locust.TaskSet.client>` attribute that refers to the client attribute on the 
 User instance.
 
 
 Referencing the User instance, or the parent TaskSet instance
 ---------------------------------------------------------------
 
-A TaskSet instance will have the attribute :py:attr:`locust <locust.core.TaskSet.user>` point to 
-its User instance, and the attribute :py:attr:`parent <locust.core.TaskSet.parent>` point to its
+A TaskSet instance will have the attribute :py:attr:`locust <locust.TaskSet.user>` point to 
+its User instance, and the attribute :py:attr:`parent <locust.TaskSet.parent>` point to its
 parent TaskSet instance.
 
 
@@ -322,7 +322,7 @@ parent TaskSet instance.
 SequentialTaskSet class
 =======================
 
-:py:class:`SequentialTaskSet <locust.sequential_taskset.SequentialTaskSet>` is a TaskSet but its 
+:py:class:`SequentialTaskSet <locust.SequentialTaskSet>` is a TaskSet but its 
 tasks will be executed in the order that they are declared. Weights are ignored for tasks on a 
 SequentialTaskSet class. Ofcourse you can also nest SequentialTaskSet within TaskSet and vice versa.
 
@@ -362,13 +362,13 @@ and then it will start over at ``first_task`` again.
 on_start and on_stop methods
 ============================
 
-User and TaskSet classes can declare an :py:meth:`on_start <locust.core.User.on_start>` method and/or
-:py:meth:`on_stop <locust.core.TaskSet.on_stop>` method. A User will call it's
-:py:meth:`on_start <locust.core.User.on_start>` method when it starts running, and it's
-:py:meth:`on_stop <locust.core.User.on_stop>` method when it stops running. For a TaskSet, the
-:py:meth:`on_start <locust.core.TaskSet.on_start>` method is called when a simulated user starts executing 
-that TaskSet, and :py:meth:`on_stop <locust.core.TaskSet.on_stop>` is called when the simulated user stops 
-executing that TaskSet (when :py:meth:`interrupt() <locust.core.TaskSet.interrupt>` is called, or the
+User and TaskSet classes can declare an :py:meth:`on_start <locust.User.on_start>` method and/or
+:py:meth:`on_stop <locust.TaskSet.on_stop>` method. A User will call it's
+:py:meth:`on_start <locust.User.on_start>` method when it starts running, and it's
+:py:meth:`on_stop <locust.User.on_stop>` method when it stops running. For a TaskSet, the
+:py:meth:`on_start <locust.TaskSet.on_start>` method is called when a simulated user starts executing 
+that TaskSet, and :py:meth:`on_stop <locust.TaskSet.on_stop>` is called when the simulated user stops 
+executing that TaskSet (when :py:meth:`interrupt() <locust.TaskSet.interrupt>` is called, or the
 user is killed).
 
 test_start and test_stop events
@@ -397,12 +397,12 @@ Making HTTP requests
 =====================
 
 So far, we've only covered the task scheduling part of a User. In order to actually load test
-a system we need to make HTTP requests. To help us do this, the :py:class:`HttpLocust <locust.core.HttpUser>`
+a system we need to make HTTP requests. To help us do this, the :py:class:`HttpLocust <locust.HttpUser>`
 class exists. When using this class, each instance gets a 
-:py:attr:`client <locust.core.User.client>` attribute which will be an instance of
+:py:attr:`client <locust.User.client>` attribute which will be an instance of
 :py:attr:`HttpSession <locust.clients.HttpSession>` which can be used to make HTTP requests.
 
-.. autoclass:: locust.core.HttpUser
+.. autoclass:: locust.HttpUser
     :members: client
     :noindex:
 
@@ -445,7 +445,7 @@ instance's TaskSet instances so that it's easy to retrieve the client and make H
 tasks.
 
 Here's a simple example that makes a GET request to the */about* path (in this case we assume *self* 
-is an instance of a :py:class:`TaskSet <locust.core.TaskSet>` or :py:class:`HttpUser <locust.core.HttpUser>`
+is an instance of a :py:class:`TaskSet <locust.TaskSet>` or :py:class:`HttpUser <locust.HttpUser>`
 class:
 
 .. code-block:: python

@@ -53,8 +53,8 @@ class FastHttpUser(User):
     It's significantly faster, but not as capable.
     
     The behaviour of this user is defined by it's tasks. Tasks can be declared either directly on the 
-    class by using the :py:func:`@task decorator <locust.core.task>` on the methods, or by setting 
-    the :py:attr:`tasks attribute <locust.core.User.tasks>`.
+    class by using the :py:func:`@task decorator <locust.task>` on the methods, or by setting 
+    the :py:attr:`tasks attribute <locust.User.tasks>`.
     
     This class creates a *client* attribute on instantiation which is an HTTP client with support 
     for keeping a user session between requests.

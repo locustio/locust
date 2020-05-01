@@ -13,7 +13,7 @@ Locust class renamed to User
 ----------------------------
 
 We've renamed the ``Locust`` and ``HttpLocust`` classes to ``User`` and ``HttpUser``. The ``locust`` attribute on 
-:py:class:`TaskSet <locust.core.TaskSet>` instances has been renamed to :py:attr:`user <locust.core.TaskSet.user>`.
+:py:class:`TaskSet <locust.TaskSet>` instances has been renamed to :py:attr:`user <locust.TaskSet.user>`.
 
 
 Ability to declare @task directly under the ``User`` class
@@ -29,11 +29,11 @@ It's now possible to declare tasks directly under a User class like this:
             pass
 
 In tasks declared under a User class (e.g. ``some_task`` in the example above), ``self`` refers to the User 
-instance, as one would expect. For tasks defined under a :py:class:`TaskSet <locust.core.TaskSet>` class, ``self`` 
+instance, as one would expect. For tasks defined under a :py:class:`TaskSet <locust.TaskSet>` class, ``self`` 
 would refer to the ``TaskSet`` instance.
 
 The ``task_set`` attribute on the ``User`` class (previously ``Locust`` class) has been removed. To declare a 
-``User`` class with a single ``TaskSet`` one would now use the the :py:attr:`tasks <locust.core.User.tasks>` 
+``User`` class with a single ``TaskSet`` one would now use the the :py:attr:`tasks <locust.User.tasks>` 
 attribute instead:
 
 .. code-block:: python

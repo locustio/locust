@@ -52,7 +52,7 @@ Let's break it down:
     class WebsiteUser(HttpUser):
 
 Here we define a class for the users that we will be simulating. It inherits from 
-:py:class:`HttpUser <locust.core.HttpUser>` which gives each user a ``client`` attribute,
+:py:class:`HttpUser <locust.HttpUser>` which gives each user a ``client`` attribute,
 which is an instance of :py:class:`HttpSession <locust.clients.HttpSession>`, that 
 can be used to make HTTP requests to the target system that we want to load test. When a test starts, 
 locust will create an instance of this class for every user that it simulates, and each of these 

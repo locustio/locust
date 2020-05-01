@@ -113,7 +113,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
     instantiated and called from the currently executing TaskSet. Execution in the
     currently running TaskSet will then be handed over to the nested TaskSet which will 
     continue to run until it throws an InterruptTaskSet exception, which is done when 
-    :py:meth:`TaskSet.interrupt() <locust.core.TaskSet.interrupt>` is called. (execution 
+    :py:meth:`TaskSet.interrupt() <locust.TaskSet.interrupt>` is called. (execution 
     will then continue in the first TaskSet).
     """
     
@@ -335,7 +335,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
     @property
     def client(self):
         """
-        Reference to the :py:attr:`client <locust.core.User.client>` attribute of the root
+        Reference to the :py:attr:`client <locust.User.client>` attribute of the root
         User instance.
         """
         return self.user.client
