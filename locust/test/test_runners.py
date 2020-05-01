@@ -8,7 +8,7 @@ from gevent.queue import Queue
 import locust
 from locust import runners, between, constant
 from locust.main import create_environment
-from locust.core import User, TaskSet, task
+from locust.user import User, TaskSet, task
 from locust.env import Environment
 from locust.exception import RPCError, StopUser
 from locust.rpc import Message

@@ -14,7 +14,7 @@ from pyquery import PyQuery as pq
 
 from locust import constant
 from locust.argument_parser import get_parser, parse_options
-from locust.core import User, task
+from locust.user import User, task
 from locust.env import Environment
 from locust.runners import Runner
 from locust.web import WebUI

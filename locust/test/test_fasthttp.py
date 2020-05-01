@@ -1,7 +1,7 @@
 import socket
 import gevent
 
-from locust.core import task, TaskSet
+from locust.user import task, TaskSet
 from locust.contrib.fasthttp import FastHttpSession, FastHttpUser
 from locust.exception import CatchResponseError, InterruptTaskSet, ResponseError
 from locust.main import is_user_class

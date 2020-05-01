@@ -12,7 +12,7 @@ import requests
 from locust import main
 from locust.argument_parser import parse_options
 from locust.main import create_environment
-from locust.core import HttpUser, User, TaskSet
+from locust.user import HttpUser, User, TaskSet
 from .mock_locustfile import mock_locustfile
 from .testcases import LocustTestCase
 from .util import temporary_file, get_free_tcp_port

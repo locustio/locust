@@ -13,16 +13,15 @@ import locust
 
 from . import log
 from .argument_parser import parse_locustfile_option, parse_options
-from .core import HttpUser, User
 from .env import Environment
-from .inspectlocust import get_task_ratio_dict, print_task_ratio
 from .log import setup_logging, greenlet_exception_logger
 from .stats import (print_error_report, print_percentile_stats, print_stats,
                     stats_printer, stats_writer, write_csv_files)
+from .user import User
+from .user.inspectuser import get_task_ratio_dict, print_task_ratio
 from .util.timespan import parse_timespan
 from .exception import AuthCredentialsError
 
-_internals = [User, HttpUser]
 version = locust.__version__
 
 

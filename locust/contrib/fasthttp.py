@@ -16,7 +16,7 @@ from gevent.timeout import Timeout
 from geventhttpclient.useragent import UserAgent, CompatRequest, CompatResponse, ConnectionError
 from geventhttpclient.response import HTTPConnectionClosed
 
-from locust.core import User
+from locust.user import User
 from locust.exception import LocustError, CatchResponseError, ResponseError
 from locust.env import Environment
 

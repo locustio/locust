@@ -9,10 +9,10 @@ import mock
 import locust
 from locust import HttpUser, TaskSet, task, User, constant
 from locust.env import Environment
-from locust.inspectlocust import get_task_ratio_dict
 from locust.rpc.protocol import Message
 from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_response_time_dicts, stats_writer
 from locust.test.testcases import LocustTestCase
+from locust.user.inspectuser import get_task_ratio_dict
 
 from .testcases import WebserverTestCase
 from .test_runners import mocked_rpc
@@ -621,7 +621,7 @@ class MyTaskSet(TaskSet):
         def task2(self):
             pass
     
-class TestInspectLocust(unittest.TestCase):
+class TestInspectUser(unittest.TestCase):
     def test_get_task_ratio_dict_relative(self):
         ratio = get_task_ratio_dict([MyTaskSet])
         self.assertEqual(1.0, ratio["MyTaskSet"]["ratio"])
