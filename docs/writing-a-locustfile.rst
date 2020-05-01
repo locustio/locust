@@ -193,33 +193,33 @@ that looks like this::
 and then Python's ``random.choice()`` is used pick tasks from the list.
 
 
-.. _marking-tasks:
+.. _tagging-tasks:
 
-Marking tasks
+Tagging tasks
 -------------
 
-By marking tasks using the `mark <locust.core.mark>` decorator, you can be picky about what tasks
-are executed during the test using the :code:`--marks` argument. Consider the following example:
+By tagging tasks using the `tag <locust.core.tag>` decorator, you can be picky about what tasks
+are executed during the test using the :code:`--tags` argument. Consider the following example:
 
 .. code-block:: python
 
-    from locust import User, constant, task, mark
+    from locust import User, constant, task, tag
 
     class MyUser(User):
         wait_time = constant(1)
 
-        @mark('mark1')
+        @tag('tag1')
         @task
         def task1(self):
             pass
 
-        @mark('mark1')
-        @mark('mark2')
+        @tag('tag1')
+        @tag('tag2')
         @task
         def task2(self):
             pass
 
-        @mark('mark3')
+        @tag('tag3')
         @task
         def task3(self):
             pass
@@ -228,29 +228,29 @@ are executed during the test using the :code:`--marks` argument. Consider the fo
         def task4(self):
             pass
 
-If you started this test with :code:`--marks mark1`, only *task1* and *task2* would be executed
-during the test. If you started it with :code:`--marks mark2 mark3`, only *task2* and *task3*
+If you started this test with :code:`--tags tag1`, only *task1* and *task2* would be executed
+during the test. If you started it with :code:`--tags tag2 tag3`, only *task2* and *task3*
 would be executed.
 
-Every task that is marked also receives the :code:`marked` mark. So, starting the test with
-:code:`--marks marked` would actually run *task1*, *task2*, and *task3*.
+Every task that is tagged also receives the :code:`tagged` tag. So, starting the test with
+:code:`--tags tagged` would actually run *task1*, *task2*, and *task3*.
 
-Furthermore, providing the argument for the mark name is actually optional, and so are the
+Furthermore, providing the argument for the tag name is actually optional, and so are the
 parentheses:
 
 .. code-block:: python
 
-    from locust import User, constant, task, mark
+    from locust import User, constant, task, tag
 
     class MyUser(User):
         wait_time = constant(1)
 
-        @mark
+        @tag
         @task
         def task1(self):
             pass
 
-        @mark()
+        @tag()
         @task
         def task2(self):
             pass
@@ -259,7 +259,7 @@ parentheses:
         def task3(self):
             pass
 
-Running this example with :code:`--marks marked` will only execute *task1* and *task2*.
+Running this example with :code:`--tags tagged` will only execute *task1* and *task2*.
 
 
 TaskSet class
@@ -385,15 +385,15 @@ its User instance, and the attribute :py:attr:`parent <locust.core.TaskSet.paren
 parent TaskSet instance.
 
 
-Marks and TaskSets
+Tags and TaskSets
 ------------------
-You can mark TaskSets using the `mark <locust.core.mark>` decorator in a similar way to normal tasks,
-as described `above <marking-tasks>`, but there are some nuances worth mentioning. If you mark a task
-within a nested TaskSet, locust will execute that task even if the TaskSet isn't marked. So, there's
-no need to mark both a task and its TaskSet. In fact, this would be redundant, as the only thing
-marking TaskSet does is mark every task defined within that TaskSet. In other words, the way that
-locust determines whether or not a TaskSet should be executed is not by looking at the marks assigned to
-the TaskSet, but instead looking at the marks assigned to each task within that TaskSet recursively.
+You can tag TaskSets using the `tag <locust.core.tag>` decorator in a similar way to normal tasks,
+as described `above <tagging-tasks>`, but there are some nuances worth mentioning. If you tag a task
+within a nested TaskSet, locust will execute that task even if the TaskSet isn't tagged. So, there's
+no need to tag both a task and its TaskSet. In fact, this would be redundant, as the only thing
+tagging TaskSet does is tag every task defined within that TaskSet. In other words, the way that
+locust determines whether or not a TaskSet should be executed is not by looking at the tags assigned to
+the TaskSet, but instead looking at the tags assigned to each task within that TaskSet recursively.
 
 
 

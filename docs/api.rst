@@ -27,10 +27,10 @@ task decorator
 
 .. autofunction:: locust.core.task
 
-mark decorator
+tag decorator
 ==============
 
-.. autofunction:: locust.core.mark
+.. autofunction:: locust.core.tag
 
 SequentialTaskSet class
 =======================

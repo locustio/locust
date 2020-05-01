@@ -153,10 +153,10 @@ def setup_parser_arguments(parser):
         help="Show list of possible User classes and exit",
     )
     parser.add_argument(
-        '-m', '--marks',
+        '-i', '--tags',
         nargs='*',
-        metavar='MARK',
-        help="List of marks that limits the test to only execute tasks with any matching marks"
+        metavar='TAG',
+        help="List of tags that limits the test to only execute tasks with any matching tags"
     )
     
     web_ui_group = parser.add_argument_group("Web UI options")

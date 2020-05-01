@@ -57,25 +57,25 @@ def task(weight=1):
     else:
         return decorator_func
 
-def mark(mark_name=None):
+def tag(tag_name=None):
     """
-    Decorator for marking tasks and TaskSets with the given mark name. You can then limit
-    the test to only execute tasks that are marked with any of the marks provided by the
-    --marks command-line argument. Example::
+    Decorator for tagging tasks and TaskSets with the given tag name. You can then limit
+    the test to only execute tasks that are tagged with any of the tags provided by the
+    --tags command-line argument. Example::
 
         class ForumPage(TaskSet):
-            @mark('thread')
+            @tag('thread')
             @task(100)
             def read_thread(self):
                 pass
 
-            @mark('thread')
-            @mark('post')
+            @tag('thread')
+            @tag('post')
             @task(7)
             def create_thread(self):
                 pass
 
-            @mark('post')
+            @tag('post')
             @task(11)
             def comment(self):
                 pass
@@ -83,25 +83,25 @@ def mark(mark_name=None):
 
     def decorator_func(decorated):
         if issubclass(type(decorated), TaskSetMeta):
-            decorated.tasks = list(map(mark(mark_name), decorated.tasks))
+            decorated.tasks = list(map(tag(tag_name), decorated.tasks))
         else:
-            if 'locust_mark_set' not in decorated.__dict__:
-                decorated.locust_mark_set = set(['marked'])
-            if mark_name is not None:
-                decorated.locust_mark_set.add(mark_name)
+            if 'locust_tag_set' not in decorated.__dict__:
+                decorated.locust_tag_set = set(['tagged'])
+            if tag_name is not None:
+                decorated.locust_tag_set.add(tag_name)
         return decorated
 
     """
-    Check if mark was used without parentheses (not called), like this::
+    Check if tag was used without parentheses (not called), like this::
 
-        @mark
+        @tag
         @task(1)
         def my_task()
             pass
     """
-    if callable(mark_name):
-        func = mark_name
-        mark_name = None
+    if callable(tag_name):
+        func = tag_name
+        tag_name = None
         return decorator_func(func)
     else:
         return decorator_func
@@ -157,16 +157,16 @@ class TaskSetMeta(type):
         return type.__new__(mcs, classname, bases, class_dict)
 
     @property
-    def locust_mark_set(cls):
+    def locust_tag_set(cls):
         result = set()
         for task in cls.tasks:
-            if 'locust_mark_set' in dir(task):
-                result |= task.locust_mark_set
+            if 'locust_tag_set' in dir(task):
+                result |= task.locust_tag_set
         return result
 
     def __dir__(cls):
         normal_dir = type.__dir__(cls)
-        normal_dir.append('locust_mark_set')
+        normal_dir.append('locust_tag_set')
         return normal_dir
 
 class TaskSet(object, metaclass=TaskSetMeta):
@@ -257,7 +257,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
         if not self.wait_function:
             self.wait_function = self.user.wait_function
 
-        self.apply_marks()
+        self.apply_tags()
 
     def on_start(self):
         """
@@ -349,24 +349,24 @@ class TaskSet(object, metaclass=TaskSetMeta):
     def get_next_task(self):
         if not self.tasks:
             raise Exception("No tasks defined. use the @task decorator or set the tasks property of the TaskSet")
-        if not self.marked_tasks:
+        if not self.tagged_tasks:
             self.interrupt(reschedule=False)
-        return random.choice(self.marked_tasks)
+        return random.choice(self.tagged_tasks)
 
-    def apply_marks(self):
-        marks = self.user.environment.marks
+    def apply_tags(self):
+        tags = self.user.environment.tags
 
-        if marks is None:
-            self.marked_tasks = self.tasks
+        if tags is None:
+            self.tagged_tasks = self.tasks
         else:
             new_tasks = []
             for task in self.tasks:
-                if 'locust_mark_set' in dir(task):
-                    mark_intersection = task.locust_mark_set & set(marks)
-                    if len(mark_intersection) > 0:
+                if 'locust_tag_set' in dir(task):
+                    tag_intersection = task.locust_tag_set & set(tags)
+                    if len(tag_intersection) > 0:
                         new_tasks.append(task)
 
-            self.marked_tasks = new_tasks
+            self.tagged_tasks = new_tasks
 
     
     def wait_time(self):
@@ -557,7 +557,7 @@ class User(object, metaclass=UserMeta):
         self._state = LOCUST_STATE_RUNNING
         self._taskset_instance = DefaultTaskSet(self)
         self._taskset_instance.tasks = self.tasks
-        self._taskset_instance.apply_marks()
+        self._taskset_instance.apply_tags()
         try:
             # run the task_set on_start method, if it has one
             self.on_start()
