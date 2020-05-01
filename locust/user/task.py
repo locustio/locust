@@ -5,16 +5,10 @@ import traceback
 from time import time
 
 import gevent
-from gevent import GreenletExit, monkey
+from gevent import GreenletExit
 
-from locust.exception import InterruptTaskSet, LocustError, RescheduleTask,\
-     RescheduleTaskImmediately, StopUser, MissingWaitTimeError
-
-
-# The monkey patching must run before requests is imported, or else 
-# we'll get an infinite recursion when doing SSL/HTTPS requests.
-# See: https://github.com/requests/requests/issues/3752#issuecomment-294608002
-monkey.patch_all()
+from locust.exception import InterruptTaskSet, RescheduleTask, RescheduleTaskImmediately, \
+     StopUser, MissingWaitTimeError
 
 
 logger = logging.getLogger(__name__)
