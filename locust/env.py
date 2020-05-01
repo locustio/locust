@@ -57,7 +57,7 @@ class Environment:
         step_load=False, 
         stop_timeout=None,
         catch_exceptions=True,
-        parsed_options=None,
+        parsed_options=None
     ):
         if events:
             self.events = events
