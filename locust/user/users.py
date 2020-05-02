@@ -1,7 +1,7 @@
 from gevent import GreenletExit
 
 from locust.clients import HttpSession
-from locust.exception import LocustError, StopUser, RescheduleTask
+from locust.exception import LocustError, StopUser
 from locust.util import deprecation
 from .task import DefaultTaskSet, get_tasks_from_base_classes, \
      LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING

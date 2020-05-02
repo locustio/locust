@@ -129,6 +129,11 @@ def get_tasks_from_base_classes(bases, class_dict):
     return new_tasks
 
 def filter_tasks_by_tags(task_holder, include_tags=None, exclude_tags=None, checked={}):
+    """
+    Function used by Environment to recursively remove any tasks/TaskSets from
+    a TaskSet/User that shouldn't be executed according to the tag options
+    """
+
     def passes_tags(task):
         if task in checked:
             return checked[task]
@@ -157,6 +162,7 @@ class TaskSetMeta(type):
     def __new__(mcs, classname, bases, class_dict):
         class_dict["tasks"] = get_tasks_from_base_classes(bases, class_dict)
         return type.__new__(mcs, classname, bases, class_dict)
+
 
 class TaskSet(object, metaclass=TaskSetMeta):
     """
@@ -330,12 +336,12 @@ class TaskSet(object, metaclass=TaskSetMeta):
             self._task_queue.insert(0, task)
         else:
             self._task_queue.append(task)
-
+    
     def get_next_task(self):
         if not self.tasks:
             raise Exception("No tasks defined. use the @task decorator or set the tasks property of the TaskSet")
         return random.choice(self.tasks)
-
+    
     def wait_time(self):
         """
         Method that returns the time (in seconds) between the execution of tasks. 
@@ -408,7 +414,7 @@ class DefaultTaskSet(TaskSet):
     """
     def get_next_task(self):
         return random.choice(self.user.tasks)
-
+    
     def execute_task(self, task, *args, **kwargs):
         if hasattr(task, "tasks") and issubclass(task, TaskSet):
             # task is  (nested) TaskSet class
@@ -416,3 +422,4 @@ class DefaultTaskSet(TaskSet):
         else:
             # task is a function
             task(self.user, *args, **kwargs)
+

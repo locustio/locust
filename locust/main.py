@@ -153,7 +153,7 @@ def main():
     
     # create locust Environment
     environment = create_environment(user_classes, options, events=locust.events)
-
+    
     # apply tag options
     environment.apply_tags(include_tags=options.include_tags, exclude_tags=options.exclude_tags)
 

@@ -12,10 +12,10 @@ class Environment:
     Event hooks used by Locust internally, as well as to extend Locust's functionality
     See :ref:`events` for available events.
     """
-
+    
     user_classes = []
     """User classes that the runner will run"""
-
+    
     stats = None
     """Reference to RequestStats instance"""
     
@@ -120,8 +120,8 @@ class Environment:
         """
         Filter the tasks on all the user_classes recursively, according to the tag options
 
-        :param include_tags: If set, the runner will only run tasks that are tagged by tags in this list
-        :param exclude_tags: If set, the runner will only run tasks that aren't tagged by tags in this list
+        :param include_tags: If set, only tasks that are tagged by tags in this list will be executed
+        :param exclude_tags: If set, only tasks that aren't tagged by tags in this list will be executed
         """
         if include_tags is not None:
             include_tags = set(include_tags)

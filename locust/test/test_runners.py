@@ -74,7 +74,6 @@ class mocked_options(object):
         self.stop_timeout = None
         self.step_load = True
         self.connection_broken = False
-        self.tags = None
 
     def reset_stats(self):
         pass
