@@ -7,7 +7,7 @@ Increase Locust's performance with a faster HTTP client
 Locust's default HTTP client uses `python-requests <http://www.python-requests.org/>`_. 
 The reason for this is that requests is a very well-maintained python package, that 
 provides a really nice API, that many python developers are familiar with. Therefore, 
-in many cases, we recommend that you use the default :py:class:`HttpUser <locust.core.HttpUser>`
+in many cases, we recommend that you use the default :py:class:`HttpUser <locust.HttpUser>`
 which uses requests. However, if you're planning to run really large scale tests, 
 Locust comes with an alternative HTTP client, 
 :py:class:`FastHttpUser <locust.contrib.fasthttp.FastHttpUser>` which

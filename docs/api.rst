@@ -6,26 +6,26 @@ API
 User class
 ============
 
-.. autoclass:: locust.core.User
+.. autoclass:: locust.User
     :members: wait_time, tasks, weight, abstract, on_start, on_stop, wait
 
 HttpUser class
 ================
 
-.. autoclass:: locust.core.HttpUser
+.. autoclass:: locust.HttpUser
     :members: wait_time, tasks, client, abstract
 
 
 TaskSet class
 =============
 
-.. autoclass:: locust.core.TaskSet
+.. autoclass:: locust.TaskSet
     :members: user, parent, wait_time, client, tasks, interrupt, schedule_task, on_start, on_stop, wait
 
 task decorator
 ==============
 
-.. autofunction:: locust.core.task
+.. autofunction:: locust.task
 
 tag decorator
 ==============
@@ -35,7 +35,7 @@ tag decorator
 SequentialTaskSet class
 =======================
 
-.. autoclass:: locust.sequential_taskset.SequentialTaskSet
+.. autoclass:: locust.SequentialTaskSet
     :members: user, parent, wait_time, client, tasks, interrupt, schedule_task, on_start, on_stop
 
 

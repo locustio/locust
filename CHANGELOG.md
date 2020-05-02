@@ -1,12 +1,26 @@
 # Changelog
 
+## [1.0b2](https://github.com/locustio/locust/tree/1.0b2) (2020-05-01)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.0b1...1.0b2)
+
+**Closed issues:**
+
+- Add --config parameter [\#1334](https://github.com/locustio/locust/issues/1334)
+- clean up core.py & \_\_init\_\_.py [\#1328](https://github.com/locustio/locust/issues/1328)
+
+**Merged pull requests:**
+
+- Split core.py into two files in separate python package [\#1361](https://github.com/locustio/locust/pull/1361) ([heyman](https://github.com/heyman))
+- --config command line argument [\#1359](https://github.com/locustio/locust/pull/1359) ([MattFisher](https://github.com/MattFisher))
+
 ## [1.0b1](https://github.com/locustio/locust/tree/1.0b1) (2020-04-29)
 
 [Full Changelog](https://github.com/locustio/locust/compare/0.14.6...1.0b1)
 
 **Fixed bugs:**
 
-- DUBUG not working master br [\#1337](https://github.com/locustio/locust/issues/1337)
+- DEBUG output in docker is not working [\#1337](https://github.com/locustio/locust/issues/1337)
 - Docker image: worker mode not starting correctly [\#1322](https://github.com/locustio/locust/issues/1322)
 - Can't run Locust distributed with --csv-full-history  [\#1315](https://github.com/locustio/locust/issues/1315)
 - Exception throws on attempt to report request results to master [\#1293](https://github.com/locustio/locust/issues/1293)

@@ -52,7 +52,7 @@ Let's break it down:
     class WebsiteUser(HttpUser):
 
 Here we define a class for the users that we will be simulating. It inherits from 
-:py:class:`HttpUser <locust.core.HttpUser>` which gives each user a ``client`` attribute,
+:py:class:`HttpUser <locust.HttpUser>` which gives each user a ``client`` attribute,
 which is an instance of :py:class:`HttpSession <locust.clients.HttpSession>`, that 
 can be used to make HTTP requests to the target system that we want to load test. When a test starts, 
 locust will create an instance of this class for every user that it simulates, and each of these 
@@ -144,20 +144,8 @@ host defaults to 127.0.0.1):
     $ locust -f locust_files/my_locust_file.py --worker --master-host=192.168.0.100
 
 
-Parameters can also be set as :ref:`environment variables <environment-variables>`, or in a 
-`config file <https://github.com/bw2/ConfigArgParse#config-file-syntax>`_ (``locust.conf`` or ``~/.locust.conf``).
-
-For example: (this will do the same thing as the previous command)
-
-.. code-block:: console
-
-    $ LOCUST_MASTER_NODE_HOST=192.168.0.100 locust
-
-.. code-block::
-
-    # locust.conf in current directory
-    locustfile locust_files/my_locust_file.py
-    worker
+Parameters can also be set through :ref:`environment variables <environment-variables>`, or in a
+:ref:`config file <configuration-file>`.
 
 .. note::
 
