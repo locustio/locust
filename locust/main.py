@@ -93,6 +93,8 @@ def create_environment(user_classes, options, events=None):
     """
     return Environment(
         user_classes=user_classes,
+        include_tags=options.include_tags,
+        exclude_tags=options.exclude_tags,
         events=events,
         host=options.host,
         reset_stats=options.reset_stats,
@@ -154,9 +156,6 @@ def main():
     # create locust Environment
     environment = create_environment(user_classes, options, events=locust.events)
     
-    # apply tag options
-    environment.apply_tags(include_tags=options.include_tags, exclude_tags=options.exclude_tags)
-
     if options.show_task_ratio:
         print("\n Task ratio per User class")
         print( "-" * 80)

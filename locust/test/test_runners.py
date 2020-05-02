@@ -65,6 +65,8 @@ class mocked_options(object):
         self.hatch_rate = 5
         self.num_users = 5
         self.host = '/'
+        self.include_tags = None
+        self.exclude_tags = None
         self.master_host = 'localhost'
         self.master_port = 5557
         self.master_bind_host = '*'

@@ -16,6 +16,12 @@ class Environment:
     user_classes = []
     """User classes that the runner will run"""
     
+    include_tags = None
+    """If set, only tasks that are tagged by tags in this list will be executed"""
+
+    exclude_tags = None
+    """If set, only tasks that aren't tagged by tags in this list will be executed"""
+
     stats = None
     """Reference to RequestStats instance"""
     
@@ -52,6 +58,8 @@ class Environment:
     def  __init__(
         self, *,
         user_classes=[],
+        include_tags=None,
+        exclude_tags=None,
         events=None, 
         host=None, 
         reset_stats=False, 
@@ -66,6 +74,8 @@ class Environment:
             self.events = Events()
         
         self.user_classes = user_classes
+        self.include_tags = include_tags
+        self.exclude_tags = exclude_tags
         self.stats = RequestStats()
         self.host = host
         self.reset_stats = reset_stats
@@ -73,6 +83,8 @@ class Environment:
         self.stop_timeout = stop_timeout
         self.catch_exceptions = catch_exceptions
         self.parsed_options = parsed_options
+
+        self.filter_tasks_by_tags()
     
     def _create_runner(self, runner_class, *args, **kwargs):
         if self.runner is not None:
@@ -116,20 +128,18 @@ class Environment:
             master_port=master_port,
         )
     
-    def apply_tags(self, include_tags=None, exclude_tags=None):
+    def filter_tasks_by_tags(self):
         """
-        Filter the tasks on all the user_classes recursively, according to the tag options
-
-        :param include_tags: If set, only tasks that are tagged by tags in this list will be executed
-        :param exclude_tags: If set, only tasks that aren't tagged by tags in this list will be executed
+        Filter the tasks on all the user_classes recursively, according to the include_tags and
+        exclude_tags attributes
         """
-        if include_tags is not None:
-            include_tags = set(include_tags)
-        if exclude_tags is not None:
-            exclude_tags = set(exclude_tags)
+        if self.include_tags is not None:
+            self.include_tags = set(self.include_tags)
+        if self.exclude_tags is not None:
+            self.exclude_tags = set(self.exclude_tags)
 
         for user_class in self.user_classes:
-            filter_tasks_by_tags(user_class, include_tags, exclude_tags)
+            filter_tasks_by_tags(user_class, self.include_tags, self.exclude_tags)
 
     def create_web_ui(self, host="", port=8089, auth_credentials=None, tls_cert=None, tls_key=None):
         """
