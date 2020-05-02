@@ -3,6 +3,7 @@ from .exception import RunnerAlreadyExistsError
 from .stats import RequestStats
 from .runners import LocalRunner, MasterRunner, WorkerRunner
 from .web import WebUI
+from .user.task import filter_tasks_by_tags
 
 
 class Environment:
@@ -14,12 +15,6 @@ class Environment:
 
     user_classes = []
     """User classes that the runner will run"""
-
-    include_tags = None
-    """If set, the runner will only run tasks that are tagged by tags in this list"""
-
-    exclude_tags = None
-    """If set, the runner will only run tasks that aren't tagged by tags in this list"""
 
     stats = None
     """Reference to RequestStats instance"""
@@ -57,8 +52,6 @@ class Environment:
     def  __init__(
         self, *,
         user_classes=[],
-        include_tags=None,
-        exclude_tags=None,
         events=None, 
         host=None, 
         reset_stats=False, 
@@ -73,8 +66,6 @@ class Environment:
             self.events = Events()
         
         self.user_classes = user_classes
-        self.include_tags = include_tags
-        self.exclude_tags = exclude_tags
         self.stats = RequestStats()
         self.host = host
         self.reset_stats = reset_stats
@@ -125,6 +116,21 @@ class Environment:
             master_port=master_port,
         )
     
+    def apply_tags(self, include_tags=None, exclude_tags=None):
+        """
+        Filter the tasks on all the user_classes recursively, according to the tag options
+
+        :param include_tags: If set, the runner will only run tasks that are tagged by tags in this list
+        :param exclude_tags: If set, the runner will only run tasks that aren't tagged by tags in this list
+        """
+        if include_tags is not None:
+            include_tags = set(include_tags)
+        if exclude_tags is not None:
+            exclude_tags = set(exclude_tags)
+
+        for user_class in self.user_classes:
+            filter_tasks_by_tags(user_class, include_tags, exclude_tags)
+
     def create_web_ui(self, host="", port=8089, auth_credentials=None, tls_cert=None, tls_key=None):
         """
         Creates a :class:`WebUI <locust.web.WebUI>` instance for this Environment and start running the web server

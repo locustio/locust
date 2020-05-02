@@ -124,14 +124,12 @@ class User(object, metaclass=UserMeta):
     def run(self):
         self._state = LOCUST_STATE_RUNNING
         self._taskset_instance = DefaultTaskSet(self)
-        self._taskset_instance.tasks = self.tasks
-        self._taskset_instance.apply_tags()
         try:
             # run the task_set on_start method, if it has one
             self.on_start()
             
             self._taskset_instance.run()
-        except (GreenletExit, StopUser, RescheduleTask) as e:
+        except (GreenletExit, StopUser) as e:
             # run the on_stop method, if it has one
             self.on_stop()
     

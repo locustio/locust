@@ -77,11 +77,10 @@ def tag(tag_name=None):
         if issubclass(type(decorated), TaskSetMeta):
             decorated.tasks = list(map(tag(tag_name), decorated.tasks))
         else:
-            if 'locust_tag_union' not in decorated.__dict__ or 'locust_tag_intersection' not in decorated.__dict__:
-                decorated.locust_tag_union = decorated.locust_tag_intersection = set(['tagged'])
+            if 'locust_tag_set' not in decorated.__dict__:
+                decorated.locust_tag_set = set(['tagged'])
             if tag_name is not None:
-                decorated.locust_tag_union.add(tag_name)
-                decorated.locust_tag_intersection.add(tag_name)
+                decorated.locust_tag_set.add(tag_name)
         return decorated
 
     """
@@ -129,6 +128,25 @@ def get_tasks_from_base_classes(bases, class_dict):
     
     return new_tasks
 
+def filter_tasks_by_tags(task_holder, include_tags=None, exclude_tags=None, checked={}):
+    def passes_tags(task):
+        if task in checked:
+            return checked[task]
+
+        passing = True
+        if issubclass(type(task), TaskSetMeta):
+            filter_tasks_by_tags(task, include_tags, exclude_tags, checked)
+            passing = len(task.tasks) > 0
+        else:
+            if include_tags is not None:
+                passing &= 'locust_tag_set' in dir(task) and len(task.locust_tag_set & include_tags) > 0
+            if exclude_tags is not None:
+                passing &= 'locust_tag_set' not in dir(task) or len(task.locust_tag_set & exclude_tags) == 0
+
+        checked[task] = passing
+        return passing
+
+    task_holder.tasks = list(filter(passes_tags, task_holder.tasks))
 
 class TaskSetMeta(type):
     """
@@ -139,33 +157,6 @@ class TaskSetMeta(type):
     def __new__(mcs, classname, bases, class_dict):
         class_dict["tasks"] = get_tasks_from_base_classes(bases, class_dict)
         return type.__new__(mcs, classname, bases, class_dict)
-
-    @property
-    def locust_tag_union(cls):
-        result = set()
-        for task in cls.tasks:
-            if 'locust_tag_union' in dir(task):
-                result |= task.locust_tag_union
-        return result
-
-    @property
-    def locust_tag_intersection(cls):
-        result = None
-        for task in cls.tasks:
-            if 'locust_tag_intersection' in dir(task):
-                if result is None:
-                    result = task.locust_tag_intersection
-                else:
-                    result &= task.locust_tag_intersection
-            else:
-                result = set()
-                break
-        return set() if result is None else result
-
-    def __dir__(cls):
-        normal_dir = type.__dir__(cls)
-        normal_dir.extend(['locust_tag_union', 'locust_tag_intersection'])
-        return normal_dir
 
 class TaskSet(object, metaclass=TaskSetMeta):
     """
@@ -252,8 +243,6 @@ class TaskSet(object, metaclass=TaskSetMeta):
             self.max_wait = self.user.max_wait
         if not self.wait_function:
             self.wait_function = self.user.wait_function
-
-        self.apply_tags()
 
     def on_start(self):
         """
@@ -345,37 +334,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
     def get_next_task(self):
         if not self.tasks:
             raise Exception("No tasks defined. use the @task decorator or set the tasks property of the TaskSet")
-        if not self.tagged_tasks:
-            self.interrupt(reschedule=False)
-        return random.choice(self.tagged_tasks)
-
-    def apply_tags(self):
-        include = self.user.environment.include_tags
-        exclude = self.user.environment.exclude_tags
-
-        new_tasks = []
-        if include is None:
-            new_tasks = self.tasks
-        else:
-            for task in self.tasks:
-                if 'locust_tag_union' in dir(task):
-                    tags_match = len(task.locust_tag_union & set(include)) > 0
-                    if tags_match:
-                        new_tasks.append(task)
-        self.tagged_tasks = new_tasks
-
-        new_tasks = []
-        if exclude is None:
-            new_tasks = self.tagged_tasks
-        else:
-            for task in self.tagged_tasks:
-                if 'locust_tag_intersection' in dir(task):
-                    tags_match = len(task.locust_tag_intersection & set(exclude)) > 0
-                    if not tags_match:
-                        new_tasks.append(task)
-                else:
-                    new_tasks.append(task)
-        self.tagged_tasks = new_tasks
+        return random.choice(self.tasks)
 
     def wait_time(self):
         """
@@ -447,6 +406,9 @@ class DefaultTaskSet(TaskSet):
     Default root TaskSet that executes tasks in User.tasks.
     It executes tasks declared directly on the Locust with the user instance as the task argument.
     """
+    def get_next_task(self):
+        return random.choice(self.user.tasks)
+
     def execute_task(self, task, *args, **kwargs):
         if hasattr(task, "tasks") and issubclass(task, TaskSet):
             # task is  (nested) TaskSet class
