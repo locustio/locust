@@ -49,11 +49,11 @@ def task(weight=1):
     else:
         return decorator_func
 
-def tag(tag_name=None):
+def tag(*tags):
     """
-    Decorator for tagging tasks and TaskSets with the given tag name. You can then limit
-    the test to only execute tasks that are tagged with any of the tags provided by the
-    --tags command-line argument. Example::
+    Decorator for tagging tasks and TaskSets with the given tag name. You can then limit the test to
+    only execute tasks that are tagged with any of the tags provided by the --include-tags
+    command-line argument. Example::
 
         class ForumPage(TaskSet):
             @tag('thread')
@@ -74,29 +74,18 @@ def tag(tag_name=None):
     """
 
     def decorator_func(decorated):
-        if issubclass(type(decorated), TaskSetMeta):
-            decorated.tasks = list(map(tag(tag_name), decorated.tasks))
+        if hasattr(decorated, 'tasks'):
+            decorated.tasks = list(map(tag(*tags), decorated.tasks))
         else:
             if 'locust_tag_set' not in decorated.__dict__:
-                decorated.locust_tag_set = set(['tagged'])
-            if tag_name is not None:
-                decorated.locust_tag_set.add(tag_name)
+                decorated.locust_tag_set = set()
+            decorated.locust_tag_set |= set(tags)
         return decorated
 
-    """
-    Check if tag was used without parentheses (not called), like this::
-
-        @tag
-        @task(1)
-        def my_task()
-            pass
-    """
-    if callable(tag_name):
-        func = tag_name
-        tag_name = None
-        return decorator_func(func)
-    else:
-        return decorator_func
+    if len(tags) == 0 or callable(tags[0]):
+        raise ValueError('No tag name was supplied')
+    
+    return decorator_func
 
 def get_tasks_from_base_classes(bases, class_dict):
     """
@@ -130,8 +119,8 @@ def get_tasks_from_base_classes(bases, class_dict):
 
 def filter_tasks_by_tags(task_holder, include_tags=None, exclude_tags=None, checked={}):
     """
-    Function used by Environment to recursively remove any tasks/TaskSets from
-    a TaskSet/User that shouldn't be executed according to the tag options
+    Function used by Environment to recursively remove any tasks/TaskSets from a TaskSet/User that
+    shouldn't be executed according to the tag options
     """
 
     def passes_tags(task):
@@ -139,7 +128,7 @@ def filter_tasks_by_tags(task_holder, include_tags=None, exclude_tags=None, chec
             return checked[task]
 
         passing = True
-        if issubclass(type(task), TaskSetMeta):
+        if hasattr(task, 'tasks'):
             filter_tasks_by_tags(task, include_tags, exclude_tags, checked)
             passing = len(task.tasks) > 0
         else:

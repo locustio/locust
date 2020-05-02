@@ -198,8 +198,8 @@ and then Python's ``random.choice()`` is used pick tasks from the list.
 Tagging tasks
 -------------
 
-By tagging tasks using the `tag <locust.core.tag>` decorator, you can be picky about what tasks
-are executed during the test using the :code:`--include-tags` and :code:`--exclude-tags` arguments.
+By tagging tasks using the `tag <locust.tag>` decorator, you can be picky about what tasks are
+executed during the test using the :code:`--include-tags` and :code:`--exclude-tags` arguments.
 Consider the following example:
 
 .. code-block:: python
@@ -214,8 +214,7 @@ Consider the following example:
         def task1(self):
             pass
 
-        @tag('tag1')
-        @tag('tag2')
+        @tag('tag1', 'tag2')
         @task
         def task2(self):
             pass
@@ -229,9 +228,9 @@ Consider the following example:
         def task4(self):
             pass
 
-If you started this test with :code:`--include-tags tag1`, only *task1* and *task2* would be executed
-during the test. If you started it with :code:`--include-tags tag2 tag3`, only *task2* and *task3*
-would be executed.
+If you started this test with :code:`--include-tags tag1`, only *task1* and *task2* would be
+executed during the test. If you started it with :code:`--include-tags tag2 tag3`, only *task2* and
+*task3* would be executed.
 
 Every task that is tagged also receives the :code:`tagged` tag. So, starting the test with
 :code:`--include-tags tagged` would actually run *task1*, *task2*, and *task3*.
@@ -241,31 +240,6 @@ Every task that is tagged also receives the :code:`tagged` tag. So, starting the
 wins over inclusion, so if a task has a tag you've included and a tag you've excluded, it will not
 be executed.
 
-Furthermore, providing the argument for the tag name is actually optional, and so are the
-parentheses:
-
-.. code-block:: python
-
-    from locust import User, constant, task, tag
-
-    class MyUser(User):
-        wait_time = constant(1)
-
-        @tag
-        @task
-        def task1(self):
-            pass
-
-        @tag()
-        @task
-        def task2(self):
-            pass
-
-        @task
-        def task3(self):
-            pass
-
-Running this example with :code:`--include-tags tagged` will only execute *task1* and *task2*.
 
 
 TaskSet class
@@ -311,9 +285,9 @@ A TaskSet can also be inlined directly under a User/TaskSet class using the @tas
         class MyTaskSet(TaskSet):
             ...
 
-
 The tasks of a TaskSet class can be other TaskSet classes, allowing them to be nested any number 
 of levels. This allows us to define a behaviour that simulates users in a more realistic way. 
+
 For example we could define TaskSets with the following structure::
 
     - Main user behaviour
@@ -393,11 +367,10 @@ parent TaskSet instance.
 
 Tags and TaskSets
 ------------------
-You can tag TaskSets using the `tag <locust.core.tag>` decorator in a similar way to normal tasks,
-as described `above <tagging-tasks>`, but there are some nuances worth mentioning. If you tag a task
-within a nested TaskSet, locust will execute that task even if the TaskSet isn't tagged. So, there's
-no need to tag both a task and its TaskSet. In fact, this would be redundant, as the only thing
-tagging TaskSet does is tag every task defined within that TaskSet.
+You can tag TaskSets using the `tag <locust.tag>` decorator in a similar way to normal tasks, as
+described `above <tagging-tasks>`, but there are some nuances worth mentioning. Tagging a TaskSet
+will automatically apply the tag(s) to all of the TaskSet's tasks. Furthermore, if you tag a task
+within a nested TaskSet, locust will execute that task even if the TaskSet isn't tagged.
 
 
 .. _sequential-taskset:
