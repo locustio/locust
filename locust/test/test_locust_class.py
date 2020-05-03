@@ -3,7 +3,7 @@ from gevent import sleep
 from gevent.pool import Group
 
 from locust.exception import InterruptTaskSet, ResponseError
-from locust import HttpUser, User, TaskSet, task, between, constant
+from locust import HttpUser, User, TaskSet, task, tag, between, constant
 from locust.env import Environment
 from locust.exception import (CatchResponseError, LocustError, RescheduleTask,
                               RescheduleTaskImmediately, StopUser)
@@ -424,6 +424,77 @@ class TestTaskSet(LocustTestCase):
         l.run()
         self.assertTrue(isinstance(parents["sub"], RootTaskSet))
         self.assertTrue(isinstance(parents["subsub"], SubTaskSet))
+
+    def test_tagging(self):
+        # single tagging
+        @tag('tag1')
+        @task
+        def my_task1():
+            pass
+
+        self.assertIn('locust_tag_set', dir(my_task1))
+        self.assertEqual(set(['tag1']), my_task1.locust_tag_set)
+
+        # multi-argument tagging
+        @tag('tag2', 'tag3')
+        @task
+        def my_task2():
+            pass
+
+        self.assertIn('locust_tag_set', dir(my_task2))
+        self.assertEqual(set(['tag2', 'tag3']), my_task2.locust_tag_set)
+
+        # tagging multiple times
+        @tag('tag4')
+        @tag('tag5')
+        @task
+        def my_task3():
+            pass
+        self.assertIn('locust_tag_set', dir(my_task3))
+        self.assertEqual(set(['tag4', 'tag5']), my_task3.locust_tag_set)
+
+    def test_tagging_taskset(self):
+        @tag('taskset')
+        @task
+        class MyTaskSet(TaskSet):
+            @task
+            def my_task1():
+                pass
+
+            @tag('task')
+            @task
+            def my_task2():
+                pass
+
+            @tag('taskset2')
+            @task
+            class MyTaskSet2(TaskSet):
+                @task
+                def my_task3():
+                    pass
+
+        # when tagging taskset, its tasks recieve the tag
+        self.assertIn('locust_tag_set', dir(MyTaskSet.my_task1))
+        self.assertEqual(set(['taskset']), MyTaskSet.my_task1.locust_tag_set)
+
+        # tagging inner task receives both
+        self.assertIn('locust_tag_set', dir(MyTaskSet.my_task2))
+        self.assertEqual(set(['taskset', 'task']), MyTaskSet.my_task2.locust_tag_set)
+
+        # when tagging nested taskset, its tasks receives both
+        self.assertIn('locust_tag_set', dir(MyTaskSet.MyTaskSet2.my_task3))
+        self.assertEqual(set(['taskset', 'taskset2']), MyTaskSet.MyTaskSet2.my_task3.locust_tag_set)
+
+    def test_tagging_without_args_fails(self):
+        @task
+        def dummy_task(self):
+            pass
+
+        # task is tagged without parens
+        self.assertRaises(ValueError, lambda: tag(dummy_task))
+
+        # task is tagged with empty parens
+        self.assertRaises(ValueError, lambda: tag()(dummy_task))
 
 
 class TestLocustClass(LocustTestCase):
