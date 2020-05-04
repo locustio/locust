@@ -1,11 +1,13 @@
 import socket
 import gevent
+from tempfile import NamedTemporaryFile
 
 from locust.user import task, TaskSet
 from locust.contrib.fasthttp import FastHttpSession, FastHttpUser
 from locust.exception import CatchResponseError, InterruptTaskSet, ResponseError
 from locust.main import is_user_class
-from .testcases import WebserverTestCase
+from .testcases import WebserverTestCase, LocustTestCase
+from .util import create_tls_cert
 
 
 class TestFastHttpSession(WebserverTestCase):
@@ -493,3 +495,34 @@ class TestFastHttpCatchResponse(WebserverTestCase):
             r.failure("Manual fail")
         self.assertEqual(0, self.num_success)
         self.assertEqual(1, self.num_failures)
+
+
+class TestFastHttpSsl(LocustTestCase):
+    def setUp(self):
+        super().setUp()
+        tls_cert, tls_key = create_tls_cert("127.0.0.1")
+        self.tls_cert_file = NamedTemporaryFile()
+        self.tls_key_file = NamedTemporaryFile()
+        with open(self.tls_cert_file.name, 'w') as f:
+            f.write(tls_cert.decode())
+        with open(self.tls_key_file.name, 'w') as f:
+            f.write(tls_key.decode())
+        
+        self.web_ui = self.environment.create_web_ui(
+            "127.0.0.1", 0, 
+            tls_cert=self.tls_cert_file.name, 
+            tls_key=self.tls_key_file.name,
+        )
+        gevent.sleep(0.01)
+        self.web_port = self.web_ui.server.server_port
+    
+    def tearDown(self):
+        super().tearDown()
+        self.web_ui.stop()
+    
+    def test_ssl_request_insecure(self):
+        s = FastHttpSession(self.environment, "https://127.0.0.1:%i" % self.web_port, insecure=True)
+        r = s.get("/")
+        self.assertEqual(200, r.status_code)
+        self.assertIn("<title>Locust</title>", r.content.decode("utf-8"))
+
