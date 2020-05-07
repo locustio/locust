@@ -117,7 +117,7 @@ def get_tasks_from_base_classes(bases, class_dict):
     
     return new_tasks
 
-def filter_tasks_by_tags(task_holder, include_tags=None, exclude_tags=None, checked={}):
+def filter_tasks_by_tags(task_holder, tags=None, exclude_tags=None, checked={}):
     """
     Function used by Environment to recursively remove any tasks/TaskSets from a TaskSet/User that
     shouldn't be executed according to the tag options
@@ -132,11 +132,11 @@ def filter_tasks_by_tags(task_holder, include_tags=None, exclude_tags=None, chec
 
         passing = True
         if hasattr(task, 'tasks'):
-            filter_tasks_by_tags(task, include_tags, exclude_tags, checked)
+            filter_tasks_by_tags(task, tags, exclude_tags, checked)
             passing = len(task.tasks) > 0
         else:
-            if include_tags is not None:
-                passing &= 'locust_tag_set' in dir(task) and len(task.locust_tag_set & include_tags) > 0
+            if tags is not None:
+                passing &= 'locust_tag_set' in dir(task) and len(task.locust_tag_set & tags) > 0
             if exclude_tags is not None:
                 passing &= 'locust_tag_set' not in dir(task) or len(task.locust_tag_set & exclude_tags) == 0
 

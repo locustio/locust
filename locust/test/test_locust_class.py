@@ -512,7 +512,7 @@ class TestTaskSet(LocustTestCase):
 
         self.assertListEqual(MyTaskSet.tasks, [MyTaskSet.included, MyTaskSet.included, MyTaskSet.not_included, MyTaskSet.dont_include_this_either])
 
-        filter_tasks_by_tags(MyTaskSet, include_tags=set(['include this']))
+        filter_tasks_by_tags(MyTaskSet, tags=set(['include this']))
         self.assertListEqual(MyTaskSet.tasks, [MyTaskSet.included, MyTaskSet.included])
 
     def test_excluding_tags(self):
@@ -557,7 +557,7 @@ class TestTaskSet(LocustTestCase):
             def included_and_excluded(self):
                 pass
 
-        filter_tasks_by_tags(MyTaskSet, include_tags=set(['included']), exclude_tags=set(['excluded']))
+        filter_tasks_by_tags(MyTaskSet, tags=set(['included']), exclude_tags=set(['excluded']))
         self.assertListEqual(MyTaskSet.tasks, [MyTaskSet.included])
 
     def test_including_tasksets(self):
@@ -586,7 +586,7 @@ class TestTaskSet(LocustTestCase):
                 def not_included(self):
                     pass
 
-        filter_tasks_by_tags(MyTaskSet, include_tags=set(['included']))
+        filter_tasks_by_tags(MyTaskSet, tags=set(['included']))
         self.assertListEqual(MyTaskSet.tasks, [MyTaskSet.MixedNestedTaskSet, MyTaskSet.TaggedNestedTaskSet])
         self.assertListEqual(MyTaskSet.MixedNestedTaskSet.tasks, [MyTaskSet.MixedNestedTaskSet.included])
 
