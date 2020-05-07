@@ -43,7 +43,7 @@ setup(
     install_requires=[
         "gevent>=1.5.0",
         "flask>=0.10.1", 
-        "requests>=2.9.1", 
+        "requests>=2.23.0", 
         "msgpack>=0.6.2", 
         "pyzmq>=16.0.2", 
         "geventhttpclient-wheels==1.3.1.dev3",
