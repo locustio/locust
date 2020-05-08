@@ -105,17 +105,29 @@ class FastHttpUser(User):
         )
 
 
+def insecure_ssl_context_factory():
+    context = gevent.ssl.create_default_context()
+    context.check_hostname = False
+    context.verify_mode = gevent.ssl.CERT_NONE
+    return context
+
+
 class FastHttpSession(object):
     auth_header = None
     
-    def __init__(self, environment: Environment, base_url: str, **kwargs):
+    def __init__(self, environment: Environment, base_url: str, insecure=True, **kwargs):
         self.environment = environment
         self.base_url = base_url
         self.cookiejar = CookieJar()
+        if insecure:
+            ssl_context_factory = insecure_ssl_context_factory
+        else:
+            ssl_context_factory = gevent.ssl.create_default_context
         self.client = LocustUserAgent(
             cookiejar=self.cookiejar,
-            ssl_options={"cert_reqs": gevent.ssl.CERT_NONE}, 
-            **kwargs
+            ssl_context_factory=ssl_context_factory,
+            insecure=insecure,
+            **kwargs,
         )
         
         # Check for basic authentication

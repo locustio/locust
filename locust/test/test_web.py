@@ -20,6 +20,7 @@ from locust.runners import Runner
 from locust.web import WebUI
 
 from .testcases import LocustTestCase
+from .util import create_tls_cert
 
 
 class TestWebUI(LocustTestCase):
@@ -311,41 +312,9 @@ class TestWebUIAuth(LocustTestCase):
 
 
 class TestWebUIWithTLS(LocustTestCase):
-
-    def _create_tls_cert(self):
-        """ Generate a TLS cert and private key to serve over https """
-        from cryptography import x509
-        from cryptography.x509.oid import NameOID
-        from cryptography.hazmat.primitives import hashes
-        from cryptography.hazmat.backends import default_backend
-        from cryptography.hazmat.primitives import serialization
-        from cryptography.hazmat.primitives.asymmetric import rsa
-
-        key = rsa.generate_private_key(public_exponent=2**16+1, key_size=2048, backend=default_backend())
-        name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "127.0.0.1")])
-        now = datetime.utcnow()
-        cert = (
-            x509.CertificateBuilder()
-            .subject_name(name)
-            .issuer_name(name)
-            .public_key(key.public_key())
-            .serial_number(1000)
-            .not_valid_before(now)
-            .not_valid_after(now + timedelta(days=10*365))
-            .sign(key, hashes.SHA256(), default_backend())
-        )
-        cert_pem = cert.public_bytes(encoding=serialization.Encoding.PEM)
-        key_pem = key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption(),
-        )
-
-        return cert_pem, key_pem
-
     def setUp(self):
         super(TestWebUIWithTLS, self).setUp()
-        tls_cert, tls_key = self._create_tls_cert()
+        tls_cert, tls_key = create_tls_cert("127.0.0.1")
         self.tls_cert_file = NamedTemporaryFile(delete=False)
         self.tls_key_file = NamedTemporaryFile(delete=False)
         with open(self.tls_cert_file.name, 'w') as f:

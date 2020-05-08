@@ -84,7 +84,7 @@ class Runner(object):
         return self.environment.user_classes
     
     @property
-    def stats(self):
+    def stats(self) -> RequestStats:
         return self.environment.stats
     
     @property
