@@ -232,9 +232,6 @@ If you started this test with :code:`--include-tags tag1`, only *task1* and *tas
 executed during the test. If you started it with :code:`--include-tags tag2 tag3`, only *task2* and
 *task3* would be executed.
 
-Every task that is tagged also receives the :code:`tagged` tag. So, starting the test with
-:code:`--include-tags tagged` would actually run *task1*, *task2*, and *task3*.
-
 :code:`--exclude-tags` will behave in the exact opposite way. So, if you start the test with
 :code:`--exclude-tags tag3`, only *task1*, *task2*, and *task4* will be executed. Exclusion always
 wins over inclusion, so if a task has a tag you've included and a tag you've excluded, it will not
