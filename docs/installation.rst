@@ -6,7 +6,7 @@ Locust is available on `PyPI <https://pypi.org/project/locustio/>`_ and can be i
 
 .. code-block:: console
 
-    $ pip3 install locust
+    $ pip3 install locustio
 
 If you want the bleeding edge version, you can use pip to install directly from our Git repository.  For example, to install the master branch using Python 3:
 
