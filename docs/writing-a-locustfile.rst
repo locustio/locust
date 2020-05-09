@@ -199,8 +199,8 @@ Tagging tasks
 -------------
 
 By tagging tasks using the `tag <locust.tag>` decorator, you can be picky about what tasks are
-executed during the test using the :code:`--include-tags` and :code:`--exclude-tags` arguments.
-Consider the following example:
+executed during the test using the :code:`--tags` and :code:`--exclude-tags` arguments.  Consider
+the following example:
 
 .. code-block:: python
 
@@ -228,9 +228,9 @@ Consider the following example:
         def task4(self):
             pass
 
-If you started this test with :code:`--include-tags tag1`, only *task1* and *task2* would be
-executed during the test. If you started it with :code:`--include-tags tag2 tag3`, only *task2* and
-*task3* would be executed.
+If you started this test with :code:`--tags tag1`, only *task1* and *task2* would be executed
+during the test. If you started it with :code:`--tags tag2 tag3`, only *task2* and *task3* would be
+executed.
 
 :code:`--exclude-tags` will behave in the exact opposite way. So, if you start the test with
 :code:`--exclude-tags tag3`, only *task1*, *task2*, and *task4* will be executed. Exclusion always
