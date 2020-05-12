@@ -1,2 +1,2 @@
-from .task import task, TaskSet
+from .task import task, tag, TaskSet
 from .users import HttpUser, User

@@ -3,7 +3,7 @@ from gevent import sleep
 from gevent.pool import Group
 
 from locust.exception import InterruptTaskSet, ResponseError
-from locust import HttpUser, User, TaskSet, task, between, constant
+from locust import HttpUser, User, TaskSet, task, constant
 from locust.env import Environment
 from locust.exception import (CatchResponseError, LocustError, RescheduleTask,
                               RescheduleTaskImmediately, StopUser)

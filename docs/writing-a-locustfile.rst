@@ -193,6 +193,51 @@ that looks like this::
 and then Python's ``random.choice()`` is used pick tasks from the list.
 
 
+.. _tagging-tasks:
+
+Tagging tasks
+-------------
+
+By tagging tasks using the `tag <locust.tag>` decorator, you can be picky about what tasks are
+executed during the test using the :code:`--tags` and :code:`--exclude-tags` arguments.  Consider
+the following example:
+
+.. code-block:: python
+
+    from locust import User, constant, task, tag
+
+    class MyUser(User):
+        wait_time = constant(1)
+
+        @tag('tag1')
+        @task
+        def task1(self):
+            pass
+
+        @tag('tag1', 'tag2')
+        @task
+        def task2(self):
+            pass
+
+        @tag('tag3')
+        @task
+        def task3(self):
+            pass
+
+        @task
+        def task4(self):
+            pass
+
+If you started this test with :code:`--tags tag1`, only *task1* and *task2* would be executed
+during the test. If you started it with :code:`--tags tag2 tag3`, only *task2* and *task3* would be
+executed.
+
+:code:`--exclude-tags` will behave in the exact opposite way. So, if you start the test with
+:code:`--exclude-tags tag3`, only *task1*, *task2*, and *task4* will be executed. Exclusion always
+wins over inclusion, so if a task has a tag you've included and a tag you've excluded, it will not
+be executed.
+
+
 
 TaskSet class
 =============
@@ -237,9 +282,9 @@ A TaskSet can also be inlined directly under a User/TaskSet class using the @tas
         class MyTaskSet(TaskSet):
             ...
 
-
 The tasks of a TaskSet class can be other TaskSet classes, allowing them to be nested any number 
 of levels. This allows us to define a behaviour that simulates users in a more realistic way. 
+
 For example we could define TaskSets with the following structure::
 
     - Main user behaviour
@@ -312,9 +357,17 @@ User instance.
 Referencing the User instance, or the parent TaskSet instance
 ---------------------------------------------------------------
 
-A TaskSet instance will have the attribute :py:attr:`locust <locust.TaskSet.user>` point to 
+A TaskSet instance will have the attribute :py:attr:`user <locust.TaskSet.user>` point to
 its User instance, and the attribute :py:attr:`parent <locust.TaskSet.parent>` point to its
 parent TaskSet instance.
+
+
+Tags and TaskSets
+------------------
+You can tag TaskSets using the `tag <locust.tag>` decorator in a similar way to normal tasks, as
+described `above <tagging-tasks>`, but there are some nuances worth mentioning. Tagging a TaskSet
+will automatically apply the tag(s) to all of the TaskSet's tasks. Furthermore, if you tag a task
+within a nested TaskSet, locust will execute that task even if the TaskSet isn't tagged.
 
 
 .. _sequential-taskset:

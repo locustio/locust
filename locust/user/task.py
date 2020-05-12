@@ -50,6 +50,44 @@ def task(weight=1):
         return decorator_func
 
 
+def tag(*tags):
+    """
+    Decorator for tagging tasks and TaskSets with the given tag name. You can then limit the test
+    to only execute tasks that are tagged with any of the tags provided by the --tags command-line
+    argument. Example::
+
+        class ForumPage(TaskSet):
+            @tag('thread')
+            @task(100)
+            def read_thread(self):
+                pass
+
+            @tag('thread')
+            @tag('post')
+            @task(7)
+            def create_thread(self):
+                pass
+
+            @tag('post')
+            @task(11)
+            def comment(self):
+                pass
+    """
+
+    def decorator_func(decorated):
+        if hasattr(decorated, 'tasks'):
+            decorated.tasks = list(map(tag(*tags), decorated.tasks))
+        else:
+            if 'locust_tag_set' not in decorated.__dict__:
+                decorated.locust_tag_set = set()
+            decorated.locust_tag_set |= set(tags)
+        return decorated
+
+    if len(tags) == 0 or callable(tags[0]):
+        raise ValueError('No tag name was supplied')
+
+    return decorator_func
+
 def get_tasks_from_base_classes(bases, class_dict):
     """
     Function used by both TaskSetMeta and UserMeta for collecting all declared tasks
@@ -80,6 +118,36 @@ def get_tasks_from_base_classes(bases, class_dict):
     
     return new_tasks
 
+def filter_tasks_by_tags(task_holder, tags=None, exclude_tags=None, checked=None):
+    """
+    Function used by Environment to recursively remove any tasks/TaskSets from a TaskSet/User that
+    shouldn't be executed according to the tag options
+    """
+
+    new_tasks = []
+    if checked is None:
+        checked = {}
+    for task in task_holder.tasks:
+        if task in checked:
+            if checked[task]:
+                new_tasks.append(task)
+            continue
+
+        passing = True
+        if hasattr(task, 'tasks'):
+            filter_tasks_by_tags(task, tags, exclude_tags, checked)
+            passing = len(task.tasks) > 0
+        else:
+            if tags is not None:
+                passing &= 'locust_tag_set' in dir(task) and len(task.locust_tag_set & tags) > 0
+            if exclude_tags is not None:
+                passing &= 'locust_tag_set' not in dir(task) or len(task.locust_tag_set & exclude_tags) == 0
+
+        if passing:
+            new_tasks.append(task)
+        checked[task] = passing
+
+    task_holder.tasks = new_tasks
 
 class TaskSetMeta(type):
     """
