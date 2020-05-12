@@ -191,10 +191,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
         """
         pass
 
-    def run(self, *args, **kwargs):
-        self.args = args
-        self.kwargs = kwargs
-        
+    def run(self):
         try:
             self.on_start()
         except InterruptTaskSet as e:
@@ -235,22 +232,21 @@ class TaskSet(object, metaclass=TaskSetMeta):
                     raise
     
     def execute_next_task(self):
-        task = self._task_queue.pop(0)
-        self.execute_task(task["callable"], *task["args"], **task["kwargs"])
+        self.execute_task(self._task_queue.pop(0))
     
-    def execute_task(self, task, *args, **kwargs):
+    def execute_task(self, task):
         # check if the function is a method bound to the current locust, and if so, don't pass self as first argument
         if hasattr(task, "__self__") and task.__self__ == self:
             # task is a bound method on self
-            task(*args, **kwargs)
+            task()
         elif hasattr(task, "tasks") and issubclass(task, TaskSet):
             # task is another (nested) TaskSet class
-            task(self).run(*args, **kwargs)
+            task(self).run()
         else:
             # task is a function
-            task(self, *args, **kwargs)
+            task(self)
     
-    def schedule_task(self, task_callable, args=None, kwargs=None, first=False):
+    def schedule_task(self, task_callable, first=False):
         """
         Add a task to the User's task execution queue.
         
@@ -259,11 +255,10 @@ class TaskSet(object, metaclass=TaskSetMeta):
         :param kwargs: Dict of keyword arguments that will be passed to the task callable.
         :param first: Optional keyword argument. If True, the task will be put first in the queue.
         """
-        task = {"callable":task_callable, "args":args or [], "kwargs":kwargs or {}}
         if first:
-            self._task_queue.insert(0, task)
+            self._task_queue.insert(0, task_callable)
         else:
-            self._task_queue.append(task)
+            self._task_queue.append(task_callable)
     
     def get_next_task(self):
         if not self.tasks:
@@ -343,11 +338,11 @@ class DefaultTaskSet(TaskSet):
     def get_next_task(self):
         return random.choice(self.user.tasks)
     
-    def execute_task(self, task, *args, **kwargs):
+    def execute_task(self, task):
         if hasattr(task, "tasks") and issubclass(task, TaskSet):
             # task is  (nested) TaskSet class
-            task(self.user).run(*args, **kwargs)
+            task(self.user).run()
         else:
             # task is a function
-            task(self.user, *args, **kwargs)
+            task(self.user)
 

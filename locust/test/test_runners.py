@@ -822,10 +822,7 @@ class TestMasterRunner(LocustTestCase):
         class MyTaskSet(TaskSet):
             def __init__(self, *a, **kw):
                 super(MyTaskSet, self).__init__(*a, **kw)
-                self._task_queue = [
-                    {"callable":self.will_error, "args":[], "kwargs":{}}, 
-                    {"callable":self.will_stop, "args":[], "kwargs":{}},
-                ]
+                self._task_queue = [self.will_error, self.will_stop]
             
             @task(1)
             def will_error(self):

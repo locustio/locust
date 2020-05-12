@@ -225,7 +225,7 @@ class TestTaskSet(LocustTestCase):
         def t1(l):
             self.t1_executed = True
 
-        def t2(l, arg):
+        def t2(l, arg="t2 argument"):
             self.t2_arg = arg
 
         class MyTasks(TaskSet):
@@ -236,29 +236,9 @@ class TestTaskSet(LocustTestCase):
         taskset.execute_next_task()
         self.assertTrue(self.t1_executed)
 
-        taskset.schedule_task(t2, args=["argument to t2"])
+        taskset.schedule_task(t2)
         taskset.execute_next_task()
-        self.assertEqual("argument to t2", self.t2_arg)
-    
-    def test_schedule_task_with_kwargs(self):
-        class MyTasks(TaskSet):
-            @task
-            def t1(self):
-                self.t1_executed = True
-            @task
-            def t2(self, *args, **kwargs):
-                self.t2_args = args
-                self.t2_kwargs = kwargs
-        loc = MyTasks(self.locust)
-        loc.schedule_task(loc.t2, [42], {"test_kw":"hello"})
-        loc.execute_next_task()
-        self.assertEqual((42, ), loc.t2_args)
-        self.assertEqual({"test_kw":"hello"}, loc.t2_kwargs)
-        
-        loc.schedule_task(loc.t2, args=[10, 4], kwargs={"arg1":1, "arg2":2})
-        loc.execute_next_task()
-        self.assertEqual((10, 4), loc.t2_args)
-        self.assertEqual({"arg1":1, "arg2":2}, loc.t2_kwargs)
+        self.assertEqual("t2 argument", self.t2_arg)
     
     def test_schedule_task_bound_method(self):
         class MyTasks(TaskSet):
@@ -358,44 +338,22 @@ class TestTaskSet(LocustTestCase):
         self.assertRaises(RescheduleTaskImmediately, lambda: loc.execute_next_task())
         self.assertTrue(self.locust.sub_locust_task_executed)
     
-    def test_sub_taskset_arguments(self):
-        class MySubTaskSet(TaskSet):
-            wait_time = constant(0.001)
-            @task()
-            def a_task(self):
-                self.user.sub_taskset_args = self.args
-                self.user.sub_taskset_kwargs = self.kwargs
-                self.interrupt()
-        class MyTaskSet(TaskSet):
-            sub_locust_args = None
-            sub_locust_kwargs = None
-            tasks = [MySubTaskSet]
-        
-        self.locust.sub_taskset_args = None
-        self.locust.sub_taskset_kwargs = None
-        
-        loc = MyTaskSet(self.locust)
-        loc.schedule_task(MySubTaskSet, args=[1,2,3], kwargs={"hello":"world"})
-        self.assertRaises(RescheduleTaskImmediately, lambda: loc.execute_next_task())
-        self.assertEqual((1,2,3), self.locust.sub_taskset_args)
-        self.assertEqual({"hello":"world"}, self.locust.sub_taskset_kwargs)
-    
     def test_on_start_interrupt(self):
         class SubTaskSet(TaskSet):
             def on_start(self):
-                if self.kwargs["reschedule"]:
-                    self.interrupt(reschedule=True)
-                else:
-                    self.interrupt(reschedule=False)
-
+                self.interrupt(reschedule=False)
+        class RescheduleSubTaskSet(TaskSet):
+            def on_start(self):
+                self.interrupt(reschedule=True)
         class MyUser(User):
             host = ""
             tasks = [SubTaskSet]
         
         l = MyUser(Environment())
         task_set = SubTaskSet(l)
-        self.assertRaises(RescheduleTaskImmediately, lambda: task_set.run(reschedule=True))
-        self.assertRaises(RescheduleTask, lambda: task_set.run(reschedule=False))
+        reschedule_task_set = RescheduleSubTaskSet(l)
+        self.assertRaises(RescheduleTaskImmediately, lambda: reschedule_task_set.run())
+        self.assertRaises(RescheduleTask, lambda: task_set.run())
 
     
     def test_parent_attribute(self):
