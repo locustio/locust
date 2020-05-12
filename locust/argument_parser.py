@@ -154,22 +154,6 @@ def setup_parser_arguments(parser):
         dest='list_commands',
         help="Show list of possible User classes and exit",
     )
-
-    tag_group = parser.add_argument_group("Tag options")
-    tag_group.add_argument(
-        '-T', '--tags',
-        nargs='*',
-        metavar='TAG',
-        env_var="LOCUST_TAGS",
-        help="List of tags to include in the test, so only tasks with any matching tags will be executed"
-    )
-    tag_group.add_argument(
-        '-E', '--exclude-tags',
-        nargs='*',
-        metavar='TAG',
-        env_var="LOCUST_EXCLUDE_TAGS",
-        help="List of tags to exclude from the test, so only tasks with no matching tags will be executed"
-    )
     
     web_ui_group = parser.add_argument_group("Web UI options")
     web_ui_group.add_argument(
@@ -281,6 +265,22 @@ def setup_parser_arguments(parser):
         default=5557,
         help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --worker. Defaults to 5557.",
         env_var="LOCUST_MASTER_NODE_PORT",
+    )
+    
+    tag_group = parser.add_argument_group("Tag options", "Locust tasks can be tagged using the @tag decorator. These options let specify which tasks to include or exclude during a test.")
+    tag_group.add_argument(
+        '-T', '--tags',
+        nargs='*',
+        metavar='TAG',
+        env_var="LOCUST_TAGS",
+        help="List of tags to include in the test, so only tasks with any matching tags will be executed"
+    )
+    tag_group.add_argument(
+        '-E', '--exclude-tags',
+        nargs='*',
+        metavar='TAG',
+        env_var="LOCUST_EXCLUDE_TAGS",
+        help="List of tags to exclude from the test, so only tasks with no matching tags will be executed"
     )
     
     stats_group = parser.add_argument_group("Request statistics options")
