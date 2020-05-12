@@ -160,12 +160,14 @@ def setup_parser_arguments(parser):
         '-T', '--tags',
         nargs='*',
         metavar='TAG',
+        env_var="LOCUST_TAGS",
         help="List of tags to include in the test, so only tasks with any matching tags will be executed"
     )
     tag_group.add_argument(
         '-E', '--exclude-tags',
         nargs='*',
         metavar='TAG',
+        env_var="LOCUST_EXCLUDE_TAGS",
         help="List of tags to exclude from the test, so only tasks with no matching tags will be executed"
     )
     
