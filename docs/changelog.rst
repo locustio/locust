@@ -51,6 +51,18 @@ Task tagging
 A new :ref:`tag feature <tagging-tasks>` has been added that makes it possible to include/exclude tasks during 
 a test run.
 
+Tasks can be tagged using the :py:func:`@tag <locust.tag>` decorator:
+
+.. code-block:: python
+
+    class WebUser(User):
+        @task
+        @tag("tag1", "tag2")
+        def my_task(self):
+            ...
+
+And tasks can then be specified/excluded using the ``--tags``/``-T`` and ``--exclude-tags``/``-E`` command line arguments. 
+
 
 Environment variables changed
 -----------------------------
