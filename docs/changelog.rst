@@ -45,6 +45,13 @@ attribute instead:
         tasks = [MyTaskSet]
 
 
+Task tagging
+------------
+
+A new :ref:`tag feature <tagging-tasks>` has been added that makes it possible to include/exclude tasks during 
+a test run.
+
+
 Environment variables changed
 -----------------------------
 
