@@ -378,7 +378,7 @@ class TestTags(LocustTestCase):
             tasks = [MyTaskSet]
 
         env = Environment(user_classes=[MyUser], tags=['include this'])
-        env.filter_tasks_by_tags()
+        env._filter_tasks_by_tags()
 
         self.assertListEqual(MyUser.tasks, [MyTaskSet])
         self.assertListEqual(MyUser.tasks[0].tasks, [MyTaskSet.included])
@@ -403,7 +403,7 @@ class TestTags(LocustTestCase):
             tasks = [MyTaskSet]
 
         env = Environment(user_classes=[MyUser], exclude_tags=['exclude this'])
-        env.filter_tasks_by_tags()
+        env._filter_tasks_by_tags()
 
         self.assertListEqual(MyUser.tasks, [MyTaskSet])
         self.assertListEqual(MyUser.tasks[0].tasks, [MyTaskSet.not_excluded, MyTaskSet.dont_exclude_this_either])

@@ -84,7 +84,7 @@ class Environment:
         self.catch_exceptions = catch_exceptions
         self.parsed_options = parsed_options
 
-        self.filter_tasks_by_tags()
+        self._filter_tasks_by_tags()
     
     def _create_runner(self, runner_class, *args, **kwargs):
         if self.runner is not None:
@@ -127,19 +127,6 @@ class Environment:
             master_host=master_host,
             master_port=master_port,
         )
-    
-    def filter_tasks_by_tags(self):
-        """
-        Filter the tasks on all the user_classes recursively, according to the tags and
-        exclude_tags attributes
-        """
-        if self.tags is not None:
-            self.tags = set(self.tags)
-        if self.exclude_tags is not None:
-            self.exclude_tags = set(self.exclude_tags)
-
-        for user_class in self.user_classes:
-            filter_tasks_by_tags(user_class, self.tags, self.exclude_tags)
 
     def create_web_ui(self, host="", port=8089, auth_credentials=None, tls_cert=None, tls_key=None):
         """
@@ -156,3 +143,16 @@ class Environment:
         """
         self.web_ui = WebUI(self, host, port, auth_credentials=auth_credentials, tls_cert=tls_cert, tls_key=tls_key)
         return self.web_ui
+    
+    def _filter_tasks_by_tags(self):
+        """
+        Filter the tasks on all the user_classes recursively, according to the tags and
+        exclude_tags attributes
+        """
+        if self.tags is not None:
+            self.tags = set(self.tags)
+        if self.exclude_tags is not None:
+            self.exclude_tags = set(self.exclude_tags)
+
+        for user_class in self.user_classes:
+            filter_tasks_by_tags(user_class, self.tags, self.exclude_tags)
