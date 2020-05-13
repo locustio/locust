@@ -4,6 +4,8 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+.. _changelog-1-0:
+
 1.0 (in development, 1.0b1 released)
 ====================================
 

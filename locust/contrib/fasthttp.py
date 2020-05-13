@@ -19,6 +19,7 @@ from geventhttpclient.response import HTTPConnectionClosed
 from locust.user import User
 from locust.exception import LocustError, CatchResponseError, ResponseError
 from locust.env import Environment
+from locust.util.deprecation import DeprecatedFastHttpLocustClass as FastHttpLocust
 
 # Monkey patch geventhttpclient.useragent.CompatRequest so that Cookiejar works with Python >= 3.3
 # More info: https://github.com/requests/requests/pull/871

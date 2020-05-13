@@ -9,6 +9,9 @@ from .user.task import task, tag, TaskSet
 from .user.users import HttpUser, User
 from .user.wait_time import between, constant, constant_pacing
 
+from .util.deprecation import DeprecatedLocustClass as Locust
+from .util.deprecation import DeprecatedHttpLocustClass as HttpLocust
+
 from .event import Events as _Events
 events = _Events()
 
