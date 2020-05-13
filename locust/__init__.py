@@ -9,10 +9,19 @@ from .user.task import task, tag, TaskSet
 from .user.users import HttpUser, User
 from .user.wait_time import between, constant, constant_pacing
 
-from .util.deprecation import DeprecatedLocustClass as Locust
-from .util.deprecation import DeprecatedHttpLocustClass as HttpLocust
-
-from .event import Events as _Events
-events = _Events()
+from .event import Events
+events = Events()
 
 __version__ = "1.0b2"
+__all__ = (
+    "SequentialTaskSet",
+    "wait_time",
+    "task", "tag", "TaskSet",
+    "HttpUser", "User"
+    "between", "constant", "constant_pacing"
+    "events",
+)
+
+# Used for raising a DeprecationWarning if old Locust/HttpLocust is used
+from .util.deprecation import DeprecatedLocustClass as Locust
+from .util.deprecation import DeprecatedHttpLocustClass as HttpLocust
