@@ -7,10 +7,10 @@ services:
      - "8089:8089"
     volumes:
       - ./:/mnt/locust
-    command: -f /mnt/locust/locustfile.py --master -H http://master:8089
+    command: locust -f /mnt/locust/locustfile.py --master -H http://master:8089
   
   worker:
     image: locustio/locust
     volumes:
       - ./:/mnt/locust
-    command: -f /mnt/locust/locustfile.py --worker --master-host master
+    command: locust -f /mnt/locust/locustfile.py --slave --master-host master
