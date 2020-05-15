@@ -11,7 +11,9 @@
 
 * Website: <a href="https://locust.io">locust.io</a>
 * Documentation: <a href="https://docs.locust.io">docs.locust.io</a>
-* Support/Questions: [Slack signup](https://slack.locust.io/)
+* Code/issues: <a href="https://github.com/locustio/locust">Github</a>
+* Support/Questions: <a href="https://stackoverflow.com/questions/tagged/locust">StackOverflow</a>
+* Chat/discussion: [Slack signup](https://slack.locust.io/)
 
 ## Description
 
