@@ -15,46 +15,9 @@ with open(_init_file, 'rb') as f:
     version = str(ast.literal_eval(_version_re.search(
         f.read().decode('utf-8')).group(1)))
 
-with open(os.path.join(ROOT_PATH, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
-
 setup(
-    name='locustio',
+    name='locust',
     version=version,
-    description="Application load testing framework",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    classifiers=[
-        "Topic :: Software Development :: Testing :: Traffic Generation",
-        "Development Status :: 5 - Production/Stable",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Intended Audience :: Developers",
-        "Intended Audience :: System Administrators",
-        "Topic :: Software Development :: Testing",
-        "Topic :: Software Development :: Testing :: Traffic Generation",
-        "Topic :: System :: Distributed Computing",
-    ],
-    keywords='',
-    author='Jonatan Heyman, Carl Bystrom, Joakim Hamrén, Hugo Heyman',
-    author_email='',
-    url='https://locust.io/',
-    project_urls={
-        'Documentation': 'https://docs.locust.io/',
-        'Code': 'https://github.com/locustio/locust',
-        'Help/Questions': 'https://stackoverflow.com/questions/tagged/locust',
-        'Issue tracker': 'https://github.com/locustio/locust/issues',
-    },
-    license='MIT',
-    packages=find_packages(exclude=['examples', 'tests']),
-    include_package_data=True,
-    zip_safe=False,
-    python_requires=">=3.6",
     install_requires=[
         "gevent>=1.5.0",
         "flask>=0.10.1", 
@@ -71,10 +34,5 @@ setup(
         'cryptography',
         'mock',
         'pyquery',
-        ],
-    entry_points={
-        'console_scripts': [
-            'locust = locust.main:main',
-        ]
-    },    
+    ], 
 )
