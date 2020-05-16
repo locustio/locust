@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0](https://github.com/locustio/locust/tree/1.0) (2020-05-15)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.0b2...1.0)
+
+**Fixed bugs:**
+
+- FastHttpUser doesn't use the SNI TLS extension [\#1360](https://github.com/locustio/locust/issues/1360)
+
+**Closed issues:**
+
+- Add @only decorator to TaskSets [\#1275](https://github.com/locustio/locust/issues/1275)
+
+**Merged pull requests:**
+
+- Remove task arguments [\#1370](https://github.com/locustio/locust/pull/1370) ([heyman](https://github.com/heyman))
+- Add task marking for running more specific tests [\#1358](https://github.com/locustio/locust/pull/1358) ([Trouv](https://github.com/Trouv))
+
 ## [1.0b2](https://github.com/locustio/locust/tree/1.0b2) (2020-05-01)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.0b1...1.0b2)
@@ -352,6 +369,7 @@
 - Fixed issue with Total Requests Per Second plot [\#1060](https://github.com/locustio/locust/pull/1060) ([williamlhunter](https://github.com/williamlhunter))
 - Tox: Add flake8 tests to find Python syntax errors and undefined names [\#1039](https://github.com/locustio/locust/pull/1039) ([cclauss](https://github.com/cclauss))
 - Fix frontend bugs. [\#822](https://github.com/locustio/locust/pull/822) ([omittones](https://github.com/omittones))
+- Remove unused nosetest settings [\#806](https://github.com/locustio/locust/pull/806) ([cgoldberg](https://github.com/cgoldberg))
 - Switch from using optparse to argparse for command line arguments [\#769](https://github.com/locustio/locust/pull/769) ([jdufresne](https://github.com/jdufresne))
 - Allow skipping the logging setup [\#738](https://github.com/locustio/locust/pull/738) ([Exide](https://github.com/Exide))
 - Added link to an Ansible role as a 3rd party tool. [\#704](https://github.com/locustio/locust/pull/704) ([tinx](https://github.com/tinx))
@@ -470,7 +488,6 @@
 - Add failures csv download [\#999](https://github.com/locustio/locust/pull/999) ([ajt89](https://github.com/ajt89))
 - Correct fail ratio calculation. Fixes \#991. [\#994](https://github.com/locustio/locust/pull/994) ([genericmoniker](https://github.com/genericmoniker))
 - Add command line argument to specify exit code on response errors [\#992](https://github.com/locustio/locust/pull/992) ([Stateford](https://github.com/Stateford))
-- Geventhttpclientmergeconflicts [\#838](https://github.com/locustio/locust/pull/838) ([SpencerPinegar](https://github.com/SpencerPinegar))
 
 ## [0.11.1](https://github.com/locustio/locust/tree/0.11.1) (2019-03-19)
 
@@ -701,12 +718,12 @@
 - Specify seconds for the `timeout` parameter [\#856](https://github.com/locustio/locust/pull/856) ([hoylemd](https://github.com/hoylemd))
 - bump dev version to 0.9.0.dev0 [\#855](https://github.com/locustio/locust/pull/855) ([cgoldberg](https://github.com/cgoldberg))
 - Change name of msgpack dependency. [\#841](https://github.com/locustio/locust/pull/841) ([vamega](https://github.com/vamega))
+- Geventhttpclientmergeconflicts [\#838](https://github.com/locustio/locust/pull/838) ([SpencerPinegar](https://github.com/SpencerPinegar))
 - response time doesn't need to be cast to int, as this is implicit in … [\#830](https://github.com/locustio/locust/pull/830) ([efology](https://github.com/efology))
 - Add tasks sequence support [\#827](https://github.com/locustio/locust/pull/827) ([Ramshell](https://github.com/Ramshell))
 - Fix some typos in events.py [\#820](https://github.com/locustio/locust/pull/820) ([felixonmars](https://github.com/felixonmars))
 - Update all pypi.python.org URLs to pypi.org [\#818](https://github.com/locustio/locust/pull/818) ([jdufresne](https://github.com/jdufresne))
 - Update third-party-tools.rst [\#808](https://github.com/locustio/locust/pull/808) ([anhldbk](https://github.com/anhldbk))
-- Remove unused nosetest settings [\#806](https://github.com/locustio/locust/pull/806) ([cgoldberg](https://github.com/cgoldberg))
 - Drop Python 3.3 support [\#804](https://github.com/locustio/locust/pull/804) ([ps-george](https://github.com/ps-george))
 - docs: Syntax highlight code and commands [\#797](https://github.com/locustio/locust/pull/797) ([joar](https://github.com/joar))
 - Added user-defined wait\_function to locust and TaskSet [\#785](https://github.com/locustio/locust/pull/785) ([ps-george](https://github.com/ps-george))
@@ -1209,10 +1226,6 @@
 
 [Full Changelog](https://github.com/locustio/locust/compare/v0.6.2...v0.7)
 
-**Fixed bugs:**
-
-- gc refcount related crash when loading web UI under Python 2.6.6 [\#49](https://github.com/locustio/locust/issues/49)
-
 **Closed issues:**
 
 - Different Users [\#126](https://github.com/locustio/locust/issues/126)
@@ -1289,6 +1302,10 @@
 ## [v0.6.1](https://github.com/locustio/locust/tree/v0.6.1) (2012-12-04)
 
 [Full Changelog](https://github.com/locustio/locust/compare/v0.6...v0.6.1)
+
+**Fixed bugs:**
+
+- gc refcount related crash when loading web UI under Python 2.6.6 [\#49](https://github.com/locustio/locust/issues/49)
 
 **Closed issues:**
 
