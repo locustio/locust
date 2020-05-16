@@ -6,8 +6,8 @@ For full details of the Locust changelog, please see https://github.com/locustio
 
 .. _changelog-1-0:
 
-1.0
-===
+1.0, 1.0.1
+==========
 
 This version contains some breaking changes.
 

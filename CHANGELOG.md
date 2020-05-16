@@ -1,21 +1,44 @@
 # Changelog
 
-## [1.0](https://github.com/locustio/locust/tree/1.0) (2020-05-15)
+## [1.0.1](https://github.com/locustio/locust/tree/1.0.1) (2020-05-16)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.0...1.0.1)
+
+**Merged pull requests:**
+
+- Add metadata for the locust PyPI package that marks the locustio package as obsolete [\#1377](https://github.com/locustio/locust/pull/1377) ([heyman](https://github.com/heyman))
+
+## [1.0](https://github.com/locustio/locust/tree/1.0) (2020-05-16)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.0b2...1.0)
 
 **Fixed bugs:**
 
 - FastHttpUser doesn't use the SNI TLS extension [\#1360](https://github.com/locustio/locust/issues/1360)
+- DEBUG output in docker is not working [\#1337](https://github.com/locustio/locust/issues/1337)
+- Can't run Locust distributed with --csv-full-history  [\#1315](https://github.com/locustio/locust/issues/1315)
+- \[Nested TaskSet\] Child TaskSet's on\_stop method is not called when GreenletExit [\#1206](https://github.com/locustio/locust/issues/1206)
 
 **Closed issues:**
 
 - Add @only decorator to TaskSets [\#1275](https://github.com/locustio/locust/issues/1275)
+- resp.failure\(\) shouldnt immediately log a failed request, just mark it a such [\#1335](https://github.com/locustio/locust/issues/1335)
+- Change CSV column names [\#1317](https://github.com/locustio/locust/issues/1317)
+- Remove @seq\_task and instead add a SequentialTaskSet class [\#1286](https://github.com/locustio/locust/issues/1286)
+- Change how logging is handled [\#1285](https://github.com/locustio/locust/issues/1285)
+- Remove the Locust.setup and Locust.teardown hooks in favour of adding test\_start and test\_stop events [\#1284](https://github.com/locustio/locust/issues/1284)
+- Rename Locust to User/LocustUser [\#1283](https://github.com/locustio/locust/issues/1283)
+- Clean up among the command line arguments [\#1282](https://github.com/locustio/locust/issues/1282)
+- Docker image should not require TARGET\_URL [\#1247](https://github.com/locustio/locust/issues/1247)
+- How to run test programatically [\#222](https://github.com/locustio/locust/issues/222)
+- Alternative terminology for "slave" [\#220](https://github.com/locustio/locust/issues/220)
 
 **Merged pull requests:**
 
 - Remove task arguments [\#1370](https://github.com/locustio/locust/pull/1370) ([heyman](https://github.com/heyman))
 - Add task marking for running more specific tests [\#1358](https://github.com/locustio/locust/pull/1358) ([Trouv](https://github.com/Trouv))
+- Add User count to CSV history stats [\#1316](https://github.com/locustio/locust/pull/1316) ([heyman](https://github.com/heyman))
+- Rename locust to user [\#1314](https://github.com/locustio/locust/pull/1314) ([anuj-ssharma](https://github.com/anuj-ssharma))
 
 ## [1.0b2](https://github.com/locustio/locust/tree/1.0b2) (2020-05-01)
 
@@ -37,35 +60,22 @@
 
 **Fixed bugs:**
 
-- DEBUG output in docker is not working [\#1337](https://github.com/locustio/locust/issues/1337)
 - Docker image: worker mode not starting correctly [\#1322](https://github.com/locustio/locust/issues/1322)
-- Can't run Locust distributed with --csv-full-history  [\#1315](https://github.com/locustio/locust/issues/1315)
 - Exception throws on attempt to report request results to master [\#1293](https://github.com/locustio/locust/issues/1293)
 - Can't access web interface [\#1288](https://github.com/locustio/locust/issues/1288)
 - Web page is confused when I shutdown the only slave [\#1279](https://github.com/locustio/locust/issues/1279)
 - \[Documentation\] Bleeding Edge link is broken [\#1278](https://github.com/locustio/locust/issues/1278)
 - Locust Web Dashboard Charts, Slaves sections not working after certain time [\#1276](https://github.com/locustio/locust/issues/1276)
 - Connection pool is full, discarding connection | 'Connection aborted.', RemoteDisconnected\('Remote end closed connection without response [\#1263](https://github.com/locustio/locust/issues/1263)
-- \[Nested TaskSet\] Child TaskSet's on\_stop method is not called when GreenletExit [\#1206](https://github.com/locustio/locust/issues/1206)
 
 **Closed issues:**
 
 - "Order of events" clarification [\#1349](https://github.com/locustio/locust/issues/1349)
-- resp.failure\(\) shouldnt immediately log a failed request, just mark it a such [\#1335](https://github.com/locustio/locust/issues/1335)
-- Change CSV column names [\#1317](https://github.com/locustio/locust/issues/1317)
 - More information in csv reports [\#1292](https://github.com/locustio/locust/issues/1292)
-- Remove @seq\_task and instead add a SequentialTaskSet class [\#1286](https://github.com/locustio/locust/issues/1286)
-- Change how logging is handled [\#1285](https://github.com/locustio/locust/issues/1285)
-- Remove the Locust.setup and Locust.teardown hooks in favour of adding test\_start and test\_stop events [\#1284](https://github.com/locustio/locust/issues/1284)
-- Rename Locust to User/LocustUser [\#1283](https://github.com/locustio/locust/issues/1283)
-- Clean up among the command line arguments [\#1282](https://github.com/locustio/locust/issues/1282)
 - Rename and restructure Locust/TaskSet [\#1264](https://github.com/locustio/locust/issues/1264)
-- Docker image should not require TARGET\_URL [\#1247](https://github.com/locustio/locust/issues/1247)
 - Add `allow\_redirects` option to FastHttpSession.request [\#1238](https://github.com/locustio/locust/issues/1238)
 - Retrieve failures.csv in --no-web mode [\#1237](https://github.com/locustio/locust/issues/1237)
 - command line arguments for clients and spawn rate should populate ui in the same way as url [\#1186](https://github.com/locustio/locust/issues/1186)
-- How to run test programatically [\#222](https://github.com/locustio/locust/issues/222)
-- Alternative terminology for "slave" [\#220](https://github.com/locustio/locust/issues/220)
 
 **Merged pull requests:**
 
@@ -86,8 +96,6 @@
 - Improve how we do logging [\#1325](https://github.com/locustio/locust/pull/1325) ([heyman](https://github.com/heyman))
 - Worker quitting then stopping via web UI bug fix [\#1324](https://github.com/locustio/locust/pull/1324) ([Trouv](https://github.com/Trouv))
 - Fixed some spelling/grammar on docstrings in core.py [\#1323](https://github.com/locustio/locust/pull/1323) ([Trouv](https://github.com/Trouv))
-- Add User count to CSV history stats [\#1316](https://github.com/locustio/locust/pull/1316) ([heyman](https://github.com/heyman))
-- Rename locust to user [\#1314](https://github.com/locustio/locust/pull/1314) ([anuj-ssharma](https://github.com/anuj-ssharma))
 - Add basic auth for webui [\#1313](https://github.com/locustio/locust/pull/1313) ([anuj-ssharma](https://github.com/anuj-ssharma))
 - Group related command line options together [\#1311](https://github.com/locustio/locust/pull/1311) ([heyman](https://github.com/heyman))
 - Replace TaskSequence and @seq\_task with SequentialTaskSet [\#1310](https://github.com/locustio/locust/pull/1310) ([heyman](https://github.com/heyman))
@@ -369,7 +377,6 @@
 - Fixed issue with Total Requests Per Second plot [\#1060](https://github.com/locustio/locust/pull/1060) ([williamlhunter](https://github.com/williamlhunter))
 - Tox: Add flake8 tests to find Python syntax errors and undefined names [\#1039](https://github.com/locustio/locust/pull/1039) ([cclauss](https://github.com/cclauss))
 - Fix frontend bugs. [\#822](https://github.com/locustio/locust/pull/822) ([omittones](https://github.com/omittones))
-- Remove unused nosetest settings [\#806](https://github.com/locustio/locust/pull/806) ([cgoldberg](https://github.com/cgoldberg))
 - Switch from using optparse to argparse for command line arguments [\#769](https://github.com/locustio/locust/pull/769) ([jdufresne](https://github.com/jdufresne))
 - Allow skipping the logging setup [\#738](https://github.com/locustio/locust/pull/738) ([Exide](https://github.com/Exide))
 - Added link to an Ansible role as a 3rd party tool. [\#704](https://github.com/locustio/locust/pull/704) ([tinx](https://github.com/tinx))
@@ -488,6 +495,7 @@
 - Add failures csv download [\#999](https://github.com/locustio/locust/pull/999) ([ajt89](https://github.com/ajt89))
 - Correct fail ratio calculation. Fixes \#991. [\#994](https://github.com/locustio/locust/pull/994) ([genericmoniker](https://github.com/genericmoniker))
 - Add command line argument to specify exit code on response errors [\#992](https://github.com/locustio/locust/pull/992) ([Stateford](https://github.com/Stateford))
+- Geventhttpclientmergeconflicts [\#838](https://github.com/locustio/locust/pull/838) ([SpencerPinegar](https://github.com/SpencerPinegar))
 
 ## [0.11.1](https://github.com/locustio/locust/tree/0.11.1) (2019-03-19)
 
@@ -718,12 +726,12 @@
 - Specify seconds for the `timeout` parameter [\#856](https://github.com/locustio/locust/pull/856) ([hoylemd](https://github.com/hoylemd))
 - bump dev version to 0.9.0.dev0 [\#855](https://github.com/locustio/locust/pull/855) ([cgoldberg](https://github.com/cgoldberg))
 - Change name of msgpack dependency. [\#841](https://github.com/locustio/locust/pull/841) ([vamega](https://github.com/vamega))
-- Geventhttpclientmergeconflicts [\#838](https://github.com/locustio/locust/pull/838) ([SpencerPinegar](https://github.com/SpencerPinegar))
 - response time doesn't need to be cast to int, as this is implicit in … [\#830](https://github.com/locustio/locust/pull/830) ([efology](https://github.com/efology))
 - Add tasks sequence support [\#827](https://github.com/locustio/locust/pull/827) ([Ramshell](https://github.com/Ramshell))
 - Fix some typos in events.py [\#820](https://github.com/locustio/locust/pull/820) ([felixonmars](https://github.com/felixonmars))
 - Update all pypi.python.org URLs to pypi.org [\#818](https://github.com/locustio/locust/pull/818) ([jdufresne](https://github.com/jdufresne))
 - Update third-party-tools.rst [\#808](https://github.com/locustio/locust/pull/808) ([anhldbk](https://github.com/anhldbk))
+- Remove unused nosetest settings [\#806](https://github.com/locustio/locust/pull/806) ([cgoldberg](https://github.com/cgoldberg))
 - Drop Python 3.3 support [\#804](https://github.com/locustio/locust/pull/804) ([ps-george](https://github.com/ps-george))
 - docs: Syntax highlight code and commands [\#797](https://github.com/locustio/locust/pull/797) ([joar](https://github.com/joar))
 - Added user-defined wait\_function to locust and TaskSet [\#785](https://github.com/locustio/locust/pull/785) ([ps-george](https://github.com/ps-george))
@@ -1226,6 +1234,10 @@
 
 [Full Changelog](https://github.com/locustio/locust/compare/v0.6.2...v0.7)
 
+**Fixed bugs:**
+
+- gc refcount related crash when loading web UI under Python 2.6.6 [\#49](https://github.com/locustio/locust/issues/49)
+
 **Closed issues:**
 
 - Different Users [\#126](https://github.com/locustio/locust/issues/126)
@@ -1302,10 +1314,6 @@
 ## [v0.6.1](https://github.com/locustio/locust/tree/v0.6.1) (2012-12-04)
 
 [Full Changelog](https://github.com/locustio/locust/compare/v0.6...v0.6.1)
-
-**Fixed bugs:**
-
-- gc refcount related crash when loading web UI under Python 2.6.6 [\#49](https://github.com/locustio/locust/issues/49)
 
 **Closed issues:**
 
