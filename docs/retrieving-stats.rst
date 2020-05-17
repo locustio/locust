@@ -6,7 +6,7 @@ You may wish to consume your Locust results via a CSV file. In this case, there 
 
 First, when running Locust with the web UI, you can retrieve CSV files under the Download Data tab. 
 
-Secondly, you can run Locust with a flag which will periodically save trhee CSV files. This is particularly useful
+Secondly, you can run Locust with a flag which will periodically save three CSV files. This is particularly useful
 if you plan on running Locust in an automated way with the ``--headless`` flag:
 
 .. code-block:: console
