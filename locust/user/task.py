@@ -218,25 +218,19 @@ class TaskSet(object, metaclass=TaskSetMeta):
     if not set on the TaskSet.
     """
 
-    user = None
-    """Will refer to the root User class instance when the TaskSet has been instantiated"""
-
-    parent = None
-    """
-    Will refer to the parent TaskSet, or User, class instance when the TaskSet has been 
-    instantiated. Useful for nested TaskSet classes.
-    """
+    _user = None
+    _parent = None
 
     def __init__(self, parent):
         self._task_queue = []
         self._time_start = time()
         
         if isinstance(parent, TaskSet):
-            self.user = parent.user
+            self._user = parent.user
         else:
-            self.user = parent
+            self._user = parent
 
-        self.parent = parent
+        self._parent = parent
         
         # if this class doesn't have a min_wait, max_wait or wait_function defined, copy it from Locust
         if not self.min_wait:
@@ -246,9 +240,21 @@ class TaskSet(object, metaclass=TaskSetMeta):
         if not self.wait_function:
             self.wait_function = self.user.wait_function
 
+
+
+    @property
+    def user(self):
+        """:py:class:`User <locust.User>` instance that this TaskSet was created by"""
+        return self._user
+
+    @property
+    def parent(self):
+        """Parent TaskSet instance of this TaskSet (or :py:class:`User <locust.User>` if this is not a nested TaskSet)"""
+        return self._parent
+
     def on_start(self):
         """
-        Called when a User starts executing (enters) this TaskSet
+        Called when a User starts executing this TaskSet
         """
         pass
     
@@ -392,8 +398,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
     @property
     def client(self):
         """
-        Reference to the :py:attr:`client <locust.User.client>` attribute of the root
-        User instance.
+        Shortcut to the client :py:attr:`client <locust.User.client>` attribute of this TaskSet's :py:class:`User <locust.User>`
         """
         return self.user.client
 
