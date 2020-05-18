@@ -155,13 +155,10 @@ def main():
         user_classes = list(user_classes.values())
     
     try:
-        # 24576 is the highest value I was able to set this on MacOS Mojave without getting an error
-        resource.setrlimit(resource.RLIMIT_NOFILE, [24576, resource.RLIM_INFINITY])
+        if resource.getrlimit(resource.RLIMIT_NOFILE)[0] < 10000:
+            resource.setrlimit(resource.RLIMIT_NOFILE, [10000, resource.RLIM_INFINITY])
     except:
-        pass # this will fail on linux, not sure about windows
-
-    if resource.getrlimit(resource.RLIMIT_NOFILE)[0] < 10000:
-        logger.warning("System open file limit setting is not high enough for load testing. See https://docs.locust.io/en/stable/installation.html#increasing-maximum-number-of-open-files-limit for more info.")
+        logger.warning("System open file limit setting is not high enough for load testing, and the OS wouldnt allow locust to increase it by itself. See https://docs.locust.io/en/stable/installation.html#increasing-maximum-number-of-open-files-limit for more info.")
 
     # create locust Environment
     environment = create_environment(user_classes, options, events=locust.events)
