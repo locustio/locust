@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.com/locustio/locust.svg?branch=master)](https://travis-ci.com/locustio/locust)
 [![codecov](https://codecov.io/gh/locustio/locust/branch/master/graph/badge.svg)](https://codecov.io/gh/locustio/locust)
 [![license](https://img.shields.io/github/license/locustio/locust.svg)](https://github.com/locustio/locust/blob/master/LICENSE)
-[![PyPI](https://img.shields.io/pypi/v/locustio.svg)](https://pypi.org/project/locustio/)
+[![PyPI](https://img.shields.io/pypi/v/locust.svg)](https://pypi.org/project/locust/)
 [![PyPI](https://img.shields.io/pypi/pyversions/locust.svg)](https://pypi.org/project/locust/)
 [![GitHub contributors](https://img.shields.io/github/contributors/locustio/locust.svg)](https://github.com/locustio/locust/graphs/contributors)
 
