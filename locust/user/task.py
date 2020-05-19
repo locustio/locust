@@ -382,10 +382,6 @@ class TaskSet(object, metaclass=TaskSetMeta):
         
         If *reschedule* is True (default), the parent User will immediately re-schedule,
         and execute, a new task.
-        
-        This method should not be called by the root TaskSet (the one that is immediately, 
-        attached to the User class's *tasks* attribute), but rather in nested TaskSet
-        classes further down the hierarchy.
         """
         raise InterruptTaskSet(reschedule)
     
