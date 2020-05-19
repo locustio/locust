@@ -149,7 +149,7 @@ class LocustProcessIntegrationTest(TestCase):
             stdout, stderr = proc.communicate()
             self.assertEqual(0, proc.returncode)
             stderr = stderr.decode("utf-8")
-            self.assertIn("Starting web monitor at", stderr)
+            self.assertIn("Starting web interface at", stderr)
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shutting down (exit code 0), bye", stderr)
 
