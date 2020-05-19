@@ -14,6 +14,8 @@ Example locustfile.py
     from locust import HttpUser, task, between
 
     class QuickstartUser(HttpUser):
+        wait_time = between(5, 9)
+
         @task
         def hello(self):
             self.client.get("/hello")
@@ -27,7 +29,6 @@ Example locustfile.py
         def on_start(self):
             self.client.post("/login", {"username":"foo", "password":"bar"})
 
-        wait_time = between(5, 9)
 
 .. rubric:: Let's break it down
 
@@ -49,6 +50,12 @@ can be used to make HTTP requests to the target system that we want to load test
 locust will create an instance of this class for every user that it simulates, and each of these 
 users will start running within their own green gevent thread.
 
+.. code-block:: python
+
+    wait_time = between(5, 9)
+
+Our class defines a ``wait_time`` function that will make the simulated users wait between 5 and 9 seconds after each task 
+is executed. For more info see :ref:`wait-time`.
 
 .. code-block:: python
 
@@ -80,13 +87,6 @@ Note that only methods decorated with ``@task`` will be called, so you can defin
 
 Additionally we've declared a `on_start` method. A method with this name will be called for each simulated 
 user when they start. For more info see :ref:`on-start-on-stop`.
-
-.. code-block:: python
-
-    wait_time = between(5, 9)
-
-Our class defines a ``wait_time`` function that will make the simulated users wait between 5 and 9 seconds after each task 
-is executed. For more info see :ref:`wait-time`.
 
 Start Locust
 ============
