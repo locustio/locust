@@ -372,7 +372,7 @@ SequentialTaskSet class
 
 :py:class:`SequentialTaskSet <locust.SequentialTaskSet>` is a TaskSet but its 
 tasks will be executed in the order that they are declared. Weights are ignored for tasks on a 
-SequentialTaskSet class. Ofcourse you can also nest SequentialTaskSet within TaskSet and vice versa.
+SequentialTaskSet class. It is possible to nest SequentialTaskSets within a TaskSet and vice versa.
 
 .. code-block:: python
     
