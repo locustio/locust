@@ -94,12 +94,6 @@ Usually, this is specified in Locust's web UI or on the command line, using the
 If one declares a host attribute in the user class, it will be used in the case when no :code:`--host` 
 is specified on the command line or in the web request.
 
-tasks
------
-
-A User class can have tasks declared as methods under it using the :py:func:`@task <locust.task>` decorator, but one can also
-specify tasks using the *tasks* attribute, as described below.
-
 
 Tasks
 =====
