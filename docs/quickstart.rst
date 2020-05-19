@@ -57,7 +57,7 @@ user when they start. For more info see :ref:`on-start-on-stop`.
     wait_time = between(5, 9)
 
 Our class defines a ``wait_time`` function that will make the simulated users wait between 5 and 9 seconds after each task 
-is executed. For more info see :ref:`the-wait-time-attribute`.
+is executed. For more info see :ref:`wait-time`.
 
 Start Locust
 ============
