@@ -34,7 +34,7 @@ def constant_pacing(wait_time):
     execution equal to the time specified by the wait_time argument. 
     
     In the following example the task will always be executed once every second, no matter 
-    the task execution time:
+    the task execution time::
     
         class MyUser(User):
             wait_time = constant_pacing(1)
