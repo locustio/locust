@@ -2,17 +2,45 @@
 Quick start
 =============
 
-In Locust you define your user behaviour in plain Python code. You then use the ``locust`` command and (optionally) its web interface to spawn and simulate a number of those users while gathering request statistics.
+In Locust you define your user behaviour in Python code. You then use the ``locust`` command and (optionally) its web interface to spawn and simulate a number of those users while gathering request statistics.
 
-locustfile.py
-=============
-.. literalinclude:: ../examples/locustfile.py
+
+
+Example locustfile.py
+=====================
+.. code-block:: python
+
+    import random
+    from locust import HttpUser, task, between
+
+    class QuickstartUser(HttpUser):
+        @task
+        def hello(self):
+            self.client.get("/hello")
+            self.client.get("/world")
         
+        @task(3)
+        def view_item(self):
+            item_id = random.randint(1, 10000)
+            self.client.get(f"/item?id={item_id}", name="/item")
+        
+        def on_start(self):
+            self.client.post("/login", {"username":"foo", "password":"bar"})
+
+        wait_time = between(5, 9)
+
 .. rubric:: Let's break it down
 
 .. code-block:: python
 
-    class MyUser(HttpUser):
+    import random
+    from locust import HttpUser, task, between
+
+A locust file is just a normal Python module, it can import code from other files or packages.
+
+.. code-block:: python
+
+    class QuickstartUser(HttpUser):
 
 Here we define a class for the users that we will be simulating. It inherits from 
 :py:class:`HttpUser <locust.HttpUser>` which gives each user a ``client`` attribute,
@@ -20,6 +48,7 @@ which is an instance of :py:class:`HttpSession <locust.clients.HttpSession>`, th
 can be used to make HTTP requests to the target system that we want to load test. When a test starts, 
 locust will create an instance of this class for every user that it simulates, and each of these 
 users will start running within their own green gevent thread.
+
 
 .. code-block:: python
 
@@ -34,7 +63,7 @@ users will start running within their own green gevent thread.
         self.client.get(f"/item?id={item_id}", name="/item")
         ...
 
-We've also declared two tasks by decorating two methods with ``@task``, one of which has been given a higher weight. When a simulated user of this type runs it'll pick one of either ``hello`` 
+We've also declared two tasks by decorating two methods with ``@task``, one of which has been given a higher weight (3). When a User of this type runs it'll pick one of either ``hello`` 
 or ``view_item`` - with three times the chance of picking ``view_item`` - call that method and then pick a duration 
 uniformly between 5 and 9 and just sleep for that duration. After it's wait time it'll pick a new task 
 and keep repeating that.
