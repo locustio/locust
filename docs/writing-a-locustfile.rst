@@ -15,7 +15,7 @@ a User class should typically define.
 The *wait_time* attribute
 -------------------------
 
-In addition to the *task_set* attribute, one should also declare a 
+In addition to the *tasks* attribute, one should also declare a 
 :py:attr:`wait_time <locust.User.wait_time>` method. It's used to determine
 for how long a simulated user will wait between executing tasks. Locust comes with a few built in 
 functions that return a few common wait_time methods.
@@ -29,15 +29,13 @@ With the following locustfile, each user would wait between 5 and 15 seconds bet
 
 .. code-block:: python
 
-    from locust import User, TaskSet, task, between
-    
-    class MyTaskSet(TaskSet):
+    from locust import User, task, between
+        
+    class MyUser(User):
         @task
         def my_task(self):
             print("executing my_task")
-    
-    class MyUser(User):
-        tasks = [MyTaskSet]
+
         wait_time = between(5, 15)
 
 The wait_time method should return a number of seconds (or fraction of a second) and can also 
@@ -48,13 +46,14 @@ following User class would start sleeping for one second and then one, two, thre
 
 .. code-block:: python
 
-    class MyLocust(Locust):
-        task_set = MyTaskSet
+    class MyUser(User):
         last_wait_time = 0
         
         def wait_time(self):
             self.last_wait_time += 1
             return self.last_wait_time
+
+        ...
     
 
 

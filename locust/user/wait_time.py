@@ -34,14 +34,13 @@ def constant_pacing(wait_time):
     execution equal to the time specified by the wait_time argument. 
     
     In the following example the task will always be executed once every second, no matter 
-    the task execution time::
+    the task execution time:
     
-        cclass MyUser(User):
+        class MyUser(User):
             wait_time = constant_pacing(1)
-            class task_set(TaskSet):
-                @task
-                def my_task(self):
-                    time.sleep(random.random())
+            @task
+            def my_task(self):
+                time.sleep(random.random())
     
     If a task execution exceeds the specified wait_time, the wait will be 0 before starting 
     the next task.

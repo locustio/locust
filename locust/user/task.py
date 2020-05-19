@@ -384,7 +384,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
         and execute, a new task.
         
         This method should not be called by the root TaskSet (the one that is immediately, 
-        attached to the User class's *task_set* attribute), but rather in nested TaskSet
+        attached to the User class's *tasks* attribute), but rather in nested TaskSet
         classes further down the hierarchy.
         """
         raise InterruptTaskSet(reschedule)
