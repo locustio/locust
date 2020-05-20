@@ -14,8 +14,8 @@ a User class should typically define.
 
 .. _wait-time:
 
-wait_time
----------
+wait_time attribute
+-------------------
 
 In addition to the *tasks* attribute, one should also declare a 
 :py:attr:`wait_time <locust.User.wait_time>` method. It's used to determine
@@ -59,8 +59,8 @@ following User class would start sleeping for one second and then one, two, thre
     
 
 
-weight
-------
+weight attribute
+----------------
 
 If more than one user class exists in the file, and no user classes are specified on the command line,
 Locust will spawn an equal number of each of the user classes. You can also specify which of the 
@@ -84,8 +84,8 @@ classes. Say for example, web users are three times more likely than mobile user
         ...
 
 
-host
-----
+host attribute
+--------------
 
 The host attribute is a URL prefix (i.e. "http://google.com") to the host that is to be loaded. 
 Usually, this is specified in Locust's web UI or on the command line, using the 
@@ -94,6 +94,11 @@ Usually, this is specified in Locust's web UI or on the command line, using the
 If one declares a host attribute in the user class, it will be used in the case when no :code:`--host` 
 is specified on the command line or in the web request.
 
+tasks attribute
+---------------
+
+A User class can have tasks declared as methods under it using the :py:func:`@task <locust.task>` decorator, but one can also
+specify tasks using the *tasks* attribute which is described in more details :ref:`below <tasks-attribute>`.
 
 Tasks
 =====
