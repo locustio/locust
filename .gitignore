@@ -14,3 +14,4 @@ dist/**
 build/
 .coverage
 .tox/
+docs/env-options.rst
