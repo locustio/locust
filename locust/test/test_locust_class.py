@@ -383,6 +383,25 @@ class TestTaskSet(LocustTestCase):
         self.assertTrue(isinstance(parents["sub"], RootTaskSet))
         self.assertTrue(isinstance(parents["subsub"], SubTaskSet))
 
+    def test_user_is_read_only(self):
+        class MyTaskSet(TaskSet):
+            raised_attribute_error = False
+            @task
+            def overwrite_user(self):
+                try:
+                    self.user = "whatever"
+                except AttributeError:
+                    MyTaskSet.raised_attribute_error = True
+                raise StopUser()
+
+        class MyUser(User):
+            wait_time = constant(0)
+            host = ""
+            tasks = [MyTaskSet]
+        
+        MyUser(Environment()).run()
+        self.assertTrue(MyTaskSet.raised_attribute_error)
+
 
 class TestLocustClass(LocustTestCase):
     def test_locust_wait(self):
