@@ -30,7 +30,6 @@ class UserMeta(type):
             # Not a base class
             class_dict["abstract"] = False
         
-        # check if class uses deprecated task_set attribute
         deprecation.check_for_deprecated_task_set_attribute(class_dict)
         
         return type.__new__(mcs, classname, bases, class_dict)
@@ -125,7 +124,7 @@ class User(object, metaclass=UserMeta):
         self._state = LOCUST_STATE_RUNNING
         self._taskset_instance = DefaultTaskSet(self)
         try:
-            # run the task_set on_start method, if it has one
+            # run the TaskSet on_start method, if it has one
             self.on_start()
             
             self._taskset_instance.run()

@@ -20,7 +20,6 @@ class WebsiteUser(HttpUser):
     """
     host = "http://127.0.0.1:8089"
     wait_time = between(2, 5)
-    class task_set(TaskSet):
-        @task
-        def my_task(self):
-            pass
+    @task
+    def my_task(self):
+        pass

@@ -5,17 +5,19 @@ Writing a locustfile
 A locustfile is a normal python file. The only requirement is that it declares at least one class —
 let's call it the user class — that inherits from the class :py:class:`User <locust.User>`. 
 
-The User class
-================
+User class
+==========
 
 A user class represents one user (or a swarming locust if you will). Locust will spawn (hatch) one 
 instance of the User class for each user that is being simulated. There are a few attributes that 
 a User class should typically define. 
 
-The *wait_time* attribute
--------------------------
+.. _wait-time:
 
-In addition to the *task_set* attribute, one should also declare a 
+wait_time attribute
+-------------------
+
+In addition to the *tasks* attribute, one should also declare a 
 :py:attr:`wait_time <locust.User.wait_time>` method. It's used to determine
 for how long a simulated user will wait between executing tasks. Locust comes with a few built in 
 functions that return a few common wait_time methods.
@@ -29,15 +31,13 @@ With the following locustfile, each user would wait between 5 and 15 seconds bet
 
 .. code-block:: python
 
-    from locust import User, TaskSet, task, between
-    
-    class MyTaskSet(TaskSet):
+    from locust import User, task, between
+        
+    class MyUser(User):
         @task
         def my_task(self):
             print("executing my_task")
-    
-    class MyUser(User):
-        tasks = [MyTaskSet]
+
         wait_time = between(5, 15)
 
 The wait_time method should return a number of seconds (or fraction of a second) and can also 
@@ -48,18 +48,19 @@ following User class would start sleeping for one second and then one, two, thre
 
 .. code-block:: python
 
-    class MyLocust(Locust):
-        task_set = MyTaskSet
+    class MyUser(User):
         last_wait_time = 0
         
         def wait_time(self):
             self.last_wait_time += 1
             return self.last_wait_time
+
+        ...
     
 
 
-The *weight* attribute
-----------------------
+weight attribute
+----------------
 
 If more than one user class exists in the file, and no user classes are specified on the command line,
 Locust will spawn an equal number of each of the user classes. You can also specify which of the 
@@ -83,8 +84,8 @@ classes. Say for example, web users are three times more likely than mobile user
         ...
 
 
-The *host* attribute
---------------------
+host attribute
+--------------
 
 The host attribute is a URL prefix (i.e. "http://google.com") to the host that is to be loaded. 
 Usually, this is specified in Locust's web UI or on the command line, using the 
@@ -93,12 +94,11 @@ Usually, this is specified in Locust's web UI or on the command line, using the
 If one declares a host attribute in the user class, it will be used in the case when no :code:`--host` 
 is specified on the command line or in the web request.
 
-The *tasks* attribute
----------------------
+tasks attribute
+---------------
 
 A User class can have tasks declared as methods under it using the :py:func:`@task <locust.task>` decorator, but one can also
 specify tasks using the *tasks* attribute which is described in more details :ref:`below <tasks-attribute>`.
-
 
 Tasks
 =====
@@ -377,7 +377,7 @@ SequentialTaskSet class
 
 :py:class:`SequentialTaskSet <locust.SequentialTaskSet>` is a TaskSet but its 
 tasks will be executed in the order that they are declared. Weights are ignored for tasks on a 
-SequentialTaskSet class. Ofcourse you can also nest SequentialTaskSet within TaskSet and vice versa.
+SequentialTaskSet class. It is possible to nest SequentialTaskSets within a TaskSet and vice versa.
 
 .. code-block:: python
     
