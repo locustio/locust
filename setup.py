@@ -24,7 +24,7 @@ setup(
         "requests>=2.9.1", 
         "msgpack>=0.6.2", 
         "pyzmq>=16.0.2", 
-        "geventhttpclient-wheels==1.3.1.dev3",
+        "geventhttpclient>=1.4.0",
         "ConfigArgParse>=1.0",
         "psutil>=5.6.7",
         "Flask-BasicAuth>=0.2.0"
