@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.0.2
+=====
+
+* Check for low open files limit (ulimit) and try to automatically increase it from within the locust process.
+* Other various bug fixes as improvements
+
+
 .. _changelog-1-0:
 
 1.0, 1.0.1

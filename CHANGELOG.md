@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.0.2](https://github.com/locustio/locust/tree/1.0.2) (2020-05-25)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.0.1...1.0.2)
+
+**Fixed bugs:**
+
+- Update flask version [\#1394](https://github.com/locustio/locust/issues/1394)
+- 'Module' object is not callable [\#1387](https://github.com/locustio/locust/issues/1387)
+- Got "unknown user exception" when use --step-load and --step-clients [\#1385](https://github.com/locustio/locust/issues/1385)
+- SequentialTaskSet is broken when using local class members \(headless mode\) [\#1379](https://github.com/locustio/locust/issues/1379)
+- FastHttpLocust + SNI [\#1369](https://github.com/locustio/locust/issues/1369)
+
+**Closed issues:**
+
+- We should check limits \(ulimit\) and warn if they are too low [\#1368](https://github.com/locustio/locust/issues/1368)
+- Run locust as a job but still have access to the API. [\#1305](https://github.com/locustio/locust/issues/1305)
+- error: argument --master-port: invalid int value bug [\#1226](https://github.com/locustio/locust/issues/1226)
+
+**Merged pull requests:**
+
+- Update flask requirement. Fixes \#1394 [\#1395](https://github.com/locustio/locust/pull/1395) ([cyberw](https://github.com/cyberw))
+- Bump geventhttpclient and switch back to use its original repo + fix windows issue with resource module [\#1388](https://github.com/locustio/locust/pull/1388) ([cyberw](https://github.com/cyberw))
+- Rework quickstart documentation and update some documentation for 1.0 [\#1384](https://github.com/locustio/locust/pull/1384) ([cyberw](https://github.com/cyberw))
+- Make TaskSet .user and .parent read only properties, avoids / fixes \#1379 [\#1380](https://github.com/locustio/locust/pull/1380) ([cyberw](https://github.com/cyberw))
+- Fixed typo [\#1378](https://github.com/locustio/locust/pull/1378) ([rahulrai-in](https://github.com/rahulrai-in))
+- Try to increase open files limit and warn if it is still too low afterwards [\#1375](https://github.com/locustio/locust/pull/1375) ([cyberw](https://github.com/cyberw))
+
 ## [1.0.1](https://github.com/locustio/locust/tree/1.0.1) (2020-05-16)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.0...1.0.1)
@@ -30,6 +57,7 @@
 - Rename Locust to User/LocustUser [\#1283](https://github.com/locustio/locust/issues/1283)
 - Clean up among the command line arguments [\#1282](https://github.com/locustio/locust/issues/1282)
 - Docker image should not require TARGET\_URL [\#1247](https://github.com/locustio/locust/issues/1247)
+- Duplicate/confusing entry in pypi [\#817](https://github.com/locustio/locust/issues/817)
 - How to run test programatically [\#222](https://github.com/locustio/locust/issues/222)
 - Alternative terminology for "slave" [\#220](https://github.com/locustio/locust/issues/220)
 
@@ -376,7 +404,6 @@
 - Allow None response time for requests [\#1088](https://github.com/locustio/locust/pull/1088) ([cyberw](https://github.com/cyberw))
 - Fixed issue with Total Requests Per Second plot [\#1060](https://github.com/locustio/locust/pull/1060) ([williamlhunter](https://github.com/williamlhunter))
 - Tox: Add flake8 tests to find Python syntax errors and undefined names [\#1039](https://github.com/locustio/locust/pull/1039) ([cclauss](https://github.com/cclauss))
-- Fix frontend bugs. [\#822](https://github.com/locustio/locust/pull/822) ([omittones](https://github.com/omittones))
 - Switch from using optparse to argparse for command line arguments [\#769](https://github.com/locustio/locust/pull/769) ([jdufresne](https://github.com/jdufresne))
 - Allow skipping the logging setup [\#738](https://github.com/locustio/locust/pull/738) ([Exide](https://github.com/Exide))
 - Added link to an Ansible role as a 3rd party tool. [\#704](https://github.com/locustio/locust/pull/704) ([tinx](https://github.com/tinx))
@@ -714,7 +741,6 @@
 - \(libev\) select: Invalid argument when trying to go past 1k users [\#121](https://github.com/locustio/locust/issues/121)
 - Command line option to specify the duration to run [\#71](https://github.com/locustio/locust/issues/71)
 - Setup/teardown hooks [\#59](https://github.com/locustio/locust/issues/59)
-- Define wait times by function instead of variable [\#18](https://github.com/locustio/locust/issues/18)
 
 **Merged pull requests:**
 
@@ -728,6 +754,7 @@
 - Change name of msgpack dependency. [\#841](https://github.com/locustio/locust/pull/841) ([vamega](https://github.com/vamega))
 - response time doesn't need to be cast to int, as this is implicit in … [\#830](https://github.com/locustio/locust/pull/830) ([efology](https://github.com/efology))
 - Add tasks sequence support [\#827](https://github.com/locustio/locust/pull/827) ([Ramshell](https://github.com/Ramshell))
+- Fix frontend bugs. [\#822](https://github.com/locustio/locust/pull/822) ([omittones](https://github.com/omittones))
 - Fix some typos in events.py [\#820](https://github.com/locustio/locust/pull/820) ([felixonmars](https://github.com/felixonmars))
 - Update all pypi.python.org URLs to pypi.org [\#818](https://github.com/locustio/locust/pull/818) ([jdufresne](https://github.com/jdufresne))
 - Update third-party-tools.rst [\#808](https://github.com/locustio/locust/pull/808) ([anhldbk](https://github.com/anhldbk))
@@ -776,6 +803,7 @@
 - make test is failing on 0.7 tags due to Flask 0.12 [\#637](https://github.com/locustio/locust/issues/637)
 - num-requests bug [\#512](https://github.com/locustio/locust/issues/512)
 - Run the tests for the specified time [\#196](https://github.com/locustio/locust/issues/196)
+- loglevel and logfile don't seem to work [\#25](https://github.com/locustio/locust/issues/25)
 - Remove support for plain sockets for master/slave communication [\#14](https://github.com/locustio/locust/issues/14)
 
 ## [v0.8](https://github.com/locustio/locust/tree/v0.8) (2017-09-19)
@@ -837,7 +865,6 @@
 - Non-200 i.e. 202 status codes are note logged as successes [\#594](https://github.com/locustio/locust/issues/594)
 - Running locust tests as a list of scenarios [\#590](https://github.com/locustio/locust/issues/590)
 - Port locust.io to HTTPS [\#589](https://github.com/locustio/locust/issues/589)
-- Custom Request/sec exit code [\#587](https://github.com/locustio/locust/issues/587)
 - reqs/sec is lower than other tools result [\#586](https://github.com/locustio/locust/issues/586)
 - Inform users about unsuccessful POST requests [\#585](https://github.com/locustio/locust/issues/585)
 - HttpSession can't handle HTTP 301 with Location: `https,https://` [\#584](https://github.com/locustio/locust/issues/584)
@@ -1349,16 +1376,13 @@
 
 [Full Changelog](https://github.com/locustio/locust/compare/v0.5...v0.5.1)
 
-**Closed issues:**
-
-- loglevel and logfile don't seem to work [\#25](https://github.com/locustio/locust/issues/25)
-
 ## [v0.5](https://github.com/locustio/locust/tree/v0.5) (2012-07-01)
 
 [Full Changelog](https://github.com/locustio/locust/compare/v0.4...v0.5)
 
 **Closed issues:**
 
+- Define wait times by function instead of variable [\#18](https://github.com/locustio/locust/issues/18)
 - Remove Confluence specific task ratio formatter [\#13](https://github.com/locustio/locust/issues/13)
 - Add HTTP request method \(GET/POST/PUT, etc\) to statistics table [\#3](https://github.com/locustio/locust/issues/3)
 
