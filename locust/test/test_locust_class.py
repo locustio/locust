@@ -545,10 +545,18 @@ class TestLocustClass(LocustTestCase):
             from locust.contrib.fasthttp import FastHttpLocust
             class FastLocust(FastHttpLocust):
                 pass
+        
+        def assert_importing_locust_class_raises(func):
+            try:
+                func()
+            except ImportError as e:
+                self.assertIn("Locust class has been renamed to", e.args[0], "ImportError was raised, but with the wrong error message")
+            else:
+                self.fail("ImportError was not raised")
 
-        self.assertRaises(DeprecationWarning, test_locust)
-        self.assertRaises(DeprecationWarning, test_http_locust)
-        self.assertRaises(DeprecationWarning, test_fast_http_locust)
+        assert_importing_locust_class_raises(test_locust)
+        assert_importing_locust_class_raises(test_http_locust)
+        assert_importing_locust_class_raises(test_fast_http_locust)
 
 
 class TestWebLocustClass(WebserverTestCase):
