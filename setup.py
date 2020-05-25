@@ -20,7 +20,7 @@ setup(
     version=version,
     install_requires=[
         "gevent>=1.5.0",
-        "flask>=0.10.1", 
+        "flask>=1.1.2", 
         "requests>=2.9.1", 
         "msgpack>=0.6.2", 
         "pyzmq>=16.0.2", 
