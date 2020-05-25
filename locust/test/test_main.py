@@ -133,6 +133,29 @@ class LocustProcessIntegrationTest(TestCase):
         self.assertIn("-f LOCUSTFILE, --locustfile LOCUSTFILE", output)
         self.assertIn("Logging options:", output)
         self.assertIn("--skip-log-setup      Disable Locust's logging setup.", output)
+    
+    def test_custom_exit_code(self):
+        with temporary_file(content=textwrap.dedent("""
+            from locust import User, task, constant, events
+            @events.quitting.add_listener
+            def _(environment, **kw):
+                print("ok")
+                environment.process_exit_code = 42
+            class TestUser(User):
+                wait_time = constant(3)
+                @task
+                def my_task():
+                    print("running my_task()")
+        """)) as file_path:
+            proc = subprocess.Popen(["locust", "-f", file_path], stdout=PIPE, stderr=PIPE)
+            gevent.sleep(1)
+            proc.send_signal(signal.SIGTERM)
+            stdout, stderr = proc.communicate()
+            self.assertEqual(42, proc.returncode)
+            stderr = stderr.decode("utf-8")
+            self.assertIn("Starting web interface at", stderr)
+            self.assertIn("Starting Locust", stderr)
+            self.assertIn("Shutting down (exit code 42), bye", stderr)
 
     def test_webserver(self):
         with temporary_file(content=textwrap.dedent("""

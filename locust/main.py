@@ -297,18 +297,30 @@ def main():
         gevent.spawn(stats_writer, environment, options.csv_prefix, full_history=options.stats_history_enabled).link_exception(greenlet_exception_handler)
 
     
-    def shutdown(code=0):
+    def shutdown():
         """
         Shut down locust by firing quitting event, printing/writing stats and exiting
         """
+        logger.info("Running teardowns...")
+        environment.events.quitting.fire(environment=environment, reverse=True)
+        
+        # determine the process exit code
+        if log.unhandled_greenlet_exception:
+            code = 2
+        elif environment.process_exit_code is not None:
+            code = environment.process_exit_code
+        elif len(runner.errors) or len(runner.exceptions):
+            code = options.exit_code_on_error
+        else:
+            code = 0
+        
         logger.info("Shutting down (exit code %s), bye." % code)
         if stats_printer_greenlet is not None:
             stats_printer_greenlet.kill(block=False)
         logger.info("Cleaning up runner...")
         if runner is not None:
             runner.quit()
-        logger.info("Running teardowns...")
-        environment.events.quitting.fire(reverse=True)
+        
         print_stats(runner.stats, current=False)
         print_percentile_stats(runner.stats)
         if options.csv_prefix:
@@ -319,17 +331,12 @@ def main():
     # install SIGTERM handler
     def sig_term_handler():
         logger.info("Got SIGTERM signal")
-        shutdown(0)
+        shutdown()
     gevent.signal_handler(signal.SIGTERM, sig_term_handler)
     
     try:
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
-        code = 0
-        if log.unhandled_greenlet_exception:
-            code = 2
-        elif len(runner.errors) or len(runner.exceptions):
-            code = options.exit_code_on_error
-        shutdown(code=code)
+        shutdown()
     except KeyboardInterrupt as e:
-        shutdown(0)
+        shutdown()

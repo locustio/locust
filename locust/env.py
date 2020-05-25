@@ -51,6 +51,11 @@ class Environment:
     If True exceptions that happen within running users will be catched (and reported in UI/console).
     If False, exeptions will be raised.
     """
+    
+    process_exit_code: int = None
+    """
+    If set it'll be the exit code of the Locust process
+    """
 
     parsed_options = None
     """Optional reference to the parsed command line options (used to pre-populate fields in Web UI)"""

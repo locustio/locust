@@ -26,6 +26,7 @@ If you want to specify the run time for a test, you can do that with ``--run-tim
 
 Locust will shutdown once the time is up.
 
+
 Allow tasks to finish their iteration on shutdown
 -------------------------------------------------
 
@@ -37,6 +38,7 @@ By default, locust will stop your tasks immediately. If you want to allow your t
 
 .. _running-locust-distributed-without-web-ui:
 
+
 Running Locust distributed without the web UI
 ---------------------------------------------
 
@@ -44,4 +46,26 @@ If you want to :ref:`run Locust distributed <running-locust-distributed>` withou
 you should specify the ``--expect-workers`` option when starting the master node, to specify
 the number of worker nodes that are expected to connect. It will then wait until that many worker
 nodes have connected before starting the test.
+
+
+Controlling the exit code of the Locust process
+-----------------------------------------------
+
+You can control the exit code of the Locust process by setting the 
+:py:attr:`process_exit_code <locust.env.Environment.process_exit_code>` of the 
+:py:class:`Environment <locust.env.Environment>` instance.
+
+Here's an example that'll set the exit code to non zero if more than 1% of the requests failed 
+(this code could go into the locustfile.py or in any other file that is imported in the locustfile):
+
+.. code-block:: python
+
+    from locust import events
+    
+    @events.quitting.add_listener
+    def _(environment, **kw):
+        if environment.stats.total.fail_ratio > 0.01:
+            environment.process_exit_code = 1
+        else:
+            environment.process_exit_code = 0
 

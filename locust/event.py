@@ -111,6 +111,10 @@ class Events:
     quitting = EventHook
     """
     Fired when the locust process is exiting
+    
+    Event arguments:
+    
+    :param environment: Environment instance
     """
     
     init = EventHook
