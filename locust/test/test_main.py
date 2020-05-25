@@ -139,7 +139,6 @@ class LocustProcessIntegrationTest(TestCase):
             from locust import User, task, constant, events
             @events.quitting.add_listener
             def _(environment, **kw):
-                print("ok")
                 environment.process_exit_code = 42
             class TestUser(User):
                 wait_time = constant(3)
