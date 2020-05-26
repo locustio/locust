@@ -51,12 +51,16 @@ nodes have connected before starting the test.
 Controlling the exit code of the Locust process
 -----------------------------------------------
 
-You can control the exit code of the Locust process by setting the 
+When running Locust in a CI environment, you might want to control the exit code of the Locust 
+process. You can do that in your test scripts by setting the 
 :py:attr:`process_exit_code <locust.env.Environment.process_exit_code>` of the 
 :py:class:`Environment <locust.env.Environment>` instance.
 
-Here's an example that'll set the exit code to non zero if more than 1% of the requests failed 
-(this code could go into the locustfile.py or in any other file that is imported in the locustfile):
+Below is an example that'll set the exit code to non zero if any of the following conditions are met:
+
+* More than 1% of the requests failed
+* The average response time is longer than 200 ms
+* The 95th percentile for response time is larger than 800 ms
 
 .. code-block:: python
 
@@ -66,6 +70,11 @@ Here's an example that'll set the exit code to non zero if more than 1% of the r
     def _(environment, **kw):
         if environment.stats.total.fail_ratio > 0.01:
             environment.process_exit_code = 1
+        elif environment.stats.total.avg_response_time > 200:
+            environment.process_exit_code = 1
+        elif environment.stats.total.get_response_time_percentile(0.95) > 800:
+            environment.process_exit_code = 1
         else:
             environment.process_exit_code = 0
 
+(this code could go into the locustfile.py or in any other file that is imported in the locustfile)
