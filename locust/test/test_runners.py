@@ -356,7 +356,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             # issue start command that should trigger TestUsers to be spawned in the Workers
             master.start(6, hatch_rate=1000)
             sleep(0.1)
-            # check that slave nodes have started locusts
+            # check that worker nodes have started locusts
             for worker in workers:
                 self.assertEqual(2, worker.user_count)
             # give time for users to generate stats, and stats to be sent to master

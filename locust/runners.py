@@ -509,7 +509,7 @@ class MasterRunner(DistributedRunner):
                     client.heartbeat -= 1
 
     def reset_connection(self):
-        logger.info("Reset connection to slave")
+        logger.info("Reset connection to worker")
         try:
             self.server.close()
             self.server = rpc.Server(self.master_bind_host, self.master_bind_port)

@@ -14,7 +14,7 @@ The docker image can be used like this (assuming that the ``locustifile.py`` exi
 Docker Compose
 ==============
 
-Here's an example Docker Compose file that could ber used to start both a master node, and slave nodes:
+Here's an example Docker Compose file that could ber used to start both a master node, and worker nodes:
 
 .. literalinclude:: ../examples/docker-compose/docker-compose.yml
     :language: yaml
