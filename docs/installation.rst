@@ -15,7 +15,7 @@ If you want the bleeding edge version, you can use pip to install directly from 
     $ pip3 install -e git://github.com/locustio/locust.git@master#egg=locustio
 
 Once Locust is installed, a **locust** command should be available in your shell. (if you're not using
-virtualenv—which you should—make sure your python script directory is on your path).
+virtualenv-which you should-make sure your python script directory is on your path).
 
 To see available options, run:
 

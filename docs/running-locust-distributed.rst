@@ -10,7 +10,7 @@ running load tests distributed across multiple machines.
 To do this, you start one instance of Locust in master mode using the ``--master`` flag. This is 
 the instance that will be running Locust's web interface where you start the test and see live 
 statistics. The master node doesn't simulate any users itself. Instead you have to start one or 
-—most likely—multiple worker Locust nodes using the ``--worker`` flag, together with the
+-most likely-multiple worker Locust nodes using the ``--worker`` flag, together with the
 ``--master-host`` (to specify the IP/hostname of the master node).
 
 A common set up is to run a single master on one machine, and then run **one worker instance per

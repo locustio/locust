@@ -2,8 +2,8 @@
 Writing a locustfile
 ======================
 
-A locustfile is a normal python file. The only requirement is that it declares at least one class —
-let's call it the user class — that inherits from the class :py:class:`User <locust.User>`. 
+A locustfile is a normal python file. The only requirement is that it declares at least one class -
+let's call it the user class - that inherits from the class :py:class:`User <locust.User>`. 
 
 User class
 ==========
@@ -107,7 +107,7 @@ When a load test is started, an instance of a User class will be created for eac
 and they will start running within their own green thread. When these users run they pick tasks that 
 they execute, sleeps for awhile, and then picks a new task and so on. 
 
-The tasks are normal python callables and — if we were load-testing an auction website — they could do 
+The tasks are normal python callables and - if we were load-testing an auction website - they could do 
 stuff like "loading the start page", "searching for some product", "making a bid", etc. 
 
 Declaring tasks
@@ -177,8 +177,8 @@ Here is an example of a User task declared as a normal python function:
 
 
 If the tasks attribute is specified as a list, each time a task is to be performed, it will be randomly 
-chosen from the *tasks* attribute. If however, *tasks* is a dict — with callables as keys and ints 
-as values — the task that is to be executed will be chosen at random but with the int as ratio. So 
+chosen from the *tasks* attribute. If however, *tasks* is a dict - with callables as keys and ints 
+as values - the task that is to be executed will be chosen at random but with the int as ratio. So 
 with a tasks that looks like this::
 
     {my_task: 3, another_task: 1}
@@ -338,7 +338,7 @@ simulated user would never stop running tasks from the Forum taskset once it has
         def frontpage(self):
             pass
 
-Using the interrupt function, we can — together with task weighting — define how likely it 
+Using the interrupt function, we can - together with task weighting - define how likely it 
 is that a simulated user leaves the forum.
 
 
@@ -527,9 +527,9 @@ Manually controlling if a request should be considered successful or a failure
 ------------------------------------------------------------------------------
 
 By default, requests are marked as failed requests unless the HTTP response code is OK (<400). 
-Most of the time, this default is what you want. Sometimes however—for example when testing 
+Most of the time, this default is what you want. Sometimes however-for example when testing 
 a URL endpoint that you expect to return 404, or testing a badly designed system that might 
-return *200 OK* even though an error occurred—there's a need for manually controlling if 
+return *200 OK* even though an error occurred-there's a need for manually controlling if 
 locust should consider a request as a success or a failure.
 
 One can mark requests as failed, even when the response code is OK, by using the 
