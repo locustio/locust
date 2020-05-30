@@ -28,7 +28,7 @@ Subclass FastHttpUser instead of HttpUser::
     from locust.contrib.fasthttp import FastHttpUser
     
     class MyUser(FastHttpUser):
-        wait_time = between(1, 60)
+        wait_time = between(2, 5)
         
         @task
         def index(self):
@@ -37,9 +37,8 @@ Subclass FastHttpUser instead of HttpUser::
 
 .. note::
 
-    FastHttpUser uses a whole other HTTP client implementation, with a different API, compared to
-    the default HttpUser that uses python-requests. Therefore FastHttpUser might not work as a
-    drop-in replacement for HttpUser, depending on how the HttpClient is used.
+    Because FastHttpUser uses a different client implementation with a slightly different API,
+    it may not always work as a drop-in replacement for HttpUser.
 
 
 API
