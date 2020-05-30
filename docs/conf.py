@@ -22,7 +22,7 @@ def save_locust_help_output():
     with open(cli_help_output_file, "w") as f:
         f.write(help_output)
 
-save_locust_help_output()
+# save_locust_help_output()
 
 # Generate RST table with help/descriptions for all available environment variables
 def save_locust_env_variables():
@@ -55,7 +55,7 @@ def save_locust_env_variables():
     with open(env_options_output_file, "w") as f:
         f.write(output)
 
-save_locust_env_variables()
+# save_locust_env_variables()
 
 
 # The default replacements for |version| and |release|, also used in various
@@ -139,11 +139,11 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 
-# Custom CSS overrides
-html_static_path = ["_static"]
-html_context = {
-    "css_files": ["_static/theme-overrides.css"],
-}
+# # Custom CSS overrides
+# html_static_path = ["_static"]
+# html_context = {
+#     "css_files": ["_static/theme-overrides.css"],
+# }
 
 
 # HTML theme
