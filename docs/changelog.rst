@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+In development
+==============
+
+* Ability to control the exit code of the Locust process by setting :py:attr:`Environment.process_exit_code <locust.env.Environment.process_exit_code>`
+
+
 1.0.2
 =====
 

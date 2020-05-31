@@ -413,7 +413,7 @@ class MasterRunner(DistributedRunner):
         self.environment.events.worker_report.add_listener(on_worker_report)
         
         # register listener that sends quit message to worker nodes
-        def on_quitting():
+        def on_quitting(environment, **kw):
             self.quit()
         self.environment.events.quitting.add_listener(on_quitting)
     
@@ -615,7 +615,7 @@ class WorkerRunner(DistributedRunner):
         self.environment.events.report_to_master.add_listener(on_report_to_master)
         
         # register listener that sends quit message to master
-        def on_quitting():
+        def on_quitting(environment, **kw):
             self.client.send(Message("quit", None, self.client_id))
         self.environment.events.quitting.add_listener(on_quitting)
 
