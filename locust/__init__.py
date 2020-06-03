@@ -17,8 +17,8 @@ __all__ = (
     "SequentialTaskSet",
     "wait_time",
     "task", "tag", "TaskSet",
-    "HttpUser", "User"
-    "between", "constant", "constant_pacing"
+    "HttpUser", "User",
+    "between", "constant", "constant_pacing",
     "events",
 )
 
