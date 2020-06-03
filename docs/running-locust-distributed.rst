@@ -38,7 +38,7 @@ To start locust in master mode::
 
     locust -f my_locustfile.py --master
 
-And then on each worker (replace ``192.168.0.14`` with IP of the master machine)::
+And then on each worker (replace ``192.168.0.14`` with IP of the master machine, or leave out the parameter alltogether if your workers are on the same machine as the master)::
 
     locust -f my_locustfile.py --worker --master-host=192.168.0.14
 
