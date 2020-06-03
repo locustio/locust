@@ -19,7 +19,7 @@ __all__ = (
     "task", "tag", "TaskSet",
     "HttpUser", "User",
     "between", "constant", "constant_pacing",
-    "events"
+    "events",
 )
 
 # Used for raising a DeprecationWarning if old Locust/HttpLocust is used
