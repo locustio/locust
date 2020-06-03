@@ -17,9 +17,9 @@ __all__ = (
     "SequentialTaskSet",
     "wait_time",
     "task", "tag", "TaskSet",
-    "HttpUser", "User"
-    "between", "constant", "constant_pacing"
-    "events",
+    "HttpUser", "User",
+    "between", "constant", "constant_pacing",
+    "events"
 )
 
 # Used for raising a DeprecationWarning if old Locust/HttpLocust is used
