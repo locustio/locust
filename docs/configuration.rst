@@ -40,10 +40,8 @@ Any of the options that can be set through command line arguments can also be se
 configuration file in the `config file <https://github.com/bw2/ConfigArgParse#config-file-syntax>`_
 format. 
 
-Locust will look for ``locust.conf`` or ``~/.locust.conf`` by default, or a file may be specified
-with the ``--config`` flag. Parameters passed as environment variables will override the settings 
-from the config file, and command line arguments will override the settings from both environment 
-variables and config file.
+Locust will look for ``~/.locust.conf`` and ``./locust.conf`` by default, and you can specify an 
+additional file using the ``--config`` flag.
 
 Example:
 
@@ -64,6 +62,13 @@ Example:
 
     $ locust --config=master.conf
 
+.. note::
+
+    Configuration values are read (overridden) in the following order:
+    
+    .. code-block::
+        
+        ~/locust.conf -> ./locust.conf -> (file specified using --conf) -> env vars -> cmd args
 
 All available configuration options
 -----------------------------------
