@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.0.3](https://github.com/locustio/locust/tree/1.0.3) (2020-06-05)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.0.2...1.0.3)
+
+**Fixed bugs:**
+
+- Search is broken on readthedocs [\#1391](https://github.com/locustio/locust/issues/1391)
+
+**Closed issues:**
+
+- Custom Request/sec exit code [\#587](https://github.com/locustio/locust/issues/587)
+
+**Merged pull requests:**
+
+- Remove Bad Apostrophe [\#1411](https://github.com/locustio/locust/pull/1411) ([curtisgibby](https://github.com/curtisgibby))
+- update \_\_init\_\_ file [\#1409](https://github.com/locustio/locust/pull/1409) ([manifiko](https://github.com/manifiko))
+- Rename 3 remaining instances of slave to worker [\#1400](https://github.com/locustio/locust/pull/1400) ([ibrahima](https://github.com/ibrahima))
+- The format for providing host can be confusing at times [\#1398](https://github.com/locustio/locust/pull/1398) ([jo19in1](https://github.com/jo19in1))
+- Ability to control the Locust process' exit code [\#1396](https://github.com/locustio/locust/pull/1396) ([heyman](https://github.com/heyman))
+
 ## [1.0.2](https://github.com/locustio/locust/tree/1.0.2) (2020-05-25)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.0.1...1.0.2)

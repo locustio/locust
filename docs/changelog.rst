@@ -7,8 +7,12 @@ For full details of the Locust changelog, please see https://github.com/locustio
 In development
 ==============
 
-* Ability to control the exit code of the Locust process by setting :py:attr:`Environment.process_exit_code <locust.env.Environment.process_exit_code>`
+1.0.3
+=====
 
+* Ability to control the exit code of the Locust process by setting :py:attr:`Environment.process_exit_code <locust.env.Environment.process_exit_code>`
+* FastHttpLocust: Change dependency to use original geventhttpclient (now that releases can be made there) instead of geventhttpclient-wheels
+* Fix search on readthedocs
 
 1.0.2
 =====

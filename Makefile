@@ -14,4 +14,4 @@ build_docs:
 	sphinx-build -b html docs/ docs/_build/
 
 changelog:
-	python generate_changelog.py
+	python3 generate_changelog.py
