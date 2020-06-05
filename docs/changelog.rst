@@ -30,7 +30,7 @@ Locust class renamed to User
 We've renamed the ``Locust`` and ``HttpLocust`` classes to ``User`` and ``HttpUser``. The ``locust`` attribute on 
 :py:class:`TaskSet <locust.TaskSet>` instances has been renamed to :py:attr:`user <locust.TaskSet.user>`.
 
-The parameter for setting number of users has also been changed, from -c / --clients to -u / --users.
+The parameter for setting number of users has also been changed, from ``-c`` / ``--clients`` to ``-u`` / ``--users``.
 
 Ability to declare @task directly under the ``User`` class
 ----------------------------------------------------------
