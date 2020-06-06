@@ -459,8 +459,10 @@ global state that all users spawned from this process will need:
 
     @events.init.add_listener
     def on_locust_init(environment, **kwargs):
-        if not isinstance(environment.runner, MasterRunner):
-            # do the setup work
+        if isinstance(environment.runner, MasterRunner):
+            print("I'm on master node")
+        else:
+            print("I'm on a worker or standalone node")
 
 
 Making HTTP requests
