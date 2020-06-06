@@ -545,24 +545,22 @@ Response's *content* attribute will be set to None, and its *status_code* will b
 Manually controlling if a request should be considered successful or a failure
 ------------------------------------------------------------------------------
 
-By default, requests are marked as failed requests unless the HTTP response code is OK (<400). 
-Most of the time, this default is what you want. Sometimes however-for example when testing 
-a URL endpoint that you expect to return 404, or testing a badly designed system that might 
-return *200 OK* even though an error occurred-there's a need for manually controlling if 
-locust should consider a request as a success or a failure.
+Requests are considered successful if the HTTP response code is OK (<400), but it is often useful to 
+do some additional validation of the response.
 
-One can mark requests as failed, even when the response code is OK, by using the 
-*catch_response* argument and a with statement:
+You can mark a request as failed by using the *catch_response* argument, a *with*-statement and 
+a call to *response.failure()*
 
 .. code-block:: python
 
     with self.client.get("/", catch_response=True) as response:
-        if response.content != b"Success":
+        if response.text != "Success":
             response.failure("Got wrong response")
+        elif response.elapsed.total_seconds() > 0.5:
+            response.failure("Request took too long")
 
-Just as one can mark requests with OK response codes as failures, one can also use **catch_response** 
-argument together with a *with* statement to make requests that resulted in an HTTP error code still 
-be reported as a success in the statistics:
+
+You can also mark a request as successful, even if the response code was bad:
 
 .. code-block:: python
 
