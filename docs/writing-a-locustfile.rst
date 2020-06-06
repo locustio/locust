@@ -445,6 +445,23 @@ events. You can set up listeners for these events at the module level of your lo
 
 When running Locust distributed the ``test_start`` and ``test_stop`` events will only be fired in the master node.
 
+init event
+==========
+
+The ``init`` event is triggered at the beginning of each Locust process. This is especially useful in distributed mode
+where each worker process (not each user) needs a chance to do some initialization. For example, let's say you have some
+global state that all users spawned from this process will need:
+
+.. code-block:: python
+
+    from locust import events
+    from locust.runners import MasterRunner
+
+    @events.init.add_listener
+    def on_locust_init(environment, **kwargs):
+        if not isinstance(environment.runner, MasterRunner):
+            # do the setup work
+
 
 Making HTTP requests
 =====================
