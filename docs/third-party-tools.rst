@@ -43,3 +43,8 @@ Deploying Locust is easy, but here and there some tools can still provide a meas
 `tinx.locust <https://github.com/tinx/ansible-role-locust>`_ is an Ansible role to install, configure and
 control Locust as a systemd service, or to build Locust docker images using ansible-container. Also
 manages locustfiles and accompanying test data.
+
+Further reading
+===============
+
+- `An introduction to Locust for JMeter users <https://howardosborne.github.io/locust_for_jmeter_users/>`_
