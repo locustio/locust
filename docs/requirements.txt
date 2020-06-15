@@ -1,2 +1,3 @@
-sphinx-rtd-theme
+spinx==3.0.4
+sphinx-rtd-theme==0.4.3
 -e git+https://github.com/readthedocs/readthedocs-sphinx-search#egg=sphinx-search
