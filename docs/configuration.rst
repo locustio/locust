@@ -24,7 +24,7 @@ Environment Variables
 ---------------------
 
 Most of the options that can be set through command line arguments can also be set through 
-environment variables.
+environment variables. Example:
 
 .. code-block::
 
