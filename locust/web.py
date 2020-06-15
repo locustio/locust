@@ -172,7 +172,11 @@ class WebUI:
         @app.route("/stats/requests/csv")
         @self.auth_required_if_enabled
         def request_stats_csv():
-            response = make_response(requests_csv(self.environment.runner.stats))
+            data = StringIO()
+            writer = csv.writer(data)
+            requests_csv(self.environment.runner.stats, writer)
+            data.seek(0)
+            response = make_response(data.read())
             file_name = "requests_{0}.csv".format(time())
             disposition = "attachment;filename={0}".format(file_name)
             response.headers["Content-type"] = "text/csv"
@@ -182,7 +186,11 @@ class WebUI:
         @app.route("/stats/failures/csv")
         @self.auth_required_if_enabled
         def failures_stats_csv():
-            response = make_response(failures_csv(self.environment.runner.stats))
+            data = StringIO()
+            writer = csv.writer(data)
+            failures_csv(self.environment.runner.stats, writer)
+            data.seek(0)
+            response = make_response(data.read())
             file_name = "failures_{0}.csv".format(time())
             disposition = "attachment;filename={0}".format(file_name)
             response.headers["Content-type"] = "text/csv"
