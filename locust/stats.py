@@ -1,3 +1,4 @@
+import csv
 import hashlib
 import time
 from collections import namedtuple, OrderedDict
@@ -767,59 +768,56 @@ def stats_writer(environment, base_filepath, full_history=False):
 def write_csv_files(environment, base_filepath, full_history=False):
     """Writes the requests, distribution, and failures csvs."""
     with open(base_filepath + '_stats.csv', 'w') as f:
-        f.write(requests_csv(environment.stats))
+        csv_writer = csv.writer(f)
+        requests_csv(environment.stats, csv_writer)
 
     with open(base_filepath + '_stats_history.csv', 'a') as f:
         f.write(stats_history_csv(environment, full_history) + "\n")
 
     with open(base_filepath + '_failures.csv', 'w') as f:
-        f.write(failures_csv(environment.stats))
+        csv_writer = csv.writer(f)
+        failures_csv(environment.stats, csv_writer)
 
 
 def sort_stats(stats):
     return [stats[key] for key in sorted(stats.keys())]
 
 
-def requests_csv(stats):
-    from . import runners
-
+def requests_csv(stats, csv_writer):
     """Returns the contents of the 'requests' & 'distribution' tab as CSV."""
-    rows = [
-        ",".join([
-            '"Type"',
-            '"Name"',
-            '"Request Count"',
-            '"Failure Count"',
-            '"Median Response Time"',
-            '"Average Response Time"',
-            '"Min Response Time"',
-            '"Max Response Time"',
-            '"Average Content Size"',
-            '"Requests/s"',
-            '"Failures/s"',
-            '"50%"',
-            '"66%"',
-            '"75%"',
-            '"80%"',
-            '"90%"',
-            '"95%"',
-            '"98%"',
-            '"99%"',
-            '"99.9%"',
-            '"99.99%"',
-            '"99.999%"',
-            '"100%"'
-        ])
-    ]
+    csv_writer.writerow([
+        "Type",
+        "Name",
+        "Request Count",
+        "Failure Count",
+        "Median Response Time",
+        "Average Response Time",
+        "Min Response Time",
+        "Max Response Time",
+        "Average Content Size",
+        "Requests/s",
+        "Failures/s",
+        "50%",
+        "66%",
+        "75%",
+        "80%",
+        "90%",
+        "95%",
+        "98%",
+        "99%",
+        "99.9%",
+        "99.99%",
+        "99.999%",
+        "100%",
+    ])
 
     for s in chain(sort_stats(stats.entries), [stats.total]):
         if s.num_requests:
-            percentile_str = ','.join([
-                str(int(s.get_response_time_percentile(x) or 0)) for x in PERCENTILES_TO_REPORT])
+            percentile_row = [int(s.get_response_time_percentile(x) or 0) for x in PERCENTILES_TO_REPORT]
         else:
-            percentile_str = ','.join(['"N/A"'] * len(PERCENTILES_TO_REPORT))
+            percentile_row = ["N/A"] * len(PERCENTILES_TO_REPORT)
 
-        rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f,%.2f,%s' % (
+        stats_row = [
             s.method,
             s.name,
             s.num_requests,
@@ -831,10 +829,9 @@ def requests_csv(stats):
             s.avg_content_length,
             s.total_rps,
             s.total_fail_per_sec,
-            percentile_str
-        ))
-    return "\n".join(rows)
+        ]
 
+        csv_writer.writerow(stats_row + percentile_row)
 
 def stats_history_csv_header():
     """Headers for the stats history CSV"""
@@ -906,22 +903,19 @@ def stats_history_csv(environment, all_entries=False):
 
     return "\n".join(rows)
 
-def failures_csv(stats):
+def failures_csv(stats, csv_writer):
     """"Return the contents of the 'failures' tab as a CSV."""
-    rows = [
-        ",".join((
-            '"Method"',
-            '"Name"',
-            '"Error"',
-            '"Occurrences"',
-        ))
-    ]
+    csv_writer.writerow([
+        "Method",
+        "Name",
+        "Error",
+        "Occurrences",
+    ])
 
     for s in sort_stats(stats.errors):
-        rows.append('"%s","%s","%s",%i' % (
+        csv_writer.writerow([
             s.method,
             s.name,
             s.error,
             s.occurrences,
-        ))
-    return "\n".join(rows)
+        ])

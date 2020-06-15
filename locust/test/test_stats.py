@@ -3,6 +3,7 @@ import time
 import unittest
 import re
 import os
+import json
 
 import gevent
 import mock
@@ -414,6 +415,32 @@ class TestCsvStats(LocustTestCase):
             self.assertEqual("Aggregated", row["Name"])
             self.assertEqual("%i" % (i + 1), row["Total Request Count"])
             self.assertGreaterEqual(int(row["Timestamp"]), start_time)
+
+    def test_requests_csv_quote_escaping(self):
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            environment = Environment()
+            master = environment.create_master_runner(master_bind_host="*", master_bind_port=0)
+            server.mocked_send(Message("client_ready", None, "fake_client"))
+
+            request_name_dict = {
+                "scenario": "get cashes",
+                "path": "/cash/[amount]",
+                "arguments": [{"size": 1}],
+            }
+            request_name_str = json.dumps(request_name_dict)
+
+            master.stats.get(request_name_str, "GET").log(100, 23455)
+            data = {"user_count": 1}
+            environment.events.report_to_master.fire(client_id="fake_client", data=data)
+            master.stats.clear_all()
+            server.mocked_send(Message("stats", data, "fake_client"))
+
+            locust.stats.write_csv_files(environment, self.STATS_BASE_NAME, full_history=True)
+            with open(self.STATS_FILENAME) as f:
+                reader = csv.DictReader(f)
+                rows = [r for r in reader]
+                csv_request_name = rows[0].get("Name")
+                self.assertEqual(request_name_str, csv_request_name)
 
 
 class TestStatsEntryResponseTimesCache(unittest.TestCase):
