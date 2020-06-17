@@ -4,8 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
-In development
-==============
+1.1 (In development)
+====================
+
+* The official Docker image is now based on the ``python:3.8`` image instead of ``python:3.8-alpine``. This should 
+  make it easier to install other python packages when extending the locust  docker image.
+
 
 1.0.3
 =====
