@@ -5,3 +5,4 @@ build/
 .coverage
 .tox/
 docs/
+.git/
