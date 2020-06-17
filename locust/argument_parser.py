@@ -258,6 +258,7 @@ def setup_parser_arguments(parser):
         default="127.0.0.1",
         help="Host or IP address of locust master for distributed load testing. Only used when running with --worker. Defaults to 127.0.0.1.",
         env_var="LOCUST_MASTER_NODE_HOST",
+        metavar="MASTER_NODE_HOST",
     )
     worker_group.add_argument(
         '--master-port',
@@ -265,6 +266,7 @@ def setup_parser_arguments(parser):
         default=5557,
         help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --worker. Defaults to 5557.",
         env_var="LOCUST_MASTER_NODE_PORT",
+        metavar="MASTER_NODE_PORT",
     )
     
     tag_group = parser.add_argument_group("Tag options", "Locust tasks can be tagged using the @tag decorator. These options let specify which tasks to include or exclude during a test.")
