@@ -1,14 +1,13 @@
 FROM python:3.8
 
-COPY . /src
-WORKDIR /src
-RUN pip install .
-RUN rm -rf /src
+COPY . /build
+RUN cd /build && pip install . && rm -rf /build
 
 EXPOSE 8089 5557
 
 RUN useradd --create-home locust
 USER locust
+WORKDIR /home/locust
 ENTRYPOINT ["locust"]
 
 # turn off python output buffering
