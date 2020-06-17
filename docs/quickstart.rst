@@ -69,7 +69,7 @@ is executed. For more info see :ref:`wait-time`.
         ...
 
 We've also declared two tasks by decorating two methods with ``@task``, one of which has been given a higher weight (3). 
-When a User of this type runs it'll pick one of either ``hello`` or ``view_item`` - with three times the chance of picking 
+When a User of this type runs it'll pick one of either ``index_page`` or ``view_item`` - with three times the chance of picking 
 ``view_item`` - call that method and then pick a duration uniformly between 5 and 9 and just sleep for that duration. 
 After it's wait time it'll pick a new task and keep repeating that.
 
