@@ -12,7 +12,7 @@ If you want the bleeding edge version, you can use pip to install directly from 
 
 .. code-block:: console
 
-    $ pip3 install -e git://github.com/locustio/locust.git@master#egg=locustio
+    $ pip3 install -e git://github.com/locustio/locust.git@master#egg=locust
 
 Once Locust is installed, a **locust** command should be available in your shell. (if you're not using
 virtualenv-which you should-make sure your python script directory is on your path).
@@ -33,7 +33,7 @@ Locust is supported on Python 3.6, 3.7 and 3.8.
 Installing Locust on Windows
 ----------------------------
 
-On Windows, running ``pip install locustio`` *should* work.
+On Windows, running ``pip install locust`` *should* work.
 
 However, if it doesn't, chances are that it can be fixed by first installing
 the pre built binary packages for pyzmq, gevent and greenlet.
@@ -47,7 +47,7 @@ When you've downloaded a pre-built ``.whl`` file, you can install it with:
 
     $ pip install name-of-file.whl
 
-Once you've done that you should be able to just ``pip install locustio``.
+Once you've done that you should be able to just ``pip install locust``.
 
 .. note::
 
