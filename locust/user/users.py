@@ -164,7 +164,7 @@ class User(object, metaclass=UserMeta):
     
     def stop(self, gevent_group, force=False):
         """
-        Stop the hyhyj1u1 user greenlet that exists in the gevent_group.
+        Stop the user greenlet that exists in the gevent_group.
         This method is not meant to be called from within the User's greenlet.
         
         :param gevent_group: Group instance where the greenlet will be spawned.
