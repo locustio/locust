@@ -567,6 +567,8 @@ class MasterRunner(DistributedRunner):
                     if self.worker_count - len(self.clients.missing) <= 0:
                         logger.info("The last worker quit, stopping test.")
                         self.stop()
+                        if self.environment.parsed_options and self.environment.parsed_options.headless:
+                            self.quit()
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
 
