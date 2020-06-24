@@ -103,7 +103,7 @@ specify tasks using the *tasks* attribute which is described in more details :re
 environment attribute
 ---------------------
 
-A reference to the :py:attr:`environment <locust.env.Environment>` in which this locust is running. Use this to interact with 
+A reference to the :py:attr:`environment <locust.env.Environment>` in which the user is running. Use this to interact with 
 the environment, or the :py:attr:`runner <locust.runners.Runner>` which it contains. E.g. to stop the runner from a task method:
 
 .. code-block:: python
