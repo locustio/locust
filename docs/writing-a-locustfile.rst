@@ -100,6 +100,18 @@ tasks attribute
 A User class can have tasks declared as methods under it using the :py:func:`@task <locust.task>` decorator, but one can also
 specify tasks using the *tasks* attribute which is described in more details :ref:`below <tasks-attribute>`.
 
+environment attribute
+---------------------
+
+A reference to the :py:attr:`environment <locust.env.Environment>` in which this locust is running. Use this to interact with 
+the environment, or the :py:attr:`runner <locust.runners.Runner>` which it contains. E.g. to stop the runner from a task method:
+
+.. code-block:: python
+    
+    self.environment.runner.quit()
+
+If run on a standalone locust instance, this will stop the entire run. If run on worker node, it will stop that particular node.
+
 Tasks
 =====
 
