@@ -11,7 +11,7 @@ def _(parser):
 
 @events.init.add_listener
 def _(environment, **kw):
-    print("Custom argument supplied: %s" % environment.options.custom_argument)
+    print("Custom argument supplied: %s" % environment.parsed_options.custom_argument)
 
 
 class WebsiteUser(HttpUser):
