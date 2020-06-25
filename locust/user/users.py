@@ -1,4 +1,4 @@
-from gevent import GreenletExit
+from gevent import GreenletExit, greenlet
 
 from locust.clients import HttpSession
 from locust.exception import LocustError, StopUser
@@ -99,6 +99,9 @@ class User(object, metaclass=UserMeta):
     abstract = True
     """If abstract is True, the class is meant to be subclassed, and locust will not spawn users of this class during a test."""
     
+    environment = None
+    """A reference to the :py:attr:`environment <locust.Environment>` in which this locust is running"""
+
     client = NoClientWarningRaiser()
     _state = None
     _greenlet = None
@@ -165,7 +168,6 @@ class User(object, metaclass=UserMeta):
     def stop(self, gevent_group, force=False):
         """
         Stop the user greenlet that exists in the gevent_group.
-        This method is not meant to be called from within the User's greenlet.
         
         :param gevent_group: Group instance where the greenlet will be spawned.
         :type gevent_group: gevent.pool.Group
@@ -174,7 +176,11 @@ class User(object, metaclass=UserMeta):
                       methods are called. If force is True the greenlet will be killed immediately.
         :returns: True if the greenlet was killed immediately, otherwise False
         """
-        if force or self._state == LOCUST_STATE_WAITING:
+        if self._greenlet is greenlet.getcurrent():
+            # the user is stopping itself (from within a task), so blocking would deadlock
+            gevent_group.killone(self._greenlet, block=False)
+            return True
+        elif force or self._state == LOCUST_STATE_WAITING:
             gevent_group.killone(self._greenlet)
             return True
         elif self._state == LOCUST_STATE_RUNNING:
