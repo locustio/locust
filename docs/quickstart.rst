@@ -122,7 +122,7 @@ and point it to http://127.0.0.1:8089. Then you should be greeted with something
 
 .. image:: images/webui-splash-screenshot.png
 
-Fill out the form and try it out! (but note that if you dont change your locust file to match your target system you'll mostly get error responses)
+Fill out the form and try it out! (but note that if you don't change your locust file to match your target system you'll mostly get error responses)
 
 .. image:: images/webui-running-statistics.png
 
@@ -133,7 +133,7 @@ More options
 ============
 
 To run Locust distributed across multiple Python processes or machines, you can start a single Locust master process 
-with the ``--master`` command line parameter, and then any number of Locust worker processes usin the ``--worker`` 
+with the ``--master`` command line parameter, and then any number of Locust worker processes using the ``--worker`` 
 command line parameter. See :ref:`running-locust-distributed` for more info.
 
 To start tests directly, without using the web interface, use ``--headless``. 

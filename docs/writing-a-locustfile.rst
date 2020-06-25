@@ -389,7 +389,7 @@ SequentialTaskSet class. It is possible to nest SequentialTaskSets within a Task
         def first_task(self):
             pass
         
-        tasks = [functon_task]
+        tasks = [function_task]
         
         @task
         def second_task(self):
@@ -608,7 +608,7 @@ python ``import`` statement.
 For small tests, keeping all of the test code in a single ``locustfile.py`` should work fine, but for 
 larger test suites, you'll probably want to split the code into multiple files and directories. 
 
-How you structure the test source code is ofcourse entirely up to you, but we recommend that you 
+How you structure the test source code is of course entirely up to you, but we recommend that you 
 follow Python best practices. Here's an example file structure of an imaginary Locust project:
 
 * Project root

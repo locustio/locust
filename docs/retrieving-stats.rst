@@ -16,7 +16,7 @@ if you plan on running Locust in an automated way with the ``--headless`` flag:
 The files will be named ``example_stats.csv``, ``example_failures.csv`` and ``example_history.csv``
 (when using ``--csv=example``). The first two files will contain the stats and failures for the whole 
 test run, with a row for every stats entry (URL endpoint) and an aggregated row. The ``example_history.csv`` 
-will get new rows with the *current* (10 seconds sliding window) stats appanded during the whole test run. 
+will get new rows with the *current* (10 seconds sliding window) stats appended during the whole test run. 
 By default only the Aggregate row is appended regularly to the history stats, but if Locust is started with 
 the ``--csv-full-history`` flag, a row for each stats entry (and the Aggregate) is appended every time 
 the stats are written (once every 2 seconds by default).
