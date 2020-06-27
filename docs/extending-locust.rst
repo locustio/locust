@@ -48,10 +48,10 @@ to the Flask app instance and use that to set up a new route::
 You should now be able to start locust and browse to http://127.0.0.1:8089/added_page
 
 Run a background greenlet
-========================
+=========================
 
-Sometimes you need to do something "out of band" with your actual load. Because a locust file is "just code", 
-there is nothing preventing you from spawning your own greenlet to run in parallel with your actual load/Users.
+Because a locust file is "just code", there is nothing preventing you from spawning your own greenlet to
+run in parallel with your actual load/Users.
 
 For example, you can monitor the fail ratio of your test and stop the run if it goes above some threshold:
 
