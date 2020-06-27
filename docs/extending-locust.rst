@@ -57,6 +57,7 @@ For example, you can monitor the fail ratio of your test and stop the run if it 
 
 .. code-block:: python
 
+    from locust import events
     from locust.runners import STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP, WorkerRunner
 
     def checker(environment):
