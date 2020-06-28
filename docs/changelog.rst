@@ -4,12 +4,15 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
-1.1 (In development)
-====================
+1.1
+===
 
 * The official Docker image is now based on the ``python:3.8`` image instead of ``python:3.8-alpine``. This should 
-  make it easier to install other python packages when extending the locust  docker image.
-
+  make it easier to install other python packages when extending the locust docker image.
+* Allow Users to stop the runner by calling self.environment.runner.quit() (without deadlocking sometimes)
+* Cut to only 5% free space on the top of the graphs
+* Use csv module to generate csv data (solves issues with sample names that need escaping in csv)
+* Various documentation improvements
 
 1.0.3
 =====

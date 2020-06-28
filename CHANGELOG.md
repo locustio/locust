@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.1](https://github.com/locustio/locust/tree/1.1) (2020-06-28)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.0.3...1.1)
+
+**Fixed bugs:**
+
+- Charts are twice as high as they need to [\#1440](https://github.com/locustio/locust/issues/1440)
+- Master-host IP is not overrided by environment variable. [\#1424](https://github.com/locustio/locust/issues/1424)
+- Two test\_stop events triggered when --run-time expires [\#1421](https://github.com/locustio/locust/issues/1421)
+- Locust Installation error on Ubuntu 16.04 and Debian Stretch [\#1418](https://github.com/locustio/locust/issues/1418)
+- locust doesn't escape the double quotes in the csv output  [\#1417](https://github.com/locustio/locust/issues/1417)
+- on\_master\_stop\_hatching is not triggered on master when hatching terminates [\#1295](https://github.com/locustio/locust/issues/1295)
+- Installing 0.12.1 requires "pipenv lock --pre" [\#1116](https://github.com/locustio/locust/issues/1116)
+
+**Closed issues:**
+
+- Allow grouping of endpoints [\#1452](https://github.com/locustio/locust/issues/1452)
+- Module object is not callable in locust 0.13.0 [\#1438](https://github.com/locustio/locust/issues/1438)
+- Locust Improvements for recording, reporting and inputs. [\#1416](https://github.com/locustio/locust/issues/1416)
+- Ability to run test\_start on workers. [\#1408](https://github.com/locustio/locust/issues/1408)
+- Ability to Stop Locust Client from within the test script [\#1192](https://github.com/locustio/locust/issues/1192)
+
+**Merged pull requests:**
+
+- Fixes a typo [\#1454](https://github.com/locustio/locust/pull/1454) ([Waples](https://github.com/Waples))
+- minor typos in docs [\#1453](https://github.com/locustio/locust/pull/1453) ([howardosborne](https://github.com/howardosborne))
+- fixed up environment.parsed\_options [\#1450](https://github.com/locustio/locust/pull/1450) ([pentop](https://github.com/pentop))
+- Allow Users to stop the runner by calling self.environment.runner.quit\(\) \(without deadlocking sometimes\) [\#1448](https://github.com/locustio/locust/pull/1448) ([cyberw](https://github.com/cyberw))
+- Cut to only 5% free space on the top of the graphs [\#1443](https://github.com/locustio/locust/pull/1443) ([benallard](https://github.com/benallard))
+- Base Locust Docker image on non-alpine python image [\#1435](https://github.com/locustio/locust/pull/1435) ([heyman](https://github.com/heyman))
+- Quickstart documentation clarification. [\#1434](https://github.com/locustio/locust/pull/1434) ([JamesB41](https://github.com/JamesB41))
+- Use csv module to generate csv data [\#1428](https://github.com/locustio/locust/pull/1428) ([ajt89](https://github.com/ajt89))
+- Add simple documentation with use case for init event [\#1415](https://github.com/locustio/locust/pull/1415) ([Zooce](https://github.com/Zooce))
+- Simplify documentation of catch\_response & add example of response time validation. [\#1414](https://github.com/locustio/locust/pull/1414) ([cyberw](https://github.com/cyberw))
+
 ## [1.0.3](https://github.com/locustio/locust/tree/1.0.3) (2020-06-05)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.0.2...1.0.3)
