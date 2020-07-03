@@ -30,7 +30,10 @@ class EventHook(object):
         else:
             handlers = self._handlers
         for handler in handlers:
-            handler(**kwargs)
+            try:
+                handler(**kwargs)
+            except:
+                pass
 
 
 class Events:
