@@ -1241,3 +1241,27 @@ class TestStopTimeout(LocustTestCase):
             self.fail("Got Timeout exception, runner must have hung somehow.")
         finally:
             timeout.cancel()
+
+    def test_gracefully_handle_exceptions_in_listener(self):
+        class MyUser(User):
+            wait_time = constant(1)
+            @task
+            def my_task(self):
+                pass
+
+        test_stop_run = [0]
+        environment = Environment(user_classes=[User])
+        def on_test_stop_ok(*args, **kwargs):
+            test_stop_run[0] += 1
+        def on_test_stop_fail(*args, **kwargs):
+            assert 0
+
+        environment.events.test_stop.add_listener(on_test_stop_ok)
+        environment.events.test_stop.add_listener(on_test_stop_fail)
+        environment.events.test_stop.add_listener(on_test_stop_ok)
+
+        runner = LocalRunner(environment)
+        runner.start(user_count=3, hatch_rate=3, wait=False)
+        self.assertEqual(0, test_stop_run[0])
+        runner.stop()
+        self.assertEqual(2, test_stop_run[0])
