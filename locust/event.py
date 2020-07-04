@@ -1,3 +1,6 @@
+import logging
+from .log import unhandled_greenlet_exception
+
 class EventHook(object):
     """
     Simple event class used to provide hooks for different types of events in Locust.
@@ -30,7 +33,11 @@ class EventHook(object):
         else:
             handlers = self._handlers
         for handler in handlers:
-            handler(**kwargs)
+            try:
+                handler(**kwargs)
+            except Exception as e:
+                logging.error("Uncaught exception in event handler: %s", e)
+                unhandled_greenlet_exception = True
 
 
 class Events:
