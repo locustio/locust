@@ -13,6 +13,7 @@ from http.cookiejar import CookieJar
 
 import gevent
 from gevent.timeout import Timeout
+from geventhttpclient._parser import HTTPParseError
 from geventhttpclient.useragent import UserAgent, CompatRequest, CompatResponse, ConnectionError
 from geventhttpclient.response import HTTPConnectionClosed
 
@@ -234,7 +235,18 @@ class FastHttpSession(object):
         if stream:
             request_meta["content_size"] = int(response.headers.get("content-length") or 0)
         else:
-            request_meta["content_size"] = len(response.content or "")
+            try:
+                request_meta["content_size"] = len(response.content or "")
+            except HTTPParseError as e:
+                request_meta["response_time"] = int((default_timer() - request_meta["start_time"]) * 1000)
+                self.environment.events.request_failure.fire(
+                    request_type=request_meta["method"],
+                    name=request_meta["name"],
+                    response_time=request_meta["response_time"],
+                    response_length=0,
+                    exception=e,
+                )
+                return response
         
         # Record the consumed time
         # Note: This is intentionally placed after we record the content_size above, since 
