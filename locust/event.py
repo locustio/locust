@@ -1,5 +1,6 @@
 import logging
-from .log import unhandled_greenlet_exception
+from . import log
+import traceback
 
 class EventHook(object):
     """
@@ -36,8 +37,8 @@ class EventHook(object):
             try:
                 handler(**kwargs)
             except Exception as e:
-                logging.error("Uncaught exception in event handler: %s", e)
-                unhandled_greenlet_exception = True
+                logging.error("Uncaught exception in event handler: \n%s", traceback.format_exc())
+                log.unhandled_greenlet_exception = True
 
 
 class Events:
