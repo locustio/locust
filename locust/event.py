@@ -1,3 +1,5 @@
+import logging
+
 class EventHook(object):
     """
     Simple event class used to provide hooks for different types of events in Locust.
@@ -32,8 +34,8 @@ class EventHook(object):
         for handler in handlers:
             try:
                 handler(**kwargs)
-            except:
-                pass
+            except Exception as e:
+                logging.error("Uncaught exception in event handler: %s", e)
 
 
 class Events:
