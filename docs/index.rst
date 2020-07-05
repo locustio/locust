@@ -68,13 +68,13 @@ API
     api
 
 
-Third-party tools
------------------
+Further reading / knowledgebase
+-------------------------------
 
 .. toctree ::
     :maxdepth: 1
 
-    third-party-tools
+    further-reading
 
 
 Changelog
