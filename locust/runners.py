@@ -2,6 +2,7 @@
 import logging
 import random
 import socket
+import sys
 import traceback
 import warnings
 from uuid import uuid4
@@ -399,7 +400,16 @@ class MasterRunner(DistributedRunner):
                 return self.get_by_state(STATE_MISSING)
         
         self.clients = WorkerNodesDict()
-        self.server = rpc.Server(master_bind_host, master_bind_port)
+        try:
+            self.server = rpc.Server(master_bind_host, master_bind_port)
+        except RPCError as e:
+            if e.args[0] == "Socket bind failure: Address already in use":
+                port_string = master_bind_host + ":" + master_bind_port if master_bind_host != "*" else master_bind_port
+                logger.error(f"The Locust master port ({port_string}) was busy. Close any applications using that port - perhaps an old instance of Locust is still running? ({e.args[0]})")
+                sys.exit(1)
+            else:
+                raise
+
         self.greenlet.spawn(self.heartbeat_worker).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.client_listener).link_exception(greenlet_exception_handler)
 
