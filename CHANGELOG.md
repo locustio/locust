@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.1.1](https://github.com/locustio/locust/tree/1.1.1) (2020-07-07)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.1...1.1.1)
+
+**Fixed bugs:**
+
+- --run-time flag is not respected if there is an exception in a test\_stop listener [\#1461](https://github.com/locustio/locust/issues/1461)
+- Unhandled exception: stream ended at an unexpected time [\#1457](https://github.com/locustio/locust/issues/1457)
+-  Unhandled `UnicodeDecodeError` exception if response with status 400 and request contains binary payload \(for FastHttpUser\) [\#1447](https://github.com/locustio/locust/issues/1447)
+
+**Closed issues:**
+
+- FastHttpUser: Show error codes on 'Failures' page for 'BadStatusCode' exception [\#1460](https://github.com/locustio/locust/issues/1460)
+
+**Merged pull requests:**
+
+- Improve logging when locust master port is busy. [\#1471](https://github.com/locustio/locust/pull/1471) ([cyberw](https://github.com/cyberw))
+- Handle http parse exceptions [\#1464](https://github.com/locustio/locust/pull/1464) ([magupov](https://github.com/magupov))
+- Gracefully handle exceptions in event listeners [\#1462](https://github.com/locustio/locust/pull/1462) ([camilojimenez](https://github.com/camilojimenez))
+
 ## [1.1](https://github.com/locustio/locust/tree/1.1) (2020-06-28)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.0.3...1.1)
@@ -16,9 +36,6 @@
 
 **Closed issues:**
 
-- Allow grouping of endpoints [\#1452](https://github.com/locustio/locust/issues/1452)
-- Module object is not callable in locust 0.13.0 [\#1438](https://github.com/locustio/locust/issues/1438)
-- Locust Improvements for recording, reporting and inputs. [\#1416](https://github.com/locustio/locust/issues/1416)
 - Ability to run test\_start on workers. [\#1408](https://github.com/locustio/locust/issues/1408)
 - Ability to Stop Locust Client from within the test script [\#1192](https://github.com/locustio/locust/issues/1192)
 
@@ -62,7 +79,6 @@
 **Fixed bugs:**
 
 - Update flask version [\#1394](https://github.com/locustio/locust/issues/1394)
-- 'Module' object is not callable [\#1387](https://github.com/locustio/locust/issues/1387)
 - Got "unknown user exception" when use --step-load and --step-clients [\#1385](https://github.com/locustio/locust/issues/1385)
 - SequentialTaskSet is broken when using local class members \(headless mode\) [\#1379](https://github.com/locustio/locust/issues/1379)
 - FastHttpLocust + SNI [\#1369](https://github.com/locustio/locust/issues/1369)

@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.1.1
+=====
+
+* --run-time flag is not respected if there is an exception in a test_stop listener
+* FastHttpUser: Handle stream ended at an unexpected time and UnicodeDecodeError. Show bad/error status codes on failures page.
+* Improve logging when locust master port is busy
+
 1.1
 ===
 
