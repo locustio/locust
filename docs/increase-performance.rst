@@ -18,6 +18,9 @@ per CPU core will automatically increase 5x-6x, since it also depends on what el
 the load testing script does. However, if your locust scripts are spending most of their 
 CPU time in making HTTP-requests, you are likely to see significant performance gains.
 
+It is impossible to say what your particular hardware can handle, but in a *best case* scenario
+you should be able to do close to 5000 requests per second per core, instead of around 850 for 
+the normal HttpUser (tested on a 2018 MacBook Pro i7 2.6GHz)
 
 How to use FastHttpUser
 ===========================
