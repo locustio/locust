@@ -36,7 +36,7 @@ absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
 # List of exceptions that can be raised by geventhttpclient when sending an HTTP request, 
 # and that should result in a Locust failure
-FAILURE_EXCEPTIONS = (ConnectionError, ConnectionRefusedError, socket.error, \
+FAILURE_EXCEPTIONS = (ConnectionError, ConnectionRefusedError, ConnectionResetError, socket.error, \
                       SSLError, Timeout, HTTPConnectionClosed)
 
 
