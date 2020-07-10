@@ -773,7 +773,7 @@ def requests_csv(stats, csv_writer):
         "Average Content Size",
         "Requests/s",
         "Failures/s"]
-    headers.extend([f'"{percentile}%"' for percentile in PERCENTILES_TO_REPORT])
+    headers.extend([f'"{percentile*100}%"' for percentile in PERCENTILES_TO_REPORT])
     csv_writer.writerow(headers)
 
     for s in chain(sort_stats(stats.entries), [stats.total]):
