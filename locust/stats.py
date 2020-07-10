@@ -699,7 +699,7 @@ def print_stats(stats, current=True):
 
 def print_percentile_stats(stats):
     console_logger.info("Percentage of the requests completed within given times")
-    headers = ('Type', 'Name', '# reqs') + tuple([f"{percentile*100}%" for percentile in PERCENTILES_TO_REPORT])
+    headers = ('Type', 'Name', '# reqs') + tuple([f"{round(percentile*100, 4)}%" for percentile in PERCENTILES_TO_REPORT])
     console_logger.info((f" %-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
                          f"{' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}") % headers)
     console_logger.info("-" * (90 + STATS_NAME_WIDTH))
@@ -773,7 +773,7 @@ def requests_csv(stats, csv_writer):
         "Average Content Size",
         "Requests/s",
         "Failures/s"]
-    headers.extend([f'"{percentile*100}%"' for percentile in PERCENTILES_TO_REPORT])
+    headers.extend([f'"{round(percentile*100, 4)}%"' for percentile in PERCENTILES_TO_REPORT])
     csv_writer.writerow(headers)
 
     for s in chain(sort_stats(stats.entries), [stats.total]):
