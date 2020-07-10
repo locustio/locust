@@ -569,7 +569,7 @@ class StatsEntry(object):
         if not self.num_requests:
             raise ValueError("Can't calculate percentile on url with no successful requests")
 
-        tpl = " %-" + str(STATS_TYPE_WIDTH) + "s %-" + str(STATS_NAME_WIDTH) + "s %8d " + " ".join(["%6d"] * len(PERCENTILES_TO_REPORT))
+        tpl = f" %-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8d {' '.join(['%6d'] * len(PERCENTILES_TO_REPORT))}"
 
         return tpl % ((self.method, self.name, self.num_requests)
                       + tuple([self.get_response_time_percentile(p) for p in PERCENTILES_TO_REPORT]))
@@ -700,8 +700,8 @@ def print_stats(stats, current=True):
 def print_percentile_stats(stats):
     console_logger.info("Percentage of the requests completed within given times")
     headers = ('Type', 'Name', '# reqs') + tuple([f"{percentile*100}%" for percentile in PERCENTILES_TO_REPORT])
-    console_logger.info((" %-" + str(STATS_TYPE_WIDTH) + "s %-" + str(STATS_NAME_WIDTH) + "s %8s "
-                         + " ".join(["%6s"] * len(PERCENTILES_TO_REPORT))) % headers)
+    console_logger.info((f" %-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
+                         f"{' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}") % headers)
     console_logger.info("-" * (90 + STATS_NAME_WIDTH))
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
