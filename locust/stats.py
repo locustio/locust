@@ -565,27 +565,15 @@ class StatsEntry(object):
                 percent,
             )
     
-    def percentile(self, tpl=" %-" + str(STATS_TYPE_WIDTH) + "s %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
+    def percentile(self):
         if not self.num_requests:
             raise ValueError("Can't calculate percentile on url with no successful requests")
-        
-        return tpl % (
-            self.method,
-            self.name,
-            self.num_requests,
-            self.get_response_time_percentile(0.5),
-            self.get_response_time_percentile(0.66),
-            self.get_response_time_percentile(0.75),
-            self.get_response_time_percentile(0.80),
-            self.get_response_time_percentile(0.90),
-            self.get_response_time_percentile(0.95),
-            self.get_response_time_percentile(0.98),
-            self.get_response_time_percentile(0.99),
-            self.get_response_time_percentile(0.999),
-            self.get_response_time_percentile(0.9999),
-            self.get_response_time_percentile(1.00)
-        )
-    
+
+        tpl = " %-" + str(STATS_TYPE_WIDTH) + "s %-" + str(STATS_NAME_WIDTH) + "s %8d " + " ".join(["%6d"] * len(PERCENTILES_TO_REPORT))
+
+        return tpl % ((self.method, self.name, self.num_requests)
+                      + tuple([self.get_response_time_percentile(p) for p in PERCENTILES_TO_REPORT]))
+
     def _cache_response_times(self, t):
         self.response_times_cache[t] = CachedResponseTimes(
             response_times=copy(self.response_times),
@@ -711,22 +699,9 @@ def print_stats(stats, current=True):
 
 def print_percentile_stats(stats):
     console_logger.info("Percentage of the requests completed within given times")
-    console_logger.info((" %-" + str(STATS_TYPE_WIDTH) + "s %-" + str(STATS_NAME_WIDTH) + "s %8s %6s %6s %6s %6s %6s %6s %6s %6s %6s %6s %6s") % (
-        'Type',
-        'Name',
-        '# reqs',
-        '50%',
-        '66%',
-        '75%',
-        '80%',
-        '90%',
-        '95%',
-        '98%',
-        '99%',
-        '99.9%',
-        '99.99%',
-        '100%',
-    ))
+    headers = ('Type', 'Name', '# reqs') + tuple([f"{percentile*100}%" for percentile in PERCENTILES_TO_REPORT])
+    console_logger.info((" %-" + str(STATS_TYPE_WIDTH) + "s %-" + str(STATS_NAME_WIDTH) + "s %8s "
+                         + " ".join(["%6s"] * len(PERCENTILES_TO_REPORT))) % headers)
     console_logger.info("-" * (90 + STATS_NAME_WIDTH))
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
@@ -737,6 +712,7 @@ def print_percentile_stats(stats):
     if stats.total.response_times:
         console_logger.info(stats.total.percentile())
     console_logger.info("")
+
 
 def print_error_report(stats):
     if not len(stats.errors):
@@ -785,7 +761,7 @@ def sort_stats(stats):
 
 def requests_csv(stats, csv_writer):
     """Returns the contents of the 'requests' & 'distribution' tab as CSV."""
-    csv_writer.writerow([
+    headers = [
         "Type",
         "Name",
         "Request Count",
@@ -796,20 +772,9 @@ def requests_csv(stats, csv_writer):
         "Max Response Time",
         "Average Content Size",
         "Requests/s",
-        "Failures/s",
-        "50%",
-        "66%",
-        "75%",
-        "80%",
-        "90%",
-        "95%",
-        "98%",
-        "99%",
-        "99.9%",
-        "99.99%",
-        "99.999%",
-        "100%",
-    ])
+        "Failures/s"]
+    headers.extend([f'"{percentile}%"' for percentile in PERCENTILES_TO_REPORT])
+    csv_writer.writerow(headers)
 
     for s in chain(sort_stats(stats.entries), [stats.total]):
         if s.num_requests:
