@@ -11,7 +11,7 @@ import locust
 from locust import HttpUser, TaskSet, task, User, constant
 from locust.env import Environment
 from locust.rpc.protocol import Message
-from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_response_time_dicts, stats_writer
+from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_response_time_dicts, stats_writer, PERCENTILES_TO_REPORT
 from locust.test.testcases import LocustTestCase
 from locust.user.inspectuser import get_task_ratio_dict
 
@@ -221,14 +221,14 @@ class TestRequestStats(unittest.TestCase):
     def test_percentile_rounded_down(self):
         s1 = StatsEntry(self.stats, "rounding down!", "GET")
         s1.log(122, 0)    # (rounded 120) min
-        actual_percentile = s1.percentile()
-        self.assertEqual(actual_percentile, " GET                  rounding down!                                                      1    120    120    120    120    120    120    120    120    120    120    120")
+        actual_percentile = s1.percentile().split()
+        self.assertEqual(actual_percentile, ['GET', 'rounding', 'down!', '1'] + ['120'] * len(PERCENTILES_TO_REPORT))
 
     def test_percentile_rounded_up(self):
         s2 = StatsEntry(self.stats, "rounding up!", "GET")
         s2.log(127, 0)    # (rounded 130) min
-        actual_percentile = s2.percentile()
-        self.assertEqual(actual_percentile, " GET                  rounding up!                                                        1    130    130    130    130    130    130    130    130    130    130    130")
+        actual_percentile = s2.percentile().split()
+        self.assertEqual(actual_percentile, ['GET', 'rounding', 'up!', '1'] + ['130'] * len(PERCENTILES_TO_REPORT))
 
     def test_error_grouping(self):
         # reset stats
