@@ -21,11 +21,15 @@ from .test_runners import mocked_rpc
 
 class TestRequestStats(unittest.TestCase):
     def setUp(self):
+        locust.stats.PERCENTILES_TO_REPORT = PERCENTILES_TO_REPORT
         self.stats = RequestStats()
+
         def log(response_time, size):
             self.stats.log_request("GET", "test_entry", response_time, size)
+
         def log_error(exc):
             self.stats.log_error("GET", "test_entry", exc)
+
         log(45, 1)
         log(135, 1)
         log(44, 1)
@@ -229,6 +233,14 @@ class TestRequestStats(unittest.TestCase):
         s2.log(127, 0)    # (rounded 130) min
         actual_percentile = s2.percentile().split()
         self.assertEqual(actual_percentile, ['GET', 'rounding', 'up!', '1'] + ['130'] * len(PERCENTILES_TO_REPORT))
+
+    def test_custom_percentile_list(self):
+        s = StatsEntry(self.stats, "custom_percentiles", "GET")
+        custom_percentile_list = [0.50, 0.90, 0.95, 0.99]
+        locust.stats.PERCENTILES_TO_REPORT = custom_percentile_list
+        s.log(150, 0)
+        actual_percentile = s.percentile().split()
+        self.assertEqual(actual_percentile, ['GET', 'custom_percentiles', '1'] + ['150'] * len(custom_percentile_list))
 
     def test_error_grouping(self):
         # reset stats
