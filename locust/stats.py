@@ -701,8 +701,8 @@ def print_percentile_stats(stats):
     console_logger.info("Percentage of the requests completed within given times")
     headers = ('Type', 'Name', '# reqs') + tuple([f"{round(percentile*100, 4)}%" for percentile in PERCENTILES_TO_REPORT])
     console_logger.info((f" %-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
-                         f"{' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}") % headers)
-    separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 9}|{("-" * 6 + "|") * len(PERCENTILES_TO_REPORT)}'
+                         f"{' '.join(['%7s'] * len(PERCENTILES_TO_REPORT))}") % headers)
+    separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 9}|{("-" * 7 + "|") * len(PERCENTILES_TO_REPORT)}'
     console_logger.info(separator)
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
