@@ -76,3 +76,8 @@ All available configuration options
 Here's a table of all the available configuration options, and their corresponding Environment and config file keys:
 
 .. include:: config-options.rst
+
+Customization of statistics settings
+------------------------------------
+
+.. include:: stats-customization.rst
