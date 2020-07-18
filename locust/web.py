@@ -22,6 +22,7 @@ from .stats import failures_csv, requests_csv, sort_stats
 from .util.cache import memoize
 from .util.rounding import proper_round
 from .util.timespan import parse_timespan
+from .util.service import get_service_name
 
 
 logger = logging.getLogger(__name__)
@@ -144,9 +145,11 @@ class WebUI:
             assert request.method == "POST"
             user_count = int(request.form["user_count"])
             hatch_rate = float(request.form["hatch_rate"])
-            if (request.form.get("host")):
-                environment.host = str(request.form["host"])
-        
+            # not allowing services to override host
+            # making the change so that people don't test random service and env
+            #if (request.form.get("host")):
+               # environment.host = str(request.form["host"])
+
             if environment.step_load:
                 step_user_count = int(request.form["step_user_count"])
                 step_duration = parse_timespan(str(request.form["step_duration"]))
@@ -176,7 +179,7 @@ class WebUI:
             writer = csv.writer(data)
             requests_csv(self.environment.runner.stats, writer)
             response = make_response(data.getvalue())
-            file_name = "requests_{0}.csv".format(time())
+            file_name = get_service_name(environment.host)+"requests_{0}.csv".format(time())
             disposition = "attachment;filename={0}".format(file_name)
             response.headers["Content-type"] = "text/csv"
             response.headers["Content-disposition"] = disposition
@@ -189,7 +192,7 @@ class WebUI:
             writer = csv.writer(data)
             failures_csv(self.environment.runner.stats, writer)
             response = make_response(data.getvalue())
-            file_name = "failures_{0}.csv".format(time())
+            file_name = get_service_name(environment.host)+"failures_{0}.csv".format(time())
             disposition = "attachment;filename={0}".format(file_name)
             response.headers["Content-type"] = "text/csv"
             response.headers["Content-disposition"] = disposition
@@ -275,7 +278,7 @@ class WebUI:
                 writer.writerow([exc["count"], exc["msg"], exc["traceback"], nodes])
 
             response = make_response(data.getvalue())
-            file_name = "exceptions_{0}.csv".format(time())
+            file_name = get_service_name(environment.host)+"exceptions_{0}.csv".format(time())
             disposition = "attachment;filename={0}".format(file_name)
             response.headers["Content-type"] = "text/csv"
             response.headers["Content-disposition"] = disposition
