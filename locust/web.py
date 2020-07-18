@@ -170,13 +170,14 @@ class WebUI:
                 # writer = csv.writer(data)
                 # requests_csv(self.environment.runner.stats, writer)
                 service_name = get_service_name(environment.host)
-                send_to_slack(
-                    text="Load test Request Stats Report for "+service_name,
-                    file_name="request_stats_{0}_{1}".format(service_name, time()),
-                    content=data
-                )
+                # send_to_slack(
+                #     text="Load test Request Stats Report for "+service_name,
+                #     file_name="request_stats_{0}_{1}".format(service_name, time()),
+                #     content=data
+                # )
             except:
-                traceback.print_stack()
+                #traceback.print_stack()
+                logger.error("Failed to send reports")
             environment.runner.stop()
             return jsonify({'success':True, 'message': 'Test stopped'})
         
