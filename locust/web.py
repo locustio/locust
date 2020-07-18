@@ -179,7 +179,7 @@ class WebUI:
             writer = csv.writer(data)
             requests_csv(self.environment.runner.stats, writer)
             response = make_response(data.getvalue())
-            file_name = get_service_name(environment.host)+"requests_{0}.csv".format(time())
+            file_name = get_service_name(environment.host)+"_requests_{0}.csv".format(time())
             disposition = "attachment;filename={0}".format(file_name)
             response.headers["Content-type"] = "text/csv"
             response.headers["Content-disposition"] = disposition
@@ -192,7 +192,7 @@ class WebUI:
             writer = csv.writer(data)
             failures_csv(self.environment.runner.stats, writer)
             response = make_response(data.getvalue())
-            file_name = get_service_name(environment.host)+"failures_{0}.csv".format(time())
+            file_name = get_service_name(environment.host)+"_failures_{0}.csv".format(time())
             disposition = "attachment;filename={0}".format(file_name)
             response.headers["Content-type"] = "text/csv"
             response.headers["Content-disposition"] = disposition
@@ -278,7 +278,7 @@ class WebUI:
                 writer.writerow([exc["count"], exc["msg"], exc["traceback"], nodes])
 
             response = make_response(data.getvalue())
-            file_name = get_service_name(environment.host)+"exceptions_{0}.csv".format(time())
+            file_name = get_service_name(environment.host)+"_exceptions_{0}.csv".format(time())
             disposition = "attachment;filename={0}".format(file_name)
             response.headers["Content-type"] = "text/csv"
             response.headers["Content-disposition"] = disposition
