@@ -166,9 +166,6 @@ class WebUI:
         def stop():
             environment.runner.stop()
             environment.runner.quit()
-            self.greenlet.kill(block=True)
-            self.stop()
-
             return jsonify({'success':True, 'message': 'Test stopped'})
         
         @app.route("/stats/reset")
