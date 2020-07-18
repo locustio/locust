@@ -23,6 +23,7 @@ from .util.cache import memoize
 from .util.rounding import proper_round
 from .util.timespan import parse_timespan
 from .util.service import get_service_name
+from .util.slack import send_to_slack
 
 
 logger = logging.getLogger(__name__)
@@ -162,6 +163,16 @@ class WebUI:
         @app.route('/stop')
         @self.auth_required_if_enabled
         def stop():
+            # send reports
+            data = request_stats()
+            writer = csv.writer(data)
+            requests_csv(self.environment.runner.stats, writer)
+            service_name = get_service_name(environment.host)
+            send_to_slack(
+                text="Load test Request Stats Report for "+service_name,
+                file_name="request_stats_{0}_{1}".format(service_name, time()),
+                content=data.getvalue()
+            )
             environment.runner.stop()
             return jsonify({'success':True, 'message': 'Test stopped'})
         

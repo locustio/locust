@@ -4,6 +4,7 @@ from .stats import RequestStats
 from .runners import LocalRunner, MasterRunner, WorkerRunner
 from .web import WebUI
 from .user.task import filter_tasks_by_tags
+import os
 
 
 class Environment:
@@ -12,10 +13,10 @@ class Environment:
     Event hooks used by Locust internally, as well as to extend Locust's functionality
     See :ref:`events` for available events.
     """
-    
+
     user_classes = []
     """User classes that the runner will run"""
-    
+
     tags = None
     """If set, only tasks that are tagged by tags in this list will be executed"""
 
@@ -24,34 +25,37 @@ class Environment:
 
     stats = None
     """Reference to RequestStats instance"""
-    
+
     runner = None
     """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
-    
+
     web_ui = None
     """Reference to the WebUI instance"""
-    
+
     host = None
     """Base URL of the target system"""
-    
+
+    slack_token = None
+    """Slack token of the configured service"""
+
     reset_stats = False
     """Determines if stats should be reset once all simulated users have been spawned"""
-    
+
     step_load = False
     """Determines if we're running in step load mode"""
-    
+
     stop_timeout = None
     """
     If set, the runner will try to stop the runnning users gracefully and wait this many seconds 
     before killing them hard.
     """
-    
+
     catch_exceptions = True
     """
     If True exceptions that happen within running users will be catched (and reported in UI/console).
     If False, exeptions will be raised.
     """
-    
+
     process_exit_code: int = None
     """
     If set it'll be the exit code of the Locust process
@@ -59,25 +63,28 @@ class Environment:
 
     parsed_options = None
     """Optional reference to the parsed command line options (used to pre-populate fields in Web UI)"""
-    
-    def  __init__(
-        self, *,
-        user_classes=[],
-        tags=None,
-        exclude_tags=None,
-        events=None, 
-        host=None, 
-        reset_stats=False, 
-        step_load=False, 
-        stop_timeout=None,
-        catch_exceptions=True,
-        parsed_options=None,
+
+    def __init__(
+            self, *,
+            user_classes=[],
+            tags=None,
+            exclude_tags=None,
+            events=None,
+            host=None,
+            reset_stats=False,
+            step_load=False,
+            stop_timeout=None,
+            catch_exceptions=True,
+            parsed_options=None,
     ):
         if events:
             self.events = events
         else:
             self.events = Events()
-        
+        try:
+            self.slack_token = os.environ['SLACK_TOKEN']
+        except:
+            print("Unable to load slack token")
         self.user_classes = user_classes
         self.tags = tags
         self.exclude_tags = exclude_tags
@@ -90,19 +97,19 @@ class Environment:
         self.parsed_options = parsed_options
 
         self._filter_tasks_by_tags()
-    
+
     def _create_runner(self, runner_class, *args, **kwargs):
         if self.runner is not None:
             raise RunnerAlreadyExistsError("Environment.runner already exists (%s)" % self.runner)
         self.runner = runner_class(self, *args, **kwargs)
         return self.runner
-    
+
     def create_local_runner(self):
         """
         Create a :class:`LocalRunner <locust.runners.LocalRunner>` instance for this Environment
         """
         return self._create_runner(LocalRunner)
-        
+
     def create_master_runner(self, master_bind_host="*", master_bind_port=5557):
         """
         Create a :class:`MasterRunner <locust.runners.MasterRunner>` instance for this Environment
@@ -116,7 +123,7 @@ class Environment:
             master_bind_host=master_bind_host,
             master_bind_port=master_bind_port,
         )
-    
+
     def create_worker_runner(self, master_host, master_port):
         """
         Create a :class:`WorkerRunner <locust.runners.WorkerRunner>` instance for this Environment
@@ -148,7 +155,7 @@ class Environment:
         """
         self.web_ui = WebUI(self, host, port, auth_credentials=auth_credentials, tls_cert=tls_cert, tls_key=tls_key)
         return self.web_ui
-    
+
     def _filter_tasks_by_tags(self):
         """
         Filter the tasks on all the user_classes recursively, according to the tags and

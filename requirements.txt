@@ -1,0 +1,14 @@
+locust~=1.1.1
+pyzmq~=19.0.1
+msgpack~=1.0.0
+cryptography~=2.9.2
+mock~=4.0.2
+gevent~=20.6.2
+requests~=2.24.0
+pyquery~=1.4.1
+Flask~=1.1.2
+pyslack~=0.5.0
+geventhttpclient~=1.4.4
+psutil~=5.7.2
+ConfigArgParse~=1.2.3
+setuptools~=49.2.0
