@@ -18,7 +18,7 @@ async def send_to_slack(text, file_name, content):
         response = client.files_upload(
             channels=slack_channel,
             content=content,
-            file_name= file_name,
+            file_name=file_name,
             initial_comment=text
         )
         assert response["file"]
