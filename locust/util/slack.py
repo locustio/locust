@@ -12,12 +12,13 @@ slack_channel = "#udaan-locust-reports"
 
 
 # Define this as an async function
-async def send_to_slack(text, content):
+async def send_to_slack(text, file_name, content):
     try:
         # Don't forget to have await as the client returns asyncio.Future
         response = client.files_upload(
             channels=slack_channel,
             content=content,
+            file_name= file_name,
             initial_comment=text
         )
         assert response["file"]

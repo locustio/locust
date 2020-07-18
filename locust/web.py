@@ -174,7 +174,7 @@ class WebUI:
                     text="Load test Request Stats Report for "+service_name,
                     file_name="request_stats_{0}_{1}".format(service_name, time()),
                     content=data.getvalue()
-                ).__await__()
+                )
             except:
                 traceback.print_stack()
             environment.runner.stop()
