@@ -113,7 +113,7 @@
                     <li><a href="#">Exceptions</a></li>
                     <li><a href="#">Download Data</a></li>
                     {% if is_distributed %}
-                    <li><a href="#">Workers</a></li>
+                    <li><a href="#workers-tab">Workers</a></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -173,7 +173,7 @@
                         <a href="./exceptions/csv">Download exceptions CSV</a>
                     </div>
                 </div>
-                <div style="display:none;">
+                <div id=workers-tab" style="display:none;">
                     <table id="workers">
                         <thead>
                             <tr>
