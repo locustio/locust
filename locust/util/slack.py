@@ -4,15 +4,15 @@ from slack.errors import SlackApiError
 
 client = WebClient(
     token=os.environ['SLACK_TOKEN'],
-    run_async=True  # turn async mode on
+    run_async=False  # turn async mode on
 )
 # hardcoding the channel name for now,
 # will provide provision of proving channel name later
-slack_channel = "udaan-locust-reports"
+slack_channel = "#udaan-locust-reports"
 
 
 # Define this as an async function
-async def send_to_slack(text, file_name, content):
+async def send_to_slack(text, content):
     try:
         # Don't forget to have await as the client returns asyncio.Future
         response = client.files_upload(
