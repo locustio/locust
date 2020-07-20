@@ -164,7 +164,7 @@ class HttpSession(requests.Session):
         Safe mode has been removed from requests 1.x.
         """
         try:
-            return requests.Session.request(self, method, url, **kwargs)
+            return super().request(method, url, **kwargs)
         except (MissingSchema, InvalidSchema, InvalidURL):
             raise
         except RequestException as e:
