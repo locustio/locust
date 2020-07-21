@@ -6,11 +6,11 @@ import textwrap
 import configargparse
 
 import locust
+import mmap
 
 version = locust.__version__
 
-
-DEFAULT_CONFIG_FILES = ['~/.locust.conf','locust.conf']
+DEFAULT_CONFIG_FILES = ['~/.locust.conf', 'locust.conf']
 
 
 def _is_package(path):
@@ -18,9 +18,10 @@ def _is_package(path):
     Is the given path a Python package?
     """
     return (
-        os.path.isdir(path)
-        and os.path.exists(os.path.join(path, '__init__.py'))
+            os.path.isdir(path)
+            and os.path.exists(os.path.join(path, '__init__.py'))
     )
+
 
 def find_locustfile(locustfile):
     """
@@ -58,7 +59,7 @@ def find_locustfile(locustfile):
 
 def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG_FILES):
     parser = configargparse.ArgumentParser(
-        default_config_files=default_config_files, 
+        default_config_files=default_config_files,
         add_env_var_help=False,
         add_config_file_help=False,
         add_help=add_help,
@@ -68,7 +69,7 @@ def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG
             Usage: locust [OPTIONS] [UserClass ...]
             
         """),
-        #epilog="",
+        # epilog="",
     )
     parser.add_argument(
         '-f', '--locustfile',
@@ -86,7 +87,7 @@ def parse_locustfile_option(args=None):
     Construct a command line parser that is only used to parse the -f argument so that we can 
     import the test scripts in case any of them adds additional command line arguments to the 
     parser
-    """    
+    """
     parser = get_empty_argument_parser(add_help=False)
     parser.add_argument(
         '-h', '--help',
@@ -98,22 +99,31 @@ def parse_locustfile_option(args=None):
         action='store_true',
         default=False,
     )
-    
+
     options, _ = parser.parse_known_args(args=args)
-    
+
     locustfile = find_locustfile(options.locustfile)
-    
+
     if not locustfile:
         if options.help or options.version:
             # if --help or --version is specified we'll call parse_options which will print the help/version message
             parse_options(args=args)
-        sys.stderr.write("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.\n")
+        sys.stderr.write(
+            "Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.\n")
         sys.exit(1)
-    
+
     if locustfile == "locust.py":
         sys.stderr.write("The locustfile must not be named `locust.py`. Please rename the file and try again.\n")
         sys.exit(1)
-        
+
+    # added check for enforcing people not to use svc-hacks urls
+    # this would prevent users do test prod env from dev infra as well
+    if locustfile:
+        with open(locustfile, 'rb', 0) as file, \
+                mmap.mmap(file.fileno(), 0, access=mmap.ACCESS_READ) as s:
+            if s.find(b'svc-hack.') != -1:
+                sys.stderr.write("You cannot use svc-hack urls for load testing.\n")
+            sys.exit(1)
     return locustfile
 
 
@@ -154,7 +164,7 @@ def setup_parser_arguments(parser):
         dest='list_commands',
         help="Show list of possible User classes and exit",
     )
-    
+
     web_ui_group = parser.add_argument_group("Web UI options")
     web_ui_group.add_argument(
         '--web-host',
@@ -195,9 +205,9 @@ def setup_parser_arguments(parser):
         help="Optional path to TLS private key to use to serve over HTTPS",
         env_var="LOCUST_TLS_KEY",
     )
-    
+
     master_group = parser.add_argument_group(
-        "Master options", 
+        "Master options",
         "Options for running a Locust Master node when running Locust distributed. A Master node need Worker nodes that connect to it before it can run load tests.",
     )
     # if locust should be run in distributed mode as master
@@ -232,9 +242,9 @@ def setup_parser_arguments(parser):
         action='store_true',
         help=configargparse.SUPPRESS,
     )
-    
+
     worker_group = parser.add_argument_group(
-        "Worker options", 
+        "Worker options",
         textwrap.dedent("""
             Options for running a Locust Worker node when running Locust distributed. 
             Only the LOCUSTFILE (-f option) need to be specified when starting a Worker, since other options such as -u, -r, -t are specified on the Master node.
@@ -268,8 +278,9 @@ def setup_parser_arguments(parser):
         env_var="LOCUST_MASTER_NODE_PORT",
         metavar="MASTER_NODE_PORT",
     )
-    
-    tag_group = parser.add_argument_group("Tag options", "Locust tasks can be tagged using the @tag decorator. These options let specify which tasks to include or exclude during a test.")
+
+    tag_group = parser.add_argument_group("Tag options",
+                                          "Locust tasks can be tagged using the @tag decorator. These options let specify which tasks to include or exclude during a test.")
     tag_group.add_argument(
         '-T', '--tags',
         nargs='*',
@@ -284,7 +295,7 @@ def setup_parser_arguments(parser):
         env_var="LOCUST_EXCLUDE_TAGS",
         help="List of tags to exclude from the test, so only tasks with no matching tags will be executed"
     )
-    
+
     stats_group = parser.add_argument_group("Request statistics options")
     stats_group.add_argument(
         '--csv',
@@ -299,7 +310,7 @@ def setup_parser_arguments(parser):
         dest='stats_history_enabled',
         help="Store each stats entry in CSV format to _stats_history.csv file",
         env_var="LOCUST_CSV_FULL_HISTORY",
-    )    
+    )
     stats_group.add_argument(
         '--print-stats',
         action='store_true',
@@ -307,10 +318,10 @@ def setup_parser_arguments(parser):
         env_var="LOCUST_PRINT_STATS",
     )
     stats_group.add_argument(
-       '--only-summary',
-       action='store_true',
-       help='Only print the summary stats',
-       env_var="LOCUST_ONLY_SUMMARY",
+        '--only-summary',
+        action='store_true',
+        help='Only print the summary stats',
+        env_var="LOCUST_ONLY_SUMMARY",
     )
     stats_group.add_argument(
         '--reset-stats',
@@ -318,7 +329,7 @@ def setup_parser_arguments(parser):
         help="Reset statistics once hatching has been completed. Should be set on both master and workers when running in distributed mode",
         env_var="LOCUST_RESET_STATS",
     )
-    
+
     log_group = parser.add_argument_group("Logging options")
     log_group.add_argument(
         '--skip-log-setup',
@@ -339,7 +350,7 @@ def setup_parser_arguments(parser):
         help="Path to log file. If not set, log will go to stdout/stderr",
         env_var="LOCUST_LOGFILE",
     )
-    
+
     step_load_group = parser.add_argument_group("Step load options")
     step_load_group.add_argument(
         '--step-load',
@@ -363,8 +374,7 @@ def setup_parser_arguments(parser):
         help="Step duration in Step Load mode, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --step-load",
         env_var="LOCUST_STEP_TIME",
     )
-    
-    
+
     other_group = parser.add_argument_group("Other options")
     other_group.add_argument(
         '--show-task-ratio',
@@ -399,7 +409,7 @@ def setup_parser_arguments(parser):
         help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. This parameter only needs to be specified for the master process when running Locust distributed.",
         env_var="LOCUST_STOP_TIMEOUT",
     )
-    
+
     user_classes_group = parser.add_argument_group("User classes")
     user_classes_group.add_argument(
         'user_classes',
@@ -407,6 +417,7 @@ def setup_parser_arguments(parser):
         metavar='UserClass',
         help="Optionally specify which User classes that should be used (available User classes can be listed with -l or --list)",
     )
+
 
 def get_parser(default_config_files=DEFAULT_CONFIG_FILES):
     # get a parser that is only able to parse the -f argument
