@@ -116,14 +116,6 @@ def parse_locustfile_option(args=None):
         sys.stderr.write("The locustfile must not be named `locust.py`. Please rename the file and try again.\n")
         sys.exit(1)
 
-    # added check for enforcing people not to use svc-hacks urls
-    # this would prevent users do test prod env from dev infra as well
-    if locustfile:
-        with open(locustfile, 'rb', 0) as file, \
-                mmap.mmap(file.fileno(), 0, access=mmap.ACCESS_READ) as s:
-            if s.find(b'svc-hack.') != -1:
-                sys.stderr.write("You cannot use svc-hack urls for load testing.\n")
-            sys.exit(1)
     return locustfile
 
 
