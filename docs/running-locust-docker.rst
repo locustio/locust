@@ -6,7 +6,7 @@ Running Locust with Docker
 
 The official Docker image is currently found at `locustio/locust <https://hub.docker.com/r/locustio/locust>`_.
 
-The docker image can be used like this (assuming that the ``locustifile.py`` exists in the current working directory)::
+The docker image can be used like this (assuming that the ``locustfile.py`` exists in the current working directory)::
 
     docker run -p 8089:8089 -v $PWD:/mnt/locust locustio/locust -f /mnt/locust/locustfile.py
 
