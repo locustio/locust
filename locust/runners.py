@@ -102,7 +102,7 @@ class Runner(object):
     def cpu_log_warning(self):
         """Called at the end of the test to repeat the warning & return the status"""
         if self.cpu_warning_emitted:
-            logger.warning("Loadgen CPU usage was too high at some point during the test! See https://docs.locust.io/en/stable/running-locust-distributed.html for how to distribute the load over multiple CPU cores or machines")
+            logger.warning("CPU usage was too high at some point during the test! See https://docs.locust.io/en/stable/running-locust-distributed.html for how to distribute the load over multiple CPU cores or machines")
             return True
         return False
 
@@ -213,7 +213,7 @@ class Runner(object):
         while True:
             self.current_cpu_usage = process.cpu_percent()
             if self.current_cpu_usage > 90 and not self.cpu_warning_emitted:
-                logging.warning("Loadgen CPU usage above 90%! This may constrain your throughput and may even give inconsistent response time measurements! See https://docs.locust.io/en/stable/running-locust-distributed.html for how to distribute the load over multiple CPU cores or machines")
+                logging.warning("CPU usage above 90%! This may constrain your throughput and may even give inconsistent response time measurements! See https://docs.locust.io/en/stable/running-locust-distributed.html for how to distribute the load over multiple CPU cores or machines")
                 self.cpu_warning_emitted = True
             gevent.sleep(CPU_MONITOR_INTERVAL)
 
