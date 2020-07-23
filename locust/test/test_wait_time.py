@@ -47,9 +47,9 @@ class TestWaitTime(LocustTestCase):
         self.assertEqual(0, MyUser(self.environment).wait_time())
         self.assertEqual(0, TaskSet1(MyUser(self.environment)).wait_time())
         taskset = TaskSet1(MyUser(self.environment))
-        start_time = time.time()
+        start_time = time.monotonic()
         taskset.wait()
-        self.assertLess(time.time() - start_time, 0.002)
+        self.assertLess(time.monotonic() - start_time, 0.002)
     
     def test_constant_pacing(self):
         class MyUser(User):
@@ -60,12 +60,12 @@ class TestWaitTime(LocustTestCase):
         
         ts2 = TS(MyUser(self.environment))
         
-        previous_time = time.time()
+        previous_time = time.monotonic()
         for i in range(7):
             ts.wait()
-            since_last_run = time.time() - previous_time
+            since_last_run = time.monotonic() - previous_time
             self.assertLess(abs(0.1 - since_last_run), 0.02)
-            previous_time = time.time()
+            previous_time = time.monotonic()
             time.sleep(random.random() * 0.1)
             _ = ts2.wait_time()
             _ = ts2.wait_time()
