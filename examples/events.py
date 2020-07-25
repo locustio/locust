@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This is an example of a locustfile that uses Locust's built in event hooks to 
+This is an example of a locustfile that uses Locust's built in event hooks to
 track the sum of the content-length header in all successful HTTP responses
 """
 
@@ -13,24 +13,26 @@ class MyTaskSet(TaskSet):
     @task(2)
     def index(l):
         l.client.get("/")
-    
+
     @task(1)
     def stats(l):
         l.client.get("/stats/requests")
+
 
 class WebsiteUser(HttpUser):
     host = "http://127.0.0.1:8089"
     wait_time = between(2, 5)
     tasks = [MyTaskSet]
-    
 
-stats = {"content-length":0}
+
+stats = {"content-length": 0}
+
 
 @events.init.add_listener
 def locust_init(environment, **kwargs):
     """
     We need somewhere to store the stats.
-    
+
     On the master node stats will contain the aggregated sum of all content-lengths,
     while on the worker nodes this will be the sum of the content-lengths since the
     last stats report was sent to the master
@@ -43,13 +45,15 @@ def locust_init(environment, **kwargs):
             Add a route to the Locust web app, where we can see the total content-length
             """
             return "Total content-length recieved: %i" % stats["content-length"]
-    
+
+
 @events.request_success.add_listener
 def on_request_success(request_type, name, response_time, response_length):
     """
     Event handler that get triggered on every successful request
     """
     stats["content-length"] += response_length
+
 
 @events.report_to_master.add_listener
 def on_report_to_master(client_id, data):
@@ -60,6 +64,7 @@ def on_report_to_master(client_id, data):
     """
     data["content-length"] = stats["content-length"]
     stats["content-length"] = 0
+
 
 @events.worker_report.add_listener
 def on_worker_report(client_id, data):

@@ -22,9 +22,12 @@ def save_locust_help_output():
     with open(cli_help_output_file, "w") as f:
         f.write(help_output)
 
+
 save_locust_help_output()
 
 # Generate RST table with help/descriptions for all available environment variables
+
+
 def save_locust_env_variables():
     env_options_output_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "config-options.rst")
     print("Generating RST table for Locust environment variables and storing in %s" % env_options_output_file)
@@ -33,27 +36,26 @@ def save_locust_env_variables():
     table_data = []
     for action in parser._actions:
         if action.env_var:
-            table_data.append((
-                ", ".join(["``%s``" % c for c in action.option_strings]), 
-                "``%s``" % action.env_var, 
-                ", ".join(["``%s``" % c for c in parser.get_possible_config_keys(action) if not c.startswith("--")]),
-                action.help,
-            ))
+            table_data.append(
+                (
+                    ", ".join(["``%s``" % c for c in action.option_strings]),
+                    "``%s``" % action.env_var,
+                    ", ".join(
+                        ["``%s``" % c for c in parser.get_possible_config_keys(action) if not c.startswith("--")]
+                    ),
+                    action.help,
+                )
+            )
     colsizes = [max(len(r[i]) for r in table_data) for i in range(len(table_data[0]))]
-    formatter = ' '.join('{:<%d}' % c for c in colsizes)
+    formatter = " ".join("{:<%d}" % c for c in colsizes)
     rows = [formatter.format(*row) for row in table_data]
-    edge = formatter.format(*['=' * c for c in colsizes])
-    divider = formatter.format(*['-' * c for c in colsizes])
+    edge = formatter.format(*["=" * c for c in colsizes])
+    divider = formatter.format(*["-" * c for c in colsizes])
     headline = formatter.format(*["Command line", "Environment", "Config file", "Description"])
-    output = "\n".join([
-        edge,
-        headline,
-        divider,
-        "\n".join(rows),
-        edge,
-    ])
+    output = "\n".join([edge, headline, divider, "\n".join(rows), edge])
     with open(env_options_output_file, "w") as f:
         f.write(output)
+
 
 save_locust_env_variables()
 
@@ -69,29 +71,29 @@ from locust import __version__
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.intersphinx", 'sphinx_search.extension']
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.intersphinx", "sphinx_search.extension"]
 
 # autoclass options
-#autoclass_content = "both"
+# autoclass_content = "both"
 
-autodoc_typehints = 'none' # I would have liked to use 'description' but unfortunately it too is very verbose
+autodoc_typehints = "none"  # I would have liked to use 'description' but unfortunately it too is very verbose
 
 # Add any paths that contain templates here, relative to this directory.
-#templates_path = ["_templates"]
+# templates_path = ["_templates"]
 
 # The suffix of source filenames.
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General substitutions.
-project = 'Locust'
-#copyright = ''
+project = "Locust"
+# copyright = ''
 
 # Intersphinx config
 intersphinx_mapping = {
-    'requests': ('https://requests.readthedocs.io/en/latest/', None),
+    "requests": ("https://requests.readthedocs.io/en/latest/", None),
 }
 
 
@@ -100,12 +102,12 @@ release = __version__
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
-#today = ''
+# today = ''
 # Else, today_fmt is used as the format for a strftime call.
-today_fmt = '%B %d, %Y'
+today_fmt = "%B %d, %Y"
 
 # List of documents that shouldn't be included in the build.
-#unused_docs = []
+# unused_docs = []
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 add_function_parentheses = True
@@ -118,9 +120,9 @@ add_module_names = False
 # output. They are ignored by default.
 show_authors = False
 
-# Sphinx will recurse into subversion configuration folders and try to read  
-# any document file within. These should be ignored. 
-# Note: exclude_dirnames is new in Sphinx 0.5 
+# Sphinx will recurse into subversion configuration folders and try to read
+# any document file within. These should be ignored.
+# Note: exclude_dirnames is new in Sphinx 0.5
 exclude_dirnames = []
 
 # Options for HTML output
@@ -131,11 +133,12 @@ html_file_suffix = ".html"
 
 
 # on_rtd is whether we are on readthedocs.org, this line of code grabbed from docs.readthedocs.org
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+on_rtd = os.environ.get("READTHEDOCS", None) == "True"
 
 if not on_rtd:  # only import and set the theme if we're building docs locally
     import sphinx_rtd_theme
-    html_theme = 'sphinx_rtd_theme'
+
+    html_theme = "sphinx_rtd_theme"
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 
@@ -147,14 +150,14 @@ html_context = {
 
 
 # HTML theme
-#html_theme = "haiku"
+# html_theme = "haiku"
 
-#html_theme = "default"
-#html_theme_options = {
+# html_theme = "default"
+# html_theme_options = {
 #    "rightsidebar": "true",
 #    "codebgcolor": "#fafcfa",
 #    "bodyfont": "Arial",
-#}
+# }
 
 # The name of the Pygments (syntax highlighting) style to use.
-#pygments_style = 'trac'
+# pygments_style = 'trac'
