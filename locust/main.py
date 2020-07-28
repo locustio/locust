@@ -235,13 +235,13 @@ def main():
     if not options.headless and not options.worker:
         # spawn web greenlet
         protocol = "https" if options.tls_cert and options.tls_key else "http"
-        logger.info("Starting web interface at %s://%s:%s" % (protocol, options.web_host, options.web_port))
         try:
             if options.web_host == "*":
                 # special check for "*" so that we're consistent with --master-bind-host
                 web_host = ''
             else:
                 web_host = options.web_host
+            logger.info("Starting web interface at %s://%s:%s" % (protocol, web_host if web_host else '127.0.0.1', options.web_port))
             web_ui = environment.create_web_ui(
                 host=web_host, 
                 port=options.web_port, 
