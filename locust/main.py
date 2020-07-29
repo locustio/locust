@@ -241,7 +241,10 @@ def main():
                 web_host = ''
             else:
                 web_host = options.web_host
-            logger.info("Starting web interface at %s://%s:%s" % (protocol, web_host if web_host else '127.0.0.1', options.web_port))
+            if web_host:
+                logger.info("Starting web interface at %s://%s:%s" % (protocol, web_host, options.web_port))
+            else:
+                logger.info("Starting web interface at %s://0.0.0.0:%s (accepting connections from all network interfaces)" % (protocol, options.web_port))
             web_ui = environment.create_web_ui(
                 host=web_host, 
                 port=options.web_port, 
