@@ -49,6 +49,8 @@ class Runner(object):
         self.state = STATE_INIT
         self.hatching_greenlet = None
         self.stepload_greenlet = None
+        self.shaper_greenlet = None
+        self.shaper_last_state = None
         self.current_cpu_usage = 0
         self.cpu_warning_emitted = False
         self.greenlet.spawn(self.monitor_cpu).link_exception(greenlet_exception_handler)
@@ -245,6 +247,8 @@ class Runner(object):
                      If False (the default), a greenlet that spawns the users will be 
                      started and the call to this method will return immediately.
         """
+        print('Runner start')
+
         if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
             self.stats.clear_all()
             self.exceptions = {}
@@ -293,6 +297,35 @@ class Runner(object):
             self.start(current_num_users, hatch_rate)
             logger.info('Step loading: start hatch job of %d user.' % (current_num_users))
             gevent.sleep(step_duration)
+
+    def start_shaper(self):
+        print('start_shaper')
+        if self.shaper_greenlet:
+            logger.info("There is an ongoing shaper running, will stop it now.")
+            self.shaper_greenlet.kill()
+
+        logger.info("Starting a new shaper load test")
+        self.state = STATE_INIT
+        self.shaper_greenlet = self.greenlet.spawn(self.shaper_worker)
+        self.shaper_greenlet.link_exception(greenlet_exception_handler)
+
+
+    def shaper_worker(self):
+        print('Shaper worker starting')
+        while self.state == STATE_INIT or self.state == STATE_HATCHING or self.state == STATE_RUNNING:
+            new_state = self.environment.shaper_class.tick()
+            user_count, hatch_rate, stop_test = new_state
+            if stop_test:
+                print('Shaper test finished')
+                self.stop()
+            if self.shaper_last_state == new_state:
+                gevent.sleep(1)
+            else:
+                new_user_count = user_count - self.user_count
+                print('Adding {0} users'.format(new_user_count))
+                self.start(user_count=new_user_count, hatch_rate=hatch_rate)
+                self.shaper_last_state = new_state
+                print('Custom setting applied: {0}'.format(self.shaper_last_state))
 
     def stop(self):
         """

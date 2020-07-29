@@ -22,6 +22,9 @@ from .user.inspectuser import get_task_ratio_dict, print_task_ratio
 from .util.timespan import parse_timespan
 from .exception import AuthCredentialsError
 
+from .shapers import LoadTestShaper
+
+
 version = locust.__version__
 
 
@@ -35,6 +38,16 @@ def is_user_class(item):
         and item.abstract == False
     )
 
+
+def is_shaper_class(item):
+    """
+    Check if a class is a LoadTestShaper
+    """
+    return bool(
+        inspect.isclass(item)
+        and issubclass(item, LoadTestShaper)
+        and item.__dict__['__module__'] != 'locust.shapers'
+    )
 
 def load_locustfile(path):
     """
@@ -84,15 +97,24 @@ def load_locustfile(path):
         del sys.path[0]
     # Return our two-tuple
     user_classes = {name:value for name, value in vars(imported).items() if is_user_class(value)}
-    return imported.__doc__, user_classes
+
+    # Find shaper class, if any, return it
+    shaper_classes = [value for name, value in vars(imported).items() if is_shaper_class(value)]
+    if shaper_classes:
+        shaper_class = shaper_classes[0]()
+    else:
+        shaper_class = None
+
+    return imported.__doc__, user_classes, shaper_class
 
 
-def create_environment(user_classes, options, events=None):
+def create_environment(user_classes, shaper_class, options, events=None):
     """
     Create an Environment instance from options
     """
     return Environment(
         user_classes=user_classes,
+        shaper_class=shaper_class,
         tags=options.tags,
         exclude_tags=options.exclude_tags,
         events=events,
@@ -110,8 +132,8 @@ def main():
     locustfile = parse_locustfile_option()
     
     # import the locustfile
-    docstring, user_classes = load_locustfile(locustfile)
-    
+    docstring, user_classes, shaper_class = load_locustfile(locustfile)
+
     # parse all command line options
     options = parse_options()
 
@@ -163,8 +185,8 @@ def main():
         logger.warning("System open file limit setting is not high enough for load testing, and the OS didn't allow locust to increase it by itself. See https://docs.locust.io/en/stable/installation.html#increasing-maximum-number-of-open-files-limit for more info.")
 
     # create locust Environment
-    environment = create_environment(user_classes, options, events=locust.events)
-    
+    environment = create_environment(user_classes, shaper_class, options, events=locust.events)
+
     if options.show_task_ratio:
         print("\n Task ratio per User class")
         print( "-" * 80)
