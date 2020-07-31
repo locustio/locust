@@ -8,7 +8,7 @@ from .user import wait_time
 from .user.task import task, tag, TaskSet
 from .user.users import HttpUser, User
 from .user.wait_time import between, constant, constant_pacing
-from .shapers import StagesShaper, StepLoadShaper
+from .shape import LoadTestShape
 
 from .event import Events
 events = Events()

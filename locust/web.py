@@ -153,9 +153,9 @@ class WebUI:
                 environment.runner.start_stepload(user_count, hatch_rate, step_user_count, step_duration)
                 return jsonify({'success': True, 'message': 'Swarming started in Step Load Mode', 'host': environment.host})
 
-            if environment.shaper_class:
-                environment.runner.start_shaper()
-                return jsonify({'success': True, 'message': 'Swarming started with custom shaper', 'host': environment.host})
+            if environment.shape_class:
+                environment.runner.start_shape()
+                return jsonify({'success': True, 'message': 'Swarming started using shape class', 'host': environment.host})
 
             environment.runner.start(user_count, hatch_rate)
             return jsonify({'success': True, 'message': 'Swarming started', 'host': environment.host})
