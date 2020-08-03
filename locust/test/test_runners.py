@@ -339,6 +339,35 @@ class TestLocustRunner(LocustTestCase):
         finally:
             timeout.cancel()
 
+    def test_stop_users_with_hatch_rate(self):
+        class MyUser(User):
+            wait_time = constant(1)
+            @task
+            def my_task(self):
+                pass
+
+        environment = Environment(user_classes=[MyUser])
+        runner = LocalRunner(environment)
+
+        # Start a new load test
+        runner.start(10, 10)
+        sleep(0.5)
+
+        # Update the running test with less users and a slow hatch_rate
+        runner.start(2, 1)
+
+        # Wait a moment and then ensure the user count has started to drop but
+        # not immediately to user_count
+        sleep(1)
+        user_count = len(runner.user_greenlets)
+        self.assertTrue(user_count > 2, "User count has decreased too quickly: %i" % user_count)
+        self.assertTrue(user_count < 10, "User count has not decreased at all: %i" % user_count)
+
+        # Wait and ensure load test users eventually dropped to desired count
+        sleep(5)
+        user_count = len(runner.user_greenlets)
+        self.assertTrue(user_count == 2, "User count has not decreased correctly to 2, it is : %i" % user_count)
+
 
 class TestMasterWorkerRunners(LocustTestCase):
     def test_distributed_integration_run(self):
@@ -784,7 +813,7 @@ class TestMasterRunner(LocustTestCase):
                 num_users += msg.data["num_users"]
             
             self.assertEqual(2, num_users, "Total number of locusts that would have been spawned is not 2")
-    
+
     def test_spawn_locusts_in_stepload_mode(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner()

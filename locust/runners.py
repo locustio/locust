@@ -168,19 +168,21 @@ class Runner(object):
                     logger.debug("%i users hatched" % len(self.user_greenlets))
                 if bucket:
                     gevent.sleep(sleep_time)
-        
+
         hatch()
         if wait:
             self.user_greenlets.join()
             logger.info("All users stopped\n")
 
-    def stop_users(self, user_count):
+    def stop_users(self, user_count, stop_rate=None):
         """
-        Stop a stop_count of weighted users from the Group() object in self.users
+        Stop `user_count` weighted users at a rate of `stop_rate`
         """
+        if user_count == 0 or stop_rate == 0:
+            return
+
         bucket = self.weight_users(user_count)
         user_count = len(bucket)
-        logger.info("Stopping %i users" % user_count)
         to_stop = []
         for g in self.user_greenlets:
             for l in bucket:
@@ -189,25 +191,38 @@ class Runner(object):
                     to_stop.append(user)
                     bucket.remove(l)
                     break
-        self.stop_user_instances(to_stop)
-        self.environment.events.hatch_complete.fire(user_count=self.user_count)
-    
-    
-    def stop_user_instances(self, users):
-        if self.environment.stop_timeout:
-            stopping = Group()
-            for user in users:
-                if not user.stop(self.user_greenlets, force=False):
+
+        if not to_stop:
+            return
+
+        if stop_rate == None or user_count == stop_rate:
+            sleep_time = 0
+            logger.info("Stopping %i users immediately" % (user_count))
+        else:
+            sleep_time = 1.0 / stop_rate
+            logger.info("Stopping %i users at rate of %g users/s" % (user_count, stop_rate))
+
+        while True:
+            user_to_stop = to_stop.pop(random.randint(0, len(to_stop)-1))
+            logger.debug('Stopping %s' % user_to_stop._greenlet.name)
+            if self.environment.stop_timeout:
+                stop_group = Group()
+                if not user_to_stop.stop(self.user_greenlets, force=False):
                     # User.stop() returns False if the greenlet was not stopped, so we'll need
                     # to add it's greenlet to our stopping Group so we can wait for it to finish it's task
-                    stopping.add(user._greenlet)
-            if not stopping.join(timeout=self.environment.stop_timeout):
-                logger.info("Not all users finished their tasks & terminated in %s seconds. Stopping them..." % self.environment.stop_timeout)
-            stopping.kill(block=True)
-        else:
-            for user in users:
-                user.stop(self.user_greenlets, force=True)
-        
+                    stop_group.add(user_to_stop._greenlet)
+                if not stop_group.join(timeout=self.environment.stop_timeout):
+                    logger.info("Not all users finished their tasks & terminated in %s seconds. Stopping them..." % self.environment.stop_timeout)
+                stop_group.kill(block=True)
+            else:
+                user_to_stop.stop(self.user_greenlets, force=True)
+            if to_stop:
+                gevent.sleep(sleep_time)
+            else:
+                logger.info("%i Users have been stopped" % user_count)
+                break
+
+
     def monitor_cpu(self):
         process = psutil.Process()
         while True:
@@ -234,13 +249,13 @@ class Runner(object):
             self.worker_cpu_warning_emitted = False
             self.target_user_count = user_count
 
-        # Dynamically changing the user count
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
+            logger.debug("Updating running test with %d users, %.2f hatch rate and wait=%r" % (user_count, hatch_rate, wait))
             self.state = STATE_HATCHING
             if self.user_count > user_count:
                 # Stop some users
                 stop_count = self.user_count - user_count
-                self.stop_users(stop_count)
+                self.stop_users(stop_count, hatch_rate)
             elif self.user_count < user_count:
                 # Spawn some users
                 spawn_count = user_count - self.user_count
@@ -284,10 +299,10 @@ class Runner(object):
         # if we are currently hatching users we need to kill the hatching greenlet first
         if self.hatching_greenlet and not self.hatching_greenlet.ready():
             self.hatching_greenlet.kill(block=True)
-        self.stop_user_instances([g.args[0] for g in self.user_greenlets])
+        self.stop_users(self.user_count)
         self.state = STATE_STOPPED
         self.cpu_log_warning()
-    
+
     def quit(self):
         """
         Stop any running load test and kill all greenlets for the runner
