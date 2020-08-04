@@ -605,6 +605,7 @@ class WorkerRunner(DistributedRunner):
         :param master_port: Port to use for connecting to the master
         """
         super().__init__(environment)
+        self.worker_state = STATE_INIT
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         self.master_host = master_host
         self.master_port = master_port
@@ -612,7 +613,6 @@ class WorkerRunner(DistributedRunner):
         self.greenlet.spawn(self.heartbeat).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.worker).link_exception(greenlet_exception_handler)
         self.client.send(Message("client_ready", None, self.client_id))
-        self.worker_state = STATE_INIT
         self.greenlet.spawn(self.stats_reporter).link_exception(greenlet_exception_handler)
         
         # register listener for when all users have hatched, and report it to the master node
