@@ -195,7 +195,7 @@ class Runner(object):
         if not to_stop:
             return
 
-        if stop_rate == None or user_count == stop_rate:
+        if stop_rate == None or stop_rate >= user_count:
             sleep_time = 0
             logger.info("Stopping %i users immediately" % (user_count))
         else:
