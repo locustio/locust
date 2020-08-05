@@ -168,33 +168,38 @@ class WebUI:
             environment.runner.stats.reset_all()
             environment.runner.exceptions = {}
             return "ok"
-            
+
+        def _download_csv_response(csv_data, filename_prefix):
+            """Generate csv file download response with 'csv_data'.
+
+            Arguments:
+            csv_data: CSV header and data rows.
+            filename_prefix: Prefix of the filename to suggest for saving the download. Will be appended with timestamp.
+            """
+
+            response = make_response(csv_data)
+            file_name = "{0}_{1}.csv".format(filename_prefix, time())
+            disposition = "attachment;filename={0}".format(file_name)
+            response.headers["Content-type"] = "text/csv"
+            response.headers["Content-disposition"] = disposition
+            return response
+
         @app.route("/stats/requests/csv")
         @self.auth_required_if_enabled
         def request_stats_csv():
             data = StringIO()
             writer = csv.writer(data)
             requests_csv(self.environment.runner.stats, writer)
-            response = make_response(data.getvalue())
-            file_name = "requests_{0}.csv".format(time())
-            disposition = "attachment;filename={0}".format(file_name)
-            response.headers["Content-type"] = "text/csv"
-            response.headers["Content-disposition"] = disposition
-            return response
-        
+            return _download_csv_response(data.getvalue(), "requests")
+
         @app.route("/stats/failures/csv")
         @self.auth_required_if_enabled
         def failures_stats_csv():
             data = StringIO()
             writer = csv.writer(data)
             failures_csv(self.environment.runner.stats, writer)
-            response = make_response(data.getvalue())
-            file_name = "failures_{0}.csv".format(time())
-            disposition = "attachment;filename={0}".format(file_name)
-            response.headers["Content-type"] = "text/csv"
-            response.headers["Content-disposition"] = disposition
-            return response
-        
+            return _download_csv_response(data.getvalue(), "failures")
+
         @app.route('/stats/requests')
         @self.auth_required_if_enabled
         @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
@@ -274,13 +279,8 @@ class WebUI:
                 nodes = ", ".join(exc["nodes"])
                 writer.writerow([exc["count"], exc["msg"], exc["traceback"], nodes])
 
-            response = make_response(data.getvalue())
-            file_name = "exceptions_{0}.csv".format(time())
-            disposition = "attachment;filename={0}".format(file_name)
-            response.headers["Content-type"] = "text/csv"
-            response.headers["Content-disposition"] = disposition
-            return response
-        
+            return _download_csv_response(data.getvalue(), "exceptions")
+
         # start the web server
         self.greenlet = gevent.spawn(self.start)
         self.greenlet.link_exception(greenlet_exception_handler)
