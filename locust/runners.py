@@ -309,7 +309,6 @@ class Runner(object):
         self.shape_greenlet = self.greenlet.spawn(self.shape_worker)
         self.shape_greenlet.link_exception(greenlet_exception_handler)
 
-
     def shape_worker(self):
         logger.info('Shape worker starting')
         while self.state == STATE_INIT or self.state == STATE_HATCHING or self.state == STATE_RUNNING:
