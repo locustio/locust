@@ -822,13 +822,13 @@ def requests_csv(stats, csv_writer):
             s.name,
             s.num_requests,
             s.num_failures,
-            s.median_response_time,
-            s.avg_response_time,
-            s.min_response_time or 0,
-            s.max_response_time,
-            s.avg_content_length,
-            s.total_rps,
-            s.total_fail_per_sec,
+            int(s.median_response_time),
+            int(s.avg_response_time),
+            int(s.min_response_time) or 0,
+            int(s.max_response_time),
+            int(s.avg_content_length),
+            round(s.total_rps, 3),
+            round(s.total_fail_per_sec, 3),
         ]
 
         csv_writer.writerow(stats_row + percentile_row)
