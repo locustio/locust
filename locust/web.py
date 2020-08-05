@@ -18,7 +18,7 @@ from locust import __version__ as version
 from .exception import AuthCredentialsError
 from .runners import MasterRunner
 from .log import greenlet_exception_logger
-from .stats import failures_csv, requests_csv, sort_stats
+from .stats import failures_csv, requests_csv, load_requests_csv, sort_stats
 from .util.cache import memoize
 from .util.rounding import proper_round
 from .util.timespan import parse_timespan
@@ -136,6 +136,7 @@ class WebUI:
                 step_time=options and options.step_time,
                 worker_count=worker_count,
                 is_step_load=environment.step_load,
+                stats_history_enabled=options and options.stats_history_enabled,
             )
         
         @app.route('/swarm', methods=["POST"])
@@ -191,6 +192,16 @@ class WebUI:
             writer = csv.writer(data)
             requests_csv(self.environment.runner.stats, writer)
             return _download_csv_response(data.getvalue(), "requests")
+
+        @app.route("/stats/requests_full_history/csv")
+        @self.auth_required_if_enabled
+        def request_stats_full_history_csv():
+            options = self.environment.parsed_options
+            if options and options.stats_history_enabled:
+                csv_data = load_requests_csv(options.csv_prefix)
+                return _download_csv_response(csv_data, "requests_full_history")
+
+            return make_response("Error: Server was not started with option to generate full history.", 404)
 
         @app.route("/stats/failures/csv")
         @self.auth_required_if_enabled

@@ -745,8 +745,7 @@ def stats_printer(stats):
 
 def stats_writer(environment, base_filepath, full_history=False):
     """Writes the csv files for the locust run."""
-    with open(base_filepath + '_stats_history.csv', 'w') as f:
-        f.write(stats_history_csv_header())
+    write_stats_history_csv_header(base_filepath)
     while True:
         write_csv_files(environment, base_filepath, full_history)
         gevent.sleep(CSV_STATS_INTERVAL_SEC)
@@ -759,7 +758,7 @@ def write_csv_files(environment, base_filepath, full_history=False):
         requests_csv(environment.stats, csv_writer)
 
     with open(base_filepath + '_stats_history.csv', 'a') as f:
-        f.write(stats_history_csv(environment, full_history) + "\n")
+        f.write(stats_history_csv_rows(environment, full_history) + "\n")
 
     with open(base_filepath + '_failures.csv', 'w') as f:
         csv_writer = csv.writer(f)
@@ -809,10 +808,11 @@ def requests_csv(stats, csv_writer):
 
         csv_writer.writerow(stats_row + percentile_row)
 
-def stats_history_csv_header():
+
+def write_stats_history_csv_header(base_filepath):
     """Headers for the stats history CSV"""
 
-    return ",".join((
+    header = ",".join((
         "Timestamp",
         "User Count",
         "Type",
@@ -829,7 +829,10 @@ def stats_history_csv_header():
         "Total Average Content Size",
     )) + '\n'
 
-def stats_history_csv(environment, all_entries=False):
+    with open(base_filepath + '_stats_history.csv', 'w') as f:
+        f.write(header)
+
+def stats_history_csv_rows(environment, all_entries=False):
     """
     Return a string of CSV rows with the *current* stats. By default only includes the 
     Aggregated stats entry, but if all_entries is set to True, a row for each entry will 
@@ -867,6 +870,13 @@ def stats_history_csv(environment, all_entries=False):
         ))
 
     return "\n".join(rows)
+
+
+def load_requests_csv(base_filepath):
+    """Return content of ..._stats_history.csv file."""
+    with open(base_filepath + '_stats_history.csv') as f:
+        return f.read()
+
 
 def failures_csv(stats, csv_writer):
     """"Return the contents of the 'failures' tab as a CSV."""

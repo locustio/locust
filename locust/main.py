@@ -16,7 +16,7 @@ from .argument_parser import parse_locustfile_option, parse_options
 from .env import Environment
 from .log import setup_logging, greenlet_exception_logger
 from .stats import (print_error_report, print_percentile_stats, print_stats,
-                    stats_printer, stats_writer, write_csv_files)
+                    stats_printer, stats_writer, write_csv_files, write_stats_history_csv_header)
 from .user import User
 from .user.inspectuser import get_task_ratio_dict, print_task_ratio
 from .util.timespan import parse_timespan
@@ -297,9 +297,9 @@ def main():
         stats_printer_greenlet.link_exception(greenlet_exception_handler)
 
     if options.csv_prefix:
+        write_stats_history_csv_header(options.csv_prefix) # Write file now to ensure full-history-file exists for download
         gevent.spawn(stats_writer, environment, options.csv_prefix, full_history=options.stats_history_enabled).link_exception(greenlet_exception_handler)
 
-    
     def shutdown():
         """
         Shut down locust by firing quitting event, printing/writing stats and exiting

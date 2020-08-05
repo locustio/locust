@@ -12,6 +12,7 @@ import gevent
 import requests
 from pyquery import PyQuery as pq
 
+import locust
 from locust import constant
 from locust.argument_parser import get_parser, parse_options
 from locust.user import User, task
@@ -28,7 +29,7 @@ class TestWebUI(LocustTestCase):
         super(TestWebUI, self).setUp()
 
         parser = get_parser(default_config_files=[])
-        self.environment.options = parser.parse_args([])
+        self.environment.parsed_options = parser.parse_args([])
         self.stats = self.environment.stats
 
         self.web_ui = self.environment.create_web_ui("127.0.0.1", 0)
@@ -135,6 +136,11 @@ class TestWebUI(LocustTestCase):
         self.stats.log_request("GET", "/test2", 120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/requests/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
+
+    def test_request_stats_full_history_csv_not_present(self):
+        self.stats.log_request("GET", "/test2", 120, 5612)
+        response = requests.get("http://127.0.0.1:%i/stats/requests_full_history/csv" % self.web_port)
+        self.assertEqual(404, response.status_code)
 
     def test_failure_stats_csv(self):
         self.stats.log_error("GET", "/", Exception("Error1337"))
@@ -345,3 +351,45 @@ class TestWebUIWithTLS(LocustTestCase):
         from urllib3.exceptions import InsecureRequestWarning
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
         self.assertEqual(200, requests.get("https://127.0.0.1:%i/" % self.web_port, verify=False).status_code)
+
+
+class TestWebUIFullHistory(LocustTestCase):
+    STATS_BASE_NAME = "web_test"
+    STATS_FILENAME = "{}_stats.csv".format(STATS_BASE_NAME)
+    STATS_HISTORY_FILENAME = "{}_stats_history.csv".format(STATS_BASE_NAME)
+    STATS_FAILURES_FILENAME = "{}_failures.csv".format(STATS_BASE_NAME)
+
+    def setUp(self):
+        super(TestWebUIFullHistory, self).setUp()
+        self.remove_files_if_exists()
+
+        parser = get_parser(default_config_files=[])
+        self.environment.parsed_options = parser.parse_args(["--csv", self.STATS_BASE_NAME, "--csv-full-history"])
+        self.stats = self.environment.stats
+
+        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0)
+        # Write files now to ensure full-history exists for download - normally done in main
+        locust.stats.write_csv_files(self.environment, self.STATS_BASE_NAME, full_history=True)
+        self.web_ui.app.view_functions["request_stats"].clear_cache()
+        gevent.sleep(0.01)
+        self.web_port = self.web_ui.server.server_port
+
+    def tearDown(self):
+        super(TestWebUIFullHistory, self).tearDown()
+        self.web_ui.stop()
+        self.runner.quit()
+        self.remove_files_if_exists()
+
+    def remove_file_if_exists(self, filename):
+        if os.path.exists(filename):
+            os.remove(filename)
+
+    def remove_files_if_exists(self):
+        self.remove_file_if_exists(self.STATS_FILENAME)
+        self.remove_file_if_exists(self.STATS_HISTORY_FILENAME)
+        self.remove_file_if_exists(self.STATS_FAILURES_FILENAME)
+
+    def test_request_stats_full_history_csv(self):
+        self.stats.log_request("GET", "/test2", 120, 5612)
+        response = requests.get("http://127.0.0.1:%i/stats/requests_full_history/csv" % self.web_port)
+        self.assertEqual(200, response.status_code)

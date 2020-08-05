@@ -169,6 +169,9 @@
                 <div style="display:none;">
                     <div style="margin-top:20px;">
                         <a href="./stats/requests/csv">Download request statistics CSV</a><br>
+                        {% if stats_history_enabled %}
+                        <a href="./stats/requests_full_history/csv">Download full request statistics history CSV</a><br>
+                        {% endif %}
                         <a href="./stats/failures/csv">Download failures CSV</a><br>
                         <a href="./exceptions/csv">Download exceptions CSV</a>
                     </div>
