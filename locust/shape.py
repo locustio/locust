@@ -9,6 +9,12 @@ class LoadTestShape(object):
 
     start_time = time.monotonic()
 
+    def reset_time(self):
+        '''
+        Resets start time back to 0
+        '''
+        self.start_time = time.monotonic()
+
     def get_run_time(self):
         '''
         Calculates run time in seconds of the load test
