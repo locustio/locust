@@ -47,6 +47,7 @@ class TestLoadLocustfile(LocustTestCase):
             docstring, user_classes, shape_class = main.load_locustfile(mocked.file_path)
             self.assertIn('UserSubclass', user_classes)
             self.assertNotIn('NotUserSubclass', user_classes)
+            self.assertNotIn('LoadTestShape', user_classes)
 
     def test_load_locust_file_from_relative_path(self):
         with mock_locustfile() as mocked:
@@ -62,6 +63,7 @@ class TestLoadLocustfile(LocustTestCase):
             self.assertEqual("This is a mock locust file for unit testing", docstring)
             self.assertIn('UserSubclass', user_classes)
             self.assertNotIn('NotUserSubclass', user_classes)
+            self.assertNotIn('LoadTestShape', user_classes)
     
     def test_create_environment(self):
         options = parse_options(args=[
