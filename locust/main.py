@@ -107,7 +107,7 @@ def load_locustfile(path):
     return imported.__doc__, user_classes, shape_class
 
 
-def create_environment(user_classes, shape_class, options, events=None):
+def create_environment(user_classes, options, events=None, shape_class=None):
     """
     Create an Environment instance from options
     """
@@ -184,7 +184,7 @@ def main():
         logger.warning("System open file limit setting is not high enough for load testing, and the OS didn't allow locust to increase it by itself. See https://docs.locust.io/en/stable/installation.html#increasing-maximum-number-of-open-files-limit for more info.")
 
     # create locust Environment
-    environment = create_environment(user_classes, shape_class, options, events=locust.events)
+    environment = create_environment(user_classes, options, events=locust.events, shape_class=shape_class)
 
     if options.show_task_ratio:
         print("\n Task ratio per User class")
