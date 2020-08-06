@@ -15,22 +15,23 @@ class WebsiteUser(HttpUser):
 
 
 class StepLoadShape(LoadTestShape):
-    '''
+    """
     A step load shape
 
-    Arguments:
 
-        step_time - Time between steps
-        step_load - User increase amount at each step
-        hatch_rate - Hatch rate to use at every step
-        time_limit - Time limit in seconds
-    '''
+    Keyword arguments:
+
+        step_time -- Time between steps
+        step_load -- User increase amount at each step
+        hatch_rate -- Hatch rate to use at every step
+        time_limit -- Time limit in seconds
+    """
     def __init__(self,
             step_time=30,
             step_load=10,
             hatch_rate=10,
             time_limit=600
-        ):
+            ):
         self.step_time = step_time
         self.step_load = step_load
         self.hatch_rate = hatch_rate

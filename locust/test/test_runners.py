@@ -859,7 +859,7 @@ class TestMasterRunner(LocustTestCase):
             
             # Wait to ensure shape_worker has stopped the test
             sleep(3)
-            self.assertEqual('stopped', master.state, "The test has not been stopped by the shape class")
+            self.assertEqual("stopped", master.state, "The test has not been stopped by the shape class")
 
     def test_spawn_locusts_in_stepload_mode(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:

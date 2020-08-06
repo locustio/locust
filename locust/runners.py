@@ -293,10 +293,10 @@ class Runner(object):
         while self.state == STATE_INIT or self.state == STATE_HATCHING or self.state == STATE_RUNNING:
             current_num_users += step_users_growth
             if current_num_users > int(self.total_users):
-                logger.info('Step Load is finished.')
+                logger.info("Step Load is finished")
                 break
             self.start(current_num_users, hatch_rate)
-            logger.info('Step loading: start hatch job of %d user.' % (current_num_users))
+            logger.info("Step loading: start hatch job of %d user" % (current_num_users))
             gevent.sleep(step_duration)
 
     def start_shape(self):
@@ -310,12 +310,12 @@ class Runner(object):
         self.shape_greenlet.link_exception(greenlet_exception_handler)
 
     def shape_worker(self):
-        logger.info('Shape worker starting')
+        logger.info("Shape worker starting")
         while self.state == STATE_INIT or self.state == STATE_HATCHING or self.state == STATE_RUNNING:
             new_state = self.environment.shape_class.tick()
             user_count, hatch_rate, stop_test = new_state
             if stop_test:
-                logger.info('Shape test stopping')
+                logger.info("Shape test stopping")
                 self.stop()
             elif self.shape_last_state == new_state:
                 gevent.sleep(1)
