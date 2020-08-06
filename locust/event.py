@@ -1,6 +1,7 @@
 import logging
 from . import log
 import traceback
+from .exception import StopUser, RescheduleTask, RescheduleTaskImmediately, InterruptTaskSet
 
 class EventHook(object):
     """
@@ -36,7 +37,11 @@ class EventHook(object):
         for handler in handlers:
             try:
                 handler(**kwargs)
-            except Exception as e:
+            except (StopUser, RescheduleTask, RescheduleTaskImmediately, InterruptTaskSet):
+                # These exceptions could be thrown by, for example, a request_failure handler,
+                # in which case they are entirely appropriate and should not be caught
+                raise 
+            except Exception:
                 logging.error("Uncaught exception in event handler: \n%s", traceback.format_exc())
                 log.unhandled_greenlet_exception = True
 
