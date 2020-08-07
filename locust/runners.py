@@ -73,7 +73,7 @@ class Runner(object):
         def on_hatch_complete(user_count):
             self.state = STATE_RUNNING
             if environment.reset_stats:
-                logger.info("Resetting stats")
+                logger.info("Resetting stats\n")
                 self.stats.reset_all()
         self.environment.events.hatch_complete.add_listener(on_hatch_complete)
 
