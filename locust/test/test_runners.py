@@ -812,7 +812,7 @@ class TestMasterRunner(LocustTestCase):
             
             self.assertEqual(2, num_users, "Total number of locusts that would have been spawned is not 2")
 
-    def test_custom_shape(self):
+    def test_custom_shape_scale_up(self):
         class MyUser(User):
             wait_time = constant(0)
             @task
@@ -856,6 +856,55 @@ class TestMasterRunner(LocustTestCase):
                 if msg.data:
                     num_users += msg.data["num_users"]
             self.assertEqual(3, num_users, "Total number of users in second stage of shape test is not 3: %i" % num_users)
+            
+            # Wait to ensure shape_worker has stopped the test
+            sleep(3)
+            self.assertEqual("stopped", master.state, "The test has not been stopped by the shape class")
+
+    def test_custom_shape_scale_down(self):
+        class MyUser(User):
+            wait_time = constant(0)
+            @task
+            def my_task(self):
+                pass
+    
+        class TestShape(LoadTestShape):
+            def tick(self):
+                run_time = self.get_run_time()
+                if run_time < 2:
+                    return (5, 5, False)
+                elif run_time < 4:
+                    return (-4, 4, False)
+                else:
+                    return (0, 0, True)
+    
+        self.environment.user_classes = [MyUser]
+        self.environment.shape_class = TestShape()
+    
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner()
+            for i in range(5):
+                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+    
+            # Start the shape_worker
+            self.environment.shape_class.reset_time()
+            master.start_shape()
+            sleep(0.5)
+    
+            # Wait for shape_worker to update user_count
+            num_users = 0
+            for _, msg in server.outbox:
+                if msg.data:
+                    num_users += msg.data["num_users"]
+            self.assertEqual(5, num_users, "Total number of users in first stage of shape test is not 5: %i" % num_users)
+    
+            # Wait for shape_worker to update user_count again
+            sleep(2)
+            num_users = 0
+            for _, msg in server.outbox:
+                if msg.data:
+                    num_users += msg.data["num_users"]
+            self.assertEqual(1, num_users, "Total number of users in second stage of shape test is not 1: %i" % num_users)
             
             # Wait to ensure shape_worker has stopped the test
             sleep(3)
