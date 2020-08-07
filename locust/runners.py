@@ -77,9 +77,6 @@ class Runner(object):
                 self.stats.reset_all()
         self.environment.events.hatch_complete.add_listener(on_hatch_complete)
 
-        if self.environment.shape_class:
-            logger.debug("Starting with shape class")
-
     def __del__(self):
         # don't leave any stray greenlets if runner is removed
         if self.greenlet and len(self.greenlet) > 0:
