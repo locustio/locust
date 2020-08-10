@@ -481,7 +481,7 @@ Making HTTP requests
 =====================
 
 So far, we've only covered the task scheduling part of a User. In order to actually load test
-a system we need to make HTTP requests. To help us do this, the :py:class:`HttpLocust <locust.HttpUser>`
+a system we need to make HTTP requests. To help us do this, the :py:class:`HttpUser <locust.HttpUser>`
 class exists. When using this class, each instance gets a 
 :py:attr:`client <locust.User.client>` attribute which will be an instance of
 :py:attr:`HttpSession <locust.clients.HttpSession>` which can be used to make HTTP requests.
