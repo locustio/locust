@@ -273,7 +273,7 @@ class StatsEntry(object):
         t = int(current_time)
         
         if self.use_response_times_cache and self.last_request_timestamp and t > int(self.last_request_timestamp):
-            # see if we shall make a copy of the respone_times dict and store in the cache
+            # see if we shall make a copy of the response_times dict and store in the cache
             self._cache_response_times(t-1)
         
         self.num_requests += 1
@@ -301,7 +301,7 @@ class StatsEntry(object):
         self.min_response_time = min(self.min_response_time, response_time)
         self.max_response_time = max(self.max_response_time, response_time)
 
-        # to avoid to much data that has to be transfered to the master node when
+        # to avoid to much data that has to be transferred to the master node when
         # running in distributed mode, we save the response time rounded in a dict
         # so that 147 becomes 150, 3432 becomes 3400 and 58760 becomes 59000
         if response_time < 100:
@@ -493,7 +493,7 @@ class StatsEntry(object):
     def to_string(self, current=True):
         """
         Return the stats as a string suitable for console output. If current is True, it'll show 
-        the RPS and failure rait for the last 10 seconds. If it's false, it'll show the total stats 
+        the RPS and failure rate for the last 10 seconds. If it's false, it'll show the total stats
         for the whole run.
         """
         if current:

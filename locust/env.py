@@ -42,14 +42,14 @@ class Environment:
     
     stop_timeout = None
     """
-    If set, the runner will try to stop the runnning users gracefully and wait this many seconds 
+    If set, the runner will try to stop the running users gracefully and wait this many seconds
     before killing them hard.
     """
     
     catch_exceptions = True
     """
-    If True exceptions that happen within running users will be catched (and reported in UI/console).
-    If False, exeptions will be raised.
+    If True exceptions that happen within running users will be caught (and reported in UI/console).
+    If False, exceptions will be raised.
     """
     
     process_exit_code: int = None

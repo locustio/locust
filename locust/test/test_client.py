@@ -108,7 +108,7 @@ class TestHttpSession(WebserverTestCase):
             set(r.headers["allow"].split(", ")),
         )
 
-    def test_error_message_with_name_replacment(self):
+    def test_error_message_with_name_replacement(self):
         s = self.get_client()
         kwargs = {}
         def on_error(**kw):
