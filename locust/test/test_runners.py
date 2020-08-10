@@ -349,12 +349,10 @@ class TestLocustRunner(LocustTestCase):
         environment = Environment(user_classes=[MyUser])
         runner = LocalRunner(environment)
 
-        # Start a new load test
-        runner.start(10, 10)
-        sleep(0.5)
-
-        # Update the running test with less users and a slow hatch_rate
-        runner.start(2, 1)
+        # Start load test, wait for users to start, then trigger ramp down
+        runner.start(10, 10, wait=False)
+        gevent.sleep(1)
+        runner.start(2, 2, wait=False)
 
         # Wait a moment and then ensure the user count has started to drop but
         # not immediately to user_count
@@ -972,7 +970,7 @@ class TestWorkerRunner(LocustTestCase):
             self.assertEqual(2, MyTestUser._test_state)
             # make sure the test_start was never fired on the worker
             self.assertFalse(test_start_run[0])
-    
+
     def test_worker_without_stop_timeout(self):
         class MyTestUser(User):
             _test_state = 0
@@ -1294,3 +1292,31 @@ class TestStopTimeout(LocustTestCase):
         self.assertEqual(0, test_stop_run[0])
         runner.stop()
         self.assertEqual(2, test_stop_run[0])
+
+    def test_stop_timeout_with_ramp_down(self):
+        class MyTaskSet(TaskSet):
+            @task
+            def my_task(self):
+                gevent.sleep(1)
+
+        class MyTestUser(User):
+            tasks = [MyTaskSet]
+            wait_time = constant(0)
+
+        environment = Environment(user_classes=[MyTestUser], stop_timeout=2)
+        runner = environment.create_local_runner()
+
+        # Start load test, wait for users to start, then trigger ramp down
+        runner.start(10, 10, wait=False)
+        gevent.sleep(1)
+        runner.start(2, 2, wait=False)
+
+        sleep(2)
+        user_count = len(runner.user_greenlets)
+        self.assertTrue(user_count > 2, "User count has decreased too quickly: %i" % user_count)
+        self.assertTrue(user_count < 10, "User count has not decreased at all: %i" % user_count)
+        
+        # Wait and ensure load test users eventually dropped to desired count
+        sleep(5)
+        user_count = len(runner.user_greenlets)
+        self.assertTrue(user_count == 2, "User count has not decreased correctly to 2, it is : %i" % user_count)
