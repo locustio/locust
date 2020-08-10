@@ -534,7 +534,7 @@ class TestStatsEntry(unittest.TestCase):
             'name': tokenlist[1],
             'request_count': int(tokenlist[2]),
             'failure_count': int(tokenlist[3]),
-            'failure_precentage': float(tokenlist[4]),
+            'failure_percentage': float(tokenlist[4]),
         }
         return tokens
 
@@ -555,7 +555,7 @@ class TestStatsEntry(unittest.TestCase):
         output_fields = self.parse_string_output(str(s))
         self.assertEqual(output_fields['request_count'], REQUEST_COUNT)
         self.assertEqual(output_fields['failure_count'], FAILURE_COUNT)
-        self.assertAlmostEqual(output_fields['failure_precentage'], EXPECTED_FAIL_RATIO*100)
+        self.assertAlmostEqual(output_fields['failure_percentage'], EXPECTED_FAIL_RATIO*100)
 
     def test_fail_ratio_with_all_failures(self):
         REQUEST_COUNT = 10
@@ -570,7 +570,7 @@ class TestStatsEntry(unittest.TestCase):
         output_fields = self.parse_string_output(str(s))
         self.assertEqual(output_fields['request_count'], REQUEST_COUNT)
         self.assertEqual(output_fields['failure_count'], FAILURE_COUNT)
-        self.assertAlmostEqual(output_fields['failure_precentage'], EXPECTED_FAIL_RATIO*100)
+        self.assertAlmostEqual(output_fields['failure_percentage'], EXPECTED_FAIL_RATIO*100)
 
     def test_fail_ratio_with_half_failures(self):
         REQUEST_COUNT = 10
@@ -585,7 +585,7 @@ class TestStatsEntry(unittest.TestCase):
         output_fields = self.parse_string_output(str(s))
         self.assertEqual(output_fields['request_count'], REQUEST_COUNT)
         self.assertEqual(output_fields['failure_count'], FAILURE_COUNT)
-        self.assertAlmostEqual(output_fields['failure_precentage'], EXPECTED_FAIL_RATIO*100)
+        self.assertAlmostEqual(output_fields['failure_percentage'], EXPECTED_FAIL_RATIO*100)
 
 
 class TestRequestStatsWithWebserver(WebserverTestCase):
