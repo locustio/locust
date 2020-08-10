@@ -202,26 +202,29 @@ class Runner(object):
             sleep_time = 1.0 / stop_rate
             logger.info("Stopping %i users at rate of %g users/s" % (user_count, stop_rate))
 
+        if self.environment.stop_timeout:
+            stop_group = Group()    
+
         while True:
             user_to_stop = to_stop.pop(random.randint(0, len(to_stop)-1))
             logger.debug('Stopping %s' % user_to_stop._greenlet.name)
             if self.environment.stop_timeout:
-                stop_group = Group()
                 if not user_to_stop.stop(self.user_greenlets, force=False):
                     # User.stop() returns False if the greenlet was not stopped, so we'll need
                     # to add it's greenlet to our stopping Group so we can wait for it to finish it's task
                     stop_group.add(user_to_stop._greenlet)
-                if not stop_group.join(timeout=self.environment.stop_timeout):
-                    logger.info("Not all users finished their tasks & terminated in %s seconds. Stopping them..." % self.environment.stop_timeout)
-                stop_group.kill(block=True)
             else:
                 user_to_stop.stop(self.user_greenlets, force=True)
             if to_stop:
                 gevent.sleep(sleep_time)
             else:
-                logger.info("%i Users have been stopped" % user_count)
                 break
 
+        if self.environment.stop_timeout and not stop_group.join(timeout=self.environment.stop_timeout):
+            logger.info("Not all users finished their tasks & terminated in %s seconds. Stopping them..." % self.environment.stop_timeout)
+            stop_group.kill(block=True)
+        
+        logger.info("%i Users have been stopped" % user_count)
 
     def monitor_cpu(self):
         process = psutil.Process()
