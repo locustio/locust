@@ -133,7 +133,7 @@ class HttpSession(requests.Session):
             if name:
                 # Since we use the Exception message when grouping failures, in order to not get 
                 # multiple failure entries for different URLs for the same name argument, we need 
-                # to temporarily override the reponse.url attribute
+                # to temporarily override the response.url attribute
                 orig_url = response.url
                 response.url = name
             try:
@@ -204,7 +204,7 @@ class ResponseContextManager(LocustResponse):
                 self._report_failure(self._manual_result)
             
             # if the user has already manually marked this response as failure or success
-            # we can ignore the default haviour of letting the response code determine the outcome
+            # we can ignore the default behaviour of letting the response code determine the outcome
             return exc is None
         
         if exc:

@@ -210,7 +210,7 @@ Identical to previous version, but now built & deployed to Pypi using Travis.
 0.13.2
 ======
 
-* Fixed bug that broke the Web UI's repsonse time graph
+* Fixed bug that broke the Web UI's response time graph
 
 0.13.1
 ======
@@ -287,7 +287,7 @@ Identical to previous version, but now built & deployed to Pypi using Travis.
 * Added sequential task support - https://github.com/locustio/locust/pull/827
 * Added support for user-defined wait_function - https://github.com/locustio/locust/pull/785
 * By default, Locust no longer resets the statistics when the hatching is complete.
-  Therefore :code:`--no-reset-stats` has been deprected (since it's now the default behaviour),
+  Therefore :code:`--no-reset-stats` has been deprecated (since it's now the default behaviour),
   and instead a new :code:`--reset-stats` option has been added.
 * Dropped support for Python 3.3
 * Updated documentation
@@ -304,7 +304,7 @@ Identical to previous version, but now built & deployed to Pypi using Travis.
 
 * Python 3 support
 * Dropped support for Python 2.6
-* Added :code:`--no-reset-stats` option for controling if the statistics should be reset once
+* Added :code:`--no-reset-stats` option for controlling if the statistics should be reset once
   the hatching is complete
 * Added charts to the web UI for requests per second, average response time, and number of
   simulated users.
@@ -352,7 +352,7 @@ Identical to previous version, but now built & deployed to Pypi using Travis.
 * Fixed bug which caused the download time of the request body not to be included in the
   reported response time.
 * Fixed bug that occurred on some linux dists that were tampering with the python-requests
-  system package (removing dependencies which requests is bundling). This bug only occured
+  system package (removing dependencies which requests is bundling). This bug only occurred
   when installing Locust in the python system packages, and not when using virtualenv.
 * Various minor fixes and improvements.
 
@@ -360,7 +360,7 @@ Identical to previous version, but now built & deployed to Pypi using Travis.
 0.7.1
 =====
 
-* Exceptions that occurs within TaskSets are now catched by default.
+* Exceptions that occur within TaskSets are now caught by default.
 * Fixed bug which caused Min response time to always be 0 after all locusts had been hatched
   and the statistics had been reset.
 * Minor UI improvements in the web interface.
@@ -376,7 +376,7 @@ HTTP client functionality moved to HttpLocust
 ---------------------------------------------
 
 Previously, the Locust class instantiated a :py:class:`HttpSession <locust.clients.HttpSession>`
-under the client attribute that was used to make HTTP requests. This funcionality has
+under the client attribute that was used to make HTTP requests. This functionality has
 now been moved into the :py:class:`HttpLocust <locust.core.HttpLocust>` class, in an
 effort to make it more obvious how one can use Locust to
 :doc:`load test non-HTTP systems <testing-other-systems>`.
@@ -389,7 +389,7 @@ msgpack for serializing master/slave data
 -----------------------------------------
 
 Locust now uses `msgpack <http://msgpack.org/>`_ for serializing data that is sent between
-a master node and it's slaves. This adresses a possible attack that can be used to execute
+a master node and it's slaves. This addresses a possible attack that can be used to execute
 code remote, if one has access to the internal locust ports that are used for master-slave
 communication. The reason for this exploit was due to the fact that pickle was used.
 
@@ -412,7 +412,7 @@ Locust updated `requests <http://python-requests.org/>`_ to the latest major rel
    Requests 1.0 introduced some major API changes (and 2.0 just a few). Please check if you
    are using any internal features and check the documentation:
    `Migrating to 1.x <http://docs.python-requests.org/en/latest/api/#migrating-to-1-x>`_ and
-   `Migrationg to 2.x <http://docs.python-requests.org/en/latest/api/#migrating-to-2-x>`_
+   `Migration to 2.x <http://docs.python-requests.org/en/latest/api/#migrating-to-2-x>`_
 
 gevent updated to version 1.0
 -------------------------------
@@ -586,7 +586,7 @@ Locust now uses Requests
 Locust's own HttpBrowser class (which was typically accessed through *self.client* from within a locust class)
 has been replaced by a thin wrapper around the requests library (http://python-requests.org). This comes with
 a number of advantages. Users can  now take advantage of a well documented, well written, fully fledged
-library for making HTTP requests. However, it also comes with some small API changes wich will require users
+library for making HTTP requests. However, it also comes with some small API changes which will require users
 to update their existing load testing scripts.
 
 Gzip encoding turned on by default
@@ -693,7 +693,7 @@ Smaller API Changes
 API changes
 -----------
 
-* Web inteface is now turned on by default. The **--web** command line option has been replaced by --no-web.
+* Web interface is now turned on by default. The **--web** command line option has been replaced by --no-web.
 * :func:`locust.events.request_success`  and :func:`locust.events.request_failure` now gets the HTTP method as the first argument.
 
 Improvements and bug fixes

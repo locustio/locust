@@ -334,7 +334,7 @@ class FastResponse(CompatResponse):
         return json.loads(self.text)
 
     def raise_for_status(self):
-        """Raise any connection errors that occured during the request"""
+        """Raise any connection errors that occurred during the request"""
         if hasattr(self, 'error') and self.error:
             raise self.error
     
@@ -411,7 +411,7 @@ class ResponseContextManager(FastResponse):
                 self._report_failure(self._manual_result)
             
             # if the user has already manually marked this response as failure or success
-            # we can ignore the default haviour of letting the response code determine the outcome
+            # we can ignore the default behaviour of letting the response code determine the outcome
             return exc is None        
         
         if exc:

@@ -62,7 +62,7 @@ class WebUI:
         Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
         
         Arguments:
-        environment: Reference to the curren Locust Environment
+        environment: Reference to the current Locust Environment
         host: Host/interface that the web server should accept connections to
         port: Port that the web server should listen to
         auth_credentials:  If provided, it will enable basic auth with all the routes protected by default.
@@ -115,7 +115,7 @@ class WebUI:
                 if len(all_hosts) == 1:
                     host = list(all_hosts)[0]
                 else:
-                    # since we have mulitple User classes with different host attributes, we'll
+                    # since we have multiple User classes with different host attributes, we'll
                     # inform that specifying host will override the host for all User classes
                     override_host_warning = True
                     host = None

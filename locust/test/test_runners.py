@@ -835,7 +835,7 @@ class TestMasterRunner(LocustTestCase):
         self.assertTrue("HeyAnException" in exception["traceback"])
         self.assertEqual(2, exception["count"])
     
-    def test_exception_is_catched(self):
+    def test_exception_is_caught(self):
         """ Test that exceptions are stored, and execution continues """
         
         class MyTaskSet(TaskSet):
@@ -1060,7 +1060,7 @@ class TestStopTimeout(LocustTestCase):
             runner.quit()
             runner.greenlet.join()
         except gevent.Timeout:
-            self.fail("Got Timeout exception. Some locusts must have kept runnining after iteration finish")
+            self.fail("Got Timeout exception. Some locusts must have kept running after iteration finish")
         finally:
             timeout.cancel()
         self.assertEqual("third", MyTaskSet.state)
@@ -1219,7 +1219,7 @@ class TestStopTimeout(LocustTestCase):
             runner.stop_users(1)
             runner.user_greenlets.join()
         except gevent.Timeout:
-            self.fail("Got Timeout exception. Some locusts must have kept runnining after iteration finish")
+            self.fail("Got Timeout exception. Some locusts must have kept running after iteration finish")
         finally:
             timeout.cancel()
         self.assertEqual("third", MyTaskSet.state)

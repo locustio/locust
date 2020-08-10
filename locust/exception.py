@@ -18,7 +18,7 @@ class InterruptTaskSet(Exception):
     def __init__(self, reschedule=True):
         """
         If *reschedule* is True and the InterruptTaskSet is raised inside a nested TaskSet,
-        the parent TaskSet whould immediately reschedule another task.
+        the parent TaskSet would immediately reschedule another task.
         """
         self.reschedule = reschedule
 

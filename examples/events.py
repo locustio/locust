@@ -42,7 +42,7 @@ def locust_init(environment, **kwargs):
             """
             Add a route to the Locust web app, where we can see the total content-length
             """
-            return "Total content-length recieved: %i" % stats["content-length"]
+            return "Total content-length received: %i" % stats["content-length"]
     
 @events.request_success.add_listener
 def on_request_success(request_type, name, response_time, response_length):
