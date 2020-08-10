@@ -366,7 +366,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
 
         The user can also be killed gracefully while it's sleeping, so calling this
         method within a task makes it possible for a user to be killed mid-task, even if you've
-        set a stop_timeout. If this behavour is not desired you should make the user wait using
+        set a stop_timeout. If this behaviour is not desired you should make the user wait using
         gevent.sleep() instead.
         """
         self._check_stop_condition()

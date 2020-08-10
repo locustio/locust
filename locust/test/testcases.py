@@ -153,7 +153,7 @@ class LocustTestCase(unittest.TestCase):
         logging.root.setLevel(logging.INFO)
         self.mocked_log = MockedLoggingHandler
         
-        # set unandled exception flag to False
+        # set unhandled exception flag to False
         log.unhandled_greenlet_exception = False
                       
     def tearDown(self):

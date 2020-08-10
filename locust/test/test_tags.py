@@ -49,7 +49,7 @@ class TestTags(LocustTestCase):
                 def nested_task(self):
                     pass
 
-        # when tagging taskset, its tasks recieve the tag
+        # when tagging taskset, its tasks receive the tag
         self.assertIn('locust_tag_set', dir(MyTaskSet.tagged))
         self.assertEqual(set(['taskset']), MyTaskSet.tagged.locust_tag_set)
 

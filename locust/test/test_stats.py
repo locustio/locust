@@ -138,11 +138,11 @@ class TestRequestStats(unittest.TestCase):
         s1.log(12, 0)
         s1.log(12, 0)
         s1.log(38, 0)
-        s1.log_error("Dummy exzeption")
+        s1.log_error("Dummy exception")
 
         s2 = StatsEntry(self.stats, "aggregate me!", "GET")
-        s2.log_error("Dummy exzeption")
-        s2.log_error("Dummy exzeption")
+        s2.log_error("Dummy exception")
+        s2.log_error("Dummy exception")
         s2.log(12, 0)
         s2.log(99, 0)
         s2.log(14, 0)
@@ -471,7 +471,7 @@ class TestStatsEntryResponseTimesCache(unittest.TestCase):
     
     def test_latest_total_response_times_pruned(self):
         """
-        Check that RequestStats.latest_total_response_times are pruned when execeeding 20 entries
+        Check that RequestStats.latest_total_response_times are pruned when exceeding 20 entries
         """
         s = StatsEntry(self.stats, "/", "GET", use_response_times_cache=True)
         t = int(time.time())

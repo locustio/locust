@@ -134,7 +134,7 @@ class Events:
     """
     Fired when Locust is started, once the Environment instance and locust runner instance 
     have been created. This hook can be used by end-users' code to run code that requires access to 
-    the Envirionment. For example to register listeners to request_success, request_failure 
+    the Environment. For example to register listeners to request_success, request_failure
     or other events.
     
     Event arguments:
