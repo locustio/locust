@@ -19,7 +19,7 @@ class LoadTestShape(object):
         """
         Calculates run time in seconds of the load test
         """
-        return round(time.monotonic() - self.start_time)
+        return time.monotonic() - self.start_time
 
     def tick(self):
         """
