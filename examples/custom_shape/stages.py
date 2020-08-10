@@ -31,12 +31,10 @@ class StagesShape(LoadTestShape):
     def __init__(self,
             stages=[
                 {'duration': 60, 'users': 10, 'hatch_rate': 10},
-                {'duration': 80, 'users': 30, 'hatch_rate': 10},
                 {'duration': 100, 'users': 50, 'hatch_rate': 10},
-                {'duration': 120, 'users': 70, 'hatch_rate': 10},
                 {'duration': 180, 'users': 100, 'hatch_rate': 10},
-                {'duration': 220, 'users': 10, 'hatch_rate': 10},
-                {'duration': 230, 'users': 5, 'hatch_rate': 10},
+                {'duration': 220, 'users': 30, 'hatch_rate': 10},
+                {'duration': 230, 'users': 10, 'hatch_rate': 10},
                 {'duration': 240, 'users': 1, 'hatch_rate': 1},
             ],
             stop_at_end=True
