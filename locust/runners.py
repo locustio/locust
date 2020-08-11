@@ -76,7 +76,7 @@ class Runner(object):
                 logger.info("Resetting stats\n")
                 self.stats.reset_all()
         self.environment.events.hatch_complete.add_listener(on_hatch_complete)
-
+    
     def __del__(self):
         # don't leave any stray greenlets if runner is removed
         if self.greenlet and len(self.greenlet) > 0:
@@ -310,13 +310,13 @@ class Runner(object):
         logger.info("Shape worker starting")
         while self.state == STATE_INIT or self.state == STATE_HATCHING or self.state == STATE_RUNNING:
             new_state = self.environment.shape_class.tick()
-            user_count, hatch_rate, stop_test = new_state
-            if stop_test:
+            if new_state == None:
                 logger.info("Shape test stopping")
                 self.stop()
             elif self.shape_last_state == new_state:
                 gevent.sleep(1)
             else:
+                user_count, hatch_rate = new_state
                 logger.info("Shape test updating to %d users at %.2f hatch rate" % (user_count, hatch_rate))
                 self.start(user_count=user_count, hatch_rate=hatch_rate)
                 self.shape_last_state = new_state

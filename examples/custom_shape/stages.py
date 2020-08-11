@@ -28,30 +28,22 @@ class StagesShape(LoadTestShape):
 
         stop_at_end -- Can be set to stop once all stages have run.
     """
-    def __init__(self,
-            stages=[
-                {'duration': 60, 'users': 10, 'hatch_rate': 10},
-                {'duration': 100, 'users': 50, 'hatch_rate': 10},
-                {'duration': 180, 'users': 100, 'hatch_rate': 10},
-                {'duration': 220, 'users': 30, 'hatch_rate': 10},
-                {'duration': 230, 'users': 10, 'hatch_rate': 10},
-                {'duration': 240, 'users': 1, 'hatch_rate': 1},
-            ],
-            stop_at_end=True
-            ):
-        self.stages = sorted(stages, key=lambda k: k["duration"])
-        self.stop_at_end = stop_at_end
+
+    stages = [
+        {'duration': 60, 'users': 10, 'hatch_rate': 10},
+        {'duration': 100, 'users': 50, 'hatch_rate': 10},
+        {'duration': 180, 'users': 100, 'hatch_rate': 10},
+        {'duration': 220, 'users': 30, 'hatch_rate': 10},
+        {'duration': 230, 'users': 10, 'hatch_rate': 10},
+        {'duration': 240, 'users': 1, 'hatch_rate': 1},
+    ]
 
     def tick(self):
         run_time = self.get_run_time()
 
         for stage in self.stages:
             if run_time < stage["duration"]:
-                tick_data = (stage["users"], stage["hatch_rate"], stage.get('stop', False))
-                self.last_stage = tick_data
+                tick_data = (stage["users"], stage["hatch_rate"])
                 return tick_data
 
-        if self.stop_at_end:
-            return (0, 0, True)
-        else:
-            return self.last_stage
+        return None

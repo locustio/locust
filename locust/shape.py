@@ -23,13 +23,14 @@ class LoadTestShape(object):
 
     def tick(self):
         """
-        Returns a tuple with 3 elements to control the running load test.
+        Returns a tuple with 2 elements to control the running load test:
 
             user_count -- Total user count
             hatch_rate -- Hatch rate to use when changing total user count
-            stop_test -- A boolean to stop the test
+
+        If `None` is returned then the running load test will be stopped.
 
         """
         run_time = self.get_run_time()
 
-        return (0, 0, True)
+        return None

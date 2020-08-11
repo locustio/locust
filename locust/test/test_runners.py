@@ -823,11 +823,11 @@ class TestMasterRunner(LocustTestCase):
             def tick(self):
                 run_time = self.get_run_time()
                 if run_time < 2:
-                    return (1, 1, False)
+                    return (1, 1)
                 elif run_time < 4:
-                    return (2, 2, False)
+                    return (2, 2)
                 else:
-                    return (0, 0, True)
+                    return None
     
         self.environment.user_classes = [MyUser]
         self.environment.shape_class = TestShape()
@@ -872,11 +872,11 @@ class TestMasterRunner(LocustTestCase):
             def tick(self):
                 run_time = self.get_run_time()
                 if run_time < 2:
-                    return (5, 5, False)
+                    return (5, 5)
                 elif run_time < 4:
-                    return (-4, 4, False)
+                    return (-4, 4)
                 else:
-                    return (0, 0, True)
+                    return None
     
         self.environment.user_classes = [MyUser]
         self.environment.shape_class = TestShape()
