@@ -7,6 +7,7 @@ import traceback
 from datetime import datetime, timedelta
 from io import StringIO
 from tempfile import NamedTemporaryFile
+import time
 
 import gevent
 import requests
@@ -17,6 +18,7 @@ from locust.argument_parser import get_parser, parse_options
 from locust.user import User, task
 from locust.env import Environment
 from locust.runners import Runner
+from locust.result import set_result, RESULT_FAIL
 from locust.web import WebUI
 
 from .testcases import LocustTestCase
@@ -280,6 +282,34 @@ class TestWebUI(LocustTestCase):
         )
         self.assertEqual(200, response.status_code)
         self.assertIn("Step Load Mode", response.text)
+
+    def test_status_result_is_not_set(self):
+        response = requests.get("http://127.0.0.1:%i/status" % self.web_port)
+        self.assertEqual(200, response.status_code)
+        assert response.json() == {'result': None, 'state': 'ready', 'user_count': 0}
+
+    def test_status_result_is_set(self):
+        class MyUser(User):
+            wait_time = constant(1)
+            @task(1)
+            def my_task(self):
+                pass
+        self.environment.user_classes = [MyUser]
+
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={'user_count': 5, 'hatch_rate': 5},
+        )
+        self.assertEqual(200, response.status_code)
+
+        reason = 'Oops'
+        set_result(self.runner, RESULT_FAIL, reason)
+        response = requests.get("http://127.0.0.1:%i/status" % self.web_port)
+        self.assertEqual(200, response.status_code)
+
+        result = response.json()['result']
+        assert result['value'] == RESULT_FAIL
+        assert result['reason'] == reason
 
 
 class TestWebUIAuth(LocustTestCase):

@@ -47,6 +47,7 @@ class Runner(object):
         self.user_greenlets = Group()
         self.greenlet = Group()
         self.state = STATE_INIT
+        self.result = None
         self.hatching_greenlet = None
         self.stepload_greenlet = None
         self.current_cpu_usage = 0

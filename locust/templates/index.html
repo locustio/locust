@@ -27,6 +27,17 @@
                     <a href="#" class="new_test" id="new_test">New test</a>
                     <a href="#" class="edit_test">Edit</a>
                 </div>
+                <div class="top_box box_result">
+                    <span title="{{result.reason}}" id="result_reason_mouseover">
+                        <div class="label">RESULT</div>
+                        <div class="value" id="result_value">
+                            {{result.value}}
+                        </div>
+                        <div class "value" id="result_reason">
+                            {{result.reason}}
+                        </div>
+                    </span>
+                </div>
                 {% if is_distributed %}
                     <div class="top_box box_workers" id="box_workers">
                         <div class="label">WORKERS</div>

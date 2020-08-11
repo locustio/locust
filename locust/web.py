@@ -125,6 +125,7 @@ class WebUI:
             options = environment.parsed_options
             return render_template("index.html",
                 state=environment.runner.state,
+                result=environment.runner.result,
                 is_distributed=is_distributed,
                 user_count=environment.runner.user_count,
                 version=version,
@@ -152,10 +153,11 @@ class WebUI:
                 step_duration = parse_timespan(str(request.form["step_duration"]))
                 environment.runner.start_stepload(user_count, hatch_rate, step_user_count, step_duration)
                 return jsonify({'success': True, 'message': 'Swarming started in Step Load Mode', 'host': environment.host})
-            
+
+            environment.runner.result = None
             environment.runner.start(user_count, hatch_rate)
             return jsonify({'success': True, 'message': 'Swarming started', 'host': environment.host})
-        
+
         @app.route('/stop')
         @self.auth_required_if_enabled
         def stop():
@@ -247,7 +249,8 @@ class WebUI:
             
             report["state"] = environment.runner.state
             report["user_count"] = environment.runner.user_count
-        
+            report["result"] = environment.runner.result
+
             return jsonify(report)
         
         @app.route("/exceptions")
@@ -263,7 +266,17 @@ class WebUI:
                     } for row in environment.runner.exceptions.values()
                 ]
             })
-        
+
+        @app.route("/status")
+        @self.auth_required_if_enabled
+        def status():
+            runner = self.environment.runner
+            return jsonify({
+                "state": runner.state,
+                "result": runner.result,
+                "user_count": runner.user_count,
+            })
+
         @app.route("/exceptions/csv")
         @self.auth_required_if_enabled
         def exceptions_csv():

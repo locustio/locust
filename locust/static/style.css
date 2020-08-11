@@ -89,6 +89,22 @@ a:hover {
 .boxes .box_status .value {
     text-transform: uppercase;
 }
+.boxes .box_result {
+    display: none;
+}
+.boxes .box_result .value {
+    text-transform: uppercase;
+}
+.boxes .box_result #result_reason {
+    font-size: 14px;
+    font-weight: normal;
+    min-width: 0px;
+    max-width: 165px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
 .top_box .stop-button {
     display: block;
     float: left;
@@ -135,6 +151,9 @@ a:hover {
     font-weight: normal;
 }
 .boxes .box_running {
+    display: none;
+}
+.box_result {
     display: none;
 }
 .hatching .boxes .box_running {display: block;}

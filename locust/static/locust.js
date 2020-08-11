@@ -62,6 +62,7 @@ function setHostName(hostname) {
 $('#swarm_form').submit(function(event) {
     event.preventDefault();
     $("body").attr("class", "hatching");
+    $(".box_result").fadeOut();
     $("#start").fadeOut();
     $("#status").fadeIn();
     $(".box_running").fadeIn();
@@ -131,6 +132,15 @@ function renderTable(report) {
     $("#fail_ratio").html(Math.round(report.fail_ratio*100));
     $("#status_text").html(report.state);
     $("#userCount").html(report.user_count);
+
+    if (report.result) {
+        $("#result_value").html(report.result.value);
+        $("#result_reason").html(report.result.reason);
+        $("#result_reason_mouseover").attr("title", report.result.reason);
+        $(".box_result").fadeIn();
+    } else {
+        $(".box_result").fadeOut();
+    }
 }
 
 function renderWorkerTable(report) {
