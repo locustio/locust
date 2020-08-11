@@ -351,18 +351,18 @@ class TestLocustRunner(LocustTestCase):
 
         # Start load test, wait for users to start, then trigger ramp down
         runner.start(10, 10, wait=False)
-        gevent.sleep(1)
-        runner.start(2, 2, wait=False)
+        sleep(1)
+        runner.start(2, 4, wait=False)
 
         # Wait a moment and then ensure the user count has started to drop but
         # not immediately to user_count
         sleep(1)
         user_count = len(runner.user_greenlets)
-        self.assertTrue(user_count > 2, "User count has decreased too quickly: %i" % user_count)
+        self.assertTrue(user_count > 5, "User count has decreased too quickly: %i" % user_count)
         self.assertTrue(user_count < 10, "User count has not decreased at all: %i" % user_count)
-
+        
         # Wait and ensure load test users eventually dropped to desired count
-        sleep(5)
+        sleep(2)
         user_count = len(runner.user_greenlets)
         self.assertTrue(user_count == 2, "User count has not decreased correctly to 2, it is : %i" % user_count)
 
@@ -1308,15 +1308,17 @@ class TestStopTimeout(LocustTestCase):
 
         # Start load test, wait for users to start, then trigger ramp down
         runner.start(10, 10, wait=False)
-        gevent.sleep(1)
-        runner.start(2, 2, wait=False)
+        sleep(1)
+        runner.start(2, 4, wait=False)
 
-        sleep(2)
+        # Wait a moment and then ensure the user count has started to drop but
+        # not immediately to user_count
+        sleep(1)
         user_count = len(runner.user_greenlets)
-        self.assertTrue(user_count > 2, "User count has decreased too quickly: %i" % user_count)
+        self.assertTrue(user_count > 5, "User count has decreased too quickly: %i" % user_count)
         self.assertTrue(user_count < 10, "User count has not decreased at all: %i" % user_count)
         
         # Wait and ensure load test users eventually dropped to desired count
-        sleep(5)
+        sleep(2)
         user_count = len(runner.user_greenlets)
         self.assertTrue(user_count == 2, "User count has not decreased correctly to 2, it is : %i" % user_count)
