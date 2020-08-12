@@ -310,7 +310,7 @@ class Runner(object):
         logger.info("Shape worker starting")
         while self.state == STATE_INIT or self.state == STATE_HATCHING or self.state == STATE_RUNNING:
             new_state = self.environment.shape_class.tick()
-            if new_state == None:
+            if new_state is None:
                 logger.info("Shape test stopping")
                 self.stop()
             elif self.shape_last_state == new_state:
