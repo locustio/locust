@@ -241,7 +241,9 @@
         });
 
         usersChart.chart.setOption({
-            xAxis: [ {% for r in history %}"{{ r.time }}", {% endfor %} ],
+            xAxis: {
+                data: [ {% for r in history %}"{{ r.time }}", {% endfor %} ],
+            },
             series: [
                 {
                     data: [ {% for r in history %}{{ r.user_count }}, {% endfor %} ]
