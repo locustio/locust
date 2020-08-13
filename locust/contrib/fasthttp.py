@@ -461,7 +461,7 @@ class ResponseContextManager(FastResponse):
         """
         Report the response as a failure.
         
-        exc can be either a python exception, or a string in which case it will
+        if exc is anything other than a python exception (like a string) it will
         be wrapped inside a CatchResponseError. 
         
         Example::
@@ -470,6 +470,6 @@ class ResponseContextManager(FastResponse):
                 if response.content == "":
                     response.failure("No data")
         """
-        if isinstance(exc, str):
+        if not isinstance(exc, Exception):
             exc = CatchResponseError(exc)
         self._manual_result = exc
