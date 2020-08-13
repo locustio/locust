@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import csv
+import datetime
 import logging
 import os.path
 from functools import wraps
@@ -32,7 +33,9 @@ DEFAULT_CACHE_TIME = 2.0
 
 class WebUI:
     """
-    Sets up and runs a Flask web app that can start and stop load tests using the 
+    Sets up and runs a Flask web
+
+     that can start and stop load tests using the
     :attr:`environment.runner <locust.env.Environment.runner>` as well as show the load test statistics 
     in :attr:`environment.stats <locust.env.Environment.stats>`
     """
@@ -169,6 +172,59 @@ class WebUI:
             environment.runner.exceptions = {}
             return "ok"
             
+        @app.route("/stats/report")
+        @self.auth_required_if_enabled
+        def stats_report():
+            stats = self.environment.runner.stats
+            start_ts = stats.start_time
+            end_ts = stats.last_request_timestamp
+            start_time = datetime.datetime.fromtimestamp(start_ts).strftime('%Y-%m-%d %H:%M:%S')
+            end_time = datetime.datetime.fromtimestamp(end_ts).strftime('%Y-%m-%d %H:%M:%S')
+
+            host = None
+            if environment.host:
+                host = environment.host
+            elif environment.runner.user_classes:
+                all_hosts = set([l.host for l in environment.runner.user_classes])
+                if len(all_hosts) == 1:
+                    host = list(all_hosts)[0]
+
+            requests_statistics = list(chain(sort_stats(stats.entries), [stats.total]))
+            failures_statistics = sort_stats(stats.errors)
+            exceptions_statistics = []
+            for exc in environment.runner.exceptions.values():
+                nodes = ", ".join(exc["nodes"])
+                exc['nodes'] = nodes
+                exceptions_statistics.append(exc)
+
+            history = stats.history
+
+            static_js = ''
+            js_files = ['jquery-1.11.3.min.js', 'echarts.common.min.js', 'vintage.js', 'chart.js']
+            for js_file in js_files:
+                path = os.path.join(os.path.dirname(__file__), 'static', js_file)
+                content = open(path, encoding='utf8').read()
+                static_js += '// ' + js_file + '\n'
+                static_js += content
+                static_js += '\n\n\n'
+
+            res = render_template('report.html',
+                int=int,
+                round=round,
+                requests_statistics=requests_statistics,
+                failures_statistics=failures_statistics,
+                exceptions_statistics=exceptions_statistics,
+                start_time=start_time,
+                end_time=end_time,
+                host=host,
+                history=history,
+                static_js=static_js,
+            )
+            if request.args.get('download'):
+                res = app.make_response(res)
+                res.headers["Content-Disposition"] = "attachment;filename=report_%s.html" % time()
+            return res
+
         @app.route("/stats/requests/csv")
         @self.auth_required_if_enabled
         def request_stats_csv():
@@ -247,7 +303,7 @@ class WebUI:
             
             report["state"] = environment.runner.state
             report["user_count"] = environment.runner.user_count
-        
+
             return jsonify(report)
         
         @app.route("/exceptions")
@@ -259,7 +315,7 @@ class WebUI:
                         "count": row["count"],
                         "msg": row["msg"],
                         "traceback": row["traceback"],
-                        "nodes" : ", ".join(row["nodes"])
+                        "nodes": ", ".join(row["nodes"])
                     } for row in environment.runner.exceptions.values()
                 ]
             })

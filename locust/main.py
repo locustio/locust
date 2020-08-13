@@ -16,7 +16,7 @@ from .argument_parser import parse_locustfile_option, parse_options
 from .env import Environment
 from .log import setup_logging, greenlet_exception_logger
 from .stats import (print_error_report, print_percentile_stats, print_stats,
-                    stats_printer, stats_writer, write_csv_files)
+                    stats_printer, stats_writer, write_csv_files, stats_history)
 from .user import User
 from .user.inspectuser import get_task_ratio_dict, print_task_ratio
 from .util.timespan import parse_timespan
@@ -299,6 +299,8 @@ def main():
     if options.csv_prefix:
         gevent.spawn(stats_writer, environment, options.csv_prefix, full_history=options.stats_history_enabled).link_exception(greenlet_exception_handler)
 
+    stats_history_greenlet = gevent.spawn(stats_history, runner)
+    stats_history_greenlet.link_exception(greenlet_exception_handler)
     
     def shutdown():
         """
@@ -329,6 +331,9 @@ def main():
         if options.csv_prefix:
             write_csv_files(environment, options.csv_prefix, full_history=options.stats_history_enabled)
         print_error_report(runner.stats)
+
+        stats_history_greenlet.kill(block=False)
+
         sys.exit(code)
     
     # install SIGTERM handler
