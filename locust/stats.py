@@ -51,6 +51,16 @@ class RequestStatsAdditionError(Exception):
     pass
 
 
+def get_readable_percentiles(percentile_list):
+    """
+    Converts a list of percentiles from 0-1 fraction to 0%-100% view for using in console & csv reporting
+    :param percentile_list: The list of percentiles in range 0-1
+    :return: The list of string representation for each percentile in 0%-100% view
+    """
+    return [f"{int(percentile * 100) if (percentile * 100).is_integer() else round(100 * percentile, 6)}%"
+            for percentile in percentile_list]
+
+
 def calculate_response_time_percentile(response_times, num_requests, percent):
     """
     Get the response time that a certain number of percent of the requests
@@ -565,27 +575,15 @@ class StatsEntry(object):
                 percent,
             )
     
-    def percentile(self, tpl=" %-" + str(STATS_TYPE_WIDTH) + "s %-" + str(STATS_NAME_WIDTH) + "s %8d %6d %6d %6d %6d %6d %6d %6d %6d %6d %6d %6d"):
+    def percentile(self):
         if not self.num_requests:
             raise ValueError("Can't calculate percentile on url with no successful requests")
-        
-        return tpl % (
-            self.method,
-            self.name,
-            self.num_requests,
-            self.get_response_time_percentile(0.5),
-            self.get_response_time_percentile(0.66),
-            self.get_response_time_percentile(0.75),
-            self.get_response_time_percentile(0.80),
-            self.get_response_time_percentile(0.90),
-            self.get_response_time_percentile(0.95),
-            self.get_response_time_percentile(0.98),
-            self.get_response_time_percentile(0.99),
-            self.get_response_time_percentile(0.999),
-            self.get_response_time_percentile(0.9999),
-            self.get_response_time_percentile(1.00)
-        )
-    
+
+        tpl = f" %-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8d {' '.join(['%7d'] * len(PERCENTILES_TO_REPORT))}"
+
+        return tpl % ((self.method, self.name, self.num_requests)
+                      + tuple([self.get_response_time_percentile(p) for p in PERCENTILES_TO_REPORT]))
+
     def _cache_response_times(self, t):
         self.response_times_cache[t] = CachedResponseTimes(
             response_times=copy(self.response_times),
@@ -711,32 +709,21 @@ def print_stats(stats, current=True):
 
 def print_percentile_stats(stats):
     console_logger.info("Percentage of the requests completed within given times")
-    console_logger.info((" %-" + str(STATS_TYPE_WIDTH) + "s %-" + str(STATS_NAME_WIDTH) + "s %8s %6s %6s %6s %6s %6s %6s %6s %6s %6s %6s %6s") % (
-        'Type',
-        'Name',
-        '# reqs',
-        '50%',
-        '66%',
-        '75%',
-        '80%',
-        '90%',
-        '95%',
-        '98%',
-        '99%',
-        '99.9%',
-        '99.99%',
-        '100%',
-    ))
-    console_logger.info("-" * (90 + STATS_NAME_WIDTH))
+    headers = ('Type', 'Name', '# reqs') + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT))
+    console_logger.info((f" %-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
+                         f"{' '.join(['%7s'] * len(PERCENTILES_TO_REPORT))}") % headers)
+    separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 9}|{("-" * 7 + "|") * len(PERCENTILES_TO_REPORT)}'
+    console_logger.info(separator)
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
         if r.response_times:
             console_logger.info(r.percentile())
-    console_logger.info("-" * (90 + STATS_NAME_WIDTH))
+    console_logger.info(separator)
 
     if stats.total.response_times:
         console_logger.info(stats.total.percentile())
     console_logger.info("")
+
 
 def print_error_report(stats):
     if not len(stats.errors):
@@ -785,7 +772,7 @@ def sort_stats(stats):
 
 def requests_csv(stats, csv_writer):
     """Returns the contents of the 'requests' & 'distribution' tab as CSV."""
-    csv_writer.writerow([
+    headers = [
         "Type",
         "Name",
         "Request Count",
@@ -796,20 +783,9 @@ def requests_csv(stats, csv_writer):
         "Max Response Time",
         "Average Content Size",
         "Requests/s",
-        "Failures/s",
-        "50%",
-        "66%",
-        "75%",
-        "80%",
-        "90%",
-        "95%",
-        "98%",
-        "99%",
-        "99.9%",
-        "99.99%",
-        "99.999%",
-        "100%",
-    ])
+        "Failures/s"]
+    headers.extend(get_readable_percentiles(PERCENTILES_TO_REPORT))
+    csv_writer.writerow(headers)
 
     for s in chain(sort_stats(stats.entries), [stats.total]):
         if s.num_requests:
@@ -836,32 +812,21 @@ def requests_csv(stats, csv_writer):
 def stats_history_csv_header():
     """Headers for the stats history CSV"""
 
-    return ','.join((
-        '"Timestamp"',
-        '"User Count"',
-        '"Type"',
-        '"Name"',
-        '"Requests/s"',
-        '"Failures/s"',
-        '"50%"',
-        '"66%"',
-        '"75%"',
-        '"80%"',
-        '"90%"',
-        '"95%"',
-        '"98%"',
-        '"99%"',
-        '"99.9%"',
-        '"99.99%"',
-        '"99.999%"',
-        '"100%"',
-        '"Total Request Count"',
-        '"Total Failure Count"',
-        '"Total Median Response Time"',
-        '"Total Average Response Time"',
-        '"Total Min Response Time"',
-        '"Total Max Response Time"',
-        '"Total Average Content Size"',
+    return ",".join((
+        "Timestamp",
+        "User Count",
+        "Type",
+        "Name",
+        "Requests/s",
+        "Failures/s",
+        ",".join(get_readable_percentiles(PERCENTILES_TO_REPORT)),
+        "Total Request Count",
+        "Total Failure Count",
+        "Total Median Response Time",
+        "Total Average Response Time",
+        "Total Min Response Time",
+        "Total Max Response Time",
+        "Total Average Content Size",
     )) + '\n'
 
 def stats_history_csv(environment, all_entries=False):
