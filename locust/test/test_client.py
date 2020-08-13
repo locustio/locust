@@ -130,7 +130,15 @@ class TestHttpSession(WebserverTestCase):
             r.failure("nope")
         self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_requests)
         self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_failures)
-    
+
+    def test_catch_response_fail_successful_request_with_non_string_error_message(self):
+        s = self.get_client()
+        with s.get("/ultra_fast", catch_response=True) as r:
+            r.failure({ "other types are also wrapped as exceptions" : True })
+        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_requests)
+        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_failures)
+
+
     def test_catch_response_pass_failed_request(self):
         s = self.get_client()
         with s.get("/fail", catch_response=True) as r:
