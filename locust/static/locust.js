@@ -135,6 +135,19 @@ function renderTable(report) {
 
     if (report.result) {
         $("#result_value").html(report.result.value);
+        switch (report.result.value) {
+        case "pass":
+            $("#result_value").css("color", "#173529"); // same green as background
+            break;
+        case "warning":
+            $("#result_value").css("color", "#ffca5a"); // same orange as vintage line
+            break;
+        case "fail":
+            $("#result_value").css("color", "red");
+            break;
+        default:
+            $("#result_value").css("color", "black");
+        }
         $("#result_reason").html(report.result.reason);
         $("#result_reason_mouseover").attr("title", report.result.reason);
         $(".box_result").fadeIn();
