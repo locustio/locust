@@ -297,11 +297,11 @@ class Runner(object):
             gevent.sleep(step_duration)
 
     def start_shape(self):
-        logger.info("Shape test starting")
         if self.shape_greenlet:
-            logger.info("There is an ongoing shape test running, will stop it now")
-            self.shape_greenlet.kill()
+            logger.info("There is an ongoing shape test running. Editing is disabled")
+            return
 
+        logger.info("Shape test starting. User count and hatch rate are ignored for this type of load test")
         self.state = STATE_INIT
         self.shape_greenlet = self.greenlet.spawn(self.shape_worker)
         self.shape_greenlet.link_exception(greenlet_exception_handler)
