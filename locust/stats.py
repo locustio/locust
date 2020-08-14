@@ -757,7 +757,7 @@ def write_csv_files(environment, base_filepath, full_history=False):
         csv_writer = csv.writer(f)
         requests_csv(environment.stats, csv_writer)
 
-    with open(base_filepath + '_stats_history.csv', 'a') as f:
+    with open(stats_history_file_name(base_filepath), 'a') as f:
         f.write(stats_history_csv_rows(environment, full_history) + "\n")
 
     with open(base_filepath + '_failures.csv', 'w') as f:
@@ -829,7 +829,7 @@ def write_stats_history_csv_header(base_filepath):
         "Total Average Content Size",
     )) + '\n'
 
-    with open(base_filepath + '_stats_history.csv', 'w') as f:
+    with open(stats_history_file_name(base_filepath), 'w') as f:
         f.write(header)
 
 def stats_history_csv_rows(environment, all_entries=False):
@@ -872,10 +872,8 @@ def stats_history_csv_rows(environment, all_entries=False):
     return "\n".join(rows)
 
 
-def load_requests_csv(base_filepath):
-    """Return content of ..._stats_history.csv file."""
-    with open(base_filepath + '_stats_history.csv') as f:
-        return f.read()
+def stats_history_file_name(base_filepath):
+    return base_filepath + '_stats_history.csv'
 
 
 def failures_csv(stats, csv_writer):

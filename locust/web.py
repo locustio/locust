@@ -10,7 +10,7 @@ from itertools import chain
 from time import time
 
 import gevent
-from flask import Flask, make_response, jsonify, render_template, request
+from flask import Flask, make_response, jsonify, render_template, request, send_file
 from flask_basicauth import BasicAuth
 from gevent import pywsgi
 
@@ -18,7 +18,7 @@ from locust import __version__ as version
 from .exception import AuthCredentialsError
 from .runners import MasterRunner
 from .log import greenlet_exception_logger
-from .stats import failures_csv, requests_csv, load_requests_csv, sort_stats
+from .stats import failures_csv, requests_csv, stats_history_file_name, sort_stats
 from .util.cache import memoize
 from .util.rounding import proper_round
 from .util.timespan import parse_timespan
@@ -170,6 +170,15 @@ class WebUI:
             environment.runner.exceptions = {}
             return "ok"
 
+        def _download_csv_suggest_file_name(suggest_filename_prefix):
+            """Generate csv file download attachment filename suggestion.
+
+            Arguments:
+            suggest_filename_prefix: Prefix of the filename to suggest for saving the download. Will be appended with timestamp.
+            """
+
+            return f"{suggest_filename_prefix}_{time()}.csv"
+
         def _download_csv_response(csv_data, filename_prefix):
             """Generate csv file download response with 'csv_data'.
 
@@ -179,10 +188,8 @@ class WebUI:
             """
 
             response = make_response(csv_data)
-            file_name = "{0}_{1}.csv".format(filename_prefix, time())
-            disposition = "attachment;filename={0}".format(file_name)
             response.headers["Content-type"] = "text/csv"
-            response.headers["Content-disposition"] = disposition
+            response.headers["Content-disposition"] = f"attachment;filename={_download_csv_suggest_file_name(filename_prefix)}"
             return response
 
         @app.route("/stats/requests/csv")
@@ -198,8 +205,11 @@ class WebUI:
         def request_stats_full_history_csv():
             options = self.environment.parsed_options
             if options and options.stats_history_enabled:
-                csv_data = load_requests_csv(options.csv_prefix)
-                return _download_csv_response(csv_data, "requests_full_history")
+                return send_file(
+                    os.path.abspath(stats_history_file_name(options.csv_prefix)),
+                    mimetype="text/csv",
+                    as_attachment=True, attachment_filename=_download_csv_suggest_file_name("requests_full_history"),
+                    add_etags=True, cache_timeout=None, conditional=True, last_modified=None)
 
             return make_response("Error: Server was not started with option to generate full history.", 404)
 
