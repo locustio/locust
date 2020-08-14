@@ -281,6 +281,19 @@ class TestWebUI(LocustTestCase):
         self.assertEqual(200, response.status_code)
         self.assertIn("Step Load Mode", response.text)
 
+    def test_report_page(self):
+        self.stats.log_request("GET", "/test", 120, 5612)
+        r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
+        self.assertEqual(200, r.status_code)
+        self.assertIn("<title>Test Report</title>", r.text)
+        self.assertIn("charts-container", r.text)
+
+    def test_report_download(self):
+        self.stats.log_request("GET", "/test", 120, 5612)
+        r = requests.get("http://127.0.0.1:%i/stats/report?download=1" % self.web_port)
+        self.assertEqual(200, r.status_code)
+        self.assertIn('attachment', r.headers.get("Content-Disposition", ""))
+
 
 class TestWebUIAuth(LocustTestCase):
     def setUp(self):
