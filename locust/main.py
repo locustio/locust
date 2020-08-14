@@ -187,7 +187,7 @@ def main():
     environment = create_environment(user_classes, options, events=locust.events, shape_class=shape_class)
 
     if shape_class and (options.num_users or options.hatch_rate or options.step_load):
-        logger.error("The specified locustfile contains a shaper class but a conflicting argument was specified: users, hatch-rate or step-load")
+        logger.error("The specified locustfile contains a shape class but a conflicting argument was specified: users, hatch-rate or step-load")
         sys.exit(1)
 
     if options.show_task_ratio:
