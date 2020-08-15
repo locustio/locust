@@ -15,7 +15,7 @@ To validate your installation and see available options, run:
 
     $ locust --help
 
-If the **locust** command is not available, make sure your python script directory is in your path. If everything worked, move on to :ref:`quickstart`
+If you get an error saying the command *locust* is not available, make sure your Python script directory is in your PATH variable. If everything worked, move on to :ref:`quickstart`.
 
 Windows
 -------
@@ -27,7 +27,7 @@ Linux machines, as gevent's performance under Windows is not very good.
 
 Bleeding edge version
 ---------------------
-For those who absolutely need some feature not yet part of a release
+For those who absolutely need some feature not yet part of a release:
 
 .. code-block:: console
 
