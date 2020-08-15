@@ -1,21 +1,15 @@
 Installation
 ============
 
-Locust is available on `PyPI <https://pypi.org/project/locustio/>`_ and can be installed with `pip <https://pip.pypa.io/>`_.
+`Install Python <https://docs.python-guide.org/starting/installation/>` 3.6 or later.
 
+Install Locust using pip.
 
 .. code-block:: console
 
     $ pip3 install locust
 
-If you want the bleeding edge version, you can use pip to install directly from our Git repository.  For example, to install the master branch using Python 3:
-
-.. code-block:: console
-
-    $ pip3 install -e git://github.com/locustio/locust.git@master#egg=locust
-
-Once Locust is installed, a **locust** command should be available in your shell. (if you're not using
-virtualenv-which you should-make sure your python script directory is on your path).
+Once Locust is installed, a **locust** command should be available in your shell. If it isn't, make sure your python script directory is on your path.
 
 To see available options, run:
 
@@ -23,55 +17,31 @@ To see available options, run:
 
     $ locust --help
 
-
-Supported Python Versions
--------------------------
-
-Locust is supported on Python 3.6, 3.7 and 3.8.
-
-
-Installing Locust on Windows
-----------------------------
-
-On Windows, running ``pip install locust`` *should* work.
-
-However, if it doesn't, chances are that it can be fixed by first installing
-the pre built binary packages for pyzmq, gevent and greenlet.
-
-You can find an unofficial collection of pre built python packages for windows here:
-`http://www.lfd.uci.edu/~gohlke/pythonlibs/ <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_
-
-When you've downloaded a pre-built ``.whl`` file, you can install it with:
-
-.. code-block:: console
-
-    $ pip install name-of-file.whl
-
-Once you've done that you should be able to just ``pip install locust``.
-
 .. note::
+    If you have issues installing on Windows, check https://stackoverflow.com/questions/61592069/locust-is-not-installing-on-my-windows-10-for-load-testing
 
     Running Locust on Windows should work fine for developing and testing your load testing
     scripts. However, when running large scale tests, it's recommended that you do that on
-    Linux machines, since gevent's performance under Windows is poor.
+    Linux machines, as gevent's performance under Windows is not very good.
 
+Install the bleeding edge version
+---------------------------------
+For those who absolutely need some feature not yet part of a release
 
-Installing Locust on macOS
---------------------------
+.. code-block:: console
 
-Make sure you have a working installation of Python 3.6 or higher and follow the above 
-instructions. `Homebrew <http://mxcl.github.com/homebrew/>`_ can be used to install Python 
-on macOS.
-
+    $ pip3 install -e git://github.com/locustio/locust.git@master#egg=locust
 
 Increasing Maximum Number of Open Files Limit
 ---------------------------------------------
 
-Every HTTP connection on a machine opens a new file (technically a file descriptor).
-Operating systems may set a low limit for the maximum number of files
-that can be open. If the limit is less than the number of simulated users in a test,
-failures will occur.
+Every User/HTTP connection from Locust opens a new file (technically a file descriptor).
+Many operating systems by default set a low limit for the maximum number of files that 
+can be open at the same time.
 
-Increase the operating system's default maximum number of files limit to a number
-higher than the number of simulated users you'll want to run. How to do this depends
-on the operating system in use.
+Locust will try to adjust this automatically for you, but in a lot of cases your 
+operating system will not allow it (in which case you will get a warning in the log), 
+so you'll need to do it yourself.
+
+How to do this depends on your operating system, but for Linux you might find some 
+useful information `here <https://www.tecmint.com/increase-set-open-file-limits-in-linux/>`
