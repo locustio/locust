@@ -1,7 +1,7 @@
 Installation
 ============
 
-`Install Python <https://docs.python-guide.org/starting/installation/>` 3.6 or later.
+`Install Python <https://docs.python-guide.org/starting/installation/>`_ 3.6 or later.
 
 Install Locust using pip.
 
@@ -9,23 +9,24 @@ Install Locust using pip.
 
     $ pip3 install locust
 
-Once Locust is installed, a **locust** command should be available in your shell. If it isn't, make sure your python script directory is on your path.
-
-To see available options, run:
+To validate your installation and see available options, run:
 
 .. code-block:: console
 
     $ locust --help
 
-.. note::
-    If you have issues installing on Windows, check https://stackoverflow.com/questions/61592069/locust-is-not-installing-on-my-windows-10-for-load-testing
+If the **locust** command is not available, make sure your python script directory is in your path. If everything worked, move on to :ref:`quickstart`
 
-    Running Locust on Windows should work fine for developing and testing your load testing
-    scripts. However, when running large scale tests, it's recommended that you do that on
-    Linux machines, as gevent's performance under Windows is not very good.
+Windows
+-------
+If you have issues installing, check https://stackoverflow.com/questions/61592069/locust-is-not-installing-on-my-windows-10-for-load-testing
 
-Install the bleeding edge version
----------------------------------
+Running Locust on Windows should work fine for developing and testing your
+scripts. However, when running large scale tests, it's recommended that you do that on
+Linux machines, as gevent's performance under Windows is not very good.
+
+Bleeding edge version
+---------------------
 For those who absolutely need some feature not yet part of a release
 
 .. code-block:: console
@@ -43,5 +44,4 @@ Locust will try to adjust this automatically for you, but in a lot of cases your
 operating system will not allow it (in which case you will get a warning in the log), 
 so you'll need to do it yourself.
 
-How to do this depends on your operating system, but for Linux you might find some 
-useful information `here <https://www.tecmint.com/increase-set-open-file-limits-in-linux/>`
+How to do this depends on your operating system, but for Linux you might find some useful information `here <https://www.tecmint.com/increase-set-open-file-limits-in-linux/>`_.
