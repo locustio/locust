@@ -1,5 +1,6 @@
 ---
 name: Feature request
+about: ''
 title: ''
 labels: feature request
 assignees: ''
