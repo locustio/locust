@@ -2,4 +2,4 @@ blank_issues_enabled: false
 contact_links:
   - name: Question
     url: https://stackoverflow.com/questions/tagged/locust
-    about: Please ask (and answer) questions on StackOverflow
+    about: Check the FAQ in the wiki, and if there is no answer there, ask on StackOverflow
