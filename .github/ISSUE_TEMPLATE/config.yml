@@ -1,5 +1,9 @@
 blank_issues_enabled: false
 contact_links:
+  - name: FAQ
+    url: https://github.com/locustio/locust/wiki/FAQ
+    about: Check the FAQ in the wiki
+contact_links:
   - name: Question
     url: https://stackoverflow.com/questions/tagged/locust
-    about: Check the FAQ in the wiki, and if there is no answer there, ask on StackOverflow
+    about: Ask questions and look for answers on StackOverflow
