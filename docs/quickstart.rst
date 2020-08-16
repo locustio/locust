@@ -124,7 +124,7 @@ and point it to http://127.0.0.1:8089. Then you should be greeted with something
 
 .. image:: images/webui-splash-screenshot.png
 
-Fill out the form and try it out! (but note that if you don't change your locust file to match your target system you'll mostly get error responses)
+Fill out the form and try it out! (but note that if you don't change your locust file to match your actual target system you'll mostly get error responses)
 
 .. image:: images/webui-running-statistics.png
 
