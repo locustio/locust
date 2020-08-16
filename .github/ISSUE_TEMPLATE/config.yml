@@ -3,7 +3,6 @@ contact_links:
   - name: FAQ
     url: https://github.com/locustio/locust/wiki/FAQ
     about: Check the FAQ in the wiki
-contact_links:
   - name: Question
     url: https://stackoverflow.com/questions/tagged/locust
     about: Ask questions and look for answers on StackOverflow
