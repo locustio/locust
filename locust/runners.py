@@ -49,6 +49,8 @@ class Runner(object):
         self.state = STATE_INIT
         self.hatching_greenlet = None
         self.stepload_greenlet = None
+        self.shape_greenlet = None
+        self.shape_last_state = None
         self.current_cpu_usage = 0
         self.cpu_warning_emitted = False
         self.greenlet.spawn(self.monitor_cpu).link_exception(greenlet_exception_handler)
@@ -288,11 +290,36 @@ class Runner(object):
         while self.state == STATE_INIT or self.state == STATE_HATCHING or self.state == STATE_RUNNING:
             current_num_users += step_users_growth
             if current_num_users > int(self.total_users):
-                logger.info('Step Load is finished.')
+                logger.info("Step Load is finished")
                 break
             self.start(current_num_users, hatch_rate)
-            logger.info('Step loading: start hatch job of %d user.' % (current_num_users))
+            logger.info("Step loading: start hatch job of %d user" % (current_num_users))
             gevent.sleep(step_duration)
+
+    def start_shape(self):
+        if self.shape_greenlet:
+            logger.info("There is an ongoing shape test running. Editing is disabled")
+            return
+
+        logger.info("Shape test starting. User count and hatch rate are ignored for this type of load test")
+        self.state = STATE_INIT
+        self.shape_greenlet = self.greenlet.spawn(self.shape_worker)
+        self.shape_greenlet.link_exception(greenlet_exception_handler)
+
+    def shape_worker(self):
+        logger.info("Shape worker starting")
+        while self.state == STATE_INIT or self.state == STATE_HATCHING or self.state == STATE_RUNNING:
+            new_state = self.environment.shape_class.tick()
+            if new_state is None:
+                logger.info("Shape test stopping")
+                self.stop()
+            elif self.shape_last_state == new_state:
+                gevent.sleep(1)
+            else:
+                user_count, hatch_rate = new_state
+                logger.info("Shape test updating to %d users at %.2f hatch rate" % (user_count, hatch_rate))
+                self.start(user_count=user_count, hatch_rate=hatch_rate)
+                self.shape_last_state = new_state
 
     def stop(self):
         """

@@ -8,7 +8,7 @@ from contextlib import contextmanager
 MOCK_LOUCSTFILE_CONTENT = '''
 """This is a mock locust file for unit testing"""
 
-from locust import HttpUser, TaskSet, task, between
+from locust import HttpUser, TaskSet, task, between, LoadTestShape
 
 
 def index(l):
@@ -32,6 +32,8 @@ class UserSubclass(HttpUser):
 class NotUserSubclass():
     host = "http://localhost:8000"
 
+class LoadTestShape(LoadTestShape):
+    pass
 '''
 
 class MockedLocustfile:

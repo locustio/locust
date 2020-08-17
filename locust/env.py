@@ -4,6 +4,7 @@ from .stats import RequestStats
 from .runners import LocalRunner, MasterRunner, WorkerRunner
 from .web import WebUI
 from .user.task import filter_tasks_by_tags
+from .shape import LoadTestShape
 
 
 class Environment:
@@ -15,7 +16,10 @@ class Environment:
     
     user_classes = []
     """User classes that the runner will run"""
-    
+
+    shape_class = None
+    """A shape class to control the shape of the load test"""
+
     tags = None
     """If set, only tasks that are tagged by tags in this list will be executed"""
 
@@ -63,12 +67,13 @@ class Environment:
     def  __init__(
         self, *,
         user_classes=[],
+        shape_class=None,
         tags=None,
         exclude_tags=None,
-        events=None, 
-        host=None, 
-        reset_stats=False, 
-        step_load=False, 
+        events=None,
+        host=None,
+        reset_stats=False,
+        step_load=False,
         stop_timeout=None,
         catch_exceptions=True,
         parsed_options=None,
@@ -79,6 +84,7 @@ class Environment:
             self.events = Events()
         
         self.user_classes = user_classes
+        self.shape_class = shape_class
         self.tags = tags
         self.exclude_tags = exclude_tags
         self.stats = RequestStats()

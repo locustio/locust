@@ -6,7 +6,7 @@ from gevent import sleep
 from gevent.queue import Queue
 
 import locust
-from locust import runners, between, constant
+from locust import runners, between, constant, LoadTestShape
 from locust.main import create_environment
 from locust.user import User, TaskSet, task
 from locust.env import Environment
@@ -416,6 +416,62 @@ class TestMasterWorkerRunners(LocustTestCase):
             20, 
             "For some reason the master node's stats has not come in",
         )
+    
+    def test_distributed_shape(self):
+        """
+        Full integration test that starts both a MasterRunner and three WorkerRunner instances 
+        and tests a basic LoadTestShape with scaling up and down users
+        """
+        class TestUser(User):
+            wait_time = constant(0)
+            @task
+            def my_task(self):
+                pass
+    
+        class TestShape(LoadTestShape):
+            def tick(self):
+                run_time = self.get_run_time()
+                if run_time < 2:
+                    return (9, 9)
+                elif run_time < 4:
+                    return (21, 21)
+                elif run_time < 6:
+                    return (3, 21)
+                else:
+                    return None
+        
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            master_env = Environment(user_classes=[TestUser], shape_class=TestShape())
+            master_env.shape_class.reset_time()
+            master = master_env.create_master_runner("*", 0)
+
+            workers = []
+            for i in range(3):
+                worker_env = Environment(user_classes=[TestUser])
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+    
+            # Give workers time to connect
+            sleep(0.1)
+            # Start a shape test
+            master.start_shape()
+            sleep(1)
+
+            # Ensure workers have connected and started the correct amounf of users
+            for worker in workers:
+                self.assertEqual(3, worker.user_count, "Shape test has not reached stage 1")
+            # Ensure new stage with more users has been reached
+            sleep(2)
+            for worker in workers:
+                self.assertEqual(7, worker.user_count, "Shape test has not reached stage 2")
+            # Ensure new stage with less users has been reached
+            sleep(2)
+            for worker in workers:
+                self.assertEqual(1, worker.user_count, "Shape test has not reached stage 3")
+            # Ensure test stops at the end
+            sleep(2)
+            for worker in workers:
+                self.assertEqual(0, worker.user_count, "Shape test has not stopped")
 
 
 class TestMasterRunner(LocustTestCase):
@@ -811,6 +867,104 @@ class TestMasterRunner(LocustTestCase):
                 num_users += msg.data["num_users"]
             
             self.assertEqual(2, num_users, "Total number of locusts that would have been spawned is not 2")
+
+    def test_custom_shape_scale_up(self):
+        class MyUser(User):
+            wait_time = constant(0)
+            @task
+            def my_task(self):
+                pass
+    
+        class TestShape(LoadTestShape):
+            def tick(self):
+                run_time = self.get_run_time()
+                if run_time < 2:
+                    return (1, 1)
+                elif run_time < 4:
+                    return (2, 2)
+                else:
+                    return None
+    
+        self.environment.user_classes = [MyUser]
+        self.environment.shape_class = TestShape()
+    
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner()
+            for i in range(5):
+                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+    
+            # Start the shape_worker
+            self.environment.shape_class.reset_time()
+            master.start_shape()
+            sleep(0.5)
+    
+            # Wait for shape_worker to update user_count
+            num_users = 0
+            for _, msg in server.outbox:
+                if msg.data:
+                    num_users += msg.data["num_users"]
+            self.assertEqual(1, num_users, "Total number of users in first stage of shape test is not 1: %i" % num_users)
+    
+            # Wait for shape_worker to update user_count again
+            sleep(2)
+            num_users = 0
+            for _, msg in server.outbox:
+                if msg.data:
+                    num_users += msg.data["num_users"]
+            self.assertEqual(3, num_users, "Total number of users in second stage of shape test is not 3: %i" % num_users)
+            
+            # Wait to ensure shape_worker has stopped the test
+            sleep(3)
+            self.assertEqual("stopped", master.state, "The test has not been stopped by the shape class")
+
+    def test_custom_shape_scale_down(self):
+        class MyUser(User):
+            wait_time = constant(0)
+            @task
+            def my_task(self):
+                pass
+    
+        class TestShape(LoadTestShape):
+            def tick(self):
+                run_time = self.get_run_time()
+                if run_time < 2:
+                    return (5, 5)
+                elif run_time < 4:
+                    return (-4, 4)
+                else:
+                    return None
+    
+        self.environment.user_classes = [MyUser]
+        self.environment.shape_class = TestShape()
+    
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner()
+            for i in range(5):
+                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+    
+            # Start the shape_worker
+            self.environment.shape_class.reset_time()
+            master.start_shape()
+            sleep(0.5)
+    
+            # Wait for shape_worker to update user_count
+            num_users = 0
+            for _, msg in server.outbox:
+                if msg.data:
+                    num_users += msg.data["num_users"]
+            self.assertEqual(5, num_users, "Total number of users in first stage of shape test is not 5: %i" % num_users)
+    
+            # Wait for shape_worker to update user_count again
+            sleep(2)
+            num_users = 0
+            for _, msg in server.outbox:
+                if msg.data:
+                    num_users += msg.data["num_users"]
+            self.assertEqual(1, num_users, "Total number of users in second stage of shape test is not 1: %i" % num_users)
+            
+            # Wait to ensure shape_worker has stopped the test
+            sleep(3)
+            self.assertEqual("stopped", master.state, "The test has not been stopped by the shape class")
 
     def test_spawn_locusts_in_stepload_mode(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
