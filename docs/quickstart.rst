@@ -4,19 +4,15 @@
 Quick start
 =============
 
-In Locust you define your user behaviour in Python code. You then use the ``locust`` command and (optionally) its web interface to spawn and simulate a number of those users while gathering request statistics.
+A Locust performance test is specified in a plain python file:
 
-
-
-Example locustfile.py
-=====================
 .. code-block:: python
 
-    import random
+    import time
     from locust import HttpUser, task, between
 
     class QuickstartUser(HttpUser):
-        wait_time = between(5, 9)
+        wait_time = between(1, 2)
 
         @task
         def index_page(self):
@@ -25,18 +21,19 @@ Example locustfile.py
         
         @task(3)
         def view_item(self):
-            item_id = random.randint(1, 10000)
-            self.client.get(f"/item?id={item_id}", name="/item")
+            for item_id in range(10):
+                self.client.get(f"/item?id={item_id}", name="/item")
+                time.sleep(1)
         
         def on_start(self):
-            self.client.post("/login", {"username":"foo", "password":"bar"})
+            self.client.post("/login", json={"username":"foo", "password":"bar"})
 
 
 .. rubric:: Let's break it down
 
 .. code-block:: python
 
-    import random
+    import time
     from locust import HttpUser, task, between
 
 A locust file is just a normal Python module, it can import code from other files or packages.
@@ -45,19 +42,22 @@ A locust file is just a normal Python module, it can import code from other file
 
     class QuickstartUser(HttpUser):
 
-Here we define a class for the users that we will be simulating. It inherits from 
-:py:class:`HttpUser <locust.HttpUser>` which gives each user a ``client`` attribute,
-which is an instance of :py:class:`HttpSession <locust.clients.HttpSession>`, that 
-can be used to make HTTP requests to the target system that we want to load test. When a test starts, 
-locust will create an instance of this class for every user that it simulates, and each of these 
-users will start running within their own green gevent thread.
+The behaviour of a simulated user is represented by a class in your locust file. When you start a test run, Locust will create an instance of the class for each concurrent user.
 
 .. code-block:: python
 
-    wait_time = between(5, 9)
+    wait_time = between(1, 2)
 
-Our class defines a ``wait_time`` function that will make the simulated users wait between 5 and 9 seconds after each task 
+The class defines a ``wait_time`` that will make the simulated users wait between 1 and 2 seconds after each task (see below)
 is executed. For more info see :ref:`wait-time`.
+
+.. code-block:: python
+
+    @task
+    def index_page(self):
+        ...
+
+Methods declared with the ``@task`` attribute are the core of your locust file. For every running user, Locust creates a greenlet (micro-thread), that will call those methods.
 
 .. code-block:: python
 
@@ -65,36 +65,34 @@ is executed. For more info see :ref:`wait-time`.
     def index_page(self):
         self.client.get("/hello")
         self.client.get("/world")
-    
+
+The self.client attribute makes it possible to make HTTP calls that will be logged by Locust. `See more details on how to make requests, validate the response, etc <writing-a-locustfile.html#using-the-http-client>`_.
+
+.. code-block:: python
+
     @task(3)
     def view_item(self):
         ...
 
-We've also declared two tasks by decorating two methods with ``@task``, one of which has been given a higher weight (3). 
-When a User of this type runs it'll pick one of either ``index_page`` or ``view_item`` - with three times the chance of picking 
-``view_item`` - call that method and then pick a duration uniformly between 5 and 9 and just sleep for that duration. 
-After it's wait time it'll pick a new task and keep repeating that.
+Tasks are picked at random, but you can give them different weighting. The above configuration will make Locust three times likelier to pick ``view_item`` than ``index_page``.
 
 .. code-block:: python
-    :emphasize-lines: 4,4
-    
+
     @task(3)
     def view_item(self):
-        item_id = random.randint(1, 10000)
-        self.client.get(f"/item?id={item_id}", name="/item")
+        for item_id in range(10)
+            self.client.get(f"/item?id={item_id}", name="/item")
+            time.sleep(1)
 
-In the ``view_item`` task we load a dynamic URL by using a query parameter that is a number picked at random between 
-1 and 10000. In order to not get 10k separate entries in Locust's statistics - since the stats is grouped on the URL - we use 
+In the ``view_item`` task we load 10 different URLs by using a query parameter based on a variable. In order to not get 10 separate entries in Locust's statistics - since the stats is grouped on the URL - we use 
 the :ref:`name parameter <name-parameter>` to group all those requests under an entry named ``"/item"`` instead.
-
-Note that only methods decorated with ``@task`` will be called, so you can define your own internal helper methods any way you like.
 
 .. code-block:: python
 
     def on_start(self):
+        self.client.post("/login", json={"username":"foo", "password":"bar"})
 
-Additionally we've declared an `on_start` method. A method with this name will be called for each simulated 
-user when they start. For more info see :ref:`on-start-on-stop`.
+If you declare a method called `on_start`, it will be called once for each user. For more info see :ref:`on-start-on-stop`.
 
 Start Locust
 ============
@@ -142,3 +140,8 @@ To start tests directly, without using the web interface, use ``--headless``.
 
 Parameters can also be set through :ref:`environment variables <environment-variables>`, or in a
 :ref:`config file <configuration-file>`.
+
+How to write a *real* locust file?
+==================================
+
+The above example was just the bare minimum, see :ref:`writing-a-locustfile` for more info.
