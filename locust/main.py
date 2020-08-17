@@ -160,7 +160,7 @@ def main():
             # It does not work on all OS:es, but we should be no worse off for trying.
             resource.setrlimit(resource.RLIMIT_NOFILE, [10000, resource.RLIM_INFINITY])
     except:
-        logger.warning("System open file limit setting is not high enough for load testing, and the OS didn't allow locust to increase it by itself. See https://docs.locust.io/en/stable/installation.html#increasing-maximum-number-of-open-files-limit for more info.")
+        logger.warning("System open file limit setting is not high enough for load testing, and the OS didn't allow locust to increase it by itself. See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info.")
 
     # create locust Environment
     environment = create_environment(user_classes, options, events=locust.events)
