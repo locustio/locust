@@ -416,6 +416,62 @@ class TestMasterWorkerRunners(LocustTestCase):
             20, 
             "For some reason the master node's stats has not come in",
         )
+    
+    def test_distributed_shape(self):
+        """
+        Full integration test that starts both a MasterRunner and three WorkerRunner instances 
+        and tests a basic LoadTestShape with scaling up and down users
+        """
+        class TestUser(User):
+            wait_time = constant(0)
+            @task
+            def my_task(self):
+                pass
+    
+        class TestShape(LoadTestShape):
+            def tick(self):
+                run_time = self.get_run_time()
+                if run_time < 2:
+                    return (9, 9)
+                elif run_time < 4:
+                    return (21, 21)
+                elif run_time < 6:
+                    return (3, 21)
+                else:
+                    return None
+        
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            master_env = Environment(user_classes=[TestUser], shape_class=TestShape())
+            master_env.shape_class.reset_time()
+            master = master_env.create_master_runner("*", 0)
+
+            workers = []
+            for i in range(3):
+                worker_env = Environment(user_classes=[TestUser])
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+    
+            # Give workers time to connect
+            sleep(0.1)
+            # Start a shape test
+            master.start_shape()
+            sleep(1)
+
+            # Ensure workers have connected and started the correct amounf of users
+            for worker in workers:
+                self.assertEqual(3, worker.user_count, "Shape test has not reached stage 1")
+            # Ensure new stage with more users has been reached
+            sleep(2)
+            for worker in workers:
+                self.assertEqual(7, worker.user_count, "Shape test has not reached stage 2")
+            # Ensure new stage with less users has been reached
+            sleep(2)
+            for worker in workers:
+                self.assertEqual(1, worker.user_count, "Shape test has not reached stage 3")
+            # Ensure test stops at the end
+            sleep(2)
+            for worker in workers:
+                self.assertEqual(0, worker.user_count, "Shape test has not stopped")
 
 
 class TestMasterRunner(LocustTestCase):
