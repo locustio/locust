@@ -16,7 +16,7 @@ from .argument_parser import parse_locustfile_option, parse_options
 from .env import Environment
 from .log import setup_logging, greenlet_exception_logger
 from . import stats
-from .stats import print_error_report, print_percentile_stats, print_stats, stats_printer
+from .stats import print_error_report, print_percentile_stats, print_stats, stats_printer, stats_history
 from .stats import StatsCSV, StatsCSVFileWriter
 from .user import User
 from .user.inspectuser import get_task_ratio_dict, print_task_ratio
@@ -336,6 +336,8 @@ def main():
     if options.csv_prefix:
         gevent.spawn(stats_csv_writer.stats_writer).link_exception(greenlet_exception_handler)
 
+    gevent.spawn(stats_history, runner)
+
     def shutdown():
         """
         Shut down locust by firing quitting event, printing/writing stats and exiting
@@ -364,6 +366,7 @@ def main():
         print_percentile_stats(runner.stats)
 
         print_error_report(runner.stats)
+
         sys.exit(code)
     
     # install SIGTERM handler

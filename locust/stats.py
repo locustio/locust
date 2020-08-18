@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import time
 from collections import namedtuple, OrderedDict
@@ -18,9 +19,13 @@ STATS_TYPE_WIDTH = 8
 """Default interval for how frequently results are written to console."""
 CONSOLE_STATS_INTERVAL_SEC = 2
 
+"""Default interval for how frequently results are written to history."""
+HISTORY_STATS_INTERVAL_SEC = 5
+
 """Default interval for how frequently CSV files are written if this option is configured."""
 CSV_STATS_INTERVAL_SEC = 1
 CSV_STATS_FLUSH_INTERVAL_SEC = 10
+
 
 """
 Default window size/resolution - in seconds - when calculating the current 
@@ -112,6 +117,7 @@ class RequestStats(object):
         self.entries = {}
         self.errors = {}
         self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
+        self.history = []
     
     @property
     def num_requests(self):
@@ -167,6 +173,7 @@ class RequestStats(object):
         self.errors = {}
         for r in self.entries.values():
             r.reset()
+        self.history = []
     
     def clear_all(self):
         """
@@ -175,6 +182,7 @@ class RequestStats(object):
         self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
         self.entries = {}
         self.errors = {}
+        self.history = []
     
     def serialize_stats(self):
         return [self.entries[key].get_stripped_report() for key in self.entries.keys() if not (self.entries[key].num_requests == 0 and self.entries[key].num_failures == 0)]
@@ -736,6 +744,7 @@ def print_error_report(stats):
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     console_logger.info("")
 
+
 def stats_printer(stats):
     def stats_printer_func():
         while True:
@@ -743,10 +752,23 @@ def stats_printer(stats):
             gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
     return stats_printer_func
 
-
 def sort_stats(stats):
     return [stats[key] for key in sorted(stats.keys())]
 
+def stats_history(runner):
+    """Save current stats info to history for charts of report."""
+    while True:
+        stats = runner.stats
+        r = {
+            'time': datetime.datetime.now().strftime("%H:%M:%S"),
+            'current_rps': stats.total.current_rps or 0,
+            'current_fail_per_sec': stats.total.current_fail_per_sec or 0,
+            'response_time_percentile_95': stats.total.get_current_response_time_percentile(0.95) or 0,
+            'response_time_percentile_50': stats.total.get_current_response_time_percentile(0.5) or 0,
+            'user_count': runner.user_count or 0,
+        }
+        stats.history.append(r)
+        gevent.sleep(HISTORY_STATS_INTERVAL_SEC)
 
 class StatsCSV():
     """Write statistics to csv_writer stream."""

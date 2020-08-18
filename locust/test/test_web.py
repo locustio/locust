@@ -304,6 +304,51 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(200, response.status_code)
         self.assertIn("Step Load Mode", response.text)
 
+    def test_report_page(self):
+        self.stats.log_request("GET", "/test", 120, 5612)
+        r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
+        self.assertEqual(200, r.status_code)
+        self.assertIn("<title>Test Report</title>", r.text)
+        self.assertIn("charts-container", r.text)
+
+    def test_report_download(self):
+        self.stats.log_request("GET", "/test", 120, 5612)
+        r = requests.get("http://127.0.0.1:%i/stats/report?download=1" % self.web_port)
+        self.assertEqual(200, r.status_code)
+        self.assertIn('attachment', r.headers.get("Content-Disposition", ""))
+
+    def test_report_host(self):
+        self.environment.host = "http://test.com"
+        self.stats.log_request("GET", "/test", 120, 5612)
+        r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
+        self.assertEqual(200, r.status_code)
+        self.assertIn("http://test.com", r.text)
+
+    def test_report_host2(self):
+        class MyUser(User):
+            host = "http://test2.com"
+            @task
+            def my_task(self):
+                pass
+        self.environment.host = None
+        self.environment.user_classes = [MyUser]
+        self.stats.log_request("GET", "/test", 120, 5612)
+        r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
+        self.assertEqual(200, r.status_code)
+        self.assertIn("http://test2.com", r.text)
+
+    def test_report_exceptions(self):
+        try:
+            raise Exception("Test exception")
+        except Exception as e:
+            tb = sys.exc_info()[2]
+            self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
+            self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
+        self.stats.log_request("GET", "/test", 120, 5612)
+        r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
+        # self.assertEqual(200, r.status_code)
+        self.assertIn("<h2>Exceptions Statistics</h2>", r.text)
+
 
 class TestWebUIAuth(LocustTestCase):
     def setUp(self):

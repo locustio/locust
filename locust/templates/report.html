@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Report</title>
+    <style>
+        .container {
+            width: 1000px;
+            margin: 0 auto;
+            padding: 10px;
+            background: #173529;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .info span{
+            color: #b3c3bc;
+        }
+
+        table {
+            border-collapse: collapse;
+            text-align: center;
+            width: 100%;
+        }
+
+        td, th {
+            border: 1px solid #cad9ea;
+            color: #666;
+            height: 30px;
+        }
+
+        thead th {
+            background-color: #cce8eb;
+            width: 100px;
+        }
+
+        tr:nth-child(odd) {
+            background: #fff;
+        }
+
+        tr:nth-child(even) {
+            background: #f5fafa;
+        }
+
+        .charts-container .chart {
+            width: 100%;
+            height: 350px;
+            margin-bottom: 30px;
+        }
+
+        .download {
+            float: right;
+        }
+
+        .download a {
+            color: #00ca5a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Locust Test Report</h1>
+
+        <div class="info">
+            <p class="download"><a href="?download=1">Download the Report</a></p>
+            <p>During: <span>{{ start_time }} - {{ end_time }}</span></p>
+            <p>Target Host: <span>{{ host }}</span></p>
+        </div>
+
+        <div class="requests">
+            <h2>Request Statistics</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Name</th>
+                        <th># Requests</th>
+                        <th># Fails</th>
+                        <th>Average (ms)</th>
+                        <th>Min (ms)</th>
+                        <th>Max (ms)</th>
+                        <th>Average size (bytes)</th>
+                        <th>RPS</th>
+                        <th>Failures/s</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in requests_statistics %}
+                        <tr>
+                            <td>{{ s.method or "" }}</td>
+                            <td>{{ s.name }}</td>
+                            <td>{{ int(s.num_requests) }}</td>
+                            <td>{{ int(s.num_failures) }}</td>
+                            <td>{{ int(s.avg_response_time) }}</td>
+                            <td>{{ int(s.min_response_time or 0) }}</td>
+                            <td>{{ int(s.max_response_time) }}</td>
+                            <td>{{ int(s.avg_content_length) }}</td>
+                            <td>{{ round(s.total_rps, 1) }}</td>
+                            <td>{{ round(s.total_fail_per_sec, 1) }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="responses">
+            <h2>Response Time Statistics</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Name</th>
+                        <th>50%ile (ms)</th>
+                        <th>60%ile (ms)</th>
+                        <th>70%ile (ms)</th>
+                        <th>80%ile (ms)</th>
+                        <th>90%ile (ms)</th>
+                        <th>95%ile (ms)</th>
+                        <th>99%ile (ms)</th>
+                        <th>100%ile (ms)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in requests_statistics %}
+                        <tr>
+                            <td>{{ s.method or "" }}</td>
+                            <td>{{ s.name }}</td>
+                            <td>{{ int(s.get_response_time_percentile(0.5)) }}</td>
+                            <td>{{ int(s.get_response_time_percentile(0.6)) }}</td>
+                            <td>{{ int(s.get_response_time_percentile(0.7)) }}</td>
+                            <td>{{ int(s.get_response_time_percentile(0.8)) }}</td>
+                            <td>{{ int(s.get_response_time_percentile(0.9)) }}</td>
+                            <td>{{ int(s.get_response_time_percentile(0.95)) }}</td>
+                            <td>{{ int(s.get_response_time_percentile(0.99)) }}</td>
+                            <td>{{ int(s.get_response_time_percentile(1)) }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if failures_statistics %}
+            <div class="failures">
+                <h2>Failures Statistics</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Name</th>
+                            <th>Error</th>
+                            <th>Occurrences</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in failures_statistics %}
+                            <tr>
+                                <td>{{ s.method or "" }}</td>
+                                <td>{{ s.name }}</td>
+                                <td>{{ s.error }}</td>
+                                <td>{{ s.occurrences }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        {% if exceptions_statistics %}
+            <div class="exceptions">
+                <h2>Exceptions Statistics</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Count</th>
+                            <th>Message</th>
+                            <th>Traceback</th>
+                            <th>Nodes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in exceptions_statistics %}
+                            <tr>
+                                <td>{{ s.count }}</td>
+                                <td>{{ s.msg }}</td>
+                                <td>{{ s.traceback }}</td>
+                                <td>{{ s.nodes }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        {% if history %}
+            <div class="charts-container">
+                <h2>Charts</h2>
+            </div>
+        {% endif %}
+    </div>
+
+    {# <script type="text/javascript" src="/static/jquery-1.11.3.min.js"></script> #}
+    {# <script type="text/javascript" src="/static/echarts.common.min.js"></script> #}
+    {# <script type="text/javascript" src="/static/vintage.js"></script> #}
+    {# <script type="text/javascript" src="/static/chart.js"></script> #}
+    <script>
+        {{ static_js|safe }}
+    </script>
+
+    <script>
+
+        var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS", "Failures/s"], "reqs/s", ['#00ca5a', '#ff6d6d']);
+        var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times (ms)", ["Median Response Time", "95% percentile"], "ms");
+        var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
+
+        rpsChart.chart.setOption({
+            xAxis: {
+                data: [ {% for r in history %}"{{ r.time }}", {% endfor %} ],
+            },
+            series: [
+                {
+                    data: [ {% for r in history %}{{ r.current_rps }}, {% endfor %} ]
+                },
+                {
+                    data: [ {% for r in history %}{{ r.current_fail_per_sec }}, {% endfor %} ]
+                },
+            ]
+        });
+
+        responseTimeChart.chart.setOption({
+            xAxis: {
+                data: [ {% for r in history %}"{{ r.time }}", {% endfor %} ],
+            },
+            series: [
+                {
+                    data: [ {% for r in history %}{{ r.response_time_percentile_50 }}, {% endfor %} ]
+                },
+                {
+                    data: [ {% for r in history %}{{ r.response_time_percentile_95 }}, {% endfor %} ]
+                },
+            ]
+        });
+
+        usersChart.chart.setOption({
+            xAxis: {
+                data: [ {% for r in history %}"{{ r.time }}", {% endfor %} ],
+            },
+            series: [
+                {
+                    data: [ {% for r in history %}{{ r.user_count }}, {% endfor %} ]
+                },
+            ]
+        });
+
+
+    </script>
+</body>
+</html>
