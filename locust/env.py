@@ -139,7 +139,7 @@ class Environment:
             master_port=master_port,
         )
 
-    def create_web_ui(self, host="", port=8089, auth_credentials=None, tls_cert=None, tls_key=None):
+    def create_web_ui(self, host="", port=8089, auth_credentials=None, tls_cert=None, tls_key=None, stats_csv_writer=None):
         """
         Creates a :class:`WebUI <locust.web.WebUI>` instance for this Environment and start running the web server
         
@@ -151,8 +151,9 @@ class Environment:
                          served over HTTPS
         :param tls_key: An optional path (str) to a TLS private key. If this is provided the web UI will be
                         served over HTTPS
+        :param stats_csv_writer: `StatsCSV <stats_csv.StatsCSV>` instance.
         """
-        self.web_ui = WebUI(self, host, port, auth_credentials=auth_credentials, tls_cert=tls_cert, tls_key=tls_key)
+        self.web_ui = WebUI(self, host, port, auth_credentials=auth_credentials, tls_cert=tls_cert, tls_key=tls_key, stats_csv_writer=stats_csv_writer)
         return self.web_ui
     
     def _filter_tasks_by_tags(self):

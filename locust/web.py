@@ -18,7 +18,9 @@ from locust import __version__ as version
 from .exception import AuthCredentialsError
 from .runners import MasterRunner
 from .log import greenlet_exception_logger
-from .stats import failures_csv, requests_csv, stats_history_file_name, sort_stats
+from .stats import sort_stats
+from . import stats as stats_module
+from .stats import StatsCSV
 from .util.cache import memoize
 from .util.rounding import proper_round
 from .util.timespan import parse_timespan
@@ -57,7 +59,7 @@ class WebUI:
     server = None
     """Reference to the :class:`pyqsgi.WSGIServer` instance"""
     
-    def __init__(self, environment, host, port, auth_credentials=None, tls_cert=None, tls_key=None):
+    def __init__(self, environment, host, port, auth_credentials=None, tls_cert=None, tls_key=None, stats_csv_writer=None):
         """
         Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
         
@@ -71,6 +73,7 @@ class WebUI:
         tls_key: A path to a TLS private key
         """
         environment.web_ui = self
+        self.stats_csv_writer = stats_csv_writer or StatsCSV(environment, stats_module.PERCENTILES_TO_REPORT)
         self.environment = environment
         self.host = host
         self.port = port
@@ -201,7 +204,7 @@ class WebUI:
         def request_stats_csv():
             data = StringIO()
             writer = csv.writer(data)
-            requests_csv(self.environment.runner.stats, writer)
+            self.stats_csv_writer.requests_csv(writer)
             return _download_csv_response(data.getvalue(), "requests")
 
         @app.route("/stats/requests_full_history/csv")
@@ -210,7 +213,7 @@ class WebUI:
             options = self.environment.parsed_options
             if options and options.stats_history_enabled:
                 return send_file(
-                    os.path.abspath(stats_history_file_name(options.csv_prefix)),
+                    os.path.abspath(self.stats_csv_writer.stats_history_file_name()),
                     mimetype="text/csv",
                     as_attachment=True, attachment_filename=_download_csv_suggest_file_name("requests_full_history"),
                     add_etags=True, cache_timeout=None, conditional=True, last_modified=None)
@@ -222,7 +225,7 @@ class WebUI:
         def failures_stats_csv():
             data = StringIO()
             writer = csv.writer(data)
-            failures_csv(self.environment.runner.stats, writer)
+            self.stats_csv_writer.failures_csv(writer)
             return _download_csv_response(data.getvalue(), "failures")
 
         @app.route('/stats/requests')
