@@ -61,7 +61,7 @@ function setHostName(hostname) {
 
 $('#swarm_form').submit(function(event) {
     event.preventDefault();
-    $("body").attr("class", "hatching");
+    $("body").attr("class", "spawning");
     $("#start").fadeOut();
     $("#status").fadeIn();
     $(".box_running").fadeIn();
@@ -82,7 +82,7 @@ $('#edit_form').submit(function(event) {
     $.post($(this).attr("action"), $(this).serialize(),
         function(response) {
             if (response.success) {
-                $("body").attr("class", "hatching");
+                $("body").attr("class", "spawning");
                 $("#edit").fadeOut();
                 setHostName(response.host);
             }

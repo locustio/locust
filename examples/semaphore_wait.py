@@ -7,8 +7,8 @@ all_users_spawned.acquire()
 
 @events.init.add_listener
 def _(environment, **kw):
-    @environment.events.hatch_complete.add_listener
-    def on_hatch_complete(**kw):
+    @environment.events.spawning_complete.add_listener
+    def on_spawning_complete(**kw):
         all_users_spawned.release()
 
 class UserTasks(TaskSet):

@@ -1,16 +1,17 @@
+.. _writing-a-locustfile:
+
 ======================
 Writing a locustfile
 ======================
 
-A locustfile is a normal python file. The only requirement is that it declares at least one class -
-let's call it the user class - that inherits from the class :py:class:`User <locust.User>`. 
+A locustfile is a normal python file. The only requirement is that it declares at least one class that inherits from the class :py:class:`User <locust.User>`. 
 
 User class
 ==========
 
-A user class represents one user (or a swarming locust if you will). Locust will spawn (hatch) one 
-instance of the User class for each user that is being simulated. There are a few attributes that 
-a User class should typically define. 
+A user class represents one user (or a swarming locust if you will). Locust will spawn one 
+instance of the User class for each user that is being simulated. There are some common attributes that 
+a User class may define. 
 
 .. _wait-time:
 
@@ -43,8 +44,8 @@ With the following locustfile, each user would wait between 5 and 15 seconds bet
 The wait_time method should return a number of seconds (or fraction of a second) and can also 
 be declared on a TaskSet class, in which case it will only be used for that TaskSet.
 
-It's also possible to declare your own wait_time method directly on a User or TaskSet class. The
-following User class would start sleeping for one second and then one, two, three, etc.
+It's also possible to declare your own wait_time method directly on a User or TaskSet class. 
+For example, the following User class would sleep for one second, then two, then three, etc.
 
 .. code-block:: python
 

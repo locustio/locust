@@ -11,7 +11,8 @@ import locust
 from locust import HttpUser, TaskSet, task, User, constant
 from locust.env import Environment
 from locust.rpc.protocol import Message
-from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_response_time_dicts, stats_writer
+from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_response_time_dicts, PERCENTILES_TO_REPORT
+from locust.stats import StatsCSVFileWriter
 from locust.test.testcases import LocustTestCase
 from locust.user.inspectuser import get_task_ratio_dict
 
@@ -19,13 +20,30 @@ from .testcases import WebserverTestCase
 from .test_runners import mocked_rpc
 
 
+_TEST_CSV_STATS_INTERVAL_SEC = 0.2
+_TEST_CSV_STATS_INTERVAL_WAIT_SEC = _TEST_CSV_STATS_INTERVAL_SEC + 0.1
+
+
+def _write_csv_files(environment, stats_base_name, full_history=False):
+    """Spawn CVS writer and exit loop after first iteration."""
+    stats_writer = StatsCSVFileWriter(environment, PERCENTILES_TO_REPORT, stats_base_name, full_history=full_history)
+    greenlet = gevent.spawn(stats_writer)
+    gevent.sleep(_TEST_CSV_STATS_INTERVAL_WAIT_SEC)
+    gevent.kill(greenlet)
+    stats_writer.close_files()
+
+
 class TestRequestStats(unittest.TestCase):
     def setUp(self):
+        locust.stats.PERCENTILES_TO_REPORT = PERCENTILES_TO_REPORT
         self.stats = RequestStats()
+
         def log(response_time, size):
             self.stats.log_request("GET", "test_entry", response_time, size)
+
         def log_error(exc):
             self.stats.log_error("GET", "test_entry", exc)
+
         log(45, 1)
         log(135, 1)
         log(44, 1)
@@ -221,14 +239,23 @@ class TestRequestStats(unittest.TestCase):
     def test_percentile_rounded_down(self):
         s1 = StatsEntry(self.stats, "rounding down!", "GET")
         s1.log(122, 0)    # (rounded 120) min
-        actual_percentile = s1.percentile()
-        self.assertEqual(actual_percentile, " GET                  rounding down!                                                      1    120    120    120    120    120    120    120    120    120    120    120")
+        actual_percentile = s1.percentile().split()
+        
+        self.assertEqual(actual_percentile, ['GET', 'rounding', 'down!'] + ['120'] * len(PERCENTILES_TO_REPORT) + ['1'])
 
     def test_percentile_rounded_up(self):
         s2 = StatsEntry(self.stats, "rounding up!", "GET")
         s2.log(127, 0)    # (rounded 130) min
-        actual_percentile = s2.percentile()
-        self.assertEqual(actual_percentile, " GET                  rounding up!                                                        1    130    130    130    130    130    130    130    130    130    130    130")
+        actual_percentile = s2.percentile().split()
+        self.assertEqual(actual_percentile, ['GET', 'rounding', 'up!'] + ['130'] * len(PERCENTILES_TO_REPORT) + ['1'])
+
+    def test_custom_percentile_list(self):
+        s = StatsEntry(self.stats, "custom_percentiles", "GET")
+        custom_percentile_list = [0.50, 0.90, 0.95, 0.99]
+        locust.stats.PERCENTILES_TO_REPORT = custom_percentile_list
+        s.log(150, 0)
+        actual_percentile = s.percentile().split()
+        self.assertEqual(actual_percentile, ['GET', 'custom_percentiles'] + ['150'] * len(custom_percentile_list) + ['1'])
 
     def test_error_grouping(self):
         # reset stats
@@ -308,22 +335,21 @@ class TestCsvStats(LocustTestCase):
             os.remove(filename)
 
     def test_write_csv_files(self):
-        locust.stats.write_csv_files(self.environment, self.STATS_BASE_NAME)
+        _write_csv_files(self.environment, self.STATS_BASE_NAME)
         self.assertTrue(os.path.exists(self.STATS_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
     
     def test_write_csv_files_full_history(self):
-        locust.stats.write_csv_files(self.environment, self.STATS_BASE_NAME, full_history=True)
+        _write_csv_files(self.environment, self.STATS_BASE_NAME, full_history=True)
         self.assertTrue(os.path.exists(self.STATS_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
     
-    @mock.patch("locust.stats.CSV_STATS_INTERVAL_SEC", new=0.2)
+    @mock.patch("locust.stats.CSV_STATS_INTERVAL_SEC", new=_TEST_CSV_STATS_INTERVAL_SEC)
     def test_csv_stats_writer(self):
-        greenlet = gevent.spawn(stats_writer, self.environment, self.STATS_BASE_NAME)
-        gevent.sleep(0.21)
-        gevent.kill(greenlet)
+        _write_csv_files(self.environment, self.STATS_BASE_NAME)
+
         self.assertTrue(os.path.exists(self.STATS_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
@@ -336,12 +362,15 @@ class TestCsvStats(LocustTestCase):
         self.assertEqual("Aggregated", rows[0]["Name"])
         self.assertEqual("Aggregated", rows[1]["Name"])
     
-    @mock.patch("locust.stats.CSV_STATS_INTERVAL_SEC", new=0.2)
+    @mock.patch("locust.stats.CSV_STATS_INTERVAL_SEC", new=_TEST_CSV_STATS_INTERVAL_SEC)
     def test_csv_stats_writer_full_history(self):
+        stats_writer = StatsCSVFileWriter(self.environment, PERCENTILES_TO_REPORT, self.STATS_BASE_NAME, full_history=True)
         self.runner.stats.log_request("GET", "/", 10, content_length=666)
-        greenlet = gevent.spawn(stats_writer, self.environment, self.STATS_BASE_NAME, full_history=True)
-        gevent.sleep(0.21)
+        greenlet = gevent.spawn(stats_writer)
+        gevent.sleep(_TEST_CSV_STATS_INTERVAL_WAIT_SEC)
         gevent.kill(greenlet)
+        stats_writer.close_files()
+
         self.assertTrue(os.path.exists(self.STATS_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
@@ -360,7 +389,11 @@ class TestCsvStats(LocustTestCase):
         # Failing test for: https://github.com/locustio/locust/issues/1315
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             environment = Environment()
+            stats_writer = StatsCSVFileWriter(environment, PERCENTILES_TO_REPORT, self.STATS_BASE_NAME, full_history=True)
             master = environment.create_master_runner(master_bind_host="*", master_bind_port=0)
+            greenlet = gevent.spawn(stats_writer)
+            gevent.sleep(_TEST_CSV_STATS_INTERVAL_WAIT_SEC)
+            
             server.mocked_send(Message("client_ready", None, "fake_client"))
             
             master.stats.get("/", "GET").log(100, 23455)
@@ -374,13 +407,15 @@ class TestCsvStats(LocustTestCase):
             server.mocked_send(Message("stats", data, "fake_client"))
             s = master.stats.get("/", "GET")
             self.assertEqual(700, s.median_response_time)
-            
-            locust.stats.write_csv_files(environment, self.STATS_BASE_NAME, full_history=True)
+
+            gevent.kill(greenlet)
+            stats_writer.close_files()
+
             self.assertTrue(os.path.exists(self.STATS_FILENAME))
             self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
             self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
     
-    @mock.patch("locust.stats.CSV_STATS_INTERVAL_SEC", new=0.2)
+    @mock.patch("locust.stats.CSV_STATS_INTERVAL_SEC", new=_TEST_CSV_STATS_INTERVAL_SEC)
     def test_user_count_in_csv_history_stats(self):
         start_time = int(time.time())
         class TestUser(User):
@@ -388,15 +423,17 @@ class TestCsvStats(LocustTestCase):
             @task
             def t(self):
                 self.environment.runner.stats.log_request("GET", "/", 10, 10)
+
         environment = Environment(user_classes=[TestUser])
+        stats_writer = StatsCSVFileWriter(environment, PERCENTILES_TO_REPORT, self.STATS_BASE_NAME, full_history=True)
         runner = environment.create_local_runner()
-        runner.start(3, 5) # spawn a user every 0.2 second
+        runner.start(3, 5) # spawn a user every _TEST_CSV_STATS_INTERVAL_SEC second
         gevent.sleep(0.1)
-        
-        greenlet = gevent.spawn(stats_writer, environment, self.STATS_BASE_NAME, full_history=True)
+
+        greenlet = gevent.spawn(stats_writer)
         gevent.sleep(0.6)
         gevent.kill(greenlet)
-        
+        stats_writer.close_files()
         runner.stop()
         
         with open(self.STATS_HISTORY_FILENAME) as f:
@@ -435,7 +472,7 @@ class TestCsvStats(LocustTestCase):
             master.stats.clear_all()
             server.mocked_send(Message("stats", data, "fake_client"))
 
-            locust.stats.write_csv_files(environment, self.STATS_BASE_NAME, full_history=True)
+            _write_csv_files(environment, self.STATS_BASE_NAME, full_history=True)
             with open(self.STATS_FILENAME) as f:
                 reader = csv.DictReader(f)
                 rows = [r for r in reader]
@@ -534,7 +571,7 @@ class TestStatsEntry(unittest.TestCase):
             'name': tokenlist[1],
             'request_count': int(tokenlist[2]),
             'failure_count': int(tokenlist[3]),
-            'failure_precentage': float(tokenlist[4]),
+            'failure_percentage': float(tokenlist[4]),
         }
         return tokens
 
@@ -555,7 +592,7 @@ class TestStatsEntry(unittest.TestCase):
         output_fields = self.parse_string_output(str(s))
         self.assertEqual(output_fields['request_count'], REQUEST_COUNT)
         self.assertEqual(output_fields['failure_count'], FAILURE_COUNT)
-        self.assertAlmostEqual(output_fields['failure_precentage'], EXPECTED_FAIL_RATIO*100)
+        self.assertAlmostEqual(output_fields['failure_percentage'], EXPECTED_FAIL_RATIO*100)
 
     def test_fail_ratio_with_all_failures(self):
         REQUEST_COUNT = 10
@@ -570,7 +607,7 @@ class TestStatsEntry(unittest.TestCase):
         output_fields = self.parse_string_output(str(s))
         self.assertEqual(output_fields['request_count'], REQUEST_COUNT)
         self.assertEqual(output_fields['failure_count'], FAILURE_COUNT)
-        self.assertAlmostEqual(output_fields['failure_precentage'], EXPECTED_FAIL_RATIO*100)
+        self.assertAlmostEqual(output_fields['failure_percentage'], EXPECTED_FAIL_RATIO*100)
 
     def test_fail_ratio_with_half_failures(self):
         REQUEST_COUNT = 10
@@ -585,7 +622,7 @@ class TestStatsEntry(unittest.TestCase):
         output_fields = self.parse_string_output(str(s))
         self.assertEqual(output_fields['request_count'], REQUEST_COUNT)
         self.assertEqual(output_fields['failure_count'], FAILURE_COUNT)
-        self.assertAlmostEqual(output_fields['failure_precentage'], EXPECTED_FAIL_RATIO*100)
+        self.assertAlmostEqual(output_fields['failure_percentage'], EXPECTED_FAIL_RATIO*100)
 
 
 class TestRequestStatsWithWebserver(WebserverTestCase):

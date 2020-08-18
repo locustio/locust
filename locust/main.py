@@ -15,12 +15,15 @@ from . import log
 from .argument_parser import parse_locustfile_option, parse_options
 from .env import Environment
 from .log import setup_logging, greenlet_exception_logger
-from .stats import (print_error_report, print_percentile_stats, print_stats,
-                    stats_printer, stats_writer, write_csv_files, stats_history)
+from . import stats
+from .stats import print_error_report, print_percentile_stats, print_stats, stats_printer, stats_history
+from .stats import StatsCSV, StatsCSVFileWriter
 from .user import User
 from .user.inspectuser import get_task_ratio_dict, print_task_ratio
 from .util.timespan import parse_timespan
 from .exception import AuthCredentialsError
+from .shape import LoadTestShape
+
 
 version = locust.__version__
 
@@ -35,6 +38,16 @@ def is_user_class(item):
         and item.abstract == False
     )
 
+
+def is_shape_class(item):
+    """
+    Check if a class is a LoadTestShape
+    """
+    return bool(
+        inspect.isclass(item)
+        and issubclass(item, LoadTestShape)
+        and item.__dict__['__module__'] != 'locust.shape'
+    )
 
 def load_locustfile(path):
     """
@@ -84,15 +97,24 @@ def load_locustfile(path):
         del sys.path[0]
     # Return our two-tuple
     user_classes = {name:value for name, value in vars(imported).items() if is_user_class(value)}
-    return imported.__doc__, user_classes
+
+    # Find shape class, if any, return it
+    shape_classes = [value for name, value in vars(imported).items() if is_shape_class(value)]
+    if shape_classes:
+        shape_class = shape_classes[0]()
+    else:
+        shape_class = None
+
+    return imported.__doc__, user_classes, shape_class
 
 
-def create_environment(user_classes, options, events=None):
+def create_environment(user_classes, options, events=None, shape_class=None):
     """
     Create an Environment instance from options
     """
     return Environment(
         user_classes=user_classes,
+        shape_class=shape_class,
         tags=options.tags,
         exclude_tags=options.exclude_tags,
         events=events,
@@ -110,15 +132,20 @@ def main():
     locustfile = parse_locustfile_option()
     
     # import the locustfile
-    docstring, user_classes = load_locustfile(locustfile)
-    
+    docstring, user_classes, shape_class = load_locustfile(locustfile)
+
     # parse all command line options
     options = parse_options()
 
     if options.slave or options.expect_slaves:
-        sys.stderr.write("[DEPRECATED] Usage of slave has been deprecated, use --worker or --expect-workers\n")
+        sys.stderr.write("The --slave/--expect-slaves parameters have been renamed --worker/--expect-workers\n")
         sys.exit(1)
-    
+
+    if options.hatch_rate:
+        sys.stderr.write("The --hatch-rate parameter has been renamed --spawn-rate\n")
+        sys.exit(1)
+ 
+
     # setup logging
     if not options.skip_log_setup:
         if options.loglevel.upper() in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
@@ -160,11 +187,15 @@ def main():
             # It does not work on all OS:es, but we should be no worse off for trying.
             resource.setrlimit(resource.RLIMIT_NOFILE, [10000, resource.RLIM_INFINITY])
     except:
-        logger.warning("System open file limit setting is not high enough for load testing, and the OS didn't allow locust to increase it by itself. See https://docs.locust.io/en/stable/installation.html#increasing-maximum-number-of-open-files-limit for more info.")
+        logger.warning("System open file limit setting is not high enough for load testing, and the OS didn't allow locust to increase it by itself. See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info.")
 
     # create locust Environment
-    environment = create_environment(user_classes, options, events=locust.events)
-    
+    environment = create_environment(user_classes, options, events=locust.events, shape_class=shape_class)
+
+    if shape_class and (options.num_users or options.spawn_rate or options.step_load):
+        logger.error("The specified locustfile contains a shape class but a conflicting argument was specified: users, spawn-rate or step-load")
+        sys.exit(1)
+
     if options.show_task_ratio:
         print("\n Task ratio per User class")
         print( "-" * 80)
@@ -230,7 +261,12 @@ def main():
                 logger.info("Time limit reached. Stopping Locust.")
                 runner.quit()
             gevent.spawn_later(options.run_time, timelimit_stop).link_exception(greenlet_exception_handler)
-    
+
+    if options.csv_prefix:
+        stats_csv_writer = StatsCSVFileWriter(environment, stats.PERCENTILES_TO_REPORT, options.csv_prefix, options.stats_history_enabled)
+    else:
+        stats_csv_writer = StatsCSV(environment, stats.PERCENTILES_TO_REPORT)
+
     # start Web UI
     if not options.headless and not options.worker:
         # spawn web greenlet
@@ -251,6 +287,7 @@ def main():
                 auth_credentials=options.web_auth, 
                 tls_cert=options.tls_cert, 
                 tls_key=options.tls_key,
+                stats_csv_writer=stats_csv_writer,
             )
         except AuthCredentialsError:
             logger.error("Credentials supplied with --web-auth should have the format: username:password")
@@ -276,16 +313,16 @@ def main():
             # apply headless mode defaults
             if options.num_users is None:
                 options.num_users = 1
-            if options.hatch_rate is None:
-                options.hatch_rate = 1
+            if options.spawn_rate is None:
+                options.spawn_rate = 1
             if options.step_users is None:
                 options.step_users = 1
 
             # start the test
             if options.step_time:
-                runner.start_stepload(options.num_users, options.hatch_rate, options.step_users, options.step_time)
+                runner.start_stepload(options.num_users, options.spawn_rate, options.step_users, options.step_time)
             else:
-                runner.start(options.num_users, options.hatch_rate)
+                runner.start(options.num_users, options.spawn_rate)
     
     if options.run_time:
         spawn_run_time_limit_greenlet()
@@ -297,11 +334,11 @@ def main():
         stats_printer_greenlet.link_exception(greenlet_exception_handler)
 
     if options.csv_prefix:
-        gevent.spawn(stats_writer, environment, options.csv_prefix, full_history=options.stats_history_enabled).link_exception(greenlet_exception_handler)
+        gevent.spawn(stats_csv_writer.stats_writer).link_exception(greenlet_exception_handler)
 
     stats_history_greenlet = gevent.spawn(stats_history, runner)
     stats_history_greenlet.link_exception(greenlet_exception_handler)
-    
+
     def shutdown():
         """
         Shut down locust by firing quitting event, printing/writing stats and exiting
@@ -328,8 +365,7 @@ def main():
         
         print_stats(runner.stats, current=False)
         print_percentile_stats(runner.stats)
-        if options.csv_prefix:
-            write_csv_files(environment, options.csv_prefix, full_history=options.stats_history_enabled)
+
         print_error_report(runner.stats)
 
         stats_history_greenlet.kill(block=False)

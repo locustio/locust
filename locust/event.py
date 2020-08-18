@@ -112,13 +112,13 @@ class Events:
     :param data: Data dict with the data from the worker node
     """
     
-    hatch_complete = EventHook
+    spawning_complete = EventHook
     """
     Fired when all simulated users has been spawned.
     
     Event arguments:
     
-    :param user_count: Number of users that was hatched
+    :param user_count: Number of users that were spawned
     """
     
     quitting = EventHook

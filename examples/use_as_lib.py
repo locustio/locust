@@ -33,7 +33,7 @@ gevent.spawn(stats_printer(env.stats))
 gevent.spawn(stats_history(env.runner))
 
 # start the test
-env.runner.start(1, hatch_rate=10)
+env.runner.start(1, spawn_rate=10)
 
 # in 60 seconds stop the runner
 gevent.spawn_later(60, lambda: env.runner.quit())

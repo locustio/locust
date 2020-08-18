@@ -11,7 +11,7 @@ from itertools import chain
 from time import time
 
 import gevent
-from flask import Flask, make_response, jsonify, render_template, request
+from flask import Flask, make_response, jsonify, render_template, request, send_file
 from flask_basicauth import BasicAuth
 from gevent import pywsgi
 
@@ -19,7 +19,9 @@ from locust import __version__ as version
 from .exception import AuthCredentialsError
 from .runners import MasterRunner
 from .log import greenlet_exception_logger
-from .stats import failures_csv, requests_csv, sort_stats
+from .stats import sort_stats
+from . import stats as stats_module
+from .stats import StatsCSV
 from .util.cache import memoize
 from .util.rounding import proper_round
 from .util.timespan import parse_timespan
@@ -60,7 +62,7 @@ class WebUI:
     server = None
     """Reference to the :class:`pyqsgi.WSGIServer` instance"""
     
-    def __init__(self, environment, host, port, auth_credentials=None, tls_cert=None, tls_key=None):
+    def __init__(self, environment, host, port, auth_credentials=None, tls_cert=None, tls_key=None, stats_csv_writer=None):
         """
         Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
         
@@ -74,6 +76,7 @@ class WebUI:
         tls_key: A path to a TLS private key
         """
         environment.web_ui = self
+        self.stats_csv_writer = stats_csv_writer or StatsCSV(environment, stats_module.PERCENTILES_TO_REPORT)
         self.environment = environment
         self.host = host
         self.port = port
@@ -134,11 +137,12 @@ class WebUI:
                 host=host,
                 override_host_warning=override_host_warning,
                 num_users=options and options.num_users,
-                hatch_rate=options and options.hatch_rate,
+                spawn_rate=options and options.spawn_rate,
                 step_users=options and options.step_users,
                 step_time=options and options.step_time,
                 worker_count=worker_count,
                 is_step_load=environment.step_load,
+                stats_history_enabled=options and options.stats_history_enabled,
             )
         
         @app.route('/swarm', methods=["POST"])
@@ -146,17 +150,21 @@ class WebUI:
         def swarm():
             assert request.method == "POST"
             user_count = int(request.form["user_count"])
-            hatch_rate = float(request.form["hatch_rate"])
+            spawn_rate = float(request.form["spawn_rate"])
             if (request.form.get("host")):
                 environment.host = str(request.form["host"])
         
             if environment.step_load:
                 step_user_count = int(request.form["step_user_count"])
                 step_duration = parse_timespan(str(request.form["step_duration"]))
-                environment.runner.start_stepload(user_count, hatch_rate, step_user_count, step_duration)
+                environment.runner.start_stepload(user_count, spawn_rate, step_user_count, step_duration)
                 return jsonify({'success': True, 'message': 'Swarming started in Step Load Mode', 'host': environment.host})
-            
-            environment.runner.start(user_count, hatch_rate)
+
+            if environment.shape_class:
+                environment.runner.start_shape()
+                return jsonify({'success': True, 'message': 'Swarming started using shape class', 'host': environment.host})
+
+            environment.runner.start(user_count, spawn_rate)
             return jsonify({'success': True, 'message': 'Swarming started', 'host': environment.host})
         
         @app.route('/stop')
@@ -225,32 +233,57 @@ class WebUI:
                 res.headers["Content-Disposition"] = "attachment;filename=report_%s.html" % time()
             return res
 
+        def _download_csv_suggest_file_name(suggest_filename_prefix):
+            """Generate csv file download attachment filename suggestion.
+
+            Arguments:
+            suggest_filename_prefix: Prefix of the filename to suggest for saving the download. Will be appended with timestamp.
+            """
+
+            return f"{suggest_filename_prefix}_{time()}.csv"
+
+        def _download_csv_response(csv_data, filename_prefix):
+            """Generate csv file download response with 'csv_data'.
+
+            Arguments:
+            csv_data: CSV header and data rows.
+            filename_prefix: Prefix of the filename to suggest for saving the download. Will be appended with timestamp.
+            """
+
+            response = make_response(csv_data)
+            response.headers["Content-type"] = "text/csv"
+            response.headers["Content-disposition"] = f"attachment;filename={_download_csv_suggest_file_name(filename_prefix)}"
+            return response
+
         @app.route("/stats/requests/csv")
         @self.auth_required_if_enabled
         def request_stats_csv():
             data = StringIO()
             writer = csv.writer(data)
-            requests_csv(self.environment.runner.stats, writer)
-            response = make_response(data.getvalue())
-            file_name = "requests_{0}.csv".format(time())
-            disposition = "attachment;filename={0}".format(file_name)
-            response.headers["Content-type"] = "text/csv"
-            response.headers["Content-disposition"] = disposition
-            return response
-        
+            self.stats_csv_writer.requests_csv(writer)
+            return _download_csv_response(data.getvalue(), "requests")
+
+        @app.route("/stats/requests_full_history/csv")
+        @self.auth_required_if_enabled
+        def request_stats_full_history_csv():
+            options = self.environment.parsed_options
+            if options and options.stats_history_enabled:
+                return send_file(
+                    os.path.abspath(self.stats_csv_writer.stats_history_file_name()),
+                    mimetype="text/csv",
+                    as_attachment=True, attachment_filename=_download_csv_suggest_file_name("requests_full_history"),
+                    add_etags=True, cache_timeout=None, conditional=True, last_modified=None)
+
+            return make_response("Error: Server was not started with option to generate full history.", 404)
+
         @app.route("/stats/failures/csv")
         @self.auth_required_if_enabled
         def failures_stats_csv():
             data = StringIO()
             writer = csv.writer(data)
-            failures_csv(self.environment.runner.stats, writer)
-            response = make_response(data.getvalue())
-            file_name = "failures_{0}.csv".format(time())
-            disposition = "attachment;filename={0}".format(file_name)
-            response.headers["Content-type"] = "text/csv"
-            response.headers["Content-disposition"] = disposition
-            return response
-        
+            self.stats_csv_writer.failures_csv(writer)
+            return _download_csv_response(data.getvalue(), "failures")
+
         @app.route('/stats/requests')
         @self.auth_required_if_enabled
         @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
@@ -330,13 +363,8 @@ class WebUI:
                 nodes = ", ".join(exc["nodes"])
                 writer.writerow([exc["count"], exc["msg"], exc["traceback"], nodes])
 
-            response = make_response(data.getvalue())
-            file_name = "exceptions_{0}.csv".format(time())
-            disposition = "attachment;filename={0}".format(file_name)
-            response.headers["Content-type"] = "text/csv"
-            response.headers["Content-disposition"] = disposition
-            return response
-        
+            return _download_csv_response(data.getvalue(), "exceptions")
+
         # start the web server
         self.greenlet = gevent.spawn(self.start)
         self.greenlet.link_exception(greenlet_exception_handler)

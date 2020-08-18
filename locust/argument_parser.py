@@ -134,14 +134,20 @@ def setup_parser_arguments(parser):
         '-u', '--users',
         type=int,
         dest='num_users',
-        help="Number of concurrent Locust users. Only used together with --headless",
+        help="Number of concurrent Locust users. Primarily used together with --headless",
         env_var="LOCUST_USERS",
     )
     parser.add_argument(
-        '-r', '--hatch-rate',
+        '-r', '--spawn-rate',
         type=float,
-        help="The rate per second in which users are spawned. Only used together with --headless",
+        help="The rate per second in which users are spawned. Primarily used together with --headless",
+        env_var="LOCUST_SPAWN_RATE",
+    )
+    parser.add_argument(
+        '--hatch-rate',
         env_var="LOCUST_HATCH_RATE",
+        action='store_true',
+        help=configargparse.SUPPRESS,
     )
     parser.add_argument(
         '-t', '--run-time',
@@ -287,17 +293,17 @@ def setup_parser_arguments(parser):
     
     stats_group = parser.add_argument_group("Request statistics options")
     stats_group.add_argument(
-        '--csv',
+        '--csv',  # Name repeated in 'parse_options'
         dest="csv_prefix",
         help="Store current request stats to files in CSV format. Setting this option will generate three files: [CSV_PREFIX]_stats.csv, [CSV_PREFIX]_stats_history.csv and [CSV_PREFIX]_failures.csv",
         env_var="LOCUST_CSV",
     )
     stats_group.add_argument(
-        '--csv-full-history',
+        '--csv-full-history',  # Name repeated in 'parse_options'
         action='store_true',
         default=False,
         dest='stats_history_enabled',
-        help="Store each stats entry in CSV format to _stats_history.csv file",
+        help="Store each stats entry in CSV format to _stats_history.csv file. You must also specify the '--csv' argument to enable this.",
         env_var="LOCUST_CSV_FULL_HISTORY",
     )    
     stats_group.add_argument(
@@ -315,7 +321,7 @@ def setup_parser_arguments(parser):
     stats_group.add_argument(
         '--reset-stats',
         action='store_true',
-        help="Reset statistics once hatching has been completed. Should be set on both master and workers when running in distributed mode",
+        help="Reset statistics once spawning has been completed. Should be set on both master and workers when running in distributed mode",
         env_var="LOCUST_RESET_STATS",
     )
     
@@ -419,4 +425,8 @@ def get_parser(default_config_files=DEFAULT_CONFIG_FILES):
 
 
 def parse_options(args=None):
-    return get_parser().parse_args(args=args)
+    parser = get_parser()
+    parsed_opts = parser.parse_args(args=args)
+    if parsed_opts.stats_history_enabled and (parsed_opts.csv_prefix is None):
+        parser.error("'--csv-full-history' requires '--csv'.")
+    return parsed_opts

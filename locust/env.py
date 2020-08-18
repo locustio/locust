@@ -4,6 +4,7 @@ from .stats import RequestStats
 from .runners import LocalRunner, MasterRunner, WorkerRunner
 from .web import WebUI
 from .user.task import filter_tasks_by_tags
+from .shape import LoadTestShape
 
 
 class Environment:
@@ -15,7 +16,10 @@ class Environment:
     
     user_classes = []
     """User classes that the runner will run"""
-    
+
+    shape_class = None
+    """A shape class to control the shape of the load test"""
+
     tags = None
     """If set, only tasks that are tagged by tags in this list will be executed"""
 
@@ -63,12 +67,13 @@ class Environment:
     def  __init__(
         self, *,
         user_classes=[],
+        shape_class=None,
         tags=None,
         exclude_tags=None,
-        events=None, 
-        host=None, 
-        reset_stats=False, 
-        step_load=False, 
+        events=None,
+        host=None,
+        reset_stats=False,
+        step_load=False,
         stop_timeout=None,
         catch_exceptions=True,
         parsed_options=None,
@@ -79,6 +84,7 @@ class Environment:
             self.events = Events()
         
         self.user_classes = user_classes
+        self.shape_class = shape_class
         self.tags = tags
         self.exclude_tags = exclude_tags
         self.stats = RequestStats()
@@ -133,7 +139,7 @@ class Environment:
             master_port=master_port,
         )
 
-    def create_web_ui(self, host="", port=8089, auth_credentials=None, tls_cert=None, tls_key=None):
+    def create_web_ui(self, host="", port=8089, auth_credentials=None, tls_cert=None, tls_key=None, stats_csv_writer=None):
         """
         Creates a :class:`WebUI <locust.web.WebUI>` instance for this Environment and start running the web server
         
@@ -145,8 +151,9 @@ class Environment:
                          served over HTTPS
         :param tls_key: An optional path (str) to a TLS private key. If this is provided the web UI will be
                         served over HTTPS
+        :param stats_csv_writer: `StatsCSV <stats_csv.StatsCSV>` instance.
         """
-        self.web_ui = WebUI(self, host, port, auth_credentials=auth_credentials, tls_cert=tls_cert, tls_key=tls_key)
+        self.web_ui = WebUI(self, host, port, auth_credentials=auth_credentials, tls_cert=tls_cert, tls_key=tls_key, stats_csv_writer=stats_csv_writer)
         return self.web_ui
     
     def _filter_tasks_by_tags(self):

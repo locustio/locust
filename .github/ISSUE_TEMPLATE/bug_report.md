@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report an error in Locust
+about: Report an error
 title: ''
 labels: bug
 assignees: ''

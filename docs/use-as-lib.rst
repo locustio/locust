@@ -23,7 +23,7 @@ The :py:class:`Environment <locust.env.Environment>` instance's
 .. code-block:: python
 
     env.create_local_runner()
-    env.runner.start(5000, hatch_rate=20)
+    env.runner.start(5000, spawn_rate=20)
     env.runner.greenlet.join()
 
 We could also use the :py:class:`Environment <locust.env.Environment>` instance's 

@@ -44,24 +44,26 @@ class TestLoadLocustfile(LocustTestCase):
     
     def test_load_locust_file_from_absolute_path(self):
         with mock_locustfile() as mocked:
-            docstring, user_classes = main.load_locustfile(mocked.file_path)
+            docstring, user_classes, shape_class = main.load_locustfile(mocked.file_path)
             self.assertIn('UserSubclass', user_classes)
             self.assertNotIn('NotUserSubclass', user_classes)
+            self.assertNotIn('LoadTestShape', user_classes)
 
     def test_load_locust_file_from_relative_path(self):
         with mock_locustfile() as mocked:
-            docstring, user_classes = main.load_locustfile(os.path.join('./locust/test/', mocked.filename))
+            docstring, user_classes, shape_class = main.load_locustfile(os.path.join('./locust/test/', mocked.filename))
 
     def test_load_locust_file_with_a_dot_in_filename(self):
         with mock_locustfile(filename_prefix="mocked.locust.file") as mocked:
-            docstring, user_classes = main.load_locustfile(mocked.file_path)
+            docstring, user_classes, shape_class = main.load_locustfile(mocked.file_path)
     
     def test_return_docstring_and_user_classes(self):
         with mock_locustfile() as mocked:
-            docstring, user_classes = main.load_locustfile(mocked.file_path)
+            docstring, user_classes, shape_class = main.load_locustfile(mocked.file_path)
             self.assertEqual("This is a mock locust file for unit testing", docstring)
             self.assertIn('UserSubclass', user_classes)
             self.assertNotIn('NotUserSubclass', user_classes)
+            self.assertNotIn('LoadTestShape', user_classes)
     
     def test_create_environment(self):
         options = parse_options(args=[
@@ -81,7 +83,7 @@ class TestLoadLocustfile(LocustTestCase):
         with temporary_file(textwrap.dedent("""
             host = localhost  # With "="
             u 100             # Short form
-            hatch-rate 5      # long form
+            spawn-rate 5      # long form
             headless          # boolean
         """), suffix=".conf") as conf_file_path:
             options = parse_options(args=[
@@ -90,7 +92,7 @@ class TestLoadLocustfile(LocustTestCase):
             self.assertEqual(conf_file_path, options.config)
             self.assertEqual("localhost", options.host)
             self.assertEqual(100, options.num_users)
-            self.assertEqual(5, options.hatch_rate)
+            self.assertEqual(5, options.spawn_rate)
             self.assertTrue(options.headless)
 
     def test_command_line_arguments_override_config_file(self):
@@ -143,7 +145,7 @@ class LocustProcessIntegrationTest(TestCase):
             class TestUser(User):
                 wait_time = constant(3)
                 @task
-                def my_task():
+                def my_task(self):
                     print("running my_task()")
         """)) as file_path:
             proc = subprocess.Popen(["locust", "-f", file_path], stdout=PIPE, stderr=PIPE)
@@ -162,7 +164,7 @@ class LocustProcessIntegrationTest(TestCase):
             class TestUser(User):
                 wait_time = constant(3)
                 @task
-                def my_task():
+                def my_task(self):
                     print("running my_task()")
         """)) as file_path:
             proc = subprocess.Popen(["locust", "-f", file_path], stdout=PIPE, stderr=PIPE)
@@ -175,7 +177,7 @@ class LocustProcessIntegrationTest(TestCase):
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shutting down (exit code 0), bye", stderr)
 
-    def test_default_headless_hatch_options(self):
+    def test_default_headless_spawn_options(self):
         with mock_locustfile() as mocked:
             output = subprocess.check_output(
                     ["locust",
@@ -186,7 +188,7 @@ class LocustProcessIntegrationTest(TestCase):
                     stderr=subprocess.STDOUT,
                     timeout=2,
                     ).decode("utf-8").strip()
-            self.assertIn("Hatching and swarming 1 users at the rate 1 users/s", output)
+            self.assertIn("Spawning 1 users at the rate 1 users/s", output)
 
     def test_web_options(self):
         port = get_free_tcp_port()

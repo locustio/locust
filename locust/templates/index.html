@@ -56,12 +56,21 @@
                 <a href="#" class="close_link">Close</a>
             </div>
             <div class="padder">
-                <h2>Start new Locust run</h2>
+                <h2>Start new load test</h2>
                 <form action="./swarm" method="POST" id="swarm_form">
+                    {% if is_shape %}
+                    <label for="user_count">Number of total users to simulate</label>
+                    <input type="text" name="user_count" id="user_count" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
+                    <input type="hidden" name="user_count" id="user_count" value="0"/><br>
+                    <label for="spawn_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
+                    <input type="text" name="spawn_rate" id="spawn_rate" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
+                    <input type="hidden" name="spawn_rate" id="spawn_rate" value="0"/><br>
+                    {% else %}
                     <label for="user_count">Number of total users to simulate</label>
                     <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
-                    <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="hatch_rate" id="hatch_rate" class="val" value="{{ hatch_rate or "" }}"/><br>
+                    <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
+                    <input type="text" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "" }}"/><br>
+                    {% endif %}
                     <label for="host">
                         Host <span style="color:#8a8a8a;">(e.g. http://www.example.com)</span>
                         {% if override_host_warning %}
@@ -86,19 +95,30 @@
                 <a href="#" class="close_link">Close</a>
             </div>
             <div class="padder">
-                <h2>Change the locust count</h2>
+                <h2>Edit running load test</h2>
                 <form action="./swarm" method="POST" id="edit_form">
+                    {% if is_shape %}
+                    <label for="new_user_count">Number of users to simulate</label>
+                    <input type="text" name="user_count" id="new_user_count" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
+                    <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users spawned or stopped per second)</span></label>
+                    <input type="text" name="spawn_rate" id="new_spawn_rate" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
+                    {% else %}
                     <label for="new_user_count">Number of users to simulate</label>
                     <input type="text" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "" }}"/><br>
-                    <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="hatch_rate" id="new_hatch_rate" class="val"  value="{{ hatch_rate or "" }}"/><br>
+                    <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users to start per second (or stop))</span></label>
+                    <input type="text" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "" }}"/><br>
+                    {% endif %}
                     {% if is_step_load %}
                     <label for="step_user_count">Number of users to increase by step</label>
                     <input type="text" name="step_user_count" id="step_user_count" class="val"  value="{{ step_users or "" }}"/><br>
                     <label for="step_duration">Step duration <span style="color:#8a8a8a;">(300s, 20m, 3h, 1h30m, etc.)</span></label>
                     <input type="text" name="step_duration" id="step_duration" class="val"  value="{{ step_time or "" }}"/><br>
                     {% endif %}
+                    {% if is_shape %}
+                    <button type="submit" disabled>Start swarming</button>
+                    {% else %}
                     <button type="submit">Start swarming</button>
+                    {% endif %}
                 </form>
                 <div style="clear:right;"></div>
             </div>
@@ -169,6 +189,9 @@
                 <div style="display:none;">
                     <div style="margin-top:20px;">
                         <a href="./stats/requests/csv">Download request statistics CSV</a><br>
+                        {% if stats_history_enabled %}
+                        <a href="./stats/requests_full_history/csv">Download full request statistics history CSV</a><br>
+                        {% endif %}
                         <a href="./stats/failures/csv">Download failures CSV</a><br>
                         <a href="./exceptions/csv">Download exceptions CSV</a><br>
                         <a href="./stats/report" target="_blank">Download Report</a><br>

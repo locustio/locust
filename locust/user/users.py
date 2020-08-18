@@ -37,7 +37,7 @@ class UserMeta(type):
 
 class User(object, metaclass=UserMeta):
     """
-    Represents a "user" which is to be hatched and attack the system that is to be load tested.
+    Represents a "user" which is to be spawned and attack the system that is to be load tested.
     
     The behaviour of this user is defined by its tasks. Tasks can be declared either directly on the
     class by using the :py:func:`@task decorator <locust.task>` on methods, or by setting
@@ -190,7 +190,7 @@ class User(object, metaclass=UserMeta):
 
 class HttpUser(User):
     """
-    Represents an HTTP "user" which is to be hatched and attack the system that is to be load tested.
+    Represents an HTTP "user" which is to be spawned and attack the system that is to be load tested.
     
     The behaviour of this user is defined by its tasks. Tasks can be declared either directly on the
     class by using the :py:func:`@task decorator <locust.task>` on methods, or by setting
