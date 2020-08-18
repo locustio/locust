@@ -146,7 +146,8 @@ def setup_parser_arguments(parser):
     parser.add_argument(
         '--hatch-rate',
         env_var="LOCUST_HATCH_RATE",
-        action='store_true',
+        type=float,
+        default=0,
         help=configargparse.SUPPRESS,
     )
     parser.add_argument(

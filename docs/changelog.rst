@@ -7,7 +7,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 1.2
 ===
 
-* Rename hatch rate to spawn rate (this may be a breaking change in some cases!)
+* Rename hatch rate to spawn rate (the --hatch-rate parameter is only deprecated, but the hatch_complete event has been renamed spawning_complete)
 * Ability to generate any custom load shape with LoadTestShape class
 * Allow ramping down of users
 * Ability to use save custom percentiles
