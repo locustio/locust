@@ -67,7 +67,7 @@ class TestArgumentParser(LocustTestCase):
         ])
         self.assertEqual("locustfile.py", options.locustfile)
         self.assertEqual(100, options.num_users)
-        self.assertEqual(10, options.hatch_rate)
+        self.assertEqual(10, options.spawn_rate)
         self.assertEqual("5m", options.run_time)
         self.assertTrue(options.reset_stats)
         self.assertEqual(5, options.stop_timeout)

@@ -4,6 +4,15 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.2
+===
+
+* Rename hatch rate to spawn rate (this may be a breaking change in some cases!)
+* Ability to generate any custom load shape with LoadTestShape class
+* Allow ramping down of users
+* Ability to use save custom percentiles
+* Bug fixes (excessive precision of metrics in losust csv stats, negative response time when system clock has changed, issue with non-string failure messages, some typos etc)
+
 1.1.1
 =====
 

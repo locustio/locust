@@ -21,7 +21,7 @@ from .exception import RPCError
 logger = logging.getLogger(__name__)
 
 
-STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_CLEANUP, STATE_STOPPING, STATE_STOPPED, STATE_MISSING = ["ready", "hatching", "running", "cleanup", "stopping", "stopped", "missing"]
+STATE_INIT, STATE_SPAWNING, STATE_RUNNING, STATE_CLEANUP, STATE_STOPPING, STATE_STOPPED, STATE_MISSING = ["ready", "spawning", "running", "cleanup", "stopping", "stopped", "missing"]
 WORKER_REPORT_INTERVAL = 3.0
 CPU_MONITOR_INTERVAL = 5.0
 HEARTBEAT_INTERVAL = 1
@@ -47,7 +47,7 @@ class Runner(object):
         self.user_greenlets = Group()
         self.greenlet = Group()
         self.state = STATE_INIT
-        self.hatching_greenlet = None
+        self.spawning_greenlet = None
         self.stepload_greenlet = None
         self.shape_greenlet = None
         self.shape_last_state = None
@@ -69,13 +69,13 @@ class Runner(object):
         self.environment.events.request_failure.add_listener(on_request_failure)
         self.connection_broken = False
 
-        # register listener that resets stats when hatching is complete
-        def on_hatch_complete(user_count):
+        # register listener that resets stats when spawning is complete
+        def on_spawning_complete(user_count):
             self.state = STATE_RUNNING
             if environment.reset_stats:
                 logger.info("Resetting stats\n")
                 self.stats.reset_all()
-        self.environment.events.hatch_complete.add_listener(on_hatch_complete)
+        self.environment.events.spawning_complete.add_listener(on_spawning_complete)
     
     def __del__(self):
         # don't leave any stray greenlets if runner is removed
@@ -141,25 +141,25 @@ class Runner(object):
 
         return bucket
 
-    def spawn_users(self, spawn_count, hatch_rate, wait=False):
+    def spawn_users(self, spawn_count, spawn_rate, wait=False):
         bucket = self.weight_users(spawn_count)
         spawn_count = len(bucket)
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
-            self.state = STATE_HATCHING
+            self.state = STATE_SPAWNING
         
         existing_count = len(self.user_greenlets)
-        logger.info("Hatching and swarming %i users at the rate %g users/s (%i users already running)..." % (spawn_count, hatch_rate, existing_count))
+        logger.info("Spawning %i users at the rate %g users/s (%i users already running)..." % (spawn_count, spawn_rate, existing_count))
         occurrence_count = dict([(l.__name__, 0) for l in self.user_classes])
         
-        def hatch():
-            sleep_time = 1.0 / hatch_rate
+        def spawn():
+            sleep_time = 1.0 / spawn_rate
             while True:
                 if not bucket:
-                    logger.info("All users hatched: %s (%i already running)" % (
+                    logger.info("All users spawned: %s (%i already running)" % (
                         ", ".join(["%s: %d" % (name, count) for name, count in occurrence_count.items()]), 
                         existing_count,
                     ))
-                    self.environment.events.hatch_complete.fire(user_count=len(self.user_greenlets))
+                    self.environment.events.spawning_complete.fire(user_count=len(self.user_greenlets))
                     return
 
                 user_class = bucket.pop(random.randint(0, len(bucket)-1))
@@ -167,11 +167,11 @@ class Runner(object):
                 new_user = user_class(self.environment)
                 new_user.start(self.user_greenlets)
                 if len(self.user_greenlets) % 10 == 0:
-                    logger.debug("%i users hatched" % len(self.user_greenlets))
+                    logger.debug("%i users spawned" % len(self.user_greenlets))
                 if bucket:
                     gevent.sleep(sleep_time)
 
-        hatch()
+        spawn()
         if wait:
             self.user_greenlets.join()
             logger.info("All users stopped\n")
@@ -237,17 +237,17 @@ class Runner(object):
                 self.cpu_warning_emitted = True
             gevent.sleep(CPU_MONITOR_INTERVAL)
 
-    def start(self, user_count, hatch_rate, wait=False):
+    def start(self, user_count, spawn_rate, wait=False):
         """
         Start running a load test
         
         :param user_count: Number of users to start
-        :param hatch_rate: Number of users to spawn per second
+        :param spawn_rate: Number of users to spawn per second
         :param wait: If True calls to this method will block until all users are spawned.
                      If False (the default), a greenlet that spawns the users will be 
                      started and the call to this method will return immediately.
         """
-        if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
+        if self.state != STATE_RUNNING and self.state != STATE_SPAWNING:
             self.stats.clear_all()
             self.exceptions = {}
             self.cpu_warning_emitted = False
@@ -255,23 +255,23 @@ class Runner(object):
             self.target_user_count = user_count
 
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
-            logger.debug("Updating running test with %d users, %.2f hatch rate and wait=%r" % (user_count, hatch_rate, wait))
-            self.state = STATE_HATCHING
+            logger.debug("Updating running test with %d users, %.2f spawn rate and wait=%r" % (user_count, spawn_rate, wait))
+            self.state = STATE_SPAWNING
             if self.user_count > user_count:
                 # Stop some users
                 stop_count = self.user_count - user_count
-                self.stop_users(stop_count, hatch_rate)
+                self.stop_users(stop_count, spawn_rate)
             elif self.user_count < user_count:
                 # Spawn some users
                 spawn_count = user_count - self.user_count
-                self.spawn_users(spawn_count=spawn_count, hatch_rate=hatch_rate)
+                self.spawn_users(spawn_count=spawn_count, spawn_rate=spawn_rate)
             else:
-                self.environment.events.hatch_complete.fire(user_count=self.user_count)
+                self.environment.events.spawning_complete.fire(user_count=self.user_count)
         else:
-            self.hatch_rate = hatch_rate
-            self.spawn_users(user_count, hatch_rate=hatch_rate, wait=wait)
+            self.spawn_rate = spawn_rate
+            self.spawn_users(user_count, spawn_rate=spawn_rate, wait=wait)
 
-    def start_stepload(self, user_count, hatch_rate, step_user_count, step_duration):
+    def start_stepload(self, user_count, spawn_rate, step_user_count, step_duration):
         if user_count < step_user_count:
             logger.error("Invalid parameters: total user count of %d is smaller than step user count of %d" % (user_count, step_user_count))
             return
@@ -280,20 +280,20 @@ class Runner(object):
         if self.stepload_greenlet:
             logger.info("There is an ongoing swarming in Step Load mode, will stop it now.")
             self.stepload_greenlet.kill()
-        logger.info("Start a new swarming in Step Load mode: total user count of %d, hatch rate of %d, step user count of %d, step duration of %d " % (user_count, hatch_rate, step_user_count, step_duration))
+        logger.info("Start a new swarming in Step Load mode: total user count of %d, spawn rate of %d, step user count of %d, step duration of %d " % (user_count, spawn_rate, step_user_count, step_duration))
         self.state = STATE_INIT
-        self.stepload_greenlet = self.greenlet.spawn(self.stepload_worker, hatch_rate, step_user_count, step_duration)
+        self.stepload_greenlet = self.greenlet.spawn(self.stepload_worker, spawn_rate, step_user_count, step_duration)
         self.stepload_greenlet.link_exception(greenlet_exception_handler)
 
-    def stepload_worker(self, hatch_rate, step_users_growth, step_duration):
+    def stepload_worker(self, spawn_rate, step_users_growth, step_duration):
         current_num_users = 0
-        while self.state == STATE_INIT or self.state == STATE_HATCHING or self.state == STATE_RUNNING:
+        while self.state == STATE_INIT or self.state == STATE_SPAWNING or self.state == STATE_RUNNING:
             current_num_users += step_users_growth
             if current_num_users > int(self.total_users):
                 logger.info("Step Load is finished")
                 break
-            self.start(current_num_users, hatch_rate)
-            logger.info("Step loading: start hatch job of %d user" % (current_num_users))
+            self.start(current_num_users, spawn_rate)
+            logger.info("Step loading: start spawn job of %d user" % (current_num_users))
             gevent.sleep(step_duration)
 
     def start_shape(self):
@@ -301,14 +301,14 @@ class Runner(object):
             logger.info("There is an ongoing shape test running. Editing is disabled")
             return
 
-        logger.info("Shape test starting. User count and hatch rate are ignored for this type of load test")
+        logger.info("Shape test starting. User count and spawn rate are ignored for this type of load test")
         self.state = STATE_INIT
         self.shape_greenlet = self.greenlet.spawn(self.shape_worker)
         self.shape_greenlet.link_exception(greenlet_exception_handler)
 
     def shape_worker(self):
         logger.info("Shape worker starting")
-        while self.state == STATE_INIT or self.state == STATE_HATCHING or self.state == STATE_RUNNING:
+        while self.state == STATE_INIT or self.state == STATE_SPAWNING or self.state == STATE_RUNNING:
             new_state = self.environment.shape_class.tick()
             if new_state is None:
                 logger.info("Shape test stopping")
@@ -316,9 +316,9 @@ class Runner(object):
             elif self.shape_last_state == new_state:
                 gevent.sleep(1)
             else:
-                user_count, hatch_rate = new_state
-                logger.info("Shape test updating to %d users at %.2f hatch rate" % (user_count, hatch_rate))
-                self.start(user_count=user_count, hatch_rate=hatch_rate)
+                user_count, spawn_rate = new_state
+                logger.info("Shape test updating to %d users at %.2f spawn rate" % (user_count, spawn_rate))
+                self.start(user_count=user_count, spawn_rate=spawn_rate)
                 self.shape_last_state = new_state
 
     def stop(self):
@@ -326,9 +326,9 @@ class Runner(object):
         Stop a running load test by stopping all running users
         """
         self.state = STATE_CLEANUP
-        # if we are currently hatching users we need to kill the hatching greenlet first
-        if self.hatching_greenlet and not self.hatching_greenlet.ready():
-            self.hatching_greenlet.kill(block=True)
+        # if we are currently spawning users we need to kill the spawning greenlet first
+        if self.spawning_greenlet and not self.spawning_greenlet.ready():
+            self.spawning_greenlet.kill(block=True)
         self.stop_users(self.user_count)
         self.state = STATE_STOPPED
         self.cpu_log_warning()
@@ -364,20 +364,20 @@ class LocalRunner(Runner):
             self.log_exception("local", str(exception), formatted_tb)
         self.environment.events.user_error.add_listener(on_user_error)
 
-    def start(self, user_count, hatch_rate, wait=False):
+    def start(self, user_count, spawn_rate, wait=False):
         self.target_user_count = user_count
-        if hatch_rate > 100:
-            logger.warning("Your selected hatch rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?")
+        if spawn_rate > 100:
+            logger.warning("Your selected spawn rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?")
         
-        if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
+        if self.state != STATE_RUNNING and self.state != STATE_SPAWNING:
             # if we're not already running we'll fire the test_start event
             self.environment.events.test_start.fire(environment=self.environment)
         
-        if self.hatching_greenlet:
-            # kill existing hatching_greenlet before we start a new one
-            self.hatching_greenlet.kill(block=True)
-        self.hatching_greenlet = self.greenlet.spawn(lambda: super(LocalRunner, self).start(user_count, hatch_rate, wait=wait))
-        self.hatching_greenlet.link_exception(greenlet_exception_handler)
+        if self.spawning_greenlet:
+            # kill existing spawning_greenlet before we start a new one
+            self.spawning_greenlet.kill(block=True)
+        self.spawning_greenlet = self.greenlet.spawn(lambda: super(LocalRunner, self).start(user_count, spawn_rate, wait=wait))
+        self.spawning_greenlet.link_exception(greenlet_exception_handler)
     
     def stop(self):
         if self.state == STATE_STOPPED:
@@ -433,8 +433,8 @@ class MasterRunner(DistributedRunner):
                 return self.get_by_state(STATE_INIT)
             
             @property
-            def hatching(self):
-                return self.get_by_state(STATE_HATCHING)
+            def spawning(self):
+                return self.get_by_state(STATE_SPAWNING)
             
             @property
             def running(self):
@@ -483,32 +483,32 @@ class MasterRunner(DistributedRunner):
             warning_emitted = True
         return warning_emitted
 
-    def start(self, user_count, hatch_rate):
+    def start(self, user_count, spawn_rate):
         self.target_user_count = user_count
-        num_workers = len(self.clients.ready) + len(self.clients.running) + len(self.clients.hatching)
+        num_workers = len(self.clients.ready) + len(self.clients.running) + len(self.clients.spawning)
         if not num_workers:
             logger.warning("You are running in distributed mode but have no worker servers connected. "
                            "Please connect workers prior to swarming.")
             return
 
-        self.hatch_rate = hatch_rate
+        self.spawn_rate = spawn_rate
         worker_num_users = user_count // (num_workers or 1)
-        worker_hatch_rate = float(hatch_rate) / (num_workers or 1)
+        worker_spawn_rate = float(spawn_rate) / (num_workers or 1)
         remaining = user_count % num_workers
 
-        logger.info("Sending hatch jobs of %d users and %.2f hatch rate to %d ready clients" % (worker_num_users, worker_hatch_rate, num_workers))
+        logger.info("Sending spawn jobs of %d users and %.2f spawn rate to %d ready clients" % (worker_num_users, worker_spawn_rate, num_workers))
 
-        if worker_hatch_rate > 100:
-            logger.warning("Your selected hatch rate is very high (>100/worker), and this is known to sometimes cause issues. Do you really need to ramp up that fast?")
+        if worker_spawn_rate > 100:
+            logger.warning("Your selected spawn rate is very high (>100/worker), and this is known to sometimes cause issues. Do you really need to ramp up that fast?")
 
-        if self.state != STATE_RUNNING and self.state != STATE_HATCHING:
+        if self.state != STATE_RUNNING and self.state != STATE_SPAWNING:
             self.stats.clear_all()
             self.exceptions = {}
             self.environment.events.test_start.fire(environment=self.environment)
         
-        for client in (self.clients.ready + self.clients.running + self.clients.hatching):
+        for client in (self.clients.ready + self.clients.running + self.clients.spawning):
             data = {
-                "hatch_rate": worker_hatch_rate,
+                "spawn_rate": worker_spawn_rate,
                 "num_users": worker_num_users,
                 "host": self.environment.host,
                 "stop_timeout": self.environment.stop_timeout,
@@ -518,9 +518,9 @@ class MasterRunner(DistributedRunner):
                 data["num_users"] += 1
                 remaining -= 1
 
-            self.server.send_to_client(Message("hatch", data, client.id))
+            self.server.send_to_client(Message("spawn", data, client.id))
         
-        self.state = STATE_HATCHING
+        self.state = STATE_SPAWNING
 
     def stop(self):
         if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
@@ -540,7 +540,7 @@ class MasterRunner(DistributedRunner):
         self.greenlet.kill(block=True)
 
     def check_stopped(self):
-        if not self.state == STATE_INIT and all(map(lambda x: x.state != STATE_RUNNING and x.state != STATE_HATCHING, self.clients.all)):
+        if not self.state == STATE_INIT and all(map(lambda x: x.state != STATE_RUNNING and x.state != STATE_SPAWNING, self.clients.all)):
             self.state = STATE_STOPPED
 
     
@@ -585,10 +585,10 @@ class MasterRunner(DistributedRunner):
             if msg.type == "client_ready":
                 id = msg.node_id
                 self.clients[id] = WorkerNode(id, heartbeat_liveness=HEARTBEAT_LIVENESS)
-                logger.info("Client %r reported as ready. Currently %i clients ready to swarm." % (id, len(self.clients.ready + self.clients.running + self.clients.hatching)))
-                if self.state == STATE_RUNNING or self.state == STATE_HATCHING:
+                logger.info("Client %r reported as ready. Currently %i clients ready to swarm." % (id, len(self.clients.ready + self.clients.running + self.clients.spawning)))
+                if self.state == STATE_RUNNING or self.state == STATE_SPAWNING:
                     # balance the load distribution when new client joins
-                    self.start(self.target_user_count, self.hatch_rate)
+                    self.start(self.target_user_count, self.spawn_rate)
                 ## emit a warning if the worker's clock seem to be out of sync with our clock
                 #if abs(time() - msg.data["time"]) > 5.0:
                 #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
@@ -607,14 +607,14 @@ class MasterRunner(DistributedRunner):
                         logger.warning("Worker %s exceeded cpu threshold (will only log this once per worker)" % (msg.node_id))
             elif msg.type == "stats":
                 self.environment.events.worker_report.fire(client_id=msg.node_id, data=msg.data)
-            elif msg.type == "hatching":
-                self.clients[msg.node_id].state = STATE_HATCHING
-            elif msg.type == "hatch_complete":
+            elif msg.type == "spawning":
+                self.clients[msg.node_id].state = STATE_SPAWNING
+            elif msg.type == "spawning_complete":
                 self.clients[msg.node_id].state = STATE_RUNNING
                 self.clients[msg.node_id].user_count = msg.data["count"]
-                if len(self.clients.hatching) == 0:
+                if len(self.clients.spawning) == 0:
                     count = sum(c.user_count for c in self.clients.values())
-                    self.environment.events.hatch_complete.fire(user_count=count)
+                    self.environment.events.spawning_complete.fire(user_count=count)
             elif msg.type == "quit":
                 if msg.node_id in self.clients:
                     del self.clients[msg.node_id]
@@ -632,7 +632,7 @@ class MasterRunner(DistributedRunner):
 
     @property
     def worker_count(self):
-        return len(self.clients.ready) + len(self.clients.hatching) + len(self.clients.running)
+        return len(self.clients.ready) + len(self.clients.spawning) + len(self.clients.running)
 
 class WorkerRunner(DistributedRunner):
     """
@@ -660,11 +660,11 @@ class WorkerRunner(DistributedRunner):
         self.client.send(Message("client_ready", None, self.client_id))
         self.greenlet.spawn(self.stats_reporter).link_exception(greenlet_exception_handler)
         
-        # register listener for when all users have hatched, and report it to the master node
-        def on_hatch_complete(user_count):
-            self.client.send(Message("hatch_complete", {"count":user_count}, self.client_id))
+        # register listener for when all users have spawned, and report it to the master node
+        def on_spawning_complete(user_count):
+            self.client.send(Message("spawning_complete", {"count":user_count}, self.client_id))
             self.worker_state = STATE_RUNNING
-        self.environment.events.hatch_complete.add_listener(on_hatch_complete)
+        self.environment.events.spawning_complete.add_listener(on_spawning_complete)
         
         # register listener that adds the current number of spawned users to the report that is sent to the master node
         def on_report_to_master(client_id, data):
@@ -706,19 +706,19 @@ class WorkerRunner(DistributedRunner):
             except RPCError as e:
                 logger.error("RPCError found when receiving from master: %s" % ( e ) )
                 continue
-            if msg.type == "hatch":
-                self.worker_state = STATE_HATCHING
-                self.client.send(Message("hatching", None, self.client_id))
+            if msg.type == "spawn":
+                self.worker_state = STATE_SPAWNING
+                self.client.send(Message("spawning", None, self.client_id))
                 job = msg.data
-                self.hatch_rate = job["hatch_rate"]
+                self.spawn_rate = job["spawn_rate"]
                 self.target_user_count = job["num_users"]
                 self.environment.host = job["host"]
                 self.environment.stop_timeout = job["stop_timeout"]
-                if self.hatching_greenlet:
-                    # kill existing hatching greenlet before we launch new one
-                    self.hatching_greenlet.kill(block=True)
-                self.hatching_greenlet = self.greenlet.spawn(lambda: self.start(user_count=job["num_users"], hatch_rate=job["hatch_rate"]))
-                self.hatching_greenlet.link_exception(greenlet_exception_handler)
+                if self.spawning_greenlet:
+                    # kill existing spawning greenlet before we launch new one
+                    self.spawning_greenlet.kill(block=True)
+                self.spawning_greenlet = self.greenlet.spawn(lambda: self.start(user_count=job["num_users"], spawn_rate=job["spawn_rate"]))
+                self.spawning_greenlet.link_exception(greenlet_exception_handler)
             elif msg.type == "stop":
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))

@@ -26,7 +26,7 @@ class LoadTestShape(object):
         Returns a tuple with 2 elements to control the running load test:
 
             user_count -- Total user count
-            hatch_rate -- Hatch rate to use when changing total user count
+            spawn_rate -- Number of users to start/stop per second when changing number of users
 
         If `None` is returned then the running load test will be stopped.
 

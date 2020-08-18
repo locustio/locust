@@ -68,8 +68,8 @@
                     {% else %}
                     <label for="user_count">Number of total users to simulate</label>
                     <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
-                    <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="hatch_rate" id="hatch_rate" class="val" value="{{ hatch_rate or "" }}"/><br>
+                    <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
+                    <input type="text" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "" }}"/><br>
                     {% endif %}
                     <label for="host">
                         Host <span style="color:#8a8a8a;">(e.g. http://www.example.com)</span>
@@ -105,8 +105,8 @@
                     {% else %}
                     <label for="new_user_count">Number of users to simulate</label>
                     <input type="text" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "" }}"/><br>
-                    <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned or stopped per second)</span></label>
-                    <input type="text" name="hatch_rate" id="new_hatch_rate" class="val"  value="{{ hatch_rate or "" }}"/><br>
+                    <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users to start per second (or stop))</span></label>
+                    <input type="text" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "" }}"/><br>
                     {% endif %}
                     {% if is_step_load %}
                     <label for="step_user_count">Number of users to increase by step</label>

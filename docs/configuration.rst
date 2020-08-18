@@ -54,7 +54,7 @@ Example:
     expect-workers = 5
     host = http://target-system
     users = 100
-    hatch-rate = 10
+    spawn-rate = 10
     run-time = 10m
     
 

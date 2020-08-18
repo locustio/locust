@@ -11,8 +11,8 @@ like a CI server - by using the ``--headless`` flag together with ``-u`` and ``-
 
     $ locust -f locust_files/my_locust_file.py --headless -u 1000 -r 100
 
-``-u`` specifies the number of Users to spawn, and ``-r`` specifies the hatch rate
-(number of users to spawn per second).
+``-u`` specifies the number of Users to spawn, and ``-r`` specifies the spawn rate
+(number of users to start per second).
 
 
 Setting a time limit for the test

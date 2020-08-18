@@ -83,7 +83,7 @@ class TestLoadLocustfile(LocustTestCase):
         with temporary_file(textwrap.dedent("""
             host = localhost  # With "="
             u 100             # Short form
-            hatch-rate 5      # long form
+            spawn-rate 5      # long form
             headless          # boolean
         """), suffix=".conf") as conf_file_path:
             options = parse_options(args=[
@@ -92,7 +92,7 @@ class TestLoadLocustfile(LocustTestCase):
             self.assertEqual(conf_file_path, options.config)
             self.assertEqual("localhost", options.host)
             self.assertEqual(100, options.num_users)
-            self.assertEqual(5, options.hatch_rate)
+            self.assertEqual(5, options.spawn_rate)
             self.assertTrue(options.headless)
 
     def test_command_line_arguments_override_config_file(self):
@@ -145,7 +145,7 @@ class LocustProcessIntegrationTest(TestCase):
             class TestUser(User):
                 wait_time = constant(3)
                 @task
-                def my_task():
+                def my_task(self):
                     print("running my_task()")
         """)) as file_path:
             proc = subprocess.Popen(["locust", "-f", file_path], stdout=PIPE, stderr=PIPE)
@@ -164,7 +164,7 @@ class LocustProcessIntegrationTest(TestCase):
             class TestUser(User):
                 wait_time = constant(3)
                 @task
-                def my_task():
+                def my_task(self):
                     print("running my_task()")
         """)) as file_path:
             proc = subprocess.Popen(["locust", "-f", file_path], stdout=PIPE, stderr=PIPE)
@@ -177,7 +177,7 @@ class LocustProcessIntegrationTest(TestCase):
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shutting down (exit code 0), bye", stderr)
 
-    def test_default_headless_hatch_options(self):
+    def test_default_headless_spawn_options(self):
         with mock_locustfile() as mocked:
             output = subprocess.check_output(
                     ["locust",
@@ -188,7 +188,7 @@ class LocustProcessIntegrationTest(TestCase):
                     stderr=subprocess.STDOUT,
                     timeout=2,
                     ).decode("utf-8").strip()
-            self.assertIn("Hatching and swarming 1 users at the rate 1 users/s", output)
+            self.assertIn("Spawning 1 users at the rate 1 users/s", output)
 
     def test_web_options(self):
         port = get_free_tcp_port()
