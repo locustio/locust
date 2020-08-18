@@ -708,7 +708,7 @@ def print_stats(stats, current=True):
 
 
 def print_percentile_stats(stats):
-    console_logger.info("Response time percentiles")
+    console_logger.info("Response time percentiles (approximated)")
     headers = ('Type', 'Name') + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)) + ('# reqs',)
     console_logger.info((f" %-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
                     f"{' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}") % headers)
