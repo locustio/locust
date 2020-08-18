@@ -226,13 +226,14 @@ class TestRequestStats(unittest.TestCase):
         s1 = StatsEntry(self.stats, "rounding down!", "GET")
         s1.log(122, 0)    # (rounded 120) min
         actual_percentile = s1.percentile().split()
-        self.assertEqual(actual_percentile, ['GET', 'rounding', 'down!', '1'] + ['120'] * len(PERCENTILES_TO_REPORT))
+        
+        self.assertEqual(actual_percentile, ['GET', 'rounding', 'down!'] + ['120'] * len(PERCENTILES_TO_REPORT) + ['1'])
 
     def test_percentile_rounded_up(self):
         s2 = StatsEntry(self.stats, "rounding up!", "GET")
         s2.log(127, 0)    # (rounded 130) min
         actual_percentile = s2.percentile().split()
-        self.assertEqual(actual_percentile, ['GET', 'rounding', 'up!', '1'] + ['130'] * len(PERCENTILES_TO_REPORT))
+        self.assertEqual(actual_percentile, ['GET', 'rounding', 'up!'] + ['130'] * len(PERCENTILES_TO_REPORT) + ['1'])
 
     def test_custom_percentile_list(self):
         s = StatsEntry(self.stats, "custom_percentiles", "GET")
@@ -240,7 +241,7 @@ class TestRequestStats(unittest.TestCase):
         locust.stats.PERCENTILES_TO_REPORT = custom_percentile_list
         s.log(150, 0)
         actual_percentile = s.percentile().split()
-        self.assertEqual(actual_percentile, ['GET', 'custom_percentiles', '1'] + ['150'] * len(custom_percentile_list))
+        self.assertEqual(actual_percentile, ['GET', 'custom_percentiles'] + ['150'] * len(custom_percentile_list) + ['1'])
 
     def test_error_grouping(self):
         # reset stats
