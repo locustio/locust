@@ -142,8 +142,8 @@ def main():
         sys.exit(1)
 
     if options.hatch_rate:
-        sys.stderr.write("The --hatch-rate parameter has been renamed --spawn-rate\n")
-        sys.exit(1)
+        sys.stderr.write("[DEPRECATED] The --hatch-rate parameter has been renamed --spawn-rate\n")
+        options.spawn_rate = options.hatch_rate
  
 
     # setup logging
