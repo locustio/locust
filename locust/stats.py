@@ -752,14 +752,6 @@ def stats_printer(stats):
             gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
     return stats_printer_func
 
-def stats_writer(environment, base_filepath, full_history=False):
-    """Writes the csv files for the locust run."""
-    with open(base_filepath + '_stats_history.csv', 'w') as f:
-        f.write(stats_history_csv_header())
-    while True:
-        write_csv_files(environment, base_filepath, full_history)
-        gevent.sleep(CSV_STATS_INTERVAL_SEC)
-
 def sort_stats(stats):
     return [stats[key] for key in sorted(stats.keys())]
 
