@@ -1,6 +1,6 @@
-=================
-Extending Locust
-=================
+==================================
+Extending Locust using event hooks
+==================================
 
 Locust comes with a number of events hooks that can be used to extend Locust in different ways.
 
@@ -74,3 +74,9 @@ For example, you can monitor the fail ratio of your test and stop the run if it 
         # only run this on master & standalone
         if not isinstance(environment.runner, WorkerRunner):
             gevent.spawn(checker, environment)
+
+
+More examples
+=============
+
+See `locust-plugins <https://github.com/SvenskaSpel/locust-plugins#listeners>`_
