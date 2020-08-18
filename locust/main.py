@@ -137,9 +137,14 @@ def main():
     options = parse_options()
 
     if options.slave or options.expect_slaves:
-        sys.stderr.write("[DEPRECATED] Usage of slave has been deprecated, use --worker or --expect-workers\n")
+        sys.stderr.write("The --slave/--expect-slaves parameters have been renamed --worker/--expect-workers\n")
         sys.exit(1)
-    
+
+    if options.hatch_rate:
+        sys.stderr.write("The --hatch-rate parameter has been renamed --spawn-rate\n")
+        sys.exit(1)
+ 
+
     # setup logging
     if not options.skip_log_setup:
         if options.loglevel.upper() in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
@@ -186,8 +191,8 @@ def main():
     # create locust Environment
     environment = create_environment(user_classes, options, events=locust.events, shape_class=shape_class)
 
-    if shape_class and (options.num_users or options.hatch_rate or options.step_load):
-        logger.error("The specified locustfile contains a shape class but a conflicting argument was specified: users, hatch-rate or step-load")
+    if shape_class and (options.num_users or options.spawn_rate or options.step_load):
+        logger.error("The specified locustfile contains a shape class but a conflicting argument was specified: users, spawn-rate or step-load")
         sys.exit(1)
 
     if options.show_task_ratio:
@@ -301,16 +306,16 @@ def main():
             # apply headless mode defaults
             if options.num_users is None:
                 options.num_users = 1
-            if options.hatch_rate is None:
-                options.hatch_rate = 1
+            if options.spawn_rate is None:
+                options.spawn_rate = 1
             if options.step_users is None:
                 options.step_users = 1
 
             # start the test
             if options.step_time:
-                runner.start_stepload(options.num_users, options.hatch_rate, options.step_users, options.step_time)
+                runner.start_stepload(options.num_users, options.spawn_rate, options.step_users, options.step_time)
             else:
-                runner.start(options.num_users, options.hatch_rate)
+                runner.start(options.num_users, options.spawn_rate)
     
     if options.run_time:
         spawn_run_time_limit_greenlet()

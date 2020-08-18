@@ -134,14 +134,20 @@ def setup_parser_arguments(parser):
         '-u', '--users',
         type=int,
         dest='num_users',
-        help="Number of concurrent Locust users. Only used together with --headless",
+        help="Number of concurrent Locust users. Primarily used together with --headless",
         env_var="LOCUST_USERS",
     )
     parser.add_argument(
-        '-r', '--hatch-rate',
+        '-r', '--spawn-rate',
         type=float,
-        help="The rate per second in which users are spawned. Only used together with --headless",
+        help="The rate per second in which users are spawned. Primarily used together with --headless",
+        env_var="LOCUST_SPAWN_RATE",
+    )
+    parser.add_argument(
+        '--hatch-rate',
         env_var="LOCUST_HATCH_RATE",
+        action='store_true',
+        help=configargparse.SUPPRESS,
     )
     parser.add_argument(
         '-t', '--run-time',
@@ -315,7 +321,7 @@ def setup_parser_arguments(parser):
     stats_group.add_argument(
         '--reset-stats',
         action='store_true',
-        help="Reset statistics once hatching has been completed. Should be set on both master and workers when running in distributed mode",
+        help="Reset statistics once spawning has been completed. Should be set on both master and workers when running in distributed mode",
         env_var="LOCUST_RESET_STATS",
     )
     

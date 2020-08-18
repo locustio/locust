@@ -14,7 +14,7 @@ from locust.exception import RPCError, StopUser
 from locust.rpc import Message
 
 from locust.runners import LocalRunner, WorkerNode, WorkerRunner, \
-     STATE_INIT, STATE_HATCHING, STATE_RUNNING, STATE_MISSING, STATE_STOPPED
+     STATE_INIT, STATE_SPAWNING, STATE_RUNNING, STATE_MISSING, STATE_STOPPED
 from locust.stats import RequestStats
 from locust.test.testcases import LocustTestCase
 
@@ -62,7 +62,7 @@ def mocked_rpc():
 
 class mocked_options(object):
     def __init__(self):
-        self.hatch_rate = 5
+        self.spawn_rate = 5
         self.num_users = 5
         self.host = '/'
         self.tags = None
@@ -162,7 +162,7 @@ class TestLocustRunner(LocustTestCase):
                 def trigger(self):
                     triggered[0] = True
         runner = Environment(user_classes=[BaseUser]).create_local_runner()
-        runner.spawn_users(2, hatch_rate=2, wait=False)
+        runner.spawn_users(2, spawn_rate=2, wait=False)
         self.assertEqual(2, len(runner.user_greenlets))
         g1 = list(runner.user_greenlets)[0]
         g2 = list(runner.user_greenlets)[1]
@@ -188,8 +188,8 @@ class TestLocustRunner(LocustTestCase):
         environment.events.test_start.add_listener(on_test_start)
         
         runner = LocalRunner(environment)
-        runner.start(user_count=3, hatch_rate=3, wait=False)
-        runner.hatching_greenlet.get(timeout=3)
+        runner.start(user_count=3, spawn_rate=3, wait=False)
+        runner.spawning_greenlet.get(timeout=3)
         
         self.assertEqual(1, test_start_run[0])
         self.assertEqual(3, MyUser.task_run_count)
@@ -208,7 +208,7 @@ class TestLocustRunner(LocustTestCase):
         environment.events.test_stop.add_listener(on_test_stop)
 
         runner = LocalRunner(environment)
-        runner.start(user_count=3, hatch_rate=3, wait=False)
+        runner.start(user_count=3, spawn_rate=3, wait=False)
         self.assertEqual(0, test_stop_run[0])
         runner.stop()
         self.assertEqual(1, test_stop_run[0])
@@ -227,7 +227,7 @@ class TestLocustRunner(LocustTestCase):
         environment.events.test_stop.add_listener(on_test_stop)
 
         runner = LocalRunner(environment)
-        runner.start(user_count=3, hatch_rate=3, wait=False)
+        runner.start(user_count=3, spawn_rate=3, wait=False)
         self.assertEqual(0, test_stop_run[0])
         runner.quit()
         self.assertEqual(1, test_stop_run[0])
@@ -246,13 +246,13 @@ class TestLocustRunner(LocustTestCase):
         environment.events.test_stop.add_listener(on_test_stop)
 
         runner = LocalRunner(environment)
-        runner.start(user_count=3, hatch_rate=3, wait=False)
+        runner.start(user_count=3, spawn_rate=3, wait=False)
         self.assertEqual(0, test_stop_run[0])
         runner.stop()
         runner.quit()
         self.assertEqual(1, test_stop_run[0])
 
-    def test_change_user_count_during_hatching(self):
+    def test_change_user_count_during_spawning(self):
         class MyUser(User):
             wait_time = constant(1)
             @task
@@ -261,10 +261,10 @@ class TestLocustRunner(LocustTestCase):
         
         environment = Environment(user_classes=[MyUser])
         runner = LocalRunner(environment)
-        runner.start(user_count=10, hatch_rate=5, wait=False)
+        runner.start(user_count=10, spawn_rate=5, wait=False)
         sleep(0.6)
-        runner.start(user_count=5, hatch_rate=5, wait=False)
-        runner.hatching_greenlet.join()
+        runner.start(user_count=5, spawn_rate=5, wait=False)
+        runner.spawning_greenlet.join()
         self.assertEqual(5, len(runner.user_greenlets))
         runner.quit()
     
@@ -285,7 +285,7 @@ class TestLocustRunner(LocustTestCase):
         
         environment = Environment(user_classes=[MyUser], reset_stats=True)
         runner = LocalRunner(environment)
-        runner.start(user_count=6, hatch_rate=12, wait=False)
+        runner.start(user_count=6, spawn_rate=12, wait=False)
         sleep(0.25)
         self.assertGreaterEqual(runner.stats.get("/test", "GET").num_requests, 3)
         sleep(0.3)
@@ -309,7 +309,7 @@ class TestLocustRunner(LocustTestCase):
         
         environment = Environment(reset_stats=False, user_classes=[MyUser])
         runner = LocalRunner(environment)
-        runner.start(user_count=6, hatch_rate=12, wait=False)
+        runner.start(user_count=6, spawn_rate=12, wait=False)
         sleep(0.25)
         self.assertGreaterEqual(runner.stats.get("/test", "GET").num_requests, 3)
         sleep(0.3)
@@ -339,7 +339,7 @@ class TestLocustRunner(LocustTestCase):
         finally:
             timeout.cancel()
 
-    def test_stop_users_with_hatch_rate(self):
+    def test_stop_users_with_spawn_rate(self):
         class MyUser(User):
             wait_time = constant(1)
             @task
@@ -398,7 +398,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             # give workers time to connect
             sleep(0.1)
             # issue start command that should trigger TestUsers to be spawned in the Workers
-            master.start(6, hatch_rate=1000)
+            master.start(6, spawn_rate=1000)
             sleep(0.1)
             # check that worker nodes have started locusts
             for worker in workers:
@@ -557,8 +557,8 @@ class TestMasterRunner(LocustTestCase):
             server.mocked_send(Message("client_ready", None, "fake_client2"))
 
             master.start(1, 2)
-            server.mocked_send(Message("hatching", None, "fake_client1"))
-            server.mocked_send(Message("hatching", None, "fake_client2"))
+            server.mocked_send(Message("spawning", None, "fake_client1"))
+            server.mocked_send(Message("spawning", None, "fake_client2"))
 
             server.mocked_send(Message("quit", None, "fake_client1"))
             sleep(0)
@@ -578,8 +578,8 @@ class TestMasterRunner(LocustTestCase):
             server.mocked_send(Message("client_ready", None, "fake_client2"))
 
             master.start(1, 2)
-            server.mocked_send(Message("hatching", None, "fake_client1"))
-            server.mocked_send(Message("hatching", None, "fake_client2"))
+            server.mocked_send(Message("spawning", None, "fake_client1"))
+            server.mocked_send(Message("spawning", None, "fake_client2"))
 
             sleep(0.3)
             server.mocked_send(Message("heartbeat", {'state': STATE_RUNNING, 'current_cpu_usage': 50}, "fake_client1"))
@@ -705,7 +705,7 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(1, len(server.outbox))
             client_id, msg = server.outbox.pop()
             self.assertEqual(100, msg.data["num_users"])
-            self.assertEqual(20, msg.data["hatch_rate"])
+            self.assertEqual(20, msg.data["spawn_rate"])
             
             # let another worker connect
             server.mocked_send(Message("client_ready", None, "zeh_fake_client2"))
@@ -713,22 +713,22 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(2, len(server.outbox))
             client_id, msg = server.outbox.pop()
             self.assertEqual(50, msg.data["num_users"])
-            self.assertEqual(10, msg.data["hatch_rate"])
+            self.assertEqual(10, msg.data["spawn_rate"])
             client_id, msg = server.outbox.pop()
             self.assertEqual(50, msg.data["num_users"])
-            self.assertEqual(10, msg.data["hatch_rate"])
+            self.assertEqual(10, msg.data["spawn_rate"])
     
-    def test_sends_hatch_data_to_ready_running_hatching_workers(self):
-        '''Sends hatch job to running, ready, or hatching workers'''
+    def test_sends_spawn_data_to_ready_running_spawning_workers(self):
+        '''Sends spawn job to running, ready, or spawning workers'''
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner()
             master.clients[1] = WorkerNode(1)
             master.clients[2] = WorkerNode(2)
             master.clients[3] = WorkerNode(3)
             master.clients[1].state = STATE_INIT
-            master.clients[2].state = STATE_HATCHING
+            master.clients[2].state = STATE_SPAWNING
             master.clients[3].state = STATE_RUNNING
-            master.start(user_count=5, hatch_rate=5)
+            master.start(user_count=5, spawn_rate=5)
 
             self.assertEqual(3, len(server.outbox))
     
@@ -828,7 +828,7 @@ class TestMasterRunner(LocustTestCase):
         
         try:
             runner.start(0, 1, wait=True)
-            runner.hatching_greenlet.join()
+            runner.spawning_greenlet.join()
         except gevent.Timeout:
             self.fail("Got Timeout exception. A locust seems to have been spawned, even though 0 was specified.")
         finally:
@@ -972,7 +972,7 @@ class TestMasterRunner(LocustTestCase):
             for i in range(5):
                 server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
 
-            # start a new swarming in Step Load mode: total locust count of 10, hatch rate of 2, step locust count of 5, step duration of 2s
+            # start a new swarming in Step Load mode: total locust count of 10, spawn rate of 2, step locust count of 5, step duration of 2s
             master.start_stepload(10, 2, 5, 2)
 
             # make sure the first step run is started
@@ -1103,16 +1103,16 @@ class TestWorkerRunner(LocustTestCase):
             worker = self.get_runner(environment=environment, user_classes=[MyTestUser])
             self.assertEqual(1, len(client.outbox))
             self.assertEqual("client_ready", client.outbox[0].type)
-            client.mocked_send(Message("hatch", {
-                "hatch_rate": 1,
+            client.mocked_send(Message("spawn", {
+                "spawn_rate": 1,
                 "num_users": 1,
                 "host": "",
                 "stop_timeout": 1,
             }, "dummy_client_id"))
             #print("outbox:", client.outbox)
-            # wait for worker to hatch locusts
-            self.assertIn("hatching", [m.type for m in client.outbox])
-            worker.hatching_greenlet.join()
+            # wait for worker to spawn locusts
+            self.assertIn("spawning", [m.type for m in client.outbox])
+            worker.spawning_greenlet.join()
             self.assertEqual(1, len(worker.user_greenlets))
             # check that locust has started running
             gevent.sleep(0.01)
@@ -1140,16 +1140,16 @@ class TestWorkerRunner(LocustTestCase):
             worker = self.get_runner(environment=environment, user_classes=[MyTestUser])
             self.assertEqual(1, len(client.outbox))
             self.assertEqual("client_ready", client.outbox[0].type)
-            client.mocked_send(Message("hatch", {
-                "hatch_rate": 1,
+            client.mocked_send(Message("spawn", {
+                "spawn_rate": 1,
                 "num_users": 1,
                 "host": "",
                 "stop_timeout": None,
             }, "dummy_client_id"))
             #print("outbox:", client.outbox)
-            # wait for worker to hatch locusts
-            self.assertIn("hatching", [m.type for m in client.outbox])
-            worker.hatching_greenlet.join()
+            # wait for worker to spawn locusts
+            self.assertIn("spawning", [m.type for m in client.outbox])
+            worker.spawning_greenlet.join()
             self.assertEqual(1, len(worker.user_greenlets))
             # check that locust has started running
             gevent.sleep(0.01)
@@ -1160,7 +1160,7 @@ class TestWorkerRunner(LocustTestCase):
             # check that locust user did not get to finish
             self.assertEqual(1, MyTestUser._test_state)
     
-    def test_change_user_count_during_hatching(self):
+    def test_change_user_count_during_spawning(self):
         class MyUser(User):
             wait_time = constant(1)
             @task
@@ -1171,22 +1171,22 @@ class TestWorkerRunner(LocustTestCase):
             environment = Environment()
             worker = self.get_runner(environment=environment, user_classes=[MyUser])
             
-            client.mocked_send(Message("hatch", {
-                "hatch_rate": 5,
+            client.mocked_send(Message("spawn", {
+                "spawn_rate": 5,
                 "num_users": 10,
                 "host": "",
                 "stop_timeout": None,
             }, "dummy_client_id"))
             sleep(0.6)
-            self.assertEqual(STATE_HATCHING, worker.state)
-            client.mocked_send(Message("hatch", {
-                "hatch_rate": 5,
+            self.assertEqual(STATE_SPAWNING, worker.state)
+            client.mocked_send(Message("spawn", {
+                "spawn_rate": 5,
                 "num_users": 9,
                 "host": "",
                 "stop_timeout": None,
             }, "dummy_client_id"))
             sleep(0)
-            worker.hatching_greenlet.join()
+            worker.spawning_greenlet.join()
             self.assertEqual(9, len(worker.user_greenlets))
             worker.quit()
 
@@ -1442,7 +1442,7 @@ class TestStopTimeout(LocustTestCase):
         environment.events.test_stop.add_listener(on_test_stop_ok)
 
         runner = LocalRunner(environment)
-        runner.start(user_count=3, hatch_rate=3, wait=False)
+        runner.start(user_count=3, spawn_rate=3, wait=False)
         self.assertEqual(0, test_stop_run[0])
         runner.stop()
         self.assertEqual(2, test_stop_run[0])

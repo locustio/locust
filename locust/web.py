@@ -131,7 +131,7 @@ class WebUI:
                 host=host,
                 override_host_warning=override_host_warning,
                 num_users=options and options.num_users,
-                hatch_rate=options and options.hatch_rate,
+                spawn_rate=options and options.spawn_rate,
                 step_users=options and options.step_users,
                 step_time=options and options.step_time,
                 worker_count=worker_count,
@@ -143,21 +143,21 @@ class WebUI:
         def swarm():
             assert request.method == "POST"
             user_count = int(request.form["user_count"])
-            hatch_rate = float(request.form["hatch_rate"])
+            spawn_rate = float(request.form["spawn_rate"])
             if (request.form.get("host")):
                 environment.host = str(request.form["host"])
         
             if environment.step_load:
                 step_user_count = int(request.form["step_user_count"])
                 step_duration = parse_timespan(str(request.form["step_duration"]))
-                environment.runner.start_stepload(user_count, hatch_rate, step_user_count, step_duration)
+                environment.runner.start_stepload(user_count, spawn_rate, step_user_count, step_duration)
                 return jsonify({'success': True, 'message': 'Swarming started in Step Load Mode', 'host': environment.host})
 
             if environment.shape_class:
                 environment.runner.start_shape()
                 return jsonify({'success': True, 'message': 'Swarming started using shape class', 'host': environment.host})
 
-            environment.runner.start(user_count, hatch_rate)
+            environment.runner.start(user_count, spawn_rate)
             return jsonify({'success': True, 'message': 'Swarming started', 'host': environment.host})
         
         @app.route('/stop')
