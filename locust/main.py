@@ -336,8 +336,7 @@ def main():
     if options.csv_prefix:
         gevent.spawn(stats_csv_writer.stats_writer).link_exception(greenlet_exception_handler)
 
-    stats_history_greenlet = gevent.spawn(stats_history, runner)
-    stats_history_greenlet.link_exception(greenlet_exception_handler)
+    gevent.spawn(stats_history, runner)
 
     def shutdown():
         """
@@ -367,8 +366,6 @@ def main():
         print_percentile_stats(runner.stats)
 
         print_error_report(runner.stats)
-
-        stats_history_greenlet.kill(block=False)
 
         sys.exit(code)
     

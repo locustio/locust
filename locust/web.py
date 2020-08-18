@@ -184,10 +184,14 @@ class WebUI:
         @self.auth_required_if_enabled
         def stats_report():
             stats = self.environment.runner.stats
+
             start_ts = stats.start_time
+            start_time = datetime.datetime.fromtimestamp(start_ts)
+            start_time = start_time.strftime('%Y-%m-%d %H:%M:%S')
+
             end_ts = stats.last_request_timestamp
-            start_time = datetime.datetime.fromtimestamp(start_ts).strftime('%Y-%m-%d %H:%M:%S')
-            end_time = datetime.datetime.fromtimestamp(end_ts).strftime('%Y-%m-%d %H:%M:%S')
+            end_time = datetime.datetime.fromtimestamp(end_ts)
+            end_time = end_time.strftime('%Y-%m-%d %H:%M:%S')
 
             host = None
             if environment.host:
@@ -201,8 +205,7 @@ class WebUI:
             failures_statistics = sort_stats(stats.errors)
             exceptions_statistics = []
             for exc in environment.runner.exceptions.values():
-                nodes = ", ".join(exc["nodes"])
-                exc['nodes'] = nodes
+                exc['nodes'] = ", ".join(exc["nodes"])
                 exceptions_statistics.append(exc)
 
             history = stats.history
