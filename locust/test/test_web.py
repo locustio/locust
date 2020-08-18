@@ -18,6 +18,8 @@ from locust.argument_parser import get_parser, parse_options
 from locust.user import User, task
 from locust.env import Environment
 from locust.runners import Runner
+from locust import stats
+from locust.stats import StatsCSVFileWriter
 from locust.web import WebUI
 
 from .testcases import LocustTestCase
@@ -383,7 +385,9 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
         self.stats = self.environment.stats
         self.stats.CSV_STATS_INTERVAL_SEC = 0.02
 
-        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0)
+        locust.stats.CSV_STATS_INTERVAL_SEC = 0.1
+        self.stats_csv_writer = StatsCSVFileWriter(self.environment, stats.PERCENTILES_TO_REPORT, self.STATS_BASE_NAME, full_history=True)
+        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, stats_csv_writer=self.stats_csv_writer)
         self.web_ui.app.view_functions["request_stats"].clear_cache()
         gevent.sleep(0.01)
         self.web_port = self.web_ui.server.server_port
@@ -408,9 +412,10 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
         self.stats.log_request("GET", "/test", 999.9764125, 1000)
         self.stats.log_request("GET", "/test2", 120, 5612)
 
-        # Call these two methods instead of the 'stats_writer' so that we avoid gevent wait loop
-        locust.stats.write_stats_history_csv_header(self.STATS_BASE_NAME)
-        locust.stats.write_csv_files(self.environment, self.STATS_BASE_NAME, full_history=True)
+        greenlet = gevent.spawn(self.stats_csv_writer.stats_writer)
+        gevent.sleep(0.01)
+        self.stats_csv_writer.stats_history_flush()
+        gevent.kill(greenlet)
 
         response = requests.get("http://127.0.0.1:%i/stats/requests_full_history/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
