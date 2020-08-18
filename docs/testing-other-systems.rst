@@ -33,3 +33,4 @@ Here's an implementation of an XML-RPC server that would work as a server for th
 
 .. literalinclude:: ../examples/custom_xmlrpc_client/server.py
 
+For more examples, see `locust-plugins <https://github.com/SvenskaSpel/locust-plugins#users>`_
