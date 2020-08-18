@@ -1,5 +1,50 @@
 # Changelog
 
+## [1.2](https://github.com/locustio/locust/tree/1.2) (2020-08-18)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.1.1...1.2)
+
+**Fixed bugs:**
+
+- Excessive precision of metrics in losust csv stats  [\#1501](https://github.com/locustio/locust/issues/1501)
+- WorkerRunner spawns heartbeat before setting worker\_state [\#1500](https://github.com/locustio/locust/issues/1500)
+- Negative min\_response\_time shown in stats [\#1487](https://github.com/locustio/locust/issues/1487)
+- Unhandled exception:  ConnectionResetError, Connection reset by peer \(FastHttpUser\) [\#1472](https://github.com/locustio/locust/issues/1472)
+
+**Closed issues:**
+
+- Change the position of dividers in command line report [\#1514](https://github.com/locustio/locust/issues/1514)
+- Allow negative hatch rate for ramping down [\#1488](https://github.com/locustio/locust/issues/1488)
+- Missing URL to download full csv history [\#1468](https://github.com/locustio/locust/issues/1468)
+- Support for completely custom load pattern / shape [\#1432](https://github.com/locustio/locust/issues/1432)
+- rename "hatch rate" to "spawn rate" [\#1405](https://github.com/locustio/locust/issues/1405)
+
+**Merged pull requests:**
+
+- Major rework of documentation & many small fixes [\#1527](https://github.com/locustio/locust/pull/1527) ([cyberw](https://github.com/cyberw))
+- Make hatch-rate parameter deprecated instead of killing it right away. [\#1526](https://github.com/locustio/locust/pull/1526) ([cyberw](https://github.com/cyberw))
+- Move dividers \(pipe characters\) in stats command line output. Also shrink percentiles output and remove 99.999 percentile by default Fixes \#1514 [\#1525](https://github.com/locustio/locust/pull/1525) ([cyberw](https://github.com/cyberw))
+- Grey out UI input fields when LoadTestShape is in use [\#1524](https://github.com/locustio/locust/pull/1524) ([max-rocket-internet](https://github.com/max-rocket-internet))
+- Rename hatch rate to spawn rate. Fixes \#1405 [\#1523](https://github.com/locustio/locust/pull/1523) ([cyberw](https://github.com/cyberw))
+- Keep csv files open [\#1522](https://github.com/locustio/locust/pull/1522) ([lhupfeldt](https://github.com/lhupfeldt))
+- Fix issue with non str, non Exception type failure messages [\#1517](https://github.com/locustio/locust/pull/1517) ([cyberw](https://github.com/cyberw))
+-  Add Feature: Download Report File [\#1516](https://github.com/locustio/locust/pull/1516) ([taojy123](https://github.com/taojy123))
+- Fix typos [\#1512](https://github.com/locustio/locust/pull/1512) ([phil-davis](https://github.com/phil-davis))
+- Fix typo of failure\_percentage in test\_stats.py [\#1511](https://github.com/locustio/locust/pull/1511) ([phil-davis](https://github.com/phil-davis))
+- Fix old HttpLocust reference in docs [\#1508](https://github.com/locustio/locust/pull/1508) ([phil-davis](https://github.com/phil-davis))
+- Adding ability to generate any custom load shape with LoadTestShape class [\#1505](https://github.com/locustio/locust/pull/1505) ([max-rocket-internet](https://github.com/max-rocket-internet))
+- Download full history - see issue 1468 [\#1504](https://github.com/locustio/locust/pull/1504) ([lhupfeldt](https://github.com/lhupfeldt))
+- Fix csv stats precision [\#1503](https://github.com/locustio/locust/pull/1503) ([vstepanov-lohika-tix](https://github.com/vstepanov-lohika-tix))
+- Allow ramping down of users [\#1502](https://github.com/locustio/locust/pull/1502) ([max-rocket-internet](https://github.com/max-rocket-internet))
+- Add 2 things to .gitignore [\#1498](https://github.com/locustio/locust/pull/1498) ([max-rocket-internet](https://github.com/max-rocket-internet))
+- Print valid URL when --web-host is not specified [\#1496](https://github.com/locustio/locust/pull/1496) ([dmitrytokarev](https://github.com/dmitrytokarev))
+- Replace time.time\(\) with time.monotonic\(\) [\#1492](https://github.com/locustio/locust/pull/1492) ([max-rocket-internet](https://github.com/max-rocket-internet))
+- Remove "Loadgen" from CPU warning log messages [\#1491](https://github.com/locustio/locust/pull/1491) ([max-rocket-internet](https://github.com/max-rocket-internet))
+- Fix small typo in docker docs [\#1490](https://github.com/locustio/locust/pull/1490) ([max-rocket-internet](https://github.com/max-rocket-internet))
+- fade into the running screen before getting a response from the server [\#1479](https://github.com/locustio/locust/pull/1479) ([camilojimenez](https://github.com/camilojimenez))
+- Refactoring stats to handle custom percentiles [\#1477](https://github.com/locustio/locust/pull/1477) ([vstepanov-lohika-tix](https://github.com/vstepanov-lohika-tix))
+- Handle connection reset error in fast http client [\#1475](https://github.com/locustio/locust/pull/1475) ([mkarlovich](https://github.com/mkarlovich))
+
 ## [1.1.1](https://github.com/locustio/locust/tree/1.1.1) (2020-07-07)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.1...1.1.1)
@@ -475,6 +520,7 @@
 - Allow None response time for requests [\#1088](https://github.com/locustio/locust/pull/1088) ([cyberw](https://github.com/cyberw))
 - Fixed issue with Total Requests Per Second plot [\#1060](https://github.com/locustio/locust/pull/1060) ([williamlhunter](https://github.com/williamlhunter))
 - Tox: Add flake8 tests to find Python syntax errors and undefined names [\#1039](https://github.com/locustio/locust/pull/1039) ([cclauss](https://github.com/cclauss))
+- Fix frontend bugs. [\#822](https://github.com/locustio/locust/pull/822) ([omittones](https://github.com/omittones))
 - Switch from using optparse to argparse for command line arguments [\#769](https://github.com/locustio/locust/pull/769) ([jdufresne](https://github.com/jdufresne))
 - Allow skipping the logging setup [\#738](https://github.com/locustio/locust/pull/738) ([Exide](https://github.com/Exide))
 - Added link to an Ansible role as a 3rd party tool. [\#704](https://github.com/locustio/locust/pull/704) ([tinx](https://github.com/tinx))
@@ -812,6 +858,7 @@
 - \(libev\) select: Invalid argument when trying to go past 1k users [\#121](https://github.com/locustio/locust/issues/121)
 - Command line option to specify the duration to run [\#71](https://github.com/locustio/locust/issues/71)
 - Setup/teardown hooks [\#59](https://github.com/locustio/locust/issues/59)
+- Define wait times by function instead of variable [\#18](https://github.com/locustio/locust/issues/18)
 
 **Merged pull requests:**
 
@@ -825,7 +872,6 @@
 - Change name of msgpack dependency. [\#841](https://github.com/locustio/locust/pull/841) ([vamega](https://github.com/vamega))
 - response time doesn't need to be cast to int, as this is implicit in … [\#830](https://github.com/locustio/locust/pull/830) ([efology](https://github.com/efology))
 - Add tasks sequence support [\#827](https://github.com/locustio/locust/pull/827) ([Ramshell](https://github.com/Ramshell))
-- Fix frontend bugs. [\#822](https://github.com/locustio/locust/pull/822) ([omittones](https://github.com/omittones))
 - Fix some typos in events.py [\#820](https://github.com/locustio/locust/pull/820) ([felixonmars](https://github.com/felixonmars))
 - Update all pypi.python.org URLs to pypi.org [\#818](https://github.com/locustio/locust/pull/818) ([jdufresne](https://github.com/jdufresne))
 - Update third-party-tools.rst [\#808](https://github.com/locustio/locust/pull/808) ([anhldbk](https://github.com/anhldbk))
@@ -874,7 +920,6 @@
 - make test is failing on 0.7 tags due to Flask 0.12 [\#637](https://github.com/locustio/locust/issues/637)
 - num-requests bug [\#512](https://github.com/locustio/locust/issues/512)
 - Run the tests for the specified time [\#196](https://github.com/locustio/locust/issues/196)
-- loglevel and logfile don't seem to work [\#25](https://github.com/locustio/locust/issues/25)
 - Remove support for plain sockets for master/slave communication [\#14](https://github.com/locustio/locust/issues/14)
 
 ## [v0.8](https://github.com/locustio/locust/tree/v0.8) (2017-09-19)
@@ -1447,13 +1492,16 @@
 
 [Full Changelog](https://github.com/locustio/locust/compare/v0.5...v0.5.1)
 
+**Closed issues:**
+
+- loglevel and logfile don't seem to work [\#25](https://github.com/locustio/locust/issues/25)
+
 ## [v0.5](https://github.com/locustio/locust/tree/v0.5) (2012-07-01)
 
 [Full Changelog](https://github.com/locustio/locust/compare/v0.4...v0.5)
 
 **Closed issues:**
 
-- Define wait times by function instead of variable [\#18](https://github.com/locustio/locust/issues/18)
 - Remove Confluence specific task ratio formatter [\#13](https://github.com/locustio/locust/issues/13)
 - Add HTTP request method \(GET/POST/PUT, etc\) to statistics table [\#3](https://github.com/locustio/locust/issues/3)
 
