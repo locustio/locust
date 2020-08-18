@@ -770,13 +770,6 @@ def stats_history(runner):
         stats.history.append(r)
         gevent.sleep(HISTORY_STATS_INTERVAL_SEC)
 
-
-def write_csv_files(environment, base_filepath, full_history=False):
-    """Writes the requests, distribution, and failures csvs."""
-    with open(base_filepath + '_stats.csv', 'w') as f:
-        csv_writer = csv.writer(f)
-        requests_csv(environment.stats, csv_writer)
-
 class StatsCSV():
     """Write statistics to csv_writer stream."""
 
