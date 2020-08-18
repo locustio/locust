@@ -13,7 +13,7 @@ import logging
 console_logger = logging.getLogger("locust.stats_logger")
 
 STATS_NAME_WIDTH = 60
-STATS_TYPE_WIDTH = 20
+STATS_TYPE_WIDTH = 8
 
 """Default interval for how frequently the CSV file is written if this option
 is configured."""
@@ -42,7 +42,6 @@ PERCENTILES_TO_REPORT = [
     0.99,
     0.999,
     0.9999,
-    0.99999,
     1.0
 ]
 
@@ -512,7 +511,7 @@ class StatsEntry(object):
         else:
             rps = self.total_rps
             fail_per_sec = self.total_fail_per_sec
-        return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d  | %7d %7.2f %7.2f") % (
+        return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s  | %7d %7d %7d %7d  | %7.2f %7.2f") % (
             (self.method and self.method + " " or "") + self.name,
             self.num_requests,
             "%d(%.2f%%)" % (self.num_failures, self.fail_ratio * 100),
@@ -579,10 +578,11 @@ class StatsEntry(object):
         if not self.num_requests:
             raise ValueError("Can't calculate percentile on url with no successful requests")
 
-        tpl = f" %-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8d {' '.join(['%7d'] * len(PERCENTILES_TO_REPORT))}"
+        tpl = f" %-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8d {' '.join(['%6d'] * len(PERCENTILES_TO_REPORT))}"
 
-        return tpl % ((self.method, self.name, self.num_requests)
-                      + tuple([self.get_response_time_percentile(p) for p in PERCENTILES_TO_REPORT]))
+        return tpl % ((self.method, self.name)
+                      + tuple([self.get_response_time_percentile(p) for p in PERCENTILES_TO_REPORT]) 
+                      + (self.num_requests,))
 
     def _cache_response_times(self, t):
         self.response_times_cache[t] = CachedResponseTimes(
@@ -697,7 +697,7 @@ def setup_distributed_stats_event_listeners(events, stats):
 
 
 def print_stats(stats, current=True):
-    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s', 'failures/s'))
+    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s  | %7s %7s %7s %7s  | %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s', 'failures/s'))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
@@ -708,11 +708,11 @@ def print_stats(stats, current=True):
 
 
 def print_percentile_stats(stats):
-    console_logger.info("Percentage of the requests completed within given times")
-    headers = ('Type', 'Name', '# reqs') + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT))
+    console_logger.info("Response time percentiles (approximated)")
+    headers = ('Type', 'Name') + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)) + ('# reqs',)
     console_logger.info((f" %-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
-                         f"{' '.join(['%7s'] * len(PERCENTILES_TO_REPORT))}") % headers)
-    separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 9}|{("-" * 7 + "|") * len(PERCENTILES_TO_REPORT)}'
+                    f"{' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}") % headers)
+    separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 9}|{("-" * 6 + "|") * len(PERCENTILES_TO_REPORT)}'
     console_logger.info(separator)
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
