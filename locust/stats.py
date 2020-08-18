@@ -512,7 +512,7 @@ class StatsEntry(object):
         else:
             rps = self.total_rps
             fail_per_sec = self.total_fail_per_sec
-        return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s %7d %7d %7d  | %7d %7.2f %7.2f") % (
+        return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s  | %7d %7d %7d %7d  | %7.2f %7.2f") % (
             (self.method and self.method + " " or "") + self.name,
             self.num_requests,
             "%d(%.2f%%)" % (self.num_failures, self.fail_ratio * 100),
@@ -697,7 +697,7 @@ def setup_distributed_stats_event_listeners(events, stats):
 
 
 def print_stats(stats, current=True):
-    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s %7s %7s %7s  | %7s %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s', 'failures/s'))
+    console_logger.info((" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s  | %7s %7s %7s %7s  | %7s %7s") % ('Name', '# reqs', '# fails', 'Avg', 'Min', 'Max', 'Median', 'req/s', 'failures/s'))
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
