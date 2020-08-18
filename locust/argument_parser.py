@@ -293,17 +293,17 @@ def setup_parser_arguments(parser):
     
     stats_group = parser.add_argument_group("Request statistics options")
     stats_group.add_argument(
-        '--csv',
+        '--csv',  # Name repeated in 'parse_options'
         dest="csv_prefix",
         help="Store current request stats to files in CSV format. Setting this option will generate three files: [CSV_PREFIX]_stats.csv, [CSV_PREFIX]_stats_history.csv and [CSV_PREFIX]_failures.csv",
         env_var="LOCUST_CSV",
     )
     stats_group.add_argument(
-        '--csv-full-history',
+        '--csv-full-history',  # Name repeated in 'parse_options'
         action='store_true',
         default=False,
         dest='stats_history_enabled',
-        help="Store each stats entry in CSV format to _stats_history.csv file",
+        help="Store each stats entry in CSV format to _stats_history.csv file. You must also specify the '--csv' argument to enable this.",
         env_var="LOCUST_CSV_FULL_HISTORY",
     )    
     stats_group.add_argument(
@@ -425,4 +425,8 @@ def get_parser(default_config_files=DEFAULT_CONFIG_FILES):
 
 
 def parse_options(args=None):
-    return get_parser().parse_args(args=args)
+    parser = get_parser()
+    parsed_opts = parser.parse_args(args=args)
+    if parsed_opts.stats_history_enabled and (parsed_opts.csv_prefix is None):
+        parser.error("'--csv-full-history' requires '--csv'.")
+    return parsed_opts
