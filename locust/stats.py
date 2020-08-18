@@ -1,9 +1,9 @@
-import csv
 import hashlib
 import time
 from collections import namedtuple, OrderedDict
 from copy import copy
 from itertools import chain
+import csv
 
 import gevent
 
@@ -15,12 +15,12 @@ console_logger = logging.getLogger("locust.stats_logger")
 STATS_NAME_WIDTH = 60
 STATS_TYPE_WIDTH = 8
 
-"""Default interval for how frequently the CSV file is written if this option
-is configured."""
-CSV_STATS_INTERVAL_SEC = 2
-
 """Default interval for how frequently results are written to console."""
 CONSOLE_STATS_INTERVAL_SEC = 2
+
+"""Default interval for how frequently CSV files are written if this option is configured."""
+CSV_STATS_INTERVAL_SEC = 1
+CSV_STATS_FLUSH_INTERVAL_SEC = 10
 
 """
 Default window size/resolution - in seconds - when calculating the current 
@@ -743,152 +743,207 @@ def stats_printer(stats):
             gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
     return stats_printer_func
 
-def stats_writer(environment, base_filepath, full_history=False):
-    """Writes the csv files for the locust run."""
-    write_stats_history_csv_header(base_filepath)
-    while True:
-        write_csv_files(environment, base_filepath, full_history)
-        gevent.sleep(CSV_STATS_INTERVAL_SEC)
-
-
-def write_csv_files(environment, base_filepath, full_history=False):
-    """Writes the requests, distribution, and failures csvs."""
-    with open(base_filepath + '_stats.csv', 'w') as f:
-        csv_writer = csv.writer(f)
-        requests_csv(environment.stats, csv_writer)
-
-    with open(stats_history_file_name(base_filepath), 'a') as f:
-        f.write(stats_history_csv_rows(environment, full_history) + "\n")
-
-    with open(base_filepath + '_failures.csv', 'w') as f:
-        csv_writer = csv.writer(f)
-        failures_csv(environment.stats, csv_writer)
-
 
 def sort_stats(stats):
     return [stats[key] for key in sorted(stats.keys())]
 
 
-def requests_csv(stats, csv_writer):
-    """Returns the contents of the 'requests' & 'distribution' tab as CSV."""
-    headers = [
-        "Type",
-        "Name",
-        "Request Count",
-        "Failure Count",
-        "Median Response Time",
-        "Average Response Time",
-        "Min Response Time",
-        "Max Response Time",
-        "Average Content Size",
-        "Requests/s",
-        "Failures/s"]
-    headers.extend(get_readable_percentiles(PERCENTILES_TO_REPORT))
-    csv_writer.writerow(headers)
+class StatsCSV():
+    """Write statistics to csv_writer stream."""
 
-    for s in chain(sort_stats(stats.entries), [stats.total]):
-        if s.num_requests:
-            percentile_row = [int(s.get_response_time_percentile(x) or 0) for x in PERCENTILES_TO_REPORT]
-        else:
-            percentile_row = ["N/A"] * len(PERCENTILES_TO_REPORT)
+    def __init__(self, environment, percentiles_to_report):
+        super().__init__()
+        self.environment = environment
+        self.percentiles_to_report = percentiles_to_report
 
-        stats_row = [
-            s.method,
-            s.name,
-            s.num_requests,
-            s.num_failures,
-            round(s.median_response_time) if s.median_response_time else s.median_response_time,
-            round(s.avg_response_time) if s.avg_response_time else s.avg_response_time,
-            round(s.min_response_time) if s.min_response_time else 0,
-            round(s.max_response_time) if s.max_response_time else s.max_response_time,
-            round(s.avg_content_length) if s.avg_content_length else s.avg_content_length,
-            round(s.total_rps, 3),
-            round(s.total_fail_per_sec, 3),
+        self.percentiles_na = ["N/A"] * len(self.percentiles_to_report)
+
+        self.requests_csv_columns = [
+            "Type",
+            "Name",
+            "Request Count",
+            "Failure Count",
+            "Median Response Time",
+            "Average Response Time",
+            "Min Response Time",
+            "Max Response Time",
+            "Average Content Size",
+            "Requests/s",
+            "Failures/s",
+        ] + get_readable_percentiles(self.percentiles_to_report)
+
+
+        self.failures_columns = [
+            "Method",
+            "Name",
+            "Error",
+            "Occurrences",
         ]
 
-        csv_writer.writerow(stats_row + percentile_row)
+    def _percentile_fields(self, stats_entry):
+        return [int(stats_entry.get_response_time_percentile(x) or 0) for x in self.percentiles_to_report] if stats_entry.num_requests else self.percentiles_na
+
+    def requests_csv(self, csv_writer):
+        """Write requests csv with header and data rows."""
+        csv_writer.writerow(self.requests_csv_columns)
+        self._requests_data_rows(csv_writer)
+
+    def _requests_data_rows(self, csv_writer):
+        """Write requests csv data row, excluding header."""
+        stats = self.environment.stats
+        for stats_entry in chain(sort_stats(stats.entries), [stats.total]):
+            csv_writer.writerow(
+                chain([
+                    stats_entry.method,
+                    stats_entry.name,
+                    stats_entry.num_requests,
+                    stats_entry.num_failures,
+                    stats_entry.median_response_time,
+                    stats_entry.avg_response_time,
+                    stats_entry.min_response_time or 0,
+                    stats_entry.max_response_time,
+                    stats_entry.avg_content_length,
+                    stats_entry.total_rps,
+                    stats_entry.total_fail_per_sec,
+                ], self._percentile_fields(stats_entry))
+            )
+
+    def failures_csv(self, csv_writer):
+        csv_writer.writerow(self.failures_columns)
+        self._failures_data_rows(csv_writer)
+
+    def _failures_data_rows(self, csv_writer):
+        for stats_error in sort_stats(self.environment.stats.errors):
+            csv_writer.writerow([
+                stats_error.method,
+                stats_error.name,
+                stats_error.error,
+                stats_error.occurrences,
+            ])
 
 
-def write_stats_history_csv_header(base_filepath):
-    """Headers for the stats history CSV"""
+class StatsCSVFileWriter(StatsCSV):
+    """Write statistics to to CSV files"""
 
-    header = ",".join((
-        "Timestamp",
-        "User Count",
-        "Type",
-        "Name",
-        "Requests/s",
-        "Failures/s",
-        ",".join(get_readable_percentiles(PERCENTILES_TO_REPORT)),
-        "Total Request Count",
-        "Total Failure Count",
-        "Total Median Response Time",
-        "Total Average Response Time",
-        "Total Min Response Time",
-        "Total Max Response Time",
-        "Total Average Content Size",
-    )) + '\n'
+    def __init__(self, environment, percentiles_to_report, base_filepath, full_history=False):
+        super().__init__(environment, percentiles_to_report)
+        self.base_filepath = base_filepath
+        self.full_history = full_history
 
-    with open(stats_history_file_name(base_filepath), 'w') as f:
-        f.write(header)
+        self.requests_csv_filehandle = open(self.base_filepath + '_stats.csv', 'w')
+        self.requests_csv_writer = csv.writer(self.requests_csv_filehandle)
 
-def stats_history_csv_rows(environment, all_entries=False):
-    """
-    Return a string of CSV rows with the *current* stats. By default only includes the 
-    Aggregated stats entry, but if all_entries is set to True, a row for each entry will 
-    will be included.
-    """
-    stats = environment.stats
-    timestamp = int(time.time())
-    stats_entries = []
-    if all_entries:
-        stats_entries = sort_stats(stats.entries)
-    
-    rows = []
-    for s in chain(stats_entries, [stats.total]):
-        if s.num_requests:
-            percentile_str = ','.join([
-                str(int(s.get_current_response_time_percentile(x) or 0)) for x in PERCENTILES_TO_REPORT])
-        else:
-            percentile_str = ','.join(['"N/A"'] * len(PERCENTILES_TO_REPORT))
+        self.stats_history_csv_filehandle = open(self.stats_history_file_name(), 'w')
+        self.stats_history_csv_writer = csv.writer(self.stats_history_csv_filehandle)
 
-        rows.append('"%i","%i","%s","%s",%.2f,%.2f,%s,%i,%i,%i,%i,%i,%i,%i' % (
-            timestamp,
-            environment.runner.user_count,
-            s.method or "",
-            s.name,
-            s.current_rps,
-            s.current_fail_per_sec,
-            percentile_str,
-            s.num_requests,
-            s.num_failures,
-            s.median_response_time,
-            s.avg_response_time,
-            s.min_response_time or 0,
-            s.max_response_time,
-            s.avg_content_length,
-        ))
+        self.failures_csv_filehandle = open(self.base_filepath + '_failures.csv', 'w')
+        self.failures_csv_writer = csv.writer(self.failures_csv_filehandle)
+        self.failures_csv_data_start = 0
 
-    return "\n".join(rows)
+        self.stats_history_csv_columns = [
+            "Timestamp",
+            "User Count",
+            "Type",
+            "Name",
+            "Requests/s",
+            "Failures/s",
+            *get_readable_percentiles(self.percentiles_to_report),
+            "Total Request Count",
+            "Total Failure Count",
+            "Total Median Response Time",
+            "Total Average Response Time",
+            "Total Min Response Time",
+            "Total Max Response Time",
+            "Total Average Content Size",
+        ]
+
+    def __call__(self):
+        self.stats_writer()
+
+    def stats_writer(self):
+        """Writes all the csv files for the locust run."""
+
+        # Write header row for all files and save posistion for non-append files
+        self.requests_csv_writer.writerow(self.requests_csv_columns)
+        requests_csv_data_start = self.requests_csv_filehandle.tell()
+
+        self.stats_history_csv_writer.writerow(self.stats_history_csv_columns)
+
+        self.failures_csv_writer.writerow(self.failures_columns)
+        self.failures_csv_data_start = self.failures_csv_filehandle.tell()
+
+        # Continuously write date rows for all files
+        last_flush_time = 0
+        while True:
+            now = time.time()
+
+            self.requests_csv_filehandle.seek(requests_csv_data_start)
+            self._requests_data_rows(self.requests_csv_writer)
+            self.requests_csv_filehandle.truncate()
+
+            self._stats_history_data_rows(self.stats_history_csv_writer, now)
+
+            self.failures_csv_filehandle.seek(self.failures_csv_data_start)
+            self._failures_data_rows(self.failures_csv_writer)
+            self.failures_csv_filehandle.truncate()
+
+            if now - last_flush_time > CSV_STATS_FLUSH_INTERVAL_SEC:
+                self.requests_flush()
+                self.stats_history_flush()
+                self.failures_flush()
+                last_flush_time = now
+
+            gevent.sleep(CSV_STATS_INTERVAL_SEC)
 
 
-def stats_history_file_name(base_filepath):
-    return base_filepath + '_stats_history.csv'
+    def _stats_history_data_rows(self, csv_writer, now):
+        """
+        Write CSV rows with the *current* stats. By default only includes the
+        Aggregated stats entry, but if self.full_history is set to True, a row for each entry will
+        will be included.
 
+        Note that this method differs from the other methods as it appends time-stamped data to the file, whereas the other methods overwrites the data.
+        """
 
-def failures_csv(stats, csv_writer):
-    """"Return the contents of the 'failures' tab as a CSV."""
-    csv_writer.writerow([
-        "Method",
-        "Name",
-        "Error",
-        "Occurrences",
-    ])
+        stats = self.environment.stats
+        timestamp = int(now)
+        stats_entries = []
+        if self.full_history:
+            stats_entries = sort_stats(stats.entries)
 
-    for s in sort_stats(stats.errors):
-        csv_writer.writerow([
-            s.method,
-            s.name,
-            s.error,
-            s.occurrences,
-        ])
+        for stats_entry in chain(stats_entries, [stats.total]):
+            csv_writer.writerow(
+                chain((
+                    timestamp,
+                    self.environment.runner.user_count,
+                    stats_entry.method or "",
+                    stats_entry.name,
+                    f"{stats_entry.current_rps:2f}",
+                    f"{stats_entry.current_fail_per_sec:2f}",
+                ), self._percentile_fields(stats_entry), (
+                    stats_entry.num_requests,
+                    stats_entry.num_failures,
+                    stats_entry.median_response_time,
+                    stats_entry.avg_response_time,
+                    stats_entry.min_response_time or 0,
+                    stats_entry.max_response_time,
+                    stats_entry.avg_content_length,
+                ))
+            )
+
+    def requests_flush(self):
+        self.requests_csv_filehandle.flush()
+
+    def stats_history_flush(self):
+        self.stats_history_csv_filehandle.flush()
+
+    def failures_flush(self):
+        self.failures_csv_filehandle.flush()
+
+    def close_files(self):
+        self.requests_csv_filehandle.close()
+        self.stats_history_csv_filehandle.close()
+        self.failures_csv_filehandle.close()
+
+    def stats_history_file_name(self):
+        return self.base_filepath + '_stats_history.csv'
