@@ -149,3 +149,11 @@ class TestArgumentParser(LocustTestCase):
         stdout = out.read()
         self.assertIn("Custom boolean flag", stdout)
         self.assertIn("Custom string arg", stdout)
+
+    def test_csv_full_history_requires_csv(self):
+        with mock.patch("sys.stderr", new=StringIO()):
+            with self.assertRaises(SystemExit):
+                parse_options(args=[
+                    "-f", "locustfile.py",
+                    "--csv-full-history",
+                ])
