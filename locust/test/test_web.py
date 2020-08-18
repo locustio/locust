@@ -24,7 +24,19 @@ from .testcases import LocustTestCase
 from .util import create_tls_cert
 
 
-class TestWebUI(LocustTestCase):
+class _HeaderCheckMixin():
+    def _check_csv_headers(self, headers, exp_fn_prefix):
+        # Check common headers for csv file download request
+        self.assertIn('Content-Type', headers)
+        content_type = headers['Content-Type']
+        self.assertIn('text/csv', content_type)
+
+        self.assertIn('Content-disposition', headers)
+        disposition = headers['Content-disposition']  # e.g.: 'attachment; filename=requests_full_history_1597586811.5084946.csv'
+        self.assertIn(exp_fn_prefix, disposition)
+
+
+class TestWebUI(LocustTestCase, _HeaderCheckMixin):
     def setUp(self):
         super(TestWebUI, self).setUp()
 
@@ -131,11 +143,12 @@ class TestWebUI(LocustTestCase):
         data = json.loads(response.text)
         self.assertEqual(1, data["stats"][0]["min_response_time"])
         self.assertEqual(1000, data["stats"][0]["max_response_time"])
-    
+
     def test_request_stats_csv(self):
         self.stats.log_request("GET", "/test2", 120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/requests/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
+        self._check_csv_headers(response.headers, 'requests')
 
     def test_request_stats_full_history_csv_not_present(self):
         self.stats.log_request("GET", "/test2", 120, 5612)
@@ -146,6 +159,7 @@ class TestWebUI(LocustTestCase):
         self.stats.log_error("GET", "/", Exception("Error1337"))
         response = requests.get("http://127.0.0.1:%i/stats/failures/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
+        self._check_csv_headers(response.headers, 'failures')
     
     def test_request_stats_with_errors(self):
         self.stats.log_error("GET", "/", Exception("Error1337"))
@@ -201,7 +215,8 @@ class TestWebUI(LocustTestCase):
         
         response = requests.get("http://127.0.0.1:%i/exceptions/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
-        
+        self._check_csv_headers(response.headers, 'exceptions')
+
         reader = csv.reader(StringIO(response.text))
         rows = []
         for row in reader:
@@ -353,7 +368,7 @@ class TestWebUIWithTLS(LocustTestCase):
         self.assertEqual(200, requests.get("https://127.0.0.1:%i/" % self.web_port, verify=False).status_code)
 
 
-class TestWebUIFullHistory(LocustTestCase):
+class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
     STATS_BASE_NAME = "web_test"
     STATS_FILENAME = "{}_stats.csv".format(STATS_BASE_NAME)
     STATS_HISTORY_FILENAME = "{}_stats_history.csv".format(STATS_BASE_NAME)
@@ -366,10 +381,9 @@ class TestWebUIFullHistory(LocustTestCase):
         parser = get_parser(default_config_files=[])
         self.environment.parsed_options = parser.parse_args(["--csv", self.STATS_BASE_NAME, "--csv-full-history"])
         self.stats = self.environment.stats
+        self.stats.CSV_STATS_INTERVAL_SEC = 0.02
 
         self.web_ui = self.environment.create_web_ui("127.0.0.1", 0)
-        # Write files now to ensure full-history exists for download - normally done in main
-        locust.stats.write_csv_files(self.environment, self.STATS_BASE_NAME, full_history=True)
         self.web_ui.app.view_functions["request_stats"].clear_cache()
         gevent.sleep(0.01)
         self.web_port = self.web_ui.server.server_port
@@ -390,6 +404,26 @@ class TestWebUIFullHistory(LocustTestCase):
         self.remove_file_if_exists(self.STATS_FAILURES_FILENAME)
 
     def test_request_stats_full_history_csv(self):
+        self.stats.log_request("GET", "/test", 1.39764125, 2)
+        self.stats.log_request("GET", "/test", 999.9764125, 1000)
         self.stats.log_request("GET", "/test2", 120, 5612)
+
+        # Call these two methods instead of the 'stats_writer' so that we avoid gevent wait loop
+        locust.stats.write_stats_history_csv_header(self.STATS_BASE_NAME)
+        locust.stats.write_csv_files(self.environment, self.STATS_BASE_NAME, full_history=True)
+
         response = requests.get("http://127.0.0.1:%i/stats/requests_full_history/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
+        self._check_csv_headers(response.headers, 'requests_full_history')
+        self.assertIn('Content-Length', response.headers)
+
+        reader = csv.reader(StringIO(response.text))
+        rows = [r for r in reader]
+
+        self.assertEqual(4, len(rows))
+        self.assertEqual("Timestamp", rows[0][0])
+        self.assertEqual("GET", rows[1][2])
+        self.assertEqual("/test", rows[1][3])
+        self.assertEqual("/test2", rows[2][3])
+        self.assertEqual("", rows[3][2])
+        self.assertEqual("Aggregated", rows[3][3])
