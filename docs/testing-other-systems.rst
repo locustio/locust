@@ -1,3 +1,5 @@
+.. _testing-other-systems:
+
 ===========================================
 Testing other systems using custom clients
 ===========================================

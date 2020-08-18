@@ -2,84 +2,62 @@
 What is Locust?
 ===============================
 
-Locust is an easy-to-use, distributed, user load testing tool. It is intended for load-testing web sites
-(or other systems) and figuring out how many concurrent users a system can handle.
+Locust is an easy to use, scriptable and scalable performance testing tool.
 
-The idea is that during a test, a swarm of `locust <http://en.wikipedia.org/wiki/Locust>`_ users
-will attack your website. The behavior of each user is defined by you using Python code, and the 
-swarming process is monitored from a web UI in real-time. This will help you battle test and identify 
-bottlenecks in your code before letting real users in.
+You define the behaviour of your users in regular Python code, instead of using a clunky UI or domain specific language.
 
-Locust is completely event-based, and therefore it's possible to support thousands of concurrent
-users on a single machine. In contrast to many other event-based apps it doesn't use callbacks. 
-Instead it uses light-weight processes, through `gevent <http://www.gevent.org/>`_. Each locust 
-swarming your site is actually running inside its own process (or greenlet, to be correct). This
-allows you to write very expressive scenarios in Python without complicating your code with callbacks.
+This makes Locust infintely expandable and very developer friendly.
 
+To start using Locust, go to :ref:`installation`
 
 Features
 ========
 
 * **Write user test scenarios in plain-old Python**
 
- No need for clunky UIs or bloated XML—just code as you normally would. Based on coroutines instead
- of callbacks, your code looks and behaves like normal, blocking Python code.
+ If you want your users to loop, perform some conditional behaviour or do some calculations, you just use the regular programming constructs provided by Python.
+ Locust runs every user inside its own greenlet (a lightweight process/coroutine). This enables you to write your tests like normal (blocking) Python code instead of having to use callbacks or some other mechanism.
+ Because your scenarios are "just python" you can use your regular IDE, and version control your tests as regular code (as opposed to some other tools that use XML or binary formats)
 
 * **Distributed & Scalable - supports hundreds of thousands of users**
 
- Locust supports running load tests distributed over multiple machines.
- Being event-based, even one Locust node can handle thousands of users in a single process.
- Part of the reason behind this is that even if you simulate that many users, not all are actively 
- hitting your system. Often, users are idle figuring out what to do next. 
- Requests per second != number of users online.
-
+ Locust makes it easy to run load tests distributed over multiple machines.
+ It is event-based (using `gevent <http://www.gevent.org/>`_), which makes it possible for a single process to handle many thousands concurrent users.
+ While there may be other tools that are capable of doing more requests per second on a given hardware, the low overhead of each Locust user makes it very suitable for testing highly concurrent workloads.
+ 
 * **Web-based UI**
 
- Locust has a neat HTML+JS user interface that shows relevant test details in real-time. And since 
- the UI is web-based, it's cross-platform and easily extendable. 
+ Locust has a user friendly web interface that shows the progress of your test in real-time. You can even change the load while the test is running. It can also be run without the UI, making it easy to use for CI/CD testing.
 
 * **Can test any system**
 
- Even though Locust is web-oriented, it can be used to test almost any system. Just write a client 
- for what ever you wish to test and swarm it with locusts! It's super easy!
+ Even though Locust primarily works with web sites/services, it can be used to test almost any system or protocol. Just :ref:`write a client <testing-other-systems>` 
+ for what you want to test, or `explore some created by the community <https://github.com/SvenskaSpel/locust-plugins#users>`_.
 
 * **Hackable**
 
- Locust is small and very hackable and we intend to keep it that way. All heavy-lifting of evented 
- I/O and coroutines are delegated to gevent. The brittleness of alternative testing tools was the 
- reason we created Locust.
+ Locust is small and very flexible and we intend to keep it that way. If you want to `send reporting data to that database & graphing system you like <https://github.com/SvenskaSpel/locust-plugins/blob/master/locust_plugins/listeners.py>`_, wrap calls to a REST API to handle the particulars of your system or run a :ref:`totally custom load pattern <generating-custom-load-shape>`, there is nothing stopping you!
 
-Background
-==========
+Name & background
+=================
 
-Locust was created because we were fed up with existing solutions. None of them are solving the 
-right problem and to me, they are missing the point. We've tried both Apache JMeter and Tsung. 
-Both tools are quite OK to use; we've used the former many times benchmarking stuff at work.
-JMeter comes with a UI, which you might think for a second is a good thing. But you soon realize it's
-a PITA to "code" your testing scenarios through some point-and-click interface. Secondly, JMeter 
-is thread-bound. This means for every user you want to simulate, you need a separate thread. 
-Needless to say, benchmarking thousands of users on a single machine just isn't feasible.
+`Locust <http://en.wikipedia.org/wiki/Locust>`_ takes its name from the grasshopper species, known for their swarming behaviour. 
 
-Tsung, on the other hand, does not have these thread issues as it's written in Erlang. It can make 
-use of the light-weight processes offered by BEAM itself and happily scale up. But when it comes to 
-defining the test scenarios, Tsung is as limited as JMeter. It offers an XML-based DSL to define how 
-a user should behave when testing. I guess you can imagine the horror of "coding" this. Displaying 
-any sorts of graphs or reports when completed requires you to post-process the log files generated from
-the test. Only then can you get an understanding of how the test went.
+Previous versions of Locust used terminology borrowed from nature (swarming, hatching, attacking etc), but now employs more industry standard naming.
 
-Anyway, we've tried to address these issues when creating Locust. Hopefully none of the above 
-pain points should exist.
-
-I guess you could say we're really just trying to scratch our own itch here. We hope others will 
-find it as useful as we do.
+:ref:`history`
 
 Authors
 =======
 
 - `Jonatan Heyman <http://heyman.info>`_ (`@jonatanheyman <https://twitter.com/jonatanheyman>`_ on Twitter)
+- Lars Holmberg (`@cyberw <https://github.com/cyberw>`_ on Github)
 - Carl Byström (`@cgbystrom <https://twitter.com/cgbystrom>`_ on Twitter)
 - Joakim Hamrén (`@Jahaaja <https://twitter.com/Jahaaja>`_ on Twitter)
 - Hugo Heyman (`@hugoheyman <https://twitter.com/hugoheyman>`_ on Twitter)
+
+Many thanks to our other great `contributors <https://github.com/locustio/locust/graphs/contributors>`_!
+
 
 License
 =======

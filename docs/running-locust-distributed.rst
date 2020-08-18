@@ -101,7 +101,7 @@ See :ref:`running-locust-distributed-without-web-ui`
 
 
 Generating a custom load shape using a `LoadTestShape` class
-=============================================
+============================================================
 
 See :ref:`generating-custom-load-shape`
 
