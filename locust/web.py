@@ -214,7 +214,8 @@ class WebUI:
             js_files = ['jquery-1.11.3.min.js', 'echarts.common.min.js', 'vintage.js', 'chart.js']
             for js_file in js_files:
                 path = os.path.join(os.path.dirname(__file__), 'static', js_file)
-                content = open(path, encoding='utf8').read()
+                with open(path, encoding='utf8') as f:
+                    content = f.read()
                 static_js += '// ' + js_file + '\n'
                 static_js += content
                 static_js += '\n\n\n'
