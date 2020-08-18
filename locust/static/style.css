@@ -188,6 +188,14 @@ a:hover {
     font-size: 24px;
     padding-left: 10px;
 }
+.start input.val_disabled, .edit input.val_disabled {
+    border: none;
+    background: #cccccc;
+    height: 52px;
+    width: 328px;
+    font-size: 24px;
+    padding-left: 10px;
+}
 .start button,
 .edit button {
     margin-top: 20px;
