@@ -62,9 +62,9 @@
                     <label for="user_count">Number of total users to simulate</label>
                     <input type="text" name="user_count" id="user_count" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
                     <input type="hidden" name="user_count" id="user_count" value="0"/><br>
-                    <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="hatch_rate" id="hatch_rate" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
-                    <input type="hidden" name="hatch_rate" id="hatch_rate" value="0"/><br>
+                    <label for="spawn_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
+                    <input type="text" name="spawn_rate" id="spawn_rate" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
+                    <input type="hidden" name="spawn_rate" id="spawn_rate" value="0"/><br>
                     {% else %}
                     <label for="user_count">Number of total users to simulate</label>
                     <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
@@ -100,8 +100,8 @@
                     {% if is_shape %}
                     <label for="new_user_count">Number of users to simulate</label>
                     <input type="text" name="user_count" id="new_user_count" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
-                    <label for="hatch_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned or stopped per second)</span></label>
-                    <input type="text" name="hatch_rate" id="new_hatch_rate" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
+                    <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users spawned or stopped per second)</span></label>
+                    <input type="text" name="spawn_rate" id="new_spawn_rate" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
                     {% else %}
                     <label for="new_user_count">Number of users to simulate</label>
                     <input type="text" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "" }}"/><br>
