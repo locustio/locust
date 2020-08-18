@@ -1,26 +1,21 @@
 .. _generating-custom-load-shape:
 
-============================================================
-Generating a custom load shape using a `LoadTestShape` class
-============================================================
+==============================
+Generating a custom load shape
+==============================
 
-Sometimes a completely custom shaped load test is required that cannot be achieved by simply setting or changing the user count and spawn rate. For example, generating a spike during a test or ramping up and down at custom times. In these cases using the `LoadTestShape` class can give complete control over the user count and spawn rate at all times.
+Sometimes a completely custom shaped load test is required that cannot be achieved by simply setting or changing the user count and spawn rate. For example, you might want to generate a load spike or ramp up and down at custom times. By using a `LoadTestShape` class you have full control over the user count and spawn rate at all times.
 
-How does a `LoadTestShape` class work?
----------------------------------------------
+Define a class inheriting the LoadTestShape class in your locust file. If this type of class is found then it will be automatically used by Locust.
 
-Define your class inheriting the `LoadTestShape` class in your locust file. If this type of class is found then it will be automatically used by Locust. Add a `tick()` method to return either a tuple containing the user count and spawn rate or `None` to stop the load test. Locust will call the `tick()` method every second and update the load test with new settings or stop the test.
+In this class you define a `tick()` method that returns a tuple with the desired user count and spawn rate (or `None` to stop the test). Locust will call the `tick()` method approximately once per second.
 
-Examples
----------------------------------------------
+In the class you also have access to the `get_run_time()` method, for checking how long the test has run for.
 
-There are also some `examples on github <https://github.com/locustio/locust/tree/master/examples/custom_shape>`_ including:
+Example
+-------
 
-- Generating a double wave shape
-- Time based stages like K6
-- Step load pattern like Visual Studio
-
-Here is a simple example that will increase user count in blocks of 100 then stop the load test after 10 minutes:
+This shape class will increase user count in blocks of 100 and then stop the load test after 10 minutes:
 
 .. code-block:: python
 
@@ -36,3 +31,9 @@ Here is a simple example that will increase user count in blocks of 100 then sto
                 return (user_count, spawn_rate)
 
             return None
+
+There are also some `examples on github <https://github.com/locustio/locust/tree/master/examples/custom_shape>`_ including:
+
+- Generating a double wave shape
+- Time based stages like K6
+- Step load pattern like Visual Studio
