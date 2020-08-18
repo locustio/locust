@@ -31,6 +31,5 @@ class LoadTestShape(object):
         If `None` is returned then the running load test will be stopped.
 
         """
-        run_time = self.get_run_time()
 
         return None
