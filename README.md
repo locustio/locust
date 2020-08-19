@@ -21,7 +21,7 @@ Locust is an easy to use, scriptable and scalable performance testing tool.
 
 You define the behaviour of your users in regular Python code, instead of using a clunky UI or domain specific language.
 
-This makes Locust infintely expandable and very developer friendly.
+This makes Locust infinitely expandable and very developer friendly.
 
 ## Features
 
@@ -33,7 +33,7 @@ This makes Locust infintely expandable and very developer friendly.
 * **Distributed & Scalable - supports hundreds of thousands of users**<br>
 
  Locust makes it easy to run load tests distributed over multiple machines.
- It is event-based (using <a href="http://www.gevent.org/">gevent</a>), which makes it possible for a single process to handle many thousands concurrent users. While there may be other tools that are capable of doing more requests per second on a given hardware, the low overhead of each Locust user makes it very suitable for testing highly concurrent workloads.
+ It is event-based (using <a href="http://www.gevent.org/">gevent</a>), which makes it possible for a single process to handle many thousands of concurrent users. While there may be other tools that are capable of doing more requests per second on a given hardware, the low overhead of each Locust user makes it very suitable for testing highly concurrent workloads.
  
 * **Web-based UI**<br>
 

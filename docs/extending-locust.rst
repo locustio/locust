@@ -2,7 +2,7 @@
 Extending Locust using event hooks
 ==================================
 
-Locust comes with a number of events hooks that can be used to extend Locust in different ways.
+Locust comes with a number of event hooks that can be used to extend Locust in different ways.
 
 Event hooks live on the Environment instance under the :py:attr:`events <locust.env.Environment.events>` 
 attribute. However, since the Environment instance hasn't been created when locustfiles are imported,  
@@ -26,7 +26,7 @@ Here's an example on how to set up an event listener::
 
 .. seealso::
 
-    To see all available event, please see :ref:`events`.
+    To see all available events, please see :ref:`events`.
 
 
 

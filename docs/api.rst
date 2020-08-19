@@ -89,7 +89,7 @@ Environment class
 Event hooks
 ===========
 
-Locust provide event hooks that can be used to extend Locus in various ways. 
+Locust provides event hooks that can be used to extend Locust in various ways.
 
 The following event hooks are available under :py:attr:`Environment.events <locust.env.Environment.events>`, 
 and there's also a reference to these events under ``locust.events`` that can be used at the module level 
