@@ -2,8 +2,6 @@
 Locust Documentation
 =====================
 
-.. rubric:: Everything you need to know about Locust
-
 .. sidebar:: About locust
 
     Locust is a scalable load testing framework written in Python
