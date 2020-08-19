@@ -13,6 +13,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 * Ability to use save custom percentiles
 * Improve command line stats output
 * Bug fixes (excessive precision of metrics in losust csv stats, negative response time when system clock has changed, issue with non-string failure messages, some typos etc)
+* Documentation improvements
 
 1.1.1
 =====

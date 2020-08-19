@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2](https://github.com/locustio/locust/tree/1.2) (2020-08-18)
+## [1.2](https://github.com/locustio/locust/tree/1.2) (2020-08-19)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.1.1...1.2)
 
@@ -21,6 +21,7 @@
 
 **Merged pull requests:**
 
+- Doc review changes [\#1528](https://github.com/locustio/locust/pull/1528) ([phil-davis](https://github.com/phil-davis))
 - Major rework of documentation & many small fixes [\#1527](https://github.com/locustio/locust/pull/1527) ([cyberw](https://github.com/cyberw))
 - Make hatch-rate parameter deprecated instead of killing it right away. [\#1526](https://github.com/locustio/locust/pull/1526) ([cyberw](https://github.com/cyberw))
 - Move dividers \(pipe characters\) in stats command line output. Also shrink percentiles output and remove 99.999 percentile by default Fixes \#1514 [\#1525](https://github.com/locustio/locust/pull/1525) ([cyberw](https://github.com/cyberw))
