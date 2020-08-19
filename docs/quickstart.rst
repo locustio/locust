@@ -142,6 +142,6 @@ Parameters can also be set through :ref:`environment variables <environment-vari
 :ref:`config file <configuration-file>`.
 
 How to write a *real* locust file?
-==================================
+""""""""""""""""""""""""""""""""""
 
 The above example was just the bare minimum, see :ref:`writing-a-locustfile` for more info.
