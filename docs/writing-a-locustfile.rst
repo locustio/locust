@@ -565,7 +565,7 @@ You can mark a request as failed by using the *catch_response* argument, a *with
 a call to *response.failure()*
 
 .. code-block:: python
-
+    
     with self.client.get("/", catch_response=True) as response:
         if response.text != "Success":
             response.failure("Got wrong response")
@@ -580,6 +580,16 @@ You can also mark a request as successful, even if the response code was bad:
     with self.client.get("/does_not_exist/", catch_response=True) as response:
         if response.status_code == 404:
             response.success()
+
+You can even avoid logging a request at all by throwing an exception and then catching it outside the with-block. Or you can throw a :ref:`locust exception <exceptions>`, like in the example below, and let locust catch it.
+
+.. code-block:: python
+
+    from locust.exception import RescheduleTask
+    ...
+    with self.client.get("/does_not_exist/", catch_response=True) as response:
+        if response.status_code == 404:
+            raise RescheduleTask()
 
 
 .. _name-parameter:
