@@ -78,18 +78,12 @@ ResponseContextManager class
 Exceptions
 ==========
 
-InterruptTaskSet Exception
-==========================
 .. autoexception:: locust.exception.InterruptTaskSet
 
 
-RescheduleTask Exception
-==========================
 .. autoexception:: locust.exception.RescheduleTask
 
 
-RescheduleTaskImmediately Exception
-==========================
 .. autoexception:: locust.exception.RescheduleTaskImmediately
 
 
