@@ -29,7 +29,7 @@ class RescheduleTask(Exception):
     """
     When raised in a task it's equivalent of a return statement.
     
-    Used internally by TaskSet. When raised within the task control flow of a TaskSet, 
+    Also used internally by TaskSet. When raised within the task control flow of a TaskSet, 
     but not inside a task, the execution should be handed over to the parent TaskSet.
     """
 
