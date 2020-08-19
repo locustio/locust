@@ -35,7 +35,7 @@ class RescheduleTask(Exception):
 
 class RescheduleTaskImmediately(Exception):
     """
-    When raised in a User task, another User task will be rescheduled immediately
+    When raised in a User task, another User task will be rescheduled immediately (without calling wait_time first)
     """
 
 class RPCError(Exception):
