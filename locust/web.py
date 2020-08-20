@@ -142,6 +142,7 @@ class WebUI:
                 step_time=options and options.step_time,
                 worker_count=worker_count,
                 is_step_load=environment.step_load,
+                is_shape=environment.shape_class,
                 stats_history_enabled=options and options.stats_history_enabled,
             )
         
