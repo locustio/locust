@@ -13,6 +13,7 @@ from locust.env import Environment
 from locust.rpc.protocol import Message
 from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_response_time_dicts, PERCENTILES_TO_REPORT
 from locust.stats import StatsCSVFileWriter
+from locust.stats import stats_history
 from locust.test.testcases import LocustTestCase
 from locust.user.inspectuser import get_task_ratio_dict
 
@@ -478,6 +479,21 @@ class TestCsvStats(LocustTestCase):
                 rows = [r for r in reader]
                 csv_request_name = rows[0].get("Name")
                 self.assertEqual(request_name_str, csv_request_name)
+
+    def test_stats_history(self):
+        env1 = Environment(events=locust.events, catch_exceptions=False)
+        runner1 = env1.create_master_runner("127.0.0.1", 5558)
+        env2 = Environment(events=locust.events, catch_exceptions=False)
+        runner2 = env2.create_worker_runner("127.0.0.1", 5558)
+        greenlet1 = gevent.spawn(stats_history, runner1)
+        greenlet2 = gevent.spawn(stats_history, runner2)
+        gevent.sleep(1)
+        hs1 = runner1.stats.history
+        hs2 = runner2.stats.history
+        gevent.kill(greenlet1)
+        gevent.kill(greenlet2)
+        self.assertEqual(1, len(hs1))
+        self.assertEqual(0, len(hs2))
 
 
 class TestStatsEntryResponseTimesCache(unittest.TestCase):
