@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.2.1
+=====
+
+* Bug fix (StatsEntry.use_response_times_cache must be set to True, https://github.com/locustio/locust/issues/1531)
+
 1.2
 ===
 

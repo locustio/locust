@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.1](https://github.com/locustio/locust/tree/1.2.1) (2020-08-20)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.2...1.2.1)
+
+**Fixed bugs:**
+
+- ValueError: StatsEntry.use\_response\_times\_cache must be set to True [\#1531](https://github.com/locustio/locust/issues/1531)
+
+**Merged pull requests:**
+
+- fix \#1531 \(ValueError: StatsEntry.use\_response\_times\_cache must be set to True\) [\#1534](https://github.com/locustio/locust/pull/1534) ([cyberw](https://github.com/cyberw))
+- Add missing parameter to render\_template to grey out UI fields [\#1533](https://github.com/locustio/locust/pull/1533) ([max-rocket-internet](https://github.com/max-rocket-internet))
+- Update repo README with new wording, locust example, screenshots [\#1532](https://github.com/locustio/locust/pull/1532) ([max-rocket-internet](https://github.com/max-rocket-internet))
+
 ## [1.2](https://github.com/locustio/locust/tree/1.2) (2020-08-19)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.1.1...1.2)
@@ -1061,7 +1075,6 @@
 - Suggest Python version  [\#231](https://github.com/locustio/locust/issues/231)
 - Changing locustfile.py on master via UI and having  master / slave replication [\#209](https://github.com/locustio/locust/issues/209)
 - Option to prevent stats from being reset when all locusts are hatched [\#205](https://github.com/locustio/locust/issues/205)
-- PUT requests are shown as GET [\#204](https://github.com/locustio/locust/issues/204)
 - Cannot simulate one single user [\#178](https://github.com/locustio/locust/issues/178)
 - Feature request: Stepped hatch rate [\#168](https://github.com/locustio/locust/issues/168)
 - Having a locust "die" or stop after one task [\#161](https://github.com/locustio/locust/issues/161)
@@ -1289,6 +1302,7 @@
 - multiple slaves of different server specs ? [\#210](https://github.com/locustio/locust/issues/210)
 - multiple url tests ? [\#208](https://github.com/locustio/locust/issues/208)
 - how to get the recorded data  [\#206](https://github.com/locustio/locust/issues/206)
+- PUT requests are shown as GET [\#204](https://github.com/locustio/locust/issues/204)
 - http proxy support [\#203](https://github.com/locustio/locust/issues/203)
 - error report is not included in `--logfile` nor is it available for download as a csv [\#202](https://github.com/locustio/locust/issues/202)
 - Stats get corrupted when the number of swarm users reaches the objective [\#201](https://github.com/locustio/locust/issues/201)
