@@ -759,6 +759,8 @@ def stats_history(runner):
     """Save current stats info to history for charts of report."""
     while True:
         stats = runner.stats
+        if not stats.total.use_response_times_cache:
+            break
         r = {
             'time': datetime.datetime.now().strftime("%H:%M:%S"),
             'current_rps': stats.total.current_rps or 0,
