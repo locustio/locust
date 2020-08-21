@@ -32,8 +32,6 @@ class UserSubclass(HttpUser):
 class NotUserSubclass():
     host = "http://localhost:8000"
 
-class LoadTestShape(LoadTestShape):
-    pass
 '''
 
 class MockedLocustfile:
