@@ -321,6 +321,8 @@ def main():
             # start the test
             if options.step_time:
                 runner.start_stepload(options.num_users, options.spawn_rate, options.step_users, options.step_time)
+            if environment.shape_class:
+                environment.runner.start_shape()
             else:
                 runner.start(options.num_users, options.spawn_rate)
     

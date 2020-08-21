@@ -13,7 +13,7 @@ from locust import main
 from locust.argument_parser import parse_options
 from locust.main import create_environment
 from locust.user import HttpUser, User, TaskSet
-from .mock_locustfile import mock_locustfile
+from .mock_locustfile import mock_locustfile, MOCK_LOUCSTFILE_CONTENT
 from .testcases import LocustTestCase
 from .util import temporary_file, get_free_tcp_port
 
@@ -48,6 +48,7 @@ class TestLoadLocustfile(LocustTestCase):
             self.assertIn('UserSubclass', user_classes)
             self.assertNotIn('NotUserSubclass', user_classes)
             self.assertNotIn('LoadTestShape', user_classes)
+            self.assertIsNone(shape_class)
 
     def test_load_locust_file_from_relative_path(self):
         with mock_locustfile() as mocked:
@@ -64,7 +65,18 @@ class TestLoadLocustfile(LocustTestCase):
             self.assertIn('UserSubclass', user_classes)
             self.assertNotIn('NotUserSubclass', user_classes)
             self.assertNotIn('LoadTestShape', user_classes)
-    
+
+    def test_with_shape_class(self):
+        content = MOCK_LOUCSTFILE_CONTENT + '''class LoadTestShape(LoadTestShape):
+    pass
+        '''
+        with mock_locustfile(content=content) as mocked:
+            docstring, user_classes, shape_class = main.load_locustfile(mocked.file_path)
+            self.assertEqual("This is a mock locust file for unit testing", docstring)
+            self.assertIn('UserSubclass', user_classes)
+            self.assertNotIn('NotUserSubclass', user_classes)
+            self.assertEqual(shape_class.__class__.__name__, 'LoadTestShape')
+
     def test_create_environment(self):
         options = parse_options(args=[
             "--host", "https://custom-host",
@@ -189,6 +201,30 @@ class LocustProcessIntegrationTest(TestCase):
                     timeout=2,
                     ).decode("utf-8").strip()
             self.assertIn("Spawning 1 users at the rate 1 users/s", output)
+
+    def test_default_headless_spawn_options_with_shape(self):
+        content = MOCK_LOUCSTFILE_CONTENT + '''
+class LoadTestShape(LoadTestShape):
+    def tick(self):
+        run_time = self.get_run_time()
+        if run_time < 2:
+                return (10, 1)
+
+        return None
+        '''
+        with mock_locustfile(content=content) as mocked:
+            output = subprocess.check_output(
+                    ["locust",
+                        "-f", mocked.file_path,
+                        "--host", "https://test.com/",
+                        "--run-time", "1s",
+                        "--headless"],
+                    stderr=subprocess.STDOUT,
+                    timeout=3,
+                    ).decode("utf-8").strip()
+            self.assertIn("Shape test updating to 10 users at 1.00 spawn rate", output)
+            self.assertIn("Cleaning up runner...", output)
+
 
     def test_web_options(self):
         port = get_free_tcp_port()
