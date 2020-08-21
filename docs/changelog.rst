@@ -4,15 +4,21 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.2.1
+=====
+
+* Bug fix (StatsEntry.use_response_times_cache must be set to True, https://github.com/locustio/locust/issues/1531)
+
 1.2
 ===
 
-* Rename hatch rate to spawn rate (this may be a breaking change in some cases!)
+* Rename hatch rate to spawn rate (the --hatch-rate parameter is only deprecated, but the hatch_complete event has been renamed spawning_complete)
 * Ability to generate any custom load shape with LoadTestShape class
 * Allow ramping down of users
 * Ability to use save custom percentiles
 * Improve command line stats output
 * Bug fixes (excessive precision of metrics in losust csv stats, negative response time when system clock has changed, issue with non-string failure messages, some typos etc)
+* Documentation improvements
 
 1.1.1
 =====

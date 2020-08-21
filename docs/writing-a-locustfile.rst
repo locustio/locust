@@ -118,7 +118,7 @@ Tasks
 
 When a load test is started, an instance of a User class will be created for each simulated user
 and they will start running within their own green thread. When these users run they pick tasks that 
-they execute, sleeps for awhile, and then picks a new task and so on. 
+they execute, sleep for awhile, and then pick a new task and so on.
 
 The tasks are normal python callables and - if we were load-testing an auction website - they could do 
 stuff like "loading the start page", "searching for some product", "making a bid", etc. 
@@ -192,7 +192,7 @@ Here is an example of a User task declared as a normal python function:
 If the tasks attribute is specified as a list, each time a task is to be performed, it will be randomly 
 chosen from the *tasks* attribute. If however, *tasks* is a dict - with callables as keys and ints 
 as values - the task that is to be executed will be chosen at random but with the int as ratio. So 
-with a tasks that looks like this::
+with a task that looks like this::
 
     {my_task: 3, another_task: 1}
 
@@ -565,7 +565,7 @@ You can mark a request as failed by using the *catch_response* argument, a *with
 a call to *response.failure()*
 
 .. code-block:: python
-
+    
     with self.client.get("/", catch_response=True) as response:
         if response.text != "Success":
             response.failure("Got wrong response")
@@ -580,6 +580,16 @@ You can also mark a request as successful, even if the response code was bad:
     with self.client.get("/does_not_exist/", catch_response=True) as response:
         if response.status_code == 404:
             response.success()
+
+You can even avoid logging a request at all by throwing an exception and then catching it outside the with-block. Or you can throw a :ref:`locust exception <exceptions>`, like in the example below, and let locust catch it.
+
+.. code-block:: python
+
+    from locust.exception import RescheduleTask
+    ...
+    with self.client.get("/does_not_exist/", catch_response=True) as response:
+        if response.status_code == 404:
+            raise RescheduleTask()
 
 
 .. _name-parameter:

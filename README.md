@@ -7,73 +7,68 @@
 [![PyPI](https://img.shields.io/pypi/pyversions/locust.svg)](https://pypi.org/project/locust/)
 [![GitHub contributors](https://img.shields.io/github/contributors/locustio/locust.svg)](https://github.com/locustio/locust/graphs/contributors)
 
-## Links
-
-* Website: <a href="https://locust.io">locust.io</a>
-* Documentation: <a href="https://docs.locust.io">docs.locust.io</a>
-* Code/issues: <a href="https://github.com/locustio/locust">Github</a>
-* Support/Questions: <a href="https://stackoverflow.com/questions/tagged/locust">StackOverflow</a>
-* Chat/discussion: [Slack signup](https://slack.locust.io/)
-
-## Description
-
-Locust is an easy-to-use, distributed, user load testing tool. It is intended for load-testing web sites (or other systems) and
-figuring out how many concurrent users a system can handle.
-
-The idea is that during a test, a swarm of simulated users will attack your website. The behavior of each user is defined by you 
-using Python code, and the swarming process is monitored from a web UI in real-time. This will help you battle test and identify 
-bottlenecks in your code before letting real users in.
-
-Locust is completely event-based, and therefore it's possible to support thousands of concurrent users on a single machine.
-In contrast to many other event-based apps it doesn't use callbacks. Instead it uses light-weight processes, through <a href="http://www.gevent.org/">gevent</a>.
-Each locust swarming your site is actually running inside its own process (or greenlet, to be correct).
-This allows you to write very expressive scenarios in Python without complicating your code with callbacks.
-
+Locust is an easy to use, scriptable and scalable performance testing tool. You define the behaviour of your users in regular Python code, instead of using a clunky UI or domain specific language. This makes Locust infinitely expandable and very developer friendly.
 
 ## Features
-* **Write user test scenarios in plain-old Python**<br>
- No need for clunky UIs or bloated XML—just code as you normally would. Based on coroutines instead
-of callbacks, your code looks and behaves like normal, blocking Python code.
 
-* **Distributed & Scalable - supports hundreds of thousands of users**<br>
- Locust supports running load tests distributed over multiple machines.
- Being event-based, even one Locust node can handle thousands of users in a single process.
- Part of the reason behind this is that even if you simulate that many users, not all are actively hitting your system. Often, users are idle figuring out what to do next. Requests per second != number of users online.
+#### Write user test scenarios in plain-old Python
 
-* **Web-based UI**<br>
- Locust has a neat HTML+JS that shows all relevant test details in real-time. And since the UI is web-based, it's cross-platform and easily extendable.
+If you want your users to loop, perform some conditional behaviour or do some calculations, you just use the regular programming constructs provided by Python. Locust runs every user inside its own greenlet (a lightweight process/coroutine). This enables you to write your tests like normal (blocking) Python code instead of having to use callbacks or some other mechanism. Because your scenarios are “just python” you can use your regular IDE, and version control your tests as regular code (as opposed to some other tools that use XML or binary formats)
 
-* **Can test any system**<br>
- Even though Locust is web-oriented, it can be used to test almost any system. Just write a client for what ever you wish to test and swarm it with users! It's super easy!
+```python
+from locust import HttpUser, task, between
 
-* **Hackable**<br>
- Locust is very small and very hackable and we intend to keep it that way. All heavy-lifting of evented I/O and coroutines are delegated to gevent. The brittleness of alternative testing tools was the reason we created Locust.
+class QuickstartUser(HttpUser):
+    wait_time = between(1, 2)
 
+    def on_start(self):
+        self.client.post("/login", json={"username":"foo", "password":"bar"})
 
-## Documentation
+    @task
+    def index_page(self):
+        self.client.get("/hello")
+        self.client.get("/world")
 
-More info and documentation can be found at: <a href="https://docs.locust.io/">https://docs.locust.io/</a>
+    @task(3)
+    def view_item(self):
+        for item_id in range(10):
+            self.client.get(f"/item?id={item_id}", name="/item")
+```
 
-## Questions/help?
+#### Distributed & Scalable - supports hundreds of thousands of users
 
-For questions about how to use Locust, feel free to stop by the Slack or ask questions on Stack Overflow tagged Locust.
+Locust makes it easy to run load tests distributed over multiple machines. It is event-based (using [gevent](http://www.gevent.org/)), which makes it possible for a single process to handle many thousands concurrent users. While there may be other tools that are capable of doing more requests per second on a given hardware, the low overhead of each Locust user makes it very suitable for testing highly concurrent workloads.
 
-## Bug reporting
+#### Web-based UI
 
-Open a Github issue and follow the template listed there.
+Locust has a user friendly web interface that shows the progress of your test in real-time. You can even change the load while the test is running. It can also be run without the UI, making it easy to use for CI/CD testing.
+
+<img src="https://raw.githubusercontent.com/locustio/locust/master/locust/static/img/ui-screenshot-charts.png" alt="Locust UI charts" width="200"/> <img src="https://raw.githubusercontent.com/locustio/locust/master/locust/static/img/ui-screenshot-stats.png" alt="Locust UI stats" width="200"/> <img src="https://raw.githubusercontent.com/locustio/locust/master/locust/static/img/ui-screenshot-workers.png" alt="Locust UI workers" width="200"/> <img src="https://raw.githubusercontent.com/locustio/locust/master/locust/static/img/ui-screenshot-start-test.png" alt="Locust UI start test" width="200"/>
+
+#### Can test any system
+
+Even though Locust primarily works with web sites/services, it can be used to test almost any system or protocol. Just [write a client](https://docs.locust.io/en/latest/testing-other-systems.html#testing-other-systems) for what you want to test, or [explore some created by the community](https://github.com/SvenskaSpel/locust-plugins#users).
+
+## Hackable
+
+Locust is small and very flexible and we intend to keep it that way. If you want to [send reporting data to that database & graphing system you like](https://github.com/SvenskaSpel/locust-plugins/blob/master/locust_plugins/listeners.py), wrap calls to a REST API to handle the particulars of your system or run a [totally custom load pattern](https://docs.locust.io/en/latest/generating-custom-load-shape.html#generating-custom-load-shape), there is nothing stopping you!
+
+## Links
+
+* Website: [locust.io](https://locust.io)
+* Documentation: [docs.locust.io](https://docs.locust.io)
+* Code/issues: [Github](https://github.com/locustio/locust)
+* Support/Questions: [StackOverflow](https://stackoverflow.com/questions/tagged/locust)
+* Chat/discussion: [Slack signup](https://slack.locust.io/)
 
 ## Authors
 
-- <a href="http://cgbystrom.com">Carl Bystr&ouml;m</a> (@<a href="https://twitter.com/cgbystrom">cgbystrom</a> on Twitter)
-- <a href="http://heyman.info">Jonatan Heyman</a> (@<a href="https://twitter.com/jonatanheyman">jonatanheyman</a> on Twitter)
-- Joakim Hamrén (@<a href="https://twitter.com/Jahaaja">Jahaaja</a>)
-- Hugo Heyman (@<a href="https://twitter.com/hugoheyman">hugoheyman</a>)
+* [Carl Bystr](http://cgbystrom.com) ([@cgbystrom](https://twitter.com/cgbystrom) on Twitter)
+* [Jonatan Heyman](http://heyman.info) ([@jonatanheyman](https://twitter.com/jonatanheyman) on Twitter)
+* [Joakim Hamrén](https://github.com/Jahaja) ([@Jahaaja](https://twitter.com/Jahaaja) on Twitter)
+* [Hugo Heyman](https://github.com/HeyHugo) ([@hugoheyman](https://twitter.com/hugoheyman) on Twitter)
+* [Lars Holmberg](https://github.com/cyberw)
 
 ## License
 
 Open source licensed under the MIT license (see _LICENSE_ file for details).
-
-
-## Supported Python Versions
-
-Locust is supported on Python 3.6, 3.7, 3.8.

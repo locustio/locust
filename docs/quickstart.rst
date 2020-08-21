@@ -66,7 +66,7 @@ Methods declared with the ``@task`` attribute are the core of your locust file. 
         self.client.get("/hello")
         self.client.get("/world")
 
-The self.client attribute makes it possible to make HTTP calls that will be logged by Locust. `See more details on how to make requests, validate the response, etc <writing-a-locustfile.html#using-the-http-client>`_.
+The self.client attribute makes it possible to make HTTP calls that will be logged by Locust. For information on how to make other kinds of requests, validate the response, etc, see `Using the HTTP Client <writing-a-locustfile.html#using-the-http-client>`_.
 
 .. code-block:: python
 
@@ -142,6 +142,6 @@ Parameters can also be set through :ref:`environment variables <environment-vari
 :ref:`config file <configuration-file>`.
 
 How to write a *real* locust file?
-==================================
+""""""""""""""""""""""""""""""""""
 
 The above example was just the bare minimum, see :ref:`writing-a-locustfile` for more info.

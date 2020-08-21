@@ -48,5 +48,5 @@ Running Locust distributed in step load mode
 ---------------------------------------------
 
 If you want to :ref:`run Locust distributed <running-locust-distributed>` in step load mode, 
-you should specify the ``--step-load`` option when starting the master node, to swarm locusts by step. It will then show the ``--step-users`` option and ``--step-time`` option in Locust UI.
+you should specify the ``--step-load`` option when starting the master node, to swarm locusts by step. It will then show the ``--step-users`` option and ``--step-time`` option in the Locust UI.
 

@@ -27,7 +27,7 @@ processor core** on the worker machines.
     Otherwise - due to the current implementation - 
     you might end up with a distribution of the  User classes that doesn't correspond to the
     User classes' ``weight`` attribute. And if the spawn rate is lower than the number of worker
-    nodes, the spawning would occur in "bursts" where all worker node would spawn a single user and
+    nodes, the spawning would occur in "bursts" where all worker nodes would spawn a single user and
     then sleep for multiple seconds, spawn another user, sleep and repeat.
 
 
@@ -38,7 +38,7 @@ To start locust in master mode::
 
     locust -f my_locustfile.py --master
 
-And then on each worker (replace ``192.168.0.14`` with IP of the master machine, or leave out the parameter altogether if your workers are on the same machine as the master)::
+And then on each worker (replace ``192.168.0.14`` with the IP of the master machine, or leave out the parameter altogether if your workers are on the same machine as the master)::
 
     locust -f my_locustfile.py --worker --master-host=192.168.0.14
 
@@ -101,7 +101,7 @@ See :ref:`running-locust-distributed-without-web-ui`
 
 
 Generating a custom load shape using a `LoadTestShape` class
-=============================================
+============================================================
 
 See :ref:`generating-custom-load-shape`
 

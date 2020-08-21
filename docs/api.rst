@@ -73,9 +73,18 @@ ResponseContextManager class
     :members: success, failure
 
 
-InterruptTaskSet Exception
-==========================
+.. _exceptions:
+
+Exceptions
+==========
+
 .. autoexception:: locust.exception.InterruptTaskSet
+
+
+.. autoexception:: locust.exception.RescheduleTask
+
+
+.. autoexception:: locust.exception.RescheduleTaskImmediately
 
 
 Environment class
@@ -89,7 +98,7 @@ Environment class
 Event hooks
 ===========
 
-Locust provide event hooks that can be used to extend Locus in various ways. 
+Locust provides event hooks that can be used to extend Locust in various ways.
 
 The following event hooks are available under :py:attr:`Environment.events <locust.env.Environment.events>`, 
 and there's also a reference to these events under ``locust.events`` that can be used at the module level 
