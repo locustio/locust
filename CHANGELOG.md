@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.2](https://github.com/locustio/locust/tree/1.2.2) (2020-08-22)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.2.1...1.2.2)
+
+**Merged pull requests:**
+
+- Fix load shape worker in headless. [\#1539](https://github.com/locustio/locust/pull/1539) ([cyberw](https://github.com/cyberw))
+- Add test case for stats\_history [\#1538](https://github.com/locustio/locust/pull/1538) ([taojy123](https://github.com/taojy123))
+- Update README.md to have full links to images [\#1536](https://github.com/locustio/locust/pull/1536) ([max-rocket-internet](https://github.com/max-rocket-internet))
+
 ## [1.2.1](https://github.com/locustio/locust/tree/1.2.1) (2020-08-20)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.2...1.2.1)
@@ -1075,6 +1085,7 @@
 - Suggest Python version  [\#231](https://github.com/locustio/locust/issues/231)
 - Changing locustfile.py on master via UI and having  master / slave replication [\#209](https://github.com/locustio/locust/issues/209)
 - Option to prevent stats from being reset when all locusts are hatched [\#205](https://github.com/locustio/locust/issues/205)
+- PUT requests are shown as GET [\#204](https://github.com/locustio/locust/issues/204)
 - Cannot simulate one single user [\#178](https://github.com/locustio/locust/issues/178)
 - Feature request: Stepped hatch rate [\#168](https://github.com/locustio/locust/issues/168)
 - Having a locust "die" or stop after one task [\#161](https://github.com/locustio/locust/issues/161)
@@ -1302,7 +1313,6 @@
 - multiple slaves of different server specs ? [\#210](https://github.com/locustio/locust/issues/210)
 - multiple url tests ? [\#208](https://github.com/locustio/locust/issues/208)
 - how to get the recorded data  [\#206](https://github.com/locustio/locust/issues/206)
-- PUT requests are shown as GET [\#204](https://github.com/locustio/locust/issues/204)
 - http proxy support [\#203](https://github.com/locustio/locust/issues/203)
 - error report is not included in `--logfile` nor is it available for download as a csv [\#202](https://github.com/locustio/locust/issues/202)
 - Stats get corrupted when the number of swarm users reaches the objective [\#201](https://github.com/locustio/locust/issues/201)
@@ -1387,6 +1397,7 @@
 - Fixed Docs Homebrew Link [\#143](https://github.com/locustio/locust/pull/143) ([saulshanabrook](https://github.com/saulshanabrook))
 - Fix typo [\#132](https://github.com/locustio/locust/pull/132) ([rafax](https://github.com/rafax))
 - Fix task ratio [\#125](https://github.com/locustio/locust/pull/125) ([sanga](https://github.com/sanga))
+- fix typo in downloadable CSV [\#100](https://github.com/locustio/locust/pull/100) ([sghill](https://github.com/sghill))
 
 ## [v0.7](https://github.com/locustio/locust/tree/v0.7) (2014-01-20)
 
@@ -1439,7 +1450,6 @@
 - fix module and variable name clash \(traceback refers to a mod so it's a ... [\#115](https://github.com/locustio/locust/pull/115) ([sanga](https://github.com/sanga))
 - Removes duplicate attribute documentation [\#106](https://github.com/locustio/locust/pull/106) ([djoume](https://github.com/djoume))
 - Fixes typo in example code [\#105](https://github.com/locustio/locust/pull/105) ([djoume](https://github.com/djoume))
-- fix typo in downloadable CSV [\#100](https://github.com/locustio/locust/pull/100) ([sghill](https://github.com/sghill))
 - Documented more 0.7 changes [\#90](https://github.com/locustio/locust/pull/90) ([EnTeQuAk](https://github.com/EnTeQuAk))
 - include hostname in log messages [\#89](https://github.com/locustio/locust/pull/89) ([sanga](https://github.com/sanga))
 - Cleanups \(deprecated code, unused imports\) [\#88](https://github.com/locustio/locust/pull/88) ([EnTeQuAk](https://github.com/EnTeQuAk))
