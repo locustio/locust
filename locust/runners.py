@@ -525,6 +525,10 @@ class MasterRunner(DistributedRunner):
     def stop(self):
         if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
             self.state = STATE_STOPPING
+
+            if self.environment.shape_class:
+                self.shape_last_state = None
+
             for client in self.clients.all:
                 self.server.send_to_client(Message("stop", None, client.id))
             self.environment.events.test_stop.fire(environment=self.environment)
