@@ -473,6 +473,57 @@ class TestMasterWorkerRunners(LocustTestCase):
             for worker in workers:
                 self.assertEqual(0, worker.user_count, "Shape test has not stopped")
 
+    def test_distributed_shape_stop_and_restart(self):
+        """
+        Test stopping and then restarting a LoadTestShape
+        """
+        class TestUser(User):
+            wait_time = constant(0)
+            @task
+            def my_task(self):
+                pass
+
+        class TestShape(LoadTestShape):
+            def tick(self):
+                run_time = self.get_run_time()
+                if run_time < 10:
+                    return (4, 4)
+                else:
+                    return None
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            master_env = Environment(user_classes=[TestUser], shape_class=TestShape())
+            master_env.shape_class.reset_time()
+            master = master_env.create_master_runner("*", 0)
+
+            workers = []
+            for i in range(2):
+                worker_env = Environment(user_classes=[TestUser])
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+
+            # Give workers time to connect
+            sleep(0.1)
+
+            # Start a shape test and ensure workers have connected and started the correct amounf of users
+            master.start_shape()
+            sleep(1)
+            for worker in workers:
+                self.assertEqual(2, worker.user_count, "Shape test has not started correctly")
+
+            # Stop the test and ensure all user count is 0
+            master.stop()
+            sleep(1)
+            for worker in workers:
+                self.assertEqual(0, worker.user_count, "Shape test has not stopped")
+
+            # Then restart the test again and ensure workers have connected and started the correct amounf of users
+            master.start_shape()
+            sleep(1)
+            for worker in workers:
+                self.assertEqual(2, worker.user_count, "Shape test has not started again correctly")
+            master.stop()
+
 
 class TestMasterRunner(LocustTestCase):
     def setUp(self):
