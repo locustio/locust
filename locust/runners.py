@@ -199,7 +199,7 @@ class Runner(object):
 
         if stop_rate == None or stop_rate >= user_count:
             sleep_time = 0
-            logger.info("Stopping %i users immediately" % (user_count))
+            logger.info("Stopping %i users" % (user_count))
         else:
             sleep_time = 1.0 / stop_rate
             logger.info("Stopping %i users at rate of %g users/s" % (user_count, stop_rate))
@@ -525,6 +525,10 @@ class MasterRunner(DistributedRunner):
     def stop(self):
         if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
             self.state = STATE_STOPPING
+
+            if self.environment.shape_class:
+                self.shape_last_state = None
+
             for client in self.clients.all:
                 self.server.send_to_client(Message("stop", None, client.id))
             self.environment.events.test_stop.fire(environment=self.environment)

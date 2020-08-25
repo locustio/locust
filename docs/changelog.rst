@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.2.2
+=====
+
+* Bug fix (LoadTestShape in headless mode https://github.com/locustio/locust/pull/1539)
+
 1.2.1
 =====
 
