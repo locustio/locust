@@ -30,7 +30,7 @@ env.create_web_ui("127.0.0.1", 8089)
 gevent.spawn(stats_printer(env.stats))
 
 # start a greenlet that save current stats to history
-gevent.spawn(stats_history(env.runner))
+gevent.spawn(stats_history, env.runner)
 
 # start the test
 env.runner.start(1, spawn_rate=10)
