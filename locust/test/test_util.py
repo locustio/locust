@@ -8,7 +8,7 @@ class TestParseTimespan(unittest.TestCase):
         self.assertRaises(ValueError, parse_timespan, None)
         self.assertRaises(ValueError, parse_timespan, "")
         self.assertRaises(ValueError, parse_timespan, "q")
-    
+
     def test_parse_timespan(self):
         self.assertEqual(7, parse_timespan("7"))
         self.assertEqual(7, parse_timespan("7s"))

@@ -19,6 +19,7 @@ class User(HttpUser):
     def task_404(self):
         self.client.get("/non-existing-path")
 
+
 # setup Environment and Runner
 env = Environment(user_classes=[User])
 env.create_local_runner()

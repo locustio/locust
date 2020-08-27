@@ -9,7 +9,7 @@ def _(parser):
         type=str,
         env_var="LOCUST_MY_ARGUMENT",
         default="",
-        help="It's working"
+        help="It's working",
     )
 
 
