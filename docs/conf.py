@@ -26,6 +26,8 @@ def save_locust_help_output():
 save_locust_help_output()
 
 # Generate RST table with help/descriptions for all available environment variables
+
+
 def save_locust_env_variables():
     env_options_output_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "config-options.rst")
     print("Generating RST table for Locust environment variables and storing in %s" % env_options_output_file)

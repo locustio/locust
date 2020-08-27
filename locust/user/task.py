@@ -36,7 +36,7 @@ def task(weight=1):
 
     """
     Check if task was used without parentheses (not called), like this::
-    
+
         @task
         def my_task()
             pass
@@ -187,9 +187,9 @@ class TaskSet(object, metaclass=TaskSetMeta):
 
     If tasks is a list, the task to be performed will be picked randomly.
 
-    If tasks is a *(callable,int)* list of two-tuples, or a {callable:int} dict, 
-    the task to be performed will be picked randomly, but each task will be weighted 
-    according to its corresponding int value. So in the following case, *ThreadPage* will 
+    If tasks is a *(callable,int)* list of two-tuples, or a {callable:int} dict,
+    the task to be performed will be picked randomly, but each task will be weighted
+    according to its corresponding int value. So in the following case, *ThreadPage* will
     be fifteen times more likely to be picked than *write_post*::
 
         class ForumPage(TaskSet):
@@ -198,24 +198,24 @@ class TaskSet(object, metaclass=TaskSetMeta):
 
     min_wait = None
     """
-    Deprecated: Use wait_time instead. 
-    Minimum waiting time between the execution of user tasks. Can be used to override 
-    the min_wait defined in the root User class, which will be used if not set on the 
+    Deprecated: Use wait_time instead.
+    Minimum waiting time between the execution of user tasks. Can be used to override
+    the min_wait defined in the root User class, which will be used if not set on the
     TaskSet.
     """
 
     max_wait = None
     """
-    Deprecated: Use wait_time instead. 
-    Maximum waiting time between the execution of user tasks. Can be used to override 
-    the max_wait defined in the root User class, which will be used if not set on the 
+    Deprecated: Use wait_time instead.
+    Maximum waiting time between the execution of user tasks. Can be used to override
+    the max_wait defined in the root User class, which will be used if not set on the
     TaskSet.
     """
 
     wait_function = None
     """
     Deprecated: Use wait_time instead.
-    Function used to calculate waiting time between the execution of user tasks in milliseconds. 
+    Function used to calculate waiting time between the execution of user tasks in milliseconds.
     Can be used to override the wait_function defined in the root User class, which will be used
     if not set on the TaskSet.
     """

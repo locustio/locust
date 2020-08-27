@@ -65,7 +65,7 @@ def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG
         description=textwrap.dedent(
             """
             Usage: locust [OPTIONS] [UserClass ...]
-            
+
         """
         ),
         # epilog="",
@@ -255,7 +255,7 @@ def setup_parser_arguments(parser):
         "Worker options",
         textwrap.dedent(
             """
-            Options for running a Locust Worker node when running Locust distributed. 
+            Options for running a Locust Worker node when running Locust distributed.
             Only the LOCUSTFILE (-f option) need to be specified when starting a Worker, since other options such as -u, -r, -t are specified on the Master node.
         """
         ),

@@ -71,7 +71,7 @@ class FastHttpUser(User):
 
     client = None
     """
-    Instance of HttpSession that is created upon instantiation of User. 
+    Instance of HttpSession that is created upon instantiation of User.
     The client support cookies, and therefore keeps the session between HTTP requests.
     """
 

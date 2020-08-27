@@ -41,9 +41,9 @@ class TestLoggingOptions(LocustTestCase):
                 """
             import logging
             from locust import User, task, constant
-            
+
             custom_logger = logging.getLogger("custom_logger")
-            
+
             class MyUser(User):
                 wait_time = constant(2)
                 @task
@@ -103,7 +103,7 @@ class TestLoggingOptions(LocustTestCase):
             textwrap.dedent(
                 """
             from locust import User, task, constant
-            
+
             class MyUser(User):
                 wait_time = constant(2)
                 @task
@@ -137,7 +137,7 @@ class TestLoggingOptions(LocustTestCase):
                 """
             import logging
             from locust import User, task, constant
-            
+
             class MyUser(User):
                 wait_time = constant(2)
                 @task

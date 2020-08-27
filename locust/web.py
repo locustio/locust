@@ -46,9 +46,9 @@ class WebUI:
     """
     Reference to the :class:`flask.Flask` app. Can be used to add additional web routes and customize
     the Flask app in other various ways. Example::
-    
+
         from flask import request
-        
+
         @web_ui.app.route("/my_custom_route")
         def my_custom_route():
             return "your IP is: %s" % request.remote_addr

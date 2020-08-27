@@ -606,7 +606,7 @@ class TestStatsEntryResponseTimesCache(unittest.TestCase):
 
 class TestStatsEntry(unittest.TestCase):
     def parse_string_output(self, text):
-        tokenlist = re.split("[\s\(\)%|]+", text.strip())
+        tokenlist = re.split(r"[\s\(\)%|]+", text.strip())
         tokens = {
             "method": tokenlist[0],
             "name": tokenlist[1],
@@ -687,7 +687,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
 
     def test_request_stats_no_content_length(self):
         path = "/no_content_length"
-        r = self.locust.client.get(path)
+        self.locust.client.get(path)
         self.assertEqual(
             self.runner.stats.get(path, "GET").avg_content_length,
             len("This response does not have content-length in the header"),
@@ -695,7 +695,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
 
     def test_request_stats_no_content_length_streaming(self):
         path = "/no_content_length"
-        r = self.locust.client.get(path, stream=True)
+        self.locust.client.get(path, stream=True)
         self.assertEqual(0, self.runner.stats.get(path, "GET").avg_content_length)
 
     def test_request_stats_named_endpoint(self):

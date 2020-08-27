@@ -181,7 +181,7 @@ def main():
             # Increasing the limit to 10000 within a running process should work on at least MacOS.
             # It does not work on all OS:es, but we should be no worse off for trying.
             resource.setrlimit(resource.RLIMIT_NOFILE, [10000, resource.RLIM_INFINITY])
-    except:
+    except BaseException:
         logger.warning(
             "System open file limit setting is not high enough for load testing, and the OS didn't allow locust to increase it by itself. See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."
         )
@@ -393,5 +393,5 @@ def main():
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
         shutdown()
-    except KeyboardInterrupt as e:
+    except KeyboardInterrupt:
         shutdown()
