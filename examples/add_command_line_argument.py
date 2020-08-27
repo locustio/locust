@@ -4,13 +4,7 @@ from locust import events
 
 @events.init_command_line_parser.add_listener
 def _(parser):
-    parser.add_argument(
-        "--my-argument",
-        type=str,
-        env_var="LOCUST_MY_ARGUMENT",
-        default="",
-        help="It's working"
-    )
+    parser.add_argument("--my-argument", type=str, env_var="LOCUST_MY_ARGUMENT", default="", help="It's working")
 
 
 @events.init.add_listener

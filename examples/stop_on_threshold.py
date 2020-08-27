@@ -4,8 +4,10 @@ from locust.runners import STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP, WorkerR
 import time
 import gevent
 
+
 class MyUser(HttpUser):
     host = "http://www.google.com"
+
     @task
     def my_task(self):
         for _ in range(10):

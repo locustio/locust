@@ -5,6 +5,7 @@ from locust.exception import RPCError
 import zmq.error as zmqerr
 import msgpack.exceptions as msgerr
 
+
 class BaseSocket(object):
     def __init__(self, sock_type):
         context = zmq.Context()
@@ -12,7 +13,7 @@ class BaseSocket(object):
 
         self.socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
         self.socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 30)
-    
+
     @retry()
     def send(self, msg):
         try:
@@ -51,6 +52,7 @@ class BaseSocket(object):
     def close(self):
         self.socket.close()
 
+
 class Server(BaseSocket):
     def __init__(self, host, port):
         BaseSocket.__init__(self, zmq.ROUTER)
@@ -61,7 +63,8 @@ class Server(BaseSocket):
                 self.socket.bind("tcp://%s:%i" % (host, port))
                 self.port = port
             except zmqerr.ZMQError as e:
-                raise RPCError("Socket bind failure: %s" % (e) )
+                raise RPCError("Socket bind failure: %s" % (e))
+
 
 class Client(BaseSocket):
     def __init__(self, host, port, identity):
