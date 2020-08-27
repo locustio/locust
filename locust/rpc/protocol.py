@@ -6,7 +6,7 @@ class Message(object):
         self.type = message_type
         self.data = data
         self.node_id = node_id
-    
+
     def __repr__(self):
         return "<Message %s:%s>" % (self.type, self.node_id)
 
