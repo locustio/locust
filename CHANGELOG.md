@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.2.3](https://github.com/locustio/locust/tree/1.2.3) (2020-08-28)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.2.2...1.2.3)
+
+**Fixed bugs:**
+
+- Unable to install packages using pip [\#1548](https://github.com/locustio/locust/issues/1548)
+- Cant start: Werkzeug: TypeError: code\(\) takes at least 14 arguments \(13 given\) [\#1545](https://github.com/locustio/locust/issues/1545)
+- use\_as\_lib.py example getting stuck when running [\#1542](https://github.com/locustio/locust/issues/1542)
+- Locust stuck in "Shape worker starting" when restarting a test from the webUI [\#1540](https://github.com/locustio/locust/issues/1540)
+
+**Closed issues:**
+
+- Let's fix code to be PEP8 compliant? [\#1489](https://github.com/locustio/locust/issues/1489)
+
+**Merged pull requests:**
+
+- Various linting fixes [\#1549](https://github.com/locustio/locust/pull/1549) ([cyberw](https://github.com/cyberw))
+- Reformat code using black. Also add black --check to build. [\#1547](https://github.com/locustio/locust/pull/1547) ([cyberw](https://github.com/cyberw))
+- fix use\_as\_lib example [\#1543](https://github.com/locustio/locust/pull/1543) ([taojy123](https://github.com/taojy123))
+- Fix stopping and restarting of LoadTestShape test [\#1541](https://github.com/locustio/locust/pull/1541) ([max-rocket-internet](https://github.com/max-rocket-internet))
+
 ## [1.2.2](https://github.com/locustio/locust/tree/1.2.2) (2020-08-22)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.2.1...1.2.2)
@@ -1397,7 +1419,6 @@
 - Fixed Docs Homebrew Link [\#143](https://github.com/locustio/locust/pull/143) ([saulshanabrook](https://github.com/saulshanabrook))
 - Fix typo [\#132](https://github.com/locustio/locust/pull/132) ([rafax](https://github.com/rafax))
 - Fix task ratio [\#125](https://github.com/locustio/locust/pull/125) ([sanga](https://github.com/sanga))
-- fix typo in downloadable CSV [\#100](https://github.com/locustio/locust/pull/100) ([sghill](https://github.com/sghill))
 
 ## [v0.7](https://github.com/locustio/locust/tree/v0.7) (2014-01-20)
 
@@ -1450,6 +1471,7 @@
 - fix module and variable name clash \(traceback refers to a mod so it's a ... [\#115](https://github.com/locustio/locust/pull/115) ([sanga](https://github.com/sanga))
 - Removes duplicate attribute documentation [\#106](https://github.com/locustio/locust/pull/106) ([djoume](https://github.com/djoume))
 - Fixes typo in example code [\#105](https://github.com/locustio/locust/pull/105) ([djoume](https://github.com/djoume))
+- fix typo in downloadable CSV [\#100](https://github.com/locustio/locust/pull/100) ([sghill](https://github.com/sghill))
 - Documented more 0.7 changes [\#90](https://github.com/locustio/locust/pull/90) ([EnTeQuAk](https://github.com/EnTeQuAk))
 - include hostname in log messages [\#89](https://github.com/locustio/locust/pull/89) ([sanga](https://github.com/sanga))
 - Cleanups \(deprecated code, unused imports\) [\#88](https://github.com/locustio/locust/pull/88) ([EnTeQuAk](https://github.com/EnTeQuAk))

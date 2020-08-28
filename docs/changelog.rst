@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.2.3
+=====
+
+* Bug fix (TypeError: code() takes at least 14 arguments (13 given) (Werkzeug version issue) https://github.com/locustio/locust/issues/1545)
+* Bug fix (Locust stuck in "Shape worker starting" when restarting a test from the webUI https://github.com/locustio/locust/issues/1540)
+* Various linting fixes that *should* have no functional impact
+
 1.2.2
 =====
 
