@@ -29,7 +29,7 @@ CSV_STATS_FLUSH_INTERVAL_SEC = 10
 
 
 """
-Default window size/resolution - in seconds - when calculating the current 
+Default window size/resolution - in seconds - when calculating the current
 response time percentile
 """
 CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW = 10
@@ -86,10 +86,10 @@ def diff_response_time_dicts(latest, old):
     percentiles.
     """
     new = {}
-    for time in latest:
-        diff = latest[time] - old.get(time, 0)
+    for t in latest:
+        diff = latest[t] - old.get(t, 0)
         if diff:
-            new[time] = diff
+            new[t] = diff
     return new
 
 
@@ -226,24 +226,24 @@ class StatsEntry(object):
     """
     A {response_time => count} dict that holds the response time distribution of all
     the requests.
-    
-    The keys (the response time in ms) are rounded to store 1, 2, ... 9, 10, 20. .. 90, 
+
+    The keys (the response time in ms) are rounded to store 1, 2, ... 9, 10, 20. .. 90,
     100, 200 .. 900, 1000, 2000 ... 9000, in order to save memory.
-    
+
     This dict is used to calculate the median and percentile response times.
     """
 
     use_response_times_cache = False
     """
-    If set to True, the copy of the response_time dict will be stored in response_times_cache 
-    every second, and kept for 20 seconds (by default, will be CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW + 10). 
-    We can use this dict to calculate the *current*  median response time, as well as other response 
+    If set to True, the copy of the response_time dict will be stored in response_times_cache
+    every second, and kept for 20 seconds (by default, will be CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW + 10).
+    We can use this dict to calculate the *current*  median response time, as well as other response
     time percentiles.
     """
 
     response_times_cache = None
     """
-    If use_response_times_cache is set to True, this will be a {timestamp => CachedResponseTimes()} 
+    If use_response_times_cache is set to True, this will be a {timestamp => CachedResponseTimes()}
     OrderedDict that holds a copy of the response_times dict for each of the last 20 seconds.
     """
 

@@ -138,8 +138,6 @@ class TestLocustRunner(LocustTestCase):
             runners.CPU_MONITOR_INTERVAL = _monitor_interval
 
     def test_weight_locusts(self):
-        maxDiff = 2048
-
         class BaseUser(User):
             pass
 

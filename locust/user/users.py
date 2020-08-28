@@ -66,11 +66,11 @@ class User(object, metaclass=UserMeta):
 
     wait_time = None
     """
-    Method that returns the time (in seconds) between the execution of locust tasks. 
+    Method that returns the time (in seconds) between the execution of locust tasks.
     Can be overridden for individual TaskSets.
-    
+
     Example::
-    
+
         from locust import User, between
         class MyUser(User):
             wait_time = between(3, 25)
@@ -79,9 +79,9 @@ class User(object, metaclass=UserMeta):
     wait_function = None
     """
     .. warning::
-    
+
         DEPRECATED: Use wait_time instead. Note that the new wait_time method should return seconds and not milliseconds.
-    
+
     Method that returns the time between the execution of locust tasks in milliseconds
     """
 
@@ -91,9 +91,9 @@ class User(object, metaclass=UserMeta):
 
     If tasks is a list, the task to be performed will be picked randomly.
 
-    If tasks is a *(callable,int)* list of two-tuples, or a {callable:int} dict, 
-    the task to be performed will be picked randomly, but each task will be weighted 
-    according to its corresponding int value. So in the following case, *ThreadPage* will 
+    If tasks is a *(callable,int)* list of two-tuples, or a {callable:int} dict,
+    the task to be performed will be picked randomly, but each task will be weighted
+    according to its corresponding int value. So in the following case, *ThreadPage* will
     be fifteen times more likely to be picked than *write_post*::
 
         class ForumPage(TaskSet):
@@ -138,7 +138,7 @@ class User(object, metaclass=UserMeta):
             self.on_start()
 
             self._taskset_instance.run()
-        except (GreenletExit, StopUser) as e:
+        except (GreenletExit, StopUser):
             # run the on_stop method, if it has one
             self.on_stop()
 
@@ -214,7 +214,7 @@ class HttpUser(User):
 
     client = None
     """
-    Instance of HttpSession that is created upon instantiation of Locust. 
+    Instance of HttpSession that is created upon instantiation of Locust.
     The client supports cookies, and therefore keeps the session between HTTP requests.
     """
 

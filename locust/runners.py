@@ -209,7 +209,7 @@ class Runner(object):
         for g in self.user_greenlets:
             for l in bucket:
                 user = g.args[0]
-                if l == type(user):
+                if isinstance(user, l):
                     to_stop.append(user)
                     bucket.remove(l)
                     break
@@ -217,7 +217,7 @@ class Runner(object):
         if not to_stop:
             return
 
-        if stop_rate == None or stop_rate >= user_count:
+        if stop_rate is None or stop_rate >= user_count:
             sleep_time = 0
             logger.info("Stopping %i users" % (user_count))
         else:
@@ -650,7 +650,7 @@ class MasterRunner(DistributedRunner):
                 if self.state == STATE_RUNNING or self.state == STATE_SPAWNING:
                     # balance the load distribution when new client joins
                     self.start(self.target_user_count, self.spawn_rate)
-                ## emit a warning if the worker's clock seem to be out of sync with our clock
+                # emit a warning if the worker's clock seem to be out of sync with our clock
                 # if abs(time() - msg.data["time"]) > 5.0:
                 #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
             elif msg.type == "client_stopped":
