@@ -229,7 +229,8 @@ def main():
 
     if options.master:
         runner = environment.create_master_runner(
-            master_bind_host=options.master_bind_host, master_bind_port=options.master_bind_port,
+            master_bind_host=options.master_bind_host,
+            master_bind_port=options.master_bind_port,
         )
     elif options.worker:
         try:
