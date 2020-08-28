@@ -174,17 +174,18 @@ def main():
         # list() call is needed to consume the dict_view object in Python 3
         user_classes = list(user_classes.values())
 
-    try:
-        import resource
+    if os.name != "nt":
+        try:
+            import resource
 
-        if resource.getrlimit(resource.RLIMIT_NOFILE)[0] < 10000:
-            # Increasing the limit to 10000 within a running process should work on at least MacOS.
-            # It does not work on all OS:es, but we should be no worse off for trying.
-            resource.setrlimit(resource.RLIMIT_NOFILE, [10000, resource.RLIM_INFINITY])
-    except BaseException:
-        logger.warning(
-            "System open file limit setting is not high enough for load testing, and the OS didn't allow locust to increase it by itself. See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."
-        )
+            if resource.getrlimit(resource.RLIMIT_NOFILE)[0] < 10000:
+                # Increasing the limit to 10000 within a running process should work on at least MacOS.
+                # It does not work on all OS:es, but we should be no worse off for trying.
+                resource.setrlimit(resource.RLIMIT_NOFILE, [10000, resource.RLIM_INFINITY])
+        except BaseException:
+            logger.warning(
+                "System open file limit setting is not high enough for load testing, and the OS didn't allow locust to increase it by itself. See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."
+            )
 
     # create locust Environment
     environment = create_environment(user_classes, options, events=locust.events, shape_class=shape_class)
@@ -228,8 +229,7 @@ def main():
 
     if options.master:
         runner = environment.create_master_runner(
-            master_bind_host=options.master_bind_host,
-            master_bind_port=options.master_bind_port,
+            master_bind_host=options.master_bind_host, master_bind_port=options.master_bind_port,
         )
     elif options.worker:
         try:
