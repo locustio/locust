@@ -32,7 +32,7 @@ def is_user_class(item):
     """
     Check if a variable is a runnable (non-abstract) User class
     """
-    return bool(inspect.isclass(item) and issubclass(item, User) and item.abstract == False)
+    return bool(inspect.isclass(item) and issubclass(item, User) and item.abstract is False)
 
 
 def is_shape_class(item):

@@ -200,7 +200,7 @@ class ResponseContextManager(LocustResponse):
 
     def __exit__(self, exc, value, traceback):
         if self._manual_result is not None:
-            if self._manual_result == True:
+            if self._manual_result is True:
                 self._report_success()
             elif isinstance(self._manual_result, Exception):
                 self._report_failure(self._manual_result)
