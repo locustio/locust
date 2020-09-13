@@ -270,9 +270,9 @@ class TaskSet(object, metaclass=TaskSetMeta):
             self.on_start()
         except InterruptTaskSet as e:
             if e.reschedule:
-                raise RescheduleTaskImmediately(e.reschedule).with_traceback(sys.exc_info()[2])
+                raise RescheduleTaskImmediately(e.reschedule).with_traceback(e.__traceback__)
             else:
-                raise RescheduleTask(e.reschedule).with_traceback(sys.exc_info()[2])
+                raise RescheduleTask(e.reschedule).with_traceback(e.__traceback__)
 
         while True:
             try:
@@ -298,7 +298,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
                 self.on_stop()
                 raise
             except Exception as e:
-                self.user.environment.events.user_error.fire(user_instance=self, exception=e, tb=sys.exc_info()[2])
+                self.user.environment.events.user_error.fire(user_instance=self, exception=e, tb=e.__traceback__)
                 if self.user.environment.catch_exceptions:
                     logger.error("%s\n%s", e, traceback.format_exc())
                     self.wait()

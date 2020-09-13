@@ -175,7 +175,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         try:
             raise Exception("A cool test exception")
         except Exception as e:
-            tb = sys.exc_info()[2]
+            tb = e.__traceback__
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
 
@@ -198,7 +198,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         try:
             raise Exception("A cool test exception")
         except Exception as e:
-            tb = sys.exc_info()[2]
+            tb = e.__traceback__
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
 
@@ -213,7 +213,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         try:
             raise Exception("Test exception")
         except Exception as e:
-            tb = sys.exc_info()[2]
+            tb = e.__traceback__
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
 
@@ -356,7 +356,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         try:
             raise Exception("Test exception")
         except Exception as e:
-            tb = sys.exc_info()[2]
+            tb = e.__traceback__
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
         self.stats.log_request("GET", "/test", 120, 5612)
