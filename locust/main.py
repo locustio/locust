@@ -53,13 +53,6 @@ def load_locustfile(path):
     the "is a Locust" test.
     """
 
-    def __import_locustfile__(filename, path):
-        """
-        Loads the locust file as a module, similar to performing `import`
-        """
-        source = importlib.machinery.SourceFileLoader(os.path.splitext(locustfile)[0], path)
-        return source.load_module()
-
     # Start with making sure the current working dir is in the sys.path
     sys.path.insert(0, os.getcwd())
     # Get directory and locustfile name
@@ -82,7 +75,8 @@ def load_locustfile(path):
             sys.path.insert(0, directory)
             del sys.path[i + 1]
     # Perform the import
-    imported = __import_locustfile__(locustfile, path)
+    source = importlib.machinery.SourceFileLoader(os.path.splitext(locustfile)[0], path)
+    imported = source.load_module()
     # Remove directory from path if we added it ourselves (just to be neat)
     if added_to_path:
         del sys.path[0]
