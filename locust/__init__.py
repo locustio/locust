@@ -1,8 +1,6 @@
-# Apply Gevent monkey patching of stdlib
-from gevent import monkey as _monkey
+from gevent import monkey
 
-_monkey.patch_all()
-
+monkey.patch_all()
 
 from .user.sequential_taskset import SequentialTaskSet
 from .user import wait_time
