@@ -45,7 +45,7 @@ class XmlRpcUser(User):
     abstract = True
 
     def __init__(self, *args, **kwargs):
-        super(XmlRpcUser, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.client = XmlRpcClient(self.host)
         self.client._locust_environment = self.environment
 

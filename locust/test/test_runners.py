@@ -575,11 +575,11 @@ class TestMasterWorkerRunners(LocustTestCase):
 
 class TestMasterRunner(LocustTestCase):
     def setUp(self):
-        super(TestMasterRunner, self).setUp()
+        super().setUp()
         self.environment = Environment(events=locust.events, catch_exceptions=False)
 
     def tearDown(self):
-        super(TestMasterRunner, self).tearDown()
+        super().tearDown()
 
     def get_runner(self):
         return self.environment.create_master_runner("*", 5557)
@@ -1189,7 +1189,7 @@ class TestMasterRunner(LocustTestCase):
 
         class MyTaskSet(TaskSet):
             def __init__(self, *a, **kw):
-                super(MyTaskSet, self).__init__(*a, **kw)
+                super().__init__(*a, **kw)
                 self._task_queue = [self.will_error, self.will_stop]
 
             @task(1)
@@ -1240,12 +1240,12 @@ class TestMasterRunner(LocustTestCase):
 
 class TestWorkerRunner(LocustTestCase):
     def setUp(self):
-        super(TestWorkerRunner, self).setUp()
+        super().setUp()
         # self._report_to_master_event_handlers = [h for h in events.report_to_master._handlers]
 
     def tearDown(self):
         # events.report_to_master._handlers = self._report_to_master_event_handlers
-        super(TestWorkerRunner, self).tearDown()
+        super().tearDown()
 
     def get_runner(self, environment=None, user_classes=[]):
         if environment is None:

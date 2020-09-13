@@ -115,7 +115,7 @@ class User(object, metaclass=UserMeta):
     _taskset_instance = None
 
     def __init__(self, environment):
-        super(User, self).__init__()
+        super().__init__()
         self.environment = environment
 
     def on_start(self):
@@ -219,7 +219,7 @@ class HttpUser(User):
     """
 
     def __init__(self, *args, **kwargs):
-        super(HttpUser, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.host is None:
             raise LocustError(
                 "You must specify the base host. Either in the host attribute in the User class, or on the command line using the --host option."

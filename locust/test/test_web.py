@@ -42,7 +42,7 @@ class _HeaderCheckMixin:
 
 class TestWebUI(LocustTestCase, _HeaderCheckMixin):
     def setUp(self):
-        super(TestWebUI, self).setUp()
+        super().setUp()
 
         parser = get_parser(default_config_files=[])
         self.environment.parsed_options = parser.parse_args([])
@@ -54,7 +54,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.web_port = self.web_ui.server.server_port
 
     def tearDown(self):
-        super(TestWebUI, self).tearDown()
+        super().tearDown()
         self.web_ui.stop()
         self.runner.quit()
 
@@ -367,7 +367,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
 class TestWebUIAuth(LocustTestCase):
     def setUp(self):
-        super(TestWebUIAuth, self).setUp()
+        super().setUp()
 
         parser = get_parser(default_config_files=[])
         options = parser.parse_args(["--web-auth", "john:doe"])
@@ -379,7 +379,7 @@ class TestWebUIAuth(LocustTestCase):
         self.web_port = self.web_ui.server.server_port
 
     def tearDown(self):
-        super(TestWebUIAuth, self).tearDown()
+        super().tearDown()
         self.web_ui.stop()
         self.runner.quit()
 
@@ -399,7 +399,7 @@ class TestWebUIAuth(LocustTestCase):
 
 class TestWebUIWithTLS(LocustTestCase):
     def setUp(self):
-        super(TestWebUIWithTLS, self).setUp()
+        super().setUp()
         tls_cert, tls_key = create_tls_cert("127.0.0.1")
         self.tls_cert_file = NamedTemporaryFile(delete=False)
         self.tls_key_file = NamedTemporaryFile(delete=False)
@@ -424,7 +424,7 @@ class TestWebUIWithTLS(LocustTestCase):
         self.web_port = self.web_ui.server.server_port
 
     def tearDown(self):
-        super(TestWebUIWithTLS, self).tearDown()
+        super().tearDown()
         self.web_ui.stop()
         self.runner.quit()
         os.unlink(self.tls_cert_file.name)
@@ -445,7 +445,7 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
     STATS_FAILURES_FILENAME = "{}_failures.csv".format(STATS_BASE_NAME)
 
     def setUp(self):
-        super(TestWebUIFullHistory, self).setUp()
+        super().setUp()
         self.remove_files_if_exists()
 
         parser = get_parser(default_config_files=[])
@@ -463,7 +463,7 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
         self.web_port = self.web_ui.server.server_port
 
     def tearDown(self):
-        super(TestWebUIFullHistory, self).tearDown()
+        super().tearDown()
         self.web_ui.stop()
         self.runner.quit()
         self.remove_files_if_exists()
