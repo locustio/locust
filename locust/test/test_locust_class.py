@@ -12,7 +12,7 @@ from .testcases import LocustTestCase, WebserverTestCase
 
 class TestTaskSet(LocustTestCase):
     def setUp(self):
-        super(TestTaskSet, self).setUp()
+        super().setUp()
 
         class MyUser(User):
             host = "127.0.0.1"
@@ -728,7 +728,7 @@ class TestWebLocustClass(WebserverTestCase):
 
 class TestCatchResponse(WebserverTestCase):
     def setUp(self):
-        super(TestCatchResponse, self).setUp()
+        super().setUp()
 
         class MyUser(HttpUser):
             host = "http://127.0.0.1:%i" % self.port

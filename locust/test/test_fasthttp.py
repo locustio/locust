@@ -413,7 +413,7 @@ class TestFastHttpUserClass(WebserverTestCase):
 
 class TestFastHttpCatchResponse(WebserverTestCase):
     def setUp(self):
-        super(TestFastHttpCatchResponse, self).setUp()
+        super().setUp()
 
         class MyUser(FastHttpUser):
             host = "http://127.0.0.1:%i" % self.port

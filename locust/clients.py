@@ -45,7 +45,7 @@ class HttpSession(requests.Session):
     """
 
     def __init__(self, base_url, request_success, request_failure, *args, **kwargs):
-        super(HttpSession, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.base_url = base_url
         self.request_success = request_success

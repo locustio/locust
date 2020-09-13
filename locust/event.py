@@ -83,7 +83,7 @@ class Events:
 
     :param user_instance: User class instance where the exception occurred
     :param exception: Exception that was thrown
-    :param tb: Traceback object (from sys.exc_info()[2])
+    :param tb: Traceback object (from e.__traceback__)
     """
 
     report_to_master = EventHook

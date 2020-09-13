@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import re
 import socket
 import json
@@ -372,7 +370,7 @@ class FastResponse(CompatResponse):
     def _content(self):
         if self.headers is None:
             return None
-        return super(FastResponse, self)._content()
+        return super()._content()
 
 
 class ErrorResponse(object):
@@ -396,7 +394,7 @@ class LocustUserAgent(UserAgent):
     valid_response_codes = frozenset([200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 301, 302, 303, 307])
 
     def __init__(self, **kwargs):
-        super(LocustUserAgent, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _urlopen(self, request):
         """Override _urlopen() in order to make it use the response_type attribute"""

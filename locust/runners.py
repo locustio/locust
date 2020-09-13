@@ -390,7 +390,7 @@ class LocalRunner(Runner):
         """
         :param environment: Environment instance
         """
-        super(LocalRunner, self).__init__(environment)
+        super().__init__(environment)
 
         # register listener thats logs the exception for the local runner
         def on_user_error(user_instance, exception, tb):
