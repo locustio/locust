@@ -280,7 +280,8 @@ class TaskSet(object, metaclass=TaskSetMeta):
                     self.schedule_task(self.get_next_task())
 
                 try:
-                    self._check_stop_condition()
+                    if self.user._state == LOCUST_STATE_STOPPING:
+                        raise StopUser()
                     self.execute_next_task()
                 except RescheduleTaskImmediately:
                     pass
@@ -372,18 +373,16 @@ class TaskSet(object, metaclass=TaskSetMeta):
         set a stop_timeout. If this behaviour is not desired you should make the user wait using
         gevent.sleep() instead.
         """
-        self._check_stop_condition()
+        if self.user._state == LOCUST_STATE_STOPPING:
+            raise StopUser()
         self.user._state = LOCUST_STATE_WAITING
         self._sleep(self.wait_time())
-        self._check_stop_condition()
+        if self.user._state == LOCUST_STATE_STOPPING:
+            raise StopUser()
         self.user._state = LOCUST_STATE_RUNNING
 
     def _sleep(self, seconds):
         gevent.sleep(seconds)
-
-    def _check_stop_condition(self):
-        if self.user._state == LOCUST_STATE_STOPPING:
-            raise StopUser()
 
     def interrupt(self, reschedule=True):
         """
