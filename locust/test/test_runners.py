@@ -364,10 +364,14 @@ class TestLocustRunner(LocustTestCase):
     def test_users_can_call_runner_quit_without_deadlocking(self):
         class BaseUser(User):
             wait_time = constant(0)
+            stop_triggered = False
 
             @task
             def trigger(self):
                 self.environment.runner.quit()
+
+            def on_stop(self):
+                BaseUser.stop_triggered = True
 
         runner = Environment(user_classes=[BaseUser]).create_local_runner()
         runner.spawn_users(1, 1, wait=False)
@@ -380,20 +384,24 @@ class TestLocustRunner(LocustTestCase):
         finally:
             timeout.cancel()
 
-    def test_runner_quit_does_not_get_blocked_by_slow_on_stop(self):
+        self.assertTrue(BaseUser.stop_triggered)
+
+    def test_runner_quit_can_run_on_stop_for_multiple_users_concurrently(self):
         class BaseUser(User):
             wait_time = constant(0)
+            stop_count = 0
 
             @task
             def trigger(self):
                 pass
 
             def on_stop(self):
-                gevent.sleep(0.2)
+                gevent.sleep(0.1)
+                BaseUser.stop_count += 1
 
         runner = Environment(user_classes=[BaseUser]).create_local_runner()
         runner.spawn_users(10, 10, wait=False)
-        timeout = gevent.Timeout(0.4)
+        timeout = gevent.Timeout(0.3)
         timeout.start()
         try:
             runner.quit()
@@ -401,6 +409,8 @@ class TestLocustRunner(LocustTestCase):
             self.fail("Got Timeout exception, runner must have hung somehow.")
         finally:
             timeout.cancel()
+
+        self.assertEqual(10, BaseUser.stop_count)  # verify that all users executed on_stop
 
     def test_stop_users_with_spawn_rate(self):
         class MyUser(User):
