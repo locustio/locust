@@ -185,11 +185,7 @@ class User(object, metaclass=UserMeta):
                       methods are called. If force is True the greenlet will be killed immediately.
         :returns: True if the greenlet was killed immediately, otherwise False
         """
-        if self._greenlet is greenlet.getcurrent():
-            # the user is stopping itself (from within a task), so blocking would deadlock
-            self._group.killone(self._greenlet, block=False)
-            return True
-        elif force or self._state == LOCUST_STATE_WAITING:
+        if force or self._state == LOCUST_STATE_WAITING:
             self._group.killone(self._greenlet)
             return True
         elif self._state == LOCUST_STATE_RUNNING:
