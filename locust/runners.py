@@ -12,6 +12,7 @@ import gevent
 import psutil
 from gevent.pool import Group
 
+from . import User
 from .log import greenlet_exception_logger
 from .rpc import Message, rpc
 from .stats import RequestStats, setup_distributed_stats_event_listeners
@@ -228,15 +229,15 @@ class Runner(object):
             stop_group = Group()
 
         while True:
-            user_to_stop = to_stop.pop(random.randint(0, len(to_stop) - 1))
+            user_to_stop: User = to_stop.pop(random.randint(0, len(to_stop) - 1))
             logger.debug("Stopping %s" % user_to_stop._greenlet.name)
             if self.environment.stop_timeout:
-                if not user_to_stop.stop(self.user_greenlets, force=False):
+                if not user_to_stop.stop(force=False):
                     # User.stop() returns False if the greenlet was not stopped, so we'll need
                     # to add it's greenlet to our stopping Group so we can wait for it to finish it's task
                     stop_group.add(user_to_stop._greenlet)
             else:
-                user_to_stop.stop(self.user_greenlets, force=True)
+                user_to_stop.stop(force=True)
             if to_stop:
                 gevent.sleep(sleep_time)
             else:
