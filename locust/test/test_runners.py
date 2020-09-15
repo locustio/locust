@@ -4,6 +4,7 @@ import unittest
 import gevent
 from gevent import sleep
 from gevent.queue import Queue
+import greenlet
 
 import locust
 from locust import runners, between, constant, LoadTestShape
@@ -360,7 +361,7 @@ class TestLocustRunner(LocustTestCase):
         self.assertEqual(env, runner.environment)
         self.assertEqual(runner, env.runner)
 
-    def test_users_can_call_runner_quit(self):
+    def test_users_can_call_runner_quit_without_deadlocking(self):
         class BaseUser(User):
             wait_time = constant(0)
 
@@ -374,6 +375,28 @@ class TestLocustRunner(LocustTestCase):
         timeout.start()
         try:
             runner.greenlet.join()
+        except gevent.Timeout:
+            self.fail("Got Timeout exception, runner must have hung somehow.")
+        finally:
+            timeout.cancel()
+
+    def test_runner_quit_does_not_get_blocked_by_slow_on_stop(self):
+        class BaseUser(User):
+            wait_time = constant(0)
+
+            @task
+            def trigger(self):
+                pass
+
+            def on_stop(self):
+                gevent.sleep(0.2)
+
+        runner = Environment(user_classes=[BaseUser]).create_local_runner()
+        runner.spawn_users(10, 10, wait=False)
+        timeout = gevent.Timeout(0.4)
+        timeout.start()
+        try:
+            runner.quit()
         except gevent.Timeout:
             self.fail("Got Timeout exception, runner must have hung somehow.")
         finally:
