@@ -326,8 +326,6 @@ class TaskSet(object, metaclass=TaskSetMeta):
         Add a task to the User's task execution queue.
 
         :param task_callable: User task to schedule.
-        :param args: Arguments that will be passed to the task callable.
-        :param kwargs: Dict of keyword arguments that will be passed to the task callable.
         :param first: Optional keyword argument. If True, the task will be put first in the queue.
         """
         if first:
