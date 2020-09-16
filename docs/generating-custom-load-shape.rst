@@ -27,6 +27,7 @@ This shape class will increase user count in blocks of 100 and then stop the loa
             run_time = self.get_run_time()
 
             if run_time < self.time_limit:
+                # User count rounded to nearest hundred.
                 user_count = round(run_time, -2)
                 return (user_count, spawn_rate)
 
