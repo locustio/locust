@@ -9,14 +9,18 @@ from uuid import uuid4
 from time import time
 
 import gevent
+import greenlet
 import psutil
 from gevent.pool import Group
 
+from . import User
 from .log import greenlet_exception_logger
 from .rpc import Message, rpc
 from .stats import RequestStats, setup_distributed_stats_event_listeners
 
 from .exception import RPCError
+from .user.task import LOCUST_STATE_STOPPING
+
 
 logger = logging.getLogger(__name__)
 
@@ -224,25 +228,28 @@ class Runner(object):
             sleep_time = 1.0 / stop_rate
             logger.info("Stopping %i users at rate of %g users/s" % (user_count, stop_rate))
 
-        if self.environment.stop_timeout:
-            stop_group = Group()
+        async_calls_to_stop = Group()
+        stop_group = Group()
 
         while True:
-            user_to_stop = to_stop.pop(random.randint(0, len(to_stop) - 1))
+            user_to_stop: User = to_stop.pop(random.randint(0, len(to_stop) - 1))
             logger.debug("Stopping %s" % user_to_stop._greenlet.name)
-            if self.environment.stop_timeout:
-                if not user_to_stop.stop(self.user_greenlets, force=False):
-                    # User.stop() returns False if the greenlet was not stopped, so we'll need
-                    # to add it's greenlet to our stopping Group so we can wait for it to finish it's task
-                    stop_group.add(user_to_stop._greenlet)
+            if user_to_stop._greenlet is greenlet.getcurrent():
+                # User called runner.quit(), so dont block waiting for killing to finish"
+                user_to_stop._group.killone(user_to_stop._greenlet, block=False)
+            elif self.environment.stop_timeout:
+                async_calls_to_stop.add(gevent.spawn_later(0, User.stop, user_to_stop, force=False))
+                stop_group.add(user_to_stop._greenlet)
             else:
-                user_to_stop.stop(self.user_greenlets, force=True)
+                async_calls_to_stop.add(gevent.spawn_later(0, User.stop, user_to_stop, force=True))
             if to_stop:
                 gevent.sleep(sleep_time)
             else:
                 break
 
-        if self.environment.stop_timeout and not stop_group.join(timeout=self.environment.stop_timeout):
+        async_calls_to_stop.join()
+
+        if not stop_group.join(timeout=self.environment.stop_timeout):
             logger.info(
                 "Not all users finished their tasks & terminated in %s seconds. Stopping them..."
                 % self.environment.stop_timeout

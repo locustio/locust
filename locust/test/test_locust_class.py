@@ -225,7 +225,7 @@ class TestTaskSet(LocustTestCase):
         user = MyUser(self.environment)
         user.start(group)
         sleep(0.05)
-        user.stop(group)
+        user.stop()
         sleep(0)
 
         self.assertTrue(user.t2_executed)
@@ -526,7 +526,7 @@ class TestLocustClass(LocustTestCase):
         self.assertEqual(1, user.test_state)
 
         # stop User gracefully
-        user.stop(group, force=False)
+        user.stop(force=False)
         sleep(0)
         # make sure instance is not killed right away
         self.assertIn(greenlet, group)
@@ -555,7 +555,7 @@ class TestLocustClass(LocustTestCase):
         self.assertEqual(1, user.test_state)
 
         # stop User gracefully
-        user.stop(group, force=True)
+        user.stop(force=True)
         sleep(0)
         # make sure instance is killed right away, and that the task did NOT get to finish
         self.assertEqual(0, len(group))

@@ -1,5 +1,5 @@
 from gevent import GreenletExit, greenlet
-
+from gevent.pool import Group
 from locust.clients import HttpSession
 from locust.exception import LocustError, StopUser
 from locust.util import deprecation
@@ -111,7 +111,8 @@ class User(object, metaclass=UserMeta):
 
     client = NoClientWarningRaiser()
     _state = None
-    _greenlet = None
+    _greenlet: greenlet.Greenlet = None
+    _group: Group
     _taskset_instance = None
 
     def __init__(self, environment):
@@ -154,11 +155,11 @@ class User(object, metaclass=UserMeta):
         """
         self._taskset_instance.wait()
 
-    def start(self, gevent_group):
+    def start(self, group: Group):
         """
         Start a greenlet that runs this User instance.
 
-        :param gevent_group: Group instance where the greenlet will be spawned.
+        :param group: Group instance where the greenlet will be spawned.
         :type gevent_group: gevent.pool.Group
         :returns: The spawned greenlet.
         """
@@ -171,26 +172,21 @@ class User(object, metaclass=UserMeta):
             """
             user.run()
 
-        self._greenlet = gevent_group.spawn(run_user, self)
+        self._greenlet = group.spawn(run_user, self)
+        self._group = group
         return self._greenlet
 
-    def stop(self, gevent_group, force=False):
+    def stop(self, force=False):
         """
-        Stop the user greenlet that exists in the gevent_group.
+        Stop the user greenlet.
 
-        :param gevent_group: Group instance where the greenlet will be spawned.
-        :type gevent_group: gevent.pool.Group
         :param force: If False (the default) the stopping is done gracefully by setting the state to LOCUST_STATE_STOPPING
                       which will make the User instance stop once any currently running task is complete and on_stop
                       methods are called. If force is True the greenlet will be killed immediately.
         :returns: True if the greenlet was killed immediately, otherwise False
         """
-        if self._greenlet is greenlet.getcurrent():
-            # the user is stopping itself (from within a task), so blocking would deadlock
-            gevent_group.killone(self._greenlet, block=False)
-            return True
-        elif force or self._state == LOCUST_STATE_WAITING:
-            gevent_group.killone(self._greenlet)
+        if force or self._state == LOCUST_STATE_WAITING:
+            self._group.killone(self._greenlet)
             return True
         elif self._state == LOCUST_STATE_RUNNING:
             self._state = LOCUST_STATE_STOPPING
