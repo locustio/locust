@@ -172,13 +172,20 @@ def main():
         try:
             import resource
 
-            if resource.getrlimit(resource.RLIMIT_NOFILE)[0] < 10000:
+            minimum_open_file_limit = 10000
+            current_open_file_limit = resource.getrlimit(resource.RLIMIT_NOFILE)[0]
+
+            if current_open_file_limit < minimum_open_file_limit:
                 # Increasing the limit to 10000 within a running process should work on at least MacOS.
                 # It does not work on all OS:es, but we should be no worse off for trying.
-                resource.setrlimit(resource.RLIMIT_NOFILE, [10000, resource.RLIM_INFINITY])
+                resource.setrlimit(resource.RLIMIT_NOFILE, [minimum_open_file_limit, resource.RLIM_INFINITY])
         except BaseException:
             logger.warning(
-                "System open file limit setting is not high enough for load testing, and the OS didn't allow locust to increase it by itself. See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."
+                (
+                    f"System open file limit '{current_open_file_limit}' is below minimum setting '{minimum_open_file_limit}'. "
+                    "It's not high enough for load testing, and the OS didn't allow locust to increase it by itself. "
+                    "See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."
+                )
             )
 
     # create locust Environment
