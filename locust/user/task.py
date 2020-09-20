@@ -31,6 +31,10 @@ def task(weight=1):
     """
 
     def decorator_func(func):
+        if func.__name__ in ["on_stop", "on_start"]:
+            logging.warning(
+                "You have tagged your on_stop/start function with @task. This will make the method get called both as a task AND on stop/start."
+            )  # this is usually not what the user intended
         func.locust_task_weight = weight
         return func
 
