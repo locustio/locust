@@ -186,6 +186,7 @@ class WebUI:
         @app.route("/stats/reset")
         @self.auth_required_if_enabled
         def reset_stats():
+            environment.events.reset_stats.fire()
             environment.runner.stats.reset_all()
             environment.runner.exceptions = {}
             return "ok"
