@@ -371,9 +371,10 @@ class WebUI:
 
             return _download_csv_response(data.getvalue(), "exceptions")
 
-        # start the web server
+    def web_server_greenlet(self):
         self.greenlet = gevent.spawn(self.start)
         self.greenlet.link_exception(greenlet_exception_handler)
+        return self.greenlet
 
     def start(self):
         if self.tls_cert and self.tls_key:
