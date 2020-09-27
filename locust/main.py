@@ -228,8 +228,7 @@ def main():
 
     if options.master:
         runner = environment.create_master_runner(
-            master_bind_host=options.master_bind_host,
-            master_bind_port=options.master_bind_port,
+            master_bind_host=options.master_bind_host, master_bind_port=options.master_bind_port,
         )
     elif options.worker:
         try:
@@ -363,7 +362,7 @@ def main():
             code = 2
         elif environment.process_exit_code is not None:
             code = environment.process_exit_code
-        elif len(runner.errors) or len(runner.exceptions):
+        elif len(runner.exceptions):
             code = options.exit_code_on_error
         else:
             code = 0
