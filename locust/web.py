@@ -108,7 +108,8 @@ class WebUI:
                 raise AuthCredentialsError(
                     "Invalid auth_credentials. It should be a string in the following format: 'user.pass'"
                 )
-        self.update_template_args()
+        if environment.runner:
+            self.update_template_args()
 
         @app.route("/")
         @self.auth_required_if_enabled
@@ -371,10 +372,8 @@ class WebUI:
 
             return _download_csv_response(data.getvalue(), "exceptions")
 
-    def web_server_greenlet(self):
         self.greenlet = gevent.spawn(self.start)
         self.greenlet.link_exception(greenlet_exception_handler)
-        return self.greenlet
 
     def start(self):
         if self.tls_cert and self.tls_key:
