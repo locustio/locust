@@ -168,7 +168,8 @@ def main():
         # list() call is needed to consume the dict_view object in Python 3
         user_classes = list(user_classes.values())
 
-    if os.name != "nt":
+    if os.name != "nt" and not options.master:
+
         try:
             import resource
 
