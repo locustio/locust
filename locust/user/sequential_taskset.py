@@ -1,3 +1,4 @@
+import logging
 from locust.exception import LocustError
 from .task import TaskSet, TaskSetMeta
 
@@ -28,7 +29,8 @@ class SequentialTaskSetMeta(TaskSetMeta):
 
             if "locust_task_weight" in dir(value):
                 # method decorated with @task
-                new_tasks.append(value)
+                for _ in range(value.locust_task_weight):
+                    new_tasks.append(value)
 
         class_dict["tasks"] = new_tasks
         return type.__new__(mcs, classname, bases, class_dict)

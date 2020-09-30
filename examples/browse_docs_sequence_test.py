@@ -17,6 +17,8 @@ class BrowseDocumentationSequence(SequentialTaskSet):
         pq = PyQuery(r.content)
         link_elements = pq(".toctree-wrapper a.internal")
         self.toc_urls = [l.attrib["href"] for l in link_elements]
+        # it is fine to do multiple requests in a single task, you dont need SequentialTaskSet for that
+        self.client.get("/favicon.ico")
 
     @task
     def load_page(self, url=None):
