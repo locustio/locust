@@ -119,6 +119,9 @@ class Runner(object):
         """
         Updates the current state
         """
+        if self.state == new_state:
+            return
+
         logger.debug("Updating state to %s, old state was %s" % (new_state, self.state))
         self.state = new_state
 
