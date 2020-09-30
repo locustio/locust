@@ -211,7 +211,7 @@ and then Python's ``random.choice()`` is used pick tasks from the list.
 Tagging tasks
 -------------
 
-By tagging tasks using the `tag <locust.tag>` decorator, you can be picky about what tasks are
+By tagging tasks using the :py:func:`@tag <locust.tag>` decorator, you can be picky about what tasks are
 executed during the test using the :code:`--tags` and :code:`--exclude-tags` arguments.  Consider
 the following example:
 
@@ -377,8 +377,8 @@ parent TaskSet instance.
 
 Tags and TaskSets
 ------------------
-You can tag TaskSets using the `tag <locust.tag>` decorator in a similar way to normal tasks, as
-described `above <tagging-tasks>`, but there are some nuances worth mentioning. Tagging a TaskSet
+You can tag TaskSets using the :py:func:`@tag <locust.tag>` decorator in a similar way to normal tasks, as
+described :ref:`above <tagging-tasks>`, but there are some nuances worth mentioning. Tagging a TaskSet
 will automatically apply the tag(s) to all of the TaskSet's tasks. Furthermore, if you tag a task
 within a nested TaskSet, locust will execute that task even if the TaskSet isn't tagged.
 

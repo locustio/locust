@@ -84,7 +84,7 @@ class Runner(object):
 
         # register listener that resets stats when spawning is complete
         def on_spawning_complete(user_count):
-            self.state = STATE_RUNNING
+            self.update_state(STATE_RUNNING)
             if environment.reset_stats:
                 logger.info("Resetting stats\n")
                 self.stats.reset_all()
@@ -114,6 +114,13 @@ class Runner(object):
         :returns: Number of currently running users
         """
         return len(self.user_greenlets)
+
+    def update_state(self, new_state):
+        """
+        Updates the current state
+        """
+        logger.debug("Updating state to %s, old state was %s" % (new_state, self.state))
+        self.state = new_state
 
     def cpu_log_warning(self):
         """Called at the end of the test to repeat the warning & return the status"""
@@ -163,7 +170,7 @@ class Runner(object):
         bucket = self.weight_users(spawn_count)
         spawn_count = len(bucket)
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
-            self.state = STATE_SPAWNING
+            self.update_state(STATE_SPAWNING)
 
         existing_count = len(self.user_greenlets)
         logger.info(
@@ -290,7 +297,7 @@ class Runner(object):
             logger.debug(
                 "Updating running test with %d users, %.2f spawn rate and wait=%r" % (user_count, spawn_rate, wait)
             )
-            self.state = STATE_SPAWNING
+            self.update_state(STATE_SPAWNING)
             if self.user_count > user_count:
                 # Stop some users
                 stop_count = self.user_count - user_count
@@ -321,7 +328,7 @@ class Runner(object):
             "Start a new swarming in Step Load mode: total user count of %d, spawn rate of %d, step user count of %d, step duration of %d "
             % (user_count, spawn_rate, step_user_count, step_duration)
         )
-        self.state = STATE_INIT
+        self.update_state(STATE_INIT)
         self.stepload_greenlet = self.greenlet.spawn(self.stepload_worker, spawn_rate, step_user_count, step_duration)
         self.stepload_greenlet.link_exception(greenlet_exception_handler)
 
@@ -342,7 +349,7 @@ class Runner(object):
             return
 
         logger.info("Shape test starting. User count and spawn rate are ignored for this type of load test")
-        self.state = STATE_INIT
+        self.update_state(STATE_INIT)
         self.shape_greenlet = self.greenlet.spawn(self.shape_worker)
         self.shape_greenlet.link_exception(greenlet_exception_handler)
 
@@ -365,12 +372,13 @@ class Runner(object):
         """
         Stop a running load test by stopping all running users
         """
-        self.state = STATE_CLEANUP
+        logger.debug("Stopping all users")
+        self.update_state(STATE_CLEANUP)
         # if we are currently spawning users we need to kill the spawning greenlet first
         if self.spawning_greenlet and not self.spawning_greenlet.ready():
             self.spawning_greenlet.kill(block=True)
         self.stop_users(self.user_count)
-        self.state = STATE_STOPPED
+        self.update_state(STATE_STOPPED)
         self.cpu_log_warning()
 
     def quit(self):
@@ -578,27 +586,33 @@ class MasterRunner(DistributedRunner):
                 data["num_users"] += 1
                 remaining -= 1
 
+            logger.debug("Sending spawn message to client %s" % (client.id))
             self.server.send_to_client(Message("spawn", data, client.id))
 
-        self.state = STATE_SPAWNING
+        self.update_state(STATE_SPAWNING)
 
     def stop(self):
         if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
-            self.state = STATE_STOPPING
+            logger.debug("Stopping...")
+            self.update_state(STATE_STOPPING)
 
             if self.environment.shape_class:
                 self.shape_last_state = None
 
             for client in self.clients.all:
+                logger.debug("Sending stop message to client %s" % (client.id))
                 self.server.send_to_client(Message("stop", None, client.id))
+
             self.environment.events.test_stop.fire(environment=self.environment)
 
     def quit(self):
         if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
+            logger.debug("Quitting...")
             # fire test_stop event if state isn't already stopped
             self.environment.events.test_stop.fire(environment=self.environment)
 
         for client in self.clients.all:
+            logger.debug("Sending quit message to client %s" % (client.id))
             self.server.send_to_client(Message("quit", None, client.id))
         gevent.sleep(0.5)  # wait for final stats report from all workers
         self.greenlet.kill(block=True)
@@ -607,7 +621,7 @@ class MasterRunner(DistributedRunner):
         if not self.state == STATE_INIT and all(
             map(lambda x: x.state != STATE_RUNNING and x.state != STATE_SPAWNING, self.clients.all)
         ):
-            self.state = STATE_STOPPED
+            self.update_state(STATE_STOPPED)
 
     def heartbeat_worker(self):
         while True:
