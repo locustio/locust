@@ -55,9 +55,9 @@ def task(weight=1):
 
 def tag(*tags):
     """
-    Decorator for tagging tasks and TaskSets with the given tag name. You can then limit the test
-    to only execute tasks that are tagged with any of the tags provided by the --tags command-line
-    argument. Example::
+    Decorator for tagging tasks and TaskSets with the given tag name. You can
+    then limit the test to only execute tasks that are tagged with any of the
+    tags provided by the :code:`--tags` command-line argument. Example::
 
         class ForumPage(TaskSet):
             @tag('thread')
