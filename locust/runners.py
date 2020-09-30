@@ -119,7 +119,7 @@ class Runner(object):
         """
         Updates the current state
         """
-        logger.debug("Updating state to %s, old state was %s" % (new_state, self.state))
+        logger.debug("Updating state to '%s', old state was '%s'" % (new_state, self.state))
         self.state = new_state
 
     def cpu_log_warning(self):
@@ -618,8 +618,10 @@ class MasterRunner(DistributedRunner):
         self.greenlet.kill(block=True)
 
     def check_stopped(self):
-        if not self.state == STATE_INIT and all(
-            map(lambda x: x.state != STATE_RUNNING and x.state != STATE_SPAWNING, self.clients.all)
+        if (
+            not self.state == STATE_INIT
+            and not self.state == STATE_STOPPED
+            and all(map(lambda x: x.state != STATE_RUNNING and x.state != STATE_SPAWNING, self.clients.all))
         ):
             self.update_state(STATE_STOPPED)
 
