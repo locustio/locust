@@ -110,14 +110,14 @@ def get_tasks_from_base_classes(bases, class_dict):
         for task in tasks:
             if isinstance(task, tuple):
                 task, count = task
-                for i in range(count):
+                for _ in range(count):
                     new_tasks.append(task)
             else:
                 new_tasks.append(task)
 
     for item in class_dict.values():
         if "locust_task_weight" in dir(item):
-            for i in range(0, item.locust_task_weight):
+            for i in range(item.locust_task_weight):
                 new_tasks.append(item)
 
     return new_tasks

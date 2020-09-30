@@ -388,39 +388,32 @@ within a nested TaskSet, locust will execute that task even if the TaskSet isn't
 SequentialTaskSet class
 =======================
 
-:py:class:`SequentialTaskSet <locust.SequentialTaskSet>` is a TaskSet but its 
-tasks will be executed in the order that they are declared. Weights are ignored for tasks on a 
-SequentialTaskSet class. It is possible to nest SequentialTaskSets within a TaskSet and vice versa.
+:py:class:`SequentialTaskSet <locust.SequentialTaskSet>` is a TaskSet whose tasks will be executed 
+in the order that they are declared. It is possible to nest SequentialTaskSets 
+within a TaskSet and vice versa.
+
+For example, the following code will request URLs /1-/4 in order, and then repeat.
 
 .. code-block:: python
     
     def function_task(taskset):
-        pass
+        taskset.client.get("/3")
     
     class SequenceOfTasks(SequentialTaskSet):
         @task
         def first_task(self):
-            pass
+            self.client.get("/1")
+            self.client.get("/2")
         
+        # you can still use the tasks property to specify a list of tasks
         tasks = [function_task]
         
         @task
-        def second_task(self):
-            pass
+        def last_task(self):
+            self.client.get("/4")
 
-        @task
-        def third_task(self):
-            pass
-
-In the above example, the tasks are executed in the order of declaration: 
-
-1. ``first_task``
-2. ``function_task``
-3. ``second_task``
-4. ``third_task``
-
-and then it will start over at ``first_task`` again.
-
+Note that you dont need SequentialTaskSets to just do some requests in order. It is often easier to 
+just do a whole user flow in a single task.
 
 .. _on-start-on-stop:
 
