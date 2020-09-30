@@ -12,16 +12,6 @@ from .task import (
 )
 
 
-class NoClientWarningRaiser(object):
-    """
-    The purpose of this class is to emit a sensible error message for old test scripts that
-    inherit from User, and expects there to be an HTTP client under the client attribute.
-    """
-
-    def __getattr__(self, _):
-        raise LocustError("No client instantiated. Did you intend to inherit from HttpUser?")
-
-
 class UserMeta(type):
     """
     Meta class for the main User class. It's used to allow User classes to specify task execution
@@ -109,7 +99,7 @@ class User(object, metaclass=UserMeta):
     environment = None
     """A reference to the :py:attr:`environment <locust.Environment>` in which this locust is running"""
 
-    client = NoClientWarningRaiser()
+    client: Any = None
     _state = None
     _greenlet: greenlet.Greenlet = None
     _group: Group

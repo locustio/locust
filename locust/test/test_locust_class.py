@@ -698,22 +698,6 @@ class TestWebLocustClass(WebserverTestCase):
         self.assertEqual(1, self.runner.stats.get("new name!", "GET").num_requests)
         self.assertEqual(0, self.runner.stats.get("/ultra_fast", "GET").num_requests)
 
-    def test_locust_client_error(self):
-        class MyTaskSet(TaskSet):
-            @task
-            def t1(self):
-                self.client.get("/")
-                self.interrupt()
-
-        class MyUser(User):
-            host = "http://127.0.0.1:%i" % self.port
-            tasks = [MyTaskSet]
-
-        my_locust = MyUser(self.environment)
-        self.assertRaises(LocustError, lambda: my_locust.client.get("/"))
-        my_taskset = MyTaskSet(my_locust)
-        self.assertRaises(LocustError, lambda: my_taskset.client.get("/"))
-
     def test_redirect_url_original_path_as_name(self):
         class MyUser(HttpUser):
             host = "http://127.0.0.1:%i" % self.port
