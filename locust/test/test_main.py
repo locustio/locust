@@ -52,7 +52,9 @@ class TestLoadLocustfile(LocustTestCase):
 
     def test_load_locust_file_from_relative_path(self):
         with mock_locustfile() as mocked:
-            docstring, user_classes, shape_class = main.load_locustfile(os.path.join("./locust/test/", mocked.filename))
+            docstring, user_classes, shape_class = main.load_locustfile(
+                os.path.join(os.path.relpath(mocked.directory, os.getcwd()), mocked.filename)
+            )
 
     def test_load_locust_file_with_a_dot_in_filename(self):
         with mock_locustfile(filename_prefix="mocked.locust.file") as mocked:
