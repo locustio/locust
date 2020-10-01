@@ -22,7 +22,7 @@ class LoadTestShape(object):
         """
         return time.monotonic() - self.start_time
 
-    def tick(self) -> Optional[Tuple(int, float)]:
+    def tick(self) -> Optional[Tuple[int, float]]:
         """
         Returns a tuple with 2 elements to control the running load test:
 
