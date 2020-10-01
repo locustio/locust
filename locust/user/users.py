@@ -1,25 +1,17 @@
+from typing import Any, Callable, List, TypeVar, Union
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
 from locust.clients import HttpSession
 from locust.exception import LocustError, StopUser
 from locust.util import deprecation
 from .task import (
+    TaskSet,
     DefaultTaskSet,
     get_tasks_from_base_classes,
     LOCUST_STATE_RUNNING,
     LOCUST_STATE_WAITING,
     LOCUST_STATE_STOPPING,
 )
-
-
-class NoClientWarningRaiser(object):
-    """
-    The purpose of this class is to emit a sensible error message for old test scripts that
-    inherit from User, and expects there to be an HTTP client under the client attribute.
-    """
-
-    def __getattr__(self, _):
-        raise LocustError("No client instantiated. Did you intend to inherit from HttpUser?")
 
 
 class UserMeta(type):
@@ -55,7 +47,7 @@ class User(object, metaclass=UserMeta):
     :py:class:`HttpUser <locust.HttpUser>` class.
     """
 
-    host = None
+    host: str = None
     """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
 
     min_wait = None
@@ -85,7 +77,7 @@ class User(object, metaclass=UserMeta):
     Method that returns the time between the execution of locust tasks in milliseconds
     """
 
-    tasks = []
+    tasks: List[Union[TaskSet, Callable]] = []
     """
     Collection of python callables and/or TaskSet classes that the Locust user(s) will run.
 
@@ -109,7 +101,7 @@ class User(object, metaclass=UserMeta):
     environment = None
     """A reference to the :py:attr:`environment <locust.Environment>` in which this locust is running"""
 
-    client = NoClientWarningRaiser()
+    client = None
     _state = None
     _greenlet: greenlet.Greenlet = None
     _group: Group
@@ -208,7 +200,7 @@ class HttpUser(User):
     abstract = True
     """If abstract is True, the class is meant to be subclassed, and users will not choose this locust during a test"""
 
-    client = None
+    client: HttpSession = None
     """
     Instance of HttpSession that is created upon instantiation of Locust.
     The client supports cookies, and therefore keeps the session between HTTP requests.
