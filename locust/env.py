@@ -1,7 +1,7 @@
 from .event import Events
 from .exception import RunnerAlreadyExistsError
 from .stats import RequestStats
-from .runners import LocalRunner, MasterRunner, WorkerRunner
+from .runners import LocalRunner, MasterRunner, Runner, WorkerRunner
 from .web import WebUI
 from .user.task import filter_tasks_by_tags
 from .shape import LoadTestShape
@@ -29,7 +29,7 @@ class Environment:
     stats = None
     """Reference to RequestStats instance"""
 
-    runner = None
+    runner: Runner = None
     """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
 
     web_ui = None
