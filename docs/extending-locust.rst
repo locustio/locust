@@ -47,6 +47,24 @@ to the Flask app instance and use that to set up a new route::
 
 You should now be able to start locust and browse to http://127.0.0.1:8089/added_page
 
+
+
+Extending Web UI
+================
+
+As an alternative to adding simple web routes, you can use `Flask Blueprints 
+<https://flask.palletsprojects.com/en/1.1.x/blueprints/>`_ and `templates 
+<https://flask.palletsprojects.com/en/1.1.x/tutorial/templates/>`_ to not only add routes but also extend 
+the web UI to allow you to show custom data along side the built-in Locust stats. This is more advanced 
+as it involves also writing and including HTML and Javascript files to be served by routes but can 
+greatly enhance the utility and customizability of the web UI.
+
+A working example of extending the web UI, complete with HTML and Javascript example files, can be found 
+in the `examples directory <https://github.com/locustio/locust/tree/master/examples>`_ of the Locust 
+source code.
+
+
+
 Run a background greenlet
 =========================
 

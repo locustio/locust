@@ -34,7 +34,7 @@
                 tooltip: {
                     trigger: 'axis',
                     formatter: function (params) {
-                        if (!!params && params.length > 0 && !!params[0].value) {
+                        if (!!params && params.length > 0 && params.some(param => !!param.value)) {
                             var str = params[0].name;
                             for (var i=0; i<params.length; i++) {
                                 var param = params[i];

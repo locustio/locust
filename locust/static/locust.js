@@ -40,14 +40,18 @@ $(".close_link").click(function(event) {
     $(this).parent().parent().hide();
 });
 
-$("ul.tabs").tabs("div.panes > div").on("onClick", function(event) {
-    if (event.target == $(".chart-tab-link")[0]) {
-        // trigger resizing of charts
-        rpsChart.resize();
-        responseTimeChart.resize();
-        usersChart.resize();
-    }
+$("ul.tabs").tabs("div.panes > div").on("onClick", function (event) {
+    // trigger resizing of charts
+    resizeCharts();
 });
+
+var charts = []
+function resizeCharts() {
+    for (let index = 0; index < charts.length; index++) {
+        const chart = charts[index];
+        chart.resize();
+    }
+}
 
 var stats_tpl = $('#stats-template');
 var errors_tpl = $('#errors-template');
@@ -162,6 +166,7 @@ $("#workers .stats_label").click(function(event) {
 var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS", "Failures/s"], "reqs/s", ['#00ca5a', '#ff6d6d']);
 var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times (ms)", ["Median Response Time", "95% percentile"], "ms");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
+charts.push(rpsChart, responseTimeChart, usersChart)
 
 function updateStats() {
     $.get('./stats/requests', function (report) {

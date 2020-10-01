@@ -135,6 +135,8 @@
                     {% if is_distributed %}
                     <li><a href="#">Workers</a></li>
                     {% endif %}
+                    {% block extended_tabs %}
+                    {% endblock extended_tabs %}
                 </ul>
             </nav>
             <div class="panes container">
@@ -197,6 +199,7 @@
                         <a href="./stats/report" target="_blank">Download Report</a><br>
                     </div>
                 </div>
+                {% if is_distributed %}
                 <div style="display:none;">
                     <table id="workers">
                         <thead>
@@ -211,6 +214,9 @@
                         </tbody>
                     </table>
                 </div>
+                {% endif %}
+                {% block extended_panes %}
+                {% endblock extended_panes %}
             </div>
         </div>
 
@@ -314,5 +320,7 @@
     </script>
     <script type="text/javascript" src="./static/chart.js?v={{ version }}"></script>
     <script type="text/javascript" src="./static/locust.js?v={{ version }}"></script>
+    {% block extended_script %}
+    {% endblock extended_script %}
 </body>
 </html>

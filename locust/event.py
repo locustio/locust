@@ -165,6 +165,11 @@ class Events:
     is only fired on the master node and not on each worker node.
     """
 
+    reset_stats = EventHook
+    """
+    Fired when the Reset Stats button is clicked in the web UI.
+    """
+
     def __init__(self):
         for name, value in vars(type(self)).items():
             if value == EventHook:

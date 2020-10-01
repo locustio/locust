@@ -62,6 +62,10 @@ class WebUI:
     server = None
     """Reference to the :class:`pyqsgi.WSGIServer` instance"""
 
+    template_args: dict = None
+    """Arguments used to render index.html for the web UI. Must be used with custom templates
+    extending index.html."""
+
     def __init__(
         self, environment, host, port, auth_credentials=None, tls_cert=None, tls_key=None, stats_csv_writer=None
     ):
@@ -104,52 +108,16 @@ class WebUI:
                 raise AuthCredentialsError(
                     "Invalid auth_credentials. It should be a string in the following format: 'user.pass'"
                 )
+        if environment.runner:
+            self.update_template_args()
 
         @app.route("/")
         @self.auth_required_if_enabled
         def index():
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
-
-            is_distributed = isinstance(environment.runner, MasterRunner)
-            if is_distributed:
-                worker_count = environment.runner.worker_count
-            else:
-                worker_count = 0
-
-            override_host_warning = False
-            if environment.host:
-                host = environment.host
-            elif environment.runner.user_classes:
-                all_hosts = set([l.host for l in environment.runner.user_classes])
-                if len(all_hosts) == 1:
-                    host = list(all_hosts)[0]
-                else:
-                    # since we have multiple User classes with different host attributes, we'll
-                    # inform that specifying host will override the host for all User classes
-                    override_host_warning = True
-                    host = None
-            else:
-                host = None
-
-            options = environment.parsed_options
-            return render_template(
-                "index.html",
-                state=environment.runner.state,
-                is_distributed=is_distributed,
-                user_count=environment.runner.user_count,
-                version=version,
-                host=host,
-                override_host_warning=override_host_warning,
-                num_users=options and options.num_users,
-                spawn_rate=options and options.spawn_rate,
-                step_users=options and options.step_users,
-                step_time=options and options.step_time,
-                worker_count=worker_count,
-                is_step_load=environment.step_load,
-                is_shape=environment.shape_class,
-                stats_history_enabled=options and options.stats_history_enabled,
-            )
+            self.update_template_args()
+            return render_template("index.html", **self.template_args)
 
         @app.route("/swarm", methods=["POST"])
         @self.auth_required_if_enabled
@@ -186,6 +154,7 @@ class WebUI:
         @app.route("/stats/reset")
         @self.auth_required_if_enabled
         def reset_stats():
+            environment.events.reset_stats.fire()
             environment.runner.stats.reset_all()
             environment.runner.exceptions = {}
             return "ok"
@@ -403,7 +372,6 @@ class WebUI:
 
             return _download_csv_response(data.getvalue(), "exceptions")
 
-        # start the web server
         self.greenlet = gevent.spawn(self.start)
         self.greenlet.link_exception(greenlet_exception_handler)
 
@@ -444,3 +412,44 @@ class WebUI:
                 return view_func(*args, **kwargs)
 
         return wrapper
+
+    def update_template_args(self):
+        override_host_warning = False
+        if self.environment.host:
+            host = self.environment.host
+        elif self.environment.runner.user_classes:
+            all_hosts = set([l.host for l in self.environment.runner.user_classes])
+            if len(all_hosts) == 1:
+                host = list(all_hosts)[0]
+            else:
+                # since we have multiple User classes with different host attributes, we'll
+                # inform that specifying host will override the host for all User classes
+                override_host_warning = True
+                host = None
+        else:
+            host = None
+
+        options = self.environment.parsed_options
+
+        is_distributed = isinstance(self.environment.runner, MasterRunner)
+        if is_distributed:
+            worker_count = self.environment.runner.worker_count
+        else:
+            worker_count = 0
+
+        self.template_args = {
+            "state": self.environment.runner.state,
+            "is_distributed": is_distributed,
+            "user_count": self.environment.runner.user_count,
+            "version": version,
+            "host": host,
+            "override_host_warning": override_host_warning,
+            "num_users": options and options.num_users,
+            "spawn_rate": options and options.spawn_rate,
+            "step_users": options and options.step_users,
+            "step_time": options and options.step_time,
+            "worker_count": worker_count,
+            "is_step_load": self.environment.step_load,
+            "is_shape": self.environment.shape_class,
+            "stats_history_enabled": options and options.stats_history_enabled,
+        }

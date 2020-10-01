@@ -270,6 +270,7 @@ a:hover {
     border-radius: 3px;
     border: 2px solid #11251c;
     border-spacing: 0;
+    margin-bottom: 30px;
 }
 .status thead {
     background: #11251c;
@@ -357,14 +358,14 @@ a:hover {
 #charts {
     width: 100%;
 }
-#charts .chart {
+.chart {
     height: 350px;
     margin-bottom: 30px;
     box-sizing: border-box;
     border: 1px solid #11271e;
     border-radius: 3px;
 }
-#charts .note {
+.note {
     color: #b3c3bc;
     margin-bottom: 30px;
     border-radius: 3px;
