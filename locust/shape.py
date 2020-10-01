@@ -8,7 +8,8 @@ class LoadTestShape(object):
     during a load test.
     """
 
-    start_time = time.monotonic()
+    def __init__(self):
+        self.start_time = time.monotonic()
 
     def reset_time(self):
         """
