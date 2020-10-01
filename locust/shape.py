@@ -1,4 +1,5 @@
 import time
+from typing import Optional, Tuple
 
 
 class LoadTestShape(object):
@@ -21,7 +22,7 @@ class LoadTestShape(object):
         """
         return time.monotonic() - self.start_time
 
-    def tick(self):
+    def tick(self) -> Optional[Tuple(int, float)]:
         """
         Returns a tuple with 2 elements to control the running load test:
 

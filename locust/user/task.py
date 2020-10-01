@@ -3,6 +3,7 @@ import random
 import sys
 import traceback
 from time import time
+from typing import Any, Callable, List, Union
 
 import gevent
 from gevent import GreenletExit
@@ -185,7 +186,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
     will then continue in the first TaskSet).
     """
 
-    tasks = []
+    tasks: List[Union["TaskSet", Callable]] = []
     """
     Collection of python callables and/or TaskSet classes that the User(s) will run.
 

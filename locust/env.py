@@ -1,23 +1,25 @@
 from .event import Events
 from .exception import RunnerAlreadyExistsError
 from .stats import RequestStats
-from .runners import LocalRunner, MasterRunner, WorkerRunner
+from .runners import Runner, LocalRunner, MasterRunner, WorkerRunner
 from .web import WebUI
+from .user import User
 from .user.task import filter_tasks_by_tags
 from .shape import LoadTestShape
+from typing import List
 
 
 class Environment:
-    events = None
+    events: Events = None
     """
     Event hooks used by Locust internally, as well as to extend Locust's functionality
     See :ref:`events` for available events.
     """
 
-    user_classes = []
+    user_classes: List[User] = []
     """User classes that the runner will run"""
 
-    shape_class = None
+    shape_class: LoadTestShape = None
     """A shape class to control the shape of the load test"""
 
     tags = None
@@ -26,16 +28,16 @@ class Environment:
     exclude_tags = None
     """If set, only tasks that aren't tagged by tags in this list will be executed"""
 
-    stats = None
+    stats: RequestStats = None
     """Reference to RequestStats instance"""
 
-    runner = None
+    runner: Runner = None
     """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
 
-    web_ui = None
+    web_ui: WebUI = None
     """Reference to the WebUI instance"""
 
-    host = None
+    host: str = None
     """Base URL of the target system"""
 
     reset_stats = False
