@@ -54,66 +54,6 @@ def _construct_basic_auth_str(username, password):
     return "Basic " + b64encode(b":".join((username, password))).strip().decode("ascii")
 
 
-class FastHttpUser(User):
-    """
-    FastHttpUser uses a different HTTP client (geventhttpclient) compared to HttpUser (python-requests).
-    It's significantly faster, but not as capable.
-
-    The behaviour of this user is defined by it's tasks. Tasks can be declared either directly on the
-    class by using the :py:func:`@task decorator <locust.task>` on the methods, or by setting
-    the :py:attr:`tasks attribute <locust.User.tasks>`.
-
-    This class creates a *client* attribute on instantiation which is an HTTP client with support
-    for keeping a user session between requests.
-    """
-
-    client = None
-    """
-    Instance of HttpSession that is created upon instantiation of User.
-    The client support cookies, and therefore keeps the session between HTTP requests.
-    """
-
-    # Below are various UserAgent settings. Change these in your subclass to alter FastHttpUser's behaviour.
-    # It needs to be done before FastHttpUser is instantiated, changing them later will have no effect
-
-    network_timeout: float = 60.0
-    """Parameter passed to FastHttpSession"""
-
-    connection_timeout: float = 60.0
-    """Parameter passed to FastHttpSession"""
-
-    max_redirects: int = 5
-    """Parameter passed to FastHttpSession. Default 5, meaning 4 redirects."""
-
-    max_retries: int = 1
-    """Parameter passed to FastHttpSession. Default 1, meaning zero retries."""
-
-    insecure: bool = True
-    """Parameter passed to FastHttpSession. Default True, meaning no SSL verification."""
-
-    abstract = True
-    """Dont register this as a User class that can be run by itself"""
-
-    def __init__(self, environment):
-        super().__init__(environment)
-        if self.host is None:
-            raise LocustError(
-                "You must specify the base host. Either in the host attribute in the User class, or on the command line using the --host option."
-            )
-        if not re.match(r"^https?://[^/]+", self.host, re.I):
-            raise LocustError("Invalid host (`%s`), must be a valid base URL. E.g. http://example.com" % self.host)
-
-        self.client = FastHttpSession(
-            self.environment,
-            base_url=self.host,
-            network_timeout=self.network_timeout,
-            connection_timeout=self.connection_timeout,
-            max_redirects=self.max_redirects,
-            max_retries=self.max_retries,
-            insecure=self.insecure,
-        )
-
-
 def insecure_ssl_context_factory():
     context = gevent.ssl.create_default_context()
     context.check_hostname = False
@@ -323,6 +263,66 @@ class FastHttpSession(object):
     def put(self, path, data=None, **kwargs):
         """Sends a PUT request"""
         return self.request("PUT", path, data=data, **kwargs)
+
+
+class FastHttpUser(User):
+    """
+    FastHttpUser uses a different HTTP client (geventhttpclient) compared to HttpUser (python-requests).
+    It's significantly faster, but not as capable.
+
+    The behaviour of this user is defined by it's tasks. Tasks can be declared either directly on the
+    class by using the :py:func:`@task decorator <locust.task>` on the methods, or by setting
+    the :py:attr:`tasks attribute <locust.User.tasks>`.
+
+    This class creates a *client* attribute on instantiation which is an HTTP client with support
+    for keeping a user session between requests.
+    """
+
+    client: FastHttpSession = None
+    """
+    Instance of HttpSession that is created upon instantiation of User.
+    The client support cookies, and therefore keeps the session between HTTP requests.
+    """
+
+    # Below are various UserAgent settings. Change these in your subclass to alter FastHttpUser's behaviour.
+    # It needs to be done before FastHttpUser is instantiated, changing them later will have no effect
+
+    network_timeout: float = 60.0
+    """Parameter passed to FastHttpSession"""
+
+    connection_timeout: float = 60.0
+    """Parameter passed to FastHttpSession"""
+
+    max_redirects: int = 5
+    """Parameter passed to FastHttpSession. Default 5, meaning 4 redirects."""
+
+    max_retries: int = 1
+    """Parameter passed to FastHttpSession. Default 1, meaning zero retries."""
+
+    insecure: bool = True
+    """Parameter passed to FastHttpSession. Default True, meaning no SSL verification."""
+
+    abstract = True
+    """Dont register this as a User class that can be run by itself"""
+
+    def __init__(self, environment):
+        super().__init__(environment)
+        if self.host is None:
+            raise LocustError(
+                "You must specify the base host. Either in the host attribute in the User class, or on the command line using the --host option."
+            )
+        if not re.match(r"^https?://[^/]+", self.host, re.I):
+            raise LocustError("Invalid host (`%s`), must be a valid base URL. E.g. http://example.com" % self.host)
+
+        self.client = FastHttpSession(
+            self.environment,
+            base_url=self.host,
+            network_timeout=self.network_timeout,
+            connection_timeout=self.connection_timeout,
+            max_redirects=self.max_redirects,
+            max_retries=self.max_retries,
+            insecure=self.insecure,
+        )
 
 
 class FastResponse(CompatResponse):
