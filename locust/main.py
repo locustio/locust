@@ -302,14 +302,16 @@ def main():
         except AuthCredentialsError:
             logger.error("Credentials supplied with --web-auth should have the format: username:password")
             sys.exit(1)
-        else:
-            main_greenlet = web_ui.greenlet
     else:
         web_ui = None
 
     # Fire locust init event which can be used by end-users' code to run setup code that
-    # need access to the Environment, Runner or WebUI.
+    # need access to the Environment, Runner or WebUI. Fire init event before starting
+    # web server to avoid race conditions with adding Flask routes.
     environment.events.init.fire(environment=environment, runner=runner, web_ui=web_ui)
+
+    if web_ui:
+        main_greenlet = web_ui.start()
 
     if options.headless:
         # headless mode

@@ -26,6 +26,7 @@ env.create_local_runner()
 
 # start a WebUI instance
 env.create_web_ui("127.0.0.1", 8089)
+env.web_ui.start()
 
 # start a greenlet that periodically outputs the current stats
 gevent.spawn(stats_printer(env.stats))

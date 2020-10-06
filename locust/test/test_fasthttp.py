@@ -539,6 +539,7 @@ class TestFastHttpSsl(LocustTestCase):
             tls_cert=self.tls_cert_file.name,
             tls_key=self.tls_key_file.name,
         )
+        self.web_ui.start()
         gevent.sleep(0.01)
         self.web_port = self.web_ui.server.server_port
 

@@ -372,10 +372,12 @@ class WebUI:
 
             return _download_csv_response(data.getvalue(), "exceptions")
 
-        self.greenlet = gevent.spawn(self.start)
-        self.greenlet.link_exception(greenlet_exception_handler)
-
     def start(self):
+        self.greenlet = gevent.spawn(self.start_server)
+        self.greenlet.link_exception(greenlet_exception_handler)
+        return self.greenlet
+
+    def start_server(self):
         if self.tls_cert and self.tls_key:
             self.server = pywsgi.WSGIServer(
                 (self.host, self.port), self.app, log=None, keyfile=self.tls_key, certfile=self.tls_cert
