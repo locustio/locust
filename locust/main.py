@@ -109,7 +109,6 @@ def create_environment(user_classes, options, events=None, shape_class=None):
         events=events,
         host=options.host,
         reset_stats=options.reset_stats,
-        step_load=options.step_load,
         stop_timeout=options.stop_timeout,
         parsed_options=options,
     )
@@ -192,9 +191,9 @@ def main():
     # create locust Environment
     environment = create_environment(user_classes, options, events=locust.events, shape_class=shape_class)
 
-    if shape_class and (options.num_users or options.spawn_rate or options.step_load):
+    if shape_class and (options.num_users or options.spawn_rate):
         logger.warning(
-            "The specified locustfile contains a shape class but a conflicting argument was specified: users, spawn-rate or step-load. Ignoring arguments"
+            "The specified locustfile contains a shape class but a conflicting argument was specified: users or spawn-rate. Ignoring arguments"
         )
 
     if options.show_task_ratio:
@@ -214,19 +213,6 @@ def main():
         }
         print(dumps(task_data))
         sys.exit(0)
-
-    if options.step_time:
-        if not options.step_load:
-            logger.error("The --step-time argument can only be used together with --step-load")
-            sys.exit(1)
-        if options.worker:
-            logger.error("--step-time should be specified on the master node, and not on worker nodes")
-            sys.exit(1)
-        try:
-            options.step_time = parse_timespan(options.step_time)
-        except ValueError:
-            logger.error("Valid --step-time formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
-            sys.exit(1)
 
     if options.master:
         runner = environment.create_master_runner(
@@ -331,12 +317,8 @@ def main():
                 options.num_users = 1
             if options.spawn_rate is None:
                 options.spawn_rate = 1
-            if options.step_users is None:
-                options.step_users = 1
 
             # start the test
-            if options.step_time:
-                runner.start_stepload(options.num_users, options.spawn_rate, options.step_users, options.step_time)
             if environment.shape_class:
                 environment.runner.start_shape()
             else:

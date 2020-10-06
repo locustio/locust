@@ -43,9 +43,6 @@ class Environment:
     reset_stats = False
     """Determines if stats should be reset once all simulated users have been spawned"""
 
-    step_load = False
-    """Determines if we're running in step load mode"""
-
     stop_timeout = None
     """
     If set, the runner will try to stop the running users gracefully and wait this many seconds
@@ -76,7 +73,6 @@ class Environment:
         events=None,
         host=None,
         reset_stats=False,
-        step_load=False,
         stop_timeout=None,
         catch_exceptions=True,
         parsed_options=None,
@@ -93,7 +89,6 @@ class Environment:
         self.stats = RequestStats()
         self.host = host
         self.reset_stats = reset_stats
-        self.step_load = step_load
         self.stop_timeout = stop_timeout
         self.catch_exceptions = catch_exceptions
         self.parsed_options = parsed_options

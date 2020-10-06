@@ -79,10 +79,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         html_to_option = {
             "user_count": ["-u", "100"],
             "spawn_rate": ["-r", "10.0"],
-            "step_user_count": ["--step-users", "20"],
-            "step_duration": ["--step-time", "15"],
         }
-        self.environment.step_load = True
         for html_name_to_test in html_to_option.keys():
             # Test that setting each spawn option individually populates the corresponding field in the html, and none of the others
             self.environment.parsed_options = parse_options(html_to_option[html_name_to_test])
@@ -299,23 +296,6 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(200, response.status_code)
         self.assertNotIn("http://example.com", response.content.decode("utf-8"))
         self.assertIn("setting this will override the host on all User classes", response.content.decode("utf-8"))
-
-    def test_swarm_in_step_load_mode(self):
-        class MyUser(User):
-            wait_time = constant(1)
-
-            @task(1)
-            def my_task(self):
-                pass
-
-        self.environment.user_classes = [MyUser]
-        self.environment.step_load = True
-        response = requests.post(
-            "http://127.0.0.1:%i/swarm" % self.web_port,
-            data={"user_count": 5, "spawn_rate": 2, "step_user_count": 2, "step_duration": "2m"},
-        )
-        self.assertEqual(200, response.status_code)
-        self.assertIn("Step Load Mode", response.text)
 
     def test_report_page(self):
         self.stats.log_request("GET", "/test", 120, 5612)

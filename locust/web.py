@@ -137,16 +137,9 @@ class WebUI:
             assert request.method == "POST"
             user_count = int(request.form["user_count"])
             spawn_rate = float(request.form["spawn_rate"])
+
             if request.form.get("host"):
                 environment.host = str(request.form["host"])
-
-            if environment.step_load:
-                step_user_count = int(request.form["step_user_count"])
-                step_duration = parse_timespan(str(request.form["step_duration"]))
-                environment.runner.start_stepload(user_count, spawn_rate, step_user_count, step_duration)
-                return jsonify(
-                    {"success": True, "message": "Swarming started in Step Load Mode", "host": environment.host}
-                )
 
             if environment.shape_class:
                 environment.runner.start_shape()
@@ -459,10 +452,7 @@ class WebUI:
             "override_host_warning": override_host_warning,
             "num_users": options and options.num_users,
             "spawn_rate": options and options.spawn_rate,
-            "step_users": options and options.step_users,
-            "step_time": options and options.step_time,
             "worker_count": worker_count,
-            "is_step_load": self.environment.step_load,
             "is_shape": self.environment.shape_class,
             "stats_history_enabled": options and options.stats_history_enabled,
         }

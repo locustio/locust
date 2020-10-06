@@ -61,7 +61,6 @@ class Runner(object):
         self.greenlet = Group()
         self.state = STATE_INIT
         self.spawning_greenlet = None
-        self.stepload_greenlet = None
         self.shape_greenlet = None
         self.shape_last_state = None
         self.current_cpu_usage = 0
@@ -311,37 +310,6 @@ class Runner(object):
         else:
             self.spawn_rate = spawn_rate
             self.spawn_users(user_count, spawn_rate=spawn_rate, wait=wait)
-
-    def start_stepload(self, user_count, spawn_rate, step_user_count, step_duration):
-        if user_count < step_user_count:
-            logger.error(
-                "Invalid parameters: total user count of %d is smaller than step user count of %d"
-                % (user_count, step_user_count)
-            )
-            return
-        self.total_users = user_count
-
-        if self.stepload_greenlet:
-            logger.info("There is an ongoing swarming in Step Load mode, will stop it now.")
-            self.stepload_greenlet.kill()
-        logger.info(
-            "Start a new swarming in Step Load mode: total user count of %d, spawn rate of %d, step user count of %d, step duration of %d "
-            % (user_count, spawn_rate, step_user_count, step_duration)
-        )
-        self.update_state(STATE_INIT)
-        self.stepload_greenlet = self.greenlet.spawn(self.stepload_worker, spawn_rate, step_user_count, step_duration)
-        self.stepload_greenlet.link_exception(greenlet_exception_handler)
-
-    def stepload_worker(self, spawn_rate, step_users_growth, step_duration):
-        current_num_users = 0
-        while self.state == STATE_INIT or self.state == STATE_SPAWNING or self.state == STATE_RUNNING:
-            current_num_users += step_users_growth
-            if current_num_users > int(self.total_users):
-                logger.info("Step Load is finished")
-                break
-            self.start(current_num_users, spawn_rate)
-            logger.info("Step loading: start spawn job of %d user" % (current_num_users))
-            gevent.sleep(step_duration)
 
     def start_shape(self):
         if self.shape_greenlet:
