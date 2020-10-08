@@ -143,7 +143,14 @@ class Environment:
         )
 
     def create_web_ui(
-        self, host="", port=8089, auth_credentials=None, tls_cert=None, tls_key=None, stats_csv_writer=None
+        self,
+        host="",
+        port=8089,
+        auth_credentials=None,
+        tls_cert=None,
+        tls_key=None,
+        stats_csv_writer=None,
+        delayed_start=False,
     ):
         """
         Creates a :class:`WebUI <locust.web.WebUI>` instance for this Environment and start running the web server
@@ -157,6 +164,8 @@ class Environment:
         :param tls_key: An optional path (str) to a TLS private key. If this is provided the web UI will be
                         served over HTTPS
         :param stats_csv_writer: `StatsCSV <stats_csv.StatsCSV>` instance.
+        :param delayed_start: Whether or not to delay starting web UI until after init event. Delaying web UI start
+                              allows for adding Flask routes or Blueprints before accepting requests, avoiding errors.
         """
         self.web_ui = WebUI(
             self,
@@ -166,6 +175,7 @@ class Environment:
             tls_cert=tls_cert,
             tls_key=tls_key,
             stats_csv_writer=stats_csv_writer,
+            delayed_start=delayed_start,
         )
         return self.web_ui
 

@@ -49,7 +49,6 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.stats = self.environment.stats
 
         self.web_ui = self.environment.create_web_ui("127.0.0.1", 0)
-        self.web_ui.start()
         self.web_ui.app.view_functions["request_stats"].clear_cache()
         gevent.sleep(0.01)
         self.web_port = self.web_ui.server.server_port
@@ -65,7 +64,6 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
     def test_web_ui_no_runner(self):
         env = Environment()
         web_ui = WebUI(env, "127.0.0.1", 0)
-        web_ui.start()
         gevent.sleep(0.01)
         try:
             response = requests.get("http://127.0.0.1:%i/" % web_ui.server.server_port)
@@ -376,7 +374,6 @@ class TestWebUIAuth(LocustTestCase):
         self.runner = Runner(self.environment)
         self.stats = self.runner.stats
         self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, auth_credentials=options.web_auth)
-        self.web_ui.start()
         self.web_ui.app.view_functions["request_stats"].clear_cache()
         gevent.sleep(0.01)
         self.web_port = self.web_ui.server.server_port
@@ -423,7 +420,6 @@ class TestWebUIWithTLS(LocustTestCase):
         self.runner = Runner(self.environment)
         self.stats = self.runner.stats
         self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, tls_cert=options.tls_cert, tls_key=options.tls_key)
-        self.web_ui.start()
         gevent.sleep(0.01)
         self.web_port = self.web_ui.server.server_port
 
@@ -462,7 +458,6 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
             self.environment, stats.PERCENTILES_TO_REPORT, self.STATS_BASE_NAME, full_history=True
         )
         self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, stats_csv_writer=self.stats_csv_writer)
-        self.web_ui.start()
         self.web_ui.app.view_functions["request_stats"].clear_cache()
         gevent.sleep(0.01)
         self.web_port = self.web_ui.server.server_port

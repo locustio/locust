@@ -34,7 +34,6 @@ to view the stats, and to control the runner (e.g. start and stop load tests):
 
     env.create_local_runner()
     env.create_web_ui()
-    env.web_ui.start()
     env.web_ui.greenlet.join()
 
 
