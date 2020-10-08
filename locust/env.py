@@ -164,7 +164,7 @@ class Environment:
         :param tls_key: An optional path (str) to a TLS private key. If this is provided the web UI will be
                         served over HTTPS
         :param stats_csv_writer: `StatsCSV <stats_csv.StatsCSV>` instance.
-        :param delayed_start: Whether or not to delay starting web UI until after init event. Delaying web UI start
+        :param delayed_start: Whether or not to delay starting web UI until `start()` is called. Delaying web UI start
                               allows for adding Flask routes or Blueprints before accepting requests, avoiding errors.
         """
         self.web_ui = WebUI(

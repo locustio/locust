@@ -311,6 +311,7 @@ def main():
     environment.events.init.fire(environment=environment, runner=runner, web_ui=web_ui)
 
     if web_ui:
+        web_ui.start()
         main_greenlet = web_ui.greenlet
 
     if options.headless:

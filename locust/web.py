@@ -25,7 +25,6 @@ from .stats import StatsCSV
 from .util.cache import memoize
 from .util.rounding import proper_round
 from .util.timespan import parse_timespan
-from . import events
 
 
 logger = logging.getLogger(__name__)
@@ -89,7 +88,7 @@ class WebUI:
                            Should be supplied in the format: "user:pass".
         tls_cert: A path to a TLS certificate
         tls_key: A path to a TLS private key
-        delayed_start: Whether or not to delay starting web UI until after init event. Delaying web UI start
+        delayed_start: Whether or not to delay starting web UI until `start()` is called. Delaying web UI start
                        allows for adding Flask routes or Blueprints before accepting requests, avoiding errors.
         """
         environment.web_ui = self
@@ -121,9 +120,7 @@ class WebUI:
                 )
         if environment.runner:
             self.update_template_args()
-        if delayed_start:
-            events.init.add_listener(self.start)
-        else:
+        if not delayed_start:
             self.start()
 
         @app.route("/")
