@@ -390,7 +390,6 @@ class WebUI:
     def start(self, **kwargs):
         self.greenlet = gevent.spawn(self.start_server)
         self.greenlet.link_exception(greenlet_exception_handler)
-        # return self.greenlet
 
     def start_server(self):
         if self.tls_cert and self.tls_key:
