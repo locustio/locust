@@ -384,7 +384,7 @@ class WebUI:
 
             return _download_csv_response(data.getvalue(), "exceptions")
 
-    def start(self, **kwargs):
+    def start(self):
         self.greenlet = gevent.spawn(self.start_server)
         self.greenlet.link_exception(greenlet_exception_handler)
 
