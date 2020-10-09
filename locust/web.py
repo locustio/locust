@@ -67,7 +67,15 @@ class WebUI:
     extending index.html."""
 
     def __init__(
-        self, environment, host, port, auth_credentials=None, tls_cert=None, tls_key=None, stats_csv_writer=None
+        self,
+        environment,
+        host,
+        port,
+        auth_credentials=None,
+        tls_cert=None,
+        tls_key=None,
+        stats_csv_writer=None,
+        delayed_start=False,
     ):
         """
         Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
@@ -80,6 +88,8 @@ class WebUI:
                            Should be supplied in the format: "user:pass".
         tls_cert: A path to a TLS certificate
         tls_key: A path to a TLS private key
+        delayed_start: Whether or not to delay starting web UI until `start()` is called. Delaying web UI start
+                       allows for adding Flask routes or Blueprints before accepting requests, avoiding errors.
         """
         environment.web_ui = self
         self.stats_csv_writer = stats_csv_writer or StatsCSV(environment, stats_module.PERCENTILES_TO_REPORT)
@@ -110,6 +120,8 @@ class WebUI:
                 )
         if environment.runner:
             self.update_template_args()
+        if not delayed_start:
+            self.start()
 
         @app.route("/")
         @self.auth_required_if_enabled
@@ -372,10 +384,11 @@ class WebUI:
 
             return _download_csv_response(data.getvalue(), "exceptions")
 
-        self.greenlet = gevent.spawn(self.start)
+    def start(self):
+        self.greenlet = gevent.spawn(self.start_server)
         self.greenlet.link_exception(greenlet_exception_handler)
 
-    def start(self):
+    def start_server(self):
         if self.tls_cert and self.tls_key:
             self.server = pywsgi.WSGIServer(
                 (self.host, self.port), self.app, log=None, keyfile=self.tls_key, certfile=self.tls_cert
