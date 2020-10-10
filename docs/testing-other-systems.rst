@@ -11,7 +11,9 @@ any request/response based system, by writing a custom client that triggers
 
 .. note::
 
-    Any protocol libraries that you use must be gevent-friendly, or they will block the whole python process in which Locust. Some C libraries cannot be monkey patched by gevent, but allow for other workarounds. For example, if you want to use psycopg2 to performance test a Postgres database, you'll need `psycogreen <https://github.com/psycopg/psycogreen/>`_. 
+    Any protocol libraries that you use must be gevent-friendly (use the Python ``socket`` module or some other standard library function like ``subprocess``), or your calls will block the whole Locust process.
+    
+    Some C libraries cannot be monkey patched by gevent, but allow for other workarounds. For example, if you want to use psycopg2 to performance test PostgreSQL, you'll need `psycogreen <https://github.com/psycopg/psycogreen/>`_. 
 
 Sample XML-RPC User client
 ============================
