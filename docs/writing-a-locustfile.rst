@@ -255,11 +255,17 @@ be executed.
 TaskSet class
 =============
 
-Since real websites are usually built up in an hierarchical way, with multiple sub-sections, 
-locust has the TaskSet class. A locust task can not only be a Python callable, but also a 
-TaskSet class. A TaskSet is a collection of locust tasks that will be executed much like the 
-tasks declared directly on a User class, with the user sleeping in between task executions.
-Here's a short example of a locustfile that has a TaskSet:
+If you are performance testing a website that is structured in a hierarchical way, with 
+sections and sub-sections, it may be useful to structure your load test the same way. 
+For this purpose, Locust provides the TaskSet class. A TaskSet is a collection of tasks that will 
+be executed much like the ones declared directly on a User class, with the user sleeping in between 
+task executions.
+
+.. note::
+
+    TaskSets are an advanced feature and only rarely useful. A lot of the time, you're better off
+    using regular Python loops and control statements to achieve the same thing. There are a few 
+    gotchas as well, the most frequent one being forgetting to call self.interrupt()
 
 .. code-block:: python
 
@@ -270,11 +276,11 @@ Here's a short example of a locustfile that has a TaskSet:
         def view_thread(self):
             pass
         
-        @task(1)
+        @task
         def create_thread(self):
             pass
         
-        @task(1)
+        @task
         def stop(self):
             self.interrupt()
     
@@ -291,7 +297,7 @@ A TaskSet can also be inlined directly under a User/TaskSet class using the @tas
 .. code-block:: python
 
     class MyUser(User):
-        @task(1)
+        @task
         class MyTaskSet(TaskSet):
             ...
 
