@@ -129,6 +129,10 @@ def main():
         sys.stderr.write("The --slave/--expect-slaves parameters have been renamed --worker/--expect-workers\n")
         sys.exit(1)
 
+    if options.step_time or options.step_load or options.step_users or options.step_clients:
+        sys.stderr.write("The step load feature has been deprecated in favour of using a LoadTestShape class. See https://docs.locust.io/en/stable/generating-custom-load-shape.html\n")
+        sys.exit(1)
+
     if options.hatch_rate:
         sys.stderr.write("[DEPRECATED] The --hatch-rate parameter has been renamed --spawn-rate\n")
         options.spawn_rate = options.hatch_rate

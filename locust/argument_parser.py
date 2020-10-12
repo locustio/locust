@@ -366,6 +366,12 @@ def setup_parser_arguments(parser):
         env_var="LOCUST_LOGFILE",
     )
 
+    step_load_group = parser.add_argument_group("Step load options")
+    step_load_group.add_argument("--step-load", action="store_true", help=configargparse.SUPPRESS)
+    step_load_group.add_argument("--step-users", type=int, help=configargparse.SUPPRESS)
+    step_load_group.add_argument("--step-clients", action="store_true", help=configargparse.SUPPRESS)
+    step_load_group.add_argument("--step-time", help=configargparse.SUPPRESS)
+
     other_group = parser.add_argument_group("Other options")
     other_group.add_argument(
         "--show-task-ratio", action="store_true", help="Print table of the User classes' task execution ratio"
