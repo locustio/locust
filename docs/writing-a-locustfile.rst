@@ -248,9 +248,9 @@ be executed.
 on_start and on_stop methods
 ============================
 
-Users (and :ref:`TaskSet <tasksets>`) can declare an :py:meth:`on_start <locust.User.on_start>` method and/or
-:py:meth:`on_stop <locust.User.on_stop>` method. A User will call it's
-:py:meth:`on_start <locust.User.on_start>` method when it starts running, and it's
+Users (and :ref:`TaskSets <tasksets>`) can declare an :py:meth:`on_start <locust.User.on_start>` method and/or
+:py:meth:`on_stop <locust.User.on_stop>` method. A User will call its
+:py:meth:`on_start <locust.User.on_start>` method when it starts running, and its
 :py:meth:`on_stop <locust.User.on_stop>` method when it stops running. For a TaskSet, the
 :py:meth:`on_start <locust.TaskSet.on_start>` method is called when a simulated user starts executing 
 that TaskSet, and :py:meth:`on_stop <locust.TaskSet.on_stop>` is called when the simulated user stops 

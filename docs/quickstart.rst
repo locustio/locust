@@ -57,7 +57,7 @@ is executed. For more info see :ref:`wait-time`.
     def index_page(self):
         ...
 
-Methods declared with the ``@task`` attribute are the core of your locust file. For every running user, Locust creates a greenlet (micro-thread), that will call those methods.
+Methods decorated with ``@task`` are the core of your locust file. For every running user, Locust creates a greenlet (micro-thread), that will call those methods.
 
 .. code-block:: python
 
