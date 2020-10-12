@@ -111,6 +111,20 @@ the environment, or the :py:attr:`runner <locust.runners.Runner>` which it conta
 
 If run on a standalone locust instance, this will stop the entire run. If run on worker node, it will stop that particular node.
 
+.. _on-start-on-stop:
+
+on_start and on_stop methods
+----------------------------
+
+Users (and :ref:`TaskSets <tasksets>`) can declare an :py:meth:`on_start <locust.User.on_start>` method and/or
+:py:meth:`on_stop <locust.User.on_stop>` method. A User will call its
+:py:meth:`on_start <locust.User.on_start>` method when it starts running, and its
+:py:meth:`on_stop <locust.User.on_stop>` method when it stops running. For a TaskSet, the
+:py:meth:`on_start <locust.TaskSet.on_start>` method is called when a simulated user starts executing 
+that TaskSet, and :py:meth:`on_stop <locust.TaskSet.on_stop>` is called when the simulated user stops 
+executing that TaskSet (when :py:meth:`interrupt() <locust.TaskSet.interrupt>` is called, or the
+user is killed).
+
 Tasks
 =====
 
@@ -121,7 +135,7 @@ they execute, sleep for awhile, and then pick a new task and so on.
 The tasks are normal python callables and - if we were load-testing an auction website - they could do 
 stuff like "loading the start page", "searching for some product", "making a bid", etc. 
 
-Declaring tasks
+@task decorator
 ---------------
 
 The easiest way to add a task for a User is by using the :py:meth:`task <locust.task>` decorator.
@@ -200,8 +214,8 @@ and then Python's ``random.choice()`` is used pick tasks from the list.
 
 .. _tagging-tasks:
 
-Tagging tasks
--------------
+@tag decorator
+--------------
 
 By tagging tasks using the :py:func:`@tag <locust.tag>` decorator, you can be picky about what tasks are
 executed during the test using the :code:`--tags` and :code:`--exclude-tags` arguments.  Consider
@@ -242,23 +256,15 @@ executed.
 wins over inclusion, so if a task has a tag you've included and a tag you've excluded, it will not
 be executed.
 
-.. _on-start-on-stop:
+Events
+======
 
+If you want to run some setup code as part of your test, it is often enough to put it at the module
+level of your locustfile, but sometimes you need to do things at particular times in the run. For 
+this need, Locust provides event hooks.
 
-on_start and on_stop methods
-============================
-
-Users (and :ref:`TaskSets <tasksets>`) can declare an :py:meth:`on_start <locust.User.on_start>` method and/or
-:py:meth:`on_stop <locust.User.on_stop>` method. A User will call its
-:py:meth:`on_start <locust.User.on_start>` method when it starts running, and its
-:py:meth:`on_stop <locust.User.on_stop>` method when it stops running. For a TaskSet, the
-:py:meth:`on_start <locust.TaskSet.on_start>` method is called when a simulated user starts executing 
-that TaskSet, and :py:meth:`on_stop <locust.TaskSet.on_stop>` is called when the simulated user stops 
-executing that TaskSet (when :py:meth:`interrupt() <locust.TaskSet.interrupt>` is called, or the
-user is killed).
-
-test_start and test_stop events
-===============================
+test_start and test_stop
+------------------------
 
 If you need to run some code at the start or stop of a load test, you should use the 
 :py:attr:`test_start <locust.event.Events.test_start>` and :py:attr:`test_stop <locust.event.Events.test_stop>` 
@@ -278,8 +284,8 @@ events. You can set up listeners for these events at the module level of your lo
 
 When running Locust distributed the ``test_start`` and ``test_stop`` events will only be fired in the master node.
 
-init event
-==========
+init
+----
 
 The ``init`` event is triggered at the beginning of each Locust process. This is especially useful in distributed mode
 where each worker process (not each user) needs a chance to do some initialization. For example, let's say you have some
@@ -297,6 +303,10 @@ global state that all users spawned from this process will need:
         else:
             print("I'm on a worker or standalone node")
 
+other events
+------------
+
+see :ref:`extending locust using event hooks <extending_locust>` for other events and more examples of how to use them.
 
 Making HTTP requests
 =====================

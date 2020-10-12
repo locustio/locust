@@ -1,3 +1,5 @@
+.. _extending_locust:
+
 ==================================
 Extending Locust using event hooks
 ==================================
