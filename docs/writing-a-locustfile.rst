@@ -352,7 +352,7 @@ Just like :py:class:`requests.Session`, it preserves cookies between requests so
     response = self.client.get("/my-profile")
 
 HttpSession catches any :py:class:`requests.RequestException` thrown by Session (caused by connection errors, timeouts or similar), instead returning a dummy 
-Response object. The returned dummy response's *status_code* will be 0 and its *content* attribute will be set to None.
+Response object with *status_code* set to 0 and *content* set to None.
 
 
 .. _catch-response:
