@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.3.0](https://github.com/locustio/locust/tree/1.3.0) (2020-10-12)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.2.3...1.3.0)
+
+**Fixed bugs:**
+
+- After starting and then stopping a load test, master is updating state in a loop [\#1577](https://github.com/locustio/locust/issues/1577)
+- Misleading log message in distributed mode [\#1572](https://github.com/locustio/locust/issues/1572)
+- LoadTestShape.get\_run\_time is not relative to start of test [\#1557](https://github.com/locustio/locust/issues/1557)
+- On Stop causes the task to continue [\#1552](https://github.com/locustio/locust/issues/1552)
+- Multiple hosts example no longer works. [\#1550](https://github.com/locustio/locust/issues/1550)
+- locust status ready but 0 users [\#1544](https://github.com/locustio/locust/issues/1544)
+
+**Closed issues:**
+
+- Remove step load feature now that LoadTestShape is possible? [\#1575](https://github.com/locustio/locust/issues/1575)
+- Add ability to easily extend Locust web UI [\#1530](https://github.com/locustio/locust/issues/1530)
+- Type hinting for common functions [\#1260](https://github.com/locustio/locust/issues/1260)
+
+**Merged pull requests:**
+
+- Start web\_ui later to avoid race adding UI routes [\#1585](https://github.com/locustio/locust/pull/1585) ([solowalker27](https://github.com/solowalker27))
+- Remove step load feature [\#1584](https://github.com/locustio/locust/pull/1584) ([max-rocket-internet](https://github.com/max-rocket-internet))
+- Add more type hints [\#1582](https://github.com/locustio/locust/pull/1582) ([cyberw](https://github.com/cyberw))
+- Run time relative to start when using LoadTestShape [\#1581](https://github.com/locustio/locust/pull/1581) ([DennisKrone](https://github.com/DennisKrone))
+- Don't log state change if it's the same [\#1580](https://github.com/locustio/locust/pull/1580) ([max-rocket-internet](https://github.com/max-rocket-internet))
+- SequentialTaskSet improvements [\#1579](https://github.com/locustio/locust/pull/1579) ([cyberw](https://github.com/cyberw))
+- Fixed documentation for tags to link properly. [\#1578](https://github.com/locustio/locust/pull/1578) ([Trouv](https://github.com/Trouv))
+- More easily extend web UI [\#1574](https://github.com/locustio/locust/pull/1574) ([solowalker27](https://github.com/solowalker27))
+- Only warn about open file limit when not running as master [\#1573](https://github.com/locustio/locust/pull/1573) ([parberge](https://github.com/parberge))
+- Adding more debug logging for runners.py [\#1570](https://github.com/locustio/locust/pull/1570) ([max-rocket-internet](https://github.com/max-rocket-internet))
+- Add friendlier message about expected limit [\#1566](https://github.com/locustio/locust/pull/1566) ([parberge](https://github.com/parberge))
+- Update documentation for schedule\_task parameters in TaskSet \(task.py\) [\#1565](https://github.com/locustio/locust/pull/1565) ([kmels](https://github.com/kmels))
+- Added comment for clarity [\#1561](https://github.com/locustio/locust/pull/1561) ([raiyankamal](https://github.com/raiyankamal))
+- Refactor and fix delayed user stopping in combination with on\_stop [\#1560](https://github.com/locustio/locust/pull/1560) ([cyberw](https://github.com/cyberw))
+- Remove legacy code that was only needed for py2 [\#1559](https://github.com/locustio/locust/pull/1559) ([cyberw](https://github.com/cyberw))
+- Clean up code and tighten flake8 linting [\#1558](https://github.com/locustio/locust/pull/1558) ([cyberw](https://github.com/cyberw))
+
 ## [1.2.3](https://github.com/locustio/locust/tree/1.2.3) (2020-08-28)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.2.2...1.2.3)
