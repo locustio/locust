@@ -333,7 +333,7 @@ client attribute / HttpSession
 ------------------------------
 
 :py:attr:`client <locust.HttpUser.client>` is an instance of :py:class:`HttpSession <locust.clients.HttpSession>`. HttpSession is a subclass/wrapper for 
-:py:class:`requests.Session`, so its features are well documented and should be familiar to many. What HttpSession adds is mainly reporting of the request results into Locust (name, success/fail, response time, response length). 
+:py:class:`requests.Session`, so its features are well documented and should be familiar to many. What HttpSession adds is mainly reporting of the request results into Locust (success/fail, response time, response length, name). 
 
 
 It contains methods for all HTTP methods: :py:meth:`get <locust.clients.HttpSession.get>`, 
@@ -351,7 +351,7 @@ Just like :py:class:`requests.Session`, it preserves cookies between requests so
     print("Response text:", response.text)
     response = self.client.get("/my-profile")
 
-HttpSession catches any RequestException:s thrown by Session (caused by connectin errors, timeouts or similar), instead returning a dummy 
+HttpSession catches any :py:class:`requests.RequestException` thrown by Session (caused by connection errors, timeouts or similar), instead returning a dummy 
 Response object. The returned dummy response's *status_code* will be 0 and its *content* attribute will be set to None.
 
 
