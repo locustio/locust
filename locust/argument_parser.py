@@ -367,24 +367,10 @@ def setup_parser_arguments(parser):
     )
 
     step_load_group = parser.add_argument_group("Step load options")
-    step_load_group.add_argument(
-        "--step-load",
-        action="store_true",
-        help="Enable Step Load mode to monitor how performance metrics varies when user load increases. Requires --step-users and --step-time to be specified.",
-        env_var="LOCUST_STEP_LOAD",
-    )
-    step_load_group.add_argument(
-        "--step-users",
-        type=int,
-        help="User count to increase by step in Step Load mode. Only used together with --step-load",
-        env_var="LOCUST_STEP_USERS",
-    )
+    step_load_group.add_argument("--step-load", action="store_true", help=configargparse.SUPPRESS)
+    step_load_group.add_argument("--step-users", type=int, help=configargparse.SUPPRESS)
     step_load_group.add_argument("--step-clients", action="store_true", help=configargparse.SUPPRESS)
-    step_load_group.add_argument(
-        "--step-time",
-        help="Step duration in Step Load mode, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --step-load",
-        env_var="LOCUST_STEP_TIME",
-    )
+    step_load_group.add_argument("--step-time", help=configargparse.SUPPRESS)
 
     other_group = parser.add_argument_group("Other options")
     other_group.add_argument(

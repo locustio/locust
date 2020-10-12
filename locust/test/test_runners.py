@@ -84,7 +84,6 @@ class mocked_options(object):
         self.heartbeat_liveness = 3
         self.heartbeat_interval = 1
         self.stop_timeout = None
-        self.step_load = True
         self.connection_broken = False
 
     def reset_stats(self):
@@ -1162,40 +1161,6 @@ class TestMasterRunner(LocustTestCase):
             # Wait to ensure shape_worker has stopped the test
             sleep(3)
             self.assertEqual("stopped", master.state, "The test has not been stopped by the shape class")
-
-    def test_spawn_locusts_in_stepload_mode(self):
-        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = self.get_runner()
-            for i in range(5):
-                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
-
-            # start a new swarming in Step Load mode: total locust count of 10, spawn rate of 2, step locust count of 5, step duration of 2s
-            master.start_stepload(10, 2, 5, 2)
-
-            # make sure the first step run is started
-            sleep(0.5)
-            self.assertEqual(5, len(server.outbox))
-
-            num_users = 0
-            end_of_last_step = len(server.outbox)
-            for _, msg in server.outbox:
-                num_users += msg.data["num_users"]
-
-            self.assertEqual(
-                5, num_users, "Total number of locusts that would have been spawned for first step is not 5"
-            )
-
-            # make sure the first step run is complete
-            sleep(2)
-            num_users = 0
-            idx = end_of_last_step
-            while idx < len(server.outbox):
-                msg = server.outbox[idx][1]
-                num_users += msg.data["num_users"]
-                idx += 1
-            self.assertEqual(
-                10, num_users, "Total number of locusts that would have been spawned for second step is not 10"
-            )
 
     def test_exception_in_task(self):
         class MyUser(User):

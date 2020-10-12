@@ -78,12 +78,6 @@
                         {% endif %}
                     </label>
                     <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or "" }}"/><br>
-                    {% if is_step_load %}
-                    <label for="step_user_count">Number of users to increase by step</label>
-                    <input type="text" name="step_user_count" id="step_user_count" class="val" value="{{ step_users or "" }}"/><br>
-                    <label for="step_duration">Step duration <span style="color:#8a8a8a;">(300s, 20m, 3h, 1h30m, etc.)</span></label>
-                    <input type="text" name="step_duration" id="step_duration" class="val" value="{{ step_time or "" }}"/><br>
-                    {% endif %}
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -107,12 +101,6 @@
                     <input type="text" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "" }}"/><br>
                     <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users to start per second (or stop))</span></label>
                     <input type="text" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "" }}"/><br>
-                    {% endif %}
-                    {% if is_step_load %}
-                    <label for="step_user_count">Number of users to increase by step</label>
-                    <input type="text" name="step_user_count" id="step_user_count" class="val"  value="{{ step_users or "" }}"/><br>
-                    <label for="step_duration">Step duration <span style="color:#8a8a8a;">(300s, 20m, 3h, 1h30m, etc.)</span></label>
-                    <input type="text" name="step_duration" id="step_duration" class="val"  value="{{ step_time or "" }}"/><br>
                     {% endif %}
                     {% if is_shape %}
                     <button type="submit" disabled>Start swarming</button>
