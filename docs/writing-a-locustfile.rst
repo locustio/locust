@@ -348,15 +348,11 @@ Just like :py:class:`requests.Session`, it preserves cookies between requests so
 
     response = self.client.post("/login", {"username":"testuser", "password":"secret"})
     print("Response status code:", response.status_code)
-    print("Response content:", response.text)
+    print("Response text:", response.text)
     response = self.client.get("/my-profile")
 
-Safe mode
----------
-The HTTP client is configured to run in safe_mode. What this does is that any request that fails due to 
-a connection error, timeout, or similar will not raise an exception, but rather return an empty dummy 
-Response object. The request will be reported as a failure in User's statistics. The returned dummy
-Response's *content* attribute will be set to None, and its *status_code* will be 0.
+HttpSession catches any RequestException:s thrown by Session (caused by connectin errors, timeouts or similar), instead returning a dummy 
+Response object. The returned dummy response's *status_code* will be 0 and its *content* attribute will be set to None.
 
 
 .. _catch-response:
