@@ -308,22 +308,10 @@ other events
 
 see :ref:`extending locust using event hooks <extending_locust>` for other events and more examples of how to use them.
 
-Making HTTP requests
-=====================
+HttpUser class
+==============
 
-So far, we've only covered the task scheduling part of a User. In order to actually load test
-a system we need to make HTTP requests. To help us do this, the :py:class:`HttpUser <locust.HttpUser>`
-class exists. When using this class, each instance gets a 
-:py:attr:`client <locust.User.client>` attribute which will be an instance of
-:py:attr:`HttpSession <locust.clients.HttpSession>` which can be used to make HTTP requests.
-
-.. autoclass:: locust.HttpUser
-    :members: client
-    :noindex:
-
-When inheriting from the HttpUser class, we can use its client attribute to make HTTP requests
-against the server. Here is an example of a locust file that can be used to load test a site 
-with two URLs; **/** and **/about/**:
+:py:class:`HttpUser <locust.HttpUser>` is the most commonly used :py:class:`User <locust.User>`. It adds a :py:attr:`client <locust.HttpUser.client>` attribute which is used to make HTTP requests.
 
 .. code-block:: python
 
@@ -332,7 +320,7 @@ with two URLs; **/** and **/about/**:
     class MyUser(HttpUser):
         wait_time = between(5, 15)
         
-        @task(2)
+        @task(4)
         def index(self):
             self.client.get("/")
         
@@ -340,38 +328,28 @@ with two URLs; **/** and **/about/**:
         def about(self):
             self.client.get("/about/")
 
-Using the above User class, each simulated user will wait between 5 and 15 seconds
-between the requests, and **/** will be requested twice as much as **/about/**.
+
+client attribute / HttpSession
+------------------------------
+
+:py:attr:`client <locust.HttpUser.client>` is an instance of :py:class:`HttpSession <locust.clients.HttpSession>`. HttpSession is a subclass/wrapper for 
+:py:class:`requests.Session`, so its features are well documented and should be familiar to many. What HttpSession adds is mainly reporting of the request results into Locust (name, success/fail, response time, response length). 
 
 
-Using the HTTP client
-----------------------
-
-Each instance of HttpUser has an instance of :py:class:`HttpSession <locust.clients.HttpSession>`
-in the *client* attribute. The HttpSession class is actually a subclass of 
-:py:class:`requests.Session` and can be used to  make HTTP requests, that will be reported to User's
-statistics, using the :py:meth:`get <locust.clients.HttpSession.get>`, 
+It contains methods for all HTTP methods: :py:meth:`get <locust.clients.HttpSession.get>`, 
 :py:meth:`post <locust.clients.HttpSession.post>`, :py:meth:`put <locust.clients.HttpSession.put>`, 
-:py:meth:`delete <locust.clients.HttpSession.delete>`, :py:meth:`head <locust.clients.HttpSession.head>`, 
-:py:meth:`patch <locust.clients.HttpSession.patch>` and :py:meth:`options <locust.clients.HttpSession.options>` 
-methods. The HttpSession instance will preserve cookies between requests so that it can be used to log in 
-to websites and keep a session between requests. 
+... 
 
-Here's a simple example that makes a GET request to the */about* path (in this case we assume *self* 
-is an instance of a :py:class:`HttpUser <locust.HttpUser>`
-class:
+
+Just like :py:class:`requests.Session`, it preserves cookies between requests so it can easily be used to log in to websites.
 
 .. code-block:: python
-
-    response = self.client.get("/about")
-    print("Response status code:", response.status_code)
-    print("Response content:", response.text)
-
-And here's an example making a POST request:
-
-.. code-block:: python
+    :caption: Make a POST request, look at the response and implicitly reuse any session cookies we got for a second request
 
     response = self.client.post("/login", {"username":"testuser", "password":"secret"})
+    print("Response status code:", response.status_code)
+    print("Response content:", response.text)
+    response = self.client.get("/my-profile")
 
 Safe mode
 ---------
@@ -383,8 +361,8 @@ Response's *content* attribute will be set to None, and its *status_code* will b
 
 .. _catch-response:
 
-Manually controlling if a request should be considered successful or a failure
-------------------------------------------------------------------------------
+Validating responses
+--------------------
 
 Requests are considered successful if the HTTP response code is OK (<400), but it is often useful to 
 do some additional validation of the response.
@@ -409,7 +387,7 @@ You can also mark a request as successful, even if the response code was bad:
         if response.status_code == 404:
             response.success()
 
-You can even avoid logging a request at all by throwing an exception and then catching it outside the with-block. Or you can throw a :ref:`locust exception <exceptions>`, like in the example below, and let locust catch it.
+You can even avoid logging a request at all by throwing an exception and then catching it outside the with-block. Or you can throw a :ref:`locust exception <exceptions>`, like in the example below, and let Locust catch it.
 
 .. code-block:: python
 
