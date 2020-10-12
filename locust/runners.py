@@ -44,7 +44,7 @@ FALLBACK_INTERVAL = 5
 greenlet_exception_handler = greenlet_exception_logger(logger)
 
 
-class Runner(object):
+class Runner:
     """
     Orchestrates the load test by starting and stopping the users.
 
@@ -415,7 +415,7 @@ class DistributedRunner(Runner):
         setup_distributed_stats_event_listeners(self.environment.events, self.stats)
 
 
-class WorkerNode(object):
+class WorkerNode:
     def __init__(self, id, state=STATE_INIT, heartbeat_liveness=HEARTBEAT_LIVENESS):
         self.id = id
         self.state = state

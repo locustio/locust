@@ -279,7 +279,7 @@ class TestRequestStats(unittest.TestCase):
         # reset stats
         self.stats = RequestStats()
 
-        class Dummy(object):
+        class Dummy:
             pass
 
         self.stats.log_error("GET", "/", Exception("Error caused by %r" % Dummy()))

@@ -32,7 +32,7 @@ NETWORK_BROKEN = "network broken"
 
 
 def mocked_rpc():
-    class MockedRpcServerClient(object):
+    class MockedRpcServerClient:
         queue = Queue()
         outbox = []
 
@@ -70,7 +70,7 @@ def mocked_rpc():
     return MockedRpcServerClient
 
 
-class mocked_options(object):
+class mocked_options:
     def __init__(self):
         self.spawn_rate = 5
         self.num_users = 5

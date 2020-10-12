@@ -6,7 +6,7 @@ import zmq.error as zmqerr
 import msgpack.exceptions as msgerr
 
 
-class BaseSocket(object):
+class BaseSocket:
     def __init__(self, sock_type):
         context = zmq.Context()
         self.socket = context.socket(sock_type)

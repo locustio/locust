@@ -93,7 +93,7 @@ def diff_response_time_dicts(latest, old):
     return new
 
 
-class RequestStats(object):
+class RequestStats:
     """
     Class that holds the request statistics.
     """
@@ -187,7 +187,7 @@ class RequestStats(object):
         return dict([(k, e.to_dict()) for k, e in self.errors.items()])
 
 
-class StatsEntry(object):
+class StatsEntry:
     """
     Represents a single stats entry (name and method)
     """
@@ -614,7 +614,7 @@ class StatsEntry(object):
                 self.response_times_cache.popitem(last=False)
 
 
-class StatsError(object):
+class StatsError:
     def __init__(self, method, name, error, occurrences=0):
         self.method = method
         self.name = name

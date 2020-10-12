@@ -61,7 +61,7 @@ def insecure_ssl_context_factory():
     return context
 
 
-class FastHttpSession(object):
+class FastHttpSession:
     auth_header = None
 
     def __init__(self, environment: Environment, base_url: str, insecure=True, **kwargs):
@@ -373,7 +373,7 @@ class FastResponse(CompatResponse):
         return super()._content()
 
 
-class ErrorResponse(object):
+class ErrorResponse:
     """
     This is used as a dummy response object when geventhttpclient raises an error
     that doesn't have a real Response object attached. E.g. a socket error or similar

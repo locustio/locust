@@ -2,7 +2,7 @@ import time
 from typing import Optional, Tuple
 
 
-class LoadTestShape(object):
+class LoadTestShape:
     """
     A simple load test shape class used to control the shape of load generated
     during a load test.
