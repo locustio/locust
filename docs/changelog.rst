@@ -4,6 +4,20 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.3.0
+=====
+
+* Breaking change: Remove step-load feature (now that we have LoadTestShape it is no longer needed)
+* More type hints to enable better code completion and linting of locustfiles
+
+Bug fixes: 
+
+* LoadTestShape.get\_run\_time is not relative to start of test https://github.com/locustio/locust/issues/1557
+* Refactor and fix delayed user stopping in combination with on\_stop https://github.com/locustio/locust/pull/1560
+* runner.quit gets blocked by slow on stop https://github.com/locustio/locust/issues/1552
+* Remove legacy code that was only needed for py2
+* Lots more
+
 1.2.3
 =====
 
