@@ -18,7 +18,7 @@ setup(
     name="locust",
     version=version,
     install_requires=[
-        "gevent>=1.5.0",
+        "gevent>=20.9.0",
         "flask>=1.1.2",
         "Werkzeug>=1.0.1",
         "requests>=2.9.1",
