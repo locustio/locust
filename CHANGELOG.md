@@ -10,8 +10,6 @@
 - Misleading log message in distributed mode [\#1572](https://github.com/locustio/locust/issues/1572)
 - LoadTestShape.get\_run\_time is not relative to start of test [\#1557](https://github.com/locustio/locust/issues/1557)
 - On Stop causes the task to continue [\#1552](https://github.com/locustio/locust/issues/1552)
-- Multiple hosts example no longer works. [\#1550](https://github.com/locustio/locust/issues/1550)
-- locust status ready but 0 users [\#1544](https://github.com/locustio/locust/issues/1544)
 
 **Closed issues:**
 

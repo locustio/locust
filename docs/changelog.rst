@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.3.1
+=====
+
+* Bump minimum required gevent version to 20.9.0 (latest), as the previous ones had sneaky binary incompatibilities with the latest version of greenlet ("RuntimeWarning: greenlet.greenlet size changed, may indicate binary incompatibility. Expected 144 from C header, got 152 from PyObject")
+
 1.3.0
 =====
 
