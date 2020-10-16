@@ -8,7 +8,7 @@ import csv
 
 import gevent
 
-from .exception import StopUser
+from .exception import StopUser, CatchResponseError
 
 import logging
 
@@ -644,7 +644,19 @@ class StatsError:
         self.occurrences += 1
 
     def to_name(self):
-        return "%s %s: %r" % (self.method, self.name, repr(self.error))
+        error = self.error
+        if isinstance(error, CatchResponseError):
+            # standalone
+            unwrapped_error = error.args[0]
+        if isinstance(error, str) and error.startswith("CatchResponseError("):
+            # distributed
+            length = len("CatchResponseError(")
+            unwrapped_error = error[length:-1]
+        else:
+            # standalone, unwrapped exception
+            unwrapped_error = repr(error)
+
+        return "%s %s: %s" % (self.method, self.name, unwrapped_error)
 
     def to_dict(self):
         return {
