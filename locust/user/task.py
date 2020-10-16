@@ -340,7 +340,9 @@ class TaskSet(object, metaclass=TaskSetMeta):
 
     def get_next_task(self):
         if not self.tasks:
-            raise Exception("No tasks defined. use the @task decorator or set the tasks property of the TaskSet")
+            raise Exception(
+                f"No tasks defined on {self.__class__.__name__}. use the @task decorator or set the tasks property of the TaskSet"
+            )
         return random.choice(self.tasks)
 
     def wait_time(self):
@@ -412,7 +414,9 @@ class DefaultTaskSet(TaskSet):
 
     def get_next_task(self):
         if not self.user.tasks:
-            raise Exception("No tasks defined. use the @task decorator or set the tasks property of the User")
+            raise Exception(
+                f"No tasks defined on {self.user.__class__.__name__}. use the @task decorator or set the tasks property of the User (or mark it as abstract = True if you only intend to subclass it)"
+            )
         return random.choice(self.user.tasks)
 
     def execute_task(self, task):

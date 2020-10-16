@@ -43,9 +43,16 @@ class TestTaskSet(LocustTestCase):
             tasks = [MyTasks]
 
         l = MyTasks(MyUser(self.environment))
-        self.assertRaisesRegex(Exception, "No tasks defined.*", l.run)
+        self.assertRaisesRegex(Exception, "No tasks defined on MyTasks.*", l.run)
         l.tasks = []
-        self.assertRaisesRegex(Exception, "No tasks defined.*", l.run)
+        self.assertRaisesRegex(Exception, "No tasks defined on MyTasks.*", l.run)
+
+    def test_tasks_missing_from_user_gives_user_friendly_exception(self):
+        class MyUser(User):
+            wait_time = constant(0.5)
+
+        l = MyUser(self.environment)
+        self.assertRaisesRegex(Exception, "No tasks defined on MyUser.*", l.run)
 
     def test_task_decorator_ratio(self):
         t1 = lambda l: None
