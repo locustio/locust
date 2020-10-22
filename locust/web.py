@@ -140,7 +140,7 @@ class WebUI:
 
             if request.form.get("host"):
                 # Replace < > to guard against XSS
-                environment.host = str(request.form["host"]).replace('<', '').replace('>', '')
+                environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
 
             if environment.shape_class:
                 environment.runner.start_shape()
