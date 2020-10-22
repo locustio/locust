@@ -139,7 +139,8 @@ class WebUI:
             spawn_rate = float(request.form["spawn_rate"])
 
             if request.form.get("host"):
-                environment.host = str(request.form["host"])
+                # Replace < > to guard against XSS
+                environment.host = str(request.form["host"]).replace('<', '').replace('>', '')
 
             if environment.shape_class:
                 environment.runner.start_shape()
