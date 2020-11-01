@@ -350,6 +350,12 @@ def setup_parser_arguments(parser):
         help="Reset statistics once spawning has been completed. Should be set on both master and workers when running in distributed mode",
         env_var="LOCUST_RESET_STATS",
     )
+    stats_group.add_argument(
+        "--html",
+        dest="html_file",
+        help="Store HTML report file",
+        env_var="LOCUST_HTML",
+    )
 
     log_group = parser.add_argument_group("Logging options")
     log_group.add_argument(
