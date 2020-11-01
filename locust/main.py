@@ -23,6 +23,7 @@ from .user.inspectuser import get_task_ratio_dict, print_task_ratio
 from .util.timespan import parse_timespan
 from .exception import AuthCredentialsError
 from .shape import LoadTestShape
+from .html import get_html_report
 
 
 version = locust.__version__
@@ -385,6 +386,10 @@ def main():
     try:
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
+        if options.html_file:
+            html_report = get_html_report(environment)
+            with open(options.html_file, 'w+') as file:
+                file.write(html_report)
         shutdown()
     except KeyboardInterrupt:
         shutdown()
