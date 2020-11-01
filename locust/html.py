@@ -7,7 +7,7 @@ from .stats import sort_stats
 
 
 def render_template(file, **kwargs):
-    templates_path = os.path.join(pathlib.Path(__file__).parent.absolute(), 'templates')
+    templates_path = os.path.join(pathlib.Path(__file__).parent.absolute(), "templates")
     env = Environment(loader=FileSystemLoader(templates_path))
     template = env.get_template(file)
     return template.render(**kwargs)
