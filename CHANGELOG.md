@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.2](https://github.com/locustio/locust/tree/1.3.2) (2020-11-02)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.3.1...1.3.2)
+
+**Merged pull requests:**
+
+- Run builds for python 3.9 [\#1607](https://github.com/locustio/locust/pull/1607) ([cyberw](https://github.com/cyberw))
+- Add note and link to k8s Helm chart [\#1606](https://github.com/locustio/locust/pull/1606) ([max-rocket-internet](https://github.com/max-rocket-internet))
+- Replace '\<' and '\>' for swarm 'host' field. Fix for XSS attack. [\#1603](https://github.com/locustio/locust/pull/1603) ([lhupfeldt](https://github.com/lhupfeldt))
+
+## [1.3.1](https://github.com/locustio/locust/tree/1.3.1) (2020-10-15)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.3.0...1.3.1)
+
 ## [1.3.0](https://github.com/locustio/locust/tree/1.3.0) (2020-10-12)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.2.3...1.3.0)

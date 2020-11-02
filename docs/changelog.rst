@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.3.2
+=====
+
+* List Python 3.9 as supported in the package/on PyPi
+* Fix XSS vulnerability in the web UI (sounds important but really isn't, as Locust UI is not meant to be exposed to outside users)
+
 1.3.1
 =====
 
