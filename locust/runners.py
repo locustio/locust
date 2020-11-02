@@ -279,7 +279,7 @@ class Runner:
         """
         Start running a load test
 
-        :param user_count: Number of users to start
+        :param user_count: Total number of users to start
         :param spawn_rate: Number of users to spawn per second
         :param wait: If True calls to this method will block until all users are spawned.
                      If False (the default), a greenlet that spawns the users will be
