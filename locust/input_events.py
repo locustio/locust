@@ -41,7 +41,7 @@ class KeyPoller:
 
     def poll(self):
         if os.name == "nt":
-            if not len(self.captured_chars) == 0:
+            if self.captured_chars:
                 return self.captured_chars.pop(0)
 
             events_peek = self.read_handle.PeekConsoleInput(10000)
@@ -58,7 +58,7 @@ class KeyPoller:
 
                 self.cur_event_length = len(events_peek)
 
-            if not self.captured_chars:
+            if self.captured_chars:
                 return self.captured_chars.pop(0)
             else:
                 return None
