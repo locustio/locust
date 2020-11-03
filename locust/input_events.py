@@ -1,7 +1,8 @@
-import time
+import gevent
+import logging
+import os
 
-isWindows = False
-try:
+if os.name == "nt":
     from win32api import STD_INPUT_HANDLE
     from win32console import (
         GetStdHandle,
@@ -10,9 +11,7 @@ try:
         ENABLE_LINE_INPUT,
         ENABLE_PROCESSED_INPUT,
     )
-
-    isWindows = True
-except ImportError:
+else:
     import sys
     import select
     import termios
@@ -21,7 +20,7 @@ except ImportError:
 
 class KeyPoller:
     def __enter__(self):
-        if isWindows:
+        if os.name == "nt":
             self.read_handle = GetStdHandle(STD_INPUT_HANDLE)
             self.read_handle.SetConsoleMode(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT)
 
@@ -37,33 +36,29 @@ class KeyPoller:
         return self
 
     def __exit__(self, type, value, traceback):
-        if isWindows:
-            pass
-        else:
+        if not os.name == "nt":
             termios.tcsetattr(self.stdin, termios.TCSANOW, self.tattr)
 
     def poll(self):
-        if isWindows:
+        if os.name == "nt":
             if not len(self.captured_chars) == 0:
                 return self.captured_chars.pop(0)
 
             events_peek = self.read_handle.PeekConsoleInput(10000)
 
-            if len(events_peek) == 0:
+            if not events_peek:
                 return None
 
             if not len(events_peek) == self.cur_event_length:
                 for cur_event in events_peek[self.cur_event_length :]:
                     if cur_event.EventType == KEY_EVENT:
-                        if ord(cur_event.Char) == 0 or not cur_event.KeyDown:
-                            pass
-                        else:
+                        if ord(cur_event.Char) and cur_event.KeyDown:
                             cur_char = str(cur_event.Char)
                             self.captured_chars.append(cur_char)
 
                 self.cur_event_length = len(events_peek)
 
-            if not len(self.captured_chars) == 0:
+            if not self.captured_chars:
                 return self.captured_chars.pop(0)
             else:
                 return None
@@ -81,11 +76,11 @@ def input_listener(key_to_func_map):
             while True:
                 input = poller.poll()
                 if input is not None:
-                    print(f"Current input is: {input}")
+                    logging.debug(f"Input key: {input}")
                     for key in map:
                         if input == key:
                             map[key]()
                 else:
-                    time.sleep(0.2)
+                    gevent.sleep(0.2)
 
     return input_listener_func
