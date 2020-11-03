@@ -344,24 +344,26 @@ def main():
     if options.run_time:
         spawn_run_time_limit_greenlet()
 
-    stats_printer_greenlet = None
     input_listener_greenlet = None
-    if not options.only_summary and (options.print_stats or (options.headless and not options.worker)):
-        # spawn stats printing greenlet
-        stats_printer_greenlet = gevent.spawn(stats_printer(runner.stats))
-        stats_printer_greenlet.link_exception(greenlet_exception_handler)
-
+    if not options.worker:
+        # spawn input listener greenlet
         input_listener_greenlet = gevent.spawn(
             input_listener(
                 {
-                    "w": lambda: runner.spawn_users(1, runner.spawn_rate),
-                    "W": lambda: runner.spawn_users(10, runner.spawn_rate),
+                    "w": lambda: runner.spawn_users(1, 100),
+                    "W": lambda: runner.spawn_users(10, 100),
                     "s": lambda: runner.stop_users(1),
                     "S": lambda: runner.stop_users(10),
                 }
             )
         )
         input_listener_greenlet.link_exception(greenlet_exception_handler)
+
+    stats_printer_greenlet = None
+    if not options.only_summary and (options.print_stats or (options.headless and not options.worker)):
+        # spawn stats printing greenlet
+        stats_printer_greenlet = gevent.spawn(stats_printer(runner.stats))
+        stats_printer_greenlet.link_exception(greenlet_exception_handler)
 
     if options.csv_prefix:
         gevent.spawn(stats_csv_writer.stats_writer).link_exception(greenlet_exception_handler)
