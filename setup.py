@@ -35,4 +35,7 @@ setup(
         "mock",
         "pyquery",
     ],
+    extras_require={
+        "sys_platform == 'win32": ["pywin32"],
+    },
 )
