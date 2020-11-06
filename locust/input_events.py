@@ -29,15 +29,21 @@ class KeyPoller:
 
             self.captured_chars = []
         else:
-            self.stdin = sys.stdin.fileno()
-            self.tattr = termios.tcgetattr(self.stdin)
-            tty.setcbreak(self.stdin, termios.TCSANOW)
+            try:
+                self.stdin = sys.stdin.fileno()
+                self.tattr = termios.tcgetattr(self.stdin)
+                tty.setcbreak(self.stdin, termios.TCSANOW)
+            except termios.error:
+                pass
 
         return self
 
     def __exit__(self, type, value, traceback):
         if not os.name == "nt":
-            termios.tcsetattr(self.stdin, termios.TCSANOW, self.tattr)
+            try:
+                termios.tcsetattr(self.stdin, termios.TCSANOW, self.tattr)
+            except termios.error:
+                pass
 
     def poll(self):
         if os.name == "nt":
