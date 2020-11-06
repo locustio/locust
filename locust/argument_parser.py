@@ -141,7 +141,7 @@ def setup_parser_arguments(parser):
         "--users",
         type=int,
         dest="num_users",
-        help="Number of concurrent Locust users. Primarily used together with --headless",
+        help="Number of concurrent Locust users. Primarily used together with --headless. Can be changed during a test by inputs w W(spawn 1, 10 users) and s S(stop 1, 10 users)",
         env_var="LOCUST_USERS",
     )
     parser.add_argument(
