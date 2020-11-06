@@ -39,7 +39,7 @@ class KeyPoller:
         return self
 
     def __exit__(self, type, value, traceback):
-        if not os.name == "nt" and getattr(self, "tattr"):
+        if not os.name == "nt" and hasattr(self, "tattr"):
             termios.tcsetattr(self.stdin, termios.TCSANOW, self.tattr)
 
     def poll(self):

@@ -306,7 +306,7 @@ class LoadTestShape(LoadTestShape):
                         mocked.file_path,
                         "--headless",
                         "--run-time",
-                        "2s",
+                        "4s",
                         "-u",
                         "0",
                     ]
