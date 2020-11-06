@@ -228,6 +228,7 @@ def main():
     elif options.worker:
         try:
             runner = environment.create_worker_runner(options.master_host, options.master_port)
+            logger.debug("Connected to locust master: %s:%s", options.master_host, options.master_port)
         except socket.error as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
