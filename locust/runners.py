@@ -137,34 +137,11 @@ class Runner:
         Distributes the amount of users for each WebLocust-class according to it's weight
         returns a list "bucket" with the weighted users
         """
-        bucket = []
-        weight_sum = sum([user.weight for user in self.user_classes])
-        residuals = {}
         for user in self.user_classes:
             if self.environment.host is not None:
                 user.host = self.environment.host
-
-            # create users depending on weight
-            percent = user.weight / float(weight_sum)
-            num_users = int(round(amount * percent))
-            bucket.extend([user for x in range(num_users)])
-            # used to keep track of the amount of rounding was done if we need
-            # to add/remove some instances from bucket
-            residuals[user] = amount * percent - round(amount * percent)
-        if len(bucket) < amount:
-            # We got too few User classes in the bucket, so we need to create a few extra users,
-            # and we do this by iterating over each of the User classes - starting with the one
-            # where the residual from the rounding was the largest - and creating one of each until
-            # we get the correct amount
-            for user in [l for l, r in sorted(residuals.items(), key=lambda x: x[1], reverse=True)][
-                : amount - len(bucket)
-            ]:
-                bucket.append(user)
-        elif len(bucket) > amount:
-            # We've got too many users due to rounding errors so we need to remove some
-            for user in [l for l, r in sorted(residuals.items(), key=lambda x: x[1])][: len(bucket) - amount]:
-                bucket.remove(user)
-
+        weights = [user.weight for user in self.user_classes]
+        bucket = random.choices(self.user_classes, weights=weights, k=amount)
         return bucket
 
     def spawn_users(self, spawn_count, spawn_rate, wait=False):
@@ -194,7 +171,7 @@ class Runner:
                     self.environment.events.spawning_complete.fire(user_count=len(self.user_greenlets))
                     return
 
-                user_class = bucket.pop(random.randint(0, len(bucket) - 1))
+                user_class = bucket.pop()
                 occurrence_count[user_class.__name__] += 1
                 new_user = user_class(self.environment)
                 new_user.start(self.user_greenlets)
@@ -240,7 +217,7 @@ class Runner:
         stop_group = Group()
 
         while True:
-            user_to_stop: User = to_stop.pop(random.randint(0, len(to_stop) - 1))
+            user_to_stop: User = to_stop.pop()
             logger.debug("Stopping %s" % user_to_stop._greenlet.name)
             if user_to_stop._greenlet is greenlet.getcurrent():
                 # User called runner.quit(), so dont block waiting for killing to finish"
