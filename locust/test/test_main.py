@@ -237,6 +237,22 @@ class LocustProcessIntegrationTest(TestCase):
             )
             self.assertIn("Spawning 1 users at the rate 1 users/s", output)
 
+    def test_headless_spawn_options_wo_run_time(self):
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen(
+                ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--headless"],
+                stdout=PIPE,
+                stderr=PIPE,
+            )
+            gevent.sleep(1)
+            proc.send_signal(signal.SIGTERM)
+            stdout, stderr = proc.communicate()
+            self.assertEqual(0, proc.returncode)
+            stderr = stderr.decode("utf-8")
+            self.assertIn("Starting Locust", stderr)
+            self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
+            self.assertIn("Shutting down (exit code 0), bye", stderr)
+
     def test_default_headless_spawn_options_with_shape(self):
         content = (
             MOCK_LOUCSTFILE_CONTENT
