@@ -338,7 +338,7 @@ class StatsEntry:
     @property
     def fail_ratio(self):
         try:
-            return float(self.num_failures) / self.num_requests
+            return float(self.num_failures / (self.num_requests + self.num_failures))
         except ZeroDivisionError:
             if self.num_failures > 0:
                 return 1.0
