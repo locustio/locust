@@ -5,7 +5,7 @@ This is an example of a locustfile that uses Locust's built in event hooks to
 track the sum of the content-length header in all successful HTTP responses
 """
 
-from locust import HttpUser, TaskSet, task, web, between
+from locust import HttpUser, TaskSet, task, web
 from locust import events
 
 
@@ -21,7 +21,6 @@ class MyTaskSet(TaskSet):
 
 class WebsiteUser(HttpUser):
     host = "http://127.0.0.1:8089"
-    wait_time = between(2, 5)
     tasks = [MyTaskSet]
 
 

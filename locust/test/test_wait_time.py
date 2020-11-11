@@ -43,9 +43,9 @@ class TestWaitTime(LocustTestCase):
         self.assertEqual(13, MyUser(self.environment).wait_time())
         self.assertEqual(13, TaskSet1(MyUser(self.environment)).wait_time())
 
-    def test_constant_zero(self):
+    def test_default_wait_time(self):
         class MyUser(User):
-            wait_time = constant(0)
+            pass  # default is wait_time = constant(0)
 
         class TaskSet1(TaskSet):
             pass
@@ -77,12 +77,3 @@ class TestWaitTime(LocustTestCase):
             time.sleep(random.random() * 0.1)
             _ = ts2.wait_time()
             _ = ts2.wait_time()
-
-    def test_missing_wait_time(self):
-        class MyUser(User):
-            pass
-
-        class TS(TaskSet):
-            pass
-
-        self.assertRaises(MissingWaitTimeError, lambda: TS(MyUser(self.environment)).wait_time())

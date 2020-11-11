@@ -138,8 +138,6 @@ class TestTaskSet(LocustTestCase):
         state = [0]
 
         class MyUser(User):
-            wait_time = constant(0)
-
             @task
             def t1(self):
                 pass
@@ -427,7 +425,6 @@ class TestTaskSet(LocustTestCase):
                 raise StopUser()
 
         class MyUser(User):
-            wait_time = constant(0)
             host = ""
             tasks = [MyTaskSet]
 
@@ -517,7 +514,6 @@ class TestLocustClass(LocustTestCase):
 
     def test_locust_graceful_stop(self):
         class TestUser(User):
-            wait_time = constant(0)
             test_state = 0
 
             @task
@@ -545,7 +541,6 @@ class TestLocustClass(LocustTestCase):
 
     def test_locust_forced_stop(self):
         class TestUser(User):
-            wait_time = constant(0)
             test_state = 0
 
             @task
