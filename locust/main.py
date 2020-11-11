@@ -125,6 +125,9 @@ def main():
     # parse all command line options
     options = parse_options()
 
+    if options.headful:
+        options.headless = False
+
     if options.slave or options.expect_slaves:
         sys.stderr.write("The --slave/--expect-slaves parameters have been renamed --worker/--expect-workers\n")
         sys.exit(1)

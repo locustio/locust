@@ -193,6 +193,13 @@ def setup_parser_arguments(parser):
         help="Disable the web interface, and instead start the load test immediately. Requires -u and -t to be specified.",
         env_var="LOCUST_HEADLESS",
     )
+    # Override --headless parameter (useful because you cant disable a store_true-parameter like headless once it has been set in a config file)
+    web_ui_group.add_argument(
+        "--headful",
+        action="store_true",
+        help=configargparse.SUPPRESS,
+        env_var="LOCUST_HEADFUL",
+    )
     web_ui_group.add_argument(
         "--web-auth",
         type=str,
