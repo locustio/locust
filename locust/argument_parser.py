@@ -161,7 +161,7 @@ def setup_parser_arguments(parser):
     parser.add_argument(
         "-t",
         "--run-time",
-        help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --headless",
+        help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --headless. Defaults to run forever.",
         env_var="LOCUST_RUN_TIME",
     )
     parser.add_argument(

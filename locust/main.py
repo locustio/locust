@@ -251,15 +251,6 @@ def main():
             logger.error("Valid --run-time formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
             sys.exit(1)
 
-        def spawn_run_time_limit_greenlet():
-            logger.info("Run time limit set to %s seconds" % options.run_time)
-
-            def timelimit_stop():
-                logger.info("Time limit reached. Stopping Locust.")
-                runner.quit()
-
-            gevent.spawn_later(options.run_time, timelimit_stop).link_exception(greenlet_exception_handler)
-
     if options.csv_prefix:
         stats_csv_writer = StatsCSVFileWriter(
             environment, stats.PERCENTILES_TO_REPORT, options.csv_prefix, options.stats_history_enabled
@@ -331,8 +322,20 @@ def main():
             else:
                 runner.start(options.num_users, options.spawn_rate)
 
+    def spawn_run_time_limit_greenlet():
+        def timelimit_stop():
+            logger.info("Time limit reached. Stopping Locust.")
+            runner.quit()
+
+        gevent.spawn_later(options.run_time, timelimit_stop).link_exception(greenlet_exception_handler)
+
     if options.run_time:
+        logger.info("Run time limit set to %s seconds" % options.run_time)
         spawn_run_time_limit_greenlet()
+    elif options.headless:
+        logger.info("No run time limit set, use CTRL+C to interrupt.")
+    else:
+        pass  # dont log anything - not having a time limit is normal when not running headless
 
     stats_printer_greenlet = None
     if not options.only_summary and (options.print_stats or (options.headless and not options.worker)):
