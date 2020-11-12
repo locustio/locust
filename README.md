@@ -23,7 +23,7 @@ class QuickstartUser(HttpUser):
         self.client.post("/login", json={"username":"foo", "password":"bar"})
 
     @task
-    def index_page(self):
+    def hello_world(self):
         self.client.get("/hello")
         self.client.get("/world")
 
