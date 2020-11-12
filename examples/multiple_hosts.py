@@ -1,6 +1,6 @@
 import os
 
-from locust import HttpUser, TaskSet, task, between
+from locust import HttpUser, TaskSet, task
 from locust.clients import HttpSession
 
 
@@ -29,5 +29,4 @@ class WebsiteUser(MultipleHostsUser):
     """
 
     host = "http://127.0.0.1:8089"
-    wait_time = between(2, 5)
     tasks = [UserTasks]

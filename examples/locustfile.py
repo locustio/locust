@@ -1,10 +1,8 @@
 import time
-from locust import HttpUser, task, between
+from locust import HttpUser, task
 
 
 class QuickstartUser(HttpUser):
-    wait_time = between(1, 2)
-
     @task
     def index_page(self):
         self.client.get("/hello")

@@ -27,12 +27,10 @@ How to use FastHttpUser
 
 Subclass FastHttpUser instead of HttpUser::
 
-    from locust import task, between
+    from locust import task
     from locust.contrib.fasthttp import FastHttpUser
     
-    class MyUser(FastHttpUser):
-        wait_time = between(2, 5)
-        
+    class MyUser(FastHttpUser):        
         @task
         def index(self):
             response = self.client.get("/")
