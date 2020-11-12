@@ -13,7 +13,7 @@ A Locust performance test is specified in a plain python file:
 
     class QuickstartUser(HttpUser):
         @task
-        def index_page(self):
+        def hello_world(self):
             self.client.get("/hello")
             self.client.get("/world")
         
@@ -45,7 +45,7 @@ The behaviour of a simulated user is represented by a class in your locust file.
 .. code-block:: python
 
     @task
-    def index_page(self):
+    def hello_world(self):
         ...
 
 Methods decorated with ``@task`` are the core of your locust file. For every running user, Locust creates a greenlet (micro-thread), that will call those methods.
@@ -53,7 +53,7 @@ Methods decorated with ``@task`` are the core of your locust file. For every run
 .. code-block:: python
 
     @task
-    def index_page(self):
+    def hello_world(self):
         self.client.get("/hello")
         self.client.get("/world")
 
@@ -65,7 +65,7 @@ The self.client attribute makes it possible to make HTTP calls that will be logg
     def view_item(self):
         ...
 
-Tasks are picked at random, but you can give them different weighting. The above configuration will make Locust three times likelier to pick ``view_item`` than ``index_page``.
+Tasks are picked at random, but you can give them different weighting. The above configuration will make Locust three times likelier to pick ``view_item`` than ``hello_world``.
 
 .. code-block:: python
 

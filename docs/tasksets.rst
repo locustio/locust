@@ -41,7 +41,7 @@ otherwise it will inherit the one from the User.
         tasks = {ForumSection:2}
         
         @task
-        def index_page(self):
+        def my_task(self):
             pass
 
 A TaskSet can also be inlined directly under a User/TaskSet class using the @task decorator:
