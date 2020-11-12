@@ -18,72 +18,88 @@ else:
     import tty
 
 
-class KeyPoller:
-    def __enter__(self):
-        if os.name == "nt":
-            self.read_handle = GetStdHandle(STD_INPUT_HANDLE)
-            self.read_handle.SetConsoleMode(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT)
+class UnixKeyPoller:
+    def setup(self):
+        try:
+            self.stdin = sys.stdin.fileno()
+            self.tattr = termios.tcgetattr(self.stdin)
+            tty.setcbreak(self.stdin, termios.TCSANOW)
+        except termios.error:
+            pass
+        return self
 
-            self.cur_event_length = 0
-            self.cur_keys_length = 0
+    def cleanup(self):
+        termios.tcsetattr(self.stdin, termios.TCSANOW, self.tattr)
 
-            self.captured_chars = []
-        else:
-            try:
-                self.stdin = sys.stdin.fileno()
-                self.tattr = termios.tcgetattr(self.stdin)
-                tty.setcbreak(self.stdin, termios.TCSANOW)
-            except termios.error:
-                pass
+    def poll(_self):
+        dr, dw, de = select.select([sys.stdin], [], [], 0)
+        if not dr == []:
+            return sys.stdin.read(1)
+        return None
+
+
+class WindowsKeyPoller:
+    def setup(self):
+        self.read_handle = GetStdHandle(STD_INPUT_HANDLE)
+        self.read_handle.SetConsoleMode(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT)
+        self.cur_event_length = 0
+        self.cur_keys_length = 0
+        self.captured_chars = []
 
         return self
 
-    def __exit__(self, type, value, traceback):
-        if not os.name == "nt" and hasattr(self, "tattr"):
-            termios.tcsetattr(self.stdin, termios.TCSANOW, self.tattr)
+    def cleanup(self):
+        pass
 
     def poll(self):
-        if os.name == "nt":
-            if self.captured_chars:
-                return self.captured_chars.pop(0)
+        if self.captured_chars:
+            return self.captured_chars.pop(0)
 
-            events_peek = self.read_handle.PeekConsoleInput(10000)
+        events_peek = self.read_handle.PeekConsoleInput(10000)
 
-            if not events_peek:
-                return None
-
-            if not len(events_peek) == self.cur_event_length:
-                for cur_event in events_peek[self.cur_event_length :]:
-                    if cur_event.EventType == KEY_EVENT:
-                        if ord(cur_event.Char) and cur_event.KeyDown:
-                            cur_char = str(cur_event.Char)
-                            self.captured_chars.append(cur_char)
-
-                self.cur_event_length = len(events_peek)
-
-            if self.captured_chars:
-                return self.captured_chars.pop(0)
-            else:
-                return None
-        else:
-            dr, dw, de = select.select([sys.stdin], [], [], 0)
-            if not dr == []:
-                return sys.stdin.read(1)
+        if not events_peek:
             return None
+
+        if not len(events_peek) == self.cur_event_length:
+            for cur_event in events_peek[self.cur_event_length :]:
+                if cur_event.EventType == KEY_EVENT:
+                    if ord(cur_event.Char) and cur_event.KeyDown:
+                        cur_char = str(cur_event.Char)
+                        self.captured_chars.append(cur_char)
+
+            self.cur_event_length = len(events_peek)
+
+        if self.captured_chars:
+            return self.captured_chars.pop(0)
+        else:
+            return None
+
+
+def get_poller():
+    if os.name == "nt":
+        poller = WindowsKeyPoller()
+    else:
+        poller = UnixKeyPoller()
+
+    poller.setup()
+    return poller
 
 
 def input_listener(key_to_func_map):
     def input_listener_func():
-        with KeyPoller() as poller:
-            map = key_to_func_map
+        try:
+            poller = get_poller()
             while True:
                 input = poller.poll()
                 if input is not None:
-                    logging.debug(f"Input key: {input}")
-                    for key in map:
+                    for key in key_to_func_map:
                         if input == key:
-                            map[key]()
+                            key_to_func_map[key]()
                 else:
                     gevent.sleep(0.2)
+        except Exception:
+            pass
+        finally:
+            poller.cleanup()
 
     return input_listener_func
