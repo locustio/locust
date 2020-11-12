@@ -141,7 +141,7 @@ To start tests directly, without using the web interface, use ``--headless``.
 Parameters can also be set through :ref:`environment variables <environment-variables>`, or in a
 :ref:`config file <configuration-file>`.
 
-To change number of users during a headless run press w or W (1, 10) to spawn users and s or S to stop(1, 10)
+To add/remove users during a headless run press w or W (1, 10) to spawn users and s or S to stop(1, 10).
 
 How to write a *real* locust file?
 """"""""""""""""""""""""""""""""""
