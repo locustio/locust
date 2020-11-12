@@ -30,7 +30,8 @@ Locust will shutdown once the time is up.
 Allow tasks to finish their iteration on shutdown
 -------------------------------------------------
 
-By default, locust will stop your tasks immediately. If you want to allow your tasks to finish their iteration, you can use ``--stop-timeout <seconds>``.
+By default, locust will stop your tasks immediately (without even waiting for requests to finish). 
+If you want to allow your tasks to finish their iteration, you can use ``--stop-timeout <seconds>``.
 
 .. code-block:: console
 
