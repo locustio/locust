@@ -4,7 +4,7 @@ import signal
 import subprocess
 import textwrap
 from unittest import TestCase
-from subprocess import PIPE
+from subprocess import PIPE, STDOUT
 
 import gevent
 import requests
@@ -313,3 +313,37 @@ class LoadTestShape(LoadTestShape):
             gevent.sleep(1)
             self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % port, timeout=1).status_code)
             proc.terminate()
+
+    def test_input(self):
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen(
+                " ".join(
+                    [
+                        "locust",
+                        "-f",
+                        mocked.file_path,
+                        "--headless",
+                        "--run-time",
+                        "4s",
+                        "-u",
+                        "0",
+                    ]
+                ),
+                stderr=STDOUT,
+                stdin=PIPE,
+                stdout=PIPE,
+                shell=True,
+            )
+
+            gevent.sleep(1)
+            proc.stdin.write(b"w")
+            proc.stdin.write(b"W")
+            proc.stdin.write(b"s")
+            proc.stdin.write(b"S")
+            gevent.sleep(1)
+
+            output = proc.communicate()[0].decode("utf-8")
+            self.assertIn("Spawning 1 users at the rate 100 users/s", output)
+            self.assertIn("Spawning 10 users at the rate 100 users/s", output)
+            self.assertIn("1 Users have been stopped", output)
+            self.assertIn("10 Users have been stopped", output)

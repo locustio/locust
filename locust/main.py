@@ -23,6 +23,7 @@ from .user.inspectuser import get_task_ratio_dict, print_task_ratio
 from .util.timespan import parse_timespan
 from .exception import AuthCredentialsError
 from .shape import LoadTestShape
+from .input_events import input_listener
 
 
 version = locust.__version__
@@ -340,6 +341,29 @@ def main():
     else:
         pass  # dont log anything - not having a time limit is normal when not running headless
 
+    input_listener_greenlet = None
+    if not options.worker:
+        # spawn input listener greenlet
+        input_listener_greenlet = gevent.spawn(
+            input_listener(
+                {
+                    "w": lambda: runner.spawn_users(1, 100)
+                    if runner.state != "spawning"
+                    else logging.warning("Already spawning users, can't spawn more right now"),
+                    "W": lambda: runner.spawn_users(10, 100)
+                    if runner.state != "spawning"
+                    else logging.warning("Already spawning users, can't spawn more right now"),
+                    "s": lambda: runner.stop_users(1)
+                    if runner.state != "spawning"
+                    else logging.warning("Spawning users, can't stop right now"),
+                    "S": lambda: runner.stop_users(10)
+                    if runner.state != "spawning"
+                    else logging.warning("Spawning users, can't stop right now"),
+                }
+            )
+        )
+        input_listener_greenlet.link_exception(greenlet_exception_handler)
+
     stats_printer_greenlet = None
     if not options.only_summary and (options.print_stats or (options.headless and not options.worker)):
         # spawn stats printing greenlet
@@ -356,6 +380,10 @@ def main():
         Shut down locust by firing quitting event, printing/writing stats and exiting
         """
         logger.info("Running teardowns...")
+
+        if input_listener_greenlet is not None:
+            input_listener_greenlet.kill(block=False)
+
         environment.events.quitting.fire(environment=environment, reverse=True)
 
         # determine the process exit code
