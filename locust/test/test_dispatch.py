@@ -105,7 +105,7 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
         self.assertDictEqual(balanced_users, expected_balanced_users)
 
 
-class TestDispatchUsersWithWorkersWithoutUsers(unittest.TestCase):
+class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
     maxDiff = None
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_5(self):
@@ -773,7 +773,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
 
 
-class TestDispatchUsersToWorkersHavingMoreUsersThanTheTarget(unittest.TestCase):
+class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.TestCase):
     maxDiff = None
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_5(self):
@@ -970,6 +970,36 @@ class TestDispatchUsersToWorkersHavingMoreUsersThanTheTarget(unittest.TestCase):
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+
+
+class TestDispatchUsersToWorkersHavingMoreUsersThanTheTarget(unittest.TestCase):
+    maxDiff = None
+
+    def test_dispatch_users_to_3_workers(self):
+        worker_node1 = WorkerNode("1")
+        worker_node1.user_class_occurrences = {"User3": 15}
+        worker_node2 = WorkerNode("2")
+        worker_node2.user_class_occurrences = {"User1": 5}
+        worker_node3 = WorkerNode("3")
+        worker_node3.user_class_occurrences = {"User2": 7}
+
+        for spawn_rate in [0.5, 1, 2, 3, 4, 9]:
+            users_dispatcher = dispatch_users(
+                worker_nodes=[worker_node1, worker_node2, worker_node3],
+                user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+                spawn_rate=spawn_rate,
+            )
+
+            ts = time.time()
+            self.assertDictEqual(next(users_dispatcher), {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            })
+            delta = time.time() - ts
+            self.assertTrue(0 <= delta <= 0.01, delta)
+
+            self.assertRaises(StopIteration, lambda: next(users_dispatcher))
 
 
 class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(unittest.TestCase):
