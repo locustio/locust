@@ -19,6 +19,9 @@ else:
 
 
 class UnixKeyPoller:
+    def __init__(self):
+        self.setup()
+
     def setup(self):
         try:
             self.stdin = sys.stdin.fileno()
@@ -39,6 +42,9 @@ class UnixKeyPoller:
 
 
 class WindowsKeyPoller:
+    def __init__(self):
+        self.setup()
+
     def setup(self):
         self.read_handle = GetStdHandle(STD_INPUT_HANDLE)
         self.read_handle.SetConsoleMode(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT)
@@ -77,18 +83,16 @@ class WindowsKeyPoller:
 
 def get_poller():
     if os.name == "nt":
-        poller = WindowsKeyPoller()
+        return WindowsKeyPoller()
     else:
-        poller = UnixKeyPoller()
-
-    poller.setup()
-    return poller
+        return UnixKeyPoller()
 
 
 def input_listener(key_to_func_map):
+    poller = get_poller()
+
     def input_listener_func():
         try:
-            poller = get_poller()
             while True:
                 input = poller.poll()
                 if input is not None:
@@ -97,8 +101,8 @@ def input_listener(key_to_func_map):
                             key_to_func_map[key]()
                 else:
                     gevent.sleep(0.2)
-        except Exception:
-            pass
+        except Exception as e:
+            logging.warning(f"Exception in keyboard input poller: {e}")
         finally:
             poller.cleanup()
 
