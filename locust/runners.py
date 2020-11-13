@@ -184,10 +184,10 @@ class Runner(object):
             while True:
                 if not bucket:
                     logger.info(
-                        "All users spawned: %s (%i already running)"
+                        "All users spawned: %s (%i total running)"
                         % (
                             ", ".join(["%s: %d" % (name, count) for name, count in occurrence_count.items()]),
-                            existing_count,
+                            len(self.user_greenlets),
                         )
                     )
                     self.environment.events.spawning_complete.fire(user_count=len(self.user_greenlets))
