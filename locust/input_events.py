@@ -20,9 +20,6 @@ else:
 
 class UnixKeyPoller:
     def __init__(self):
-        self.setup()
-
-    def setup(self):
         try:
             self.stdin = sys.stdin.fileno()
             self.tattr = termios.tcgetattr(self.stdin)
@@ -43,9 +40,6 @@ class UnixKeyPoller:
 
 class WindowsKeyPoller:
     def __init__(self):
-        self.setup()
-
-    def setup(self):
         self.read_handle = GetStdHandle(STD_INPUT_HANDLE)
         self.read_handle.SetConsoleMode(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT)
         self.cur_event_length = 0
