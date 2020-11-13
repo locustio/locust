@@ -26,7 +26,6 @@ class UnixKeyPoller:
             tty.setcbreak(self.stdin, termios.TCSANOW)
         except termios.error:
             pass
-        return self
 
     def cleanup(self):
         termios.tcsetattr(self.stdin, termios.TCSANOW, self.tattr)
@@ -45,8 +44,6 @@ class WindowsKeyPoller:
         self.cur_event_length = 0
         self.cur_keys_length = 0
         self.captured_chars = []
-
-        return self
 
     def cleanup(self):
         pass
