@@ -83,10 +83,7 @@ def dispatch_users(
             gevent.sleep(max(0.0, wait_between_dispatch - delta))
 
     else:
-        while sum(sum(x.values()) for x in effective_balanced_users.values()) > 0:
-            done = False
-            if all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences):
-                break
+        while not all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences):
             number_of_users_in_current_dispatch = 0
             for user_class in user_class_occurrences.keys():
                 if all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, user_class):
@@ -100,12 +97,6 @@ def dispatch_users(
                 )
                 if done:
                     break
-
-            if not done:
-                # We have no more users to dispatch and
-                # number_of_users_in_current_dispatch < number_of_users_per_dispatch,
-                # thus we need to break out of the while loop
-                break
 
             if all(
                     sum(x[user_class] for x in dispatched_users.values())
