@@ -82,6 +82,12 @@ def dispatch_users(
             delta = time.time() - ts
             gevent.sleep(max(0.0, wait_between_dispatch - delta))
 
+    elif (
+            not less_users_than_desired
+            and number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_class_occurrences) <= number_of_users_per_dispatch
+    ):
+        yield balanced_users
+
     else:
         while not all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences):
             number_of_users_in_current_dispatch = 0
@@ -98,14 +104,6 @@ def dispatch_users(
                 if done:
                     break
 
-            if all(
-                    sum(x[user_class] for x in dispatched_users.values())
-                    >= sum(x[user_class] for x in balanced_users.values())
-                    for user_class in user_class_occurrences.keys()
-            ):
-                # TODO: Explain
-                break
-
             ts = time.time()
             yield {
                 worker_node_id: dict(sorted(user_class_occurrences.items(), key=lambda x: x[0]))
@@ -120,6 +118,22 @@ def dispatch_users(
         # TODO: Explain why we don't stop the users at "spawn_rate"
         #       and why we stop the excess users once at the end.
         yield balanced_users
+
+
+# TODO: test
+def number_of_users_left_to_dispatch(
+        dispatched_users: Dict[str, Dict[str, int]],
+        balanced_users: Dict[str, Dict[str, int]],
+        user_class_occurrences: Dict[str, int],
+) -> int:
+    return sum(
+        max(
+            0,
+            sum(x[user_class] for x in balanced_users.values())
+            - sum(x[user_class] for x in dispatched_users.values())
+        )
+        for user_class in user_class_occurrences.keys()
+    )
 
 
 def distribute_current_user_class_among_workers(
