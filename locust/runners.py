@@ -263,7 +263,7 @@ class Runner(object):
             )
             stop_group.kill(block=True)
 
-        logger.info("%i Users have been stopped" % user_count)
+        logger.info("%i Users have been stopped, %g still running" % (user_count, len(self.user_greenlets)))
 
     def monitor_cpu(self):
         process = psutil.Process()
