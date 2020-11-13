@@ -183,10 +183,10 @@ class Runner:
             while True:
                 if not bucket:
                     logger.info(
-                        "All users spawned: %s (%i already running)"
+                        "All users spawned: %s (%i total running)"
                         % (
                             ", ".join(["%s: %d" % (name, count) for name, count in occurrence_count.items()]),
-                            existing_count,
+                            len(self.user_greenlets),
                         )
                     )
                     self.environment.events.spawning_complete.fire(user_count=len(self.user_greenlets))
@@ -262,7 +262,7 @@ class Runner:
             )
             stop_group.kill(block=True)
 
-        logger.info("%i Users have been stopped" % user_count)
+        logger.info("%i Users have been stopped, %g still running" % (user_count, len(self.user_greenlets)))
 
     def monitor_cpu(self):
         process = psutil.Process()
