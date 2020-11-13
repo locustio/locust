@@ -350,10 +350,18 @@ def main():
         input_listener_greenlet = gevent.spawn(
             input_listener(
                 {
-                    "w": lambda: runner.spawn_users(1, 100),
-                    "W": lambda: runner.spawn_users(10, 100),
-                    "s": lambda: runner.stop_users(1),
-                    "S": lambda: runner.stop_users(10),
+                    "w": lambda: runner.spawn_users(1, 100)
+                    if runner.state != "spawning"
+                    else logging.warning("Already spawning users, can't spawn more right now"),
+                    "W": lambda: runner.spawn_users(10, 100)
+                    if runner.state != "spawning"
+                    else logging.warning("Already spawning users, can't spawn more right now"),
+                    "s": lambda: runner.stop_users(1)
+                    if runner.state != "spawning"
+                    else logging.warning("Spawning users, can't stop right now"),
+                    "S": lambda: runner.stop_users(10)
+                    if runner.state != "spawning"
+                    else logging.warning("Spawning users, can't stop right now"),
                 }
             )
         )
