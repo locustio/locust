@@ -1,6 +1,24 @@
 # Changelog
 
-## [1.3.2](https://github.com/locustio/locust/tree/1.3.2) (2020-11-02)
+## [1.4.0](https://github.com/locustio/locust/tree/1.4.0) (2020-11-13)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.3.2...1.4.0)
+
+**Closed issues:**
+
+- Control user count from terminal [\#1600](https://github.com/locustio/locust/issues/1600)
+- Introduce sensible default settings for run time [\#1598](https://github.com/locustio/locust/issues/1598)
+- Make wait\_time default to zero \(vote up/down for this ticket please :\) [\#1308](https://github.com/locustio/locust/issues/1308)
+
+**Merged pull requests:**
+
+- Improve logging about users spawned/stopped [\#1628](https://github.com/locustio/locust/pull/1628) ([cyberw](https://github.com/cyberw))
+- Make zero wait time the default [\#1626](https://github.com/locustio/locust/pull/1626) ([cyberw](https://github.com/cyberw))
+- Make infinite run time the default when running headless [\#1625](https://github.com/locustio/locust/pull/1625) ([cyberw](https://github.com/cyberw))
+- issue-1571 : Added a logging line when workers connect [\#1617](https://github.com/locustio/locust/pull/1617) ([zdannar](https://github.com/zdannar))
+- Add key commands for increasing and stopping users  [\#1612](https://github.com/locustio/locust/pull/1612) ([DennisKrone](https://github.com/DennisKrone))
+
+## [1.3.2](https://github.com/locustio/locust/tree/1.3.2) (2020-11-03)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.3.1...1.3.2)
 

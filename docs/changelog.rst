@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.4.0
+=====
+
+* You can now control user count from terminal while the test is running https://github.com/locustio/locust/pull/1612
+* Infinite run time is now the default for command line runs https://github.com/locustio/locust/pull/1625
+* wait_time now defaults to zero https://github.com/locustio/locust/pull/1626
+
 1.3.2
 =====
 
