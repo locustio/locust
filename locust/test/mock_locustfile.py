@@ -5,7 +5,7 @@ import time
 from contextlib import contextmanager
 
 
-MOCK_LOUCSTFILE_CONTENT = '''
+MOCK_LOCUSTFILE_CONTENT = '''
 """This is a mock locust file for unit testing"""
 
 from locust import HttpUser, TaskSet, task, between, LoadTestShape
@@ -40,7 +40,7 @@ class MockedLocustfile:
 
 
 @contextmanager
-def mock_locustfile(filename_prefix="mock_locustfile", content=MOCK_LOUCSTFILE_CONTENT):
+def mock_locustfile(filename_prefix="mock_locustfile", content=MOCK_LOCUSTFILE_CONTENT):
     mocked = MockedLocustfile()
     mocked.directory = os.path.dirname(os.path.abspath(__file__))
     mocked.filename = "%s_%s_%i.py" % (

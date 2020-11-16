@@ -172,8 +172,6 @@ class Runner:
             n = 0
             while n < spawn_count:
                 new_user = self.user_classes_by_name[user_class](self.environment)
-                if self.environment.host is not None:
-                    new_user.host = self.environment.host
                 new_user.start(self.user_greenlets)
                 n += 1
                 if n % 10 == 0 or n == spawn_count:
@@ -352,11 +350,7 @@ class Runner:
             self.shape_greenlet = None
             self.shape_last_state = None
 
-        user_classes_stop_count = {
-            user_class: self.user_class_occurrences[user_class]
-            for user_class, occurrences in self.user_class_occurrences.items()
-        }
-        self.stop_users(user_classes_stop_count)
+        self.stop_users(self.user_class_occurrences)
 
         self.update_state(STATE_STOPPED)
 

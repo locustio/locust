@@ -14,7 +14,7 @@ from locust import main
 from locust.argument_parser import parse_options
 from locust.main import create_environment
 from locust.user import HttpUser, User, TaskSet
-from .mock_locustfile import mock_locustfile, MOCK_LOUCSTFILE_CONTENT
+from .mock_locustfile import mock_locustfile, MOCK_LOCUSTFILE_CONTENT
 from .testcases import LocustTestCase
 from .util import temporary_file, get_free_tcp_port
 
@@ -71,8 +71,8 @@ class TestLoadLocustfile(LocustTestCase):
 
     def test_with_shape_class(self):
         content = (
-            MOCK_LOUCSTFILE_CONTENT
-            + """class LoadTestShape(LoadTestShape):
+                MOCK_LOCUSTFILE_CONTENT
+                + """class LoadTestShape(LoadTestShape):
     pass
         """
         )
@@ -236,7 +236,7 @@ class LocustProcessIntegrationTest(TestCase):
                 .decode("utf-8")
                 .strip()
             )
-            self.assertIn("Spawning 1 users at the rate 1 users/s", output)
+            self.assertIn("Spawning additional {\"UserSubclass\": 1} ({\"UserSubclass\": 0} already running)...", output)
 
     def test_headless_spawn_options_wo_run_time(self):
         with mock_locustfile() as mocked:
@@ -255,13 +255,13 @@ class LocustProcessIntegrationTest(TestCase):
             self.assertIn("Shutting down (exit code 0), bye", stderr)
 
     def test_default_headless_spawn_options_with_shape(self):
-        content = MOCK_LOUCSTFILE_CONTENT + textwrap.dedent(
+        content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
             """
             class LoadTestShape(LoadTestShape):
                 def tick(self):
                     run_time = self.get_run_time()
                     if run_time < 2:
-                            return (10, 1)
+                        return (10, 1)
 
                     return None
             """
