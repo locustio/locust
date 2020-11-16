@@ -316,7 +316,8 @@ class LoadTestShape(LoadTestShape):
             proc.terminate()
 
     def test_input(self):
-        LOCUSTFILE_CONTENT = textwrap.dedent("""
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
         from locust import User, TaskSet, task, between
         
         class UserSubclass(User):
@@ -324,7 +325,8 @@ class LoadTestShape(LoadTestShape):
             @task
             def t(self):
                 print("Test task is running")
-        """)
+        """
+        )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             stdin_m, stdin_s = pty.openpty()
             stdin = os.fdopen(stdin_m, "wb", 0)
@@ -348,7 +350,7 @@ class LoadTestShape(LoadTestShape):
                 shell=True,
             )
             gevent.sleep(1)
-            
+
             stdin.write(b"w")
             gevent.sleep(0.1)
             stdin.write(b"W")
