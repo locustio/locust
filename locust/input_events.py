@@ -94,7 +94,7 @@ def input_listener(key_to_func_map):
         try:
             while True:
                 input = poller.poll()
-                if input is not None:
+                if input:
                     for key in key_to_func_map:
                         if input == key:
                             key_to_func_map[key]()
