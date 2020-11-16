@@ -71,8 +71,8 @@ class TestLoadLocustfile(LocustTestCase):
 
     def test_with_shape_class(self):
         content = (
-                MOCK_LOCUSTFILE_CONTENT
-                + """class LoadTestShape(LoadTestShape):
+            MOCK_LOCUSTFILE_CONTENT
+            + """class LoadTestShape(LoadTestShape):
     pass
         """
         )
