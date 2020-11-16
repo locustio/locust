@@ -1,5 +1,6 @@
 import os
 import platform
+import pty
 import signal
 import subprocess
 import textwrap
@@ -315,7 +316,19 @@ class LoadTestShape(LoadTestShape):
             proc.terminate()
 
     def test_input(self):
-        with mock_locustfile() as mocked:
+        LOCUSTFILE_CONTENT = textwrap.dedent("""
+        from locust import User, TaskSet, task, between
+        
+        class UserSubclass(User):
+            wait_time = between(0.2, 0.8)
+            @task
+            def t(self):
+                print("Test task is running")
+        """)
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            stdin_m, stdin_s = pty.openpty()
+            stdin = os.fdopen(stdin_m, "wb", 0)
+
             proc = subprocess.Popen(
                 " ".join(
                     [
@@ -330,20 +343,26 @@ class LoadTestShape(LoadTestShape):
                     ]
                 ),
                 stderr=STDOUT,
-                stdin=PIPE,
+                stdin=stdin_s,
                 stdout=PIPE,
                 shell=True,
             )
-
             gevent.sleep(1)
-            proc.stdin.write(b"w")
-            proc.stdin.write(b"W")
-            proc.stdin.write(b"s")
-            proc.stdin.write(b"S")
+            
+            stdin.write(b"w")
+            gevent.sleep(0.1)
+            stdin.write(b"W")
+            gevent.sleep(0.1)
+            stdin.write(b"s")
+            gevent.sleep(0.1)
+            stdin.write(b"S")
+
             gevent.sleep(1)
 
             output = proc.communicate()[0].decode("utf-8")
+            stdin.close()
             self.assertIn("Spawning 1 users at the rate 100 users/s", output)
             self.assertIn("Spawning 10 users at the rate 100 users/s", output)
             self.assertIn("1 Users have been stopped", output)
             self.assertIn("10 Users have been stopped", output)
+            self.assertIn("Test task is running", output)

@@ -18,14 +18,18 @@ else:
     import tty
 
 
+class InitError(Exception):
+    pass
+
+
 class UnixKeyPoller:
     def __init__(self):
-        try:
+        if sys.stdin.isatty():
             self.stdin = sys.stdin.fileno()
             self.tattr = termios.tcgetattr(self.stdin)
             tty.setcbreak(self.stdin, termios.TCSANOW)
-        except termios.error:
-            pass
+        else:
+            raise InitError("Terminal was not a tty. Keyboard input disabled")
 
     def cleanup(self):
         termios.tcsetattr(self.stdin, termios.TCSANOW, self.tattr)
@@ -80,13 +84,17 @@ def get_poller():
 
 
 def input_listener(key_to_func_map):
-    poller = get_poller()
-
     def input_listener_func():
+        try:
+            poller = get_poller()
+        except InitError as e:
+            logging.info(e)
+            return
+
         try:
             while True:
                 input = poller.poll()
-                if input is not None:
+                if input:
                     for key in key_to_func_map:
                         if input == key:
                             key_to_func_map[key]()
