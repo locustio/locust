@@ -123,7 +123,6 @@ def dispatch_users(
         yield balanced_users
 
 
-# TODO: test
 def number_of_users_left_to_dispatch(
         dispatched_users: Dict[str, Dict[str, int]],
         balanced_users: Dict[str, Dict[str, int]],
@@ -161,7 +160,6 @@ def distribute_current_user_class_among_workers(
     return done, number_of_users_in_current_dispatch
 
 
-# TODO: test
 def all_users_have_been_dispatched(
         dispatched_users: Dict[str, Dict[str, int]],
         effective_balanced_users: Dict[str, Dict[str, int]],
@@ -174,7 +172,6 @@ def all_users_have_been_dispatched(
     )
 
 
-# TODO: test
 def all_users_of_current_class_have_been_dispatched(
         dispatched_users: Dict[str, Dict[str, int]],
         effective_balanced_users: Dict[str, Dict[str, int]],
@@ -184,33 +181,6 @@ def all_users_of_current_class_have_been_dispatched(
         sum(x[user_class] for x in dispatched_users.values())
         >= sum(x[user_class] for x in effective_balanced_users.values())
     )
-
-
-# TODO: test
-def add_dispatched_users(
-        dispatched_users1: Dict[str, Dict[str, int]],
-        dispatched_users2: Dict[str, Dict[str, int]],
-) -> Dict[str, Dict[str, int]]:
-    worker_node_ids = sorted(
-        set(dispatched_users1.keys()).union(
-            dispatched_users2.keys()
-        )
-    )
-    user_classes = sorted(
-        set(y for x in dispatched_users1.values() for y in x.keys()).union(
-            y for x in dispatched_users2.values() for y in x.keys()
-        )
-    )
-    return {
-        worker_node_id: {
-            user_class: (
-                dispatched_users1.get(worker_node_id, {}).get(user_class, 0)
-                + dispatched_users2.get(worker_node_id, {}).get(user_class, 0)
-            )
-            for user_class in user_classes
-        }
-        for worker_node_id in worker_node_ids
-    }
 
 
 def balance_users_among_workers(

@@ -79,7 +79,7 @@ class Runner:
         self.worker_cpu_warning_emitted = False
         self.greenlet.spawn(self.monitor_cpu).link_exception(greenlet_exception_handler)
         self.exceptions = {}
-        self.target_user_count = None
+        self.target_user_class_occurrences: Dict[str, int] = {}
 
         # set up event listeners for recording requests
         def on_request_success(request_type, name, response_time, response_length, **kwargs):
@@ -130,7 +130,6 @@ class Runner:
         """
         return len(self.user_greenlets)
 
-    # TODO: Test this
     @property
     def user_class_occurrences(self) -> Dict[str, int]:
         """
@@ -262,9 +261,11 @@ class Runner:
         if wait and user_count - self.user_count > spawn_rate:
             raise ValueError("wait is True but the amount of users to add is greater than the spawn rate")
 
+        self.target_user_class_occurrences = weight_users(self.user_classes, user_count)
+
         users_dispatcher = dispatch_users(
             worker_nodes=[WorkerNode(id="dummy")],
-            user_class_occurrences=weight_users(self.user_classes, user_count),
+            user_class_occurrences=self.target_user_class_occurrences,
             spawn_rate=spawn_rate,
         )
 
@@ -370,6 +371,10 @@ class Runner:
         row["count"] += 1
         row["nodes"].add(node_id)
         self.exceptions[key] = row
+
+    @property
+    def target_user_count(self) -> int:
+        return sum(self.target_user_class_occurrences.values())
 
 
 class LocalRunner(Runner):
@@ -498,7 +503,6 @@ class MasterRunner(DistributedRunner):
         self.worker_cpu_warning_emitted = False
         self.master_bind_host = master_bind_host
         self.master_bind_port = master_bind_port
-        self.target_user_class_occurrences: Dict[str, int] = {}
         self.spawn_rate: float = 0
 
         self.clients = WorkerNodes()
@@ -744,11 +748,6 @@ class MasterRunner(DistributedRunner):
     def worker_count(self):
         return len(self.clients.ready) + len(self.clients.spawning) + len(self.clients.running)
 
-    # TODO: Test this
-    @property
-    def target_user_count(self) -> int:
-        return sum(self.user_class_occurrences.values())
-
 
 class WorkerRunner(DistributedRunner):
     """
@@ -812,6 +811,8 @@ class WorkerRunner(DistributedRunner):
 
         :param user_class_occurrences: Users to run
         """
+        self.target_user_class_occurrences = user_class_occurrences
+
         if self.worker_state != STATE_RUNNING and self.worker_state != STATE_SPAWNING:
             self.stats.clear_all()
             self.exceptions = {}

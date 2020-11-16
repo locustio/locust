@@ -194,7 +194,6 @@ class Environment:
         for user_class in self.user_classes:
             filter_tasks_by_tags(user_class, self.tags, self.exclude_tags)
 
-    # TODO: Test this
     @property
     def user_classes_by_name(self) -> Dict[str, Type[User]]:
         return {u.__name__: u for u in self.user_classes}

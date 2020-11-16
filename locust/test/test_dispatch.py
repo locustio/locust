@@ -2,8 +2,11 @@ import time
 import unittest
 
 from locust.dispatch import (
+    all_users_have_been_dispatched,
+    all_users_of_current_class_have_been_dispatched,
     balance_users_among_workers,
     dispatch_users,
+    number_of_users_left_to_dispatch,
 )
 from locust.runners import WorkerNode
 
@@ -1480,3 +1483,133 @@ class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(unittest.TestCase)
             self.assertRaises(StopIteration, lambda: next(users_dispatcher))
             delta = time.time() - ts
             self.assertTrue(0 <= delta <= 0.01, delta)
+
+
+class TestNumberOfUsersLeftToDispatch(unittest.TestCase):
+    maxDiff = None
+
+    def test_number_of_users_left_to_dispatch(self):
+        user_class_occurrences = {"User1": 6, "User2": 2, "User3": 8}
+        balanced_users = {
+            "Worker1": {"User1": 3, "User2": 1, "User3": 4},
+            "Worker2": {"User1": 3, "User2": 1, "User3": 4},
+        }
+
+        dispatched_users = {
+            "Worker1": {"User1": 5, "User2": 2, "User3": 6},
+            "Worker2": {"User1": 5, "User2": 2, "User3": 6},
+        }
+        result = number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_class_occurrences)
+        self.assertEqual(0, result)
+
+        dispatched_users = {
+            "Worker1": {"User1": 2, "User2": 0, "User3": 4},
+            "Worker2": {"User1": 2, "User2": 0, "User3": 4},
+        }
+        result = number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_class_occurrences)
+        self.assertEqual(4, result)
+
+        dispatched_users = {
+            "Worker1": {"User1": 3, "User2": 1, "User3": 4},
+            "Worker2": {"User1": 3, "User2": 0, "User3": 4},
+        }
+        result = number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_class_occurrences)
+        self.assertEqual(1, result)
+
+        dispatched_users = {
+            "Worker1": {"User1": 3, "User2": 1, "User3": 4},
+            "Worker2": {"User1": 3, "User2": 1, "User3": 4},
+        }
+        result = number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_class_occurrences)
+        self.assertEqual(0, result)
+
+
+class AllUsersHaveBeenDispatched(unittest.TestCase):
+    maxDiff = None
+
+    def test_all_users_have_been_dispatched(self):
+        user_class_occurrences = {"User1": 6, "User2": 2, "User3": 8}
+        effective_balanced_users = {
+            "Worker1": {"User1": 3, "User2": 1, "User3": 4},
+            "Worker2": {"User1": 3, "User2": 1, "User3": 4},
+        }
+
+        dispatched_users = {
+            "Worker1": {"User1": 3, "User2": 1, "User3": 4},
+            "Worker2": {"User1": 3, "User2": 1, "User3": 4},
+        }
+        self.assertTrue(all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences))
+
+        dispatched_users = {
+            "Worker1": {"User1": 4, "User2": 1, "User3": 4},
+            "Worker2": {"User1": 3, "User2": 1, "User3": 4},
+        }
+        self.assertTrue(all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences))
+
+        dispatched_users = {
+            "Worker1": {"User1": 2, "User2": 1, "User3": 4},
+            "Worker2": {"User1": 3, "User2": 1, "User3": 4},
+        }
+        self.assertFalse(all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences))
+
+        dispatched_users = {
+            "Worker1": {"User1": 0, "User2": 0, "User3": 0},
+            "Worker2": {"User1": 0, "User2": 0, "User3": 0},
+        }
+        self.assertFalse(all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences))
+
+        dispatched_users = {
+            "Worker1": {"User1": 4, "User2": 0, "User3": 0},
+            "Worker2": {"User1": 4, "User2": 0, "User3": 0},
+        }
+        self.assertFalse(all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences))
+
+
+class TestAllUsersOfCurrentClassHaveBeenDispatched(unittest.TestCase):
+    maxDiff = None
+
+    def test_all_users_of_current_class_have_been_dispatched(self):
+        effective_balanced_users = {
+            "Worker1": {"User1": 3, "User2": 1, "User3": 4},
+            "Worker2": {"User1": 3, "User2": 1, "User3": 4},
+        }
+
+        dispatched_users = {
+            "Worker1": {"User1": 3, "User2": 1, "User3": 4},
+            "Worker2": {"User1": 3, "User2": 1, "User3": 4},
+        }
+        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User1"))
+        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User2"))
+        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User3"))
+
+        dispatched_users = {
+            "Worker1": {"User1": 4, "User2": 1, "User3": 4},
+            "Worker2": {"User1": 3, "User2": 1, "User3": 4},
+        }
+        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User1"))
+        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User2"))
+        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User3"))
+
+        dispatched_users = {
+            "Worker1": {"User1": 2, "User2": 1, "User3": 4},
+            "Worker2": {"User1": 3, "User2": 1, "User3": 4},
+        }
+        self.assertFalse(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User1"))
+        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User2"))
+        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User3"))
+
+        dispatched_users = {
+            "Worker1": {"User1": 0, "User2": 0, "User3": 0},
+            "Worker2": {"User1": 0, "User2": 0, "User3": 0},
+        }
+        self.assertFalse(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User1"))
+        self.assertFalse(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User2"))
+        self.assertFalse(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User3"))
+
+        dispatched_users = {
+            "Worker1": {"User1": 4, "User2": 0, "User3": 0},
+            "Worker2": {"User1": 4, "User2": 0, "User3": 0},
+        }
+        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User1"))
+        self.assertFalse(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User2"))
+        self.assertFalse(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User3"))
