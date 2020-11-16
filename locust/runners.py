@@ -94,7 +94,7 @@ class Runner:
         self.connection_broken = False
 
         # register listener that resets stats when spawning is complete
-        def on_spawning_complete(user_count):
+        def on_spawning_complete(user_class_occurrences):
             self.update_state(STATE_RUNNING)
             if environment.reset_stats:
                 logger.info("Resetting stats\n")
@@ -298,7 +298,7 @@ class Runner:
                 self.spawn_users(user_classes_spawn_count, wait)
                 self.stop_users(user_classes_stop_count)
 
-        self.environment.events.spawning_complete.fire(user_count=self.user_count)
+        self.environment.events.spawning_complete.fire(user_class_occurrences=self.target_user_class_occurrences)
 
     def start_shape(self):
         if self.shape_greenlet:
@@ -727,7 +727,7 @@ class MasterRunner(DistributedRunner):
                 self.clients[msg.node_id].state = STATE_RUNNING
                 self.clients[msg.node_id].user_class_occurrences = msg.data["user_class_occurrences"]
                 if len(self.clients.spawning) == 0:
-                    self.environment.events.spawning_complete.fire(user_count=self.user_count)
+                    self.environment.events.spawning_complete.fire(user_class_occurrences=self.user_class_occurrences)
             elif msg.type == "quit":
                 if msg.node_id in self.clients:
                     del self.clients[msg.node_id]

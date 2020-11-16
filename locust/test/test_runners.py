@@ -1996,13 +1996,13 @@ class TestStopTimeout(LocustTestCase):
                 pass
 
         test_stop_run = [0]
-        environment = Environment(user_classes=[User])
+        environment = Environment(user_classes=[MyUser])
 
         def on_test_stop_ok(*args, **kwargs):
             test_stop_run[0] += 1
 
         def on_test_stop_fail(*args, **kwargs):
-            assert 0
+            assert False
 
         environment.events.test_stop.add_listener(on_test_stop_ok)
         environment.events.test_stop.add_listener(on_test_stop_fail)

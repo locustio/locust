@@ -119,7 +119,7 @@ class Events:
 
     Event arguments:
 
-    :param user_count: Number of users that were spawned
+    :param user_class_occurrences: Number of users for each class that were spawned
     """
 
     quitting: EventHook
