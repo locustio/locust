@@ -1525,6 +1525,12 @@ class TestWorkerRunner(LocustTestCase):
         class MyUser(User):
             wait_time = constant(1)
 
+            def start(self, group: Group):
+                # We do this so that the spawning does not finish
+                # too quickly
+                gevent.sleep(0.1)
+                return super().start(group)
+
             @task
             def my_task(self):
                 pass
