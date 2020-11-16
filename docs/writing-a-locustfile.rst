@@ -142,9 +142,11 @@ The easiest way to add a task for a User is by using the :py:meth:`task <locust.
 
 .. code-block:: python
 
-    from locust import User, task
+    from locust import User, task, constant
 
     class MyUser(User):
+        wait_time = constant(1)
+        
         @task
         def my_task(self):
             print("User instance (%r) executing my_task" % self)
