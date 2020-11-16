@@ -7,6 +7,19 @@ from locust.distribution import weight_users
 class TestDistribution(unittest.TestCase):
     maxDiff = None
 
+    def test_distribution_no_user_classes(self):
+        user_class_occurrences = weight_users(
+            user_classes=[],
+            number_of_users=0,
+        )
+        self.assertDictEqual(user_class_occurrences, {})
+
+        user_class_occurrences = weight_users(
+            user_classes=[],
+            number_of_users=1,
+        )
+        self.assertDictEqual(user_class_occurrences, {})
+
     def test_distribution_equal_weights_and_fewer_amount_than_user_classes(self):
         class User1(User):
             weight = 1

@@ -108,6 +108,105 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
 class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
     maxDiff = None
 
+    def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_15(self):
+        worker_node1 = WorkerNode("1")
+        worker_node2 = WorkerNode("2")
+        worker_node3 = WorkerNode("3")
+
+        users_dispatcher = dispatch_users(
+            worker_nodes=[worker_node1, worker_node2, worker_node3],
+            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            spawn_rate=0.15,
+        )
+
+        sleep_time = 1 / 0.15
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 0, "User3": 0},
+            "2": {"User1": 0, "User2": 0, "User3": 0},
+            "3": {"User1": 0, "User2": 0, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 0, "User3": 0},
+            "2": {"User1": 1, "User2": 0, "User3": 0},
+            "3": {"User1": 0, "User2": 0, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 0, "User3": 0},
+            "2": {"User1": 1, "User2": 0, "User3": 0},
+            "3": {"User1": 1, "User2": 0, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 0},
+            "2": {"User1": 1, "User2": 0, "User3": 0},
+            "3": {"User1": 1, "User2": 0, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 0},
+            "2": {"User1": 1, "User2": 1, "User3": 0},
+            "3": {"User1": 1, "User2": 0, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 0},
+            "2": {"User1": 1, "User2": 1, "User3": 0},
+            "3": {"User1": 1, "User2": 1, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 1},
+            "2": {"User1": 1, "User2": 1, "User3": 0},
+            "3": {"User1": 1, "User2": 1, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 1},
+            "2": {"User1": 1, "User2": 1, "User3": 1},
+            "3": {"User1": 1, "User2": 1, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 1},
+            "2": {"User1": 1, "User2": 1, "User3": 1},
+            "3": {"User1": 1, "User2": 1, "User3": 1},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
+
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_5(self):
         worker_node1 = WorkerNode("1")
         worker_node2 = WorkerNode("2")
@@ -200,7 +299,10 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_1(self):
         worker_node1 = WorkerNode("1")
@@ -294,7 +396,10 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_2(self):
         worker_node1 = WorkerNode("1")
@@ -352,7 +457,73 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
+
+    def test_dispatch_users_to_3_workers_with_spawn_rate_of_2_4(self):
+        worker_node1 = WorkerNode("1")
+        worker_node2 = WorkerNode("2")
+        worker_node3 = WorkerNode("3")
+
+        users_dispatcher = dispatch_users(
+            worker_nodes=[worker_node1, worker_node2, worker_node3],
+            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            spawn_rate=2.4,
+        )
+
+        sleep_time = 2 / 2.4
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 0, "User3": 0},
+            "2": {"User1": 1, "User2": 0, "User3": 0},
+            "3": {"User1": 0, "User2": 0, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 0},
+            "2": {"User1": 1, "User2": 0, "User3": 0},
+            "3": {"User1": 1, "User2": 0, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 0},
+            "2": {"User1": 1, "User2": 1, "User3": 0},
+            "3": {"User1": 1, "User2": 1, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 1},
+            "2": {"User1": 1, "User2": 1, "User3": 1},
+            "3": {"User1": 1, "User2": 1, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 1},
+            "2": {"User1": 1, "User2": 1, "User3": 1},
+            "3": {"User1": 1, "User2": 1, "User3": 1},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_3(self):
         worker_node1 = WorkerNode("1")
@@ -392,7 +563,10 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_4(self):
         worker_node1 = WorkerNode("1")
@@ -432,7 +606,10 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_9(self):
         worker_node1 = WorkerNode("1")
@@ -454,12 +631,99 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
 
 class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
     maxDiff = None
 
+    def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_15(self):
+        worker_node1 = WorkerNode("1")
+        worker_node1.user_class_occurrences = {}
+        worker_node2 = WorkerNode("2")
+        worker_node2.user_class_occurrences = {"User1": 1}
+        worker_node3 = WorkerNode("3")
+        worker_node3.user_class_occurrences = {"User2": 1}
+
+        users_dispatcher = dispatch_users(
+            worker_nodes=[worker_node1, worker_node2, worker_node3],
+            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            spawn_rate=0.15,
+        )
+
+        sleep_time = 1 / 0.15
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 0, "User3": 0},
+            "2": {"User1": 1, "User2": 0, "User3": 0},
+            "3": {"User1": 0, "User2": 1, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 0, "User3": 0},
+            "2": {"User1": 1, "User2": 0, "User3": 0},
+            "3": {"User1": 1, "User2": 1, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 0},
+            "2": {"User1": 1, "User2": 0, "User3": 0},
+            "3": {"User1": 1, "User2": 1, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 0},
+            "2": {"User1": 1, "User2": 1, "User3": 0},
+            "3": {"User1": 1, "User2": 1, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 1},
+            "2": {"User1": 1, "User2": 1, "User3": 0},
+            "3": {"User1": 1, "User2": 1, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 1},
+            "2": {"User1": 1, "User2": 1, "User3": 1},
+            "3": {"User1": 1, "User2": 1, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 1},
+            "2": {"User1": 1, "User2": 1, "User3": 1},
+            "3": {"User1": 1, "User2": 1, "User3": 1},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
+
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_5(self):
         worker_node1 = WorkerNode("1")
         worker_node1.user_class_occurrences = {}
@@ -537,7 +801,10 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_1(self):
         worker_node1 = WorkerNode("1")
@@ -616,7 +883,10 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_2(self):
         worker_node1 = WorkerNode("1")
@@ -668,7 +938,67 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
+
+    def test_dispatch_users_to_3_workers_with_spawn_rate_of_2_4(self):
+        worker_node1 = WorkerNode("1")
+        worker_node1.user_class_occurrences = {}
+        worker_node2 = WorkerNode("2")
+        worker_node2.user_class_occurrences = {"User1": 1}
+        worker_node3 = WorkerNode("3")
+        worker_node3.user_class_occurrences = {"User2": 1}
+
+        users_dispatcher = dispatch_users(
+            worker_nodes=[worker_node1, worker_node2, worker_node3],
+            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            spawn_rate=2.4,
+        )
+
+        sleep_time = 2 / 2.4
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 0, "User3": 0},
+            "2": {"User1": 1, "User2": 0, "User3": 0},
+            "3": {"User1": 1, "User2": 1, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 0},
+            "2": {"User1": 1, "User2": 1, "User3": 0},
+            "3": {"User1": 1, "User2": 1, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 1},
+            "2": {"User1": 1, "User2": 1, "User3": 1},
+            "3": {"User1": 1, "User2": 1, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 1},
+            "2": {"User1": 1, "User2": 1, "User3": 1},
+            "3": {"User1": 1, "User2": 1, "User3": 1},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_3(self):
         worker_node1 = WorkerNode("1")
@@ -711,7 +1041,10 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_4(self):
         worker_node1 = WorkerNode("1")
@@ -745,7 +1078,10 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_9(self):
         worker_node1 = WorkerNode("1")
@@ -770,12 +1106,63 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
 
 class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.TestCase):
     maxDiff = None
 
+    def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_15(self):
+        worker_node1 = WorkerNode("1")
+        worker_node1.user_class_occurrences = {}
+        worker_node2 = WorkerNode("2")
+        worker_node2.user_class_occurrences = {"User1": 5}
+        worker_node3 = WorkerNode("3")
+        worker_node3.user_class_occurrences = {"User2": 7}
+
+        users_dispatcher = dispatch_users(
+            worker_nodes=[worker_node1, worker_node2, worker_node3],
+            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            spawn_rate=0.15,
+        )
+
+        sleep_time = 1 / 0.15
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 0, "User2": 0, "User3": 1},
+            "2": {"User1": 5, "User2": 0, "User3": 0},
+            "3": {"User1": 0, "User2": 7, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 0, "User2": 0, "User3": 1},
+            "2": {"User1": 5, "User2": 0, "User3": 1},
+            "3": {"User1": 0, "User2": 7, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 1},
+            "2": {"User1": 1, "User2": 1, "User3": 1},
+            "3": {"User1": 1, "User2": 1, "User3": 1},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
+
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_5(self):
         worker_node1 = WorkerNode("1")
         worker_node1.user_class_occurrences = {}
@@ -817,7 +1204,10 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_1(self):
         worker_node1 = WorkerNode("1")
@@ -860,7 +1250,10 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_2(self):
         worker_node1 = WorkerNode("1")
@@ -894,7 +1287,49 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
+
+    def test_dispatch_users_to_3_workers_with_spawn_rate_of_2_4(self):
+        worker_node1 = WorkerNode("1")
+        worker_node1.user_class_occurrences = {}
+        worker_node2 = WorkerNode("2")
+        worker_node2.user_class_occurrences = {"User1": 5}
+        worker_node3 = WorkerNode("3")
+        worker_node3.user_class_occurrences = {"User2": 7}
+
+        users_dispatcher = dispatch_users(
+            worker_nodes=[worker_node1, worker_node2, worker_node3],
+            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            spawn_rate=2.4,
+        )
+
+        sleep_time = 2 / 2.4
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 0, "User2": 0, "User3": 1},
+            "2": {"User1": 5, "User2": 0, "User3": 1},
+            "3": {"User1": 0, "User2": 7, "User3": 0},
+        })
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
+
+        ts = time.time()
+        self.assertDictEqual(next(users_dispatcher), {
+            "1": {"User1": 1, "User2": 1, "User3": 1},
+            "2": {"User1": 1, "User2": 1, "User3": 1},
+            "3": {"User1": 1, "User2": 1, "User3": 1},
+        })
+        delta = time.time() - ts
+        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+
+        ts = time.time()
+        self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_3(self):
         worker_node1 = WorkerNode("1")
@@ -919,7 +1354,10 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_4(self):
         worker_node1 = WorkerNode("1")
@@ -944,7 +1382,10 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_9(self):
         worker_node1 = WorkerNode("1")
@@ -969,7 +1410,10 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
+        ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.time() - ts
+        self.assertTrue(0 <= delta <= 0.01, delta)
 
 
 class TestDispatchUsersToWorkersHavingMoreUsersThanTheTarget(unittest.TestCase):
@@ -983,7 +1427,7 @@ class TestDispatchUsersToWorkersHavingMoreUsersThanTheTarget(unittest.TestCase):
         worker_node3 = WorkerNode("3")
         worker_node3.user_class_occurrences = {"User2": 7}
 
-        for spawn_rate in [0.5, 1, 2, 3, 4, 9]:
+        for spawn_rate in [0.15, 0.5, 1, 2, 2.4, 3, 4, 9]:
             users_dispatcher = dispatch_users(
                 worker_nodes=[worker_node1, worker_node2, worker_node3],
                 user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
@@ -999,7 +1443,10 @@ class TestDispatchUsersToWorkersHavingMoreUsersThanTheTarget(unittest.TestCase):
             delta = time.time() - ts
             self.assertTrue(0 <= delta <= 0.01, delta)
 
+            ts = time.time()
             self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+            delta = time.time() - ts
+            self.assertTrue(0 <= delta <= 0.01, delta)
 
 
 class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(unittest.TestCase):
@@ -1013,7 +1460,7 @@ class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(unittest.TestCase)
         worker_node3 = WorkerNode("3")
         worker_node3.user_class_occurrences = {"User1": 1, "User2": 1, "User3": 1}
 
-        for spawn_rate in [0.5, 1, 2, 3, 4, 9]:
+        for spawn_rate in [0.15, 0.5, 1, 2, 2.4, 3, 4, 9]:
             users_dispatcher = dispatch_users(
                 worker_nodes=[worker_node1, worker_node2, worker_node3],
                 user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
@@ -1029,4 +1476,7 @@ class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(unittest.TestCase)
             delta = time.time() - ts
             self.assertTrue(0 <= delta <= 0.01, delta)
 
+            ts = time.time()
             self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+            delta = time.time() - ts
+            self.assertTrue(0 <= delta <= 0.01, delta)

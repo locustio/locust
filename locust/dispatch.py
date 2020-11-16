@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import itertools
 import math
 import time
@@ -6,11 +8,13 @@ from typing import (
     Dict,
     Generator,
     List,
+    TYPE_CHECKING,
 )
 
 import gevent
 
-from locust.runners import WorkerNode
+if TYPE_CHECKING:
+    from locust.runners import WorkerNode
 
 
 def dispatch_users(
@@ -44,18 +48,18 @@ def dispatch_users(
         for worker_node in worker_nodes
     }
 
-    wait_between_dispatch = math.ceil(1 / spawn_rate)
+    number_of_users_per_dispatch = max(1, math.floor(spawn_rate))
 
-    number_of_users_per_dispatch = math.ceil(spawn_rate)
+    wait_between_dispatch = number_of_users_per_dispatch / spawn_rate
 
     dispatched_users = deepcopy(initial_dispatched_users)
 
     # The amount of users in each user class
     # is less than the desired amount
     less_users_than_desired = all(
-            sum(x[user_class] for x in dispatched_users.values())
-            < sum(x[user_class] for x in effective_balanced_users.values())
-            for user_class in user_class_occurrences.keys()
+        sum(x[user_class] for x in dispatched_users.values())
+        < sum(x[user_class] for x in effective_balanced_users.values())
+        for user_class in user_class_occurrences.keys()
     )
 
     if less_users_than_desired:
@@ -79,8 +83,9 @@ def dispatch_users(
                 worker_node_id: dict(sorted(user_class_occurrences.items(), key=lambda x: x[0]))
                 for worker_node_id, user_class_occurrences in sorted(dispatched_users.items(), key=lambda x: x[0])
             }
-            delta = time.time() - ts
-            gevent.sleep(max(0.0, wait_between_dispatch - delta))
+            if sum(sum(x.values()) for x in effective_balanced_users.values()) > 0:
+                delta = time.time() - ts
+                gevent.sleep(max(0.0, wait_between_dispatch - delta))
 
     elif (
             not less_users_than_desired
@@ -109,8 +114,9 @@ def dispatch_users(
                 worker_node_id: dict(sorted(user_class_occurrences.items(), key=lambda x: x[0]))
                 for worker_node_id, user_class_occurrences in sorted(dispatched_users.items(), key=lambda x: x[0])
             }
-            delta = time.time() - ts
-            gevent.sleep(max(0.0, wait_between_dispatch - delta))
+            if not all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences):
+                delta = time.time() - ts
+                gevent.sleep(max(0.0, wait_between_dispatch - delta))
 
         # If we are here, it means we have an excess of users for one or more user classes.
         # Hence, we need to dispatch a last set of users that will bring the desired users
@@ -178,8 +184,8 @@ def all_users_of_current_class_have_been_dispatched(
         user_class: str,
 ) -> bool:
     return (
-            sum(x[user_class] for x in dispatched_users.values())
-            >= sum(x[user_class] for x in effective_balanced_users.values())
+        sum(x[user_class] for x in dispatched_users.values())
+        >= sum(x[user_class] for x in effective_balanced_users.values())
     )
 
 
@@ -201,8 +207,8 @@ def add_dispatched_users(
     return {
         worker_node_id: {
             user_class: (
-                    dispatched_users1.get(worker_node_id, {}).get(user_class, 0)
-                    + dispatched_users2.get(worker_node_id, {}).get(user_class, 0)
+                dispatched_users1.get(worker_node_id, {}).get(user_class, 0)
+                + dispatched_users2.get(worker_node_id, {}).get(user_class, 0)
             )
             for user_class in user_classes
         }

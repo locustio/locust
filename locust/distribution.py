@@ -22,6 +22,9 @@ def weight_users(
     """
     assert number_of_users >= 0
 
+    if len(user_classes) == 0:
+        return {}
+
     user_classes = sorted(user_classes, key=lambda u: u.__name__)
 
     user_class_occurrences = {user_class.__name__: 0 for user_class in user_classes}
