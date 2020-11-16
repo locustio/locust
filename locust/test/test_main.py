@@ -319,7 +319,7 @@ class LoadTestShape(LoadTestShape):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
         from locust import User, TaskSet, task, between
-        
+
         class UserSubclass(User):
             wait_time = between(0.2, 0.8)
             @task
