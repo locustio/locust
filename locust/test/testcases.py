@@ -4,7 +4,6 @@ import random
 import sys
 import unittest
 import warnings
-from copy import copy
 from io import BytesIO
 
 import gevent

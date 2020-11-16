@@ -1,4 +1,3 @@
-import unittest
 from time import sleep
 import zmq
 from locust.rpc import zmqrpc, Message
