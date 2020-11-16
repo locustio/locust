@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import itertools
 import math
 import time
@@ -18,7 +16,7 @@ if TYPE_CHECKING:
 
 
 def dispatch_users(
-        worker_nodes: List[WorkerNode],
+        worker_nodes,  # type: List[WorkerNode]
         user_class_occurrences: Dict[str, int],
         spawn_rate: float,
 ) -> Generator[Dict[str, Dict[str, int]], None, None]:
@@ -217,7 +215,7 @@ def add_dispatched_users(
 
 
 def balance_users_among_workers(
-        worker_nodes: List[WorkerNode],
+        worker_nodes,  # type: List[WorkerNode]
         user_class_occurrences: Dict[str, int],
 ) -> Dict[str, Dict[str, int]]:
     balanced_users = {
