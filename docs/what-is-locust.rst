@@ -41,6 +41,11 @@ Features
 Name & background
 =================
 
+Locust was born out of a frustration with existing solutions. No existing load testing tool was well equipped to generate realistic 
+load against a dynamic website where most pages had different content for different users. Existing tools used clunky interfaces or 
+verbose configuration files to declare the tests. In Locust we took a different approach. Instead of configuration formats or UIs 
+you'd get a python framework that would let you define the behaviour of your users using Python code. 
+
 `Locust <http://en.wikipedia.org/wiki/Locust>`_ takes its name from the grasshopper species, known for their swarming behaviour. 
 
 Previous versions of Locust used terminology borrowed from nature (swarming, hatching, attacking etc), but now employs more industry standard naming.
