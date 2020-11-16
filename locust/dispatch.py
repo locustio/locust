@@ -112,9 +112,8 @@ def dispatch_users(
                 worker_node_id: dict(sorted(user_class_occurrences.items(), key=lambda x: x[0]))
                 for worker_node_id, user_class_occurrences in sorted(dispatched_users.items(), key=lambda x: x[0])
             }
-            if not all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences):
-                delta = time.time() - ts
-                gevent.sleep(max(0.0, wait_between_dispatch - delta))
+            delta = time.time() - ts
+            gevent.sleep(max(0.0, wait_between_dispatch - delta))
 
         # If we are here, it means we have an excess of users for one or more user classes.
         # Hence, we need to dispatch a last set of users that will bring the desired users
