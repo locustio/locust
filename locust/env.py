@@ -6,7 +6,12 @@ from .web import WebUI
 from .user import User
 from .user.task import filter_tasks_by_tags
 from .shape import LoadTestShape
-from typing import List
+from typing import (
+    Dict,
+    List,
+    Type,
+    Union,
+)
 
 
 class Environment:
@@ -16,7 +21,7 @@ class Environment:
     See :ref:`events` for available events.
     """
 
-    user_classes: List[User] = []
+    user_classes: List[Type[User]] = []
     """User classes that the runner will run"""
 
     shape_class: LoadTestShape = None
@@ -66,7 +71,7 @@ class Environment:
     def __init__(
         self,
         *,
-        user_classes=[],
+        user_classes=None,
         shape_class=None,
         tags=None,
         exclude_tags=None,
@@ -82,7 +87,7 @@ class Environment:
         else:
             self.events = Events()
 
-        self.user_classes = user_classes
+        self.user_classes = user_classes or []
         self.shape_class = shape_class
         self.tags = tags
         self.exclude_tags = exclude_tags
@@ -95,19 +100,21 @@ class Environment:
 
         self._filter_tasks_by_tags()
 
-    def _create_runner(self, runner_class, *args, **kwargs):
+    def _create_runner(
+            self, runner_class: Union[Type[LocalRunner], Type[MasterRunner], Type[WorkerRunner]], *args, **kwargs,
+    ) -> Union[LocalRunner, MasterRunner, WorkerRunner]:
         if self.runner is not None:
             raise RunnerAlreadyExistsError("Environment.runner already exists (%s)" % self.runner)
-        self.runner = runner_class(self, *args, **kwargs)
+        self.runner: Union[LocalRunner, MasterRunner, WorkerRunner] = runner_class(self, *args, **kwargs)
         return self.runner
 
-    def create_local_runner(self):
+    def create_local_runner(self) -> LocalRunner:
         """
         Create a :class:`LocalRunner <locust.runners.LocalRunner>` instance for this Environment
         """
         return self._create_runner(LocalRunner)
 
-    def create_master_runner(self, master_bind_host="*", master_bind_port=5557):
+    def create_master_runner(self, master_bind_host="*", master_bind_port=5557) -> MasterRunner:
         """
         Create a :class:`MasterRunner <locust.runners.MasterRunner>` instance for this Environment
 
@@ -121,7 +128,7 @@ class Environment:
             master_bind_port=master_bind_port,
         )
 
-    def create_worker_runner(self, master_host, master_port):
+    def create_worker_runner(self, master_host, master_port) -> WorkerRunner:
         """
         Create a :class:`WorkerRunner <locust.runners.WorkerRunner>` instance for this Environment
 
@@ -186,3 +193,8 @@ class Environment:
 
         for user_class in self.user_classes:
             filter_tasks_by_tags(user_class, self.tags, self.exclude_tags)
+
+    # TODO: Test this
+    @property
+    def user_classes_by_name(self) -> Dict[str, Type[User]]:
+        return {u.__name__: u for u in self.user_classes}

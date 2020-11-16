@@ -185,6 +185,14 @@ class User(object, metaclass=UserMeta):
             self._state = LOCUST_STATE_STOPPING
             return False
 
+    @property
+    def group(self):
+        return self._group
+
+    @property
+    def greenlet(self):
+        return self._greenlet
+
 
 class HttpUser(User):
     """

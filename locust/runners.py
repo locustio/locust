@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
-import random
 import socket
 import sys
+import time
 import traceback
-import warnings
+from collections.abc import MutableMapping
+from typing import (
+    Dict,
+    Iterator,
+    List,
+    ValuesView,
+)
 from uuid import uuid4
-from time import time
 
 import gevent
 import greenlet
@@ -14,13 +20,18 @@ import psutil
 from gevent.pool import Group
 
 from . import User
-from .log import greenlet_exception_logger
-from .rpc import Message, rpc
-from .stats import RequestStats, setup_distributed_stats_event_listeners
-
+from .dispatch import dispatch_users
+from .distribution import weight_users
 from .exception import RPCError
-from .user.task import LOCUST_STATE_STOPPING
-
+from .log import greenlet_exception_logger
+from .rpc import (
+    Message,
+    rpc,
+)
+from .stats import (
+    RequestStats,
+    setup_distributed_stats_event_listeners,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +76,7 @@ class Runner:
         self.shape_last_state = None
         self.current_cpu_usage = 0
         self.cpu_warning_emitted = False
+        self.worker_cpu_warning_emitted = False
         self.greenlet.spawn(self.monitor_cpu).link_exception(greenlet_exception_handler)
         self.exceptions = {}
         self.target_user_count = None
@@ -100,6 +112,10 @@ class Runner:
         return self.environment.user_classes
 
     @property
+    def user_classes_by_name(self):
+        return self.environment.user_classes_by_name
+
+    @property
     def stats(self) -> RequestStats:
         return self.environment.stats
 
@@ -113,6 +129,18 @@ class Runner:
         :returns: Number of currently running users
         """
         return len(self.user_greenlets)
+
+    # TODO: Test this
+    @property
+    def user_class_occurrences(self) -> Dict[str, int]:
+        """
+        :returns: Number of currently running users for each user class
+        """
+        user_class_occurrences = {user_class.__name__: 0 for user_class in self.user_classes}
+        for user_greenlet in self.user_greenlets:
+            user = user_greenlet.args[0]
+            user_class_occurrences[user.__class__.__name__] += 1
+        return user_class_occurrences
 
     def update_state(self, new_state):
         """
@@ -132,105 +160,66 @@ class Runner:
             return True
         return False
 
-    def weight_users(self, amount):
-        """
-        Distributes the amount of users for each WebLocust-class according to it's weight
-        returns a list "bucket" with the weighted users
-        """
-        for user in self.user_classes:
-            if self.environment.host is not None:
-                user.host = self.environment.host
-        weights = [user.weight for user in self.user_classes]
-        bucket = random.choices(self.user_classes, weights=weights, k=amount)
-        return bucket
-
-    def spawn_users(self, spawn_count, spawn_rate, wait=False):
-        bucket = self.weight_users(spawn_count)
-        spawn_count = len(bucket)
+    def spawn_users(self, user_classes_spawn_count: Dict[str, int], wait: bool = False):
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
             self.update_state(STATE_SPAWNING)
 
-        existing_count = len(self.user_greenlets)
         logger.info(
-            "Spawning %i users at the rate %g users/s (%i users already running)..."
-            % (spawn_count, spawn_rate, existing_count)
+            "Spawning additional %s (%s already running)..."
+            % (json.dumps(user_classes_spawn_count), json.dumps(self.user_class_occurrences))
         )
-        occurrence_count = dict([(l.__name__, 0) for l in self.user_classes])
 
-        def spawn():
-            sleep_time = 1.0 / spawn_rate
-            while True:
-                if not bucket:
-                    logger.info(
-                        "All users spawned: %s (%i total running)"
-                        % (
-                            ", ".join(["%s: %d" % (name, count) for name, count in occurrence_count.items()]),
-                            len(self.user_greenlets),
-                        )
-                    )
-                    self.environment.events.spawning_complete.fire(user_count=len(self.user_greenlets))
-                    return
-
-                user_class = bucket.pop()
-                occurrence_count[user_class.__name__] += 1
-                new_user = user_class(self.environment)
+        def spawn(user_class: str, spawn_count: int):
+            n = 0
+            while n < spawn_count:
+                new_user = self.user_classes_by_name[user_class](self.environment)
+                if self.environment.host is not None:
+                    new_user.host = self.environment.host
                 new_user.start(self.user_greenlets)
-                if len(self.user_greenlets) % 10 == 0:
-                    logger.debug("%i users spawned" % len(self.user_greenlets))
-                if bucket:
-                    gevent.sleep(sleep_time)
+                n += 1
+                if n % 10 == 0 or n == spawn_count:
+                    logger.debug("%i users spawned" % self.user_count)
+            logger.info("All users of class %s spawned" % user_class)
 
-        spawn()
+        for user_class, spawn_count in user_classes_spawn_count.items():
+            spawn(user_class, spawn_count)
+
         if wait:
             self.user_greenlets.join()
             logger.info("All users stopped\n")
 
-    def stop_users(self, user_count, stop_rate=None):
-        """
-        Stop `user_count` weighted users at a rate of `stop_rate`
-        """
-        if user_count == 0 or stop_rate == 0:
-            return
-
-        bucket = self.weight_users(user_count)
-        user_count = len(bucket)
-        to_stop = []
-        for g in self.user_greenlets:
-            for l in bucket:
-                user = g.args[0]
-                if isinstance(user, l):
-                    to_stop.append(user)
-                    bucket.remove(l)
-                    break
-
-        if not to_stop:
-            return
-
-        if stop_rate is None or stop_rate >= user_count:
-            sleep_time = 0
-            logger.info("Stopping %i users" % (user_count))
-        else:
-            sleep_time = 1.0 / stop_rate
-            logger.info("Stopping %i users at rate of %g users/s" % (user_count, stop_rate))
-
+    def stop_users(self, user_classes_stop_count: Dict[str, int]):
         async_calls_to_stop = Group()
         stop_group = Group()
 
-        while True:
-            user_to_stop: User = to_stop.pop()
-            logger.debug("Stopping %s" % user_to_stop._greenlet.name)
-            if user_to_stop._greenlet is greenlet.getcurrent():
-                # User called runner.quit(), so dont block waiting for killing to finish"
-                user_to_stop._group.killone(user_to_stop._greenlet, block=False)
-            elif self.environment.stop_timeout:
-                async_calls_to_stop.add(gevent.spawn_later(0, User.stop, user_to_stop, force=False))
-                stop_group.add(user_to_stop._greenlet)
-            else:
-                async_calls_to_stop.add(gevent.spawn_later(0, User.stop, user_to_stop, force=True))
-            if to_stop:
-                gevent.sleep(sleep_time)
-            else:
-                break
+        for user_class, stop_count in user_classes_stop_count.items():
+            if self.user_class_occurrences[user_class] == 0:
+                continue
+
+            to_stop = []
+            for g in self.user_greenlets:
+                if len(to_stop) == stop_count:
+                    break
+                user = g.args[0]
+                if isinstance(user, self.user_classes_by_name[user_class]):
+                    to_stop.append(user)
+
+            if not to_stop:
+                continue
+
+            while True:
+                user_to_stop: User = to_stop.pop()
+                logger.debug("Stopping %s" % user_to_stop.greenlet.name)
+                if user_to_stop.greenlet is greenlet.getcurrent():
+                    # User called runner.quit(), so dont block waiting for killing to finish"
+                    user_to_stop.group.killone(user_to_stop.greenlet, block=False)
+                elif self.environment.stop_timeout:
+                    async_calls_to_stop.add(gevent.spawn_later(0, User.stop, user_to_stop, force=False))
+                    stop_group.add(user_to_stop.greenlet)
+                else:
+                    async_calls_to_stop.add(gevent.spawn_later(0, User.stop, user_to_stop, force=True))
+                if not to_stop:
+                    break
 
         async_calls_to_stop.join()
 
@@ -241,7 +230,7 @@ class Runner:
             )
             stop_group.kill(block=True)
 
-        logger.info("%i Users have been stopped, %g still running" % (user_count, len(self.user_greenlets)))
+        logger.info("%i Users have been stopped, %g still running" % (sum(user_classes_stop_count.values()), self.user_count))
 
     def monitor_cpu(self):
         process = psutil.Process()
@@ -254,7 +243,7 @@ class Runner:
                 self.cpu_warning_emitted = True
             gevent.sleep(CPU_MONITOR_INTERVAL)
 
-    def start(self, user_count, spawn_rate, wait=False):
+    def start(self, user_count: int, spawn_rate: float, wait: bool = False):
         """
         Start running a load test
 
@@ -269,26 +258,46 @@ class Runner:
             self.exceptions = {}
             self.cpu_warning_emitted = False
             self.worker_cpu_warning_emitted = False
-            self.target_user_count = user_count
+
+        if wait and user_count - self.user_count > spawn_rate:
+            raise ValueError("wait is True but the amount of users to add is greater than the spawn rate")
+
+        users_dispatcher = dispatch_users(
+            worker_nodes=[WorkerNode(id="dummy")],
+            user_class_occurrences=weight_users(self.user_classes, user_count),
+            spawn_rate=spawn_rate,
+        )
 
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
             logger.debug(
                 "Updating running test with %d users, %.2f spawn rate and wait=%r" % (user_count, spawn_rate, wait)
             )
             self.update_state(STATE_SPAWNING)
-            if self.user_count > user_count:
-                # Stop some users
-                stop_count = self.user_count - user_count
-                self.stop_users(stop_count, spawn_rate)
-            elif self.user_count < user_count:
-                # Spawn some users
-                spawn_count = user_count - self.user_count
-                self.spawn_users(spawn_count=spawn_count, spawn_rate=spawn_rate)
+
+        for dispatched_users in users_dispatcher:
+            user_classes_spawn_count = {}
+            user_classes_stop_count = {}
+            user_class_occurrences = dispatched_users["dummy"]
+            for user_class, occurrences in user_class_occurrences.items():
+                logger.debug(
+                    "Updating running test with %d users of class %s and wait=%r" % (occurrences, user_class, wait)
+                )
+                if self.user_class_occurrences[user_class] > occurrences:
+                    user_classes_stop_count[user_class] = self.user_class_occurrences[user_class] - occurrences
+                elif self.user_class_occurrences[user_class] < occurrences:
+                    user_classes_spawn_count[user_class] = occurrences - self.user_class_occurrences[user_class]
+
+            if wait:
+                # spawn_users will block, so we need to call stop_users first
+                self.stop_users(user_classes_stop_count)
+                self.spawn_users(user_classes_spawn_count, wait)
             else:
-                self.environment.events.spawning_complete.fire(user_count=self.user_count)
-        else:
-            self.spawn_rate = spawn_rate
-            self.spawn_users(user_count, spawn_rate=spawn_rate, wait=wait)
+                # call spawn_users before stopping the users since stop_users
+                # can be blocking because of the stop_timeout
+                self.spawn_users(user_classes_spawn_count, wait)
+                self.stop_users(user_classes_stop_count)
+
+        self.environment.events.spawning_complete.fire(user_count=self.user_count)
 
     def start_shape(self):
         if self.shape_greenlet:
@@ -311,6 +320,9 @@ class Runner:
                     self.quit()
                 else:
                     self.stop()
+                self.shape_greenlet = None
+                self.shape_last_state = None
+                return
             elif self.shape_last_state == new_state:
                 gevent.sleep(1)
             else:
@@ -325,11 +337,24 @@ class Runner:
         """
         logger.debug("Stopping all users")
         self.update_state(STATE_CLEANUP)
+
         # if we are currently spawning users we need to kill the spawning greenlet first
         if self.spawning_greenlet and not self.spawning_greenlet.ready():
             self.spawning_greenlet.kill(block=True)
-        self.stop_users(self.user_count)
+
+        if self.environment.shape_class is not None and self.shape_greenlet is not greenlet.getcurrent():
+            self.shape_greenlet.kill(block=True)
+            self.shape_greenlet = None
+            self.shape_last_state = None
+
+        user_classes_stop_count = {
+            user_class: self.user_class_occurrences[user_class]
+            for user_class, occurrences in self.user_class_occurrences.items()
+        }
+        self.stop_users(user_classes_stop_count)
+
         self.update_state(STATE_STOPPED)
+
         self.cpu_log_warning()
 
     def quit(self):
@@ -365,8 +390,7 @@ class LocalRunner(Runner):
 
         self.environment.events.user_error.add_listener(on_user_error)
 
-    def start(self, user_count, spawn_rate, wait=False):
-        self.target_user_count = user_count
+    def start(self, user_count: int, spawn_rate: float, wait: bool = False):
         if spawn_rate > 100:
             logger.warning(
                 "Your selected spawn rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?"
@@ -398,13 +422,60 @@ class DistributedRunner(Runner):
 
 
 class WorkerNode:
-    def __init__(self, id, state=STATE_INIT, heartbeat_liveness=HEARTBEAT_LIVENESS):
-        self.id = id
+    def __init__(self, id: str, state=STATE_INIT, heartbeat_liveness=HEARTBEAT_LIVENESS):
+        self.id: str = id
         self.state = state
-        self.user_count = 0
         self.heartbeat = heartbeat_liveness
         self.cpu_usage = 0
         self.cpu_warning_emitted = False
+        self.user_class_occurrences: Dict[str, int] = {}
+
+    @property
+    def user_count(self) -> int:
+        return sum(self.user_class_occurrences.values())
+
+
+class WorkerNodes(MutableMapping):
+    def __init__(self):
+        self._worker_nodes = {}
+
+    def get_by_state(self, state) -> List[WorkerNode]:
+        return [c for c in self.values() if c.state == state]
+
+    @property
+    def all(self) -> ValuesView[WorkerNode]:
+        return self.values()
+
+    @property
+    def ready(self) -> List[WorkerNode]:
+        return self.get_by_state(STATE_INIT)
+
+    @property
+    def spawning(self) -> List[WorkerNode]:
+        return self.get_by_state(STATE_SPAWNING)
+
+    @property
+    def running(self) -> List[WorkerNode]:
+        return self.get_by_state(STATE_RUNNING)
+
+    @property
+    def missing(self) -> List[WorkerNode]:
+        return self.get_by_state(STATE_MISSING)
+
+    def __setitem__(self, k: str, v: WorkerNode) -> None:
+        self._worker_nodes[k] = v
+
+    def __delitem__(self, k: str) -> None:
+        del self._worker_nodes[k]
+
+    def __getitem__(self, k: str) -> WorkerNode:
+        return self._worker_nodes[k]
+
+    def __len__(self) -> int:
+        return len(self._worker_nodes)
+
+    def __iter__(self) -> Iterator[WorkerNode]:
+        return iter(self._worker_nodes)
 
 
 class MasterRunner(DistributedRunner):
@@ -427,32 +498,10 @@ class MasterRunner(DistributedRunner):
         self.worker_cpu_warning_emitted = False
         self.master_bind_host = master_bind_host
         self.master_bind_port = master_bind_port
+        self.target_user_class_occurrences: Dict[str, int] = {}
+        self.spawn_rate: float = 0
 
-        class WorkerNodesDict(dict):
-            def get_by_state(self, state):
-                return [c for c in self.values() if c.state == state]
-
-            @property
-            def all(self):
-                return self.values()
-
-            @property
-            def ready(self):
-                return self.get_by_state(STATE_INIT)
-
-            @property
-            def spawning(self):
-                return self.get_by_state(STATE_SPAWNING)
-
-            @property
-            def running(self):
-                return self.get_by_state(STATE_RUNNING)
-
-            @property
-            def missing(self):
-                return self.get_by_state(STATE_MISSING)
-
-        self.clients = WorkerNodesDict()
+        self.clients = WorkerNodes()
         try:
             self.server = rpc.Server(master_bind_host, master_bind_port)
         except RPCError as e:
@@ -473,8 +522,7 @@ class MasterRunner(DistributedRunner):
             if client_id not in self.clients:
                 logger.info("Discarded report from unrecognized worker %s", client_id)
                 return
-
-            self.clients[client_id].user_count = data["user_count"]
+            self.clients[client_id].user_class_occurrences = data["user_class_occurrences"]
 
         self.environment.events.worker_report.add_listener(on_worker_report)
 
@@ -486,7 +534,7 @@ class MasterRunner(DistributedRunner):
 
     @property
     def user_count(self):
-        return sum([c.user_count for c in self.clients.values()])
+        return sum(c.user_count for c in self.clients.values())
 
     def cpu_log_warning(self):
         warning_emitted = Runner.cpu_log_warning(self)
@@ -495,8 +543,7 @@ class MasterRunner(DistributedRunner):
             warning_emitted = True
         return warning_emitted
 
-    def start(self, user_count, spawn_rate):
-        self.target_user_count = user_count
+    def start(self, user_count: int, spawn_rate: float, **kwargs):
         num_workers = len(self.clients.ready) + len(self.clients.running) + len(self.clients.spawning)
         if not num_workers:
             logger.warning(
@@ -505,14 +552,14 @@ class MasterRunner(DistributedRunner):
             )
             return
 
-        self.spawn_rate = spawn_rate
-        worker_num_users = user_count // (num_workers or 1)
-        worker_spawn_rate = float(spawn_rate) / (num_workers or 1)
-        remaining = user_count % num_workers
+        self.target_user_class_occurrences = weight_users(self.user_classes, user_count)
 
+        self.spawn_rate = spawn_rate
+
+        worker_spawn_rate = float(spawn_rate) / (num_workers or 1)
         logger.info(
             "Sending spawn jobs of %d users and %.2f spawn rate to %d ready clients"
-            % (worker_num_users, worker_spawn_rate, num_workers)
+            % (user_count, worker_spawn_rate, num_workers)
         )
 
         if worker_spawn_rate > 100:
@@ -525,20 +572,28 @@ class MasterRunner(DistributedRunner):
             self.exceptions = {}
             self.environment.events.test_start.fire(environment=self.environment)
 
-        for client in self.clients.ready + self.clients.running + self.clients.spawning:
-            data = {
-                "spawn_rate": worker_spawn_rate,
-                "num_users": worker_num_users,
-                "host": self.environment.host,
-                "stop_timeout": self.environment.stop_timeout,
-            }
+        users_dispatcher = dispatch_users(
+            worker_nodes=self.clients.ready + self.clients.running + self.clients.spawning,
+            user_class_occurrences=self.target_user_class_occurrences,
+            spawn_rate=spawn_rate,
+        )
 
-            if remaining > 0:
-                data["num_users"] += 1
-                remaining -= 1
-
-            logger.debug("Sending spawn message to client %s" % (client.id))
-            self.server.send_to_client(Message("spawn", data, client.id))
+        for dispatched_users in users_dispatcher:
+            dispatch_greenlets = Group()
+            for worker_node_id, worker_user_class_occurrences in dispatched_users.items():
+                data = {
+                    "timestamp": time.time(),
+                    "user_class_occurrences": worker_user_class_occurrences,
+                    "host": self.environment.host,
+                    "stop_timeout": self.environment.stop_timeout,
+                }
+                dispatch_greenlets.add(gevent.spawn_later(
+                    0,
+                    self.server.send_to_client,
+                    Message("spawn", data, worker_node_id),
+                ))
+            logger.debug("Sending spawn message to %i client(s)" % len(dispatch_greenlets))
+            dispatch_greenlets.join()
 
         self.update_state(STATE_SPAWNING)
 
@@ -547,12 +602,25 @@ class MasterRunner(DistributedRunner):
             logger.debug("Stopping...")
             self.update_state(STATE_STOPPING)
 
-            if self.environment.shape_class:
+            if self.environment.shape_class is not None and self.shape_greenlet is not greenlet.getcurrent():
+                self.shape_greenlet.kill(block=True)
+                self.shape_greenlet = None
                 self.shape_last_state = None
 
             for client in self.clients.all:
-                logger.debug("Sending stop message to client %s" % (client.id))
+                logger.debug("Sending stop message to client %s" % client.id)
                 self.server.send_to_client(Message("stop", None, client.id))
+
+            # Give 60s more for all workers to stop
+            timeout = gevent.Timeout(self.environment.stop_timeout or 0 + 60)
+            timeout.start()
+            try:
+                while self.user_count != 0:
+                    gevent.sleep(1)
+            except gevent.Timeout:
+                logger.error("Timeout waiting for all workers to stop")
+            finally:
+                timeout.cancel()
 
             self.environment.events.test_stop.fire(environment=self.environment)
 
@@ -584,7 +652,7 @@ class MasterRunner(DistributedRunner):
                 if client.heartbeat < 0 and client.state != STATE_MISSING:
                     logger.info("Worker %s failed to send heartbeat, setting state to missing." % str(client.id))
                     client.state = STATE_MISSING
-                    client.user_count = 0
+                    client.user_class_occurrences = {}
                     if self.worker_count <= 0:
                         logger.info("The last worker went missing, stopping test.")
                         self.stop()
@@ -612,11 +680,11 @@ class MasterRunner(DistributedRunner):
             self.connection_broken = False
             msg.node_id = client_id
             if msg.type == "client_ready":
-                id = msg.node_id
-                self.clients[id] = WorkerNode(id, heartbeat_liveness=HEARTBEAT_LIVENESS)
+                worker_node_id = msg.node_id
+                self.clients[worker_node_id] = WorkerNode(worker_node_id, heartbeat_liveness=HEARTBEAT_LIVENESS)
                 logger.info(
                     "Client %r reported as ready. Currently %i clients ready to swarm."
-                    % (id, len(self.clients.ready + self.clients.running + self.clients.spawning))
+                    % (worker_node_id, len(self.clients.ready + self.clients.running + self.clients.spawning))
                 )
                 if self.state == STATE_RUNNING or self.state == STATE_SPAWNING:
                     # balance the load distribution when new client joins
@@ -653,10 +721,9 @@ class MasterRunner(DistributedRunner):
                 self.clients[msg.node_id].state = STATE_SPAWNING
             elif msg.type == "spawning_complete":
                 self.clients[msg.node_id].state = STATE_RUNNING
-                self.clients[msg.node_id].user_count = msg.data["count"]
+                self.clients[msg.node_id].user_class_occurrences = msg.data["user_class_occurrences"]
                 if len(self.clients.spawning) == 0:
-                    count = sum(c.user_count for c in self.clients.values())
-                    self.environment.events.spawning_complete.fire(user_count=count)
+                    self.environment.events.spawning_complete.fire(user_count=self.user_count)
             elif msg.type == "quit":
                 if msg.node_id in self.clients:
                     del self.clients[msg.node_id]
@@ -676,6 +743,11 @@ class MasterRunner(DistributedRunner):
     @property
     def worker_count(self):
         return len(self.clients.ready) + len(self.clients.spawning) + len(self.clients.running)
+
+    # TODO: Test this
+    @property
+    def target_user_count(self) -> int:
+        return sum(self.user_class_occurrences.values())
 
 
 class WorkerRunner(DistributedRunner):
@@ -698,6 +770,7 @@ class WorkerRunner(DistributedRunner):
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         self.master_host = master_host
         self.master_port = master_port
+        self.worker_cpu_warning_emitted = False
         self.client = rpc.Client(master_host, master_port, self.client_id)
         self.greenlet.spawn(self.heartbeat).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.worker).link_exception(greenlet_exception_handler)
@@ -705,15 +778,15 @@ class WorkerRunner(DistributedRunner):
         self.greenlet.spawn(self.stats_reporter).link_exception(greenlet_exception_handler)
 
         # register listener for when all users have spawned, and report it to the master node
-        def on_spawning_complete(user_count):
-            self.client.send(Message("spawning_complete", {"count": user_count}, self.client_id))
+        def on_spawning_complete(user_class_occurrences):
+            self.client.send(Message("spawning_complete", {"user_class_occurrences": user_class_occurrences}, self.client_id))
             self.worker_state = STATE_RUNNING
 
         self.environment.events.spawning_complete.add_listener(on_spawning_complete)
 
         # register listener that adds the current number of spawned users to the report that is sent to the master node
         def on_report_to_master(client_id, data):
-            data["user_count"] = self.user_count
+            data["user_class_occurrences"] = self.user_class_occurrences
 
         self.environment.events.report_to_master.add_listener(on_report_to_master)
 
@@ -729,6 +802,37 @@ class WorkerRunner(DistributedRunner):
             self.client.send(Message("exception", {"msg": str(exception), "traceback": formatted_tb}, self.client_id))
 
         self.environment.events.user_error.add_listener(on_user_error)
+
+    def start(self, user_count, spawn_rate, wait=False):
+        raise NotImplementedError("user start_worker")
+
+    def start_worker(self, user_class_occurrences: Dict[str, int], **kwargs):
+        """
+        Start running a load test as a worker
+
+        :param user_class_occurrences: Users to run
+        """
+        if self.worker_state != STATE_RUNNING and self.worker_state != STATE_SPAWNING:
+            self.stats.clear_all()
+            self.exceptions = {}
+            self.cpu_warning_emitted = False
+            self.worker_cpu_warning_emitted = False
+
+        user_classes_spawn_count = {}
+        user_classes_stop_count = {}
+
+        for user_class, occurrences in user_class_occurrences.items():
+            if self.user_class_occurrences[user_class] > occurrences:
+                user_classes_stop_count[user_class] = self.user_class_occurrences[user_class] - occurrences
+            elif self.user_class_occurrences[user_class] < occurrences:
+                user_classes_spawn_count[user_class] = occurrences - self.user_class_occurrences[user_class]
+
+        # call spawn_users before stopping the users since stop_users
+        # can be blocking because of the stop_timeout
+        self.spawn_users(user_classes_spawn_count)
+        self.stop_users(user_classes_stop_count)
+
+        self.environment.events.spawning_complete.fire(user_class_occurrences=self.user_class_occurrences)
 
     def heartbeat(self):
         while True:
@@ -758,6 +862,7 @@ class WorkerRunner(DistributedRunner):
             logger.error("Temporary failure when resetting connection: %s, will retry later." % (e))
 
     def worker(self):
+        last_received_spawn_timestamp = 0
         while True:
             try:
                 msg = self.client.recv()
@@ -768,17 +873,19 @@ class WorkerRunner(DistributedRunner):
                 self.worker_state = STATE_SPAWNING
                 self.client.send(Message("spawning", None, self.client_id))
                 job = msg.data
-                self.spawn_rate = job["spawn_rate"]
-                self.target_user_count = job["num_users"]
+                if job["timestamp"] <= last_received_spawn_timestamp:
+                    logger.info("Discard spawn message with older or equal timestamp than timestamp of previous spawn message")
+                    continue
                 self.environment.host = job["host"]
                 self.environment.stop_timeout = job["stop_timeout"]
                 if self.spawning_greenlet:
                     # kill existing spawning greenlet before we launch new one
                     self.spawning_greenlet.kill(block=True)
                 self.spawning_greenlet = self.greenlet.spawn(
-                    lambda: self.start(user_count=job["num_users"], spawn_rate=job["spawn_rate"])
+                    lambda: self.start_worker(job["user_class_occurrences"])
                 )
                 self.spawning_greenlet.link_exception(greenlet_exception_handler)
+                last_received_spawn_timestamp = job["timestamp"]
             elif msg.type == "stop":
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))
