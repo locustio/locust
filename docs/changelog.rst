@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.4.1
+=====
+
+* Fix 100% cpu usage when running in docker/non-tty terminal https://github.com/locustio/locust/issues/1629
+
 1.4.0
 =====
 

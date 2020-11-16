@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.1](https://github.com/locustio/locust/tree/1.4.1) (2020-11-16)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.4.0...1.4.1)
+
+**Merged pull requests:**
+
+- Fix 100% cpu usage when running in docker/non-tty terminal [\#1631](https://github.com/locustio/locust/pull/1631) ([DennisKrone](https://github.com/DennisKrone))
+
 ## [1.4.0](https://github.com/locustio/locust/tree/1.4.0) (2020-11-13)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.3.2...1.4.0)
@@ -1008,6 +1016,7 @@
 - Resolve improper display of About in Web UI [\#697](https://github.com/locustio/locust/pull/697) ([mbeacom](https://github.com/mbeacom))
 - Make UI URL links relative [\#692](https://github.com/locustio/locust/pull/692) ([karol-brejna-i](https://github.com/karol-brejna-i))
 - Small python 3 syntax improvement in docs [\#676](https://github.com/locustio/locust/pull/676) ([miki725](https://github.com/miki725))
+- Bump version to 0.8a3 for another pre-release candidate [\#654](https://github.com/locustio/locust/pull/654) ([aldenpeterson-wf](https://github.com/aldenpeterson-wf))
 - \#331:  Use rounded\_response\_time for min/max/total response times [\#558](https://github.com/locustio/locust/pull/558) ([jude](https://github.com/jude))
 - Refactored stats code and display median as well as 95% percentile response times in web UI's charts [\#549](https://github.com/locustio/locust/pull/549) ([heyman](https://github.com/heyman))
 - Added a slaves-tab to show the id, status and number of users running on each slave. [\#305](https://github.com/locustio/locust/pull/305) ([TZer0](https://github.com/TZer0))
@@ -1193,7 +1202,6 @@
 
 **Merged pull requests:**
 
-- Bump version to 0.8a3 for another pre-release candidate [\#654](https://github.com/locustio/locust/pull/654) ([aldenpeterson-wf](https://github.com/aldenpeterson-wf))
 - Standardize utf8 file coding declarations [\#652](https://github.com/locustio/locust/pull/652) ([mbeacom](https://github.com/mbeacom))
 - Sort all Python imports [\#651](https://github.com/locustio/locust/pull/651) ([mbeacom](https://github.com/mbeacom))
 - Modify gevent wsgi and libev dependencies [\#650](https://github.com/locustio/locust/pull/650) ([mbeacom](https://github.com/mbeacom))
