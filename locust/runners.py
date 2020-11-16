@@ -261,6 +261,10 @@ class Runner:
         if wait and user_count - self.user_count > spawn_rate:
             raise ValueError("wait is True but the amount of users to add is greater than the spawn rate")
 
+        for user_class in self.user_classes:
+            if self.environment.host is not None:
+                user_class.host = self.environment.host
+
         self.target_user_class_occurrences = weight_users(self.user_classes, user_count)
 
         users_dispatcher = dispatch_users(
@@ -555,6 +559,10 @@ class MasterRunner(DistributedRunner):
                 "Please connect workers prior to swarming."
             )
             return
+
+        for user_class in self.user_classes:
+            if self.environment.host is not None:
+                user_class.host = self.environment.host
 
         self.target_user_class_occurrences = weight_users(self.user_classes, user_count)
 
