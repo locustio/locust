@@ -24,12 +24,12 @@ class InitError(Exception):
 
 class UnixKeyPoller:
     def __init__(self):
-        if sys.stdout.isatty():
+        if sys.stdin.isatty():
             self.stdin = sys.stdin.fileno()
             self.tattr = termios.tcgetattr(self.stdin)
             tty.setcbreak(self.stdin, termios.TCSANOW)
         else:
-            raise InitError("Failed to get terminal attributes during keypoller init. Keyboard input disabled")
+            raise InitError("Terminal was not a tty. Keyboard input disabled")
 
     def cleanup(self):
         termios.tcsetattr(self.stdin, termios.TCSANOW, self.tattr)
