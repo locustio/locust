@@ -94,6 +94,7 @@ def input_listener(key_to_func_map):
                     gevent.sleep(0.2)
         except Exception as e:
             logging.warning(f"Exception in keyboard input poller: {e}")
+            raise
         finally:
             poller.cleanup()
 

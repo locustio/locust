@@ -342,7 +342,7 @@ def main():
         pass  # dont log anything - not having a time limit is normal when not running headless
 
     input_listener_greenlet = None
-    if not options.worker:
+    if not options.worker and sys.stdout.isatty():
         # spawn input listener greenlet
         input_listener_greenlet = gevent.spawn(
             input_listener(
