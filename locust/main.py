@@ -351,19 +351,12 @@ def main():
         input_listener_greenlet = gevent.spawn(
             input_listener(
                 {
-                    "w": lambda: runner.spawn_users(1, 100)
-                    if runner.state != "spawning"
-                    else logging.warning("Already spawning users, can't spawn more right now"),
-                    "W": lambda: runner.spawn_users(10, 100)
-                    if runner.state != "spawning"
-                    else logging.warning("Already spawning users, can't spawn more right now"),
-                    "s": lambda: runner.stop_users(1)
-                    if runner.state != "spawning"
-                    else logging.warning("Spawning users, can't stop right now"),
-                    "S": lambda: runner.stop_users(10)
-                    if runner.state != "spawning"
-                    else logging.warning("Spawning users, can't stop right now"),
-                }
+                    "w": (1, 100),
+                    "W": (10, 100),
+                    "s": (-1, 100),
+                    "S": (-10, 100),
+                },
+                runner,
             )
         )
         input_listener_greenlet.link_exception(greenlet_exception_handler)

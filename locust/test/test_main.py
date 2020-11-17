@@ -338,7 +338,7 @@ class LocustProcessIntegrationTest(TestCase):
                         mocked.file_path,
                         "--headless",
                         "--run-time",
-                        "4s",
+                        "7s",
                         "-u",
                         "0",
                     ]
@@ -351,22 +351,32 @@ class LocustProcessIntegrationTest(TestCase):
             gevent.sleep(1)
 
             stdin.write(b"w")
-            gevent.sleep(0.1)
+            gevent.sleep(1)
             stdin.write(b"W")
-            gevent.sleep(0.1)
+            gevent.sleep(1)
             stdin.write(b"s")
-            gevent.sleep(0.1)
+            gevent.sleep(1)
             stdin.write(b"S")
+            gevent.sleep(1)
 
+            # These two should not do anything since we are already at zero users
+            stdin.write(b"S")
             gevent.sleep(1)
 
             output = proc.communicate()[0].decode("utf-8")
             stdin.close()
-            self.assertIn("Spawning 1 users at the rate 100 users/s", output)
-            self.assertIn("Spawning 10 users at the rate 100 users/s", output)
-            self.assertIn("1 Users have been stopped", output)
-            self.assertIn("10 Users have been stopped", output)
+            self.assertIn("Spawning additional {\"UserSubclass\": 1} ({\"UserSubclass\": 0} already running)...", output)
+            self.assertIn("0 Users have been stopped, 1 still running", output)
+            self.assertIn("Spawning additional {\"UserSubclass\": 10} ({\"UserSubclass\": 1} already running)...", output)
+            self.assertIn("Spawning additional {} ({\"UserSubclass\": 11} already running)...", output)
+            self.assertIn("1 Users have been stopped, 10 still running", output)
+            self.assertIn("Spawning additional {} ({\"UserSubclass\": 10} already running)...", output)
+            self.assertIn("10 Users have been stopped, 0 still running", output)
+            self.assertIn("Spawning additional {} ({\"UserSubclass\": 0} already running)...", output)
+            self.assertIn("10 Users have been stopped, 0 still running", output)
             self.assertIn("Test task is running", output)
+            self.assertIn("Shutting down (exit code 0), bye.", output)
+            self.assertEqual(0, proc.returncode)
 
     def test_html_report_option(self):
         with mock_locustfile() as mocked:

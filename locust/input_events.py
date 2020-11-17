@@ -1,7 +1,17 @@
+from typing import (
+    Dict,
+    Tuple,
+)
+
 import gevent
 import logging
 import os
 import sys
+
+from locust.runners import (
+    Runner,
+    STATE_SPAWNING,
+)
 
 if os.name == "nt":
     from win32api import STD_INPUT_HANDLE
@@ -86,7 +96,7 @@ def get_poller():
         return UnixKeyPoller()
 
 
-def input_listener(key_to_func_map):
+def input_listener(key_to_user_params: Dict[str, Tuple[int, float]], runner: Runner):
     def input_listener_func():
         try:
             poller = get_poller()
@@ -94,13 +104,24 @@ def input_listener(key_to_func_map):
             logging.info(e)
             return
 
+        user_count = 0
         try:
             while True:
                 input = poller.poll()
                 if input:
-                    for key in key_to_func_map:
-                        if input == key:
-                            key_to_func_map[key]()
+                    try:
+                        user_params = key_to_user_params[input]
+                    except KeyError:
+                        continue
+                    user_delta, spawn_rate = user_params
+                    if runner.state == STATE_SPAWNING and user_delta > 0:
+                        logging.warning("Already spawning users, can't spawn more right now")
+                        continue
+                    elif runner.state == STATE_SPAWNING and user_delta < 0:
+                        logging.warning("Spawning users, can't stop right now")
+                        continue
+                    user_count = max(0, user_count + user_delta)
+                    runner.start(user_count, spawn_rate)
                 else:
                     gevent.sleep(0.2)
         except Exception as e:
