@@ -603,9 +603,8 @@ class MasterRunner(DistributedRunner):
                     )
                 )
             logger.debug("Sending spawn message to %i client(s)" % len(dispatch_greenlets))
+            self.update_state(STATE_SPAWNING)
             dispatch_greenlets.join()
-
-        self.update_state(STATE_SPAWNING)
 
     def stop(self):
         if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
