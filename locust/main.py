@@ -225,6 +225,9 @@ def main():
         sys.exit(0)
 
     if options.master:
+        if options.worker:
+            logger.error("The --master argument cannot be combined with --worker")
+            sys.exit(-1)
         runner = environment.create_master_runner(
             master_bind_host=options.master_bind_host,
             master_bind_port=options.master_bind_port,
