@@ -811,7 +811,7 @@ class WorkerRunner(DistributedRunner):
         self.environment.events.user_error.add_listener(on_user_error)
 
     def start(self, user_count, spawn_rate, wait=False):
-        raise NotImplementedError("user start_worker")
+        raise NotImplementedError("use start_worker")
 
     def start_worker(self, user_class_occurrences: Dict[str, int], **kwargs):
         """
