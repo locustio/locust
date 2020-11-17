@@ -99,6 +99,9 @@ def get_poller():
 def input_listener(
     key_to_user_params: Dict[str, Tuple[int, float]], key_to_callbacks: Dict[str, callable], runner: Runner
 ):
+    # Ensure key presses are unique across both dictionaries
+    assert len(set(key_to_user_params.keys()).intersection(key_to_callbacks.keys())) == 0
+
     def input_listener_func():
         try:
             poller = get_poller()
