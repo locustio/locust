@@ -10,8 +10,8 @@ from locust import User
 
 
 def weight_users(
-        user_classes: List[Type[User]],
-        number_of_users: int,
+    user_classes: List[Type[User]],
+    number_of_users: int,
 ) -> Dict[str, int]:
     """
     Compute users to spawn
@@ -30,14 +30,16 @@ def weight_users(
     user_class_occurrences = {user_class.__name__: 0 for user_class in user_classes}
 
     if number_of_users <= len(user_classes):
-        user_class_occurrences.update({
-            user_class.__name__: 1
-            for user_class in sorted(
-                user_classes,
-                key=lambda user_class: user_class.weight,
-                reverse=True,
-            )[:number_of_users]
-        })
+        user_class_occurrences.update(
+            {
+                user_class.__name__: 1
+                for user_class in sorted(
+                    user_classes,
+                    key=lambda user_class: user_class.weight,
+                    reverse=True,
+                )[:number_of_users]
+            }
+        )
         return user_class_occurrences
 
     weights = list(map(attrgetter("weight"), user_classes))
@@ -71,10 +73,10 @@ def weight_users(
 
 
 def _recursive_add_users(
-        user_classes: List[Type[User]],
-        number_of_users: int,
-        user_class_occurrences_candidate: Dict[str, int],
-        user_class_occurrences_candidates: Dict[float, Dict[str, int]],
+    user_classes: List[Type[User]],
+    number_of_users: int,
+    user_class_occurrences_candidate: Dict[str, int],
+    user_class_occurrences_candidates: Dict[float, Dict[str, int]],
 ):
     if sum(user_class_occurrences_candidate.values()) == number_of_users:
         distance = distance_from_desired_distribution(
@@ -99,10 +101,10 @@ def _recursive_add_users(
 
 
 def _recursive_remove_users(
-        user_classes: List[Type[User]],
-        number_of_users: int,
-        user_class_occurrences_candidate: Dict[str, int],
-        user_class_occurrences_candidates: Dict[float, Dict[str, int]],
+    user_classes: List[Type[User]],
+    number_of_users: int,
+    user_class_occurrences_candidate: Dict[str, int],
+    user_class_occurrences_candidates: Dict[float, Dict[str, int]],
 ):
     if sum(user_class_occurrences_candidate.values()) == number_of_users:
         distance = distance_from_desired_distribution(
@@ -129,8 +131,8 @@ def _recursive_remove_users(
 
 
 def distance_from_desired_distribution(
-        user_classes: List[Type[User]],
-        user_class_occurrences: Dict[str, int],
+    user_classes: List[Type[User]],
+    user_class_occurrences: Dict[str, int],
 ) -> float:
     user_class_2_actual_percentage = {
         user_class: 100 * occurrences / sum(user_class_occurrences.values())
@@ -147,4 +149,4 @@ def distance_from_desired_distribution(
         for user_class, expected_percentage in user_class_2_expected_percentage.items()
     ]
 
-    return math.sqrt(math.fsum(map(lambda x: x**2, differences)))
+    return math.sqrt(math.fsum(map(lambda x: x ** 2, differences)))

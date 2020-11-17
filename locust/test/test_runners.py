@@ -373,6 +373,7 @@ class TestLocustRunner(LocustTestCase):
         It is expected that the excess users will be stopped as soon as possible in parallel
         (while respecting the stop_timeout).
         """
+
         class MyUser(User):
             wait_time = constant(1)
 
@@ -388,15 +389,23 @@ class TestLocustRunner(LocustTestCase):
         runner.start(10, 10, wait=False)
         runner.spawning_greenlet.join()
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, "Expected user count to increase to 10 instantaneously, instead it took %f" % delta)
-        self.assertTrue(runner.user_count == 10, "User count has not decreased correctly to 2, it is : %i" % runner.user_count)
+        self.assertTrue(
+            0 <= delta <= 0.01, "Expected user count to increase to 10 instantaneously, instead it took %f" % delta
+        )
+        self.assertTrue(
+            runner.user_count == 10, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
+        )
 
         ts = time.time()
         runner.start(2, 4, wait=False)
         runner.spawning_greenlet.join()
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, "Expected user count to decrease to 2 instantaneously, instead it took %f" % delta)
-        self.assertTrue(runner.user_count == 2, "User count has not decreased correctly to 2, it is : %i" % runner.user_count)
+        self.assertTrue(
+            0 <= delta <= 0.01, "Expected user count to decrease to 2 instantaneously, instead it took %f" % delta
+        )
+        self.assertTrue(
+            runner.user_count == 2, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
+        )
 
     def test_attributes_populated_when_calling_start(self):
         class MyUser1(User):
@@ -1005,6 +1014,7 @@ class TestMasterRunner(LocustTestCase):
 
     def test_sends_spawn_data_to_ready_running_spawning_workers(self):
         """Sends spawn job to running, ready, or spawning workers"""
+
         class TestUser(User):
             @task
             def my_task(self):
@@ -1026,6 +1036,7 @@ class TestMasterRunner(LocustTestCase):
         """
         Tests that test_start event is fired
         """
+
         class TestUser(User):
             @task
             def my_task(self):
@@ -1062,6 +1073,7 @@ class TestMasterRunner(LocustTestCase):
         """
         Tests that test_stop event is fired
         """
+
         class TestUser(User):
             @task
             def my_task(self):
@@ -1096,6 +1108,7 @@ class TestMasterRunner(LocustTestCase):
         """
         Tests that test_stop event is fired when quit() is called directly
         """
+
         class TestUser(User):
             @task
             def my_task(self):
@@ -1147,6 +1160,7 @@ class TestMasterRunner(LocustTestCase):
         Tests that we can accurately spawn a certain number of locusts, even if it's not an
         even number of the connected workers
         """
+
         class TestUser(User):
             @task
             def my_task(self):
@@ -2033,6 +2047,7 @@ class TestStopTimeout(LocustTestCase):
         It is expected that the excess users will be stopped as soon as possible in parallel
         (while respecting the stop_timeout).
         """
+
         class MyTaskSet(TaskSet):
             @task
             def my_task(self):
@@ -2049,12 +2064,18 @@ class TestStopTimeout(LocustTestCase):
         runner.start(10, 10, wait=False)
         runner.spawning_greenlet.join()
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, "Expected user count to increase to 10 instantaneously, instead it took %f" % delta)
-        self.assertTrue(runner.user_count == 10, "User count has not decreased correctly to 2, it is : %i" % runner.user_count)
+        self.assertTrue(
+            0 <= delta <= 0.01, "Expected user count to increase to 10 instantaneously, instead it took %f" % delta
+        )
+        self.assertTrue(
+            runner.user_count == 10, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
+        )
 
         ts = time.time()
         runner.start(2, 4, wait=False)
         runner.spawning_greenlet.join()
         delta = time.time() - ts
         self.assertTrue(1 <= delta <= 1.01, "Expected user count to decrease to 2 in 1s, instead it took %f" % delta)
-        self.assertTrue(runner.user_count == 2, "User count has not decreased correctly to 2, it is : %i" % runner.user_count)
+        self.assertTrue(
+            runner.user_count == 2, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
+        )

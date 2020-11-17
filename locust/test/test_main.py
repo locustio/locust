@@ -236,7 +236,7 @@ class LocustProcessIntegrationTest(TestCase):
                 .decode("utf-8")
                 .strip()
             )
-            self.assertIn("Spawning additional {\"UserSubclass\": 1} ({\"UserSubclass\": 0} already running)...", output)
+            self.assertIn('Spawning additional {"UserSubclass": 1} ({"UserSubclass": 0} already running)...', output)
 
     def test_headless_spawn_options_wo_run_time(self):
         with mock_locustfile() as mocked:
@@ -365,14 +365,14 @@ class LocustProcessIntegrationTest(TestCase):
 
             output = proc.communicate()[0].decode("utf-8")
             stdin.close()
-            self.assertIn("Spawning additional {\"UserSubclass\": 1} ({\"UserSubclass\": 0} already running)...", output)
+            self.assertIn('Spawning additional {"UserSubclass": 1} ({"UserSubclass": 0} already running)...', output)
             self.assertIn("0 Users have been stopped, 1 still running", output)
-            self.assertIn("Spawning additional {\"UserSubclass\": 10} ({\"UserSubclass\": 1} already running)...", output)
-            self.assertIn("Spawning additional {} ({\"UserSubclass\": 11} already running)...", output)
+            self.assertIn('Spawning additional {"UserSubclass": 10} ({"UserSubclass": 1} already running)...', output)
+            self.assertIn('Spawning additional {} ({"UserSubclass": 11} already running)...', output)
             self.assertIn("1 Users have been stopped, 10 still running", output)
-            self.assertIn("Spawning additional {} ({\"UserSubclass\": 10} already running)...", output)
+            self.assertIn('Spawning additional {} ({"UserSubclass": 10} already running)...', output)
             self.assertIn("10 Users have been stopped, 0 still running", output)
-            self.assertIn("Spawning additional {} ({\"UserSubclass\": 0} already running)...", output)
+            self.assertIn('Spawning additional {} ({"UserSubclass": 0} already running)...', output)
             self.assertIn("10 Users have been stopped, 0 still running", output)
             self.assertIn("Test task is running", output)
             self.assertIn("Shutting down (exit code 0), bye.", output)

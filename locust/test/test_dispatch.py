@@ -103,7 +103,7 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
         expected_balanced_users = {
             "1": {"User1": 0, "User2": 0, "User3": 0},
             "2": {"User1": 0, "User2": 0, "User3": 0},
-            '3': {"User1": 0, "User2": 0, "User3": 0},
+            "3": {"User1": 0, "User2": 0, "User3": 0},
         }
         self.assertDictEqual(balanced_users, expected_balanced_users)
 
@@ -125,83 +125,110 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
         sleep_time = 1 / 0.15
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 0, "User2": 0, "User3": 0},
-            "3": {"User1": 0, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 0, "User2": 0, "User3": 0},
+                "3": {"User1": 0, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 0, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 0, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
@@ -222,83 +249,110 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 0, "User2": 0, "User3": 0},
-            "3": {"User1": 0, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 0, "User2": 0, "User3": 0},
+                "3": {"User1": 0, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 0, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 0, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
@@ -319,83 +373,110 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 0, "User2": 0, "User3": 0},
-            "3": {"User1": 0, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 0, "User2": 0, "User3": 0},
+                "3": {"User1": 0, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 0, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 0, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
@@ -416,47 +497,62 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 0, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 0, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
@@ -479,47 +575,62 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
         sleep_time = 2 / 2.4
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 0, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 0, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
@@ -540,29 +651,38 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
@@ -583,29 +703,38 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 0, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 0, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
@@ -626,11 +755,14 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
@@ -660,65 +792,86 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
         sleep_time = 1 / 0.15
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 0, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 0, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
@@ -742,65 +895,86 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 0, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 0, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
@@ -824,65 +998,86 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 0, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 0, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
@@ -906,38 +1101,50 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
@@ -963,38 +1170,50 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
         sleep_time = 2 / 2.4
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 0, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
@@ -1018,29 +1237,38 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 0, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 0, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
@@ -1064,20 +1292,26 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 1, "User2": 1, "User3": 0},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 1, "User2": 1, "User3": 0},
+                "3": {"User1": 1, "User2": 1, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
@@ -1101,11 +1335,14 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
@@ -1135,29 +1372,38 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
         sleep_time = 1 / 0.15
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 0, "User2": 0, "User3": 1},
-            "2": {"User1": 5, "User2": 0, "User3": 0},
-            "3": {"User1": 0, "User2": 7, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 0, "User2": 0, "User3": 1},
+                "2": {"User1": 5, "User2": 0, "User3": 0},
+                "3": {"User1": 0, "User2": 7, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 0, "User2": 0, "User3": 1},
-            "2": {"User1": 5, "User2": 0, "User3": 1},
-            "3": {"User1": 0, "User2": 7, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 0, "User2": 0, "User3": 1},
+                "2": {"User1": 5, "User2": 0, "User3": 1},
+                "3": {"User1": 0, "User2": 7, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
@@ -1181,29 +1427,38 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 0, "User2": 0, "User3": 1},
-            "2": {"User1": 5, "User2": 0, "User3": 0},
-            "3": {"User1": 0, "User2": 7, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 0, "User2": 0, "User3": 1},
+                "2": {"User1": 5, "User2": 0, "User3": 0},
+                "3": {"User1": 0, "User2": 7, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 0, "User2": 0, "User3": 1},
-            "2": {"User1": 5, "User2": 0, "User3": 1},
-            "3": {"User1": 0, "User2": 7, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 0, "User2": 0, "User3": 1},
+                "2": {"User1": 5, "User2": 0, "User3": 1},
+                "3": {"User1": 0, "User2": 7, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(1.99 <= delta <= 2.01, delta)
 
@@ -1227,29 +1482,38 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 0, "User2": 0, "User3": 1},
-            "2": {"User1": 5, "User2": 0, "User3": 0},
-            "3": {"User1": 0, "User2": 7, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 0, "User2": 0, "User3": 1},
+                "2": {"User1": 5, "User2": 0, "User3": 0},
+                "3": {"User1": 0, "User2": 7, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 0, "User2": 0, "User3": 1},
-            "2": {"User1": 5, "User2": 0, "User3": 1},
-            "3": {"User1": 0, "User2": 7, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 0, "User2": 0, "User3": 1},
+                "2": {"User1": 5, "User2": 0, "User3": 1},
+                "3": {"User1": 0, "User2": 7, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
@@ -1273,20 +1537,26 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 0, "User2": 0, "User3": 1},
-            "2": {"User1": 5, "User2": 0, "User3": 1},
-            "3": {"User1": 0, "User2": 7, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 0, "User2": 0, "User3": 1},
+                "2": {"User1": 5, "User2": 0, "User3": 1},
+                "3": {"User1": 0, "User2": 7, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0.99 <= delta <= 1.01, delta)
 
@@ -1312,20 +1582,26 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
         sleep_time = 2 / 2.4
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 0, "User2": 0, "User3": 1},
-            "2": {"User1": 5, "User2": 0, "User3": 1},
-            "3": {"User1": 0, "User2": 7, "User3": 0},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 0, "User2": 0, "User3": 1},
+                "2": {"User1": 5, "User2": 0, "User3": 1},
+                "3": {"User1": 0, "User2": 7, "User3": 0},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
 
@@ -1349,11 +1625,14 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
@@ -1377,11 +1656,14 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
@@ -1405,11 +1687,14 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
         )
 
         ts = time.time()
-        self.assertDictEqual(next(users_dispatcher), {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 1, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 1},
-        })
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 1, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 1},
+            },
+        )
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.01, delta)
 
@@ -1438,11 +1723,14 @@ class TestDispatchUsersToWorkersHavingMoreUsersThanTheTarget(unittest.TestCase):
             )
 
             ts = time.time()
-            self.assertDictEqual(next(users_dispatcher), {
-                "1": {"User1": 1, "User2": 1, "User3": 1},
-                "2": {"User1": 1, "User2": 1, "User3": 1},
-                "3": {"User1": 1, "User2": 1, "User3": 1},
-            })
+            self.assertDictEqual(
+                next(users_dispatcher),
+                {
+                    "1": {"User1": 1, "User2": 1, "User3": 1},
+                    "2": {"User1": 1, "User2": 1, "User3": 1},
+                    "3": {"User1": 1, "User2": 1, "User3": 1},
+                },
+            )
             delta = time.time() - ts
             self.assertTrue(0 <= delta <= 0.01, delta)
 
@@ -1471,11 +1759,14 @@ class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(unittest.TestCase)
             )
 
             ts = time.time()
-            self.assertDictEqual(next(users_dispatcher), {
-                "1": {"User1": 1, "User2": 1, "User3": 1},
-                "2": {"User1": 1, "User2": 1, "User3": 1},
-                "3": {"User1": 1, "User2": 1, "User3": 1},
-            })
+            self.assertDictEqual(
+                next(users_dispatcher),
+                {
+                    "1": {"User1": 1, "User2": 1, "User3": 1},
+                    "2": {"User1": 1, "User2": 1, "User3": 1},
+                    "3": {"User1": 1, "User2": 1, "User3": 1},
+                },
+            )
             delta = time.time() - ts
             self.assertTrue(0 <= delta <= 0.01, delta)
 
@@ -1538,31 +1829,41 @@ class AllUsersHaveBeenDispatched(unittest.TestCase):
             "Worker1": {"User1": 3, "User2": 1, "User3": 4},
             "Worker2": {"User1": 3, "User2": 1, "User3": 4},
         }
-        self.assertTrue(all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences))
+        self.assertTrue(
+            all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences)
+        )
 
         dispatched_users = {
             "Worker1": {"User1": 4, "User2": 1, "User3": 4},
             "Worker2": {"User1": 3, "User2": 1, "User3": 4},
         }
-        self.assertTrue(all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences))
+        self.assertTrue(
+            all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences)
+        )
 
         dispatched_users = {
             "Worker1": {"User1": 2, "User2": 1, "User3": 4},
             "Worker2": {"User1": 3, "User2": 1, "User3": 4},
         }
-        self.assertFalse(all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences))
+        self.assertFalse(
+            all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences)
+        )
 
         dispatched_users = {
             "Worker1": {"User1": 0, "User2": 0, "User3": 0},
             "Worker2": {"User1": 0, "User2": 0, "User3": 0},
         }
-        self.assertFalse(all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences))
+        self.assertFalse(
+            all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences)
+        )
 
         dispatched_users = {
             "Worker1": {"User1": 4, "User2": 0, "User3": 0},
             "Worker2": {"User1": 4, "User2": 0, "User3": 0},
         }
-        self.assertFalse(all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences))
+        self.assertFalse(
+            all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences)
+        )
 
 
 class TestAllUsersOfCurrentClassHaveBeenDispatched(unittest.TestCase):
@@ -1578,38 +1879,68 @@ class TestAllUsersOfCurrentClassHaveBeenDispatched(unittest.TestCase):
             "Worker1": {"User1": 3, "User2": 1, "User3": 4},
             "Worker2": {"User1": 3, "User2": 1, "User3": 4},
         }
-        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User1"))
-        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User2"))
-        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User3"))
+        self.assertTrue(
+            all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User1")
+        )
+        self.assertTrue(
+            all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User2")
+        )
+        self.assertTrue(
+            all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User3")
+        )
 
         dispatched_users = {
             "Worker1": {"User1": 4, "User2": 1, "User3": 4},
             "Worker2": {"User1": 3, "User2": 1, "User3": 4},
         }
-        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User1"))
-        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User2"))
-        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User3"))
+        self.assertTrue(
+            all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User1")
+        )
+        self.assertTrue(
+            all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User2")
+        )
+        self.assertTrue(
+            all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User3")
+        )
 
         dispatched_users = {
             "Worker1": {"User1": 2, "User2": 1, "User3": 4},
             "Worker2": {"User1": 3, "User2": 1, "User3": 4},
         }
-        self.assertFalse(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User1"))
-        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User2"))
-        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User3"))
+        self.assertFalse(
+            all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User1")
+        )
+        self.assertTrue(
+            all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User2")
+        )
+        self.assertTrue(
+            all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User3")
+        )
 
         dispatched_users = {
             "Worker1": {"User1": 0, "User2": 0, "User3": 0},
             "Worker2": {"User1": 0, "User2": 0, "User3": 0},
         }
-        self.assertFalse(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User1"))
-        self.assertFalse(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User2"))
-        self.assertFalse(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User3"))
+        self.assertFalse(
+            all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User1")
+        )
+        self.assertFalse(
+            all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User2")
+        )
+        self.assertFalse(
+            all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User3")
+        )
 
         dispatched_users = {
             "Worker1": {"User1": 4, "User2": 0, "User3": 0},
             "Worker2": {"User1": 4, "User2": 0, "User3": 0},
         }
-        self.assertTrue(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User1"))
-        self.assertFalse(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User2"))
-        self.assertFalse(all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User3"))
+        self.assertTrue(
+            all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User1")
+        )
+        self.assertFalse(
+            all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User2")
+        )
+        self.assertFalse(
+            all_users_of_current_class_have_been_dispatched(dispatched_users, effective_balanced_users, "User3")
+        )

@@ -222,7 +222,7 @@ class TestDistribution(unittest.TestCase):
             user_classes=[User1, User2, User3],
             number_of_users=10,
         )
-        self.assertDictEqual(user_class_occurrences, {"User1": 2, 'User2': 4, "User3": 4})
+        self.assertDictEqual(user_class_occurrences, {"User1": 2, "User2": 4, "User3": 4})
 
         user_class_occurrences = weight_users(
             user_classes=[User1, User2, User3],
@@ -278,7 +278,23 @@ class TestDistribution(unittest.TestCase):
 
         number_of_users = 1044523783783
         user_class_occurrences = weight_users(
-            user_classes=[User1, User2, User3, User4, User5, User6, User7, User8, User9, User10, User11, User12, User13, User14, User15],
+            user_classes=[
+                User1,
+                User2,
+                User3,
+                User4,
+                User5,
+                User6,
+                User7,
+                User8,
+                User9,
+                User10,
+                User11,
+                User12,
+                User13,
+                User14,
+                User15,
+            ],
             number_of_users=number_of_users,
         )
         self.assertEqual(sum(user_class_occurrences.values()), number_of_users)

@@ -101,7 +101,10 @@ class Environment:
         self._filter_tasks_by_tags()
 
     def _create_runner(
-            self, runner_class: Union[Type[LocalRunner], Type[MasterRunner], Type[WorkerRunner]], *args, **kwargs,
+        self,
+        runner_class: Union[Type[LocalRunner], Type[MasterRunner], Type[WorkerRunner]],
+        *args,
+        **kwargs,
     ) -> Union[LocalRunner, MasterRunner, WorkerRunner]:
         if self.runner is not None:
             raise RunnerAlreadyExistsError("Environment.runner already exists (%s)" % self.runner)

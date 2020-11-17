@@ -227,7 +227,9 @@ class Runner:
             )
             stop_group.kill(block=True)
 
-        logger.info("%i Users have been stopped, %g still running" % (sum(user_classes_stop_count.values()), self.user_count))
+        logger.info(
+            "%i Users have been stopped, %g still running" % (sum(user_classes_stop_count.values()), self.user_count)
+        )
 
     def monitor_cpu(self):
         process = psutil.Process()
@@ -593,11 +595,13 @@ class MasterRunner(DistributedRunner):
                     "host": self.environment.host,
                     "stop_timeout": self.environment.stop_timeout,
                 }
-                dispatch_greenlets.add(gevent.spawn_later(
-                    0,
-                    self.server.send_to_client,
-                    Message("spawn", data, worker_node_id),
-                ))
+                dispatch_greenlets.add(
+                    gevent.spawn_later(
+                        0,
+                        self.server.send_to_client,
+                        Message("spawn", data, worker_node_id),
+                    )
+                )
             logger.debug("Sending spawn message to %i client(s)" % len(dispatch_greenlets))
             dispatch_greenlets.join()
 
@@ -780,7 +784,9 @@ class WorkerRunner(DistributedRunner):
 
         # register listener for when all users have spawned, and report it to the master node
         def on_spawning_complete(user_class_occurrences):
-            self.client.send(Message("spawning_complete", {"user_class_occurrences": user_class_occurrences}, self.client_id))
+            self.client.send(
+                Message("spawning_complete", {"user_class_occurrences": user_class_occurrences}, self.client_id)
+            )
             self.worker_state = STATE_RUNNING
 
         self.environment.events.spawning_complete.add_listener(on_spawning_complete)
@@ -877,16 +883,16 @@ class WorkerRunner(DistributedRunner):
                 self.client.send(Message("spawning", None, self.client_id))
                 job = msg.data
                 if job["timestamp"] <= last_received_spawn_timestamp:
-                    logger.info("Discard spawn message with older or equal timestamp than timestamp of previous spawn message")
+                    logger.info(
+                        "Discard spawn message with older or equal timestamp than timestamp of previous spawn message"
+                    )
                     continue
                 self.environment.host = job["host"]
                 self.environment.stop_timeout = job["stop_timeout"]
                 if self.spawning_greenlet:
                     # kill existing spawning greenlet before we launch new one
                     self.spawning_greenlet.kill(block=True)
-                self.spawning_greenlet = self.greenlet.spawn(
-                    lambda: self.start_worker(job["user_class_occurrences"])
-                )
+                self.spawning_greenlet = self.greenlet.spawn(lambda: self.start_worker(job["user_class_occurrences"]))
                 self.spawning_greenlet.link_exception(greenlet_exception_handler)
                 last_received_spawn_timestamp = job["timestamp"]
             elif msg.type == "stop":
