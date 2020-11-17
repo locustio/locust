@@ -14,11 +14,18 @@ def weight_users(
     number_of_users: int,
 ) -> Dict[str, int]:
     """
-    Compute users to spawn
+    Compute the desired state of users using the weight of each user class.
+
+    If `number_of_users` is less than `len(user_classes)`, at most one user of each user class
+    is chosen. User classes with higher weight are chosen first.
+
+    If `number_of_users` is greater than or equal to `len(user_classes)`, at least one user of each
+    user class will be chosen. The greater `number_of_users` is, the better the actual distribution
+    of users will match the desired one (as dictated by the weight attributes).
 
     :param user_classes: the list of user class
     :param number_of_users: total number of users
-    :return: the new set of users to run
+    :return: the set of users to run
     """
     assert number_of_users >= 0
 

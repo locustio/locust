@@ -390,7 +390,7 @@ class TestLocustRunner(LocustTestCase):
         runner.spawning_greenlet.join()
         delta = time.time() - ts
         self.assertTrue(
-            0 <= delta <= 0.01, "Expected user count to increase to 10 instantaneously, instead it took %f" % delta
+            0 <= delta <= 0.05, "Expected user count to increase to 10 instantaneously, instead it took %f" % delta
         )
         self.assertTrue(
             runner.user_count == 10, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
@@ -401,7 +401,7 @@ class TestLocustRunner(LocustTestCase):
         runner.spawning_greenlet.join()
         delta = time.time() - ts
         self.assertTrue(
-            0 <= delta <= 0.01, "Expected user count to decrease to 2 instantaneously, instead it took %f" % delta
+            0 <= delta <= 0.05, "Expected user count to decrease to 2 instantaneously, instead it took %f" % delta
         )
         self.assertTrue(
             runner.user_count == 2, "User count has not decreased correctly to 2, it is : %i" % runner.user_count

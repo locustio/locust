@@ -20,6 +20,31 @@ def dispatch_users(
     user_class_occurrences: Dict[str, int],
     spawn_rate: float,
 ) -> Generator[Dict[str, Dict[str, int]], None, None]:
+    """
+    Generator function that dispatches the users
+    in `user_class_occurrences` to the workers.
+    The currently running users is also taken into
+    account.
+
+    It waits an appropriate amount of time between each iteration
+    in order for the spawn rate to be respected, whether running in
+    local or distributed mode.
+
+    The spawn rate is only applicable when additional users are needed.
+    Hence, if `user_class_occurrences` contains less users than there are
+    currently running, this function won't wait and will only run for
+    one iteration. The logic for not stopping users at a rate of `spawn_rate`
+    is that stopping them is a blocking operation, especially when
+    having a `stop_timeout` and users with tasks running for a few seconds or
+    more. If we were to dispatch multiple spawn messages to have a ramp down,
+    we'd run into problems where the previous spawning would be killed
+    by the new message. See the call to `self.spawning_greenlet.kill()` in
+    `:py:meth:`locust.runners.LocalRunner.start` and `:py:meth:`locust.runners.WorkerRunner.worker`.
+
+    :param worker_nodes: List of worker nodes
+    :param user_class_occurrences: Desired number of users for each class
+    :param spawn_rate: The spawn rate
+    """
     initial_dispatched_users = {
         worker_node.id: {
             user_class: worker_node.user_class_occurrences.get(user_class, 0)
@@ -119,10 +144,8 @@ def dispatch_users(
             gevent.sleep(max(0.0, wait_between_dispatch - delta))
 
         # If we are here, it means we have an excess of users for one or more user classes.
-        # Hence, we need to dispatch a last set of users that will bring the desired users
+        # Hence, we need to dispatch a last set of users that will bring the users
         # distribution to the desired one.
-        # TODO: Explain why we don't stop the users at "spawn_rate"
-        #       and why we stop the excess users once at the end.
         yield balanced_users
 
 
@@ -188,6 +211,10 @@ def balance_users_among_workers(
     worker_nodes,  # type: List[WorkerNode]
     user_class_occurrences: Dict[str, int],
 ) -> Dict[str, Dict[str, int]]:
+    """
+    Balance the users among the workers so that
+    each worker gets around the same number of users of each user class
+    """
     balanced_users = {
         worker_node.id: {user_class: 0 for user_class in sorted(user_class_occurrences.keys())}
         for worker_node in worker_nodes
