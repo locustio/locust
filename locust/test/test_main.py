@@ -359,7 +359,7 @@ class LocustProcessIntegrationTest(TestCase):
             stdin.write(b"S")
             gevent.sleep(1)
 
-            # These two should not do anything since we are already at zero users
+            # This should not do anything since we are already at zero users
             stdin.write(b"S")
             gevent.sleep(1)
 
