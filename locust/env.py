@@ -1,3 +1,10 @@
+from typing import (
+    Dict,
+    List,
+    Type,
+    TypeVar,
+)
+
 from .event import Events
 from .exception import RunnerAlreadyExistsError
 from .stats import RequestStats
@@ -6,12 +13,9 @@ from .web import WebUI
 from .user import User
 from .user.task import filter_tasks_by_tags
 from .shape import LoadTestShape
-from typing import (
-    Dict,
-    List,
-    Type,
-    Union,
-)
+
+
+RunnerType = TypeVar("RunnerType", bound=Runner)
 
 
 class Environment:
@@ -102,13 +106,13 @@ class Environment:
 
     def _create_runner(
         self,
-        runner_class: Union[Type[LocalRunner], Type[MasterRunner], Type[WorkerRunner]],
+        runner_class: Type[RunnerType],
         *args,
         **kwargs,
-    ) -> Union[LocalRunner, MasterRunner, WorkerRunner]:
+    ) -> RunnerType:
         if self.runner is not None:
             raise RunnerAlreadyExistsError("Environment.runner already exists (%s)" % self.runner)
-        self.runner: Union[LocalRunner, MasterRunner, WorkerRunner] = runner_class(self, *args, **kwargs)
+        self.runner: RunnerType = runner_class(self, *args, **kwargs)
         return self.runner
 
     def create_local_runner(self) -> LocalRunner:
