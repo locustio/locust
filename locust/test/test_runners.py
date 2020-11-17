@@ -608,6 +608,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             # Give workers time to connect
             sleep(0.1)
+
             # Start a shape test
             master.start_shape()
             sleep(1)
@@ -615,18 +616,240 @@ class TestMasterWorkerRunners(LocustTestCase):
             # Ensure workers have connected and started the correct amount of users
             for worker in workers:
                 self.assertEqual(3, worker.user_count, "Shape test has not reached stage 1")
+
             # Ensure new stage with more users has been reached
             sleep(2)
             for worker in workers:
                 self.assertEqual(7, worker.user_count, "Shape test has not reached stage 2")
+
             # Ensure new stage with less users has been reached
             sleep(2)
             for worker in workers:
                 self.assertEqual(1, worker.user_count, "Shape test has not reached stage 3")
+
             # Ensure test stops at the end
             sleep(2)
             for worker in workers:
                 self.assertEqual(0, worker.user_count, "Shape test has not stopped")
+
+            self.assertEqual("stopped", master.state)
+
+    def test_distributed_shape_with_stop_timeout(self):
+        """
+        Full integration test that starts both a MasterRunner and five WorkerRunner instances
+        and tests a basic LoadTestShape with scaling up and down users
+        """
+
+        class TestUser1(User):
+            def start(self, group: Group):
+                gevent.sleep(0.1)
+                return super().start(group)
+
+            @task
+            def my_task(self):
+                gevent.sleep(60)
+
+        class TestUser2(User):
+            def start(self, group: Group):
+                gevent.sleep(0.1)
+                return super().start(group)
+
+            @task
+            def my_task(self):
+                gevent.sleep(15)
+
+        class TestUser3(User):
+            def start(self, group: Group):
+                gevent.sleep(0.1)
+                return super().start(group)
+
+            @task
+            def my_task(self):
+                gevent.sleep(5)
+
+        class TestShape(LoadTestShape):
+            def tick(self):
+                run_time = self.get_run_time()
+                if run_time < 10:
+                    return 5, 1
+                elif run_time < 20:
+                    return 10, 1
+                elif run_time < 30:
+                    return 15, 5
+                elif run_time < 60:
+                    return 5, 1
+                else:
+                    return None
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            master_env = Environment(
+                user_classes=[TestUser1, TestUser2, TestUser3], shape_class=TestShape(), stop_timeout=20
+            )
+            master_env.shape_class.reset_time()
+            master = master_env.create_master_runner("*", 0)
+
+            workers = []
+            for i in range(5):
+                worker_env = Environment(user_classes=[TestUser1, TestUser2, TestUser3])
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+
+            # Give workers time to connect
+            sleep(0.1)
+
+            self.assertEqual("ready", master.state)
+
+            # Start a shape test
+            master.start_shape()
+            sleep(0.1)
+
+            # First stage
+            self.assertEqual("spawning", master.state)
+            sleep(5)  # runtime = 5s
+            self.assertEqual("running", master.state)
+            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w3 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            self.assertDictEqual(w1, workers[0].user_class_occurrences)
+            self.assertDictEqual(w2, workers[1].user_class_occurrences)
+            self.assertDictEqual(w3, workers[2].user_class_occurrences)
+            self.assertDictEqual(w4, workers[3].user_class_occurrences)
+            self.assertDictEqual(w5, workers[4].user_class_occurrences)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_class_occurrences)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_class_occurrences)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
+            sleep(5)  # runtime = 10s
+
+            # Second stage
+            self.assertEqual("spawning", master.state)
+            sleep(5)  # runtime = 15s
+            self.assertEqual("running", master.state)
+            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
+            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            self.assertDictEqual(w1, workers[0].user_class_occurrences)
+            self.assertDictEqual(w2, workers[1].user_class_occurrences)
+            self.assertDictEqual(w3, workers[2].user_class_occurrences)
+            self.assertDictEqual(w4, workers[3].user_class_occurrences)
+            self.assertDictEqual(w5, workers[4].user_class_occurrences)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_class_occurrences)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_class_occurrences)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
+            sleep(5)  # runtime = 20s
+
+            # Third stage
+            self.assertEqual("spawning", master.state)
+            sleep(5)  # runtime = 25s
+            self.assertEqual("running", master.state)
+            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w4 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w5 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            self.assertDictEqual(w1, workers[0].user_class_occurrences)
+            self.assertDictEqual(w2, workers[1].user_class_occurrences)
+            self.assertDictEqual(w3, workers[2].user_class_occurrences)
+            self.assertDictEqual(w4, workers[3].user_class_occurrences)
+            self.assertDictEqual(w5, workers[4].user_class_occurrences)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_class_occurrences)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_class_occurrences)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
+            sleep(5)  # runtime = 30s
+
+            # Forth stage
+            self.assertEqual("spawning", master.state)
+            sleep(5)  # runtime = 35s
+
+            # Forth stage - Excess TestUser3 have been stopped but
+            #               TestUser1/TestUser2 have not reached stop timeout yet, so
+            #               their number are unchanged
+            self.assertEqual("spawning", master.state)
+            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w4 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w5 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            self.assertDictEqual(w1, workers[0].user_class_occurrences)
+            self.assertDictEqual(w2, workers[1].user_class_occurrences)
+            self.assertDictEqual(w3, workers[2].user_class_occurrences)
+            self.assertDictEqual(w4, workers[3].user_class_occurrences)
+            self.assertDictEqual(w5, workers[4].user_class_occurrences)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_class_occurrences)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_class_occurrences)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
+            sleep(10)  # runtime = 45s
+
+            # Forth stage - TestUser2/TestUser3 are now at the desired
+            #               number, but TestUser1 is still unchanged
+            self.assertEqual("spawning", master.state)
+            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w3 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
+            w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
+            w5 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
+            self.assertDictEqual(w1, workers[0].user_class_occurrences)
+            self.assertDictEqual(w2, workers[1].user_class_occurrences)
+            self.assertDictEqual(w3, workers[2].user_class_occurrences)
+            self.assertDictEqual(w4, workers[3].user_class_occurrences)
+            self.assertDictEqual(w5, workers[4].user_class_occurrences)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_class_occurrences)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_class_occurrences)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
+            sleep(5)  # runtime = 50s
+
+            # Forth stage - All users are now at the desired number
+            self.assertEqual("running", master.state)
+            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w3 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            self.assertDictEqual(w1, workers[0].user_class_occurrences)
+            self.assertDictEqual(w2, workers[1].user_class_occurrences)
+            self.assertDictEqual(w3, workers[2].user_class_occurrences)
+            self.assertDictEqual(w4, workers[3].user_class_occurrences)
+            self.assertDictEqual(w5, workers[4].user_class_occurrences)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_class_occurrences)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_class_occurrences)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
+            sleep(10)  # runtime = 60s
+
+            # Sleep stop_timeout and make sure the test has stopped
+            sleep(1)  # runtime = 61s
+            self.assertEqual("stopping", master.state)
+            sleep(20)  # runtime = 81s
+            self.assertEqual("stopped", master.state)
+            w1 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            w2 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            w3 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            self.assertDictEqual(w1, workers[0].user_class_occurrences)
+            self.assertDictEqual(w2, workers[1].user_class_occurrences)
+            self.assertDictEqual(w3, workers[2].user_class_occurrences)
+            self.assertDictEqual(w4, workers[3].user_class_occurrences)
+            self.assertDictEqual(w5, workers[4].user_class_occurrences)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_class_occurrences)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_class_occurrences)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
 
     def test_distributed_shape_stop_and_restart(self):
         """
