@@ -580,6 +580,8 @@ class MasterRunner(DistributedRunner):
             self.exceptions = {}
             self.environment.events.test_start.fire(environment=self.environment)
 
+        self.update_state(STATE_SPAWNING)
+
         users_dispatcher = dispatch_users(
             worker_nodes=self.clients.ready + self.clients.running + self.clients.spawning,
             user_class_occurrences=self.target_user_class_occurrences,
@@ -603,7 +605,6 @@ class MasterRunner(DistributedRunner):
                     )
                 )
             logger.debug("Sending spawn message to %i client(s)" % len(dispatch_greenlets))
-            self.update_state(STATE_SPAWNING)
             dispatch_greenlets.join()
 
     def stop(self):

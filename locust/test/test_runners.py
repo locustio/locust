@@ -642,7 +642,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
         class TestUser1(User):
             def start(self, group: Group):
-                gevent.sleep(0.1)
+                gevent.sleep(0.5)
                 return super().start(group)
 
             @task
@@ -651,7 +651,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
         class TestUser2(User):
             def start(self, group: Group):
-                gevent.sleep(0.1)
+                gevent.sleep(0.5)
                 return super().start(group)
 
             @task
@@ -660,7 +660,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
         class TestUser3(User):
             def start(self, group: Group):
-                gevent.sleep(0.1)
+                gevent.sleep(0.5)
                 return super().start(group)
 
             @task
