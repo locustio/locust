@@ -1863,7 +1863,7 @@ class TestWorkerRunner(LocustTestCase):
             self.assertEqual(9, len(worker.user_greenlets))
             worker.quit()
 
-    def test_attributes_populated_when_calling_start_worker(self):
+    def test_computed_properties(self):
         class MyUser1(User):
             wait_time = constant(1)
 
@@ -1896,56 +1896,6 @@ class TestWorkerRunner(LocustTestCase):
             )
             worker.spawning_greenlet.join()
             self.assertDictEqual(worker.user_class_occurrences, {"MyUser1": 10, "MyUser2": 10})
-
-            client.mocked_send(
-                Message(
-                    "spawn",
-                    {
-                        "timestamp": 1605538585,
-                        "user_class_occurrences": {"MyUser1": 1, "MyUser2": 2},
-                        "host": "",
-                        "stop_timeout": None,
-                    },
-                    "dummy_client_id",
-                )
-            )
-            worker.spawning_greenlet.join()
-            self.assertDictEqual(worker.user_class_occurrences, {"MyUser1": 1, "MyUser2": 2})
-
-            worker.quit()
-
-    def test_user_class_occurrences(self):
-        class MyUser1(User):
-            wait_time = constant(1)
-
-            @task
-            def my_task(self):
-                pass
-
-        class MyUser2(User):
-            wait_time = constant(1)
-
-            @task
-            def my_task(self):
-                pass
-
-        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
-            environment = Environment()
-            worker = self.get_runner(environment=environment, user_classes=[MyUser1, MyUser2])
-
-            client.mocked_send(
-                Message(
-                    "spawn",
-                    {
-                        "timestamp": 1605538584,
-                        "user_class_occurrences": {"MyUser1": 10, "MyUser2": 10},
-                        "host": "",
-                        "stop_timeout": None,
-                    },
-                    "dummy_client_id",
-                )
-            )
-            worker.spawning_greenlet.join()
             self.assertDictEqual(worker.target_user_class_occurrences, {"MyUser1": 10, "MyUser2": 10})
             self.assertEqual(worker.target_user_count, 20)
 
@@ -1962,6 +1912,7 @@ class TestWorkerRunner(LocustTestCase):
                 )
             )
             worker.spawning_greenlet.join()
+            self.assertDictEqual(worker.user_class_occurrences, {"MyUser1": 1, "MyUser2": 2})
             self.assertDictEqual(worker.target_user_class_occurrences, {"MyUser1": 1, "MyUser2": 2})
             self.assertEqual(worker.target_user_count, 3)
 
