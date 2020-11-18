@@ -7,6 +7,7 @@ from typing import (
     Generator,
     List,
     TYPE_CHECKING,
+    Tuple,
 )
 
 import gevent
@@ -45,6 +46,7 @@ def dispatch_users(
     :param user_class_occurrences: Desired number of users for each class
     :param spawn_rate: The spawn rate
     """
+    # This represents the already running users among the workers
     initial_dispatched_users = {
         worker_node.id: {
             user_class: worker_node.user_class_occurrences.get(user_class, 0)
@@ -53,13 +55,13 @@ def dispatch_users(
         for worker_node in worker_nodes
     }
 
-    # This represents the desired users distribution
+    # This represents the desired users distribution among the workers
     balanced_users = balance_users_among_workers(
         worker_nodes,
         user_class_occurrences,
     )
 
-    # This represents the desired users distribution minus the already running users
+    # This represents the desired users distribution minus the already running users among the workers
     effective_balanced_users = {
         worker_node.id: {
             user_class: max(
@@ -169,7 +171,11 @@ def distribute_current_user_class_among_workers(
     user_class: str,
     number_of_users_in_current_dispatch: int,
     number_of_users_per_dispatch: int,
-):
+) -> Tuple[bool, int]:
+    """
+    :return done: boolean indicating if we have enough users to perform a dispatch to the workers
+    :return number_of_users_in_current_dispatch: current number of users in the dispatch
+    """
     done = False
     for worker_node_id in itertools.cycle(effective_balanced_users.keys()):
         if effective_balanced_users[worker_node_id][user_class] == 0:
