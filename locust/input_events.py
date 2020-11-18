@@ -96,12 +96,7 @@ def get_poller():
         return UnixKeyPoller()
 
 
-def input_listener(
-    key_to_user_params: Dict[str, Tuple[int, float]], key_to_callbacks: Dict[str, callable], runner: Runner
-):
-    # Ensure key presses are unique across both dictionaries
-    assert len(set(key_to_user_params.keys()).intersection(key_to_callbacks.keys())) == 0
-
+def input_listener(key_to_func_map: Dict[str, callable]):
     def input_listener_func():
         try:
             poller = get_poller()
@@ -109,28 +104,13 @@ def input_listener(
             logging.info(e)
             return
 
-        user_count = 0
         try:
             while True:
                 input = poller.poll()
                 if input:
-                    try:
-                        user_params = key_to_user_params[input]
-                    except KeyError:
-                        try:
-                            key_to_callbacks[input](runner)
-                        except KeyError:
-                            continue
-                    else:
-                        user_delta, spawn_rate = user_params
-                        if runner.state == STATE_SPAWNING and user_delta > 0:
-                            logging.warning("Already spawning users, can't spawn more right now")
-                            continue
-                        elif runner.state == STATE_SPAWNING and user_delta < 0:
-                            logging.warning("Spawning users, can't stop right now")
-                            continue
-                        user_count = max(0, user_count + user_delta)
-                        runner.start(user_count, spawn_rate)
+                    for key in key_to_func_map:
+                        if input == key:
+                            key_to_func_map[key]()
                 else:
                     gevent.sleep(0.2)
         except Exception as e:
