@@ -130,7 +130,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -142,7 +142,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -154,7 +154,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -166,7 +166,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -178,7 +178,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -190,7 +190,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -202,7 +202,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -214,7 +214,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -226,12 +226,12 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_5(self):
         worker_node1 = WorkerNode("1")
@@ -254,7 +254,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -266,7 +266,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(1.99 <= delta <= 2.01, delta)
+        self.assertTrue(1.98 <= delta <= 2.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -278,7 +278,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(1.99 <= delta <= 2.01, delta)
+        self.assertTrue(1.98 <= delta <= 2.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -290,7 +290,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(1.99 <= delta <= 2.01, delta)
+        self.assertTrue(1.98 <= delta <= 2.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -302,7 +302,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(1.99 <= delta <= 2.01, delta)
+        self.assertTrue(1.98 <= delta <= 2.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -314,7 +314,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(1.99 <= delta <= 2.01, delta)
+        self.assertTrue(1.98 <= delta <= 2.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -326,7 +326,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(1.99 <= delta <= 2.01, delta)
+        self.assertTrue(1.98 <= delta <= 2.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -338,7 +338,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(1.99 <= delta <= 2.01, delta)
+        self.assertTrue(1.98 <= delta <= 2.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -350,12 +350,12 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(1.99 <= delta <= 2.01, delta)
+        self.assertTrue(1.98 <= delta <= 2.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_1(self):
         worker_node1 = WorkerNode("1")
@@ -378,7 +378,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -390,7 +390,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -402,7 +402,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -414,7 +414,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -426,7 +426,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -438,7 +438,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -450,7 +450,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -462,7 +462,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -474,12 +474,12 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_2(self):
         worker_node1 = WorkerNode("1")
@@ -502,7 +502,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -514,7 +514,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -526,7 +526,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -538,7 +538,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -550,12 +550,12 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_2_4(self):
         worker_node1 = WorkerNode("1")
@@ -580,7 +580,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -592,7 +592,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -604,7 +604,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -616,7 +616,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -628,12 +628,12 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_3(self):
         worker_node1 = WorkerNode("1")
@@ -656,7 +656,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -668,7 +668,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -680,12 +680,12 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_4(self):
         worker_node1 = WorkerNode("1")
@@ -708,7 +708,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -720,7 +720,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -732,12 +732,12 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_9(self):
         worker_node1 = WorkerNode("1")
@@ -760,12 +760,12 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
 
 class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
@@ -795,7 +795,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -807,7 +807,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -819,7 +819,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -831,7 +831,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -843,7 +843,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -855,7 +855,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -867,12 +867,12 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_5(self):
         worker_node1 = WorkerNode("1")
@@ -898,7 +898,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -910,7 +910,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(1.99 <= delta <= 2.01, delta)
+        self.assertTrue(1.98 <= delta <= 2.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -922,7 +922,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(1.99 <= delta <= 2.01, delta)
+        self.assertTrue(1.98 <= delta <= 2.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -934,7 +934,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(1.99 <= delta <= 2.01, delta)
+        self.assertTrue(1.98 <= delta <= 2.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -946,7 +946,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(1.99 <= delta <= 2.01, delta)
+        self.assertTrue(1.98 <= delta <= 2.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -958,7 +958,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(1.99 <= delta <= 2.01, delta)
+        self.assertTrue(1.98 <= delta <= 2.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -970,12 +970,12 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(1.99 <= delta <= 2.01, delta)
+        self.assertTrue(1.98 <= delta <= 2.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_1(self):
         worker_node1 = WorkerNode("1")
@@ -1001,7 +1001,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1013,7 +1013,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1025,7 +1025,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1037,7 +1037,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1049,7 +1049,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1061,7 +1061,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1073,12 +1073,12 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_2(self):
         worker_node1 = WorkerNode("1")
@@ -1104,7 +1104,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1116,7 +1116,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1128,7 +1128,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1140,12 +1140,12 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_2_4(self):
         worker_node1 = WorkerNode("1")
@@ -1173,7 +1173,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1185,7 +1185,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1197,7 +1197,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1209,12 +1209,12 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_3(self):
         worker_node1 = WorkerNode("1")
@@ -1240,7 +1240,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1252,7 +1252,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1264,12 +1264,12 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_4(self):
         worker_node1 = WorkerNode("1")
@@ -1295,7 +1295,7 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1307,12 +1307,12 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_9(self):
         worker_node1 = WorkerNode("1")
@@ -1338,12 +1338,12 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
 
 class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.TestCase):
@@ -1373,7 +1373,7 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1385,7 +1385,7 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1397,12 +1397,12 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_5(self):
         worker_node1 = WorkerNode("1")
@@ -1428,7 +1428,7 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1440,7 +1440,7 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
             },
         )
         delta = time.time() - ts
-        self.assertTrue(1.99 <= delta <= 2.01, delta)
+        self.assertTrue(1.98 <= delta <= 2.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1452,12 +1452,12 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
             },
         )
         delta = time.time() - ts
-        self.assertTrue(1.99 <= delta <= 2.01, delta)
+        self.assertTrue(1.98 <= delta <= 2.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_1(self):
         worker_node1 = WorkerNode("1")
@@ -1483,7 +1483,7 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1495,7 +1495,7 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1507,12 +1507,12 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_2(self):
         worker_node1 = WorkerNode("1")
@@ -1538,7 +1538,7 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1550,12 +1550,12 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0.99 <= delta <= 1.01, delta)
+        self.assertTrue(0.98 <= delta <= 1.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_2_4(self):
         worker_node1 = WorkerNode("1")
@@ -1583,7 +1583,7 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertDictEqual(
@@ -1595,12 +1595,12 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
             },
         )
         delta = time.time() - ts
-        self.assertTrue(sleep_time - 0.01 <= delta <= sleep_time + 0.01, delta)
+        self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_3(self):
         worker_node1 = WorkerNode("1")
@@ -1626,12 +1626,12 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_4(self):
         worker_node1 = WorkerNode("1")
@@ -1657,12 +1657,12 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_9(self):
         worker_node1 = WorkerNode("1")
@@ -1688,12 +1688,12 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
             },
         )
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
         ts = time.time()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 0.01, delta)
+        self.assertTrue(0 <= delta <= 0.02, delta)
 
 
 class TestDispatchUsersToWorkersHavingMoreUsersThanTheTarget(unittest.TestCase):
@@ -1722,12 +1722,12 @@ class TestDispatchUsersToWorkersHavingMoreUsersThanTheTarget(unittest.TestCase):
                 },
             )
             delta = time.time() - ts
-            self.assertTrue(0 <= delta <= 0.01, delta)
+            self.assertTrue(0 <= delta <= 0.02, delta)
 
             ts = time.time()
             self.assertRaises(StopIteration, lambda: next(users_dispatcher))
             delta = time.time() - ts
-            self.assertTrue(0 <= delta <= 0.01, delta)
+            self.assertTrue(0 <= delta <= 0.02, delta)
 
 
 class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(unittest.TestCase):
@@ -1756,12 +1756,12 @@ class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(unittest.TestCase)
                 },
             )
             delta = time.time() - ts
-            self.assertTrue(0 <= delta <= 0.01, delta)
+            self.assertTrue(0 <= delta <= 0.02, delta)
 
             ts = time.time()
             self.assertRaises(StopIteration, lambda: next(users_dispatcher))
             delta = time.time() - ts
-            self.assertTrue(0 <= delta <= 0.01, delta)
+            self.assertTrue(0 <= delta <= 0.02, delta)
 
 
 class TestNumberOfUsersLeftToDispatch(unittest.TestCase):
