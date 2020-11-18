@@ -1621,37 +1621,6 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(1, master.target_user_count)
             self.assertEqual(3, master.spawn_rate)
 
-    def test_user_class_occurrences(self):
-        class MyUser1(User):
-            @task
-            def my_task(self):
-                pass
-
-        class MyUser2(User):
-            @task
-            def my_task(self):
-                pass
-
-        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = self.get_runner(user_classes=[MyUser1, MyUser2])
-
-            server.mocked_send(Message("client_ready", None, "fake_client1"))
-
-            master.start(7, 7)
-            self.assertEqual({"MyUser1": 3, "MyUser2": 4}, master.target_user_class_occurrences)
-            self.assertEqual(7, master.target_user_count)
-            self.assertEqual(7, master.spawn_rate)
-
-            master.start(10, 10)
-            self.assertEqual({"MyUser1": 5, "MyUser2": 5}, master.target_user_class_occurrences)
-            self.assertEqual(10, master.target_user_count)
-            self.assertEqual(10, master.spawn_rate)
-
-            master.start(1, 3)
-            self.assertEqual({"MyUser1": 1, "MyUser2": 0}, master.target_user_class_occurrences)
-            self.assertEqual(1, master.target_user_count)
-            self.assertEqual(3, master.spawn_rate)
-
 
 class TestWorkerRunner(LocustTestCase):
     def setUp(self):
