@@ -67,29 +67,6 @@ def weight_users(
         )
 
 
-def _find_ideal_users_to_add(
-    user_classes: List[Type[User]],
-    number_of_users_to_add: int,
-    user_class_occurrences: Dict[str, int],
-) -> Dict[str, int]:
-    user_class_occurrences_candidates: Dict[float, Dict[str, int]] = {}
-
-    for user_classes_combination in combinations_with_replacement(user_classes, number_of_users_to_add):
-        user_class_occurrences_candidate = {
-            user_class.__name__: user_class_occurrences[user_class.__name__]
-            + sum(1 for user_class_ in user_classes_combination if user_class_.__name__ == user_class.__name__)
-            for user_class in user_classes
-        }
-        distance = distance_from_desired_distribution(
-            user_classes,
-            user_class_occurrences_candidate,
-        )
-        if distance not in user_class_occurrences_candidates:
-            user_class_occurrences_candidates[distance] = user_class_occurrences_candidate.copy()
-
-    return user_class_occurrences_candidates[min(user_class_occurrences_candidates.keys())]
-
-
 def _find_ideal_users_to_add_or_remove(
     user_classes: List[Type[User]],
     number_of_users_to_add_or_remove: int,
