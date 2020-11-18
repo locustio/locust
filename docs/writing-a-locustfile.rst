@@ -18,8 +18,9 @@ a User class may define.
 wait_time attribute
 -------------------
 
-A User's :py:attr:`wait_time <locust.User.wait_time>` method is an optional feature used to make 
-a simulated user wait a specified time between task executions.
+A User's :py:attr:`wait_time <locust.User.wait_time>` method is an optional attribute used to determine
+how long a simulated user should wait between executing tasks. If no :py:attr:`wait_time <locust.User.wait_time>` 
+is specified, a new task will be executed as soon as one finishes.
 
 There are three built in wait time functions: 
 
@@ -156,9 +157,11 @@ the following example *task2* will have twice the chance of being picked as *tas
 
 .. code-block:: python
     
-    from locust import User, task
+    from locust import User, task, between
     
     class MyUser(User):
+        wait_time = between(5, 15)
+        
         @task(3)
         def task1(self):
             pass
@@ -190,6 +193,7 @@ Here is an example of a User task declared as a normal python function:
     
     class MyUser(User):
         tasks = [my_task]
+        wait_time = constant(1)
 
 
 If the tasks attribute is specified as a list, each time a task is to be performed, it will be randomly 

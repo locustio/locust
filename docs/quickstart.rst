@@ -9,9 +9,11 @@ A Locust performance test is specified in a plain python file:
 .. code-block:: python
 
     import time
-    from locust import HttpUser, task
+    from locust import HttpUser, task, between
 
     class QuickstartUser(HttpUser):
+        wait_time = between(1, 2)
+
         @task
         def hello_world(self):
             self.client.get("/hello")
@@ -32,7 +34,7 @@ A Locust performance test is specified in a plain python file:
 .. code-block:: python
 
     import time
-    from locust import HttpUser, task
+    from locust import HttpUser, task, between
 
 A locust file is just a normal Python module, it can import code from other files or packages.
 
@@ -41,6 +43,13 @@ A locust file is just a normal Python module, it can import code from other file
     class QuickstartUser(HttpUser):
 
 The behaviour of a simulated user is represented by a class in your locust file. When you start a test run, Locust will create an instance of the class for each concurrent user.
+
+.. code-block:: python
+
+    wait_time = between(1, 2)
+
+The class defines a ``wait_time`` that will make the simulated users wait between 1 and 2 seconds after each task (see below)
+is executed. For more info see :ref:`wait-time`.
 
 .. code-block:: python
 
