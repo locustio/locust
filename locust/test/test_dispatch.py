@@ -12,8 +12,6 @@ from locust.runners import WorkerNode
 
 
 class TestBalanceUsersAmongWorkers(unittest.TestCase):
-    maxDiff = None
-
     def test_balance_users_among_1_worker(self):
         worker_node1 = WorkerNode("1")
 
@@ -109,8 +107,6 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
 
 
 class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
-    maxDiff = None
-
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_15(self):
         worker_node1 = WorkerNode("1")
         worker_node2 = WorkerNode("2")
@@ -773,8 +769,6 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
 
 
 class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
-    maxDiff = None
-
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_15(self):
         worker_node1 = WorkerNode("1")
         worker_node1.user_class_occurrences = {}
@@ -1353,8 +1347,6 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
 
 
 class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.TestCase):
-    maxDiff = None
-
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_15(self):
         worker_node1 = WorkerNode("1")
         worker_node1.user_class_occurrences = {}
@@ -1705,8 +1697,6 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
 
 
 class TestDispatchUsersToWorkersHavingMoreUsersThanTheTarget(unittest.TestCase):
-    maxDiff = None
-
     def test_dispatch_users_to_3_workers(self):
         worker_node1 = WorkerNode("1")
         worker_node1.user_class_occurrences = {"User3": 15}
@@ -1741,8 +1731,6 @@ class TestDispatchUsersToWorkersHavingMoreUsersThanTheTarget(unittest.TestCase):
 
 
 class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(unittest.TestCase):
-    maxDiff = None
-
     def test_dispatch_users_to_3_workers(self):
         worker_node1 = WorkerNode("1")
         worker_node1.user_class_occurrences = {"User1": 1, "User2": 1, "User3": 1}
@@ -1777,8 +1765,6 @@ class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(unittest.TestCase)
 
 
 class TestNumberOfUsersLeftToDispatch(unittest.TestCase):
-    maxDiff = None
-
     def test_number_of_users_left_to_dispatch(self):
         user_class_occurrences = {"User1": 6, "User2": 2, "User3": 8}
         balanced_users = {
@@ -1816,8 +1802,6 @@ class TestNumberOfUsersLeftToDispatch(unittest.TestCase):
 
 
 class AllUsersHaveBeenDispatched(unittest.TestCase):
-    maxDiff = None
-
     def test_all_users_have_been_dispatched(self):
         user_class_occurrences = {"User1": 6, "User2": 2, "User3": 8}
         effective_balanced_users = {
@@ -1867,8 +1851,6 @@ class AllUsersHaveBeenDispatched(unittest.TestCase):
 
 
 class TestAllUsersOfCurrentClassHaveBeenDispatched(unittest.TestCase):
-    maxDiff = None
-
     def test_all_users_of_current_class_have_been_dispatched(self):
         effective_balanced_users = {
             "Worker1": {"User1": 3, "User2": 1, "User3": 4},

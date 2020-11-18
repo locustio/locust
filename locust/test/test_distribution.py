@@ -5,8 +5,6 @@ from locust.distribution import weight_users
 
 
 class TestDistribution(unittest.TestCase):
-    maxDiff = None
-
     def test_distribution_no_user_classes(self):
         user_class_occurrences = weight_users(
             user_classes=[],
