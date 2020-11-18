@@ -208,7 +208,7 @@ class Runner:
                 user_to_stop: User = to_stop.pop()
                 logger.debug("Stopping %s" % user_to_stop.greenlet.name)
                 if user_to_stop.greenlet is greenlet.getcurrent():
-                    # User called runner.quit(), so dont block waiting for killing to finish"
+                    # User called runner.quit(), so don't block waiting for killing to finish
                     user_to_stop.group.killone(user_to_stop.greenlet, block=False)
                 elif self.environment.stop_timeout:
                     async_calls_to_stop.add(gevent.spawn_later(0, User.stop, user_to_stop, force=False))
@@ -537,7 +537,7 @@ class MasterRunner(DistributedRunner):
         self.environment.events.quitting.add_listener(on_quitting)
 
     @property
-    def user_count(self):
+    def user_count(self) -> int:
         return sum(c.user_count for c in self.clients.values())
 
     def cpu_log_warning(self):
@@ -547,7 +547,7 @@ class MasterRunner(DistributedRunner):
             warning_emitted = True
         return warning_emitted
 
-    def start(self, user_count: int, spawn_rate: float, **kwargs):
+    def start(self, user_count: int, spawn_rate: float, **kwargs) -> None:
         num_workers = len(self.clients.ready) + len(self.clients.running) + len(self.clients.spawning)
         if not num_workers:
             logger.warning(
@@ -621,7 +621,7 @@ class MasterRunner(DistributedRunner):
                 logger.debug("Sending stop message to client %s" % client.id)
                 self.server.send_to_client(Message("stop", None, client.id))
 
-            # Give 60s more for all workers to stop
+            # Give an additional 60s for all workers to stop
             timeout = gevent.Timeout(self.environment.stop_timeout or 0 + 60)
             timeout.start()
             try:
