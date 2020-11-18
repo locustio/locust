@@ -708,7 +708,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             sleep(5)  # runtime = 5s
             self.assertEqual("running", master.state)
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
-            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
             w3 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
             w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
             w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
@@ -775,7 +775,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             #               their number are unchanged
             self.assertEqual("spawning", master.state)
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
-            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
             w4 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
             w5 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
@@ -795,7 +795,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             #               number, but TestUser1 is still unchanged
             self.assertEqual("spawning", master.state)
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
-            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             w3 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
             w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
             w5 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
@@ -814,7 +814,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             # Forth stage - All users are now at the desired number
             self.assertEqual("running", master.state)
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
-            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
             w3 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
             w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
             w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
@@ -1607,7 +1607,7 @@ class TestMasterRunner(LocustTestCase):
             server.mocked_send(Message("client_ready", None, "fake_client1"))
 
             master.start(7, 7)
-            self.assertEqual({"MyUser1": 4, "MyUser2": 3}, master.target_user_class_occurrences)
+            self.assertEqual({"MyUser1": 3, "MyUser2": 4}, master.target_user_class_occurrences)
             self.assertEqual(7, master.target_user_count)
             self.assertEqual(7, master.spawn_rate)
 
@@ -1638,7 +1638,7 @@ class TestMasterRunner(LocustTestCase):
             server.mocked_send(Message("client_ready", None, "fake_client1"))
 
             master.start(7, 7)
-            self.assertEqual({"MyUser1": 4, "MyUser2": 3}, master.target_user_class_occurrences)
+            self.assertEqual({"MyUser1": 3, "MyUser2": 4}, master.target_user_class_occurrences)
             self.assertEqual(7, master.target_user_count)
             self.assertEqual(7, master.spawn_rate)
 
