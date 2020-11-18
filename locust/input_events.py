@@ -1,17 +1,9 @@
-from typing import (
-    Dict,
-    Tuple,
-)
+from typing import Dict
 
 import gevent
 import logging
 import os
 import sys
-
-from locust.runners import (
-    Runner,
-    STATE_SPAWNING,
-)
 
 if os.name == "nt":
     from win32api import STD_INPUT_HANDLE
