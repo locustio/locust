@@ -113,8 +113,7 @@ def dispatch_users(
                 gevent.sleep(max(0.0, wait_between_dispatch - delta))
 
     elif (
-        not less_users_than_desired
-        and number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_class_occurrences)
+        number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_class_occurrences)
         <= number_of_users_per_dispatch
     ):
         yield balanced_users
