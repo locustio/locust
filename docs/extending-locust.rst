@@ -96,6 +96,37 @@ For example, you can monitor the fail ratio of your test and stop the run if it 
             gevent.spawn(checker, environment)
 
 
+
+InfluxDB Listener 
+=================
+
+As an alternative to the provided locust reports, you can use the :py:obj:`locust.events` to expose the locust 
+events to an external persistance system like InfluxDB which can be connected 
+to Grafana to provide more powerful and detailed reports. 
+
+For example, you can provide a custom library that initializes a listener on the init event and post all test
+events.
+
+.. code-block:: python
+    @events.init.add_listener
+    # creates the influxdb listener object
+    influxDBSettings = InfluxDBSettings(
+        influx_host = 'localhost',
+        influx_port = '8086',
+        user = 'admin',
+        pwd = 'pass',
+        database = 'test-project'
+    )
+    # start listerner with the given configuration
+    InfluxDBListener(env=environment, influxDbSettings=influxDBSettings)
+
+.. code
+
+
+The full example with a working influxDB listener can be found in `influxdb-boilerplate <https://github.com/hoodoo-digital/locust-influxdb-boilerplate>`
+
+
+
 More examples
 =============
 
