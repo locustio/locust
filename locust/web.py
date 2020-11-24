@@ -36,9 +36,7 @@ DEFAULT_CACHE_TIME = 2.0
 
 class WebUI:
     """
-    Sets up and runs a Flask web
-
-     that can start and stop load tests using the
+    Sets up and runs a Flask web app that can start and stop load tests using the
     :attr:`environment.runner <locust.env.Environment.runner>` as well as show the load test statistics
     in :attr:`environment.stats <locust.env.Environment.stats>`
     """
