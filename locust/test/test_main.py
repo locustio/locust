@@ -368,3 +368,44 @@ class LoadTestShape(LoadTestShape):
             self.assertIn("1 Users have been stopped", output)
             self.assertIn("10 Users have been stopped", output)
             self.assertIn("Test task is running", output)
+
+    def test_html_report_option(self):
+        with mock_locustfile() as mocked:
+            with temporary_file("", suffix=".html") as html_report_file_path:
+                try:
+                    output = (
+                        subprocess.check_output(
+                            [
+                                "locust",
+                                "-f",
+                                mocked.file_path,
+                                "--host",
+                                "https://test.com/",
+                                "--run-time",
+                                "5s",
+                                "--headless",
+                                "--html",
+                                html_report_file_path,
+                            ],
+                            stderr=subprocess.STDOUT,
+                            timeout=10,
+                        )
+                        .decode("utf-8")
+                        .strip()
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise AssertionError(
+                        "Running locust command failed. Output was:\n\n%s" % e.stdout.decode("utf-8")
+                    ) from e
+
+                with open(html_report_file_path, encoding="utf-8") as f:
+                    html_report_content = f.read()
+
+        # make sure title appears in the report
+        self.assertIn("<title>Test Report</title>", html_report_content)
+
+        # make sure host appears in the report
+        self.assertIn("https://test.com/", html_report_content)
+
+        # make sure the charts container appears in the report
+        self.assertIn("charts-container", html_report_content)
