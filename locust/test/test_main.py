@@ -375,7 +375,18 @@ class LoadTestShape(LoadTestShape):
                 try:
                     output = (
                         subprocess.check_output(
-                            ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--run-time", "5s", "--headless", "--html", html_report_file_path],
+                            [
+                                "locust",
+                                "-f",
+                                mocked.file_path,
+                                "--host",
+                                "https://test.com/",
+                                "--run-time",
+                                "5s",
+                                "--headless",
+                                "--html",
+                                html_report_file_path,
+                            ],
                             stderr=subprocess.STDOUT,
                             timeout=10,
                         )
