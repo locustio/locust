@@ -698,6 +698,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             sleep(0.1)
 
             self.assertEqual("ready", master.state)
+            self.assertEqual(5, len(master.clients.ready))
 
             # Start a shape test
             master.start_shape()
@@ -705,7 +706,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             # First stage
             self.assertEqual("spawning", master.state)
-            sleep(5)  # runtime = 5s
+            sleep(8)  # runtime = 8s
             self.assertEqual("running", master.state)
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
@@ -722,7 +723,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
             self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
             self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
-            sleep(5)  # runtime = 10s
+            sleep(2)  # runtime = 10s
 
             # Second stage
             self.assertEqual("spawning", master.state)
