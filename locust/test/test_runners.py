@@ -1252,7 +1252,7 @@ class TestWorkerRunner(LocustTestCase):
             test_start_run = [False]
 
             @environment.events.test_start.add_listener
-            def on_test_start(**kw):
+            def on_test_start(_environment, **kw):
                 test_start_run[0] = True
 
             worker = self.get_runner(environment=environment, user_classes=[MyTestUser])
