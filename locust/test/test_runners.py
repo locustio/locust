@@ -490,6 +490,7 @@ class TestMasterWorkerRunners(LocustTestCase):
     def test_test_stop_event(self):
         class TestUser(User):
             wait_time = constant(0.1)
+
             @task
             def my_task(l):
                 pass
