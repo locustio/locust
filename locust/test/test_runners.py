@@ -487,6 +487,60 @@ class TestMasterWorkerRunners(LocustTestCase):
             "For some reason the master node's stats has not come in",
         )
 
+    def test_test_stop_event(self):
+        class TestUser(User):
+            wait_time = constant(0.1)
+            @task
+            def my_task(l):
+                pass
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            # start a Master runner
+            master_env = Environment(user_classes=[TestUser])
+            test_stop_count = {"master": 0, "worker": 0}
+
+            @master_env.events.test_stop.add_listener
+            def _(*args, **kwargs):
+                test_stop_count["master"] += 1
+
+            master = master_env.create_master_runner("*", 0)
+            sleep(0)
+            # start a Worker runner
+            worker_env = Environment(user_classes=[TestUser])
+
+            @worker_env.events.test_stop.add_listener
+            def _(*args, **kwargs):
+                test_stop_count["worker"] += 1
+
+            worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+
+            # give worker time to connect
+            sleep(0.1)
+            # issue start command that should trigger TestUsers to be spawned in the Workers
+            master.start(2, spawn_rate=1000)
+            sleep(0.1)
+            # check that worker nodes have started locusts
+            self.assertEqual(2, worker.user_count)
+            # give time for users to generate stats, and stats to be sent to master
+            sleep(0.1)
+            master_env.events.quitting.fire(environment=master_env, reverse=True)
+            master.quit()
+            sleep(0.1)
+            # make sure users are killed
+            self.assertEqual(0, worker.user_count)
+
+        # check the test_stop event was called one time in master and zero times in workder
+        self.assertEqual(
+            1,
+            test_stop_count["master"],
+            "The test_stop event was not called exactly one time in the master node",
+        )
+        self.assertEqual(
+            0,
+            test_stop_count["worker"],
+            "The test_stop event was called in the worker node",
+        )
+
     def test_distributed_shape(self):
         """
         Full integration test that starts both a MasterRunner and three WorkerRunner instances
