@@ -671,13 +671,13 @@ class TestMasterWorkerRunners(LocustTestCase):
             def tick(self):
                 run_time = self.get_run_time()
                 if run_time < 10:
-                    return 5, 1
+                    return 5, 3
                 elif run_time < 20:
-                    return 10, 1
+                    return 10, 3
                 elif run_time < 30:
-                    return 15, 5
+                    return 15, 3
                 elif run_time < 60:
-                    return 5, 1
+                    return 5, 3
                 else:
                     return None
 
@@ -700,13 +700,18 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertEqual("ready", master.state)
             self.assertEqual(5, len(master.clients.ready))
 
+            # Re-order `workers` so that it is sorted by `id`.
+            # This is required because the dispatch is done
+            # on the sorted workers.
+            workers = sorted(workers, key=lambda w: w.client_id)
+
             # Start a shape test
             master.start_shape()
             sleep(0.1)
 
             # First stage
             self.assertEqual("spawning", master.state)
-            sleep(8)  # runtime = 8s
+            sleep(5)  # runtime = 5s
             self.assertEqual("running", master.state)
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
@@ -723,7 +728,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
             self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
             self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
-            sleep(2)  # runtime = 10s
+            sleep(5)  # runtime = 10s
 
             # Second stage
             self.assertEqual("spawning", master.state)

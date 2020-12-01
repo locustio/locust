@@ -46,6 +46,9 @@ def dispatch_users(
     :param user_class_occurrences: Desired number of users for each class
     :param spawn_rate: The spawn rate
     """
+    # Get repeatable behaviour.
+    worker_nodes = sorted(worker_nodes, key=lambda w: w.id)
+
     # This represents the already running users among the workers
     initial_dispatched_users = {
         worker_node.id: {
