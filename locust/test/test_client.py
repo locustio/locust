@@ -196,3 +196,8 @@ class TestHttpSession(WebserverTestCase):
             pass
         self.assertEqual(1, self.environment.stats.total.num_requests)
         self.assertEqual(1, self.environment.stats.total.num_failures)
+
+    def test_querystring_different_format(self):
+        s = self.get_client()
+        response = s.get("/querystring?this/is/a/non-standard/querystring")
+        self.assertEqual("this/is/a/non-standard/querystring", response.text)
