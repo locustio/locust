@@ -1,0 +1,47 @@
+////////////////////////
+// Default the Breakpoints variable
+////////////////////////
+$breakpoints: () !default;
+
+////////////////////////
+// Respond-to API Mixin
+////////////////////////
+@mixin respond-to($context, $no-query: false) {
+  @if type-of($breakpoints) != 'map' {
+    // Just in case someone writes gibberish to the $breakpoints variable.
+    @warn "Your breakpoints aren't a map! See https://github.com/snugug/respond-to#api if you'd like a reminder on how to use Respond-to";
+    @content;
+  }
+  @else if map-has-key($breakpoints, $context) {
+    @include breakpoint(map-get($breakpoints, $context), $no-query) {
+      @content;
+    }
+  }
+  @else if not map-has-key($breakpoints, $context) {
+    @warn "`#{$context}` isn't a defined breakpoint! Please add it using `$breakpoints: add-breakpoint(`#{$context}`, $value);`";
+    @content;
+  }
+  @else {
+    @warn "You haven't created any breakpoints yet! Make some already! See https://github.com/snugug/respond-to#api if you'd like a reminder on how to use Respond-to";
+    @content;
+  }
+}
+
+//////////////////////////////
+// Add Breakpoint to Breakpoints
+//////////////////////////////
+@function add-breakpoint($name, $bkpt, $overwrite: false) {
+  $output: ($name: $bkpt);
+  @if length($breakpoints) == 0 {
+    @return $output;
+  }
+  @else {
+    @if map-has-key($breakpoints, $name) and $overwrite != true {
+      @warn "You already have a breakpoint named `#{$name}`, please choose another breakpoint name, or pass in `$overwrite: true` to overwrite the previous breakpoint.";
+      @return $breakpoints;
+    }
+    @else if not map-has-key($breakpoints, $name) or $overwrite == true {
+      @return map-merge($breakpoints, $output);
+    }
+  }
+}

@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Locust</title>
-    <link rel="stylesheet" type="text/css" href="./static/style.css?v={{ version }}" media="screen">
+    <link rel="stylesheet" type="text/css" href="./static/css/application.css?v={{ version }}" media="screen">
     <link rel="shortcut icon" href="./static/img/favicon.ico" type="image/x-icon"/>
 </head>
 <body class="{{state}}">
@@ -24,8 +24,8 @@
                     <div class="user_count">
                         <span id="userCount">{{user_count}}</span> users
                     </div>
-                    <a href="#" class="new_test" id="new_test">New test</a>
-                    <a href="#" class="edit_test">Edit</a>
+                    <a href="#" class="new-test" id="new-test">New test</a>
+                    <a href="#" class="edit-test" id="edit-test">Edit</a>
                 </div>
                 {% if is_distributed %}
                     <div class="top_box box_workers" id="box_workers">
@@ -51,64 +51,66 @@
     </div>
 
     <div class="main">
-        <div class="start" id="start">
-            <div style="position:relative;">
-                <a href="#" class="close_link">Close</a>
-            </div>
-            <div class="padder">
-                <h2>Start new load test</h2>
-                <form action="./swarm" method="POST" id="swarm_form">
-                    {% if is_shape %}
-                    <label for="user_count">Number of total users to simulate</label>
-                    <input type="text" name="user_count" id="user_count" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
-                    <input type="hidden" name="user_count" id="user_count" value="0"/><br>
-                    <label for="spawn_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="spawn_rate" id="spawn_rate" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
-                    <input type="hidden" name="spawn_rate" id="spawn_rate" value="0"/><br>
-                    {% else %}
-                    <label for="user_count">Number of total users to simulate</label>
-                    <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
-                    <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                    <input type="text" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "" }}"/><br>
-                    {% endif %}
-                    <label for="host">
-                        Host <span style="color:#8a8a8a;">(e.g. http://www.example.com)</span>
-                        {% if override_host_warning %}
-                            <span style="color:#8a8a8a; font-size:12px;">(setting this will override the host on all User classes)</span></label>
+        <div class="dialogs">
+            <div class="dialog start" id="start">
+                <div style="position:relative;">
+                    <a href="#" class="close_link">Close</a>
+                </div>
+                <div class="padder">
+                    <h2>Start new load test</h2>
+                    <form action="./swarm" method="POST" id="swarm_form">
+                        {% if is_shape %}
+                        <label for="user_count">Number of total users to simulate</label>
+                        <input type="text" name="user_count" id="user_count" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
+                        <input type="hidden" name="user_count" id="user_count" value="0"/><br>
+                        <label for="spawn_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
+                        <input type="text" name="spawn_rate" id="spawn_rate" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
+                        <input type="hidden" name="spawn_rate" id="spawn_rate" value="0"/><br>
+                        {% else %}
+                        <label for="user_count">Number of total users to simulate</label>
+                        <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
+                        <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
+                        <input type="text" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "" }}"/><br>
                         {% endif %}
-                    </label>
-                    <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or "" }}"/><br>
-                    <button type="submit">Start swarming</button>
-                </form>
-                <div style="clear:right;"></div>
+                        <label for="host">
+                            Host <span style="color:#8a8a8a;">(e.g. http://www.example.com)</span>
+                            {% if override_host_warning %}
+                                <span style="color:#8a8a8a; font-size:12px;">(setting this will override the host on all User classes)</span></label>
+                            {% endif %}
+                        </label>
+                        <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or "" }}"/><br>
+                        <button type="submit">Start swarming</button>
+                    </form>
+                    <div style="clear:right;"></div>
+                </div>
             </div>
-        </div>
-
-        <div class="edit" id="edit">
-            <div style="position:relative;">
-                <a href="#" class="close_link">Close</a>
-            </div>
-            <div class="padder">
-                <h2>Edit running load test</h2>
-                <form action="./swarm" method="POST" id="edit_form">
-                    {% if is_shape %}
-                    <label for="new_user_count">Number of users to simulate</label>
-                    <input type="text" name="user_count" id="new_user_count" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
-                    <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users spawned or stopped per second)</span></label>
-                    <input type="text" name="spawn_rate" id="new_spawn_rate" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
-                    {% else %}
-                    <label for="new_user_count">Number of users to simulate</label>
-                    <input type="text" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "" }}"/><br>
-                    <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users to start per second (or stop))</span></label>
-                    <input type="text" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "" }}"/><br>
-                    {% endif %}
-                    {% if is_shape %}
-                    <button type="submit" disabled>Start swarming</button>
-                    {% else %}
-                    <button type="submit">Start swarming</button>
-                    {% endif %}
-                </form>
-                <div style="clear:right;"></div>
+    
+            <div class="dialog edit" id="edit">
+                <div style="position:relative;">
+                    <a href="#" class="close_link">Close</a>
+                </div>
+                <div class="padder">
+                    <h2>Edit running load test</h2>
+                    <form action="./swarm" method="POST" id="edit_form">
+                        {% if is_shape %}
+                        <label for="new_user_count">Number of users to simulate</label>
+                        <input type="text" name="user_count" id="new_user_count" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
+                        <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users spawned or stopped per second)</span></label>
+                        <input type="text" name="spawn_rate" id="new_spawn_rate" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
+                        {% else %}
+                        <label for="new_user_count">Number of users to simulate</label>
+                        <input type="text" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "" }}"/><br>
+                        <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users to start per second (or stop))</span></label>
+                        <input type="text" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "" }}"/><br>
+                        {% endif %}
+                        {% if is_shape %}
+                        <button type="submit" disabled>Start swarming</button>
+                        {% else %}
+                        <button type="submit">Start swarming</button>
+                        {% endif %}
+                    </form>
+                    <div style="clear:right;"></div>
+                </div>
             </div>
         </div>
 
@@ -157,10 +159,10 @@
                 <div style="display:none;">
                     <table id="errors" class="stats">
                         <thead>
-                            <th class="error_count stats_label" data-sortkey="1"># fails</th>
+                            <th class="error_count stats_label" data-sortkey="occurences"># fails</th>
                             <th class="stats_label" href="#" data-sortkey="method">Method</th>
                             <th class="stats_label" href="#" data-sortkey="name">Name</th>
-                            <th class="error_type stats_label" data-sortkey="0">Type</th>
+                            <th class="error_type stats_label" data-sortkey="error">Type</th>
                         </thead>
                         <tbody>
                         </tbody>
