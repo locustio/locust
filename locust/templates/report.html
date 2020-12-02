@@ -3,43 +3,20 @@
 <head>
     <title>Test Report</title>
     <style>
+        body {
+            background: #173529;
+        }
         .container {
             width: 1000px;
             margin: 0 auto;
             padding: 10px;
-            background: #173529;
             font-family: Arial, Helvetica, sans-serif;
             font-size: 14px;
-            color: #fff;
+            color: #ecf3ee;
         }
 
-        .info span{
+        .info span {
             color: #b3c3bc;
-        }
-
-        table {
-            border-collapse: collapse;
-            text-align: center;
-            width: 100%;
-        }
-
-        td, th {
-            border: 1px solid #cad9ea;
-            color: #666;
-            height: 30px;
-        }
-
-        thead th {
-            background-color: #cce8eb;
-            width: 100px;
-        }
-
-        tr:nth-child(odd) {
-            background: #fff;
-        }
-
-        tr:nth-child(even) {
-            background: #f5fafa;
         }
 
         .charts-container .chart {
@@ -55,6 +32,8 @@
         .download a {
             color: #00ca5a;
         }
+        
+        {{ static_css|safe }}
     </style>
 </head>
 <body>
@@ -69,7 +48,7 @@
 
         <div class="requests">
             <h2>Request Statistics</h2>
-            <table>
+            <table class="stats">
                 <thead>
                     <tr>
                         <th>Method</th>
@@ -86,7 +65,7 @@
                 </thead>
                 <tbody>
                     {% for s in requests_statistics %}
-                        <tr>
+                        <tr{% if loop.last %} class="total"{% endif %}>
                             <td>{{ s.method or "" }}</td>
                             <td>{{ s.name }}</td>
                             <td>{{ int(s.num_requests) }}</td>
@@ -105,7 +84,7 @@
 
         <div class="responses">
             <h2>Response Time Statistics</h2>
-            <table>
+            <table class="stats">
                 <thead>
                     <tr>
                         <th>Method</th>
@@ -122,7 +101,7 @@
                 </thead>
                 <tbody>
                     {% for s in requests_statistics %}
-                        <tr>
+                        <tr{% if loop.last %} class="total"{% endif %}>
                             <td>{{ s.method or "" }}</td>
                             <td>{{ s.name }}</td>
                             <td>{{ int(s.get_response_time_percentile(0.5)) }}</td>
@@ -142,7 +121,7 @@
         {% if failures_statistics %}
             <div class="failures">
                 <h2>Failures Statistics</h2>
-                <table>
+                <table class="stats">
                     <thead>
                         <tr>
                             <th>Method</th>

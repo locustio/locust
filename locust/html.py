@@ -41,15 +41,23 @@ def get_html_report(environment):
 
     history = stats.history
 
-    static_js = ""
+    static_js = []
     js_files = ["jquery-1.11.3.min.js", "echarts.common.min.js", "vintage.js", "chart.js"]
     for js_file in js_files:
         path = os.path.join(os.path.dirname(__file__), "static", js_file)
+        static_js.append("// " + js_file)
         with open(path, encoding="utf8") as f:
-            content = f.read()
-        static_js += "// " + js_file + "\n"
-        static_js += content
-        static_js += "\n\n\n"
+            static_js.append(f.read())
+        static_js.extend(["", ""])
+    
+    static_css = []
+    css_files = ["tables.css"]
+    for css_file in css_files:
+        path = os.path.join(os.path.dirname(__file__), "static", "css", css_file)
+        static_css.append("/* " + css_file + " */")
+        with open(path, encoding="utf8") as f:
+            static_css.append(f.read())
+        static_css.extend(["", ""])
 
     res = render_template(
         "report.html",
@@ -62,7 +70,8 @@ def get_html_report(environment):
         end_time=end_time,
         host=host,
         history=history,
-        static_js=static_js,
+        static_js="\n".join(static_js),
+        static_css="\n".join(static_css),
     )
 
     return res
