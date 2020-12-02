@@ -58,21 +58,23 @@ Other functionalities
     use-as-lib
 
 
+Further reading / knowledgebase
+-------------------------------
+
+.. toctree ::
+    :maxdepth: 1
+    
+    developing-locust-itself
+    further-reading
+
+
 API
 ---
 .. toctree ::
     :maxdepth: 4
 
     api
-
-
-Further reading / knowledgebase
--------------------------------
-
-.. toctree ::
-    :maxdepth: 1
-
-    further-reading
+    
 
 
 Changelog
