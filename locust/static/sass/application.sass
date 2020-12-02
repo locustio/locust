@@ -114,10 +114,8 @@
     padding-left: 10px
     padding-right: 10px
 
-.main
-    position: relative
-
 .dialogs
+    position: relative
     .dialog
         width: 398px
         position: absolute
@@ -173,6 +171,8 @@
     .start
         body.ready &
             display: block
+            .close_link
+                display: none
         body.stopped &, body.stopping &
             display: none
             border-radius: 5px
@@ -197,8 +197,8 @@
             background: #132b21
             box-shadow: 0 0 60px rgba(0,0,0,0.3)
 
-.stats_label
-    //cursor: pointer
+.main
+    position: relative
 
 .status
     display: block

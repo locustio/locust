@@ -182,78 +182,82 @@ table.stats {
   padding-left: 10px;
   padding-right: 10px; }
 
+.dialogs {
+  position: relative; }
+  .dialogs .dialog {
+    width: 398px;
+    position: absolute;
+    left: 50%;
+    top: 60px;
+    margin-left: -169px;
+    z-index: 1; }
+    .dialogs .dialog .padder {
+      padding: 30px;
+      padding-top: 0px; }
+    .dialogs .dialog h2 {
+      color: #addf82;
+      font-size: 26px;
+      font-weight: bold; }
+    .dialogs .dialog label {
+      display: block;
+      margin-bottom: 10px;
+      margin-top: 20px;
+      font-size: 16px; }
+    .dialogs .dialog input.val {
+      border: none;
+      background: #fff;
+      height: 52px;
+      width: 328px;
+      font-size: 24px;
+      padding-left: 10px; }
+    .dialogs .dialog input.val_disabled {
+      border: none;
+      background: #cccccc;
+      height: 52px;
+      width: 328px;
+      font-size: 24px;
+      padding-left: 10px; }
+    .dialogs .dialog button {
+      margin-top: 20px;
+      float: right;
+      font-size: 16px;
+      font-weight: bold;
+      background: #8adaba;
+      padding: 14px 30px;
+      border-style: none;
+      border-radius: 5px;
+      cursor: pointer; }
+      .dialogs .dialog button:hover {
+        background: #74b99d; }
+  body.ready .dialogs .start {
+    display: block; }
+    body.ready .dialogs .start .close_link {
+      display: none; }
+  body.stopped .dialogs .start, body.stopping .dialogs .start {
+    display: none;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radisu: 5px;
+    border: 3px solid #eee;
+    background: #132b21;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.3); }
+  body.running .dialogs .start, body.spawning .dialogs .start {
+    display: none; }
+  body.ready .dialogs .edit {
+    display: none; }
+  body.stopped .dialogs .edit, body.stopping .dialogs .edit {
+    display: none; }
+  body.running .dialogs .edit, body.spawning .dialogs .edit {
+    display: none;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radisu: 5px;
+    border: 3px solid #eee;
+    background: #132b21;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.3); }
+
 .main {
   position: relative; }
-
-.dialogs .dialog {
-  width: 398px;
-  position: absolute;
-  left: 50%;
-  top: 60px;
-  margin-left: -169px;
-  z-index: 1; }
-  .dialogs .dialog .padder {
-    padding: 30px;
-    padding-top: 0px; }
-  .dialogs .dialog h2 {
-    color: #addf82;
-    font-size: 26px;
-    font-weight: bold; }
-  .dialogs .dialog label {
-    display: block;
-    margin-bottom: 10px;
-    margin-top: 20px;
-    font-size: 16px; }
-  .dialogs .dialog input.val {
-    border: none;
-    background: #fff;
-    height: 52px;
-    width: 328px;
-    font-size: 24px;
-    padding-left: 10px; }
-  .dialogs .dialog input.val_disabled {
-    border: none;
-    background: #cccccc;
-    height: 52px;
-    width: 328px;
-    font-size: 24px;
-    padding-left: 10px; }
-  .dialogs .dialog button {
-    margin-top: 20px;
-    float: right;
-    font-size: 16px;
-    font-weight: bold;
-    background: #8adaba;
-    padding: 14px 30px;
-    border-style: none;
-    border-radius: 5px;
-    cursor: pointer; }
-    .dialogs .dialog button:hover {
-      background: #74b99d; }
-body.ready .dialogs .start {
-  display: block; }
-body.stopped .dialogs .start, body.stopping .dialogs .start {
-  display: none;
-  border-radius: 5px;
-  -moz-border-radius: 5px;
-  -webkit-border-radisu: 5px;
-  border: 3px solid #eee;
-  background: #132b21;
-  box-shadow: 0 0 60px rgba(0, 0, 0, 0.3); }
-body.running .dialogs .start, body.spawning .dialogs .start {
-  display: none; }
-body.ready .dialogs .edit {
-  display: none; }
-body.stopped .dialogs .edit, body.stopping .dialogs .edit {
-  display: none; }
-body.running .dialogs .edit, body.spawning .dialogs .edit {
-  display: none;
-  border-radius: 5px;
-  -moz-border-radius: 5px;
-  -webkit-border-radisu: 5px;
-  border: 3px solid #eee;
-  background: #132b21;
-  box-shadow: 0 0 60px rgba(0, 0, 0, 0.3); }
 
 .status {
   display: block; }
