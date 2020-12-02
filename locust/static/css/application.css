@@ -293,40 +293,37 @@ table.stats {
     margin-top: 30px; }
     .main .panes > div {
       overflow: hidden; }
-
-#errors td, #errors th {
-  text-align: left; }
-  #errors td th.error_count, #errors th th.error_count {
-    width: 70px; }
-
-#exceptions th.exception_occurrences {
-  width: 110px;
-  text-align: center; }
-#exceptions th.exception_traceback {
-  text-align: left; }
-#exceptions td.occurrences {
-  text-align: center; }
-#exceptions td.traceback {
-  font-size: 12px;
-  line-height: 18px;
-  font-family: monospace;
-  white-space: pre; }
-
-#charts {
-  width: 100%; }
-  #charts .chart {
-    height: 350px;
-    margin-bottom: 30px;
-    box-sizing: border-box;
-    border: 1px solid #11271e;
-    border-radius: 3px; }
-  #charts .note {
-    color: #b3c3bc;
-    margin-bottom: 30px;
-    border-radius: 3px;
-    background: #132b21;
-    padding: 10px;
-    display: inline-block; }
+  .main #errors td, .main #errors th {
+    text-align: left; }
+    .main #errors td th.error_count, .main #errors th th.error_count {
+      width: 70px; }
+  .main #exceptions th.exception_occurrences {
+    width: 110px;
+    text-align: center; }
+  .main #exceptions th.exception_traceback {
+    text-align: left; }
+  .main #exceptions td.occurrences {
+    text-align: center; }
+  .main #exceptions td.traceback {
+    font-size: 12px;
+    line-height: 18px;
+    font-family: monospace;
+    white-space: pre; }
+  .main #charts {
+    width: 100%; }
+    .main #charts .chart {
+      height: 350px;
+      margin-bottom: 30px;
+      box-sizing: border-box;
+      border: 1px solid #11271e;
+      border-radius: 3px; }
+    .main #charts .note {
+      color: #b3c3bc;
+      margin-bottom: 30px;
+      border-radius: 3px;
+      background: #132b21;
+      padding: 10px;
+      display: inline-block; }
 
 .about {
   width: 398px;
