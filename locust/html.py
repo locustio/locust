@@ -17,12 +17,13 @@ def get_html_report(environment):
     stats = environment.runner.stats
 
     start_ts = stats.start_time
-    start_time = datetime.datetime.fromtimestamp(start_ts)
-    start_time = start_time.strftime("%Y-%m-%d %H:%M:%S")
+    start_time = datetime.datetime.fromtimestamp(start_ts).strftime("%Y-%m-%d %H:%M:%S")
 
     end_ts = stats.last_request_timestamp
-    end_time = datetime.datetime.fromtimestamp(end_ts)
-    end_time = end_time.strftime("%Y-%m-%d %H:%M:%S")
+    if end_ts:
+        end_time = datetime.datetime.fromtimestamp(end_ts).strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        end_time = start_time
 
     host = None
     if environment.host:
