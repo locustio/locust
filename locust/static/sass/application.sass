@@ -51,7 +51,7 @@
                     font-weight: bold
                     max-width: 165px
                     word-wrap: break-word
-                &.box_host .value
+                &.box_url .value
                     font-size: 14px
                     font-weight: normal
                 &.box_rps .value, &.box_workers .value
@@ -199,108 +199,81 @@
 
 .main
     position: relative
-
-.status
     display: block
     body.ready &
         display: none
+    nav.menu
+        background: #132b21
+    
+        ul.tabs
+            overflow: hidden
         
-
-.status th.error_count
-    width: 70px
-
+            > li
+                display: block
+                float: left
+                font-size: 16px
+        
+                a
+                    padding: 14px 10px
+                    display: inline-block
+                    color: #b3c3bc
+                    position: relative
+                    font-weight: 600
+                    font-size: 14px
+                    &:hover
+                        background: #10211a
+                    &.current
+                        color: #fff
+                        &:after
+                            content: ""
+                            display: block
+                            position: absolute
+                            left: 0
+                            bottom: 0
+                            right: 0
+                            height: 3px
+                            background: #fff
+        
+    .panes
+        margin-top: 30px
+        > div
+            overflow: hidden
 
 #errors td, #errors th
     text-align: left
+    th.error_count
+        width: 70px
 
-
-#exceptions th.exception_occurrences
-    width: 110px
-    text-align: center
-
-#exceptions th.exception_traceback
-    text-align: left
-
-
-#exceptions td.occurrences
-    text-align: center
-
-#exceptions td.traceback
-    font-size: 12px
-    line-height: 18px
-    font-family: monospace
-    white-space: pre
+#exceptions 
+    th.exception_occurrences
+        width: 110px
+        text-align: center
+    th.exception_traceback
+        text-align: left
+    td.occurrences
+        text-align: center
+    td.traceback
+        font-size: 12px
+        line-height: 18px
+        font-family: monospace
+        white-space: pre
 
 #charts
     width: 100%
-
-.chart
-    height: 350px
-    margin-bottom: 30px
-    box-sizing: border-box
-    border: 1px solid #11271e
-    border-radius: 3px
-
-.note
-    color: #b3c3bc
-    margin-bottom: 30px
-    border-radius: 3px
-    background: #132b21
-    padding: 10px
-    display: inline-block
-
-
-em
-    width: 100%
-    color: white
-    display: block
-    margin-left: 180px
-    font-size: 20px
-    font-family: Palatino, Times New Roman, serif
-
-
-nav.menu
-    background: #132b21
-
-ul.tabs
-    overflow: hidden
-
-ul.tabs li
-    display: block
-    float: left
-    font-size: 16px
-
-ul.tabs li a
-    padding: 14px 10px
-    display: inline-block
-    color: #b3c3bc
-    position: relative
-    font-weight: 600
-    font-size: 14px
-
-ul.tabs li a:hover
-    background: #10211a
-
-ul.tabs li a.current
-    color: #fff
-
-ul.tabs li a.current:after
-    content: ""
-    display: block
-    position: absolute
-    left: 0
-    bottom: 0
-    right: 0
-    height: 3px
-    background: #fff
-
-
-.panes
-    margin-top: 30px
-
-.panes > div
-    overflow: hidden
-
+    .chart
+        height: 350px
+        margin-bottom: 30px
+        box-sizing: border-box
+        border: 1px solid #11271e
+        border-radius: 3px
+    
+    .note
+        color: #b3c3bc
+        margin-bottom: 30px
+        border-radius: 3px
+        background: #132b21
+        padding: 10px
+        display: inline-block
 
 .about
     width: 398px
@@ -315,42 +288,14 @@ ul.tabs li a.current:after
     background: #132b21
     box-shadow: 0 0 60px rgba(0,0,0,0.3)
     z-index: 1
-
-.about a.close_link
-    position: absolute
-    right: 10px
-    top: 10px
-
-.about .padder
-    padding: 30px
-    padding-top: 0px
-
-
-.hostname
-    width: 1000px
-    margin-top: 25px
-    margin-bottom: 25px
-    margin-left: auto
-    margin-right: auto
-    font-size: 16px
-
-
-.hostname .label
-    color: #fff
-    font-weight: bold
-    margin-bottom: 10px
-
-
-.hostname .value
-    font-weight: bold
-
-
-.running .hostname, .spawning .hostname
-    display: block
-.stopped .hostname, .stopping .hostname
-    display: block
-.ready .hostname
-    display: none
+    
+    a.close_link
+        position: absolute
+        right: 10px
+        top: 10px
+    .padder
+        padding: 30px
+        padding-top: 0px
 
 .footer
     position: absolute
@@ -361,9 +306,8 @@ ul.tabs li a.current:after
     text-align: right
     box-sizing: border-box
     height: 40px
-
-
-.footer a
-    margin-right: 10px
-    color: #48a584
+    
+    a
+        margin-right: 10px
+        color: #48a584
 

@@ -69,12 +69,12 @@ function setHostName(hostname) {
 $('#swarm_form').submit(function(event) {
     event.preventDefault();
     $("body").attr("class", "spawning");
-    $("#start").fadeOut();
-    $("#status").fadeIn();
-    $(".box_running").fadeIn();
-    newTestLink.fadeOut();
-    editTestLink.fadeIn();
-    $(".user_count").fadeIn();
+    $("#start").hide();
+    $("#main").show();
+    $(".box_running").show();
+    newTestLink.hide();
+    editTestLink.show();
+    $(".user_count").show();
     $.post($(this).attr("action"), $(this).serialize(),
         function(response) {
             if (response.success) {
