@@ -119,6 +119,8 @@ var workerSortAttribute = "id";
 var desc = false;
 var workerDesc = false;
 var report;
+var failuresSortAttribute = "name";
+var failuresDesc = false;
 
 function renderTable(report) {
     var totalRow = report.stats.pop();
@@ -132,7 +134,7 @@ function renderTable(report) {
     $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
 
     window.alternate = false;
-    $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
+    $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(failuresSortAttribute, failuresDesc)));
 
     $("#total_rps").html(Math.round(report.total_rps*100)/100);
     $("#fail_ratio").html(Math.round(report.fail_ratio*100));
@@ -155,6 +157,13 @@ $("#stats .stats_label").click(function(event) {
     event.preventDefault();
     sortAttribute = $(this).attr("data-sortkey");
     desc = !desc;
+    renderTable(window.report);
+});
+
+$("#errors .stats_label").click(function(event) {
+    event.preventDefault();
+    failuresSortAttribute = $(this).attr("data-sortkey");
+    failuresDesc = !failuresDesc;
     renderTable(window.report);
 });
 

@@ -40,7 +40,8 @@ table.stats {
     table.stats thead tr:hover {
       background: none; }
     table.stats thead th {
-      font-weight: bold; }
+      font-weight: bold;
+      cursor: default; }
       table.stats thead th.nowrap {
         white-space: nowrap; }
       table.stats thead th[data-sortkey] {
