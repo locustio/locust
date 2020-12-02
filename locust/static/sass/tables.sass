@@ -8,13 +8,17 @@ table.stats
     margin-bottom: 30px
 
     thead
-        background: #11251c
+        
         padding: 0
         margin: 0
         color: #a9c5ba
         
-        tr:hover
-            background: none
+        tr
+            background: #11251c
+            &:nth-child(even)
+                background: #11251c
+            &:hover
+                background: #11251c
         th
             font-weight: bold
             cursor: default
@@ -47,8 +51,10 @@ table.stats
             +breakpoint(max-width 1100px)
                 max-width: 350px
 
-        &.dark
+        &:nth-child(even)
             background: #153126
+            &:hover
+                background: #1d4434
         &.total
             background: #11251c
             td

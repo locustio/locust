@@ -255,7 +255,7 @@
     <script type="text/javascript" src="./static/vintage.js"></script>
     <script type="text/x-jqote-template" id="stats-template">
         <![CDATA[
-        <tr class="<%=(alternate ? "dark" : "")%> <%=(this.is_aggregated ? "total" : "")%>">
+        <tr class="<%=(this.is_aggregated ? "total" : "")%>">
             <td><%= (this.method ? this.method : "") %></td>
             <td class="name" title="<%= this.name %>"><%= this.safe_name %></td>
             <td class="numeric"><%= this.num_requests %></td>
@@ -274,7 +274,7 @@
     </script>
     <script type="text/x-jqote-template" id="errors-template">
         <![CDATA[
-        <tr class="<%=(alternate ? "dark" : "")%>">
+        <tr>
             <td><%= this.occurrences %></td>
             <td><%= this.method %></td>
             <td><%= this.name %></td>
@@ -285,7 +285,7 @@
     </script>
     <script type="text/x-jqote-template" id="exceptions-template">
         <![CDATA[
-        <tr class="<%=(alternate ? "dark" : "")%>">
+        <tr>
             <td class="occurrences"><%= this.count %></td>
             <td class="traceback" title="Occurred on: <%= this.nodes %>"><%= function(e) { return e.replace("<", "&lt;"); }(this.traceback) %>
 <%= function(e) { return e.replace("<", "&lt;"); }(this.msg) %></td>
@@ -295,7 +295,7 @@
     </script>
     <script type="text/x-jqote-template" id="worker-template">
         <![CDATA[
-        <tr class="<%=(alternate ? "dark" : "")%> <%=(this.name == "Total" ? "total" : "")%>">
+        <tr class="<%=(this.name == "Total" ? "total" : "")%>">
             <td><%= this.id %></td>
             <td><%= this.state %></td>
             <td class="numeric"><%= this.user_count %></td>
