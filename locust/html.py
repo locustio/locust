@@ -13,7 +13,7 @@ def render_template(file, **kwargs):
     return template.render(**kwargs)
 
 
-def get_html_report(environment):
+def get_html_report(environment, show_download_link=True):
     stats = environment.runner.stats
 
     start_ts = stats.start_time
@@ -73,6 +73,7 @@ def get_html_report(environment):
         history=history,
         static_js="\n".join(static_js),
         static_css="\n".join(static_css),
+        show_download_link=show_download_link,
     )
 
     return res

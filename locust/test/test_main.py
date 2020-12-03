@@ -409,3 +409,5 @@ class LoadTestShape(LoadTestShape):
 
         # make sure the charts container appears in the report
         self.assertIn("charts-container", html_report_content)
+
+        self.assertNotIn('Download the Report', html_report_content, "Download report link found in HTML content")

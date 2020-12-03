@@ -41,7 +41,9 @@
         <h1>Locust Test Report</h1>
 
         <div class="info">
-            <p class="download"><a href="?download=1">Download the Report</a></p>
+            {% if show_download_link %}
+                <p class="download"><a href="?download=1">Download the Report</a></p>
+            {% endif %}
             <p>During: <span>{{ start_time }} - {{ end_time }}</span></p>
             <p>Target Host: <span>{{ host }}</span></p>
         </div>
