@@ -303,12 +303,12 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(200, r.status_code)
         self.assertIn("<title>Test Report</title>", r.text)
         self.assertIn("charts-container", r.text)
-    
+
     def test_report_page_empty_stats(self):
         r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
         self.assertEqual(200, r.status_code)
         self.assertIn("<title>Test Report</title>", r.text)
-        self.assertIn("charts-container", r.text)    
+        self.assertIn("charts-container", r.text)
 
     def test_report_download(self):
         self.stats.log_request("GET", "/test", 120, 5612)
