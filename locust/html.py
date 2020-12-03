@@ -50,7 +50,7 @@ def get_html_report(environment):
         with open(path, encoding="utf8") as f:
             static_js.append(f.read())
         static_js.extend(["", ""])
-    
+
     static_css = []
     css_files = ["tables.css"]
     for css_file in css_files:
