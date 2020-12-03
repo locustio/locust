@@ -1,4 +1,4 @@
-@import "../lib/breakpoint/breakpoint"
+@import "mixins"
 
 table.stats
     width: 100%
@@ -48,7 +48,7 @@ table.stats
             word-wrap: break-word
             white-space: no-wrap
             text-overflow: ellipsis
-            +breakpoint(max-width 1100px)
+            +max-width(1100px)
                 max-width: 350px
 
         &:nth-child(even)
