@@ -139,6 +139,7 @@ def set_cookie():
 def get_cookie():
     return make_response(request.cookies.get(request.args.get("name"), ""))
 
+
 @app.route("/querystring")
 def get_querystring():
     return request.query_string
