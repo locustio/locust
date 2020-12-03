@@ -1,5 +1,5 @@
 """
-Example of a manual_report() function that can be used either as a context manager 
+Example of a manual_report() function that can be used either as a context manager
 (with statement), or a decorator, to manually add entries to Locust's statistics.
 
 Usage as a context manager:
@@ -7,7 +7,7 @@ Usage as a context manager:
     with manual_report("stats entry name"):
         # Run time of this block will be reported under a stats entry called "stats entry name"
         # do stuff here, if an Exception is raised, it'll be reported as a failure
-    
+
 Usage as a decorator:
 
     @task
@@ -15,7 +15,6 @@ Usage as a decorator:
     def my_task(self):
        # The run time of this task will be reported under a stats entry called "my task" (type "manual").
        # If an Exception is raised, it'll be reported as a failure
-
 """
 
 import random
