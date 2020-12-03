@@ -1,0 +1,61 @@
+@import "mixins"
+
+table.stats
+    width: 100%
+    border-radius: 3px
+    border: 2px solid #11251c
+    border-spacing: 0
+    margin-bottom: 30px
+
+    thead
+        
+        padding: 0
+        margin: 0
+        color: #a9c5ba
+        
+        tr
+            background: #11251c
+            &:nth-child(even)
+                background: #11251c
+            &:hover
+                background: #11251c
+        th
+            font-weight: bold
+            cursor: default
+            &.nowrap
+                white-space: nowrap
+            &[data-sortkey]
+                cursor: pointer
+    tr
+        &:hover
+            background: #1d4434
+
+        td, th
+            padding: 10px
+            margin: 0
+            text-align: left
+
+            &:first-child
+                padding-left: 16px
+            &:last-child
+                padding-right: 16px
+
+            &.numeric
+                text-align: right
+        td
+            max-width: 450px
+            overflow: hidden
+            word-wrap: break-word
+            white-space: no-wrap
+            text-overflow: ellipsis
+            +max-width(1100px)
+                max-width: 350px
+
+        &:nth-child(even)
+            background: #153126
+            &:hover
+                background: #1d4434
+        &.total
+            background: #11251c
+            td
+                font-weight: bold

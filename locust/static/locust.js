@@ -1,3 +1,6 @@
+var newTestLink = $("#new-test");
+var editTestLink = $("#edit-test");
+
 $(window).ready(function() {
     if($("#user_count").length > 0) {
         $("#user_count").focus().select();
@@ -6,8 +9,8 @@ $(window).ready(function() {
 
 function appearStopped() {
     $(".box_stop").hide();
-    $("a.new_test").show();
-    $("a.edit_test").hide();
+    newTestLink.show();
+    editTestLink.hide();
     $(".user_count").hide();
 }
 
@@ -23,13 +26,13 @@ $("#box_stop a.reset-button").click(function(event) {
     $.get($(this).attr("href"));
 });
 
-$("#new_test").click(function(event) {
+newTestLink.click(function(event) {
     event.preventDefault();
     $("#start").show();
     $("#user_count").focus().select();
 });
 
-$(".edit_test").click(function(event) {
+editTestLink.click(function(event) {
     event.preventDefault();
     $("#edit").show();
     $("#new_user_count").focus().select();
@@ -66,12 +69,12 @@ function setHostName(hostname) {
 $('#swarm_form').submit(function(event) {
     event.preventDefault();
     $("body").attr("class", "spawning");
-    $("#start").fadeOut();
-    $("#status").fadeIn();
-    $(".box_running").fadeIn();
-    $("a.new_test").fadeOut();
-    $("a.edit_test").fadeIn();
-    $(".user_count").fadeIn();
+    $("#start").hide();
+    $("#main").show();
+    $(".box_running").show();
+    newTestLink.hide();
+    editTestLink.show();
+    $(".user_count").show();
     $.post($(this).attr("action"), $(this).serialize(),
         function(response) {
             if (response.success) {
@@ -112,10 +115,12 @@ var sortBy = function(field, reverse, primer){
 // Sorting by column
 var alternate = false; //used by jqote2.min.js
 var sortAttribute = "name";
-var WorkerSortAttribute = "id";
+var workerSortAttribute = "id";
 var desc = false;
-var WorkerDesc = false;
+var workerDesc = false;
 var report;
+var failuresSortAttribute = "name";
+var failuresDesc = false;
 
 function renderTable(report) {
     var totalRow = report.stats.pop();
@@ -129,7 +134,7 @@ function renderTable(report) {
     $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
 
     window.alternate = false;
-    $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
+    $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(failuresSortAttribute, failuresDesc)));
 
     $("#total_rps").html(Math.round(report.total_rps*100)/100);
     $("#fail_ratio").html(Math.round(report.fail_ratio*100));
@@ -139,7 +144,7 @@ function renderTable(report) {
 
 function renderWorkerTable(report) {
     if (report.workers) {
-        var workers = (report.workers).sort(sortBy(WorkerSortAttribute, WorkerDesc));
+        var workers = (report.workers).sort(sortBy(workerSortAttribute, workerDesc));
         $("#workers tbody").empty();
         window.alternate = false;
         $("#workers tbody").jqoteapp(workers_tpl, workers);
@@ -155,10 +160,17 @@ $("#stats .stats_label").click(function(event) {
     renderTable(window.report);
 });
 
+$("#errors .stats_label").click(function(event) {
+    event.preventDefault();
+    failuresSortAttribute = $(this).attr("data-sortkey");
+    failuresDesc = !failuresDesc;
+    renderTable(window.report);
+});
+
 $("#workers .stats_label").click(function(event) {
     event.preventDefault();
-    WorkerSortAttribute = $(this).attr("data-sortkey");
-    WorkerDesc = !WorkerDesc;
+    workerSortAttribute = $(this).attr("data-sortkey");
+    workerDesc = !workerDesc;
     renderWorkerTable(window.report);
 });
 
