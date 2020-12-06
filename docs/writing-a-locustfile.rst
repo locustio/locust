@@ -423,7 +423,7 @@ requests.Session's trust_env attribute to ``False``. If you don't want this you 
 
 TaskSets
 ================================
-:ref:`TaskSets <tasksets>` is a way to structure tests of hierarchial web sites/systems.
+TaskSets is a way to structure tests of hierarchial web sites/systems. You can :ref:`read more about it here <tasksets>`
 
 
 How to structure your test code
