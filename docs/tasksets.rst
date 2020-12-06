@@ -8,9 +8,6 @@ sections and sub-sections, it may be useful to structure your load test the same
 For this purpose, Locust provides the TaskSet class. It is a collection of tasks that will 
 be executed much like the ones declared directly on a User class. 
 
-If the TaskSet has its own wait_time defined, it will be used between the tasks inside it, 
-otherwise it will inherit the one from the User.
-
 .. note::
 
     TaskSets are an advanced feature and only rarely useful. A lot of the time, you're better off
