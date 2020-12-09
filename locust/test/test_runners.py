@@ -713,11 +713,11 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertEqual("spawning", master.state)
             sleep(5)  # runtime = 5s
             self.assertEqual("running", master.state)
-            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
-            w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
-            w3 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
-            w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
-            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
+            w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
+            w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
+            w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
+            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
             self.assertDictEqual(w1, workers[0].user_class_occurrences)
             self.assertDictEqual(w2, workers[1].user_class_occurrences)
             self.assertDictEqual(w3, workers[2].user_class_occurrences)
@@ -734,11 +734,11 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertEqual("spawning", master.state)
             sleep(5)  # runtime = 15s
             self.assertEqual("running", master.state)
-            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
-            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
-            w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
-            w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
-            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 1}
+            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 2}
             self.assertDictEqual(w1, workers[0].user_class_occurrences)
             self.assertDictEqual(w2, workers[1].user_class_occurrences)
             self.assertDictEqual(w3, workers[2].user_class_occurrences)
@@ -780,11 +780,11 @@ class TestMasterWorkerRunners(LocustTestCase):
             #               TestUser1/TestUser2 have not reached stop timeout yet, so
             #               their number are unchanged
             self.assertEqual("spawning", master.state)
-            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
-            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
             w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
-            w4 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
-            w5 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w4 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w5 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             self.assertDictEqual(w1, workers[0].user_class_occurrences)
             self.assertDictEqual(w2, workers[1].user_class_occurrences)
             self.assertDictEqual(w3, workers[2].user_class_occurrences)
@@ -800,11 +800,11 @@ class TestMasterWorkerRunners(LocustTestCase):
             # Forth stage - TestUser2/TestUser3 are now at the desired
             #               number, but TestUser1 is still unchanged
             self.assertEqual("spawning", master.state)
-            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
-            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
-            w3 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
-            w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
-            w5 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
+            w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
+            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 1}
+            w5 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 1}
             self.assertDictEqual(w1, workers[0].user_class_occurrences)
             self.assertDictEqual(w2, workers[1].user_class_occurrences)
             self.assertDictEqual(w3, workers[2].user_class_occurrences)
@@ -819,11 +819,11 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             # Forth stage - All users are now at the desired number
             self.assertEqual("running", master.state)
-            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
-            w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
-            w3 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
-            w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
-            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
+            w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
+            w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
+            w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
+            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
             self.assertDictEqual(w1, workers[0].user_class_occurrences)
             self.assertDictEqual(w2, workers[1].user_class_occurrences)
             self.assertDictEqual(w3, workers[2].user_class_occurrences)

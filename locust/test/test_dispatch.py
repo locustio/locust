@@ -66,9 +66,9 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
             user_class_occurrences={"User1": 5, "User2": 4, "User3": 2},
         )
         expected_balanced_users = {
-            "1": {"User1": 2, "User2": 2, "User3": 1},
+            "1": {"User1": 2, "User2": 1, "User3": 1},
             "2": {"User1": 2, "User2": 1, "User3": 1},
-            "3": {"User1": 1, "User2": 1, "User3": 0},
+            "3": {"User1": 1, "User2": 2, "User3": 0},
         }
         self.assertDictEqual(balanced_users, expected_balanced_users)
 
@@ -77,9 +77,9 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
             user_class_occurrences={"User1": 1, "User2": 1, "User3": 1},
         )
         expected_balanced_users = {
-            "1": {"User1": 1, "User2": 1, "User3": 1},
-            "2": {"User1": 0, "User2": 0, "User3": 0},
-            "3": {"User1": 0, "User2": 0, "User3": 0},
+            "1": {"User1": 1, "User2": 0, "User3": 0},
+            "2": {"User1": 0, "User2": 1, "User3": 0},
+            "3": {"User1": 0, "User2": 0, "User3": 1},
         }
         self.assertDictEqual(balanced_users, expected_balanced_users)
 
@@ -88,8 +88,8 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
             user_class_occurrences={"User1": 1, "User2": 1, "User3": 0},
         )
         expected_balanced_users = {
-            "1": {"User1": 1, "User2": 1, "User3": 0},
-            "2": {"User1": 0, "User2": 0, "User3": 0},
+            "1": {"User1": 1, "User2": 0, "User3": 0},
+            "2": {"User1": 0, "User2": 1, "User3": 0},
             "3": {"User1": 0, "User2": 0, "User3": 0},
         }
         self.assertDictEqual(balanced_users, expected_balanced_users)
@@ -102,6 +102,153 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
             "1": {"User1": 0, "User2": 0, "User3": 0},
             "2": {"User1": 0, "User2": 0, "User3": 0},
             "3": {"User1": 0, "User2": 0, "User3": 0},
+        }
+        self.assertDictEqual(balanced_users, expected_balanced_users)
+
+    def test_balance_5_users_among_10_workers(self):
+        worker_nodes = [WorkerNode(str(i)) for i in range(1, 11)]
+
+        balanced_users = balance_users_among_workers(
+            worker_nodes=worker_nodes,
+            user_class_occurrences={"User1": 10, "User2": 5, "User3": 5, "User4": 5, "User5": 5},
+        )
+        expected_balanced_users = {
+            "1": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
+            "2": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
+            "3": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
+            "4": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
+            "5": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
+            "6": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+            "7": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+            "8": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+            "9": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+            "10": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+        }
+        self.assertDictEqual(balanced_users, expected_balanced_users)
+
+        balanced_users = balance_users_among_workers(
+            worker_nodes=worker_nodes,
+            user_class_occurrences={"User1": 11, "User2": 5, "User3": 5, "User4": 5, "User5": 5},
+        )
+        expected_balanced_users = {
+            "1": {"User1": 2, "User2": 1, "User3": 0, "User4": 0, "User5": 1},  # 4 users
+            "2": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
+            "3": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
+            "4": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
+            "5": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
+            "6": {"User1": 1, "User2": 0, "User3": 1, "User4": 1, "User5": 0},  # 3 users
+            "7": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+            "8": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+            "9": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+            "10": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+        }
+        self.assertDictEqual(balanced_users, expected_balanced_users)
+
+        balanced_users = balance_users_among_workers(
+            worker_nodes=worker_nodes,
+            user_class_occurrences={"User1": 11, "User2": 5, "User3": 5, "User4": 5, "User5": 6},
+        )
+        expected_balanced_users = {
+            "1": {"User1": 2, "User2": 1, "User3": 0, "User4": 0, "User5": 1},  # 4 users
+            "2": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 1},  # 4 users
+            "3": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
+            "4": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
+            "5": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
+            "6": {"User1": 1, "User2": 0, "User3": 1, "User4": 1, "User5": 0},  # 3 users
+            "7": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+            "8": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+            "9": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+            "10": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+        }
+        self.assertDictEqual(balanced_users, expected_balanced_users)
+
+        balanced_users = balance_users_among_workers(
+            worker_nodes=worker_nodes,
+            user_class_occurrences={"User1": 11, "User2": 5, "User3": 5, "User4": 6, "User5": 6},
+        )
+        expected_balanced_users = {
+            "1": {"User1": 2, "User2": 1, "User3": 0, "User4": 0, "User5": 1},  # 4 users
+            "2": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 1},  # 4 users
+            "3": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 1},  # 4 users
+            "4": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
+            "5": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
+            "6": {"User1": 1, "User2": 0, "User3": 1, "User4": 1, "User5": 0},  # 3 users
+            "7": {"User1": 1, "User2": 0, "User3": 0, "User4": 2, "User5": 0},  # 3 users
+            "8": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+            "9": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+            "10": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+        }
+        self.assertDictEqual(balanced_users, expected_balanced_users)
+
+        balanced_users = balance_users_among_workers(
+            worker_nodes=worker_nodes,
+            user_class_occurrences={"User1": 11, "User2": 5, "User3": 6, "User4": 6, "User5": 6},
+        )
+        expected_balanced_users = {
+            "1": {"User1": 2, "User2": 1, "User3": 0, "User4": 0, "User5": 1},  # 4 users
+            "2": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 1},  # 4 users
+            "3": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 1},  # 4 users
+            "4": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 1},  # 4 users
+            "5": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
+            "6": {"User1": 1, "User2": 0, "User3": 1, "User4": 1, "User5": 0},  # 3 users
+            "7": {"User1": 1, "User2": 0, "User3": 1, "User4": 1, "User5": 0},  # 3 users
+            "8": {"User1": 1, "User2": 0, "User3": 0, "User4": 2, "User5": 0},  # 3 users
+            "9": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+            "10": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+        }
+        self.assertDictEqual(balanced_users, expected_balanced_users)
+
+        balanced_users = balance_users_among_workers(
+            worker_nodes=worker_nodes,
+            user_class_occurrences={"User1": 11, "User2": 6, "User3": 6, "User4": 6, "User5": 6},
+        )
+        expected_balanced_users = {
+            "1": {"User1": 2, "User2": 1, "User3": 0, "User4": 0, "User5": 1},  # 4 users
+            "2": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 1},  # 4 users
+            "3": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 1},  # 4 users
+            "4": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 1},  # 4 users
+            "5": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 1},  # 4 users
+            "6": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
+            "7": {"User1": 1, "User2": 0, "User3": 1, "User4": 1, "User5": 0},  # 3 users
+            "8": {"User1": 1, "User2": 0, "User3": 0, "User4": 2, "User5": 0},  # 3 users
+            "9": {"User1": 1, "User2": 0, "User3": 0, "User4": 2, "User5": 0},  # 3 users
+            "10": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+        }
+        self.assertDictEqual(balanced_users, expected_balanced_users)
+
+        balanced_users = balance_users_among_workers(
+            worker_nodes=worker_nodes,
+            user_class_occurrences={"User1": 11, "User2": 6, "User3": 6, "User4": 6, "User5": 7},
+        )
+        expected_balanced_users = {
+            "1": {"User1": 2, "User2": 1, "User3": 0, "User4": 0, "User5": 1},  # 4 users
+            "2": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 1},  # 4 users
+            "3": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 1},  # 4 users
+            "4": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 1},  # 4 users
+            "5": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 1},  # 4 users
+            "6": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 1},  # 4 users
+            "7": {"User1": 1, "User2": 0, "User3": 1, "User4": 1, "User5": 0},  # 3 users
+            "8": {"User1": 1, "User2": 0, "User3": 0, "User4": 2, "User5": 0},  # 3 users
+            "9": {"User1": 1, "User2": 0, "User3": 0, "User4": 2, "User5": 0},  # 3 users
+            "10": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
+        }
+        self.assertDictEqual(balanced_users, expected_balanced_users)
+
+        balanced_users = balance_users_among_workers(
+            worker_nodes=worker_nodes,
+            user_class_occurrences={"User1": 11, "User2": 6, "User3": 6, "User4": 6, "User5": 11},
+        )
+        expected_balanced_users = {
+            "1": {"User1": 2, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 4 users
+            "2": {"User1": 1, "User2": 1, "User3": 1, "User4": 1, "User5": 0},  # 4 users
+            "3": {"User1": 1, "User2": 1, "User3": 1, "User4": 1, "User5": 0},  # 4 users
+            "4": {"User1": 1, "User2": 1, "User3": 1, "User4": 1, "User5": 0},  # 4 users
+            "5": {"User1": 1, "User2": 1, "User3": 1, "User4": 1, "User5": 0},  # 4 users
+            "6": {"User1": 1, "User2": 1, "User3": 1, "User4": 1, "User5": 0},  # 4 users
+            "7": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 2},  # 4 users
+            "8": {"User1": 1, "User2": 0, "User3": 0, "User4": 0, "User5": 3},  # 4 users
+            "9": {"User1": 1, "User2": 0, "User3": 0, "User4": 0, "User5": 3},  # 4 users
+            "10": {"User1": 1, "User2": 0, "User3": 0, "User4": 0, "User5": 3},  # 4 users
         }
         self.assertDictEqual(balanced_users, expected_balanced_users)
 

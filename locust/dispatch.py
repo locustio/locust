@@ -230,12 +230,25 @@ def balance_users_among_workers(
 
     user_class_occurrences = user_class_occurrences.copy()
 
+    total_users = sum(user_class_occurrences.values())
+    users_per_worker, remainder = divmod(total_users, len(worker_nodes))
+
     for user_class in sorted(user_class_occurrences.keys()):
         if sum(user_class_occurrences.values()) == 0:
             break
         for worker_node in itertools.cycle(worker_nodes):
             if user_class_occurrences[user_class] == 0:
                 break
+            if (
+                sum(balanced_users[worker_node.id].values()) == users_per_worker
+                and total_users - sum(map(sum, map(lambda x: x.values(), balanced_users.values()))) > remainder
+            ):
+                continue
+            elif (
+                sum(balanced_users[worker_node.id].values()) == users_per_worker + 1
+                and total_users - sum(map(sum, map(lambda x: x.values(), balanced_users.values()))) < remainder
+            ):
+                continue
             balanced_users[worker_node.id][user_class] += 1
             user_class_occurrences[user_class] -= 1
 
