@@ -18,3 +18,4 @@ docs/env-options.rst
 .editorconfig
 __pycache__
 .pytest_cache
+.sass-cache/

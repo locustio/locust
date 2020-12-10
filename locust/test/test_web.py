@@ -303,12 +303,24 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(200, r.status_code)
         self.assertIn("<title>Test Report</title>", r.text)
         self.assertIn("charts-container", r.text)
+        self.assertIn(
+            '<a href="?download=1">Download the Report</a>',
+            r.text,
+            "Download report link not found in HTML content",
+        )
+
+    def test_report_page_empty_stats(self):
+        r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
+        self.assertEqual(200, r.status_code)
+        self.assertIn("<title>Test Report</title>", r.text)
+        self.assertIn("charts-container", r.text)
 
     def test_report_download(self):
         self.stats.log_request("GET", "/test", 120, 5612)
         r = requests.get("http://127.0.0.1:%i/stats/report?download=1" % self.web_port)
         self.assertEqual(200, r.status_code)
         self.assertIn("attachment", r.headers.get("Content-Disposition", ""))
+        self.assertNotIn("Download the Report", r.text, "Download report link found in HTML content")
 
     def test_report_host(self):
         self.environment.host = "http://test.com"

@@ -575,11 +575,8 @@ class MasterRunner(DistributedRunner):
             self.environment.events.test_stop.fire(environment=self.environment)
 
     def quit(self):
-        if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
-            logger.debug("Quitting...")
-            # fire test_stop event if state isn't already stopped
-            self.environment.events.test_stop.fire(environment=self.environment)
-
+        self.stop()
+        logger.debug("Quitting...")
         for client in self.clients.all:
             logger.debug("Sending quit message to client %s" % (client.id))
             self.server.send_to_client(Message("quit", None, client.id))

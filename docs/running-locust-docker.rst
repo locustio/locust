@@ -35,7 +35,7 @@ official Locust docker image as a base image::
 
 
 Running a distributed load test on Kubernetes
-================================
+=============================================
 
 The easiest way to run Locust on Kubernetes is to use a Helm chart. A Helm chart will package all settings and kubernetes resources together into an easy to manage way.
 

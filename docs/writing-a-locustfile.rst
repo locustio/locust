@@ -276,11 +276,11 @@ events. You can set up listeners for these events at the module level of your lo
     from locust import events
     
     @events.test_start.add_listener
-    def on_test_start(**kwargs):
+    def on_test_start(environment, **kwargs):
         print("A new test is starting")
     
     @events.test_stop.add_listener
-    def on_test_stop(**kwargs):
+    def on_test_stop(environment, **kwargs):
         print("A new test is ending")
 
 When running Locust distributed the ``test_start`` and ``test_stop`` events will only be fired in the master node.
@@ -423,7 +423,7 @@ requests.Session's trust_env attribute to ``False``. If you don't want this you 
 
 TaskSets
 ================================
-:ref:`TaskSets <tasksets>` is a way to structure tests of hierarchial web sites/systems.
+TaskSets is a way to structure tests of hierarchial web sites/systems. You can :ref:`read more about it here <tasksets>`
 
 
 How to structure your test code
