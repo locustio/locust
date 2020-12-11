@@ -1,6 +1,7 @@
 import gevent
 import logging
 import os
+import sys
 
 if os.name == "nt":
     from win32api import STD_INPUT_HANDLE
@@ -12,7 +13,6 @@ if os.name == "nt":
         ENABLE_PROCESSED_INPUT,
     )
 else:
-    import sys
     import select
     import termios
     import tty
@@ -43,11 +43,14 @@ class UnixKeyPoller:
 
 class WindowsKeyPoller:
     def __init__(self):
-        self.read_handle = GetStdHandle(STD_INPUT_HANDLE)
-        self.read_handle.SetConsoleMode(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT)
-        self.cur_event_length = 0
-        self.cur_keys_length = 0
-        self.captured_chars = []
+        if sys.stdin.isatty():
+            self.read_handle = GetStdHandle(STD_INPUT_HANDLE)
+            self.read_handle.SetConsoleMode(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT)
+            self.cur_event_length = 0
+            self.cur_keys_length = 0
+            self.captured_chars = []
+        else:
+            raise InitError("Terminal was not a tty. Keyboard input disabled")
 
     def cleanup(self):
         pass
