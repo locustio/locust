@@ -26,6 +26,13 @@
             
             this.chart = echarts.init(this.element[0], 'vintage');
             this.chart.setOption({
+                legend: {
+                    icon: 'circle',
+                    inactiveColor: '#b3c3bc',
+                    textStyle: {
+                        color: '#b3c3bc',
+                    }
+                },
                 title: {
                     text: this.title,
                     x: 10,
