@@ -40,13 +40,15 @@
                 },
                 tooltip: {
                     trigger: 'axis',
-                    formatter: function (params) {
+                    formatter:
+                    function (params) {
                         if (!!params && params.length > 0 && params.some(param => !!param.value)) {
                             var str = params[0].name;
                             for (var i=0; i<params.length; i++) {
                                 var param = params[i];
-                                str += '<br><span style="color:' + param.color + ';">' + param.seriesName + ': ' + param.data + '</span>';
+                                str += '<br><span style="color:' + param.color + ';">' + param.seriesName + ': ' + param.data.value + '</span>';
                             }
+                            str += '<br><span style="color:#b3c3bc;">Users: ' + param.data.users + '</span>';
                             return str;
                         } else {
                             return "No data";
@@ -94,12 +96,12 @@
             })
         }
         
-        addValue(values) {
+        addValue(values, user_count=0) {
             this.dates.push(new Date().toLocaleTimeString());
             var seriesData = [];
             for (var i=0; i<values.length; i++) {
                 var value = Math.round(values[i] * 100) / 100;
-                this.data[i].push(value);
+                this.data[i].push({"value": value, "users": user_count});
                 seriesData.push({data: this.data[i]});
             }
             this.chart.setOption({
