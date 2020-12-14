@@ -134,8 +134,11 @@ class WebUI:
         @self.auth_required_if_enabled
         def swarm():
             assert request.method == "POST"
-            user_count = int(request.form["user_count"])
-            spawn_rate = float(request.form["spawn_rate"])
+            user_count = spawn_rate = 1
+            if request.form.get("user_count"):
+                user_count = int(request.form["user_count"])
+            if request.form.get("spawn_rate"):
+                spawn_rate = float(request.form["spawn_rate"])
 
             if request.form.get("host"):
                 # Replace < > to guard against XSS
