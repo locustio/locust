@@ -54,7 +54,13 @@
                     },
                     axisPointer: {
                         animation: true
-                    }
+                    },
+                    textStyle: {
+                        color: '#b3c3bc',
+                    },
+                    backgroundColor: 'rgba(21,35,28, 0.93)',
+                    borderWidth: 0,
+                    extraCssText: "z-index:1;",
                 },
                 xAxis: {
                     type: 'category',
