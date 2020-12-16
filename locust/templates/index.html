@@ -67,9 +67,9 @@
                         <input type="hidden" name="spawn_rate" id="spawn_rate" value="0"/><br>
                     {% else %}
                         <label for="user_count">Number of total users to simulate</label>
-                        <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
+                        <input placeholder="Please enter a number" type="number" required="required" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
                         <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                        <input type="text" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "" }}"/><br>
+                        <input placeholder="Please enter a number" type="number" required="required" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "" }}"/><br>
                     {% endif %}
                     <label for="host">
                         Host <span style="color:#8a8a8a;">(e.g. http://www.example.com)</span>
@@ -98,9 +98,9 @@
                         <input type="text" name="spawn_rate" id="new_spawn_rate" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
                     {% else %}
                         <label for="new_user_count">Number of users to simulate</label>
-                        <input type="text" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "" }}"/><br>
+                        <input placeholder="Please enter a number" type="number" required="required" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "" }}"/><br>
                         <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users to start per second (or stop))</span></label>
-                        <input type="text" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "" }}"/><br>
+                        <input placeholder="Please enter a number" type="number" required="required" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "" }}"/><br>
                     {% endif %}
                     {% if is_shape %}
                         <button type="submit" disabled>Start swarming</button>
@@ -249,6 +249,7 @@
     <script type="text/javascript" src="./static/jquery-1.11.3.min.js"></script>
     <script type="text/javascript" src="./static/jquery.jqote2.min.js"></script>
     <script type="text/javascript" src="./static/jquery.tools.min.js"></script>
+
     <!-- echarts from https://github.com/ecomfe/echarts -->
     <script type="text/javascript" src="./static/echarts.common.min.js"></script>
     <!-- vintage theme of echarts -->

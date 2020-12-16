@@ -1,7 +1,7 @@
 var newTestLink = $("#new-test");
 var editTestLink = $("#edit-test");
 
-$(window).ready(function() {
+$(document).ready(function() {
     if($("#user_count").length > 0) {
         $("#user_count").focus().select();
     }
