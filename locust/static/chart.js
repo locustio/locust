@@ -45,8 +45,9 @@
                             var str = params[0].name;
                             for (var i=0; i<params.length; i++) {
                                 var param = params[i];
-                                str += '<br><span style="color:' + param.color + ';">' + param.seriesName + ': ' + param.data + '</span>';
+                                str += '<br><span style="color:' + param.color + ';">' + param.seriesName + ': ' + param.data.value + '</span>';
                             }
+                            str += '<br><span style="color:#a3b3ac;">Users: ' + param.data.users + '</span>';
                             return str;
                         } else {
                             return "No data";
@@ -54,7 +55,14 @@
                     },
                     axisPointer: {
                         animation: true
-                    }
+                    },
+                    textStyle: {
+                        color: '#b3c3bc',
+                        fontSize: 13,
+                    },
+                    backgroundColor: 'rgba(21,35,28, 0.93)',
+                    borderWidth: 0,
+                    extraCssText: "z-index:1;",
                 },
                 xAxis: {
                     type: 'category',
@@ -94,12 +102,12 @@
             })
         }
         
-        addValue(values) {
+        addValue(values, user_count=0) {
             this.dates.push(new Date().toLocaleTimeString());
             var seriesData = [];
             for (var i=0; i<values.length; i++) {
                 var value = Math.round(values[i] * 100) / 100;
-                this.data[i].push(value);
+                this.data[i].push({"value": value, "users": user_count});
                 seriesData.push({data: this.data[i]});
             }
             this.chart.setOption({

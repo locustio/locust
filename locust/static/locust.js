@@ -191,8 +191,8 @@ function updateStats() {
             // get total stats row
             var total = report.stats[report.stats.length-1];
             // update charts
-            rpsChart.addValue([total.current_rps, total.current_fail_per_sec]);
-            responseTimeChart.addValue([report.current_response_time_percentile_50, report.current_response_time_percentile_95]);
+            rpsChart.addValue([total.current_rps, total.current_fail_per_sec], report.user_count);
+            responseTimeChart.addValue([report.current_response_time_percentile_50, report.current_response_time_percentile_95], report.user_count);
             usersChart.addValue([report.user_count]);
         } else {
             appearStopped();
