@@ -67,9 +67,9 @@
                         <input type="hidden" name="spawn_rate" id="spawn_rate" value="0"/><br>
                     {% else %}
                         <label for="user_count">Number of total users to simulate</label>
-                        <input placeholder="Please enter a number" type="number" required="required" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
+                        <input placeholder="1" type="number" required="required" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
                         <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                        <input placeholder="Please enter a number" type="number" required="required" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "" }}"/><br>
+                        <input placeholder="1" type="number" required="required" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "" }}"/><br>
                     {% endif %}
                     <label for="host">
                         Host <span style="color:#8a8a8a;">(e.g. http://www.example.com)</span>
@@ -77,7 +77,7 @@
                             <span style="color:#8a8a8a; font-size:12px;">(setting this will override the host on all User classes)</span></label>
                         {% endif %}
                     </label>
-                    <input placeholder="Please enter a Host" type="text" required="required" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or "" }}"/><br>
+                    <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or "" }}"/><br>
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -98,9 +98,9 @@
                         <input type="text" name="spawn_rate" id="new_spawn_rate" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
                     {% else %}
                         <label for="new_user_count">Number of users to simulate</label>
-                        <input placeholder="Please enter a number" type="number" required="required" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "" }}"/><br>
+                        <input placeholder="1" type="number" required="required" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "" }}"/><br>
                         <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users to start per second (or stop))</span></label>
-                        <input placeholder="Please enter a number" type="number" required="required" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "" }}"/><br>
+                        <input placeholder="1" type="number" required="required" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "" }}"/><br>
                     {% endif %}
                     {% if is_shape %}
                         <button type="submit" disabled>Start swarming</button>
