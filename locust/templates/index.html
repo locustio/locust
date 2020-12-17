@@ -78,6 +78,8 @@
                         {% endif %}
                     </label>
                     <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or "" }}"/><br>
+                    <br/>
+                    <div id="swarm_errors" align="center" style="color: #e68686;"></div>
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>

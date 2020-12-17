@@ -227,6 +227,42 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual("Test exception", rows[1][1])
         self.assertEqual(2, int(rows[1][0]), "Exception count should be 2")
 
+    def test_swarm_user_count_value_not_specified(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task(1)
+            def my_task(self):
+                pass
+
+        self.environment.user_classes = [MyUser]
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"spawn_rate": 5, "host": "https://localhost"},
+        )
+        data = response.json()
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(False, data["success"])
+        self.assertEqual("You must specify user_count and spawn_rate", data["message"])
+
+    def test_swarm_spawn_rate_value_not_specified(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task(1)
+            def my_task(self):
+                pass
+
+        self.environment.user_classes = [MyUser]
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 5, "host": "https://localhost"},
+        )
+        data = response.json()
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(False, data["success"])
+        self.assertEqual("You must specify user_count and spawn_rate", data["message"])
+
     def test_swarm_host_value_specified(self):
         class MyUser(User):
             wait_time = constant(1)

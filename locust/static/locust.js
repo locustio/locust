@@ -68,17 +68,19 @@ function setHostName(hostname) {
 
 $('#swarm_form').submit(function(event) {
     event.preventDefault();
-    $("body").attr("class", "spawning");
-    $("#start").hide();
-    $("#main").show();
-    $(".box_running").show();
-    newTestLink.hide();
-    editTestLink.show();
-    $(".user_count").show();
     $.post($(this).attr("action"), $(this).serialize(),
         function(response) {
             if (response.success) {
+                $("body").attr("class", "spawning");
+                $("#start").hide();
+                $("#main").show();
+                $(".box_running").show();
+                newTestLink.hide();
+                editTestLink.show();
+                $(".user_count").show();
                 setHostName(response.host);
+            } else {
+                $("#swarm_errors").html(response.message);
             }
         }
     );
