@@ -79,7 +79,7 @@
                     </label>
                     <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or "" }}"/><br>
                     <br/>
-                    <div id="swarm_errors" align="center" style="color: #e68686;"></div>
+                    <div id="start_swarm_errors" align="center" style="color: #e68686;"></div>
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -103,6 +103,8 @@
                         <input placeholder="1" type="number" required="required" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "" }}"/><br>
                         <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users to start per second (or stop))</span></label>
                         <input placeholder="1" type="number" required="required" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "" }}"/><br>
+                        <br/>
+                        <div id="edit_swarm_errors" align="center" style="color: #e68686;"></div>
                     {% endif %}
                     {% if is_shape %}
                         <button type="submit" disabled>Start swarming</button>

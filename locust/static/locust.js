@@ -16,6 +16,7 @@ function appearStopped() {
 
 $("#box_stop a.stop-button").click(function(event) {
     event.preventDefault();
+    $("#edit").hide();
     $.get($(this).attr("href"));
     $("body").attr("class", "stopped");
     appearStopped()
@@ -28,12 +29,14 @@ $("#box_stop a.reset-button").click(function(event) {
 
 newTestLink.click(function(event) {
     event.preventDefault();
+    $("#edit").hide();
     $("#start").show();
     $("#user_count").focus().select();
 });
 
 editTestLink.click(function(event) {
     event.preventDefault();
+    $("#start").hide();
     $("#edit").show();
     $("#new_user_count").focus().select();
 });
@@ -79,8 +82,9 @@ $('#swarm_form').submit(function(event) {
                 editTestLink.show();
                 $(".user_count").show();
                 setHostName(response.host);
+                $("#start_swarm_errors").empty();
             } else {
-                $("#swarm_errors").html(response.message);
+                $("#start_swarm_errors").html(response.message);
             }
         }
     );
@@ -94,6 +98,9 @@ $('#edit_form').submit(function(event) {
                 $("body").attr("class", "spawning");
                 $("#edit").fadeOut();
                 setHostName(response.host);
+                $("#edit_swarm_errors").empty();
+            } else {
+                $("#edit_swarm_errors").html(response.message);
             }
         }
     );
