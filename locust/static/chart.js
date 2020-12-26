@@ -31,6 +31,19 @@
                     x: 10,
                     y: 10,
                 },
+                legend: {
+                    right: '2%',
+                    top: '1%',
+                    selector: true,
+                    icon: 'roundRect',
+                    textStyle: {
+                        color: '#b3c3bc'
+                    },
+                    inactiveColor: '#7a7a7a',
+                    data: seriesData.map(function (x) {
+                        return x.name;
+                    }),
+                },
                 tooltip: {
                     trigger: 'axis',
                     formatter: function (params) {
