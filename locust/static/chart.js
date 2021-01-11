@@ -47,7 +47,7 @@
                                 var param = params[i];
                                 str += '<br><span style="color:' + param.color + ';">' + param.seriesName + ': ' + param.data.value + '</span>';
                             }
-                            str += '<br><span style="color:#b3c3bc;">Users: ' + param.data.users + '</span>';
+                            str += '<br><span style="color:#a3b3ac;">Users: ' + param.data.users + '</span>';
                             return str;
                         } else {
                             return "No data";
@@ -55,7 +55,14 @@
                     },
                     axisPointer: {
                         animation: true
-                    }
+                    },
+                    textStyle: {
+                        color: '#b3c3bc',
+                        fontSize: 13,
+                    },
+                    backgroundColor: 'rgba(21,35,28, 0.93)',
+                    borderWidth: 0,
+                    extraCssText: "z-index:1;",
                 },
                 xAxis: {
                     type: 'category',
