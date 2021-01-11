@@ -827,6 +827,13 @@ class StatsCSV:
             "Occurrences",
         ]
 
+        self.exceptions_columns = [
+            "Count",
+            "Message",
+            "Traceback",
+            "Nodes",
+        ]
+
     def _percentile_fields(self, stats_entry):
         return (
             [int(stats_entry.get_response_time_percentile(x) or 0) for x in self.percentiles_to_report]
@@ -877,6 +884,21 @@ class StatsCSV:
                 ]
             )
 
+    def exceptions_csv(self, csv_writer):
+        csv_writer.writerow(self.exceptions_columns)
+        self._exceptions_data_rows(csv_writer)
+
+    def _exceptions_data_rows(self, csv_writer):
+        for exc in self.environment.runner.exceptions.values():
+            csv_writer.writerow(
+                [
+                    exc["count"],
+                    exc["msg"],
+                    exc["traceback"],
+                    ", ".join(exc["nodes"])
+                ]
+            )
+
 
 class StatsCSVFileWriter(StatsCSV):
     """Write statistics to to CSV files"""
@@ -895,6 +917,10 @@ class StatsCSVFileWriter(StatsCSV):
         self.failures_csv_filehandle = open(self.base_filepath + "_failures.csv", "w")
         self.failures_csv_writer = csv.writer(self.failures_csv_filehandle)
         self.failures_csv_data_start = 0
+
+        self.exceptions_csv_filehandle = open(self.base_filepath + "_exceptions.csv", "w")
+        self.exceptions_csv_writer = csv.writer(self.exceptions_csv_filehandle)
+        self.exceptions_csv_data_start = 0
 
         self.stats_history_csv_columns = [
             "Timestamp",
@@ -928,6 +954,9 @@ class StatsCSVFileWriter(StatsCSV):
         self.failures_csv_writer.writerow(self.failures_columns)
         self.failures_csv_data_start = self.failures_csv_filehandle.tell()
 
+        self.exceptions_csv_writer.writerow(self.exceptions_columns)
+        self.exceptions_csv_data_start = self.exceptions_csv_filehandle.tell()
+
         # Continuously write date rows for all files
         last_flush_time = 0
         while True:
@@ -943,10 +972,15 @@ class StatsCSVFileWriter(StatsCSV):
             self._failures_data_rows(self.failures_csv_writer)
             self.failures_csv_filehandle.truncate()
 
+            self.exceptions_csv_filehandle.seek((self.exceptions_csv_data_start))
+            self._exceptions_data_rows(self.exceptions_csv_writer)
+            self.exceptions_csv_filehandle.truncate()
+
             if now - last_flush_time > CSV_STATS_FLUSH_INTERVAL_SEC:
                 self.requests_flush()
                 self.stats_history_flush()
                 self.failures_flush()
+                self.exceptions_flush()
                 last_flush_time = now
 
             gevent.sleep(CSV_STATS_INTERVAL_SEC)
@@ -999,10 +1033,14 @@ class StatsCSVFileWriter(StatsCSV):
     def failures_flush(self):
         self.failures_csv_filehandle.flush()
 
+    def exceptions_flush(self):
+        self.exceptions_csv_filehandle.flush()
+
     def close_files(self):
         self.requests_csv_filehandle.close()
         self.stats_history_csv_filehandle.close()
         self.failures_csv_filehandle.close()
+        self.exceptions_csv_filehandle.close()
 
     def stats_history_file_name(self):
         return self.base_filepath + "_stats_history.csv"
