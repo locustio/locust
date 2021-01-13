@@ -919,7 +919,7 @@ class StatsCSVFileWriter(StatsCSV):
     def stats_writer(self):
         """Writes all the csv files for the locust run."""
 
-        # Write header row for all files and save posistion for non-append files
+        # Write header row for all files and save position for non-append files
         self.requests_csv_writer.writerow(self.requests_csv_columns)
         requests_csv_data_start = self.requests_csv_filehandle.tell()
 

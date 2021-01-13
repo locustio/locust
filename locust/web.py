@@ -134,11 +134,6 @@ class WebUI:
         @self.auth_required_if_enabled
         def swarm():
             assert request.method == "POST"
-            if not request.form.get("user_count") or not request.form.get("spawn_rate"):
-                return jsonify({"success": False, "message": "You must specify user_count and spawn_rate"})
-
-            user_count = int(request.form["user_count"])
-            spawn_rate = float(request.form["spawn_rate"])
 
             if request.form.get("host"):
                 # Replace < > to guard against XSS
@@ -149,6 +144,12 @@ class WebUI:
                 return jsonify(
                     {"success": True, "message": "Swarming started using shape class", "host": environment.host}
                 )
+
+            if not request.form.get("user_count") or not request.form.get("spawn_rate"):
+                return jsonify({"success": False, "message": "You must specify user_count and spawn_rate"})
+
+            user_count = int(request.form["user_count"])
+            spawn_rate = float(request.form["spawn_rate"])
 
             environment.runner.start(user_count, spawn_rate)
             return jsonify({"success": True, "message": "Swarming started", "host": environment.host})
