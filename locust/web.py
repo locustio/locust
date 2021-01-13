@@ -325,11 +325,7 @@ class WebUI:
         def exceptions_csv():
             data = StringIO()
             writer = csv.writer(data)
-            writer.writerow(["Count", "Message", "Traceback", "Nodes"])
-            for exc in environment.runner.exceptions.values():
-                nodes = ", ".join(exc["nodes"])
-                writer.writerow([exc["count"], exc["msg"], exc["traceback"], nodes])
-
+            self.stats_csv_writer.exceptions_csv(writer)
             return _download_csv_response(data.getvalue(), "exceptions")
 
     def start(self):

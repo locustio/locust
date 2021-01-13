@@ -322,17 +322,20 @@ class TestCsvStats(LocustTestCase):
     STATS_FILENAME = "{}_stats.csv".format(STATS_BASE_NAME)
     STATS_HISTORY_FILENAME = "{}_stats_history.csv".format(STATS_BASE_NAME)
     STATS_FAILURES_FILENAME = "{}_failures.csv".format(STATS_BASE_NAME)
+    STATS_EXCEPTIONS_FILENAME = "{}_exceptions.csv".format(STATS_BASE_NAME)
 
     def setUp(self):
         super().setUp()
         self.remove_file_if_exists(self.STATS_FILENAME)
         self.remove_file_if_exists(self.STATS_HISTORY_FILENAME)
         self.remove_file_if_exists(self.STATS_FAILURES_FILENAME)
+        self.remove_file_if_exists(self.STATS_EXCEPTIONS_FILENAME)
 
     def tearDown(self):
         self.remove_file_if_exists(self.STATS_FILENAME)
         self.remove_file_if_exists(self.STATS_HISTORY_FILENAME)
         self.remove_file_if_exists(self.STATS_FAILURES_FILENAME)
+        self.remove_file_if_exists(self.STATS_EXCEPTIONS_FILENAME)
 
     def remove_file_if_exists(self, filename):
         if os.path.exists(filename):
@@ -343,12 +346,14 @@ class TestCsvStats(LocustTestCase):
         self.assertTrue(os.path.exists(self.STATS_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
+        self.assertTrue(os.path.exists(self.STATS_EXCEPTIONS_FILENAME))
 
     def test_write_csv_files_full_history(self):
         _write_csv_files(self.environment, self.STATS_BASE_NAME, full_history=True)
         self.assertTrue(os.path.exists(self.STATS_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
+        self.assertTrue(os.path.exists(self.STATS_EXCEPTIONS_FILENAME))
 
     @mock.patch("locust.stats.CSV_STATS_INTERVAL_SEC", new=_TEST_CSV_STATS_INTERVAL_SEC)
     def test_csv_stats_writer(self):
@@ -357,6 +362,7 @@ class TestCsvStats(LocustTestCase):
         self.assertTrue(os.path.exists(self.STATS_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
+        self.assertTrue(os.path.exists(self.STATS_EXCEPTIONS_FILENAME))
 
         with open(self.STATS_HISTORY_FILENAME) as f:
             reader = csv.DictReader(f)
@@ -380,6 +386,7 @@ class TestCsvStats(LocustTestCase):
         self.assertTrue(os.path.exists(self.STATS_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
         self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
+        self.assertTrue(os.path.exists(self.STATS_EXCEPTIONS_FILENAME))
 
         with open(self.STATS_HISTORY_FILENAME) as f:
             reader = csv.DictReader(f)
@@ -422,6 +429,7 @@ class TestCsvStats(LocustTestCase):
             self.assertTrue(os.path.exists(self.STATS_FILENAME))
             self.assertTrue(os.path.exists(self.STATS_HISTORY_FILENAME))
             self.assertTrue(os.path.exists(self.STATS_FAILURES_FILENAME))
+            self.assertTrue(os.path.exists(self.STATS_EXCEPTIONS_FILENAME))
 
     @mock.patch("locust.stats.CSV_STATS_INTERVAL_SEC", new=_TEST_CSV_STATS_INTERVAL_SEC)
     def test_user_count_in_csv_history_stats(self):
