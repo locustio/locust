@@ -340,7 +340,7 @@ def main():
     if options.run_time:
         logger.info("Run time limit set to %s seconds" % options.run_time)
         spawn_run_time_limit_greenlet()
-    elif options.headless:
+    elif options.headless and not options.worker:
         logger.info("No run time limit set, use CTRL+C to interrupt.")
     else:
         pass  # dont log anything - not having a time limit is normal when not running headless
