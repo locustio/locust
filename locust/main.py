@@ -23,6 +23,7 @@ from .user.inspectuser import get_task_ratio_dict, print_task_ratio
 from .util.timespan import parse_timespan
 from .exception import AuthCredentialsError
 from .shape import LoadTestShape
+from .scenario import Scenario
 from .input_events import input_listener
 from .html import get_html_report
 
@@ -43,6 +44,19 @@ def is_shape_class(item):
     """
     return bool(
         inspect.isclass(item) and issubclass(item, LoadTestShape) and item.__dict__["__module__"] != "locust.shape"
+    )
+
+
+def is_scenario_class(item):
+    """
+    Check if a class is a Scenario
+    """
+    return bool(
+        inspect.isclass(item)
+        and issubclass(item, Scenario)
+        and item.name
+        and item.users
+        and all([True if is_user_class(user) else False for user in item.users])
     )
 
 
@@ -89,6 +103,9 @@ def load_locustfile(path):
     # Return our two-tuple
     user_classes = {name: value for name, value in vars(imported).items() if is_user_class(value)}
 
+    # Find list of scenario
+    scenario_classes = [value for name, value in vars(imported).items() if is_scenario_class(value)]
+
     # Find shape class, if any, return it
     shape_classes = [value for name, value in vars(imported).items() if is_shape_class(value)]
     if shape_classes:
@@ -96,10 +113,10 @@ def load_locustfile(path):
     else:
         shape_class = None
 
-    return imported.__doc__, user_classes, shape_class
+    return imported.__doc__, user_classes, shape_class, scenario_classes
 
 
-def create_environment(user_classes, options, events=None, shape_class=None):
+def create_environment(user_classes, options, events=None, shape_class=None, scenario_classes=None):
     """
     Create an Environment instance from options
     """
@@ -113,6 +130,7 @@ def create_environment(user_classes, options, events=None, shape_class=None):
         reset_stats=options.reset_stats,
         stop_timeout=options.stop_timeout,
         parsed_options=options,
+        scenario_classes=scenario_classes or [],
     )
 
 
@@ -122,7 +140,7 @@ def main():
     locustfile = parse_locustfile_option()
 
     # import the locustfile
-    docstring, user_classes, shape_class = load_locustfile(locustfile)
+    docstring, user_classes, shape_class, scenario_classes = load_locustfile(locustfile)
 
     # parse all command line options
     options = parse_options()
@@ -200,7 +218,7 @@ def main():
             )
 
     # create locust Environment
-    environment = create_environment(user_classes, options, events=locust.events, shape_class=shape_class)
+    environment = create_environment(user_classes, options, events=locust.events, shape_class=shape_class, scenario_classes=scenario_classes)
 
     if shape_class and (options.num_users or options.spawn_rate):
         logger.warning(

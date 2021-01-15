@@ -8,7 +8,7 @@ from contextlib import contextmanager
 MOCK_LOUCSTFILE_CONTENT = '''
 """This is a mock locust file for unit testing"""
 
-from locust import HttpUser, TaskSet, task, between, LoadTestShape
+from locust import HttpUser, TaskSet, task, between, LoadTestShape, Scenario
 
 
 def index(l):

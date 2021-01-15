@@ -8,6 +8,7 @@ from .user.task import task, tag, TaskSet
 from .user.users import HttpUser, User
 from .user.wait_time import between, constant, constant_pacing
 from .shape import LoadTestShape
+from .scenario import Scenario
 
 from .event import Events
 
@@ -26,6 +27,7 @@ __all__ = (
     "constant",
     "constant_pacing",
     "events",
+    "Scenario",
 )
 
 # Used for raising a DeprecationWarning if old Locust/HttpLocust is used

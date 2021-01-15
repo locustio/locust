@@ -425,6 +425,23 @@ TaskSets
 ================================
 TaskSets is a way to structure tests of hierarchial web sites/systems. You can :ref:`read more about it here <tasksets>`
 
+Scenario
+================================
+By default every instance of User Class are loaded. Scenario allow you to specify which users to run. When scenario exists a dropdown is added in the UI to selec
+
+By default, each User Class instance is loaded (including HttpUser). A scenario allows you to choose users to run. When a scenario exists, a drop-down list is added in the user interface to select the scenario before running it.
+
+Example
+--------
+This scenario will run User and Admin users.
+
+.. code-block:: python
+
+    class FirstScenario(Scenario):
+        name = "My first scenario"
+        users = [User, Admin]
+
+See `a full example on github <https://github.com/locustio/locust/tree/master/examples/scenario.py>`_.
 
 How to structure your test code
 ================================

@@ -68,6 +68,7 @@ class Runner:
         self.greenlet.spawn(self.monitor_cpu).link_exception(greenlet_exception_handler)
         self.exceptions = {}
         self.target_user_count = None
+        self.scenario = None
 
         # set up event listeners for recording requests
         def on_request_success(request_type, name, response_time, response_length, **kwargs):
@@ -97,6 +98,8 @@ class Runner:
 
     @property
     def user_classes(self):
+        if self.scenario:
+            return self.scenario.users
         return self.environment.user_classes
 
     @property
@@ -275,7 +278,7 @@ class Runner:
                 self.cpu_warning_emitted = True
             gevent.sleep(CPU_MONITOR_INTERVAL)
 
-    def start(self, user_count, spawn_rate, wait=False):
+    def start(self, user_count, spawn_rate, wait=False, scenario=None):
         """
         Start running a load test
 
@@ -284,7 +287,9 @@ class Runner:
         :param wait: If True calls to this method will block until all users are spawned.
                      If False (the default), a greenlet that spawns the users will be
                      started and the call to this method will return immediately.
+        :param scenario: A scenario object to run.
         """
+        self.scenario = scenario
         if self.state != STATE_RUNNING and self.state != STATE_SPAWNING:
             self.stats.clear_all()
             self.exceptions = {}
@@ -311,7 +316,8 @@ class Runner:
             self.spawn_rate = spawn_rate
             self.spawn_users(user_count, spawn_rate=spawn_rate, wait=wait)
 
-    def start_shape(self):
+    def start_shape(self, scenario=None):
+        self.scenario = scenario
         if self.shape_greenlet:
             logger.info("There is an ongoing shape test running. Editing is disabled")
             return
@@ -383,7 +389,8 @@ class LocalRunner(Runner):
 
         self.environment.events.user_error.add_listener(on_user_error)
 
-    def start(self, user_count, spawn_rate, wait=False):
+    def start(self, user_count, spawn_rate, wait=False, scenario=None):
+        self.scenario = scenario
         self.target_user_count = user_count
         if spawn_rate > 100:
             logger.warning(

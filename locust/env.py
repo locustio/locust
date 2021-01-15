@@ -63,6 +63,9 @@ class Environment:
     parsed_options = None
     """Optional reference to the parsed command line options (used to pre-populate fields in Web UI)"""
 
+    scenario_classes = []
+    """Scenario classes that the runner will run"""
+
     def __init__(
         self,
         *,
@@ -76,6 +79,7 @@ class Environment:
         stop_timeout=None,
         catch_exceptions=True,
         parsed_options=None,
+        scenario_classes=None,
     ):
         if events:
             self.events = events
@@ -92,6 +96,7 @@ class Environment:
         self.stop_timeout = stop_timeout
         self.catch_exceptions = catch_exceptions
         self.parsed_options = parsed_options
+        self.scenario_classes = scenario_classes
 
         self._filter_tasks_by_tags()
 
@@ -173,6 +178,14 @@ class Environment:
             delayed_start=delayed_start,
         )
         return self.web_ui
+
+    def get_scenario_name(self):
+        """
+        Return the list of scenario names
+        """
+        if not self.scenario_classes:
+            return []
+        return [scenario.name for scenario in self.scenario_classes]
 
     def _filter_tasks_by_tags(self):
         """

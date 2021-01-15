@@ -104,6 +104,7 @@ class WebUI:
         self.app.config["BASIC_AUTH_ENABLED"] = False
         self.auth = None
         self.greenlet = None
+        self.scenario = None
 
         if auth_credentials is not None:
             credentials = auth_credentials.split(":")
@@ -139,16 +140,24 @@ class WebUI:
                 # Replace < > to guard against XSS
                 environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
 
+            if request.form.get("scenario"):
+                self.scenario = [scenario_class for scenario_class in self.environment.scenario_classes if request.form.get("scenario") == scenario_class.name][0]
+
             if environment.shape_class:
-                environment.runner.start_shape()
+                environment.runner.start_shape(scenario=self.scenario)
                 return jsonify(
                     {"success": True, "message": "Swarming started using shape class", "host": environment.host}
                 )
             user_count = int(request.form["user_count"])
             spawn_rate = float(request.form["spawn_rate"])
 
-            environment.runner.start(user_count, spawn_rate)
-            return jsonify({"success": True, "message": "Swarming started", "host": environment.host})
+            environment.runner.start(user_count, spawn_rate, scenario=self.scenario)
+            return jsonify({
+                "success": True,
+                "message": "Swarming started",
+                "host": environment.host,
+                "scenario": self.scenario_name
+            })
 
         @app.route("/stop")
         @self.auth_required_if_enabled
@@ -324,6 +333,10 @@ class WebUI:
             self.stats_csv_writer.exceptions_csv(writer)
             return _download_csv_response(data.getvalue(), "exceptions")
 
+    @property
+    def scenario_name(self):
+        return self.scenario.name if self.scenario else ""
+
     def start(self):
         self.greenlet = gevent.spawn(self.start_server)
         self.greenlet.link_exception(greenlet_exception_handler)
@@ -402,4 +415,6 @@ class WebUI:
             "worker_count": worker_count,
             "is_shape": self.environment.shape_class,
             "stats_history_enabled": options and options.stats_history_enabled,
+            "scenarios": self.environment.get_scenario_name(),
+            "scenario": self.scenario_name,
         }

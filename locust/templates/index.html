@@ -16,6 +16,14 @@
                         {{ host or "" }}
                     </div>
                 </div>
+                {% if scenarios %}
+                    <div class="top_box box_url">
+                        <div class="label">Scenario</div>
+                        <div class="value" id="scenario">
+                            {{ scenario }}
+                        </div>
+                    </div>
+                {% endif %}
                 <div class="top_box box_status">
                     <div class="label">STATUS</div>
                     <div class="value" id="status_text">
@@ -49,7 +57,7 @@
             <div style="clear:both;"></div>
         </div>
     </div>
-    
+
     <div class="dialogs">
         <div class="dialog start" id="start">
             <div style="position:relative;">
@@ -58,6 +66,14 @@
             <div class="padder">
                 <h2>Start new load test</h2>
                 <form action="./swarm" method="POST" id="swarm_form">
+                    {% if scenarios %}
+                        <label for="scenario">Select the scenario to run</label>
+                        <select name="scenario">
+                            {% for s in scenarios %}
+                                <option name="{{ s }}">{{ s }}</option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
                     {% if is_shape %}
                         <label for="user_count">Number of total users to simulate</label>
                         <input type="text" name="user_count" id="user_count" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
@@ -91,6 +107,13 @@
             <div class="padder">
                 <h2>Edit running load test</h2>
                 <form action="./swarm" method="POST" id="edit_form">
+                    {% if scenarios %}
+                        <select name="scenario">
+                            {% for s in scenarios %}
+                                <option name="{{ s }}" {% if s == scenario %}selected{% endif %}>{{ s }}</option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
                     {% if is_shape %}
                         <label for="new_user_count">Number of users to simulate</label>
                         <input type="text" name="user_count" id="new_user_count" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
@@ -112,7 +135,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="main" id="main">
         <nav class="menu">
             <ul class="tabs container">

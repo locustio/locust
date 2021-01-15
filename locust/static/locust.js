@@ -61,9 +61,14 @@ var errors_tpl = $('#errors-template');
 var exceptions_tpl = $('#exceptions-template');
 var workers_tpl = $('#worker-template');
 
-function setHostName(hostname) {
-    hostname = hostname || "";
-    $('#host_url').text(hostname);
+function setHeader(value, id) {
+    value = value || "";
+    $(id).text(value);
+}
+
+function selectScenario(value) {
+    value = value || "";
+    $("select[name=scenario] option[value=\"" + value + "\"]").prop('selected', true);;
 }
 
 $('#swarm_form').submit(function(event) {
@@ -78,7 +83,9 @@ $('#swarm_form').submit(function(event) {
     $.post($(this).attr("action"), $(this).serialize(),
         function(response) {
             if (response.success) {
-                setHostName(response.host);
+                setHeader(response.host, '#host_url');
+                setHeader(response.scenario, '#scenario');
+                selectScenario(response.scenario);
             }
         }
     );
@@ -91,7 +98,9 @@ $('#edit_form').submit(function(event) {
             if (response.success) {
                 $("body").attr("class", "spawning");
                 $("#edit").fadeOut();
-                setHostName(response.host);
+                setHeader(response.host, '#host_url');
+                setHeader(response.scenario, '#scenario');
+                selectScenario(response.scenario);
             }
         }
     );
