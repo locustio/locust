@@ -16,6 +16,7 @@ import locust
 from locust import constant
 from locust.argument_parser import get_parser, parse_options
 from locust.user import User, task
+from locust.scenario import Scenario
 from locust.env import Environment
 from locust.runners import Runner
 from locust import stats
@@ -242,6 +243,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         )
         self.assertEqual(200, response.status_code)
         self.assertEqual("https://localhost", response.json()["host"])
+        self.assertEqual("", response.json()["scenario"])
         self.assertEqual(self.environment.host, "https://localhost")
 
     def test_swarm_host_value_not_specified(self):
@@ -259,6 +261,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         )
         self.assertEqual(200, response.status_code)
         self.assertEqual(None, response.json()["host"])
+        self.assertEqual("", response.json()["scenario"])
         self.assertEqual(self.environment.host, None)
 
     def test_host_value_from_user_class(self):
@@ -296,6 +299,41 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(200, response.status_code)
         self.assertNotIn("http://example.com", response.content.decode("utf-8"))
         self.assertIn("setting this will override the host on all User classes", response.content.decode("utf-8"))
+
+    def test_swarm_ui_with_scenario(self):
+        class MyUser(User):
+            @task(1)
+            def my_task(self):
+                pass
+
+        class Scenario1(Scenario):
+            name = "My Scenario 1"
+            users = [MyUser]
+
+        self.environment.user_classes = [MyUser]
+        self.environment.scenario_classes = [Scenario1]
+        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+        self.assertEqual(200, response.status_code)
+        self.assertIn("<option name=\"My Scenario 1\">", response.content.decode("utf-8"))
+
+    def test_swarm_with_scenario(self):
+        class MyUser(User):
+            @task(1)
+            def my_task(self):
+                pass
+
+        class Scenario1(Scenario):
+            name = "My Scenario 1"
+            users = [MyUser]
+
+        self.environment.user_classes = [MyUser]
+        self.environment.scenario_classes = [Scenario1]
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost", "scenario": "My Scenario 1"},
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual("My Scenario 1", response.json()["scenario"])
 
     def test_report_page(self):
         self.stats.log_request("GET", "/test", 120, 5612)
