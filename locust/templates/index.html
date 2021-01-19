@@ -304,22 +304,7 @@
         ]]>
     </script>
     <script type="text/javascript">
-        var stats_history = {
-            "time": [],
-            "user_count": [],
-            "current_rps": [],
-            "current_fail_per_sec": [],
-            "response_time_percentile_50": [],
-            "response_time_percentile_95": [],
-        };
-        {% for r in history %}
-            stats_history["time"].push("{{ r.time }}");
-            stats_history["user_count"].push({{ r.user_count }});
-            stats_history["current_rps"].push({{ r.current_rps }});
-            stats_history["current_fail_per_sec"].push({{ r.current_fail_per_sec }});
-            stats_history["response_time_percentile_50"].push({{ r.response_time_percentile_50 }});
-            stats_history["response_time_percentile_95"].push({{ r.response_time_percentile_95 }});
-        {% endfor %}
+        {% include 'stats_data.html' %}
     </script>
     <script type="text/javascript" src="./static/chart.js?v={{ version }}"></script>
     <script type="text/javascript" src="./static/locust.js?v={{ version }}"></script>
