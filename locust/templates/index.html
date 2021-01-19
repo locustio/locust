@@ -152,7 +152,6 @@
             </div>
             <div id="charts" style="display:none;">
                 <div class="charts-container"></div>
-                <p class="note">Note: There is no persistence of these charts, if you refresh this page, new charts will be created.</p>
             </div>
             <div style="display:none;">
                 <table id="errors" class="stats">
@@ -303,6 +302,24 @@
         </tr>
         <% alternate = !alternate; %>
         ]]>
+    </script>
+    <script type="text/javascript">
+        var stats_history = {
+            "time": [],
+            "user_count": [],
+            "current_rps": [],
+            "current_fail_per_sec": [],
+            "response_time_percentile_50": [],
+            "response_time_percentile_95": [],
+        };
+        {% for r in history %}
+            stats_history["time"].push("{{ r.time }}");
+            stats_history["user_count"].push({{ r.user_count }});
+            stats_history["current_rps"].push({{ r.current_rps }});
+            stats_history["current_fail_per_sec"].push({{ r.current_fail_per_sec }});
+            stats_history["response_time_percentile_50"].push({{ r.response_time_percentile_50 }});
+            stats_history["response_time_percentile_95"].push({{ r.response_time_percentile_95 }});
+        {% endfor %}
     </script>
     <script type="text/javascript" src="./static/chart.js?v={{ version }}"></script>
     <script type="text/javascript" src="./static/locust.js?v={{ version }}"></script>
