@@ -174,38 +174,41 @@ $("#workers .stats_label").click(function(event) {
     renderWorkerTable(window.report);
 });
 
+function update_stats_charts(){
+    if(stats_history["time"].length > 0){
+        rpsChart.chart.setOption({
+            xAxis: {data: stats_history["time"]},
+            series: [
+                {data: stats_history["current_rps"]},
+                {data: stats_history["current_fail_per_sec"]},
+            ]
+        });
+
+        responseTimeChart.chart.setOption({
+            xAxis: {data: stats_history["time"]},
+            series: [
+                {data: stats_history["response_time_percentile_50"]},
+                {data: stats_history["response_time_percentile_95"]},
+            ]
+        });
+
+        usersChart.chart.setOption({
+            xAxis: {
+                data: stats_history["time"]
+            },
+            series: [
+                {data: stats_history["user_count"]},
+            ]
+        });
+    }
+}
+
 // init charts
 var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS", "Failures/s"], "reqs/s", ['#00ca5a', '#ff6d6d']);
 var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times (ms)", ["Median Response Time", "95% percentile"], "ms");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 charts.push(rpsChart, responseTimeChart, usersChart);
-
-if(stats_history["time"].length > 0){
-    rpsChart.chart.setOption({
-        xAxis: {data: stats_history["time"]},
-        series: [
-            {data: stats_history["current_rps"]},
-            {data: stats_history["current_fail_per_sec"]},
-        ]
-    });
-
-    responseTimeChart.chart.setOption({
-        xAxis: {data: stats_history["time"]},
-        series: [
-            {data: stats_history["response_time_percentile_50"]},
-            {data: stats_history["response_time_percentile_95"]},
-        ]
-    });
-
-    usersChart.chart.setOption({
-        xAxis: {
-            data: stats_history["time"]
-        },
-        series: [
-            {data: stats_history["user_count"]},
-        ]
-    });
-}
+update_stats_charts()
 
 function updateStats() {
     $.get('./stats/requests', function (report) {
@@ -218,9 +221,13 @@ function updateStats() {
             // get total stats row
             var total = report.stats[report.stats.length-1];
             // update charts
-            rpsChart.addValue([total.current_rps, total.current_fail_per_sec], report.user_count);
-            responseTimeChart.addValue([report.current_response_time_percentile_50, report.current_response_time_percentile_95], report.user_count);
-            usersChart.addValue([report.user_count]);
+            stats_history["time"].push(report.user_count);
+            stats_history["user_count"].push(report.user_count);
+            stats_history["current_rps"].push(total.current_rps);
+            stats_history["current_fail_per_sec"].push(total.current_fail_per_sec);
+            stats_history["response_time_percentile_50"].push(report.current_response_time_percentile_50);
+            stats_history["response_time_percentile_95"].push(report.current_response_time_percentile_95);
+            update_stats_charts()
         } else {
             appearStopped();
         }
