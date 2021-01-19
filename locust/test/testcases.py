@@ -19,6 +19,7 @@ from locust.test.mock_logging import MockedLoggingHandler
 
 
 app = Flask(__name__)
+app.jinja_options['extensions'].append('jinja2.ext.do')
 
 
 @app.route("/ultra_fast")
