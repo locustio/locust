@@ -1,6 +1,4 @@
-from jinja2 import Environment, FileSystemLoader
 import os
-import pathlib
 import datetime
 from itertools import chain
 from .stats import sort_stats
