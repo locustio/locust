@@ -188,51 +188,37 @@
     </script>
 
     <script>
-
+        {% include 'stats_data.html' %}
         var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS", "Failures/s"], "reqs/s", ['#00ca5a', '#ff6d6d']);
         var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times (ms)", ["Median Response Time", "95% percentile"], "ms");
         var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 
-        rpsChart.chart.setOption({
-            xAxis: {
-                data: [ {% for r in history %}"{{ r.time }}", {% endfor %} ],
-            },
-            series: [
-                {
-                    data: [ {% for r in history %}{{ r.current_rps }}, {% endfor %} ]
-                },
-                {
-                    data: [ {% for r in history %}{{ r.current_fail_per_sec }}, {% endfor %} ]
-                },
-            ]
-        });
+        if(stats_history["time"].length > 0){
+            rpsChart.chart.setOption({
+                xAxis: {data: stats_history["time"]},
+                series: [
+                    {data: stats_history["current_rps"]},
+                    {data: stats_history["current_fail_per_sec"]},
+                ]
+            });
 
-        responseTimeChart.chart.setOption({
-            xAxis: {
-                data: [ {% for r in history %}"{{ r.time }}", {% endfor %} ],
-            },
-            series: [
-                {
-                    data: [ {% for r in history %}{{ r.response_time_percentile_50 }}, {% endfor %} ]
-                },
-                {
-                    data: [ {% for r in history %}{{ r.response_time_percentile_95 }}, {% endfor %} ]
-                },
-            ]
-        });
+            responseTimeChart.chart.setOption({
+                xAxis: {data: stats_history["time"]},
+                series: [
+                    {data: stats_history["response_time_percentile_50"]},
+                    {data: stats_history["response_time_percentile_95"]},
+                ]
+            });
 
-        usersChart.chart.setOption({
-            xAxis: {
-                data: [ {% for r in history %}"{{ r.time }}", {% endfor %} ],
-            },
-            series: [
-                {
-                    data: [ {% for r in history %}{{ r.user_count }}, {% endfor %} ]
+            usersChart.chart.setOption({
+                xAxis: {
+                    data: stats_history["time"]
                 },
-            ]
-        });
-
-
+                series: [
+                    {data: stats_history["user_count"]},
+                ]
+            });
+        }
     </script>
 </body>
 </html>

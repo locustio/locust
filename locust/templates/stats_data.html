@@ -1,0 +1,17 @@
+var stats_history = {
+    "time": [],
+    "user_count": [],
+    "current_rps": [],
+    "current_fail_per_sec": [],
+    "response_time_percentile_50": [],
+    "response_time_percentile_95": [],
+};
+{% for r in history %}
+    var user_count = {{ r.user_count }};
+    stats_history["time"].push("{{ r.time }}");
+    stats_history["user_count"].push({"value": user_count});
+    stats_history["current_rps"].push({"value": {{ r.current_rps }}, "users": user_count});
+    stats_history["current_fail_per_sec"].push({"value": {{ r.current_fail_per_sec }}, "users": user_count});
+    stats_history["response_time_percentile_50"].push({"value": {{ r.response_time_percentile_50 }}, "users": user_count});
+    stats_history["response_time_percentile_95"].push({"value": {{ r.response_time_percentile_95 }}, "users": user_count});
+{% endfor %}

@@ -390,12 +390,15 @@ class WebUI:
         else:
             worker_count = 0
 
+        stats = self.environment.runner.stats
+
         self.template_args = {
             "state": self.environment.runner.state,
             "is_distributed": is_distributed,
             "user_count": self.environment.runner.user_count,
             "version": version,
             "host": host,
+            "history": stats.history,
             "override_host_warning": override_host_warning,
             "num_users": options and options.num_users,
             "spawn_rate": options and options.spawn_rate,

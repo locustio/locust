@@ -178,7 +178,34 @@ $("#workers .stats_label").click(function(event) {
 var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS", "Failures/s"], "reqs/s", ['#00ca5a', '#ff6d6d']);
 var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times (ms)", ["Median Response Time", "95% percentile"], "ms");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
-charts.push(rpsChart, responseTimeChart, usersChart)
+charts.push(rpsChart, responseTimeChart, usersChart);
+
+if(stats_history["time"].length > 0){
+    rpsChart.chart.setOption({
+        xAxis: {data: stats_history["time"]},
+        series: [
+            {data: stats_history["current_rps"]},
+            {data: stats_history["current_fail_per_sec"]},
+        ]
+    });
+
+    responseTimeChart.chart.setOption({
+        xAxis: {data: stats_history["time"]},
+        series: [
+            {data: stats_history["response_time_percentile_50"]},
+            {data: stats_history["response_time_percentile_95"]},
+        ]
+    });
+
+    usersChart.chart.setOption({
+        xAxis: {
+            data: stats_history["time"]
+        },
+        series: [
+            {data: stats_history["user_count"]},
+        ]
+    });
+}
 
 function updateStats() {
     $.get('./stats/requests', function (report) {
