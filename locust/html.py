@@ -1,8 +1,16 @@
+from jinja2 import Environment, FileSystemLoader
 import os
+import pathlib
 import datetime
 from itertools import chain
 from .stats import sort_stats
-from flask import render_template
+
+
+def render_template(file, **kwargs):
+    templates_path = os.path.join(pathlib.Path(__file__).parent.absolute(), "templates")
+    env = Environment(loader=FileSystemLoader(templates_path), extensions=['jinja2.ext.do'])
+    template = env.get_template(file)
+    return template.render(**kwargs)
 
 
 def get_html_report(environment, show_download_link=True):
