@@ -221,7 +221,7 @@ function updateStats() {
             // get total stats row
             var total = report.stats[report.stats.length-1];
             // update charts
-            stats_history["time"].push(report.user_count);
+            stats_history["time"].push(new Date().toLocaleTimeString());
             stats_history["user_count"].push(report.user_count);
             stats_history["current_rps"].push(total.current_rps);
             stats_history["current_fail_per_sec"].push(total.current_fail_per_sec);
