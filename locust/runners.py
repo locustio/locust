@@ -118,7 +118,9 @@ class Runner:
         """
         Updates the current state
         """
-        logger.debug("Updating state to '%s', old state was '%s'" % (new_state, self.state))
+        # I (cyberwiz) commented out this logging, because it is too noisy even for debug level
+        # Uncomment it if you are specifically debugging state transitions
+        # logger.debug("Updating state to '%s', old state was '%s'" % (new_state, self.state))
         self.state = new_state
 
     def cpu_log_warning(self):
