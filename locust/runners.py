@@ -330,7 +330,10 @@ class Runner:
             new_state = self.environment.shape_class.tick()
             if new_state is None:
                 logger.info("Shape test stopping")
-                self.stop()
+                if self.environment.parsed_options.headless:
+                    self.quit()
+                else:
+                    self.stop()
             elif self.shape_last_state == new_state:
                 gevent.sleep(1)
             else:
