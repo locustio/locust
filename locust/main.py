@@ -407,10 +407,10 @@ def main():
         if runner is not None:
             runner.quit()
 
-        print_stats(runner.stats, current=False)
-        print_percentile_stats(runner.stats)
-
-        print_error_report(runner.stats)
+        if not isinstance(runner, locust.runners.WorkerRunner):
+            print_stats(runner.stats, current=False)
+            print_percentile_stats(runner.stats)
+            print_error_report(runner.stats)
 
         sys.exit(code)
 
