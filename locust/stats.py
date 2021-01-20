@@ -784,7 +784,7 @@ def stats_history(runner):
         stats = runner.stats
         if not stats.total.use_response_times_cache:
             break
-        if runner.state != 'stopped':
+        if runner.state != "stopped":
             r = {
                 "time": datetime.datetime.now().strftime("%H:%M:%S"),
                 "current_rps": stats.total.current_rps or 0,
@@ -891,14 +891,7 @@ class StatsCSV:
 
     def _exceptions_data_rows(self, csv_writer):
         for exc in self.environment.runner.exceptions.values():
-            csv_writer.writerow(
-                [
-                    exc["count"],
-                    exc["msg"],
-                    exc["traceback"],
-                    ", ".join(exc["nodes"])
-                ]
-            )
+            csv_writer.writerow([exc["count"], exc["msg"], exc["traceback"], ", ".join(exc["nodes"])])
 
 
 class StatsCSVFileWriter(StatsCSV):

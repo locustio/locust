@@ -99,7 +99,7 @@ class WebUI:
         self.tls_key = tls_key
         app = Flask(__name__)
         self.app = app
-        app.jinja_options['extensions'].append('jinja2.ext.do')
+        app.jinja_options["extensions"].append("jinja2.ext.do")
         app.debug = True
         app.root_path = os.path.dirname(os.path.abspath(__file__))
         self.app.config["BASIC_AUTH_ENABLED"] = False
