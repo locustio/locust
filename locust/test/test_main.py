@@ -279,6 +279,7 @@ class LoadTestShape(LoadTestShape):
             )
             self.assertIn("Shape test updating to 10 users at 1.00 spawn rate", output)
             self.assertIn("Cleaning up runner...", output)
+            self.assertIn("Quitting...", output)
 
     def test_web_options(self):
         port = get_free_tcp_port()
