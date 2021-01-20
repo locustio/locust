@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.4.2
+=====
+
+* Multiple improvements for charting including tooltips etc
+* Added --html option to save HTML report https://github.com/locustio/locust/pull/1637
+* Lots of other small fixes
+
 1.4.1
 =====
 
