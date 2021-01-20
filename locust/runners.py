@@ -330,7 +330,7 @@ class Runner:
             new_state = self.environment.shape_class.tick()
             if new_state is None:
                 logger.info("Shape test stopping")
-                if self.environment.parsed_options.headless:
+                if self.environment.parsed_options and self.environment.parsed_options.headless:
                     self.quit()
                 else:
                     self.stop()
