@@ -213,25 +213,28 @@ update_stats_charts()
 function updateStats() {
     $.get('./stats/requests', function (report) {
         window.report = report;
+        try{
+            renderTable(report);
+            renderWorkerTable(report);
 
-        renderTable(report);
-        renderWorkerTable(report);
-
-        if (report.state !== "stopped"){
-            // get total stats row
-            var total = report.stats[report.stats.length-1];
-            // update charts
-            stats_history["time"].push(new Date().toLocaleTimeString());
-            stats_history["user_count"].push(report.user_count);
-            stats_history["current_rps"].push(total.current_rps);
-            stats_history["current_fail_per_sec"].push(total.current_fail_per_sec);
-            stats_history["response_time_percentile_50"].push(report.current_response_time_percentile_50);
-            stats_history["response_time_percentile_95"].push(report.current_response_time_percentile_95);
-            update_stats_charts()
-        } else {
-            appearStopped();
+            if (report.state !== "stopped"){
+                // get total stats row
+                var total = report.stats[report.stats.length-1];
+                // update charts
+                stats_history["time"].push(new Date().toLocaleTimeString());
+                stats_history["user_count"].push(report.user_count);
+                stats_history["current_rps"].push(total.current_rps);
+                stats_history["current_fail_per_sec"].push(total.current_fail_per_sec);
+                stats_history["response_time_percentile_50"].push(report.current_response_time_percentile_50);
+                stats_history["response_time_percentile_95"].push(report.current_response_time_percentile_95);
+                update_stats_charts()
+            } else {
+                appearStopped();
+            }
+        } catch(i){
+            console.debug(i);
         }
-
+    }).always(function() {
         setTimeout(updateStats, 2000);
     });
 }
