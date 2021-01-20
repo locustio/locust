@@ -5,12 +5,6 @@ from gevent.pool import Group
 from locust.clients import HttpSession
 from locust.exception import LocustError, StopUser
 from locust.util import deprecation
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from locust.env import Environment
-
 from .task import (
     TaskSet,
     DefaultTaskSet,
@@ -105,7 +99,7 @@ class User(object, metaclass=UserMeta):
     abstract = True
     """If abstract is True, the class is meant to be subclassed, and locust will not spawn users of this class during a test."""
 
-    environment: Environment = None
+    environment: "Environment" = None
     """A reference to the :py:attr:`environment <locust.Environment>` in which this locust is running"""
 
     client = None
