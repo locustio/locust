@@ -417,17 +417,15 @@ def main():
     # install SIGTERM handler
     def sig_term_handler():
         logger.info("Got SIGTERM signal")
-        shutdown()
 
     gevent.signal_handler(signal.SIGTERM, sig_term_handler)
 
     try:
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
+    finally:
         if options.html_file:
             html_report = get_html_report(environment, show_download_link=False)
-            with open(options.html_file, "w+") as file:
-                file.write(html_report)
-        shutdown()
-    except KeyboardInterrupt:
+            with open(options.html_file, "wb+") as file:
+                file.write(html_report.encode("utf-8"))
         shutdown()
