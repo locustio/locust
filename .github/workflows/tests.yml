@@ -42,3 +42,14 @@ jobs:
         run: echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
       - run: pip install tox codecov
       - run: tox -e ${{ matrix.tox }}
+  
+  verify_docker_build:
+    name: Verify Docker image build
+    needs: tests
+    steps:
+      - uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./Dockerfile
+          push: false
+          tags: locustio/locust:latest
