@@ -426,7 +426,7 @@ def main():
         main_greenlet.join()
         if options.html_file:
             html_report = get_html_report(environment, show_download_link=False)
-            with open(options.html_file, "w+") as file:
+            with open(options.html_file, "w", encoding="utf-8") as file:
                 file.write(html_report)
         shutdown()
     except KeyboardInterrupt:
