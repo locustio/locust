@@ -426,6 +426,6 @@ def main():
     finally:
         if options.html_file:
             html_report = get_html_report(environment, show_download_link=False)
-            with open(options.html_file, "wb+") as file:
-                file.write(html_report.encode("utf-8"))
+            with open(options.html_file, "w", encoding="utf-8") as file:
+                file.write(html_report)
         shutdown()
