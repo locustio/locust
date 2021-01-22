@@ -255,17 +255,16 @@ class LocustProcessIntegrationTest(TestCase):
             self.assertIn("Shutting down (exit code 0), bye", stderr)
 
     def test_default_headless_spawn_options_with_shape(self):
-        content = (
-            MOCK_LOUCSTFILE_CONTENT
-            + """
-class LoadTestShape(LoadTestShape):
-    def tick(self):
-        run_time = self.get_run_time()
-        if run_time < 2:
-                return (10, 1)
+        content = MOCK_LOUCSTFILE_CONTENT + textwrap.dedent(
+            """
+            class LoadTestShape(LoadTestShape):
+                def tick(self):
+                    run_time = self.get_run_time()
+                    if run_time < 2:
+                            return (10, 1)
 
-        return None
-        """
+                    return None
+            """
         )
         with mock_locustfile(content=content) as mocked:
             output = (
@@ -279,7 +278,6 @@ class LoadTestShape(LoadTestShape):
             )
             self.assertIn("Shape test updating to 10 users at 1.00 spawn rate", output)
             self.assertIn("Cleaning up runner...", output)
-            self.assertIn("Quitting...", output)
 
     def test_web_options(self):
         port = get_free_tcp_port()
