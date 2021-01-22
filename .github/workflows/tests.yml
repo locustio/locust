@@ -46,6 +46,7 @@ jobs:
   verify_docker_build:
     name: Verify Docker image build
     needs: tests
+    runs-on: ubuntu-latest
     steps:
       - uses: docker/build-push-action@v2
         with:
