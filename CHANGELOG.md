@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.4.2](https://github.com/locustio/locust/tree/1.4.2) (2021-01-20)
+## [1.4.2](https://github.com/locustio/locust/tree/1.4.2) (2021-01-26)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.4.1...1.4.2)
 
@@ -8,6 +8,7 @@
 
 - Report charts plot data points after the test has ended [\#1677](https://github.com/locustio/locust/issues/1677)
 - SetConsoleMode throws an error when locust is run from Jenkins Powershell [\#1654](https://github.com/locustio/locust/issues/1654)
+- locust should exit when a load shape returns None in headless mode [\#1653](https://github.com/locustio/locust/issues/1653)
 - test\_stop is fired twice when Locust is running in –master/worker mode [\#1638](https://github.com/locustio/locust/issues/1638)
 
 **Closed issues:**
@@ -18,6 +19,9 @@
 
 **Merged pull requests:**
 
+- Verify docker build & create PyPI releases through Github Actions when tags are pushed [\#1687](https://github.com/locustio/locust/pull/1687) ([heyman](https://github.com/heyman))
+- Use Github Actions for CI [\#1686](https://github.com/locustio/locust/pull/1686) ([heyman](https://github.com/heyman))
+- Shutdown workers when using LoadTestShape and headless mode [\#1683](https://github.com/locustio/locust/pull/1683) ([max-rocket-internet](https://github.com/max-rocket-internet))
 - Stats charts data persistance [\#1681](https://github.com/locustio/locust/pull/1681) ([aek](https://github.com/aek))
 - Fix issues with render\_template [\#1680](https://github.com/locustio/locust/pull/1680) ([aek](https://github.com/aek))
 - Improve stats data sharing from python to js [\#1679](https://github.com/locustio/locust/pull/1679) ([aek](https://github.com/aek))
@@ -1498,7 +1502,6 @@
 - Update what-is-locust.rst [\#247](https://github.com/locustio/locust/pull/247) ([frvi](https://github.com/frvi))
 - Fixed typo in the quickstart doc. [\#245](https://github.com/locustio/locust/pull/245) ([hirokiky](https://github.com/hirokiky))
 - Fixed link to ESN's Twitter page [\#227](https://github.com/locustio/locust/pull/227) ([gentlecat](https://github.com/gentlecat))
-- Fix a missing backtick [\#221](https://github.com/locustio/locust/pull/221) ([chrisramsay](https://github.com/chrisramsay))
 - Fix typo in docs [\#216](https://github.com/locustio/locust/pull/216) ([gregeinfrank](https://github.com/gregeinfrank))
 - Typos in docs. [\#193](https://github.com/locustio/locust/pull/193) ([jfacorro](https://github.com/jfacorro))
 - recieve -\> receive; locsutfile -\> locustfile [\#183](https://github.com/locustio/locust/pull/183) ([stevetjoa](https://github.com/stevetjoa))
@@ -1534,6 +1537,7 @@
 
 **Merged pull requests:**
 
+- Fix a missing backtick [\#221](https://github.com/locustio/locust/pull/221) ([chrisramsay](https://github.com/chrisramsay))
 - Add start and stop hatching events [\#199](https://github.com/locustio/locust/pull/199) ([skinp](https://github.com/skinp))
 - fixed typo: your're -\> you are [\#182](https://github.com/locustio/locust/pull/182) ([stevetjoa](https://github.com/stevetjoa))
 - choosed -\> chosen [\#181](https://github.com/locustio/locust/pull/181) ([mrjf](https://github.com/mrjf))
