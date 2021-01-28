@@ -222,11 +222,11 @@ function updateStats() {
                 var total = report.stats[report.stats.length-1];
                 // update charts
                 stats_history["time"].push(new Date().toLocaleTimeString());
-                stats_history["user_count"].push(report.user_count);
-                stats_history["current_rps"].push(total.current_rps);
-                stats_history["current_fail_per_sec"].push(total.current_fail_per_sec);
-                stats_history["response_time_percentile_50"].push(report.current_response_time_percentile_50);
-                stats_history["response_time_percentile_95"].push(report.current_response_time_percentile_95);
+                stats_history["user_count"].push({"value": report.user_count});
+                stats_history["current_rps"].push({"value": total.current_rps, "users": report.user_count});
+                stats_history["current_fail_per_sec"].push({"value": total.current_fail_per_sec, "users": report.user_count});
+                stats_history["response_time_percentile_50"].push({"value": report.current_response_time_percentile_50, "users": report.user_count});
+                stats_history["response_time_percentile_95"].push({"value": report.current_response_time_percentile_95, "users": report.user_count});
                 update_stats_charts()
             } else {
                 appearStopped();
