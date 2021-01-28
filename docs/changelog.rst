@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.4.3
+=====
+
+* Fix bug that broke the tooltips for charts in the Web UI 
+
 1.4.2
 =====
 
