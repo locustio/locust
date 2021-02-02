@@ -218,7 +218,9 @@ def main():
             )
 
     # create locust Environment
-    environment = create_environment(user_classes, options, events=locust.events, shape_class=shape_class, scenario_classes=scenario_classes)
+    environment = create_environment(
+        user_classes, options, events=locust.events, shape_class=shape_class, scenario_classes=scenario_classes
+    )
 
     if shape_class and (options.num_users or options.spawn_rate):
         logger.warning(

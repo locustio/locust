@@ -314,7 +314,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.environment.scenario_classes = [Scenario1]
         response = requests.get("http://127.0.0.1:%i/" % self.web_port)
         self.assertEqual(200, response.status_code)
-        self.assertIn("<option name=\"My Scenario 1\">", response.content.decode("utf-8"))
+        self.assertIn('<option name="My Scenario 1">', response.content.decode("utf-8"))
 
     def test_swarm_with_scenario(self):
         class MyUser(User):

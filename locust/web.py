@@ -142,7 +142,11 @@ class WebUI:
                 environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
 
             if request.form.get("scenario"):
-                self.scenario = [scenario_class for scenario_class in self.environment.scenario_classes if request.form.get("scenario") == scenario_class.name][0]
+                self.scenario = [
+                    scenario_class
+                    for scenario_class in self.environment.scenario_classes
+                    if request.form.get("scenario") == scenario_class.name
+                ][0]
 
             if environment.shape_class:
                 environment.runner.start_shape(scenario=self.scenario)
@@ -153,12 +157,14 @@ class WebUI:
             spawn_rate = float(request.form["spawn_rate"])
 
             environment.runner.start(user_count, spawn_rate, scenario=self.scenario)
-            return jsonify({
-                "success": True,
-                "message": "Swarming started",
-                "host": environment.host,
-                "scenario": self.scenario_name
-            })
+            return jsonify(
+                {
+                    "success": True,
+                    "message": "Swarming started",
+                    "host": environment.host,
+                    "scenario": self.scenario_name,
+                }
+            )
 
         @app.route("/stop")
         @self.auth_required_if_enabled
