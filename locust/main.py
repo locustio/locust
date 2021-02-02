@@ -358,7 +358,7 @@ def main():
     if options.run_time:
         logger.info("Run time limit set to %s seconds" % options.run_time)
         spawn_run_time_limit_greenlet()
-    elif options.headless and not options.worker:
+    elif options.headless and not options.worker and not environment.shape_class:
         logger.info("No run time limit set, use CTRL+C to interrupt.")
     else:
         pass  # dont log anything - not having a time limit is normal when not running headless
@@ -425,10 +425,10 @@ def main():
         if runner is not None:
             runner.quit()
 
-        print_stats(runner.stats, current=False)
-        print_percentile_stats(runner.stats)
-
-        print_error_report(runner.stats)
+        if not isinstance(runner, locust.runners.WorkerRunner):
+            print_stats(runner.stats, current=False)
+            print_percentile_stats(runner.stats)
+            print_error_report(runner.stats)
 
         sys.exit(code)
 
@@ -444,7 +444,7 @@ def main():
         main_greenlet.join()
         if options.html_file:
             html_report = get_html_report(environment, show_download_link=False)
-            with open(options.html_file, "w+") as file:
+            with open(options.html_file, "w", encoding="utf-8") as file:
                 file.write(html_report)
         shutdown()
     except KeyboardInterrupt:

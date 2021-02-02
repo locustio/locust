@@ -99,6 +99,7 @@ class WebUI:
         self.tls_key = tls_key
         app = Flask(__name__)
         self.app = app
+        app.jinja_options["extensions"].append("jinja2.ext.do")
         app.debug = True
         app.root_path = os.path.dirname(os.path.abspath(__file__))
         self.app.config["BASIC_AUTH_ENABLED"] = False
@@ -403,12 +404,15 @@ class WebUI:
         else:
             worker_count = 0
 
+        stats = self.environment.runner.stats
+
         self.template_args = {
             "state": self.environment.runner.state,
             "is_distributed": is_distributed,
             "user_count": self.environment.runner.user_count,
             "version": version,
             "host": host,
+            "history": stats.history,
             "override_host_warning": override_host_warning,
             "num_users": options and options.num_users,
             "spawn_rate": options and options.spawn_rate,

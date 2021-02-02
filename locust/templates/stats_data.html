@@ -1,0 +1,9 @@
+{% set time_data = [] %}{% set user_count_data = [] %}{% set current_rps_data = [] %}{% set current_fail_per_sec_data = [] %}{% set response_time_percentile_50_data = [] %}{% set response_time_percentile_95_data = [] %}{% for r in history %}{% do time_data.append(r.time) %}{% do user_count_data.append({"value": r.user_count}) %}{% do current_rps_data.append({"value": r.current_rps, "users": r.user_count}) %}{% do current_fail_per_sec_data.append({"value": r.current_fail_per_sec, "users": r.user_count}) %}{% do response_time_percentile_50_data.append({"value": r.response_time_percentile_50, "users": r.user_count}) %}{% do response_time_percentile_95_data.append({"value": r.response_time_percentile_95, "users": r.user_count}) %}{% endfor %}
+var stats_history = {
+    "time": {{ time_data | tojson }},
+    "user_count": {{ user_count_data | tojson }},
+    "current_rps": {{ current_rps_data | tojson }},
+    "current_fail_per_sec": {{ current_fail_per_sec_data | tojson }},
+    "response_time_percentile_50": {{ response_time_percentile_50_data | tojson }},
+    "response_time_percentile_95": {{ response_time_percentile_95_data | tojson }},
+};

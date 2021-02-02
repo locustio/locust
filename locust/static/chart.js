@@ -47,7 +47,9 @@
                                 var param = params[i];
                                 str += '<br><span style="color:' + param.color + ';">' + param.seriesName + ': ' + param.data.value + '</span>';
                             }
-                            str += '<br><span style="color:#a3b3ac;">Users: ' + param.data.users + '</span>';
+                            if(param.data.users != undefined){
+                                str += '<br><span style="color:#a3b3ac;">Users: ' + param.data.users + '</span>';
+                            }
                             return str;
                         } else {
                             return "No data";

@@ -121,7 +121,9 @@ class Runner:
         """
         Updates the current state
         """
-        logger.debug("Updating state to '%s', old state was '%s'" % (new_state, self.state))
+        # I (cyberwiz) commented out this logging, because it is too noisy even for debug level
+        # Uncomment it if you are specifically debugging state transitions
+        # logger.debug("Updating state to '%s', old state was '%s'" % (new_state, self.state))
         self.state = new_state
 
     def cpu_log_warning(self):
@@ -334,7 +336,10 @@ class Runner:
             new_state = self.environment.shape_class.tick()
             if new_state is None:
                 logger.info("Shape test stopping")
-                self.stop()
+                if self.environment.parsed_options and self.environment.parsed_options.headless:
+                    self.quit()
+                else:
+                    self.stop()
             elif self.shape_last_state == new_state:
                 gevent.sleep(1)
             else:

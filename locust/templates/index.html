@@ -175,7 +175,6 @@
             </div>
             <div id="charts" style="display:none;">
                 <div class="charts-container"></div>
-                <p class="note">Note: There is no persistence of these charts, if you refresh this page, new charts will be created.</p>
             </div>
             <div style="display:none;">
                 <table id="errors" class="stats">
@@ -326,6 +325,9 @@
         </tr>
         <% alternate = !alternate; %>
         ]]>
+    </script>
+    <script type="text/javascript">
+        {% include 'stats_data.html' %}
     </script>
     <script type="text/javascript" src="./static/chart.js?v={{ version }}"></script>
     <script type="text/javascript" src="./static/locust.js?v={{ version }}"></script>
