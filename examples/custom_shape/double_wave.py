@@ -17,7 +17,8 @@ class WebsiteUser(HttpUser):
 class DoubleWave(LoadTestShape):
     """
     A shape to immitate some specific user behaviour. In this example, midday
-    and evening meal times.
+    and evening meal times. First peak of users appear at time_limit/3 and
+    second peak appears at 2*time_limit/3
 
     Settings:
         min_users -- minimum users
