@@ -394,11 +394,32 @@ You can even avoid logging a request at all by throwing an exception and then ca
         if response.status_code == 404:
             raise RescheduleTask()
 
+.. _rest:
+
+REST/JSON APIs
+--------------
+
+Here's an example of how to call a REST API and validate the response:
+
+.. code-block:: python
+    
+    from json import JSONDecodeError
+    ...
+    with self.client.post("/", json={"foo": 42, "bar": None}, catch_response=True) as response:
+        try:
+            if response.json()["greeting"] != "hello":
+                response.failure("Did not get expected value in greeting")
+        except JSONDecodeError:
+            response.failure("Response could not be decoded as JSON")
+        except KeyError:
+            response.failure("Response did not contain expected key 'greeting'")
+
+
 
 .. _name-parameter:
 
-Grouping requests to URLs with dynamic parameters
--------------------------------------------------
+Grouping requests
+-----------------
 
 It's very common for websites to have pages whose URLs contain some kind of dynamic parameter(s). 
 Often it makes sense to group these URLs together in User's statistics. This can be done
