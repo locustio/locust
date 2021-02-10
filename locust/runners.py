@@ -740,7 +740,9 @@ class MasterRunner(DistributedRunner):
                 self.clients[msg.node_id].state = STATE_RUNNING
                 self.clients[msg.node_id].user_class_occurrences = msg.data["user_class_occurrences"]
                 if len(self.clients.spawning) == 0:
-                    self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_class_occurrences.values()))
+                    self.environment.events.spawning_complete.fire(
+                        user_count=sum(self.target_user_class_occurrences.values())
+                    )
             elif msg.type == "quit":
                 if msg.node_id in self.clients:
                     del self.clients[msg.node_id]
