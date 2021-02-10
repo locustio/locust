@@ -94,7 +94,7 @@ class Runner:
         self.connection_broken = False
 
         # register listener that resets stats when spawning is complete
-        def on_spawning_complete(user_class_occurrences):
+        def on_spawning_complete(user_count):
             self.update_state(STATE_RUNNING)
             if environment.reset_stats:
                 logger.info("Resetting stats\n")
@@ -306,7 +306,7 @@ class Runner:
                 self.spawn_users(user_classes_spawn_count, wait)
                 self.stop_users(user_classes_stop_count)
 
-        self.environment.events.spawning_complete.fire(user_class_occurrences=self.target_user_class_occurrences)
+        self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_class_occurrences.values()))
 
     def start_shape(self):
         if self.shape_greenlet:
@@ -740,7 +740,7 @@ class MasterRunner(DistributedRunner):
                 self.clients[msg.node_id].state = STATE_RUNNING
                 self.clients[msg.node_id].user_class_occurrences = msg.data["user_class_occurrences"]
                 if len(self.clients.spawning) == 0:
-                    self.environment.events.spawning_complete.fire(user_class_occurrences=self.user_class_occurrences)
+                    self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_class_occurrences.values()))
             elif msg.type == "quit":
                 if msg.node_id in self.clients:
                     del self.clients[msg.node_id]
@@ -790,9 +790,10 @@ class WorkerRunner(DistributedRunner):
         self.greenlet.spawn(self.stats_reporter).link_exception(greenlet_exception_handler)
 
         # register listener for when all users have spawned, and report it to the master node
-        def on_spawning_complete(user_class_occurrences):
+        def on_spawning_complete(user_count):
+            assert user_count == sum(self.user_class_occurrences.values())
             self.client.send(
-                Message("spawning_complete", {"user_class_occurrences": user_class_occurrences}, self.client_id)
+                Message("spawning_complete", {"user_class_occurrences": self.user_class_occurrences}, self.client_id)
             )
             self.worker_state = STATE_RUNNING
 
@@ -848,7 +849,7 @@ class WorkerRunner(DistributedRunner):
         self.spawn_users(user_classes_spawn_count)
         self.stop_users(user_classes_stop_count)
 
-        self.environment.events.spawning_complete.fire(user_class_occurrences=self.user_class_occurrences)
+        self.environment.events.spawning_complete.fire(user_count=sum(self.user_class_occurrences.values()))
 
     def heartbeat(self):
         while True:
