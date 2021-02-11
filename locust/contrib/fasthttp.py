@@ -302,6 +302,9 @@ class FastHttpUser(User):
     insecure: bool = True
     """Parameter passed to FastHttpSession. Default True, meaning no SSL verification."""
 
+    concurrency: int = 1
+    """Parameter passed to FastHttpSession. Describes number of concurrent request allowed by the FastHttpSession. Default 1."""
+
     abstract = True
     """Dont register this as a User class that can be run by itself"""
 
@@ -322,6 +325,7 @@ class FastHttpUser(User):
             max_redirects=self.max_redirects,
             max_retries=self.max_retries,
             insecure=self.insecure,
+            concurrency=self.concurrency,
         )
 
 
