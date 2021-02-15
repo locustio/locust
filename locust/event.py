@@ -48,7 +48,7 @@ class EventHook:
 
 
 class Events:
-    request_success = EventHook
+    request_success: EventHook
     """
     Fired when a request is completed successfully. This event is typically used to report requests
     when writing custom clients for locust.
@@ -61,7 +61,7 @@ class Events:
     :param response_length: Content-length of the response
     """
 
-    request_failure = EventHook
+    request_failure: EventHook
     """
     Fired when a request fails. This event is typically used to report failed requests when writing
     custom clients for locust.
@@ -75,7 +75,7 @@ class Events:
     :param exception: Exception instance that was thrown
     """
 
-    user_error = EventHook
+    user_error: EventHook
     """
     Fired when an exception occurs inside the execution of a User class.
 
@@ -86,7 +86,7 @@ class Events:
     :param tb: Traceback object (from e.__traceback__)
     """
 
-    report_to_master = EventHook
+    report_to_master: EventHook
     """
     Used when Locust is running in --worker mode. It can be used to attach
     data to the dicts that are regularly sent to the master. It's fired regularly when a report
@@ -100,7 +100,7 @@ class Events:
     :param data: Data dict that can be modified in order to attach data that should be sent to the master.
     """
 
-    worker_report = EventHook
+    worker_report: EventHook
     """
     Used when Locust is running in --master mode and is fired when the master
     server receives a report from a Locust worker server.
@@ -113,7 +113,7 @@ class Events:
     :param data: Data dict with the data from the worker node
     """
 
-    spawning_complete = EventHook
+    spawning_complete: EventHook
     """
     Fired when all simulated users has been spawned.
 
@@ -122,7 +122,7 @@ class Events:
     :param user_count: Number of users that were spawned
     """
 
-    quitting = EventHook
+    quitting: EventHook
     """
     Fired when the locust process is exiting
 
@@ -131,7 +131,7 @@ class Events:
     :param environment: Environment instance
     """
 
-    init = EventHook
+    init: EventHook
     """
     Fired when Locust is started, once the Environment instance and locust runner instance
     have been created. This hook can be used by end-users' code to run code that requires access to
@@ -143,7 +143,7 @@ class Events:
     :param environment: Environment instance
     """
 
-    init_command_line_parser = EventHook
+    init_command_line_parser: EventHook
     """
     Event that can be used to add command line options to Locust
 
@@ -152,25 +152,25 @@ class Events:
     :param parser: ArgumentParser instance
     """
 
-    test_start = EventHook
+    test_start: EventHook
     """
     Fired when a new load test is started. It's not fired again if the number of
     users change during a test. When running locust distributed the event is only fired
     on the master node and not on each worker node.
     """
 
-    test_stop = EventHook
+    test_stop: EventHook
     """
     Fired when a load test is stopped. When running locust distributed the event
     is only fired on the master node and not on each worker node.
     """
 
-    reset_stats = EventHook
+    reset_stats: EventHook
     """
     Fired when the Reset Stats button is clicked in the web UI.
     """
 
     def __init__(self):
         for name, value in vars(type(self)).items():
-            if value == EventHook:
+            if self.__annotations__.get(name) == EventHook or value == EventHook:
                 setattr(self, name, value())
