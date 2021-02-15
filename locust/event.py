@@ -172,5 +172,6 @@ class Events:
 
     def __init__(self):
         for name, value in vars(type(self)).items():
-            if self.__annotations__.get(name) == EventHook or value == EventHook:
+            value = self.__annotations__.get(name, value) == EventHook
+            if value == EventHook:
                 setattr(self, name, value())
