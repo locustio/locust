@@ -171,7 +171,11 @@ class Events:
     """
 
     def __init__(self):
+        # For backwarde compatiblilty use also values of class attributes
         for name, value in vars(type(self)).items():
-            value = self.__annotations__.get(name, value) == EventHook
+            if value == EventHook:
+                setattr(self, name, value())
+
+        for name, value in self.__annotations__.items():
             if value == EventHook:
                 setattr(self, name, value())
