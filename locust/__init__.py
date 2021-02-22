@@ -26,6 +26,7 @@ __all__ = (
     "constant",
     "constant_pacing",
     "events",
+    "LoadTestShape",
 )
 
 # Used for raising a DeprecationWarning if old Locust/HttpLocust is used
