@@ -22,6 +22,7 @@ from locust.runners import (
     STATE_SPAWNING,
     STATE_RUNNING,
     STATE_MISSING,
+    STATE_STOPPING,
     STATE_STOPPED,
 )
 from locust.stats import RequestStats
@@ -754,20 +755,45 @@ class TestMasterRunner(LocustTestCase):
             master = self.get_runner()
             server.mocked_send(Message("client_ready", None, "fake_client1"))
             server.mocked_send(Message("client_ready", None, "fake_client2"))
+            server.mocked_send(Message("client_ready", None, "fake_client3"))
 
-            master.start(1, 2)
+            master.start(3, 3)
             server.mocked_send(Message("spawning", None, "fake_client1"))
             server.mocked_send(Message("spawning", None, "fake_client2"))
+            server.mocked_send(Message("spawning", None, "fake_client3"))
 
-            sleep(0.3)
-            server.mocked_send(Message("heartbeat", {"state": STATE_RUNNING, "current_cpu_usage": 50}, "fake_client1"))
+            sleep(0.2)
+            server.mocked_send(
+                Message("heartbeat", {"state": STATE_RUNNING, "current_cpu_usage": 50, "count": 1}, "fake_client1")
+            )
+            server.mocked_send(
+                Message("heartbeat", {"state": STATE_RUNNING, "current_cpu_usage": 50, "count": 1}, "fake_client2")
+            )
+            server.mocked_send(
+                Message("heartbeat", {"state": STATE_RUNNING, "current_cpu_usage": 50, "count": 1}, "fake_client3")
+            )
 
-            sleep(0.3)
-            self.assertEqual(1, len(master.clients.missing))
-            self.assertNotEqual(STATE_STOPPED, master.state, "Not all workers went missing but test stopped anyway.")
+            sleep(0.2)
+            self.assertEqual(0, len(master.clients.missing))
+            self.assertEqual(3, master.worker_count)
+            self.assertNotIn(
+                master.state, [STATE_STOPPED, STATE_STOPPING], "Not all workers went missing but test stopped anyway."
+            )
 
-            sleep(0.3)
+            server.mocked_send(
+                Message("heartbeat", {"state": STATE_RUNNING, "current_cpu_usage": 50, "count": 1}, "fake_client1")
+            )
+
+            sleep(0.4)
             self.assertEqual(2, len(master.clients.missing))
+            self.assertEqual(1, master.worker_count)
+            self.assertNotIn(
+                master.state, [STATE_STOPPED, STATE_STOPPING], "Not all workers went missing but test stopped anyway."
+            )
+
+            sleep(0.2)
+            self.assertEqual(3, len(master.clients.missing))
+            self.assertEqual(0, master.worker_count)
             self.assertEqual(STATE_STOPPED, master.state, "All workers went missing but test didn't stop.")
 
     def test_master_total_stats(self):

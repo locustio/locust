@@ -608,7 +608,7 @@ class MasterRunner(DistributedRunner):
                     logger.info("Worker %s failed to send heartbeat, setting state to missing." % str(client.id))
                     client.state = STATE_MISSING
                     client.user_count = 0
-                    if self.worker_count - len(self.clients.missing) <= 0:
+                    if self.worker_count <= 0:
                         logger.info("The last worker went missing, stopping test.")
                         self.stop()
                         self.check_stopped()
@@ -654,7 +654,15 @@ class MasterRunner(DistributedRunner):
                 if msg.node_id in self.clients:
                     c = self.clients[msg.node_id]
                     c.heartbeat = HEARTBEAT_LIVENESS
-                    c.state = msg.data["state"]
+                    client_state = msg.data["state"]
+                    if c.state == STATE_MISSING:
+                        logger.info(
+                            "Worker %s self-healed with heartbeat, setting state to %s." % (str(c.id), client_state)
+                        )
+                        user_count = msg.data.get("count")
+                        if user_count:
+                            c.user_count = user_count
+                    c.state = client_state
                     c.cpu_usage = msg.data["current_cpu_usage"]
                     if not c.cpu_warning_emitted and c.cpu_usage > 90:
                         self.worker_cpu_warning_emitted = True  # used to fail the test in the end
@@ -751,7 +759,11 @@ class WorkerRunner(DistributedRunner):
                 self.client.send(
                     Message(
                         "heartbeat",
-                        {"state": self.worker_state, "current_cpu_usage": self.current_cpu_usage},
+                        {
+                            "state": self.worker_state,
+                            "current_cpu_usage": self.current_cpu_usage,
+                            "count": self.user_count,
+                        },
                         self.client_id,
                     )
                 )
