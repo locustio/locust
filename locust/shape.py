@@ -1,5 +1,6 @@
 import time
 from typing import Optional, Tuple
+from .runners import Runner
 
 
 class LoadTestShape:
@@ -7,6 +8,9 @@ class LoadTestShape:
     A simple load test shape class used to control the shape of load generated
     during a load test.
     """
+
+    _runner: Runner = None
+    """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
 
     def __init__(self):
         self.start_time = time.monotonic()
@@ -22,6 +26,12 @@ class LoadTestShape:
         Calculates run time in seconds of the load test
         """
         return time.monotonic() - self.start_time
+
+    def get_current_user_count(self):
+        """
+        Returns current actual number of users from the runner
+        """
+        return self._runner.user_count
 
     def tick(self) -> Optional[Tuple[int, float]]:
         """

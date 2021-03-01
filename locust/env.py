@@ -99,6 +99,11 @@ class Environment:
         if self.runner is not None:
             raise RunnerAlreadyExistsError("Environment.runner already exists (%s)" % self.runner)
         self.runner = runner_class(self, *args, **kwargs)
+
+        # Attach the runner to the shape class so that the shape class can access user count state
+        if self.shape_class:
+            self.shape_class._runner = self.runner
+
         return self.runner
 
     def create_local_runner(self):
