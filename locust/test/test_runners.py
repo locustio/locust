@@ -567,7 +567,8 @@ class TestMasterWorkerRunners(LocustTestCase):
                     return None
 
         with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
-            master_env = Environment(user_classes=[TestUser], shape_class=TestShape())
+            test_shape = TestShape()
+            master_env = Environment(user_classes=[TestUser], shape_class=test_shape)
             master_env.shape_class.reset_time()
             master = master_env.create_master_runner("*", 0)
 
@@ -586,18 +587,30 @@ class TestMasterWorkerRunners(LocustTestCase):
             # Ensure workers have connected and started the correct amounf of users
             for worker in workers:
                 self.assertEqual(3, worker.user_count, "Shape test has not reached stage 1")
+                self.assertEqual(
+                    9, test_shape.get_current_user_count(), "Shape is not seeing stage 1 runner user count correctly"
+                )
             # Ensure new stage with more users has been reached
             sleep(2)
             for worker in workers:
                 self.assertEqual(7, worker.user_count, "Shape test has not reached stage 2")
+                self.assertEqual(
+                    21, test_shape.get_current_user_count(), "Shape is not seeing stage 2 runner user count correctly"
+                )
             # Ensure new stage with less users has been reached
             sleep(2)
             for worker in workers:
                 self.assertEqual(1, worker.user_count, "Shape test has not reached stage 3")
+                self.assertEqual(
+                    3, test_shape.get_current_user_count(), "Shape is not seeing stage 3 runner user count correctly"
+                )
             # Ensure test stops at the end
             sleep(2)
             for worker in workers:
                 self.assertEqual(0, worker.user_count, "Shape test has not stopped")
+                self.assertEqual(
+                    0, test_shape.get_current_user_count(), "Shape is not seeing stopped runner user count correctly"
+                )
 
     def test_distributed_shape_stop_and_restart(self):
         """
