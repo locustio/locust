@@ -11,7 +11,6 @@ from gevent.queue import Queue
 import locust
 from locust import (
     LoadTestShape,
-    between,
     constant,
     runners,
 )
@@ -25,8 +24,6 @@ from locust.rpc import Message
 from locust.runners import (
     LocalRunner,
     STATE_INIT,
-    STATE_MISSING,
-    STATE_RUNNING,
     STATE_SPAWNING,
     STATE_RUNNING,
     STATE_MISSING,
