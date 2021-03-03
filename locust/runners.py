@@ -283,28 +283,34 @@ class Runner:
             )
             self.update_state(STATE_SPAWNING)
 
-        for dispatched_users in users_dispatcher:
-            user_classes_spawn_count = {}
-            user_classes_stop_count = {}
-            user_class_occurrences = dispatched_users[dummy_worker_node.id]
-            for user_class, occurrences in user_class_occurrences.items():
-                logger.debug(
-                    "Updating running test with %d users of class %s and wait=%r" % (occurrences, user_class, wait)
-                )
-                if self.user_class_occurrences[user_class] > occurrences:
-                    user_classes_stop_count[user_class] = self.user_class_occurrences[user_class] - occurrences
-                elif self.user_class_occurrences[user_class] < occurrences:
-                    user_classes_spawn_count[user_class] = occurrences - self.user_class_occurrences[user_class]
+        try:
+            for dispatched_users in users_dispatcher:
+                user_classes_spawn_count = {}
+                user_classes_stop_count = {}
+                user_class_occurrences = dispatched_users[dummy_worker_node.id]
+                for user_class, occurrences in user_class_occurrences.items():
+                    logger.debug(
+                        "Updating running test with %d users of class %s and wait=%r" % (occurrences, user_class, wait)
+                    )
+                    if self.user_class_occurrences[user_class] > occurrences:
+                        user_classes_stop_count[user_class] = self.user_class_occurrences[user_class] - occurrences
+                    elif self.user_class_occurrences[user_class] < occurrences:
+                        user_classes_spawn_count[user_class] = occurrences - self.user_class_occurrences[user_class]
 
-            if wait:
-                # spawn_users will block, so we need to call stop_users first
-                self.stop_users(user_classes_stop_count)
-                self.spawn_users(user_classes_spawn_count, wait)
-            else:
-                # call spawn_users before stopping the users since stop_users
-                # can be blocking because of the stop_timeout
-                self.spawn_users(user_classes_spawn_count, wait)
-                self.stop_users(user_classes_stop_count)
+                if wait:
+                    # spawn_users will block, so we need to call stop_users first
+                    self.stop_users(user_classes_stop_count)
+                    self.spawn_users(user_classes_spawn_count, wait)
+                else:
+                    # call spawn_users before stopping the users since stop_users
+                    # can be blocking because of the stop_timeout
+                    self.spawn_users(user_classes_spawn_count, wait)
+                    self.stop_users(user_classes_stop_count)
+
+        except KeyboardInterrupt:
+            # We need to catch keyboard interrupt. Otherwise, if KeyboardInterrupt is received while in
+            # a gevent.sleep inside the dispatch_users function, locust won't gracefully shutdown.
+            self.quit()
 
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_class_occurrences.values()))
 
@@ -595,24 +601,30 @@ class MasterRunner(DistributedRunner):
             spawn_rate=spawn_rate,
         )
 
-        for dispatched_users in users_dispatcher:
-            dispatch_greenlets = Group()
-            for worker_node_id, worker_user_class_occurrences in dispatched_users.items():
-                data = {
-                    "timestamp": time.time(),
-                    "user_class_occurrences": worker_user_class_occurrences,
-                    "host": self.environment.host,
-                    "stop_timeout": self.environment.stop_timeout,
-                }
-                dispatch_greenlets.add(
-                    gevent.spawn_later(
-                        0,
-                        self.server.send_to_client,
-                        Message("spawn", data, worker_node_id),
+        try:
+            for dispatched_users in users_dispatcher:
+                dispatch_greenlets = Group()
+                for worker_node_id, worker_user_class_occurrences in dispatched_users.items():
+                    data = {
+                        "timestamp": time.time(),
+                        "user_class_occurrences": worker_user_class_occurrences,
+                        "host": self.environment.host,
+                        "stop_timeout": self.environment.stop_timeout,
+                    }
+                    dispatch_greenlets.add(
+                        gevent.spawn_later(
+                            0,
+                            self.server.send_to_client,
+                            Message("spawn", data, worker_node_id),
+                        )
                     )
-                )
-            logger.debug("Sending spawn message to %i client(s)" % len(dispatch_greenlets))
-            dispatch_greenlets.join()
+                logger.debug("Sending spawn message to %i client(s)" % len(dispatch_greenlets))
+                dispatch_greenlets.join()
+
+        except KeyboardInterrupt:
+            # We need to catch keyboard interrupt. Otherwise, if KeyboardInterrupt is received while in
+            # a gevent.sleep inside the dispatch_users function, locust won't gracefully shutdown.
+            self.quit()
 
     def stop(self):
         if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
