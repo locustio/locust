@@ -9,7 +9,7 @@ class LoadTestShape:
     during a load test.
     """
 
-    _runner: Runner = None
+    runner: Runner = None
     """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
 
     def __init__(self):
@@ -31,7 +31,7 @@ class LoadTestShape:
         """
         Returns current actual number of users from the runner
         """
-        return self._runner.user_count
+        return self.runner.user_count
 
     def tick(self) -> Optional[Tuple[int, float]]:
         """

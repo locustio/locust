@@ -33,7 +33,7 @@ This shape class will increase user count in blocks of 100 and then stop the loa
 
             return None
 
-This functionality is further demonstraction in the `examples on github <https://github.com/locustio/locust/tree/master/examples/custom_shape>`_ including:
+This functionality is further demonstrated in the `examples on github <https://github.com/locustio/locust/tree/master/examples/custom_shape>`_ including:
 
 - Generating a double wave shape
 - Time based stages like K6

@@ -102,7 +102,7 @@ class Environment:
 
         # Attach the runner to the shape class so that the shape class can access user count state
         if self.shape_class:
-            self.shape_class._runner = self.runner
+            self.shape_class.runner = self.runner
 
         return self.runner
 
