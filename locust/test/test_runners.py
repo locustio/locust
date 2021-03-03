@@ -717,7 +717,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             # Start a shape test
             master.start_shape()
-            sleep(0.1)
+            sleep(0.2)
 
             # First stage
             self.assertEqual("spawning", master.state)
