@@ -721,9 +721,9 @@ class MasterRunner(DistributedRunner):
                         logger.info(
                             "Worker %s self-healed with heartbeat, setting state to %s." % (str(c.id), client_state)
                         )
-                        user_count = msg.data.get("count")
-                        if user_count:
-                            c.user_count = user_count
+                        user_class_occurrences = msg.data.get("user_class_occurrences")
+                        if user_class_occurrences:
+                            c.user_class_occurrences = user_class_occurrences
                     c.state = client_state
                     c.cpu_usage = msg.data["current_cpu_usage"]
                     if not c.cpu_warning_emitted and c.cpu_usage > 90:
@@ -862,7 +862,7 @@ class WorkerRunner(DistributedRunner):
                         {
                             "state": self.worker_state,
                             "current_cpu_usage": self.current_cpu_usage,
-                            "count": self.user_count,
+                            "user_class_occurrences": self.user_class_occurrences,
                         },
                         self.client_id,
                     )
