@@ -717,11 +717,13 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             # Start a shape test
             master.start_shape()
-            sleep(0.5)
 
             # First stage
-            self.assertEqual("spawning", master.state)
-            sleep(5)  # runtime = 5s
+            ts = time.time()
+            while master.state != "spawning":
+                self.assertTrue(time.time() - ts <= 1)
+                sleep()
+            sleep(5 - (time.time() - ts))  # runtime = 5s
             self.assertEqual("running", master.state)
             w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
             w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
@@ -741,8 +743,11 @@ class TestMasterWorkerRunners(LocustTestCase):
             sleep(5)  # runtime = 10s
 
             # Second stage
-            self.assertEqual("spawning", master.state)
-            sleep(5)  # runtime = 15s
+            ts = time.time()
+            while master.state != "spawning":
+                self.assertTrue(time.time() - ts <= 1)
+                sleep()
+            sleep(5 - (time.time() - ts))  # runtime = 15s
             self.assertEqual("running", master.state)
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
             w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
@@ -762,8 +767,11 @@ class TestMasterWorkerRunners(LocustTestCase):
             sleep(5)  # runtime = 20s
 
             # Third stage
-            self.assertEqual("spawning", master.state)
-            sleep(5)  # runtime = 25s
+            ts = time.time()
+            while master.state != "spawning":
+                self.assertTrue(time.time() - ts <= 1)
+                sleep()
+            sleep(5 - (time.time() - ts))  # runtime = 25s
             self.assertEqual("running", master.state)
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
@@ -783,8 +791,11 @@ class TestMasterWorkerRunners(LocustTestCase):
             sleep(5)  # runtime = 30s
 
             # Forth stage
-            self.assertEqual("spawning", master.state)
-            sleep(5)  # runtime = 35s
+            ts = time.time()
+            while master.state != "spawning":
+                self.assertTrue(time.time() - ts <= 1)
+                sleep()
+            sleep(5 - (time.time() - ts))  # runtime = 35s
 
             # Forth stage - Excess TestUser3 have been stopped but
             #               TestUser1/TestUser2 have not reached stop timeout yet, so
@@ -809,7 +820,11 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             # Forth stage - TestUser2/TestUser3 are now at the desired
             #               number, but TestUser1 is still unchanged
-            self.assertEqual("spawning", master.state)
+            ts = time.time()
+            while master.state != "spawning":
+                self.assertTrue(time.time() - ts <= 1)
+                sleep()
+            delta = time.time() - ts
             w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
             w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
             w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
@@ -825,10 +840,14 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
             self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
             self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
-            sleep(5)  # runtime = 50s
+            sleep(5 - delta)  # runtime = 50s
 
             # Forth stage - All users are now at the desired number
-            self.assertEqual("running", master.state)
+            ts = time.time()
+            while master.state != "running":
+                self.assertTrue(time.time() - ts <= 1)
+                sleep()
+            delta = time.time() - ts
             w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
             w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
             w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
@@ -844,7 +863,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
             self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
             self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
-            sleep(10)  # runtime = 60s
+            sleep(10 - delta)  # runtime = 60s
 
             # Sleep stop_timeout and make sure the test has stopped
             sleep(1)  # runtime = 61s
