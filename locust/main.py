@@ -316,6 +316,9 @@ def main():
                     len(runner.clients.ready),
                     options.expect_workers,
                 )
+                # TODO: Handle KeyboardInterrupt and send quit signal to workers that are started.
+                #       Right now, if the user sends a ctrl+c, the master will not gracefully
+                #       shutdown resulting in all the already started workers to stay active.
                 time.sleep(1)
         if not options.worker:
             # apply headless mode defaults
