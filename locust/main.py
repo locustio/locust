@@ -306,6 +306,7 @@ def main():
         web_ui.start()
         main_greenlet = web_ui.greenlet
 
+    headless_master_greenlet = None
     if options.headless:
         # headless mode
         if options.master:
@@ -331,7 +332,8 @@ def main():
             if environment.shape_class:
                 environment.runner.start_shape()
             else:
-                runner.start(options.num_users, options.spawn_rate)
+                headless_master_greenlet = gevent.spawn(runner.start, options.num_users, options.spawn_rate)
+                headless_master_greenlet.link_exception(greenlet_exception_handler)
 
     def spawn_run_time_limit_greenlet():
         def timelimit_stop():
@@ -406,6 +408,8 @@ def main():
         logger.info("Shutting down (exit code %s), bye." % code)
         if stats_printer_greenlet is not None:
             stats_printer_greenlet.kill(block=False)
+        if headless_master_greenlet is not None:
+            headless_master_greenlet.kill(block=False)
         logger.info("Cleaning up runner...")
         if runner is not None:
             runner.quit()
