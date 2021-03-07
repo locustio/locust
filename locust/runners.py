@@ -5,6 +5,7 @@ import socket
 import sys
 import time
 import traceback
+from collections import defaultdict
 from collections.abc import MutableMapping
 from typing import (
     Dict,
@@ -311,6 +312,14 @@ class Runner:
             # We need to catch keyboard interrupt. Otherwise, if KeyboardInterrupt is received while in
             # a gevent.sleep inside the dispatch_users function, locust won't gracefully shutdown.
             self.quit()
+
+        logger.info(
+            "All users spawned: %s (%i total running)"
+            % (
+                ", ".join("%s: %d" % (name, count) for name, count in self.user_class_occurrences.items()),
+                sum(self.user_class_occurrences.values()),
+            )
+        )
 
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_class_occurrences.values()))
 
@@ -626,6 +635,27 @@ class MasterRunner(DistributedRunner):
             # a gevent.sleep inside the dispatch_users function, locust won't gracefully shutdown.
             self.quit()
 
+        # Wait a little for workers to report their users to the master
+        # so that we can give an accurate log message below, i.e. "All users spawned [...]".
+        # Otherwise, the logged user count might be less than the target user count.
+        timeout = gevent.Timeout(0.1)
+        timeout.start()
+        try:
+            while self.user_count != self.target_user_count:
+                gevent.sleep()
+        except gevent.Timeout:
+            pass
+        finally:
+            timeout.cancel()
+
+        logger.info(
+            "All users spawned: %s (%i total running)"
+            % (
+                ", ".join("%s: %d" % (name, count) for name, count in self.reported_user_class_occurrences.items()),
+                sum(self.reported_user_class_occurrences.values()),
+            )
+        )
+
     def stop(self):
         if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
             logger.debug("Stopping...")
@@ -774,6 +804,14 @@ class MasterRunner(DistributedRunner):
     @property
     def worker_count(self):
         return len(self.clients.ready) + len(self.clients.spawning) + len(self.clients.running)
+
+    @property
+    def reported_user_class_occurrences(self) -> Dict[str, int]:
+        reported_user_class_occurrences = defaultdict(lambda: 0)
+        for client in self.clients.ready + self.clients.spawning + self.clients.running:
+            for name, count in client.user_class_occurrences.items():
+                reported_user_class_occurrences[name] += count
+        return reported_user_class_occurrences
 
 
 class WorkerRunner(DistributedRunner):

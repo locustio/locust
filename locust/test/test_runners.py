@@ -617,6 +617,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.assertEqual(
                     9, test_shape.get_current_user_count(), "Shape is not seeing stage 1 runner user count correctly"
                 )
+            self.assertDictEqual(master.reported_user_class_occurrences, {"TestUser": 9})
 
             # Ensure new stage with more users has been reached
             sleep(2)
@@ -625,6 +626,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.assertEqual(
                     21, test_shape.get_current_user_count(), "Shape is not seeing stage 2 runner user count correctly"
                 )
+            self.assertDictEqual(master.reported_user_class_occurrences, {"TestUser": 21})
 
             # Ensure new stage with less users has been reached
             sleep(2)
@@ -633,6 +635,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.assertEqual(
                     3, test_shape.get_current_user_count(), "Shape is not seeing stage 3 runner user count correctly"
                 )
+            self.assertDictEqual(master.reported_user_class_occurrences, {"TestUser": 3})
 
             # Ensure test stops at the end
             sleep(2)
@@ -641,6 +644,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.assertEqual(
                     0, test_shape.get_current_user_count(), "Shape is not seeing stopped runner user count correctly"
                 )
+            self.assertDictEqual(master.reported_user_class_occurrences, {"TestUser": 0})
 
             self.assertEqual("stopped", master.state)
 
