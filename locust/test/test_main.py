@@ -229,7 +229,18 @@ class LocustProcessIntegrationTest(TestCase):
         with mock_locustfile() as mocked:
             output = (
                 subprocess.check_output(
-                    ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--run-time", "1s", "--headless"],
+                    [
+                        "locust",
+                        "-f",
+                        mocked.file_path,
+                        "--host",
+                        "https://test.com/",
+                        "--run-time",
+                        "1s",
+                        "--headless",
+                        "--loglevel",
+                        "DEBUG",
+                    ],
                     stderr=subprocess.STDOUT,
                     timeout=2,
                 )
@@ -341,6 +352,8 @@ class LocustProcessIntegrationTest(TestCase):
                         "7s",
                         "-u",
                         "0",
+                        "--loglevel",
+                        "DEBUG",
                     ]
                 ),
                 stderr=STDOUT,

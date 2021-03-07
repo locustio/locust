@@ -164,10 +164,16 @@ class Runner:
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
             self.update_state(STATE_SPAWNING)
 
-        logger.info(
-            "Spawning additional %s (%s already running)..."
-            % (json.dumps(user_classes_spawn_count), json.dumps(self.user_class_occurrences))
-        )
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "Spawning additional %s (%s already running)..."
+                % (json.dumps(user_classes_spawn_count), json.dumps(self.user_class_occurrences))
+            )
+        elif sum(user_classes_spawn_count.values()) > 0:
+            logger.info(
+                "Spawning additional %s (%s already running)..."
+                % (sum(user_classes_spawn_count.values()), sum(self.user_class_occurrences.values()))
+            )
 
         def spawn(user_class: str, spawn_count: int):
             n = 0
@@ -177,7 +183,7 @@ class Runner:
                 n += 1
                 if n % 10 == 0 or n == spawn_count:
                     logger.debug("%i users spawned" % self.user_count)
-            logger.info("All users of class %s spawned" % user_class)
+            logger.debug("All users of class %s spawned" % user_class)
 
         for user_class, spawn_count in user_classes_spawn_count.items():
             spawn(user_class, spawn_count)
@@ -228,9 +234,11 @@ class Runner:
             )
             stop_group.kill(block=True)
 
-        logger.info(
-            "%i Users have been stopped, %g still running" % (sum(user_classes_stop_count.values()), self.user_count)
-        )
+        msg = "%i Users have been stopped, %g still running" % (sum(user_classes_stop_count.values()), self.user_count)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(msg)
+        elif sum(user_classes_stop_count.values()) > 0:
+            logger.info(msg)
 
     def monitor_cpu(self):
         process = psutil.Process()
@@ -289,6 +297,7 @@ class Runner:
                 user_classes_spawn_count = {}
                 user_classes_stop_count = {}
                 user_class_occurrences = dispatched_users[dummy_worker_node.id]
+                logger.info("Updating running test with %d users" % (sum(user_class_occurrences.values()),))
                 for user_class, occurrences in user_class_occurrences.items():
                     logger.debug(
                         "Updating running test with %d users of class %s and wait=%r" % (occurrences, user_class, wait)
