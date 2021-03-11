@@ -4,6 +4,7 @@ import random
 import socket
 import sys
 import traceback
+from typing import Type, List
 import warnings
 from uuid import uuid4
 from time import time
@@ -132,7 +133,7 @@ class Runner:
             return True
         return False
 
-    def weight_users(self, amount):
+    def weight_users(self, amount) -> List[Type[User]]:
         """
         Distributes the amount of users for each WebLocust-class according to it's weight
         returns a list "bucket" with the weighted users
