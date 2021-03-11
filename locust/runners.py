@@ -219,12 +219,18 @@ class Runner:
         bucket = self.weight_users(user_count)
         user_count = len(bucket)
         to_stop = []
-        for g in self.user_greenlets:
-            for l in bucket:
-                user = g.args[0]
-                if isinstance(user, l):
+        for user_greenlet in self.user_greenlets:
+            try:
+                user = user_greenlet.args[0]
+            except IndexError:
+                logger.error(
+                    "While stopping users, we encountered a user that didnt have proper args %s", user_greenlet
+                )
+                continue
+            for user_class in bucket:
+                if isinstance(user, user_class):
                     to_stop.append(user)
-                    bucket.remove(l)
+                    bucket.remove(user_class)
                     break
 
         if not to_stop:
