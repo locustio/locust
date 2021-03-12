@@ -201,10 +201,16 @@ class Runner:
                 continue
 
             to_stop = []
-            for g in self.user_greenlets:
+            for user_greenlet in self.user_greenlets:
                 if len(to_stop) == stop_count:
                     break
-                user = g.args[0]
+                try:
+                    user = user_greenlet.args[0]
+                except IndexError:
+                    logger.error(
+                        "While stopping users, we encountered a user that didnt have proper args %s", user_greenlet
+                    )
+                    continue
                 if isinstance(user, self.user_classes_by_name[user_class]):
                     to_stop.append(user)
 
