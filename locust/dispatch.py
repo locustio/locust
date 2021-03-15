@@ -7,7 +7,6 @@ from typing import (
     Generator,
     List,
     TYPE_CHECKING,
-    Tuple,
 )
 
 import gevent
@@ -92,19 +91,35 @@ def dispatch_users(
 
     if less_users_than_desired:
         while sum(sum(x.values()) for x in effective_balanced_users.values()) > 0:
+            ts1 = time.time()
             number_of_users_in_current_dispatch = 0
-            for user_class in user_class_occurrences.keys():
-                if all(x[user_class] == 0 for x in effective_balanced_users.values()):
-                    continue
-                done, number_of_users_in_current_dispatch = distribute_current_user_class_among_workers(
-                    dispatched_users,
-                    effective_balanced_users,
-                    user_class,
-                    number_of_users_in_current_dispatch,
-                    number_of_users_per_dispatch,
-                )
-                if done:
+            for i, user_class in enumerate(itertools.cycle(user_class_occurrences.keys())):
+                assert i < 5000, i
+
+                if sum(map(sum, map(dict.values, effective_balanced_users.values()))) == 0:
                     break
+
+                if all_users_of_current_class_have_been_dispatched(effective_balanced_users, user_class):
+                    continue
+
+                if go_to_next_user_class(
+                    user_class, user_class_occurrences, dispatched_users, effective_balanced_users
+                ):
+                    continue
+
+                for j, worker_node_id in enumerate(itertools.cycle(effective_balanced_users.keys())):
+                    assert j < 100, j
+                    if effective_balanced_users[worker_node_id][user_class] == 0:
+                        continue
+                    dispatched_users[worker_node_id][user_class] += 1
+                    effective_balanced_users[worker_node_id][user_class] -= 1
+                    number_of_users_in_current_dispatch += 1
+                    break
+
+                if number_of_users_in_current_dispatch == number_of_users_per_dispatch:
+                    break
+
+            assert time.time() - ts1 < 0.5, time.time() - ts1
 
             ts = time.time()
             yield {
@@ -113,7 +128,9 @@ def dispatch_users(
             }
             if sum(sum(x.values()) for x in effective_balanced_users.values()) > 0:
                 delta = time.time() - ts
-                gevent.sleep(max(0.0, wait_between_dispatch - delta))
+                sleep_duration = max(0.0, wait_between_dispatch - delta)
+                assert sleep_duration <= 10, sleep_duration
+                gevent.sleep(sleep_duration)
 
     elif (
         number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_class_occurrences)
@@ -123,21 +140,35 @@ def dispatch_users(
 
     else:
         while not all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences):
+            ts1 = time.time()
             number_of_users_in_current_dispatch = 0
-            for user_class in user_class_occurrences.keys():
-                if all_users_of_current_class_have_been_dispatched(
-                    dispatched_users, effective_balanced_users, user_class
+            for i, user_class in enumerate(itertools.cycle(user_class_occurrences.keys())):
+                assert i < 5000, i
+
+                if sum(map(sum, map(dict.values, effective_balanced_users.values()))) == 0:
+                    break
+
+                if all_users_of_current_class_have_been_dispatched(effective_balanced_users, user_class):
+                    continue
+
+                if go_to_next_user_class(
+                    user_class, user_class_occurrences, dispatched_users, effective_balanced_users
                 ):
                     continue
-                done, number_of_users_in_current_dispatch = distribute_current_user_class_among_workers(
-                    dispatched_users,
-                    effective_balanced_users,
-                    user_class,
-                    number_of_users_in_current_dispatch,
-                    number_of_users_per_dispatch,
-                )
-                if done:
+
+                for j, worker_node_id in enumerate(itertools.cycle(effective_balanced_users.keys())):
+                    assert j < 100, j
+                    if effective_balanced_users[worker_node_id][user_class] == 0:
+                        continue
+                    dispatched_users[worker_node_id][user_class] += 1
+                    effective_balanced_users[worker_node_id][user_class] -= 1
+                    number_of_users_in_current_dispatch += 1
                     break
+
+                if number_of_users_in_current_dispatch == number_of_users_per_dispatch:
+                    break
+
+            assert time.time() - ts1 < 0.5, time.time() - ts1
 
             ts = time.time()
             yield {
@@ -145,12 +176,39 @@ def dispatch_users(
                 for worker_node_id, user_class_occurrences in sorted(dispatched_users.items(), key=lambda x: x[0])
             }
             delta = time.time() - ts
-            gevent.sleep(max(0.0, wait_between_dispatch - delta))
+            sleep_duration = max(0.0, wait_between_dispatch - delta)
+            assert sleep_duration <= 10, sleep_duration
+            gevent.sleep(sleep_duration)
 
         # If we are here, it means we have an excess of users for one or more user classes.
         # Hence, we need to dispatch a last set of users that will bring the users
         # distribution to the desired one.
         yield balanced_users
+
+
+def go_to_next_user_class(
+    user_class: str,
+    user_class_occurrences: Dict[str, int],
+    dispatched_users: Dict[str, Dict[str, int]],
+    effective_balanced_users: Dict[str, Dict[str, int]],
+) -> bool:
+    """
+    Whether to skip to next user class or not. This is done so that
+    the distribution of user class stays approximately balanced during
+    a ramp up.
+    """
+    dispatched_user_class_occurrences = {
+        user_class_: sum(x[user_class_] for x in dispatched_users.values())
+        for user_class_ in user_class_occurrences.keys()
+    }
+    for user_class_ in sorted(user_class_occurrences.keys()):
+        if user_class_ == user_class:
+            continue
+        if sum(x[user_class_] for x in effective_balanced_users.values()) == 0:
+            continue
+        if dispatched_user_class_occurrences[user_class] - dispatched_user_class_occurrences[user_class_] >= 1:
+            return True
+    return False
 
 
 def number_of_users_left_to_dispatch(
@@ -167,32 +225,6 @@ def number_of_users_left_to_dispatch(
     )
 
 
-def distribute_current_user_class_among_workers(
-    dispatched_users: Dict[str, Dict[str, int]],
-    effective_balanced_users: Dict[str, Dict[str, int]],
-    user_class: str,
-    number_of_users_in_current_dispatch: int,
-    number_of_users_per_dispatch: int,
-) -> Tuple[bool, int]:
-    """
-    :return done: boolean indicating if we have enough users to perform a dispatch to the workers
-    :return number_of_users_in_current_dispatch: current number of users in the dispatch
-    """
-    done = False
-    for worker_node_id in itertools.cycle(effective_balanced_users.keys()):
-        if effective_balanced_users[worker_node_id][user_class] == 0:
-            continue
-        dispatched_users[worker_node_id][user_class] += 1
-        effective_balanced_users[worker_node_id][user_class] -= 1
-        number_of_users_in_current_dispatch += 1
-        if number_of_users_in_current_dispatch == number_of_users_per_dispatch:
-            done = True
-            break
-        if all(x[user_class] == 0 for x in effective_balanced_users.values()):
-            break
-    return done, number_of_users_in_current_dispatch
-
-
 def all_users_have_been_dispatched(
     dispatched_users: Dict[str, Dict[str, int]],
     effective_balanced_users: Dict[str, Dict[str, int]],
@@ -206,13 +238,10 @@ def all_users_have_been_dispatched(
 
 
 def all_users_of_current_class_have_been_dispatched(
-    dispatched_users: Dict[str, Dict[str, int]],
     effective_balanced_users: Dict[str, Dict[str, int]],
     user_class: str,
 ) -> bool:
-    return sum(x[user_class] for x in dispatched_users.values()) >= sum(
-        x[user_class] for x in effective_balanced_users.values()
-    )
+    return all(x[user_class] == 0 for x in effective_balanced_users.values())
 
 
 def balance_users_among_workers(

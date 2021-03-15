@@ -776,6 +776,10 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.assertTrue(time.time() - ts <= 1)
                 sleep()
             sleep(5 - (time.time() - ts))  # runtime = 25s
+            ts = time.time()
+            while master.state != "running":
+                self.assertTrue(time.time() - ts <= 1)
+                sleep()
             self.assertEqual("running", master.state)
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
@@ -792,7 +796,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
             self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
             self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
-            sleep(5)  # runtime = 30s
+            sleep(5 - (time.time() - ts))  # runtime = 30s
 
             # Forth stage
             ts = time.time()
