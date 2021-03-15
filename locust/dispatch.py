@@ -1,6 +1,7 @@
 import itertools
 import math
 import time
+from collections import namedtuple
 from copy import deepcopy
 from typing import (
     Dict,
@@ -91,41 +92,12 @@ def dispatch_users(
 
     if less_users_than_desired:
         while sum(sum(x.values()) for x in effective_balanced_users.values()) > 0:
-            ts1 = time.time()
-            number_of_users_in_current_dispatch = 0
-            for i, user_class in enumerate(itertools.cycle(user_class_occurrences.keys())):
-                assert i < 5000, i
-
-                if sum(map(sum, map(dict.values, effective_balanced_users.values()))) == 0:
-                    break
-
-                if all_users_of_current_class_have_been_dispatched(effective_balanced_users, user_class):
-                    continue
-
-                if go_to_next_user_class(
-                    user_class, user_class_occurrences, dispatched_users, effective_balanced_users
-                ):
-                    continue
-
-                for j, worker_node_id in enumerate(itertools.cycle(effective_balanced_users.keys())):
-                    assert j < 100, j
-                    if effective_balanced_users[worker_node_id][user_class] == 0:
-                        continue
-                    dispatched_users[worker_node_id][user_class] += 1
-                    effective_balanced_users[worker_node_id][user_class] -= 1
-                    number_of_users_in_current_dispatch += 1
-                    break
-
-                if number_of_users_in_current_dispatch == number_of_users_per_dispatch:
-                    break
-
-            assert time.time() - ts1 < 0.5, time.time() - ts1
+            users_to_dispatch = get_users_to_dispatch_for_current_iteration(
+                user_class_occurrences, dispatched_users, effective_balanced_users, number_of_users_per_dispatch
+            )
 
             ts = time.time()
-            yield {
-                worker_node_id: dict(sorted(user_class_occurrences.items(), key=lambda x: x[0]))
-                for worker_node_id, user_class_occurrences in sorted(dispatched_users.items(), key=lambda x: x[0])
-            }
+            yield users_to_dispatch
             if sum(sum(x.values()) for x in effective_balanced_users.values()) > 0:
                 delta = time.time() - ts
                 sleep_duration = max(0.0, wait_between_dispatch - delta)
@@ -140,41 +112,12 @@ def dispatch_users(
 
     else:
         while not all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences):
-            ts1 = time.time()
-            number_of_users_in_current_dispatch = 0
-            for i, user_class in enumerate(itertools.cycle(user_class_occurrences.keys())):
-                assert i < 5000, i
-
-                if sum(map(sum, map(dict.values, effective_balanced_users.values()))) == 0:
-                    break
-
-                if all_users_of_current_class_have_been_dispatched(effective_balanced_users, user_class):
-                    continue
-
-                if go_to_next_user_class(
-                    user_class, user_class_occurrences, dispatched_users, effective_balanced_users
-                ):
-                    continue
-
-                for j, worker_node_id in enumerate(itertools.cycle(effective_balanced_users.keys())):
-                    assert j < 100, j
-                    if effective_balanced_users[worker_node_id][user_class] == 0:
-                        continue
-                    dispatched_users[worker_node_id][user_class] += 1
-                    effective_balanced_users[worker_node_id][user_class] -= 1
-                    number_of_users_in_current_dispatch += 1
-                    break
-
-                if number_of_users_in_current_dispatch == number_of_users_per_dispatch:
-                    break
-
-            assert time.time() - ts1 < 0.5, time.time() - ts1
+            users_to_dispatch = get_users_to_dispatch_for_current_iteration(
+                user_class_occurrences, dispatched_users, effective_balanced_users, number_of_users_per_dispatch
+            )
 
             ts = time.time()
-            yield {
-                worker_node_id: dict(sorted(user_class_occurrences.items(), key=lambda x: x[0]))
-                for worker_node_id, user_class_occurrences in sorted(dispatched_users.items(), key=lambda x: x[0])
-            }
+            yield users_to_dispatch
             delta = time.time() - ts
             sleep_duration = max(0.0, wait_between_dispatch - delta)
             assert sleep_duration <= 10, sleep_duration
@@ -184,6 +127,50 @@ def dispatch_users(
         # Hence, we need to dispatch a last set of users that will bring the users
         # distribution to the desired one.
         yield balanced_users
+
+
+def get_users_to_dispatch_for_current_iteration(
+    user_class_occurrences: Dict[str, int],
+    dispatched_users: Dict[str, Dict[str, int]],
+    effective_balanced_users: Dict[str, Dict[str, int]],
+    number_of_users_per_dispatch: int,
+) -> Dict[str, Dict[str, int]]:
+    ts_dispatch = time.time()
+
+    number_of_users_in_current_dispatch = 0
+
+    for i, user_class in enumerate(itertools.cycle(user_class_occurrences.keys())):
+        assert i < 5000, "Looks like dispatch is stuck in an infinite loop (iteration {})".format(i)
+
+        if sum(map(sum, map(dict.values, effective_balanced_users.values()))) == 0:
+            break
+
+        if all_users_of_current_class_have_been_dispatched(effective_balanced_users, user_class):
+            continue
+
+        if go_to_next_user_class(user_class, user_class_occurrences, dispatched_users, effective_balanced_users):
+            continue
+
+        for j, worker_node_id in enumerate(itertools.cycle(effective_balanced_users.keys())):
+            assert j < 100, "Looks like dispatch is stuck in an infinite loop (iteration {})".format(j)
+            if effective_balanced_users[worker_node_id][user_class] == 0:
+                continue
+            dispatched_users[worker_node_id][user_class] += 1
+            effective_balanced_users[worker_node_id][user_class] -= 1
+            number_of_users_in_current_dispatch += 1
+            break
+
+        if number_of_users_in_current_dispatch == number_of_users_per_dispatch:
+            break
+
+    assert time.time() - ts_dispatch < 0.5, "Dispatch iteration took too much time: {}s".format(
+        time.time() - ts_dispatch
+    )
+
+    return {
+        worker_node_id: dict(sorted(user_class_occurrences.items(), key=lambda x: x[0]))
+        for worker_node_id, user_class_occurrences in sorted(dispatched_users.items(), key=lambda x: x[0])
+    }
 
 
 def go_to_next_user_class(
