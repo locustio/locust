@@ -138,7 +138,14 @@ class Runner:
         """
         user_class_occurrences = {user_class.__name__: 0 for user_class in self.user_classes}
         for user_greenlet in self.user_greenlets:
-            user = user_greenlet.args[0]
+            try:
+                user = user_greenlet.args[0]
+            except IndexError:
+                logger.error(
+                    "While calculating number of running users, we encountered a user that didnt have proper args %s",
+                    user_greenlet,
+                )
+                continue
             user_class_occurrences[user.__class__.__name__] += 1
         return user_class_occurrences
 
