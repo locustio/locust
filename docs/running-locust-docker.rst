@@ -27,11 +27,13 @@ The above compose configuration could be used to start a master node and 4 worke
 Use docker image as a base image
 ================================
 
-It's very common to have test scripts that rely on third party python packages. In those cases you can use the
-official Locust docker image as a base image::
+It's very common to have test scripts that rely on third party python packages. In those cases you can add the package installation command in the
+official Locust docker file <https://github.com/locustio/locust/blob/master/Dockerfile> and build it::
 
-    FROM locustio/locust
-    RUN pip3 install some-python-package
+    FROM python:3.8
+    COPY . /build
+    RUN cd /build && pip install . && pip install some-python-package && rm -rf /build
+    ...
 
 
 Running a distributed load test on Kubernetes
