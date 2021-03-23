@@ -554,6 +554,8 @@ class MasterRunner(DistributedRunner):
             self.stats.clear_all()
             self.exceptions = {}
             self.environment.events.test_start.fire(environment=self.environment)
+            if self.environment.shape_class:
+                self.environment.shape_class.reset_time()
 
         for client in self.clients.ready + self.clients.running + self.clients.spawning:
             data = {
