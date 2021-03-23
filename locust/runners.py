@@ -333,6 +333,7 @@ class Runner:
 
     def shape_worker(self):
         logger.info("Shape worker starting")
+        print("1")
         while self.state == STATE_INIT or self.state == STATE_SPAWNING or self.state == STATE_RUNNING:
             new_state = self.environment.shape_class.tick()
             if new_state is None:
@@ -344,6 +345,7 @@ class Runner:
             elif self.shape_last_state == new_state:
                 gevent.sleep(1)
             else:
+                print("2")
                 user_count, spawn_rate = new_state
                 logger.info("Shape test updating to %d users at %.2f spawn rate" % (user_count, spawn_rate))
                 self.start(user_count=user_count, spawn_rate=spawn_rate)
@@ -526,6 +528,7 @@ class MasterRunner(DistributedRunner):
         return warning_emitted
 
     def start(self, user_count, spawn_rate):
+        print("3")
         self.target_user_count = user_count
         num_workers = len(self.clients.ready) + len(self.clients.running) + len(self.clients.spawning)
         if not num_workers:
@@ -553,6 +556,7 @@ class MasterRunner(DistributedRunner):
         if self.state != STATE_RUNNING and self.state != STATE_SPAWNING:
             self.stats.clear_all()
             self.exceptions = {}
+            print("4")
             self.environment.events.test_start.fire(environment=self.environment)
 
         for client in self.clients.ready + self.clients.running + self.clients.spawning:
