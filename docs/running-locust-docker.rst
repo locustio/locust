@@ -28,7 +28,7 @@ Use docker image as a base image
 ================================
 
 It's very common to have test scripts that rely on third party python packages. In those cases you can add the package installation command in the
-official Locust docker file <https://github.com/locustio/locust/blob/master/Dockerfile> and build it::
+official `Locust Dockerfile <https://github.com/locustio/locust/blob/master/Dockerfile>`_ and build it::
 
     FROM python:3.8
     COPY . /build
