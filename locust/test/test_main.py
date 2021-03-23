@@ -107,7 +107,9 @@ class TestLoadLocustfile(LocustTestCase):
             host = localhost  # With "="
             u 100             # Short form
             spawn-rate 5      # long form
-            headless          # boolean
+                              # boolean
+            headless
+            # (for some reason an inline comment makes boolean values fail in configargparse nowadays)
         """
             ),
             suffix=".conf",
