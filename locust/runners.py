@@ -487,7 +487,9 @@ class MasterRunner(DistributedRunner):
             self.server = rpc.Server(master_bind_host, master_bind_port)
         except RPCError as e:
             if e.args[0] == "Socket bind failure: Address already in use":
-                port_string = master_bind_host + ":" + master_bind_port if master_bind_host != "*" else master_bind_port
+                port_string = (
+                    master_bind_host + ":" + str(master_bind_port) if master_bind_host != "*" else str(master_bind_port)
+                )
                 logger.error(
                     f"The Locust master port ({port_string}) was busy. Close any applications using that port - perhaps an old instance of Locust master is still running? ({e.args[0]})"
                 )
