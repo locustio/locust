@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.4.4
+=====
+
+* Ensure runner.quit finishes even when users are broken https://github.com/locustio/locust/pull/1728
+* Make user count available to LoadTestShape https://github.com/locustio/locust/pull/1719
+* Other small fixes
+
 1.4.3
 =====
 
