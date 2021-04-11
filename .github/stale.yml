@@ -1,0 +1,5 @@
+only: issues
+onlyLabels:
+  - non-critical
+  - waiting on contributor
+staleLabel: stale
