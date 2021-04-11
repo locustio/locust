@@ -16,5 +16,4 @@ jobs:
           any-of-labels: "non-critical,waiting on contributor"
           stale-issue-message: "This issue is stale because it has been open 30 days with no activity. Remove stale label or comment or this will be closed in 10 days."
           close-issue-message: "This issue was closed because it has been stalled for 10 days with no activity."
-          close-issue-label: "stale"
           days-before-close: 10
