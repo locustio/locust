@@ -107,6 +107,29 @@ class TestHttpSession(WebserverTestCase):
             set(r.headers["allow"].split(", ")),
         )
 
+    def test_error_message(self):
+        s = self.get_client()
+        kwargs = {}
+
+        def on_error(**kw):
+            kwargs.update(kw)
+
+        self.environment.events.request_failure.add_listener(on_error)
+        s.request("get", "/wrong_url", context={"foo": "bar"})
+        self.assertIn("/wrong_url", str(kwargs["exception"]))
+        self.assertDictEqual({"foo": "bar"}, kwargs["context"])
+
+    def test_context_in_success(self):
+        s = self.get_client()
+        kwargs = {}
+
+        def on_success(**kw):
+            kwargs.update(kw)
+
+        self.environment.events.request_success.add_listener(on_success)
+        s.request("get", "/request_method", context={"foo": "bar"})
+        self.assertDictEqual({"foo": "bar"}, kwargs["context"])
+
     def test_error_message_with_name_replacement(self):
         s = self.get_client()
         kwargs = {}
@@ -115,8 +138,9 @@ class TestHttpSession(WebserverTestCase):
             kwargs.update(kw)
 
         self.environment.events.request_failure.add_listener(on_error)
-        s.request("get", "/wrong_url/01", name="replaced_url_name")
+        s.request("get", "/wrong_url/01", name="replaced_url_name", context={"foo": "bar"})
         self.assertIn("for url: replaced_url_name", str(kwargs["exception"]))
+        self.assertDictEqual({"foo": "bar"}, kwargs["context"])
 
     def test_get_with_params(self):
         s = self.get_client()
