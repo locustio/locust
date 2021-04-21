@@ -216,8 +216,7 @@ class HttpUser(User):
 
         session = HttpSession(
             base_url=self.host,
-            request_success=self.environment.events.request_success,
-            request_failure=self.environment.events.request_failure,
+            request_event=self.environment.events.request,
         )
         session.trust_env = False
         self.client = session

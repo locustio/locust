@@ -127,6 +127,7 @@ class FastHttpSession:
         auth=None,
         json: dict = None,
         allow_redirects=True,
+        context: dict = {},
         **kwargs,
     ):
         """
@@ -165,6 +166,7 @@ class FastHttpSession:
         request_meta["method"] = method
         request_meta["start_time"] = default_timer()
         request_meta["name"] = name or path
+        request_meta["context"] = context
 
         headers = headers or {}
         if auth:
@@ -200,13 +202,15 @@ class FastHttpSession:
                 request_meta["content_size"] = len(response.content or "")
             except HTTPParseError as e:
                 request_meta["response_time"] = int((default_timer() - request_meta["start_time"]) * 1000)
-                self.environment.events.request_failure.fire(
+                self.environment.events.request.fire(
                     request_type=request_meta["method"],
                     name=request_meta["name"],
                     response_time=request_meta["response_time"],
                     response_length=0,
                     exception=e,
+                    context=request_meta["context"],
                 )
+
                 return response
 
         # Record the consumed time
@@ -218,23 +222,20 @@ class FastHttpSession:
             response.locust_request_meta = request_meta
             return ResponseContextManager(response, environment=self.environment)
         else:
+            exception = None
             try:
                 response.raise_for_status()
             except FAILURE_EXCEPTIONS as e:
-                self.environment.events.request_failure.fire(
-                    request_type=request_meta["method"],
-                    name=request_meta["name"],
-                    response_time=request_meta["response_time"],
-                    response_length=request_meta["content_size"],
-                    exception=e,
-                )
-            else:
-                self.environment.events.request_success.fire(
-                    request_type=request_meta["method"],
-                    name=request_meta["name"],
-                    response_time=request_meta["response_time"],
-                    response_length=request_meta["content_size"],
-                )
+                exception = e
+
+            self.environment.events.request.fire(
+                request_type=request_meta["method"],
+                name=request_meta["name"],
+                response_time=request_meta["response_time"],
+                response_length=request_meta["content_size"],
+                exception=exception,
+                context=request_meta["context"],
+            )
             return response
 
     def delete(self, path, **kwargs):
@@ -430,9 +431,9 @@ class ResponseContextManager(FastResponse):
     def __exit__(self, exc, value, traceback):
         if self._manual_result is not None:
             if self._manual_result is True:
-                self._report_success()
+                self._report_request()
             elif isinstance(self._manual_result, Exception):
-                self._report_failure(self._manual_result)
+                self._report_request(exc=self._manual_result)
 
             # if the user has already manually marked this response as failure or success
             # we can ignore the default behaviour of letting the response code determine the outcome
@@ -440,33 +441,26 @@ class ResponseContextManager(FastResponse):
 
         if exc:
             if isinstance(value, ResponseError):
-                self._report_failure(value)
+                self._report_request(value)
             else:
                 return False
         else:
             try:
                 self.raise_for_status()
             except FAILURE_EXCEPTIONS as e:
-                self._report_failure(e)
-            else:
-                self._report_success()
+                exc = e
+            self._report_request(exc)
+
         return True
 
-    def _report_success(self):
-        self.environment.events.request_success.fire(
-            request_type=self.locust_request_meta["method"],
-            name=self.locust_request_meta["name"],
-            response_time=self.locust_request_meta["response_time"],
-            response_length=self.locust_request_meta["content_size"],
-        )
-
-    def _report_failure(self, exc):
-        self.environment.events.request_failure.fire(
+    def _report_request(self, exc=None):
+        self.environment.events.request.fire(
             request_type=self.locust_request_meta["method"],
             name=self.locust_request_meta["name"],
             response_time=self.locust_request_meta["response_time"],
             response_length=self.locust_request_meta["content_size"],
             exception=exc,
+            context=self.locust_request_meta["context"],
         )
 
     def success(self):

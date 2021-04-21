@@ -71,15 +71,19 @@ class Runner:
         self.target_user_count = None
 
         # set up event listeners for recording requests
-        def on_request_success(request_type, name, response_time, response_length, **kwargs):
+        def on_request(request_type, name, response_time, response_length, exception, context, **kwargs):
             self.stats.log_request(request_type, name, response_time, response_length)
+            if exception:
+                self.stats.log_error(request_type, name, exception)
+                # Fire fail event. To be removed in future versions.
+                self.environment.events.request_failure.fire(
+                    request_type, name, response_time, response_length, exception
+                )
+            else:
+                # Fire success event.To be removed in future versions.
+                self.environment.events.request_success.fire(request_type, name, response_time, response_length)
 
-        def on_request_failure(request_type, name, response_time, response_length, exception, **kwargs):
-            self.stats.log_request(request_type, name, response_time, response_length)
-            self.stats.log_error(request_type, name, exception)
-
-        self.environment.events.request_success.add_listener(on_request_success)
-        self.environment.events.request_failure.add_listener(on_request_failure)
+        self.environment.events.request.add_listener(on_request)
         self.connection_broken = False
 
         # register listener that resets stats when spawning is complete

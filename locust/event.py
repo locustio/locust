@@ -48,6 +48,20 @@ class EventHook:
 
 
 class Events:
+    request: EventHook
+    """
+    Fired when a request in completed, successful or unsuccessful. This event is typically used to report requests when writing custom clients for locust.
+
+    Event arguments:
+
+    :param request_type: Request type method used
+    :param name: Path to the URL that was called (or override name if it was used in the call to the client)
+    :param response_time: Time in milliseconds until exception was thrown
+    :param response_length: Content-length of the response
+    :param exception: Exception instance that was thrown. None if no exception
+    :param context: Dict with context values specified when performing request
+    """
+
     request_success: EventHook
     """
     Fired when a request is completed successfully. This event is typically used to report requests

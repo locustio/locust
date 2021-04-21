@@ -44,12 +44,11 @@ class HttpSession(requests.Session):
                            and then mark it as successful even if the response code was not (i.e 500 or 404).
     """
 
-    def __init__(self, base_url, request_success, request_failure, *args, **kwargs):
+    def __init__(self, base_url, request_event, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.base_url = base_url
-        self.request_success = request_success
-        self.request_failure = request_failure
+        self.request_event = request_event
 
         # Check for basic authentication
         parsed_url = urlparse(self.base_url)
@@ -72,7 +71,7 @@ class HttpSession(requests.Session):
         else:
             return "%s%s" % (self.base_url, path)
 
-    def request(self, method, url, name=None, catch_response=False, **kwargs):
+    def request(self, method, url, name=None, catch_response=False, context={}, **kwargs):
         """
         Constructs and sends a :py:class:`requests.Request`.
         Returns :py:class:`requests.Response` object.
@@ -119,6 +118,8 @@ class HttpSession(requests.Session):
 
         request_meta["name"] = name or (response.history and response.history[0] or response).request.path_url
 
+        request_meta["context"] = context
+
         # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body
         if kwargs.get("stream", False):
@@ -129,7 +130,8 @@ class HttpSession(requests.Session):
         if catch_response:
             response.locust_request_meta = request_meta
             return ResponseContextManager(
-                response, request_success=self.request_success, request_failure=self.request_failure
+                response,
+                request_event=self.request_event,
             )
         else:
             if name:
@@ -138,23 +140,21 @@ class HttpSession(requests.Session):
                 # to temporarily override the response.url attribute
                 orig_url = response.url
                 response.url = name
+
+            exc = None
             try:
                 response.raise_for_status()
             except RequestException as e:
-                self.request_failure.fire(
-                    request_type=request_meta["method"],
-                    name=request_meta["name"],
-                    response_time=request_meta["response_time"],
-                    response_length=request_meta["content_size"],
-                    exception=e,
-                )
-            else:
-                self.request_success.fire(
-                    request_type=request_meta["method"],
-                    name=request_meta["name"],
-                    response_time=request_meta["response_time"],
-                    response_length=request_meta["content_size"],
-                )
+                exc = e
+
+            self.request_event.fire(
+                request_type=request_meta["method"],
+                name=request_meta["name"],
+                response_time=request_meta["response_time"],
+                response_length=request_meta["content_size"],
+                exception=exc,
+                context=request_meta["context"],
+            )
             if name:
                 response.url = orig_url
             return response
@@ -189,11 +189,10 @@ class ResponseContextManager(LocustResponse):
 
     _manual_result = None
 
-    def __init__(self, response, request_success, request_failure):
+    def __init__(self, response, request_event):
         # copy data from response to this object
         self.__dict__ = response.__dict__
-        self._request_success = request_success
-        self._request_failure = request_failure
+        self._request_event = request_event
 
     def __enter__(self):
         return self
@@ -201,9 +200,9 @@ class ResponseContextManager(LocustResponse):
     def __exit__(self, exc, value, traceback):
         if self._manual_result is not None:
             if self._manual_result is True:
-                self._report_success()
+                self._report_request()
             elif isinstance(self._manual_result, Exception):
-                self._report_failure(self._manual_result)
+                self._report_request(self._manual_result)
 
             # if the user has already manually marked this response as failure or success
             # we can ignore the default behaviour of letting the response code determine the outcome
@@ -211,7 +210,7 @@ class ResponseContextManager(LocustResponse):
 
         if exc:
             if isinstance(value, ResponseError):
-                self._report_failure(value)
+                self._report_request(value)
             else:
                 # we want other unknown exceptions to be raised
                 return False
@@ -219,27 +218,20 @@ class ResponseContextManager(LocustResponse):
             try:
                 self.raise_for_status()
             except requests.exceptions.RequestException as e:
-                self._report_failure(e)
+                self._report_request(e)
             else:
-                self._report_success()
+                self._report_request()
 
         return True
 
-    def _report_success(self):
-        self._request_success.fire(
-            request_type=self.locust_request_meta["method"],
-            name=self.locust_request_meta["name"],
-            response_time=self.locust_request_meta["response_time"],
-            response_length=self.locust_request_meta["content_size"],
-        )
-
-    def _report_failure(self, exc):
-        self._request_failure.fire(
+    def _report_request(self, exc=None):
+        self._request_event.fire(
             request_type=self.locust_request_meta["method"],
             name=self.locust_request_meta["name"],
             response_time=self.locust_request_meta["response_time"],
             response_length=self.locust_request_meta["content_size"],
             exception=exc,
+            context=self.locust_request_meta["context"],
         )
 
     def success(self):
