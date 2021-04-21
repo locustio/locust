@@ -423,15 +423,14 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         self.num_failures = 0
         self.num_success = 0
 
-        def on_failure(request_type, name, response_time, response_length, exception, **kwargs):
-            self.num_failures += 1
-            self.last_failure_exception = exception
+        def on_request(exception, **kwargs):
+            if exception:
+                self.num_failures += 1
+                self.last_failure_exception = exception
+            else:
+                self.num_success += 1
 
-        def on_success(**kwargs):
-            self.num_success += 1
-
-        self.environment.events.request_failure.add_listener(on_failure)
-        self.environment.events.request_success.add_listener(on_success)
+        self.environment.events.request.add_listener(on_request)
 
     def test_catch_response(self):
         self.assertEqual(500, self.locust.client.get("/fail").status_code)
@@ -443,9 +442,12 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         self.assertEqual(1, self.num_failures)
         self.assertEqual(1, self.num_success)
         self.assertIn("ultra fast", str(response.content))
+        print(self.num_failures)
 
         with self.locust.client.get("/ultra_fast", catch_response=True) as response:
             raise ResponseError("Not working")
+
+        print(self.num_failures)
 
         self.assertEqual(2, self.num_failures)
         self.assertEqual(1, self.num_success)

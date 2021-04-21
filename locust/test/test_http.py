@@ -13,8 +13,7 @@ class TestHttpSession(WebserverTestCase):
             base_url = "http://127.0.0.1:%i" % self.port
         return HttpSession(
             base_url=base_url,
-            request_success=self.environment.events.request_success,
-            request_failure=self.environment.events.request_failure,
+            request_event=self.environment.events.request,
         )
 
     def test_get(self):
@@ -111,10 +110,10 @@ class TestHttpSession(WebserverTestCase):
         s = self.get_client()
         kwargs = {}
 
-        def on_error(**kw):
+        def on_request(**kw):
             kwargs.update(kw)
 
-        self.environment.events.request_failure.add_listener(on_error)
+        self.environment.events.request.add_listener(on_request)
         s.request("get", "/wrong_url", context={"foo": "bar"})
         self.assertIn("/wrong_url", str(kwargs["exception"]))
         self.assertDictEqual({"foo": "bar"}, kwargs["context"])
@@ -123,10 +122,11 @@ class TestHttpSession(WebserverTestCase):
         s = self.get_client()
         kwargs = {}
 
-        def on_success(**kw):
+        def on_request(exception, **kw):
+            self.assertIsNone(exception)
             kwargs.update(kw)
 
-        self.environment.events.request_success.add_listener(on_success)
+        self.environment.events.request.add_listener(on_request)
         s.request("get", "/request_method", context={"foo": "bar"})
         self.assertDictEqual({"foo": "bar"}, kwargs["context"])
 
@@ -134,10 +134,11 @@ class TestHttpSession(WebserverTestCase):
         s = self.get_client()
         kwargs = {}
 
-        def on_error(**kw):
+        def on_request(**kw):
+            self.assertIsNotNone(kw["exception"])
             kwargs.update(kw)
 
-        self.environment.events.request_failure.add_listener(on_error)
+        self.environment.events.request.add_listener(on_request)
         s.request("get", "/wrong_url/01", name="replaced_url_name", context={"foo": "bar"})
         self.assertIn("for url: replaced_url_name", str(kwargs["exception"]))
         self.assertDictEqual({"foo": "bar"}, kwargs["context"])
