@@ -1,4 +1,74 @@
-# Locust
+# Bevy's Locust Fork
+
+## Manging the Bevy Locust Fork
+
+Bevy maintains a custom fork of locust to allow us to have custom features server-side that are not in the base locustio/locust package.
+Out of consideration for the maintainers of this open-source tool, it is recommended that if you intend to contribute to the Bevy 
+Locust fork that you follow the git recommended patterns for working with upstream remotes. An overview of those upstream patterns 
+can be found [here](https://git-scm.com/book/en/v2/Git-Basics-Working-with-Remotes) and a how-to guide for managing remotes can 
+be found [here](https://docs.github.com/en/github/getting-started-with-github/managing-remote-repositories). 
+
+A specific guide for configuring a remote for a fork can be found [here](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/configuring-a-remote-for-a-fork).
+
+The basics for contributing are these:
+
+1) Clone a copy of this repo - `bevy/locust` - to your machine. In doing so, git will likely preset the origin push and pull urls 
+for you. You can find this out with `git remote -v`:
+
+```
+git remote -v
+origin  git@github.com:bevy/locust.git (fetch)
+origin  git@github.com:bevy/locust.git (push)
+```
+
+This should probably be enough for contributing new Bevy-specific features. However, since `locustio/locust` is an actively maintained project 
+as of this writing, there might ocassionaly be a need to update the `bevy/locust` fork from the upstream `locustio/locust` repo. 
+
+2) If you need to pull new features from `locustio/locust` , then first add the original repo as an upstream:
+
+```
+git remote add upstream git@github.com:locustio/locust.git
+```
+
+Calling `git remote -v` should indicate that `locustio/locust` is configured as an upstream now:
+
+```
+git remote -v                                             
+origin  git@github.com:bevy/locust.git (fetch)
+origin  git@github.com:bevy/locust.git (push)
+upstream    git@github.com:locustio/locust.git (fetch)
+upstream    git@github.com:locustio/locust.git (push)
+```
+
+3) Out of respect for the maintainers of `locustio/locust`, disable upstream pushes in order to avoid accidental pushes to the 
+original project's repository.
+
+```
+git remote set-url --push upstream no_push
+```
+
+Which yields:
+
+```
+git remote -v                                       
+origin  git@github.com:bevy/locust.git (fetch)
+origin  git@github.com:bevy/locust.git (push)
+upstream    git@github.com:locustio/locust.git (fetch)
+upstream    no_push (push)
+```
+
+This is a bit hacky, but it prevents accidental pushes to the original package:
+
+```
+git push upstream
+fatal: 'no_push' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+```
+
+## locustio/locust updates
 
 [![Build Status](https://github.com/locustio/locust/workflows/Tests/badge.svg)](https://github.com/locustio/locust/actions?query=workflow%3ATests)
 [![codecov](https://codecov.io/gh/locustio/locust/branch/master/graph/badge.svg)](https://codecov.io/gh/locustio/locust)
