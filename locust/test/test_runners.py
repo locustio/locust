@@ -311,11 +311,13 @@ class TestLocustRunner(LocustTestCase):
             class task_set(TaskSet):
                 @task
                 def my_task(self):
-                    self.user.environment.events.request_success.fire(
+                    self.user.environment.events.request.fire(
                         request_type="GET",
                         name="/test",
                         response_time=666,
                         response_length=1337,
+                        exception=None,
+                        context={},
                     )
                     sleep(2)
 
@@ -334,11 +336,13 @@ class TestLocustRunner(LocustTestCase):
             class task_set(TaskSet):
                 @task
                 def my_task(self):
-                    self.user.environment.events.request_success.fire(
+                    self.user.environment.events.request.fire(
                         request_type="GET",
                         name="/test",
                         response_time=666,
                         response_length=1337,
+                        exception=None,
+                        context={},
                     )
                     sleep(2)
 
@@ -447,11 +451,13 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             @task
             def incr_stats(l):
-                l.environment.events.request_success.fire(
+                l.environment.events.request.fire(
                     request_type="GET",
                     name="/",
                     response_time=1337,
                     response_length=666,
+                    exception=None,
+                    context={},
                 )
 
         with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
