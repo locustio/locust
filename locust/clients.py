@@ -129,10 +129,7 @@ class HttpSession(requests.Session):
 
         if catch_response:
             response.locust_request_meta = request_meta
-            return ResponseContextManager(
-                response,
-                request_event=self.request_event,
-            )
+            return ResponseContextManager(response, request_event=self.request_event)
         else:
             if name:
                 # Since we use the Exception message when grouping failures, in order to not get
@@ -198,14 +195,13 @@ class ResponseContextManager(LocustResponse):
         return self
 
     def __exit__(self, exc, value, traceback):
+        # if the user has already manually marked this response as failure or success
+        # we can ignore the default behaviour of letting the response code determine the outcome
         if self._manual_result is not None:
             if self._manual_result is True:
                 self._report_request()
             elif isinstance(self._manual_result, Exception):
                 self._report_request(self._manual_result)
-
-            # if the user has already manually marked this response as failure or success
-            # we can ignore the default behaviour of letting the response code determine the outcome
             return exc is None
 
         if exc:

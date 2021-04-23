@@ -429,14 +429,14 @@ class ResponseContextManager(FastResponse):
         return self
 
     def __exit__(self, exc, value, traceback):
+        # if the user has already manually marked this response as failure or success
+        # we can ignore the default behaviour of letting the response code determine the outcome
         if self._manual_result is not None:
             if self._manual_result is True:
                 self._report_request()
             elif isinstance(self._manual_result, Exception):
                 self._report_request(exc=self._manual_result)
 
-            # if the user has already manually marked this response as failure or success
-            # we can ignore the default behaviour of letting the response code determine the outcome
             return exc is None
 
         if exc:
