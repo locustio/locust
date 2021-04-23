@@ -138,9 +138,9 @@ class Runner:
         returns a list "bucket" with the weighted users
         """
         bucket = []
-        weight_sum = sum([user.weight for user in self.user_classes])
+        weight_sum = sum([user.weight for user in self.user_class_test_selection])
         residuals = {}
-        for user in self.user_classes:
+        for user in self.user_class_test_selection:
             if self.environment.host is not None:
                 user.host = self.environment.host
 
@@ -178,7 +178,7 @@ class Runner:
             "Spawning %i users at the rate %g users/s (%i users already running)..."
             % (spawn_count, spawn_rate, existing_count)
         )
-        occurrence_count = dict([(l.__name__, 0) for l in self.user_classes])
+        occurrence_count = dict([(l.__name__, 0) for l in self.user_class_test_selection])
 
         def spawn():
             sleep_time = 1.0 / spawn_rate
@@ -198,6 +198,7 @@ class Runner:
                 occurrence_count[user_class.__name__] += 1
                 new_user = user_class(self.environment)
                 new_user.start(self.user_greenlets)
+                logging.info(f"Spawning new {user_class.select_name!r}")
                 if len(self.user_greenlets) % 10 == 0:
                     logger.debug("%i users spawned" % len(self.user_greenlets))
                 if bucket:
