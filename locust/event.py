@@ -47,6 +47,16 @@ class EventHook:
                 log.unhandled_greenlet_exception = True
 
 
+class DeprecatedEventHook(EventHook):
+    def __init__(self, message):
+        self.message = message
+        super().__init__()
+
+    def add_listener(self, handler):
+        logging.warning(self.message)
+        return super().add_listener(handler)
+
+
 class Events:
     request: EventHook
     """
@@ -62,7 +72,7 @@ class Events:
     :param context: Dict with context values specified when performing request
     """
 
-    request_success: EventHook
+    request_success: DeprecatedEventHook
     """
     Fired when a request is completed successfully. This event is typically used to report requests
     when writing custom clients for locust.
@@ -75,7 +85,7 @@ class Events:
     :param response_length: Content-length of the response
     """
 
-    request_failure: EventHook
+    request_failure: DeprecatedEventHook
     """
     Fired when a request fails. This event is typically used to report failed requests when writing
     custom clients for locust.
@@ -193,3 +203,29 @@ class Events:
         for name, value in self.__annotations__.items():
             if value == EventHook:
                 setattr(self, name, value())
+
+        setattr(
+            self, "request_success", DeprecatedEventHook("request_success event deprecated. Use the request event.")
+        )
+        setattr(
+            self, "request_failure", DeprecatedEventHook("request_failure event deprecated. Use the request event.")
+        )
+
+        def on_request(request_type, name, response_time, response_length, exception, context, **kwargs):
+            if exception:
+                self.request_failure.fire(
+                    request_type=request_type,
+                    name=name,
+                    response_time=response_time,
+                    response_length=response_length,
+                    exception=exception,
+                )
+            else:
+                self.request_success.fire(
+                    request_type=request_type,
+                    name=name,
+                    response_time=response_time,
+                    response_length=response_length,
+                )
+
+        self.request.add_listener(on_request)
