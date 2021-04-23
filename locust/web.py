@@ -34,6 +34,14 @@ greenlet_exception_handler = greenlet_exception_logger(logger)
 DEFAULT_CACHE_TIME = 2.0
 
 
+def parse_user_class_dict_from_environment(user_classes):
+    return [{"value": x.select_value, "class": x, "client_name": x.select_name} for x in user_classes]
+
+
+def get_user_class_from_select_value(test_client_value, user_classes_list):
+    return list(filter(lambda x: x["value"] == test_client_value, user_classes_list))[0]["class"]
+
+
 class WebUI:
     """
     Sets up and runs a Flask web app that can start and stop load tests using the
@@ -129,7 +137,9 @@ class WebUI:
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             self.update_template_args()
-            return render_template("index.html", **self.template_args)
+            user_class_args = parse_user_class_dict_from_environment(environment.runner.user_classes)
+            all_template_args = {**self.template_args, "user_classes": user_class_args}
+            return render_template("index.html", **all_template_args)
 
         @app.route("/swarm", methods=["POST"])
         @self.auth_required_if_enabled
@@ -147,6 +157,11 @@ class WebUI:
                 )
             user_count = int(request.form["user_count"])
             spawn_rate = float(request.form["spawn_rate"])
+            user_classes = parse_user_class_dict_from_environment(environment.runner.user_classes)
+            environment.runner.user_class_test_selection = get_user_class_from_select_value(
+                request.form["test_client"],
+                user_classes,
+            )
 
             environment.runner.start(user_count, spawn_rate)
             return jsonify({"success": True, "message": "Swarming started", "host": environment.host})
