@@ -1269,7 +1269,7 @@ class TestMasterRunner(LocustTestCase):
         self.assertEqual(2, exception["count"])
 
     def test_exception_is_caught(self):
-        """ Test that exceptions are stored, and execution continues """
+        """Test that exceptions are stored, and execution continues"""
 
         class MyTaskSet(TaskSet):
             def __init__(self, *a, **kw):
@@ -1308,7 +1308,7 @@ class TestMasterRunner(LocustTestCase):
         self.assertEqual(2, exception["count"])
 
     def test_master_reset_connection(self):
-        """ Test that connection will be reset when network issues found """
+        """Test that connection will be reset when network issues found"""
         with mock.patch("locust.runners.FALLBACK_INTERVAL", new=0.1):
             with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
                 master = self.get_runner()
