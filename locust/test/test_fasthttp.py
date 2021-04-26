@@ -442,12 +442,9 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         self.assertEqual(1, self.num_failures)
         self.assertEqual(1, self.num_success)
         self.assertIn("ultra fast", str(response.content))
-        print(self.num_failures)
 
         with self.locust.client.get("/ultra_fast", catch_response=True) as response:
             raise ResponseError("Not working")
-
-        print(self.num_failures)
 
         self.assertEqual(2, self.num_failures)
         self.assertEqual(1, self.num_success)

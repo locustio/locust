@@ -226,8 +226,8 @@ class ResponseContextManager(LocustResponse):
             name=self.locust_request_meta["name"],
             response_time=self.locust_request_meta["response_time"],
             response_length=self.locust_request_meta["content_size"],
-            exception=exc,
             context=self.locust_request_meta["context"],
+            exception=exc,
         )
 
     def success(self):

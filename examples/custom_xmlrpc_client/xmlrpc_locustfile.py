@@ -18,20 +18,23 @@ class XmlRpcClient(ServerProxy):
 
         def wrapper(*args, **kwargs):
             start_time = time.time()
+            exc = None
             try:
                 result = func(*args, **kwargs)
             except Fault as e:
-                total_time = int((time.time() - start_time) * 1000)
-                self._locust_environment.events.request_failure.fire(
-                    request_type="xmlrpc", name=name, response_time=total_time, exception=e
-                )
-            else:
-                total_time = int((time.time() - start_time) * 1000)
-                self._locust_environment.events.request_success.fire(
-                    request_type="xmlrpc", name=name, response_time=total_time, response_length=0
-                )
-                # In this example, I've hardcoded response_length=0. If we would want the response length to be
-                # reported correctly in the statistics, we would probably need to hook in at a lower level
+                exc = e
+
+            total_time = int((time.time() - start_time) * 1000)
+            self._locust_environment.events.request.fire(
+                request_type="xmlrpc",
+                name=name,
+                response_time=total_time,
+                response_length=0,
+                context={},
+                exception=exc,
+            )
+            # In this example, I've hardcoded response_length=0. If we would want the response length to be
+            # reported correctly in the statistics, we would probably need to hook in at a lower level
 
         return wrapper
 

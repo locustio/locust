@@ -435,7 +435,7 @@ class ResponseContextManager(FastResponse):
             if self._manual_result is True:
                 self._report_request()
             elif isinstance(self._manual_result, Exception):
-                self._report_request(exc=self._manual_result)
+                self._report_request(self._manual_result)
 
             return exc is None
 
@@ -459,8 +459,8 @@ class ResponseContextManager(FastResponse):
             name=self.locust_request_meta["name"],
             response_time=self.locust_request_meta["response_time"],
             response_length=self.locust_request_meta["content_size"],
-            exception=exc,
             context=self.locust_request_meta["context"],
+            exception=exc,
         )
 
     def success(self):

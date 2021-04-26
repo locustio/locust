@@ -15,9 +15,10 @@ Here's an example on how to set up an event listener::
 
     from locust import events
     
-    @events.request_success.add_listener
-    def my_success_handler(request_type, name, response_time, response_length, **kw):
-        print("Successfully made a request to: %s" % name)
+    @events.request.add_listener
+    def my_request_handler(request_type, name, response_time, response_length, context, exception, **kw):
+        if not exception:
+            print("Successfully made a request to: %s" % name)
 
 
 .. note::

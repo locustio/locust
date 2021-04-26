@@ -126,7 +126,7 @@ def locust_init(environment, **kwargs):
 @events.request.add_listener
 def on_request(request_type, name, response_time, response_length, exception, context, **kwargs):
     """
-    Event handler that get triggered on every successful request
+    Event handler that get triggered on every request
     """
     stats.setdefault(name, {"content-length": 0})
     stats[name]["content-length"] += response_length
