@@ -520,6 +520,25 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         self.assertEqual(0, self.num_success)
         self.assertEqual(1, self.num_failures)
 
+    def test_status_specific_request_event(self):
+        status = {"success_amount": 0, "failure_amount": 0}
+
+        def on_success(**kw):
+            status["success_amount"] += 1
+
+        def on_failure(**kw):
+            status["failure_amount"] += 1
+
+        self.environment.events.request_success.add_listener(on_success)
+        self.environment.events.request_failure.add_listener(on_failure)
+        with self.locust.client.get("/ultra_fast", catch_response=True) as response:
+            pass
+        with self.locust.client.get("/wrong_url", catch_response=True) as response:
+            pass
+
+        self.assertEqual(1, status["success_amount"])
+        self.assertEqual(1, status["failure_amount"])
+
 
 class TestFastHttpSsl(LocustTestCase):
     def setUp(self):
