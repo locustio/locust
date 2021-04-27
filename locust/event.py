@@ -211,7 +211,9 @@ class Events:
             self, "request_failure", DeprecatedEventHook("request_failure event deprecated. Use the request event.")
         )
 
-        def on_request(request_type, name, response_time, response_length, exception, context, **kwargs):
+        def fire_deprecated_request_handlers(
+            request_type, name, response_time, response_length, exception, context, **kwargs
+        ):
             if exception:
                 self.request_failure.fire(
                     request_type=request_type,
@@ -228,4 +230,4 @@ class Events:
                     response_length=response_length,
                 )
 
-        self.request.add_listener(on_request)
+        self.request.add_listener(fire_deprecated_request_handlers)
