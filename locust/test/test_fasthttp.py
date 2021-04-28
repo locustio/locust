@@ -520,7 +520,7 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         self.assertEqual(0, self.num_success)
         self.assertEqual(1, self.num_failures)
 
-    def test_status_specific_request_event(self):
+    def test_deprecated_request_events(self):
         status = {"success_amount": 0, "failure_amount": 0}
 
         def on_success(**kw):

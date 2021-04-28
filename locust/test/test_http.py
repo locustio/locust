@@ -130,7 +130,7 @@ class TestHttpSession(WebserverTestCase):
         s.request("get", "/request_method", context={"foo": "bar"})
         self.assertDictEqual({"foo": "bar"}, kwargs["context"])
 
-    def test_status_specific_request_event(self):
+    def test_deprecated_request_events(self):
         s = self.get_client()
         status = {"success_amount": 0, "failure_amount": 0}
 
