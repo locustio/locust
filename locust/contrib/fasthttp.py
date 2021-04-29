@@ -312,6 +312,7 @@ class FastHttpUser(User):
             max_redirects=self.max_redirects,
             max_retries=self.max_retries,
             insecure=self.insecure,
+            user=self,
         )
 
 

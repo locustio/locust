@@ -384,7 +384,7 @@ class TestFastHttpUserClass(WebserverTestCase):
         self.assertFalse("location" in resp.headers)
 
     def test_slow_redirect(self):
-        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port, user=None)
         url = "/redirect?url=/redirect&delay=0.5"
         r = s.get(url)
         stats = self.runner.stats.get(url, method="GET")
@@ -565,7 +565,7 @@ class TestFastHttpSsl(LocustTestCase):
         self.web_ui.stop()
 
     def test_ssl_request_insecure(self):
-        s = FastHttpSession(self.environment, "https://127.0.0.1:%i" % self.web_port, insecure=True)
+        s = FastHttpSession(self.environment, "https://127.0.0.1:%i" % self.web_port, insecure=True, user=None)
         r = s.get("/")
         self.assertEqual(200, r.status_code)
         self.assertIn("<title>Locust</title>", r.content.decode("utf-8"))
