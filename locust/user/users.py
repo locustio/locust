@@ -1,5 +1,5 @@
 from locust.user.wait_time import constant
-from typing import Any, Callable, List, TypeVar, Union
+from typing import Any, Callable, Dict, List, TypeVar, Union
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
 from locust.clients import HttpSession
@@ -184,6 +184,9 @@ class User(object, metaclass=UserMeta):
         elif self._state == LOCUST_STATE_RUNNING:
             self._state = LOCUST_STATE_STOPPING
             return False
+
+    def context(self) -> Dict:
+        return {}
 
 
 class HttpUser(User):

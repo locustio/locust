@@ -250,6 +250,23 @@ class TestFastHttpUserClass(WebserverTestCase):
         self.assertTrue(FastHttpUser.abstract)
         self.assertFalse(is_user_class(FastHttpUser))
 
+    def test_class_context(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+            def context(self):
+                return {"user": self}
+
+        kwargs = {}
+
+        def on_request(**kw):
+            kwargs.update(kw)
+
+        self.environment.events.request.add_listener(on_request)
+        user = MyUser(self.environment)
+        user.client.request("get", "/request_method")
+        self.assertDictContainsSubset({"user": user}, kwargs["context"])
+
     def test_get_request(self):
         self.response = ""
 
