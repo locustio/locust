@@ -44,11 +44,12 @@ class HttpSession(requests.Session):
                            and then mark it as successful even if the response code was not (i.e 500 or 404).
     """
 
-    def __init__(self, base_url, request_event, *args, **kwargs):
+    def __init__(self, base_url, request_event, user, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.base_url = base_url
         self.request_event = request_event
+        self.user = user
 
         # Check for basic authentication
         parsed_url = urlparse(self.base_url)
@@ -103,33 +104,30 @@ class HttpSession(requests.Session):
 
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(url)
-
-        # store meta data that is used when reporting the request to locust's statistics
-        request_meta = {}
-
-        # set up pre_request hook for attaching meta data to the request object
-        request_meta["method"] = method
-        request_meta["start_time"] = time.monotonic()
+        start_time = time.monotonic()
 
         response = self._send_request_safe_mode(method, url, **kwargs)
 
-        # record the consumed time
-        request_meta["response_time"] = (time.monotonic() - request_meta["start_time"]) * 1000
-
-        request_meta["name"] = name or (response.history and response.history[0] or response).request.path_url
-
-        request_meta["context"] = context
+        # store meta data that is used when reporting the request to locust's statistics
+        request_meta = {
+            "request_type": method,
+            "start_time": start_time,
+            "response_time": (time.monotonic() - start_time) * 1000,
+            "name": name or (response.history and response.history[0] or response).request.path_url,
+            "context": context,
+            "user": self.user,
+            "exception": None,
+        }
 
         # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body
         if kwargs.get("stream", False):
-            request_meta["content_size"] = int(response.headers.get("content-length") or 0)
+            request_meta["response_length"] = int(response.headers.get("content-length") or 0)
         else:
-            request_meta["content_size"] = len(response.content or b"")
+            request_meta["response_length"] = len(response.content or b"")
 
         if catch_response:
-            response.locust_request_meta = request_meta
-            return ResponseContextManager(response, request_event=self.request_event)
+            return ResponseContextManager(response, request_event=self.request_event, request_meta=request_meta)
         else:
             if name:
                 # Since we use the Exception message when grouping failures, in order to not get
@@ -138,20 +136,12 @@ class HttpSession(requests.Session):
                 orig_url = response.url
                 response.url = name
 
-            exc = None
             try:
                 response.raise_for_status()
             except RequestException as e:
-                exc = e
+                request_meta["exception"] = e
 
-            self.request_event.fire(
-                request_type=request_meta["method"],
-                name=request_meta["name"],
-                response_time=request_meta["response_time"],
-                response_length=request_meta["content_size"],
-                exception=exc,
-                context=request_meta["context"],
-            )
+            self.request_event.fire(**request_meta)
             if name:
                 response.url = orig_url
             return response
@@ -186,10 +176,11 @@ class ResponseContextManager(LocustResponse):
 
     _manual_result = None
 
-    def __init__(self, response, request_event):
+    def __init__(self, response, request_event, request_meta):
         # copy data from response to this object
         self.__dict__ = response.__dict__
         self._request_event = request_event
+        self.request_meta = request_meta
 
     def __enter__(self):
         return self
@@ -199,14 +190,16 @@ class ResponseContextManager(LocustResponse):
         # we can ignore the default behaviour of letting the response code determine the outcome
         if self._manual_result is not None:
             if self._manual_result is True:
-                self._report_request()
+                self.request_meta["exception"] = None
             elif isinstance(self._manual_result, Exception):
-                self._report_request(self._manual_result)
+                self.request_meta["exception"] = self._manual_result
+            self._report_request()
             return exc is None
 
         if exc:
             if isinstance(value, ResponseError):
-                self._report_request(value)
+                self.request_meta["exception"] = value
+                self._report_request()
             else:
                 # we want other unknown exceptions to be raised
                 return False
@@ -214,21 +207,14 @@ class ResponseContextManager(LocustResponse):
             try:
                 self.raise_for_status()
             except requests.exceptions.RequestException as e:
-                self._report_request(e)
-            else:
-                self._report_request()
+                self.request_meta["exception"] = e
+
+            self._report_request()
 
         return True
 
     def _report_request(self, exc=None):
-        self._request_event.fire(
-            request_type=self.locust_request_meta["method"],
-            name=self.locust_request_meta["name"],
-            response_time=self.locust_request_meta["response_time"],
-            response_length=self.locust_request_meta["content_size"],
-            context=self.locust_request_meta["context"],
-            exception=exc,
-        )
+        self._request_event.fire(**self.request_meta)
 
     def success(self):
         """

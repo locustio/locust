@@ -12,15 +12,15 @@ from .util import create_tls_cert
 
 class TestFastHttpSession(WebserverTestCase):
     def get_client(self):
-        return FastHttpSession(self.environment, base_url="http://127.0.0.1:%i" % self.port)
+        return FastHttpSession(self.environment, base_url="http://127.0.0.1:%i" % self.port, user=None)
 
     def test_get(self):
-        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         r = s.get("/ultra_fast")
         self.assertEqual(200, r.status_code)
 
     def test_connection_error(self):
-        s = FastHttpSession(self.environment, "http://localhost:1")
+        s = FastHttpSession(self.environment, "http://localhost:1", user=None)
         r = s.get("/", timeout=0.1)
         self.assertEqual(r.status_code, 0)
         self.assertEqual(None, r.content)
@@ -29,13 +29,13 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertTrue(isinstance(next(iter(self.runner.stats.errors.values())).error, ConnectionRefusedError))
 
     def test_404(self):
-        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         r = s.get("/does_not_exist")
         self.assertEqual(404, r.status_code)
         self.assertEqual(1, self.runner.stats.get("/does_not_exist", "GET").num_failures)
 
     def test_204(self):
-        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         r = s.get("/status/204")
         self.assertEqual(204, r.status_code)
         self.assertEqual(1, self.runner.stats.get("/status/204", "GET").num_requests)
@@ -45,7 +45,7 @@ class TestFastHttpSession(WebserverTestCase):
         """
         Test a request to an endpoint that returns a streaming response
         """
-        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         r = s.get("/streaming/30")
 
         # verify that the time reported includes the download time of the whole streamed response
@@ -61,7 +61,7 @@ class TestFastHttpSession(WebserverTestCase):
         _ = r.content
 
     def test_slow_redirect(self):
-        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         url = "/redirect?url=/redirect&delay=0.5"
         r = s.get(url)
         stats = self.runner.stats.get(url, method="GET")
@@ -69,7 +69,7 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertGreater(stats.avg_response_time, 500)
 
     def test_post_redirect(self):
-        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         url = "/redirect"
         r = s.post(url)
         self.assertEqual(200, r.status_code)
@@ -79,32 +79,32 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(0, get_stats.num_requests)
 
     def test_cookie(self):
-        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         r = s.post("/set_cookie?name=testcookie&value=1337")
         self.assertEqual(200, r.status_code)
         r = s.get("/get_cookie?name=testcookie")
         self.assertEqual("1337", r.content.decode())
 
     def test_head(self):
-        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         r = s.head("/request_method")
         self.assertEqual(200, r.status_code)
         self.assertEqual("", r.content.decode())
 
     def test_delete(self):
-        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         r = s.delete("/request_method")
         self.assertEqual(200, r.status_code)
         self.assertEqual("DELETE", r.content.decode())
 
     def test_patch(self):
-        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         r = s.patch("/request_method")
         self.assertEqual(200, r.status_code)
         self.assertEqual("PATCH", r.content.decode())
 
     def test_options(self):
-        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         r = s.options("/request_method")
         self.assertEqual(200, r.status_code)
         self.assertEqual("", r.content.decode())
@@ -114,7 +114,7 @@ class TestFastHttpSession(WebserverTestCase):
         )
 
     def test_json_payload(self):
-        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port)
+        s = self.get_client()
         r = s.post("/request_method", json={"foo": "bar"})
         self.assertEqual(200, r.status_code)
 

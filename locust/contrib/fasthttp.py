@@ -64,10 +64,11 @@ def insecure_ssl_context_factory():
 class FastHttpSession:
     auth_header = None
 
-    def __init__(self, environment: Environment, base_url: str, insecure=True, **kwargs):
+    def __init__(self, environment: Environment, base_url: str, user: "FastHttpUser", insecure=True, **kwargs):
         self.environment = environment
         self.base_url = base_url
         self.cookiejar = CookieJar()
+        self.user = user
         if insecure:
             ssl_context_factory = insecure_ssl_context_factory
         else:
@@ -160,13 +161,16 @@ class FastHttpSession:
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(path)
 
+        start_time = default_timer()
+
         # store meta data that is used when reporting the request to locust's statistics
-        request_meta = {}
-        # set up pre_request hook for attaching meta data to the request object
-        request_meta["method"] = method
-        request_meta["start_time"] = default_timer()
-        request_meta["name"] = name or path
-        request_meta["context"] = context
+        request_meta = {
+            "request_type": method,
+            "start_time": start_time,
+            "name": name or path,
+            "context": context,
+            "exception": None,
+        }
 
         headers = headers or {}
         if auth:
@@ -196,21 +200,15 @@ class FastHttpSession:
         # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body
         if stream:
-            request_meta["content_size"] = int(response.headers.get("content-length") or 0)
+            request_meta["response_length"] = int(response.headers.get("response_length") or 0)
         else:
             try:
-                request_meta["content_size"] = len(response.content or "")
+                request_meta["response_length"] = len(response.content or "")
             except HTTPParseError as e:
                 request_meta["response_time"] = int((default_timer() - request_meta["start_time"]) * 1000)
-                self.environment.events.request.fire(
-                    request_type=request_meta["method"],
-                    name=request_meta["name"],
-                    response_time=request_meta["response_time"],
-                    response_length=0,
-                    exception=e,
-                    context=request_meta["context"],
-                )
-
+                request_meta["response_length"] = 0
+                request_meta["exception"] = e
+                self.environment.events.request.fire(**request_meta)
                 return response
 
         # Record the consumed time
@@ -219,23 +217,14 @@ class FastHttpSession:
         request_meta["response_time"] = int((default_timer() - request_meta["start_time"]) * 1000)
 
         if catch_response:
-            response.locust_request_meta = request_meta
-            return ResponseContextManager(response, environment=self.environment)
+            return ResponseContextManager(response, environment=self.environment, request_meta=request_meta)
         else:
-            exception = None
             try:
                 response.raise_for_status()
             except FAILURE_EXCEPTIONS as e:
-                exception = e
+                request_meta["exception"] = e
 
-            self.environment.events.request.fire(
-                request_type=request_meta["method"],
-                name=request_meta["name"],
-                response_time=request_meta["response_time"],
-                response_length=request_meta["content_size"],
-                exception=exception,
-                context=request_meta["context"],
-            )
+            self.environment.events.request.fire(**request_meta)
             return response
 
     def delete(self, path, **kwargs):
@@ -418,12 +407,13 @@ class ResponseContextManager(FastResponse):
 
     _manual_result = None
 
-    def __init__(self, response, environment):
+    def __init__(self, response, environment, request_meta):
         # copy data from response to this object
         self.__dict__ = response.__dict__
         self._cached_content = response.content
         # store reference to locust Environment
         self.environment = environment
+        self._request_meta = request_meta
 
     def __enter__(self):
         return self
@@ -435,33 +425,28 @@ class ResponseContextManager(FastResponse):
             if self._manual_result is True:
                 self._report_request()
             elif isinstance(self._manual_result, Exception):
-                self._report_request(self._manual_result)
+                self._request_meta["exception"] = self._manual_result
+                self._report_request()
 
             return exc is None
 
         if exc:
             if isinstance(value, ResponseError):
-                self._report_request(value)
+                self._request_meta["exception"] = value
+                self._report_request()
             else:
                 return False
         else:
             try:
                 self.raise_for_status()
             except FAILURE_EXCEPTIONS as e:
-                exc = e
-            self._report_request(exc)
+                self._request_meta["exception"] = e
+            self._report_request()
 
         return True
 
-    def _report_request(self, exc=None):
-        self.environment.events.request.fire(
-            request_type=self.locust_request_meta["method"],
-            name=self.locust_request_meta["name"],
-            response_time=self.locust_request_meta["response_time"],
-            response_length=self.locust_request_meta["content_size"],
-            context=self.locust_request_meta["context"],
-            exception=exc,
-        )
+    def _report_request(self):
+        self.environment.events.request.fire(**self._request_meta)
 
     def success(self):
         """

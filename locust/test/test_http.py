@@ -14,6 +14,7 @@ class TestHttpSession(WebserverTestCase):
         return HttpSession(
             base_url=base_url,
             request_event=self.environment.events.request,
+            user=None,
         )
 
     def test_get(self):
