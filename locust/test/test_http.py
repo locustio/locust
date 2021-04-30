@@ -118,7 +118,7 @@ class TestHttpSession(WebserverTestCase):
         self.environment.events.request.add_listener(on_request)
         s.request("get", "/wrong_url", context={"foo": "bar"})
         self.assertIn("/wrong_url", str(kwargs["exception"]))
-        self.assertDictContainsSubset({"foo": "bar"}, kwargs["context"])
+        self.assertDictEqual({"foo": "bar"}, kwargs["context"])
 
     def test_context_in_success(self):
         s = self.get_client()
@@ -130,7 +130,7 @@ class TestHttpSession(WebserverTestCase):
 
         self.environment.events.request.add_listener(on_request)
         s.request("get", "/request_method", context={"foo": "bar"})
-        self.assertDictContainsSubset({"foo": "bar"}, kwargs["context"])
+        self.assertDictEqual({"foo": "bar"}, kwargs["context"])
 
     def test_deprecated_request_events(self):
         s = self.get_client()
@@ -160,7 +160,7 @@ class TestHttpSession(WebserverTestCase):
         self.environment.events.request.add_listener(on_request)
         s.request("get", "/wrong_url/01", name="replaced_url_name", context={"foo": "bar"})
         self.assertIn("for url: replaced_url_name", str(kwargs["exception"]))
-        self.assertDictContainsSubset({"foo": "bar"}, kwargs["context"])
+        self.assertDictEqual({"foo": "bar"}, kwargs["context"])
 
     def test_get_with_params(self):
         s = self.get_client()
@@ -257,4 +257,4 @@ class TestHttpSession(WebserverTestCase):
 
         user = TestUser(self.environment)
         user.client.request("get", "/request_method")
-        self.assertDictContainsSubset({"user": user}, kwargs["context"])
+        self.assertDictEqual({"user": user}, kwargs["context"])

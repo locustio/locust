@@ -39,7 +39,7 @@ class EventHook:
             try:
                 handler(**kwargs)
             except (StopUser, RescheduleTask, RescheduleTaskImmediately, InterruptTaskSet):
-                # These exceptions could be thrown by, for example, a request_failure handler,
+                # These exceptions could be thrown by, for example, a request handler,
                 # in which case they are entirely appropriate and should not be caught
                 raise
             except Exception:
@@ -204,12 +204,9 @@ class Events:
             if value == EventHook:
                 setattr(self, name, value())
 
-        setattr(
-            self, "request_success", DeprecatedEventHook("request_success event deprecated. Use the request event.")
-        )
-        setattr(
-            self, "request_failure", DeprecatedEventHook("request_failure event deprecated. Use the request event.")
-        )
+        self.request_success = DeprecatedEventHook("request_success event deprecated. Use the request event.")
+
+        self.request_failure = DeprecatedEventHook("request_failure event deprecated. Use the request event.")
 
         def fire_deprecated_request_handlers(
             request_type, name, response_time, response_length, exception, context, **kwargs

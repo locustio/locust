@@ -17,8 +17,10 @@ Here's an example on how to set up an event listener::
     
     @events.request.add_listener
     def my_request_handler(request_type, name, response_time, response_length, context, exception, **kw):
-        if not exception:
-            print("Successfully made a request to: %s" % name)
+        if exception:
+            print(f"Request to {name} failed with exception {exception}")
+        else:
+            print(f"Successfully made a request to: {name})
 
 
 .. note::

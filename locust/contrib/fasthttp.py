@@ -163,7 +163,7 @@ class FastHttpSession:
 
         start_time = default_timer()
 
-        if self.user and self.user.context():
+        if self.user:
             context.update(self.user.context())
 
         # store meta data that is used when reporting the request to locust's statistics
@@ -416,7 +416,7 @@ class ResponseContextManager(FastResponse):
         self.__dict__ = response.__dict__
         self._cached_content = response.content
         # store reference to locust Environment
-        self.environment = environment
+        self._environment = environment
         self._request_meta = request_meta
 
     def __enter__(self):
@@ -450,7 +450,7 @@ class ResponseContextManager(FastResponse):
         return True
 
     def _report_request(self):
-        self.environment.events.request.fire(**self._request_meta)
+        self._environment.events.request.fire(**self._request_meta)
 
     def success(self):
         """

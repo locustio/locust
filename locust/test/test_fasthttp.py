@@ -265,7 +265,7 @@ class TestFastHttpUserClass(WebserverTestCase):
         self.environment.events.request.add_listener(on_request)
         user = MyUser(self.environment)
         user.client.request("get", "/request_method")
-        self.assertDictContainsSubset({"user": user}, kwargs["context"])
+        self.assertDictEqual({"user": user}, kwargs["context"])
 
     def test_get_request(self):
         self.response = ""
