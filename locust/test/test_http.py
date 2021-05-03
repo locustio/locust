@@ -256,7 +256,7 @@ class TestHttpSession(WebserverTestCase):
 
     def test_user_context(self):
         class TestUser(HttpUser):
-            host = "http://localhost"
+            host = f"http://127.0.0.1:{self.port}"
 
             def context(self):
                 return {"user": self.username}
