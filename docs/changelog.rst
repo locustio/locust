@@ -4,6 +4,19 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.5.0
+=====
+
+* Add new event called request. Is called on every request successful or not. request_success and request_failure are still available but are deprecated
+* Add parameter context to the request event. Can be used to forward information when calling a request, things like user information, tags etc
+
+1.4.4
+=====
+
+* Ensure runner.quit finishes even when users are broken https://github.com/locustio/locust/pull/1728
+* Make runner / user count available to LoadTestShape https://github.com/locustio/locust/pull/1719
+* Other small fixes
+
 1.4.3
 =====
 

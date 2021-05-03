@@ -83,15 +83,12 @@ class Runner:
         self.target_user_class_occurrences: Dict[str, int] = {}
 
         # set up event listeners for recording requests
-        def on_request_success(request_type, name, response_time, response_length, **kwargs):
+        def on_request(request_type, name, response_time, response_length, exception, context, **kwargs):
             self.stats.log_request(request_type, name, response_time, response_length)
+            if exception:
+                self.stats.log_error(request_type, name, exception)
 
-        def on_request_failure(request_type, name, response_time, response_length, exception, **kwargs):
-            self.stats.log_request(request_type, name, response_time, response_length)
-            self.stats.log_error(request_type, name, exception)
-
-        self.environment.events.request_success.add_listener(on_request_success)
-        self.environment.events.request_failure.add_listener(on_request_failure)
+        self.environment.events.request.add_listener(on_request)
         self.connection_broken = False
 
         # register listener that resets stats when spawning is complete
@@ -554,7 +551,9 @@ class MasterRunner(DistributedRunner):
             self.server = rpc.Server(master_bind_host, master_bind_port)
         except RPCError as e:
             if e.args[0] == "Socket bind failure: Address already in use":
-                port_string = master_bind_host + ":" + master_bind_port if master_bind_host != "*" else master_bind_port
+                port_string = (
+                    master_bind_host + ":" + str(master_bind_port) if master_bind_host != "*" else str(master_bind_port)
+                )
                 logger.error(
                     f"The Locust master port ({port_string}) was busy. Close any applications using that port - perhaps an old instance of Locust master is still running? ({e.args[0]})"
                 )
@@ -623,6 +622,8 @@ class MasterRunner(DistributedRunner):
             self.stats.clear_all()
             self.exceptions = {}
             self.environment.events.test_start.fire(environment=self.environment)
+            if self.environment.shape_class:
+                self.environment.shape_class.reset_time()
 
         self.update_state(STATE_SPAWNING)
 

@@ -15,7 +15,7 @@ cmd = [
     "-p",
     "locust",
     "--exclude-labels",
-    "duplicate,question,invalid,wontfix,cantfix",
+    "duplicate,question,invalid,wontfix,cantfix,stale",
     "--future-release",
     version,
 ]

@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.4.4](https://github.com/locustio/locust/tree/1.4.4) (2021-04-03)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.4.3...1.4.4)
+
+**Fixed bugs:**
+
+- self.quit\(\) fails test doesn't stop [\#1726](https://github.com/locustio/locust/issues/1726)
+- LoadTestShape run\_time broken when using test\_start and test\_stop decorators [\#1718](https://github.com/locustio/locust/issues/1718)
+- Distributed test stopped despite workers running [\#1707](https://github.com/locustio/locust/issues/1707)
+- Charts not working well in version 1.4.2 [\#1690](https://github.com/locustio/locust/issues/1690)
+
+**Closed issues:**
+
+- A simple TypeError（str + int） in runners.py [\#1737](https://github.com/locustio/locust/issues/1737)
+- Dwell-time based load shape testing [\#1715](https://github.com/locustio/locust/issues/1715)
+
+**Merged pull requests:**
+
+- Fix test issue probably caused by updated configargparse version. [\#1739](https://github.com/locustio/locust/pull/1739) ([cyberw](https://github.com/cyberw))
+- Call shape\_class.reset\_time\(\) after test\_start event so that tick time is correct [\#1738](https://github.com/locustio/locust/pull/1738) ([max-rocket-internet](https://github.com/max-rocket-internet))
+- Ensure runner.quit finishes even when users are broken [\#1728](https://github.com/locustio/locust/pull/1728) ([cyberw](https://github.com/cyberw))
+- make user count available to LoadTestShape [\#1719](https://github.com/locustio/locust/pull/1719) ([msarahan](https://github.com/msarahan))
+- Fix typo in ~examples/dynamic\_user\_credentials.py [\#1714](https://github.com/locustio/locust/pull/1714) ([luke-h1](https://github.com/luke-h1))
+- Fix automatic distributed test shutdown [\#1710](https://github.com/locustio/locust/pull/1710) ([enote-kane](https://github.com/enote-kane))
+- fix type hinting on Events [\#1705](https://github.com/locustio/locust/pull/1705) ([mrijken](https://github.com/mrijken))
+- updated double wave load shape docs to reflect peak times [\#1698](https://github.com/locustio/locust/pull/1698) ([pranavgupta1234](https://github.com/pranavgupta1234))
+- add LoadTestShape to \_\_all\_\_ in order to fix warning "'LoadTestShape'… [\#1696](https://github.com/locustio/locust/pull/1696) ([amitwer](https://github.com/amitwer))
+
 ## [1.4.3](https://github.com/locustio/locust/tree/1.4.3) (2021-01-28)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.4.2...1.4.3)

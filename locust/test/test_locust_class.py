@@ -724,15 +724,14 @@ class TestCatchResponse(WebserverTestCase):
         self.num_failures = 0
         self.num_success = 0
 
-        def on_failure(request_type, name, response_time, response_length, exception):
-            self.num_failures += 1
-            self.last_failure_exception = exception
+        def on_request(request_type, name, response_time, response_length, exception, context, **kwargs):
+            if exception:
+                self.num_failures += 1
+                self.last_failure_exception = exception
+            else:
+                self.num_success += 1
 
-        def on_success(**kwargs):
-            self.num_success += 1
-
-        self.environment.events.request_failure.add_listener(on_failure)
-        self.environment.events.request_success.add_listener(on_success)
+        self.environment.events.request.add_listener(on_request)
 
     def test_catch_response(self):
         self.assertEqual(500, self.locust.client.get("/fail").status_code)
