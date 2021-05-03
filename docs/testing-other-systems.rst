@@ -4,38 +4,23 @@
 Testing other systems using custom clients
 ===========================================
 
-Locust was built with HTTP as its main target. However, it can easily be extended to load test 
-any request/response based system, by writing a custom client that triggers 
-:py:attr:`request <locust.event.Events.request>`
+Locust was built with HTTP as its main use case but it can be extended to load test almost any system. You do this by writing a custom client that triggers :py:attr:`request <locust.event.Events.request>`
 
 .. note::
 
-    Any protocol libraries that you use must be gevent-friendly (use the Python ``socket`` module or some other standard library function like ``subprocess``), or your calls will block the whole Locust process.
+    Any protocol libraries that you use must be gevent-friendly (use the Python ``socket`` module or some other standard library function like ``subprocess``), or your calls are likely to block the whole Locust/Python process.
     
-    Some C libraries cannot be monkey patched by gevent, but allow for other workarounds. For example, if you want to use psycopg2 to performance test PostgreSQL, can use `psycogreen <https://github.com/psycopg/psycogreen/>`_. 
+    Some C libraries cannot be monkey patched by gevent, but allow for other workarounds. For example, if you want to use psycopg2 to performance test PostgreSQL, you can use `psycogreen <https://github.com/psycopg/psycogreen/>`_. 
 
-Sample XML-RPC User client
-============================
+Example: writing an XML-RPC User/client
+=======================================
 
-Here is an example of a User class, **XmlRpcUser**, which provides an XML-RPC client,
-**XmlRpcUser**, and tracks all requests made:
-
-.. literalinclude:: ../examples/custom_xmlrpc_client/xmlrpc_locustfile.py
-
-If you've written Locust tests before, you'll recognize the class called ``ApiUser`` which is a normal 
-User class that has a couple of tasks declared. However, the ``ApiUser`` inherits from
-``XmlRpcUser`` that you can see right above ``ApiUser``. The ``XmlRpcUser`` is marked as abstract
-using ``abstract = True`` which means that Locust will not try to create simulated users from that class
-(only of classes that extend it). ``XmlRpcUser`` provides an instance of XmlRpcClient under the
-``client`` attribute. 
-
-The ``XmlRpcClient`` is a wrapper around the standard 
-library's :py:class:`xmlrpc.client.ServerProxy`. It basically just proxies the function calls, but with the
-important addition of firing :py:attr:`locust.event.Events.request`
-event, which will record all calls in Locust's statistics.
-
-Here's an implementation of an XML-RPC server that would work as a server for the code above:
+Lets assume we had an XML-RPC server that we wanted to load test
 
 .. literalinclude:: ../examples/custom_xmlrpc_client/server.py
+
+We can build a generic XML-RPC client, by wrapping :py:class:`xmlrpc.client.ServerProxy`
+
+.. literalinclude:: ../examples/custom_xmlrpc_client/xmlrpc_locustfile.py
 
 For more examples, see `locust-plugins <https://github.com/SvenskaSpel/locust-plugins#users>`_
