@@ -39,7 +39,7 @@ class EventHook:
             try:
                 handler(**kwargs)
             except (StopUser, RescheduleTask, RescheduleTaskImmediately, InterruptTaskSet):
-                # These exceptions could be thrown by, for example, a request_failure handler,
+                # These exceptions could be thrown by, for example, a request handler,
                 # in which case they are entirely appropriate and should not be caught
                 raise
             except Exception:
@@ -47,10 +47,34 @@ class EventHook:
                 log.unhandled_greenlet_exception = True
 
 
+class DeprecatedEventHook(EventHook):
+    def __init__(self, message):
+        self.message = message
+        super().__init__()
+
+    def add_listener(self, handler):
+        logging.warning(self.message)
+        return super().add_listener(handler)
+
+
 class Events:
-    request_success: EventHook
+    request: EventHook
     """
-    Fired when a request is completed successfully. This event is typically used to report requests
+    Fired when a request in completed, successful or unsuccessful. This event is typically used to report requests when writing custom clients for locust.
+
+    Event arguments:
+
+    :param request_type: Request type method used
+    :param name: Path to the URL that was called (or override name if it was used in the call to the client)
+    :param response_time: Time in milliseconds until exception was thrown
+    :param response_length: Content-length of the response
+    :param exception: Exception instance that was thrown. None if no exception
+    :param context: Dict with context values specified when performing request
+    """
+
+    request_success: DeprecatedEventHook
+    """
+    DEPRECATED. Fired when a request is completed successfully. This event is typically used to report requests
     when writing custom clients for locust.
 
     Event arguments:
@@ -61,9 +85,9 @@ class Events:
     :param response_length: Content-length of the response
     """
 
-    request_failure: EventHook
+    request_failure: DeprecatedEventHook
     """
-    Fired when a request fails. This event is typically used to report failed requests when writing
+    DEPRECATED. Fired when a request fails. This event is typically used to report failed requests when writing
     custom clients for locust.
 
     Event arguments:
@@ -179,3 +203,28 @@ class Events:
         for name, value in self.__annotations__.items():
             if value == EventHook:
                 setattr(self, name, value())
+
+        self.request_success = DeprecatedEventHook("request_success event deprecated. Use the request event.")
+
+        self.request_failure = DeprecatedEventHook("request_failure event deprecated. Use the request event.")
+
+        def fire_deprecated_request_handlers(
+            request_type, name, response_time, response_length, exception, context, **kwargs
+        ):
+            if exception:
+                self.request_failure.fire(
+                    request_type=request_type,
+                    name=name,
+                    response_time=response_time,
+                    response_length=response_length,
+                    exception=exception,
+                )
+            else:
+                self.request_success.fire(
+                    request_type=request_type,
+                    name=name,
+                    response_time=response_time,
+                    response_length=response_length,
+                )
+
+        self.request.add_listener(fire_deprecated_request_handlers)

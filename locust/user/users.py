@@ -1,5 +1,5 @@
 from locust.user.wait_time import constant
-from typing import Any, Callable, List, TypeVar, Union
+from typing import Any, Callable, Dict, List, TypeVar, Union
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
 from locust.clients import HttpSession
@@ -185,6 +185,15 @@ class User(object, metaclass=UserMeta):
             self._state = LOCUST_STATE_STOPPING
             return False
 
+    def context(self) -> Dict:
+        """
+        Returns user specific context. Override this method to customize data to be forwarded in request event.
+
+        :return: Context data
+        :rtype: Dict
+        """
+        return {}
+
 
 class HttpUser(User):
     """
@@ -216,8 +225,8 @@ class HttpUser(User):
 
         session = HttpSession(
             base_url=self.host,
-            request_success=self.environment.events.request_success,
-            request_failure=self.environment.events.request_failure,
+            request_event=self.environment.events.request,
+            user=self,
         )
         session.trust_env = False
         self.client = session

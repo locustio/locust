@@ -123,10 +123,10 @@ def locust_init(environment, **kwargs):
         environment.web_ui.app.register_blueprint(extend)
 
 
-@events.request_success.add_listener
-def on_request_success(request_type, name, response_time, response_length):
+@events.request.add_listener
+def on_request(request_type, name, response_time, response_length, exception, context, **kwargs):
     """
-    Event handler that get triggered on every successful request
+    Event handler that get triggered on every request
     """
     stats.setdefault(name, {"content-length": 0})
     stats[name]["content-length"] += response_length
