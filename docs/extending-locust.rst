@@ -29,10 +29,44 @@ Here's an example on how to set up an event listener::
     (the \**kw in the code above), to prevent your code from breaking if new arguments are
     added in a future version.
 
+
+Request context
+==================
+
+By using the context parameter in the request method information you can attach data that will be forwarded by the 
+request event. This should be a dictionary and can be set directly when calling request() or on a class level 
+by overwriting the User.context() method. 
+
+Context from request method::
+
+    class MyUser(HttpUser):
+        @task
+        def t(self):
+            self.client.post("/login", json={"username": "foo"}, context={"username": "foo"})
+
+        @events.request.add_listener
+        def on_request(context, **kwargs):
+            print(context["username"])
+    
+Context from User class::
+
+    class MyUser(HttpUser):
+        def context(self):
+            return {"username": self.username}
+
+        @task
+        def t(self):
+            self.username = "foo"
+            self.client.post("/login", json={"username": self.username})
+
+        @events.request.add_listener
+        def on_request(self, context, **kwargs):
+            print(context["username"])
+
+
 .. seealso::
 
     To see all available events, please see :ref:`events`.
-
 
 
 Adding Web Routes

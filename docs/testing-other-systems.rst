@@ -32,7 +32,7 @@ using ``abstract = True`` which means that Locust will not try to create simulat
 The ``XmlRpcClient`` is a wrapper around the standard 
 library's :py:class:`xmlrpc.client.ServerProxy`. It basically just proxies the function calls, but with the
 important addition of firing :py:attr:`locust.event.Events.request`
-events, which will record all calls in Locust's statistics.
+event, which will record all calls in Locust's statistics.
 
 Here's an implementation of an XML-RPC server that would work as a server for the code above:
 

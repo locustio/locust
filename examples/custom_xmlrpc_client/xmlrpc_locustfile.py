@@ -8,7 +8,7 @@ class XmlRpcClient(ServerProxy):
     """
     Simple, sample XML RPC client implementation that wraps xmlrpclib.ServerProxy and
     fires locust events on request, so that all requests
-    gets tracked in locust's statistics.
+    get tracked in locust's statistics.
     """
 
     _locust_environment = None

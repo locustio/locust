@@ -186,6 +186,12 @@ class User(object, metaclass=UserMeta):
             return False
 
     def context(self) -> Dict:
+        """
+        Returns user specific context. Override this method to customize data to be forwarded in request event.
+
+        :return: Context data
+        :rtype: Dict
+        """
         return {}
 
 

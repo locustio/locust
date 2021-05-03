@@ -74,8 +74,8 @@ class Events:
 
     request_success: DeprecatedEventHook
     """
-    Fired when a request is completed successfully. This event is typically used to report requests
-    when writing custom clients for locust.
+    DEPRECATED. Fired when a request is completed successfully. This event is typically used to report requests
+    when writing custom clients for locust. 
 
     Event arguments:
 
@@ -87,7 +87,7 @@ class Events:
 
     request_failure: DeprecatedEventHook
     """
-    Fired when a request fails. This event is typically used to report failed requests when writing
+    DEPRECATED. Fired when a request fails. This event is typically used to report failed requests when writing
     custom clients for locust.
 
     Event arguments:
