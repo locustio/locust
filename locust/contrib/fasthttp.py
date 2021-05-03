@@ -196,6 +196,7 @@ class FastHttpSession:
 
         # send request, and catch any exceptions
         response = self._send_request_safe_mode(method, url, payload=data, headers=headers, **kwargs)
+        request_meta["response"] = response
 
         if not allow_redirects:
             self.client.redirect_resonse_codes = old_redirect_response_codes

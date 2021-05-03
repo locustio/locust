@@ -118,6 +118,7 @@ class HttpSession(requests.Session):
             "response_time": (time.monotonic() - start_time) * 1000,
             "name": name or (response.history and response.history[0] or response).request.path_url,
             "context": context,
+            "response": response,
             "exception": None,
         }
 

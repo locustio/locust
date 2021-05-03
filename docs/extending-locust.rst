@@ -16,12 +16,12 @@ Here's an example on how to set up an event listener::
     from locust import events
     
     @events.request.add_listener
-    def my_request_handler(request_type, name, response_time, response_length, context, exception, **kw):
+    def my_request_handler(request_type, name, response_time, response_length, response,
+                           context, exception, **kw):
         if exception:
             print(f"Request to {name} failed with exception {exception}")
         else:
             print(f"Successfully made a request to: {name})
-
 
 .. note::
 
@@ -29,6 +29,10 @@ Here's an example on how to set up an event listener::
     (the \**kw in the code above), to prevent your code from breaking if new arguments are
     added in a future version.
 
+    Note that it is entirely possible to implement a client that does not support all parameters 
+    (some non-HTTP protocols might not have a concept of `response_length` or `response` object).
+
+.. _request_context:
 
 Request context
 ==================
@@ -60,7 +64,7 @@ Context from User class::
             self.client.post("/login", json={"username": self.username})
 
         @events.request.add_listener
-        def on_request(self, context, **kwargs):
+        def on_request(context, **kwargs):
             print(context["username"])
 
 
