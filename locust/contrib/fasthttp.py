@@ -164,7 +164,7 @@ class FastHttpSession:
         start_time = default_timer()
 
         if self.user:
-            context.update(self.user.context())
+            context = {**context, **self.user.context()}
 
         # store meta data that is used when reporting the request to locust's statistics
         request_meta = {
