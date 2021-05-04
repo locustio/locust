@@ -4,11 +4,16 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.5.1
+=====
+
+* Fixed an issue with 1.5.0 where an extra parameter (start_time) was passed to request event https://github.com/locustio/locust/pull/1754
+
 1.5.0
 =====
 
-* Add new event called request. Is called on every request successful or not. request_success and request_failure are still available but are deprecated
-* Add parameter context to the request event. Can be used to forward information when calling a request, things like user information, tags etc
+* Unify request_success/request_failure into a single event called request (the old ones are deprecated but still work) https://github.com/locustio/locust/issues/1724
+* Add the response object and context as parameters to the request event. context is used to forward information to the request event handler (can be used for things like username, tags etc)
 
 1.4.4
 =====

@@ -255,7 +255,7 @@ class TestFastHttpUserClass(WebserverTestCase):
             host = "http://127.0.0.1:%i" % self.port
 
             def context(self):
-                return {"user": self}
+                return {"user": self.username}
 
         kwargs = {}
 
@@ -264,8 +264,12 @@ class TestFastHttpUserClass(WebserverTestCase):
 
         self.environment.events.request.add_listener(on_request)
         user = MyUser(self.environment)
+        user.username = "foo"
         user.client.request("get", "/request_method")
-        self.assertDictEqual({"user": user}, kwargs["context"])
+        self.assertDictEqual({"user": "foo"}, kwargs["context"])
+        self.assertEqual("GET", kwargs["response"].text)
+        user.client.request("get", "/request_method", context={"user": "bar"})
+        self.assertDictEqual({"user": "bar"}, kwargs["context"])
 
     def test_get_request(self):
         self.response = ""
