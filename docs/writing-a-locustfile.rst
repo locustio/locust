@@ -304,10 +304,10 @@ global state that all users spawned from this process will need:
         else:
             print("I'm on a worker or standalone node")
 
-other events
+Other events
 ------------
 
-see :ref:`extending locust using event hooks <extending_locust>` for other events and more examples of how to use them.
+See :ref:`extending locust using event hooks <extending_locust>` for other events and more examples of how to use them.
 
 HttpUser class
 ==============
