@@ -804,16 +804,16 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
             sleep(5 - (time.time() - ts))  # runtime = 30s
 
-            # Forth stage
+            # Fourth stage
             ts = time.time()
             while master.state != "spawning":
                 self.assertTrue(time.time() - ts <= 1)
                 sleep()
             sleep(5 - (time.time() - ts))  # runtime = 35s
 
-            # Forth stage - Excess TestUser3 have been stopped but
-            #               TestUser1/TestUser2 have not reached stop timeout yet, so
-            #               their number are unchanged
+            # Fourth stage - Excess TestUser3 have been stopped but
+            #                TestUser1/TestUser2 have not reached stop timeout yet, so
+            #                their number are unchanged
             self.assertEqual("spawning", master.state)
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
             w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
@@ -832,8 +832,8 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
             sleep(10)  # runtime = 45s
 
-            # Forth stage - TestUser2/TestUser3 are now at the desired
-            #               number, but TestUser1 is still unchanged
+            # Fourth stage - TestUser2/TestUser3 are now at the desired
+            #                number, but TestUser1 is still unchanged
             ts = time.time()
             while master.state != "spawning":
                 self.assertTrue(time.time() - ts <= 1)
@@ -856,7 +856,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
             sleep(5 - delta)  # runtime = 50s
 
-            # Forth stage - All users are now at the desired number
+            # Fourth stage - All users are now at the desired number
             ts = time.time()
             while master.state != "running":
                 self.assertTrue(time.time() - ts <= 1)
