@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.1](https://github.com/locustio/locust/tree/1.5.1) (2021-05-04)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.5.0...1.5.1)
+
+**Merged pull requests:**
+
+- remove accidentally added start\_time parameter to request event [\#1754](https://github.com/locustio/locust/pull/1754) ([cyberw](https://github.com/cyberw))
+
 ## [1.5.0](https://github.com/locustio/locust/tree/1.5.0) (2021-05-04)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.4.4...1.5.0)
