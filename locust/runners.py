@@ -868,7 +868,11 @@ class WorkerRunner(DistributedRunner):
         def on_spawning_complete(user_count):
             assert user_count == sum(self.user_class_occurrences.values())
             self.client.send(
-                Message("spawning_complete", {"user_class_occurrences": self.user_class_occurrences}, self.client_id)
+                Message(
+                    "spawning_complete",
+                    {"user_class_occurrences": self.user_class_occurrences, "user_count": self.user_count},
+                    self.client_id,
+                )
             )
             self.worker_state = STATE_RUNNING
 
@@ -877,6 +881,7 @@ class WorkerRunner(DistributedRunner):
         # register listener that adds the current number of spawned users to the report that is sent to the master node
         def on_report_to_master(client_id, data):
             data["user_class_occurrences"] = self.user_class_occurrences
+            data["user_count"] = self.user_count
 
         self.environment.events.report_to_master.add_listener(on_report_to_master)
 

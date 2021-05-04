@@ -1863,6 +1863,64 @@ class TestWorkerRunner(LocustTestCase):
 
             worker.quit()
 
+    def test_worker_messages_sent_to_master(self):
+        """
+        Ensure that worker includes both "user_count" and "user_class_occurrences"
+        when reporting to the master.
+        """
+
+        class MyUser(User):
+            wait_time = constant(1)
+
+            def start(self, group: Group):
+                # We do this so that the spawning does not finish
+                # too quickly
+                gevent.sleep(0.1)
+                return super().start(group)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            environment = Environment()
+            worker = self.get_runner(environment=environment, user_classes=[MyUser])
+
+            client.mocked_send(
+                Message(
+                    "spawn",
+                    {
+                        "timestamp": 1605538584,
+                        "user_class_occurrences": {"MyUser": 10},
+                        "host": "",
+                        "stop_timeout": None,
+                    },
+                    "dummy_client_id",
+                )
+            )
+            sleep(0.6)
+            self.assertEqual(STATE_SPAWNING, worker.state)
+            worker.spawning_greenlet.join()
+            self.assertEqual(10, worker.user_count)
+
+            sleep(2)
+
+            message = next((m for m in reversed(client.outbox) if m.type == "stats"), None)
+            self.assertIsNotNone(message)
+            self.assertIn("user_count", message.data)
+            self.assertIn("user_class_occurrences", message.data)
+            self.assertEqual(message.data["user_count"], 10)
+            self.assertEqual(message.data["user_class_occurrences"]["MyUser"], 10)
+
+            message = next((m for m in client.outbox if m.type == "spawning_complete"), None)
+            self.assertIsNotNone(message)
+            self.assertIn("user_count", message.data)
+            self.assertIn("user_class_occurrences", message.data)
+            self.assertEqual(message.data["user_count"], 10)
+            self.assertEqual(message.data["user_class_occurrences"]["MyUser"], 10)
+
+            worker.quit()
+
     def test_change_user_count_during_spawning(self):
         class MyUser(User):
             wait_time = constant(1)
