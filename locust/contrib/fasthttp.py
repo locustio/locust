@@ -169,7 +169,6 @@ class FastHttpSession:
         # store meta data that is used when reporting the request to locust's statistics
         request_meta = {
             "request_type": method,
-            "start_time": start_time,
             "name": name or path,
             "context": context,
             "exception": None,
@@ -209,7 +208,7 @@ class FastHttpSession:
             try:
                 request_meta["response_length"] = len(response.content or "")
             except HTTPParseError as e:
-                request_meta["response_time"] = int((default_timer() - request_meta["start_time"]) * 1000)
+                request_meta["response_time"] = int((default_timer() - start_time) * 1000)
                 request_meta["response_length"] = 0
                 request_meta["exception"] = e
                 self.environment.events.request.fire(**request_meta)
@@ -218,7 +217,7 @@ class FastHttpSession:
         # Record the consumed time
         # Note: This is intentionally placed after we record the content_size above, since
         # we'll then trigger fetching of the body (unless stream=True)
-        request_meta["response_time"] = int((default_timer() - request_meta["start_time"]) * 1000)
+        request_meta["response_time"] = int((default_timer() - start_time) * 1000)
 
         if catch_response:
             return ResponseContextManager(response, environment=self.environment, request_meta=request_meta)

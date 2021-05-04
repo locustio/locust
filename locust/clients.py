@@ -114,7 +114,6 @@ class HttpSession(requests.Session):
         # store meta data that is used when reporting the request to locust's statistics
         request_meta = {
             "request_type": method,
-            "start_time": start_time,
             "response_time": (time.monotonic() - start_time) * 1000,
             "name": name or (response.history and response.history[0] or response).request.path_url,
             "context": context,
