@@ -164,7 +164,7 @@ class FastHttpSession:
         start_time = default_timer()
 
         if self.user:
-            context = {**context, **self.user.context()}
+            context = {**self.user.context(), **context}
 
         # store meta data that is used when reporting the request to locust's statistics
         request_meta = {
@@ -196,6 +196,7 @@ class FastHttpSession:
 
         # send request, and catch any exceptions
         response = self._send_request_safe_mode(method, url, payload=data, headers=headers, **kwargs)
+        request_meta["response"] = response
 
         if not allow_redirects:
             self.client.redirect_resonse_codes = old_redirect_response_codes

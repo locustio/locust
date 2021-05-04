@@ -132,6 +132,19 @@ class TestHttpSession(WebserverTestCase):
         s.request("get", "/request_method", context={"foo": "bar"})
         self.assertDictEqual({"foo": "bar"}, kwargs["context"])
 
+    def test_response_parameter(self):
+        s = self.get_client()
+        kwargs = {}
+
+        def on_request(**kw):
+            kwargs.update(kw)
+
+        self.environment.events.request.add_listener(on_request)
+        s.request("get", "/request_method")
+        self.assertEqual("GET", kwargs["response"].text)
+        s.request("get", "/wrong_url")
+        self.assertEqual("Not Found", kwargs["response"].text)
+
     def test_deprecated_request_events(self):
         s = self.get_client()
         status = {"success_amount": 0, "failure_amount": 0}
@@ -243,10 +256,10 @@ class TestHttpSession(WebserverTestCase):
 
     def test_user_context(self):
         class TestUser(HttpUser):
-            host = "http://localhost"
+            host = f"http://127.0.0.1:{self.port}"
 
             def context(self):
-                return {"user": self}
+                return {"user": self.username}
 
         kwargs = {}
 
@@ -256,5 +269,9 @@ class TestHttpSession(WebserverTestCase):
         self.environment.events.request.add_listener(on_request)
 
         user = TestUser(self.environment)
+        user.username = "foo"
         user.client.request("get", "/request_method")
-        self.assertDictEqual({"user": user}, kwargs["context"])
+        self.assertDictEqual({"user": "foo"}, kwargs["context"])
+        self.assertEqual("GET", kwargs["response"].text)
+        user.client.request("get", "/request_method", context={"user": "bar"})  # override User context
+        self.assertDictEqual({"user": "bar"}, kwargs["context"])

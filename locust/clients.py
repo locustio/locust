@@ -109,7 +109,7 @@ class HttpSession(requests.Session):
         response = self._send_request_safe_mode(method, url, **kwargs)
 
         if self.user:
-            context = {**context, **self.user.context()}
+            context = {**self.user.context(), **context}
 
         # store meta data that is used when reporting the request to locust's statistics
         request_meta = {
@@ -118,6 +118,7 @@ class HttpSession(requests.Session):
             "response_time": (time.monotonic() - start_time) * 1000,
             "name": name or (response.history and response.history[0] or response).request.path_url,
             "context": context,
+            "response": response,
             "exception": None,
         }
 
