@@ -116,16 +116,16 @@ def create_environment(user_classes, options, events=None, shape_class=None):
     )
 
 
-def main():
+def main(args=None):
     # find specified locustfile and make sure it exists, using a very simplified
     # command line parser that is only used to parse the -f option
-    locustfile = parse_locustfile_option()
+    locustfile = parse_locustfile_option(args)
 
     # import the locustfile
     docstring, user_classes, shape_class = load_locustfile(locustfile)
 
     # parse all command line options
-    options = parse_options()
+    options = parse_options(args)
 
     if options.headful:
         options.headless = False
