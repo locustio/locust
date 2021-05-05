@@ -24,3 +24,24 @@ We can build a generic XML-RPC client, by wrapping :py:class:`xmlrpc.client.Serv
 .. literalinclude:: ../examples/custom_xmlrpc_client/xmlrpc_locustfile.py
 
 For more examples, see `locust-plugins <https://github.com/SvenskaSpel/locust-plugins#users>`_
+
+Example: writing a gRPC User/client
+=======================================
+
+Similarly to the XML-RPC example, we can also load test a gRPC server.
+
+.. literalinclude:: ../examples/grpc/hello_server.py
+
+In this case, the gRPC stub methods can also be wrapped so that we can record the request stats.
+
+.. literalinclude:: ../examples/grpc/locustfile.py
+
+Note: In order to make the `grpcio` Python library gevent-compatible the following code needs to be executed before creating the gRPC channel.
+
+```python
+import grpc.experimental.gevent as grpc_gevent
+grpc_gevent.init_gevent()
+```
+
+Note: It is important to close the gRPC channel before stopping the User greenlet; otherwise Locust may not be able to stop executing. 
+This is due to an issue in `grpcio` (see `grpc#15880 <https://github.com/grpc/grpc/issues/15880>`_).
