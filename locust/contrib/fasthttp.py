@@ -5,7 +5,7 @@ import json as unshadowed_json  # some methods take a named parameter called jso
 from base64 import b64encode
 from urllib.parse import urlparse, urlunparse
 from ssl import SSLError
-from timeit import default_timer
+import time
 
 from http.cookiejar import CookieJar
 
@@ -161,7 +161,7 @@ class FastHttpSession:
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(path)
 
-        start_time = default_timer()
+        start_time = time.perf_counter()
 
         if self.user:
             context = {**self.user.context(), **context}
@@ -208,7 +208,7 @@ class FastHttpSession:
             try:
                 request_meta["response_length"] = len(response.content or "")
             except HTTPParseError as e:
-                request_meta["response_time"] = int((default_timer() - start_time) * 1000)
+                request_meta["response_time"] = (time.perf_counter() - start_time) * 1000
                 request_meta["response_length"] = 0
                 request_meta["exception"] = e
                 self.environment.events.request.fire(**request_meta)
@@ -217,7 +217,7 @@ class FastHttpSession:
         # Record the consumed time
         # Note: This is intentionally placed after we record the content_size above, since
         # we'll then trigger fetching of the body (unless stream=True)
-        request_meta["response_time"] = int((default_timer() - start_time) * 1000)
+        request_meta["response_time"] = int((time.perf_counter() - start_time) * 1000)
 
         if catch_response:
             return ResponseContextManager(response, environment=self.environment, request_meta=request_meta)

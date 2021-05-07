@@ -13,19 +13,19 @@ class LoadTestShape:
     """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
 
     def __init__(self):
-        self.start_time = time.monotonic()
+        self.start_time = time.perf_counter()
 
     def reset_time(self):
         """
         Resets start time back to 0
         """
-        self.start_time = time.monotonic()
+        self.start_time = time.perf_counter()
 
     def get_run_time(self):
         """
         Calculates run time in seconds of the load test
         """
-        return time.monotonic() - self.start_time
+        return time.perf_counter() - self.start_time
 
     def get_current_user_count(self):
         """

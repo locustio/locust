@@ -28,7 +28,7 @@ class GrpcClient:
         func = self._stub_class.__getattribute__(self._stub, name)
 
         def wrapper(*args, **kwargs):
-            start_time = time.monotonic()
+            start_time = time.perf_counter()
             request_meta = {
                 "request_type": "grpc",
                 "name": name,
@@ -42,7 +42,7 @@ class GrpcClient:
                 request_meta["response_length"] = len(request_meta["response"].message)
             except grpc.RpcError as e:
                 request_meta["exception"] = e
-            request_meta["response_time"] = (time.monotonic() - start_time) * 1000
+            request_meta["response_time"] = (time.perf_counter() - start_time) * 1000
             events.request.fire(**request_meta)
             return request_meta["response"]
 
