@@ -104,7 +104,7 @@ class HttpSession(requests.Session):
 
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(url)
-        start_time = time.monotonic()
+        start_time = time.perf_counter()
 
         response = self._send_request_safe_mode(method, url, **kwargs)
 
@@ -114,7 +114,7 @@ class HttpSession(requests.Session):
         # store meta data that is used when reporting the request to locust's statistics
         request_meta = {
             "request_type": method,
-            "response_time": (time.monotonic() - start_time) * 1000,
+            "response_time": (time.perf_counter() - start_time) * 1000,
             "name": name or (response.history and response.history[0] or response).request.path_url,
             "context": context,
             "response": response,

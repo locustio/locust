@@ -19,7 +19,7 @@ class XmlRpcClient(ServerProxy):
         func = ServerProxy.__getattr__(self, name)
 
         def wrapper(*args, **kwargs):
-            start_time = time.monotonic()
+            start_time = time.perf_counter()
             request_meta = {
                 "request_type": "xmlrpc",
                 "name": name,
@@ -32,7 +32,7 @@ class XmlRpcClient(ServerProxy):
                 request_meta["response"] = func(*args, **kwargs)
             except Fault as e:
                 request_meta["exception"] = e
-            request_meta["response_time"] = (time.monotonic() - start_time) * 1000
+            request_meta["response_time"] = (time.perf_counter() - start_time) * 1000
             self._request_event.fire(**request_meta)  # This is what makes the request actually get logged in Locust
             return request_meta["response"]
 

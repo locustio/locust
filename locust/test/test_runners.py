@@ -1755,7 +1755,7 @@ class TestStopTimeout(LocustTestCase):
 
         # Wait a moment and then ensure the user count has started to drop but
         # not immediately to user_count
-        sleep(1)
+        sleep(1.1)
         user_count = len(runner.user_greenlets)
         self.assertTrue(user_count > 5, "User count has decreased too quickly: %i" % user_count)
         self.assertTrue(user_count < 10, "User count has not decreased at all: %i" % user_count)
