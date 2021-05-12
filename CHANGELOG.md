@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.5.2](https://github.com/locustio/locust/tree/1.5.2) (2021-05-12)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.5.1...1.5.2)
+
+**Fixed bugs:**
+
+- Locust stopped working after Flast 2.0 got released [\#1759](https://github.com/locustio/locust/issues/1759)
+- GRPC compatibility : Locust load test throws greenlet.GreenletExit exception on reaching test time limit [\#1676](https://github.com/locustio/locust/issues/1676)
+
+**Merged pull requests:**
+
+- Pin flask version to 1.1.2. Fixes \#1759 [\#1760](https://github.com/locustio/locust/pull/1760) ([cyberw](https://github.com/cyberw))
+- Measure elapsed time using time.perf\_counter\(\)  [\#1758](https://github.com/locustio/locust/pull/1758) ([cyberw](https://github.com/cyberw))
+- Add gRPC load test example [\#1755](https://github.com/locustio/locust/pull/1755) ([beandrad](https://github.com/beandrad))
+
 ## [1.5.1](https://github.com/locustio/locust/tree/1.5.1) (2021-05-04)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.5.0...1.5.1)
@@ -38,7 +53,7 @@
 - Fix test issue probably caused by updated configargparse version. [\#1739](https://github.com/locustio/locust/pull/1739) ([cyberw](https://github.com/cyberw))
 - Call shape\_class.reset\_time\(\) after test\_start event so that tick time is correct [\#1738](https://github.com/locustio/locust/pull/1738) ([max-rocket-internet](https://github.com/max-rocket-internet))
 - Ensure runner.quit finishes even when users are broken [\#1728](https://github.com/locustio/locust/pull/1728) ([cyberw](https://github.com/cyberw))
-- make user count available to LoadTestShape [\#1719](https://github.com/locustio/locust/pull/1719) ([msarahan](https://github.com/msarahan))
+- make runner / user count available to LoadTestShape [\#1719](https://github.com/locustio/locust/pull/1719) ([msarahan](https://github.com/msarahan))
 - Fix typo in ~examples/dynamic\_user\_credentials.py [\#1714](https://github.com/locustio/locust/pull/1714) ([luke-h1](https://github.com/luke-h1))
 - Fix automatic distributed test shutdown [\#1710](https://github.com/locustio/locust/pull/1710) ([enote-kane](https://github.com/enote-kane))
 - fix type hinting on Events [\#1705](https://github.com/locustio/locust/pull/1705) ([mrijken](https://github.com/mrijken))
@@ -435,7 +450,7 @@
 - "Order of events" clarification [\#1349](https://github.com/locustio/locust/issues/1349)
 - More information in csv reports [\#1292](https://github.com/locustio/locust/issues/1292)
 - Rename and restructure Locust/TaskSet [\#1264](https://github.com/locustio/locust/issues/1264)
-- Add `allow\_redirects` option to FastHttpSession.request [\#1238](https://github.com/locustio/locust/issues/1238)
+- Add `allow_redirects` option to FastHttpSession.request [\#1238](https://github.com/locustio/locust/issues/1238)
 - Retrieve failures.csv in --no-web mode [\#1237](https://github.com/locustio/locust/issues/1237)
 - command line arguments for clients and spawn rate should populate ui in the same way as url [\#1186](https://github.com/locustio/locust/issues/1186)
 
@@ -464,7 +479,14 @@
 - Replace locust setup teardown with events [\#1309](https://github.com/locustio/locust/pull/1309) ([heyman](https://github.com/heyman))
 - Decouple Runner and Locust code by introducing Locust.start and Locust.stop methods [\#1306](https://github.com/locustio/locust/pull/1306) ([heyman](https://github.com/heyman))
 - Allow tasks to be declared directly under Locust classes [\#1304](https://github.com/locustio/locust/pull/1304) ([heyman](https://github.com/heyman))
+- Rename slave to worker \(except changelog\) [\#1303](https://github.com/locustio/locust/pull/1303) ([anuj-ssharma](https://github.com/anuj-ssharma))
+- Support parametrization of FastHttpLocust  [\#1299](https://github.com/locustio/locust/pull/1299) ([cyberw](https://github.com/cyberw))
+- Fix typo in running-locust-in-step-load-mode.rst [\#1298](https://github.com/locustio/locust/pull/1298) ([sgajjar](https://github.com/sgajjar))
+- Add reference to LocustRunner instance and WebUI instance on Environment [\#1291](https://github.com/locustio/locust/pull/1291) ([heyman](https://github.com/heyman))
+- Give a more descriptive error when the Locust or TaskSet has no tasks. [\#1287](https://github.com/locustio/locust/pull/1287) ([cyberw](https://github.com/cyberw))
 - ensure the connection between master and slave in heartbeat [\#1280](https://github.com/locustio/locust/pull/1280) ([delulu](https://github.com/delulu))
+- Fix simple typo: betwen -\> between [\#1269](https://github.com/locustio/locust/pull/1269) ([timgates42](https://github.com/timgates42))
+- Work towards 1.0. Refactoring of runners/events/web ui. Getting rid of global state. [\#1266](https://github.com/locustio/locust/pull/1266) ([heyman](https://github.com/heyman))
 
 ## [0.14.6](https://github.com/locustio/locust/tree/0.14.6) (2020-02-25)
 
@@ -473,10 +495,6 @@
 **Closed issues:**
 
 - Fix simple typo: betwen -\> between [\#1268](https://github.com/locustio/locust/issues/1268)
-
-**Merged pull requests:**
-
-- Fix simple typo: betwen -\> between [\#1269](https://github.com/locustio/locust/pull/1269) ([timgates42](https://github.com/timgates42))
 
 ## [0.14.5](https://github.com/locustio/locust/tree/0.14.5) (2020-02-25)
 
@@ -565,7 +583,7 @@
 
 **Merged pull requests:**
 
-- Use `response\_time\_percentile` for \<name\>\_stats.csv file instead of `current\_response\_time\_percentile` [\#1197](https://github.com/locustio/locust/pull/1197) ([mehta-ankit](https://github.com/mehta-ankit))
+- Use `response_time_percentile` for \<name\>\_stats.csv file instead of `current_response_time_percentile` [\#1197](https://github.com/locustio/locust/pull/1197) ([mehta-ankit](https://github.com/mehta-ankit))
 - Send Accept-Encoding: gzip, deflate as default in FastHttpLocust. [\#1196](https://github.com/locustio/locust/pull/1196) ([cyberw](https://github.com/cyberw))
 - Get encoding from content-type header instead of autodetecting using chardet \(which is slow\) [\#1194](https://github.com/locustio/locust/pull/1194) ([cyberw](https://github.com/cyberw))
 
@@ -750,7 +768,6 @@
 - Allow None response time for requests [\#1088](https://github.com/locustio/locust/pull/1088) ([cyberw](https://github.com/cyberw))
 - Fixed issue with Total Requests Per Second plot [\#1060](https://github.com/locustio/locust/pull/1060) ([williamlhunter](https://github.com/williamlhunter))
 - Tox: Add flake8 tests to find Python syntax errors and undefined names [\#1039](https://github.com/locustio/locust/pull/1039) ([cclauss](https://github.com/cclauss))
-- Geventhttpclientmergeconflicts [\#838](https://github.com/locustio/locust/pull/838) ([SpencerPinegar](https://github.com/SpencerPinegar))
 - Fix frontend bugs. [\#822](https://github.com/locustio/locust/pull/822) ([omittones](https://github.com/omittones))
 - Switch from using optparse to argparse for command line arguments [\#769](https://github.com/locustio/locust/pull/769) ([jdufresne](https://github.com/jdufresne))
 - Allow skipping the logging setup [\#738](https://github.com/locustio/locust/pull/738) ([Exide](https://github.com/Exide))
@@ -872,6 +889,7 @@
 - Add failures csv download [\#999](https://github.com/locustio/locust/pull/999) ([ajt89](https://github.com/ajt89))
 - Correct fail ratio calculation. Fixes \#991. [\#994](https://github.com/locustio/locust/pull/994) ([genericmoniker](https://github.com/genericmoniker))
 - Add command line argument to specify exit code on response errors [\#992](https://github.com/locustio/locust/pull/992) ([Stateford](https://github.com/Stateford))
+- Geventhttpclientmergeconflicts [\#838](https://github.com/locustio/locust/pull/838) ([SpencerPinegar](https://github.com/SpencerPinegar))
 
 ## [0.11.1](https://github.com/locustio/locust/tree/0.11.1) (2019-03-19)
 
@@ -913,7 +931,6 @@
 - add users 1 time per minute [\#961](https://github.com/locustio/locust/issues/961)
 - HttpLocust class instance variable not set for all users during setup [\#957](https://github.com/locustio/locust/issues/957)
 - locust.runners.MasterLocustRunner failed with ExtraData [\#956](https://github.com/locustio/locust/issues/956)
-- Use pytest tests as locust tasks [\#955](https://github.com/locustio/locust/issues/955)
 - Time limit reached,but test does not stop,throw GreenletExit exception [\#953](https://github.com/locustio/locust/issues/953)
 - Bug: Locust master doesn't remove killed slave [\#951](https://github.com/locustio/locust/issues/951)
 - How to pass multiple request under same @task. Eg: If I need to pass diferrent key for same get, how to do that? Is parameterization exist? [\#948](https://github.com/locustio/locust/issues/948)
@@ -1389,7 +1406,7 @@
 - Locust web interface not starting on Windows [\#436](https://github.com/locustio/locust/issues/436)
 - aborting task in on\_start  [\#435](https://github.com/locustio/locust/issues/435)
 - Can I use locust for live streaming load testing [\#434](https://github.com/locustio/locust/issues/434)
-- URLs with `\#` in them are not evaluated [\#433](https://github.com/locustio/locust/issues/433)
+- URLs with `#` in them are not evaluated [\#433](https://github.com/locustio/locust/issues/433)
 - In light of \#431, is it ok to migrate to pytest? [\#432](https://github.com/locustio/locust/issues/432)
 - AttributeError: 'NoneType' object has no attribute 'replace' [\#431](https://github.com/locustio/locust/issues/431)
 - Missing tags for versions above v0.7.2 [\#428](https://github.com/locustio/locust/issues/428)
