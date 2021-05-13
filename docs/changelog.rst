@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.5.2
+=====
+
+* Pin version of flask to 1.1.2, fixing https://github.com/locustio/locust/issues/1759
+* Fix issue with GRPC compatibility and add GRPC example to documentation https://github.com/locustio/locust/pull/1755
+* Use time.perf_counter() to calculate elapsed times everywhere, should only matter for Windows https://github.com/locustio/locust/pull/1758
+
 1.5.1
 =====
 

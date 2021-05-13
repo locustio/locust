@@ -228,10 +228,10 @@ class Runner:
                     # User called runner.quit(), so don't block waiting for killing to finish
                     user_to_stop.group.killone(user_to_stop.greenlet, block=False)
                 elif self.environment.stop_timeout:
-                    async_calls_to_stop.add(gevent.spawn_later(0, User.stop, user_to_stop, force=False))
+                    async_calls_to_stop.add(gevent.spawn_later(0, user_to_stop.stop, force=False))
                     stop_group.add(user_to_stop.greenlet)
                 else:
-                    async_calls_to_stop.add(gevent.spawn_later(0, User.stop, user_to_stop, force=True))
+                    async_calls_to_stop.add(gevent.spawn_later(0, user_to_stop.stop, force=True))
                 if not to_stop:
                     break
 
