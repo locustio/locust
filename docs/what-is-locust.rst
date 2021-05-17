@@ -13,13 +13,13 @@ To start using Locust, go to :ref:`installation`
 Features
 ========
 
-* **Write user test scenarios in plain-old Python**
+* **Write test scenarios in plain old Python**
 
  If you want your users to loop, perform some conditional behaviour or do some calculations, you just use the regular programming constructs provided by Python.
  Locust runs every user inside its own greenlet (a lightweight process/coroutine). This enables you to write your tests like normal (blocking) Python code instead of having to use callbacks or some other mechanism.
  Because your scenarios are "just python" you can use your regular IDE, and version control your tests as regular code (as opposed to some other tools that use XML or binary formats)
 
-* **Distributed & Scalable - supports hundreds of thousands of users**
+* **Distributed and scalable - supports hundreds of thousands of concurrent users**
 
  Locust makes it easy to run load tests distributed over multiple machines.
  It is event-based (using `gevent <http://www.gevent.org/>`_), which makes it possible for a single process to handle many thousands concurrent users.
