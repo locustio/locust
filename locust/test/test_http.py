@@ -1,3 +1,4 @@
+from locust.user.users import HttpUser
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 
 
@@ -13,8 +14,8 @@ class TestHttpSession(WebserverTestCase):
             base_url = "http://127.0.0.1:%i" % self.port
         return HttpSession(
             base_url=base_url,
-            request_success=self.environment.events.request_success,
-            request_failure=self.environment.events.request_failure,
+            request_event=self.environment.events.request,
+            user=None,
         )
 
     def test_get(self):
@@ -107,16 +108,72 @@ class TestHttpSession(WebserverTestCase):
             set(r.headers["allow"].split(", ")),
         )
 
+    def test_error_message(self):
+        s = self.get_client()
+        kwargs = {}
+
+        def on_request(**kw):
+            kwargs.update(kw)
+
+        self.environment.events.request.add_listener(on_request)
+        s.request("get", "/wrong_url", context={"foo": "bar"})
+        self.assertIn("/wrong_url", str(kwargs["exception"]))
+        self.assertDictEqual({"foo": "bar"}, kwargs["context"])
+
+    def test_context_in_success(self):
+        s = self.get_client()
+        kwargs = {}
+
+        def on_request(exception, **kw):
+            self.assertIsNone(exception)
+            kwargs.update(kw)
+
+        self.environment.events.request.add_listener(on_request)
+        s.request("get", "/request_method", context={"foo": "bar"})
+        self.assertDictEqual({"foo": "bar"}, kwargs["context"])
+
+    def test_response_parameter(self):
+        s = self.get_client()
+        kwargs = {}
+
+        def on_request(**kw):
+            kwargs.update(kw)
+
+        self.environment.events.request.add_listener(on_request)
+        s.request("get", "/request_method")
+        self.assertEqual("GET", kwargs["response"].text)
+        s.request("get", "/wrong_url")
+        self.assertEqual("Not Found", kwargs["response"].text)
+
+    def test_deprecated_request_events(self):
+        s = self.get_client()
+        status = {"success_amount": 0, "failure_amount": 0}
+
+        def on_success(**kw):
+            status["success_amount"] += 1
+
+        def on_failure(**kw):
+            status["failure_amount"] += 1
+
+        self.environment.events.request_success.add_listener(on_success)
+        self.environment.events.request_failure.add_listener(on_failure)
+        s.request("get", "/request_method")
+        s.request("get", "/wrong_url")
+        self.assertEqual(1, status["success_amount"])
+        self.assertEqual(1, status["failure_amount"])
+
     def test_error_message_with_name_replacement(self):
         s = self.get_client()
         kwargs = {}
 
-        def on_error(**kw):
+        def on_request(**kw):
+            self.assertIsNotNone(kw["exception"])
             kwargs.update(kw)
 
-        self.environment.events.request_failure.add_listener(on_error)
-        s.request("get", "/wrong_url/01", name="replaced_url_name")
+        self.environment.events.request.add_listener(on_request)
+        s.request("get", "/wrong_url/01", name="replaced_url_name", context={"foo": "bar"})
         self.assertIn("for url: replaced_url_name", str(kwargs["exception"]))
+        self.assertDictEqual({"foo": "bar"}, kwargs["context"])
 
     def test_get_with_params(self):
         s = self.get_client()
@@ -196,3 +253,25 @@ class TestHttpSession(WebserverTestCase):
             pass
         self.assertEqual(1, self.environment.stats.total.num_requests)
         self.assertEqual(1, self.environment.stats.total.num_failures)
+
+    def test_user_context(self):
+        class TestUser(HttpUser):
+            host = f"http://127.0.0.1:{self.port}"
+
+            def context(self):
+                return {"user": self.username}
+
+        kwargs = {}
+
+        def on_request(**kw):
+            kwargs.update(kw)
+
+        self.environment.events.request.add_listener(on_request)
+
+        user = TestUser(self.environment)
+        user.username = "foo"
+        user.client.request("get", "/request_method")
+        self.assertDictEqual({"user": "foo"}, kwargs["context"])
+        self.assertEqual("GET", kwargs["response"].text)
+        user.client.request("get", "/request_method", context={"user": "bar"})  # override User context
+        self.assertDictEqual({"user": "bar"}, kwargs["context"])

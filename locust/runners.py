@@ -4,6 +4,7 @@ import random
 import socket
 import sys
 import traceback
+from typing import Type, List
 import warnings
 from uuid import uuid4
 from time import time
@@ -70,15 +71,20 @@ class Runner:
         self.target_user_count = None
 
         # set up event listeners for recording requests
-        def on_request_success(request_type, name, response_time, response_length, **kwargs):
+        def on_request_success(request_type, name, response_time, response_length, **_kwargs):
             self.stats.log_request(request_type, name, response_time, response_length)
 
-        def on_request_failure(request_type, name, response_time, response_length, exception, **kwargs):
+        def on_request_failure(request_type, name, response_time, response_length, exception, **_kwargs):
             self.stats.log_request(request_type, name, response_time, response_length)
             self.stats.log_error(request_type, name, exception)
 
+        # temporarily set log level to ignore warnings to suppress deprication message
+        loglevel = logging.getLogger().level
+        logging.getLogger().setLevel(logging.ERROR)
         self.environment.events.request_success.add_listener(on_request_success)
         self.environment.events.request_failure.add_listener(on_request_failure)
+        logging.getLogger().setLevel(loglevel)
+
         self.connection_broken = False
 
         # register listener that resets stats when spawning is complete
@@ -132,7 +138,7 @@ class Runner:
             return True
         return False
 
-    def weight_users(self, amount):
+    def weight_users(self, amount) -> List[Type[User]]:
         """
         Distributes the amount of users for each WebLocust-class according to it's weight
         returns a list "bucket" with the weighted users
@@ -218,12 +224,18 @@ class Runner:
         bucket = self.weight_users(user_count)
         user_count = len(bucket)
         to_stop = []
-        for g in self.user_greenlets:
-            for l in bucket:
-                user = g.args[0]
-                if isinstance(user, l):
+        for user_greenlet in self.user_greenlets:
+            try:
+                user = user_greenlet.args[0]
+            except IndexError:
+                logger.error(
+                    "While stopping users, we encountered a user that didnt have proper args %s", user_greenlet
+                )
+                continue
+            for user_class in bucket:
+                if isinstance(user, user_class):
                     to_stop.append(user)
-                    bucket.remove(l)
+                    bucket.remove(user_class)
                     break
 
         if not to_stop:
@@ -246,10 +258,10 @@ class Runner:
                 # User called runner.quit(), so dont block waiting for killing to finish"
                 user_to_stop._group.killone(user_to_stop._greenlet, block=False)
             elif self.environment.stop_timeout:
-                async_calls_to_stop.add(gevent.spawn_later(0, User.stop, user_to_stop, force=False))
+                async_calls_to_stop.add(gevent.spawn_later(0, user_to_stop.stop, force=False))
                 stop_group.add(user_to_stop._greenlet)
             else:
-                async_calls_to_stop.add(gevent.spawn_later(0, User.stop, user_to_stop, force=True))
+                async_calls_to_stop.add(gevent.spawn_later(0, user_to_stop.stop, force=True))
             if to_stop:
                 gevent.sleep(sleep_time)
             else:
@@ -480,7 +492,9 @@ class MasterRunner(DistributedRunner):
             self.server = rpc.Server(master_bind_host, master_bind_port)
         except RPCError as e:
             if e.args[0] == "Socket bind failure: Address already in use":
-                port_string = master_bind_host + ":" + master_bind_port if master_bind_host != "*" else master_bind_port
+                port_string = (
+                    master_bind_host + ":" + str(master_bind_port) if master_bind_host != "*" else str(master_bind_port)
+                )
                 logger.error(
                     f"The Locust master port ({port_string}) was busy. Close any applications using that port - perhaps an old instance of Locust master is still running? ({e.args[0]})"
                 )
@@ -547,6 +561,8 @@ class MasterRunner(DistributedRunner):
             self.stats.clear_all()
             self.exceptions = {}
             self.environment.events.test_start.fire(environment=self.environment)
+            if self.environment.shape_class:
+                self.environment.shape_class.reset_time()
 
         for client in self.clients.ready + self.clients.running + self.clients.spawning:
             data = {
@@ -608,7 +624,7 @@ class MasterRunner(DistributedRunner):
                     logger.info("Worker %s failed to send heartbeat, setting state to missing." % str(client.id))
                     client.state = STATE_MISSING
                     client.user_count = 0
-                    if self.worker_count - len(self.clients.missing) <= 0:
+                    if self.worker_count <= 0:
                         logger.info("The last worker went missing, stopping test.")
                         self.stop()
                         self.check_stopped()
@@ -654,7 +670,15 @@ class MasterRunner(DistributedRunner):
                 if msg.node_id in self.clients:
                     c = self.clients[msg.node_id]
                     c.heartbeat = HEARTBEAT_LIVENESS
-                    c.state = msg.data["state"]
+                    client_state = msg.data["state"]
+                    if c.state == STATE_MISSING:
+                        logger.info(
+                            "Worker %s self-healed with heartbeat, setting state to %s." % (str(c.id), client_state)
+                        )
+                        user_count = msg.data.get("count")
+                        if user_count:
+                            c.user_count = user_count
+                    c.state = client_state
                     c.cpu_usage = msg.data["current_cpu_usage"]
                     if not c.cpu_warning_emitted and c.cpu_usage > 90:
                         self.worker_cpu_warning_emitted = True  # used to fail the test in the end
@@ -751,7 +775,11 @@ class WorkerRunner(DistributedRunner):
                 self.client.send(
                     Message(
                         "heartbeat",
-                        {"state": self.worker_state, "current_cpu_usage": self.current_cpu_usage},
+                        {
+                            "state": self.worker_state,
+                            "current_cpu_usage": self.current_cpu_usage,
+                            "count": self.user_count,
+                        },
                         self.client_id,
                     )
                 )

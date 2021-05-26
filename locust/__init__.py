@@ -13,7 +13,7 @@ from .event import Events
 
 events = Events()
 
-__version__ = "1.4.3"
+__version__ = "1.5.3"
 __all__ = (
     "SequentialTaskSet",
     "wait_time",
@@ -26,6 +26,7 @@ __all__ = (
     "constant",
     "constant_pacing",
     "events",
+    "LoadTestShape",
 )
 
 # Used for raising a DeprecationWarning if old Locust/HttpLocust is used

@@ -6,30 +6,65 @@ Extending Locust using event hooks
 
 Locust comes with a number of event hooks that can be used to extend Locust in different ways.
 
-Event hooks live on the Environment instance under the :py:attr:`events <locust.env.Environment.events>` 
-attribute. However, since the Environment instance hasn't been created when locustfiles are imported,  
-the events object can also be accessed at the module level of the locustfile through the 
-:py:obj:`locust.events` variable.
+Event hooks are registered on the Environment under its :py:attr:`events <locust.env.Environment.events>` 
+attribute, but they are more conveniently accessed via the :py:obj:`locust.events` variable (because the Environment 
+is instantiated *after* importing the locustfile)
 
 Here's an example on how to set up an event listener::
 
     from locust import events
     
-    @events.request_success.add_listener
-    def my_success_handler(request_type, name, response_time, response_length, **kw):
-        print("Successfully made a request to: %s" % name)
-
+    @events.request.add_listener
+    def my_request_handler(request_type, name, response_time, response_length, response,
+                           context, exception, **kwargs):
+        if exception:
+            print(f"Request to {name} failed with exception {exception}")
+        else:
+            print(f"Successfully made a request to: {name})
+            print(f"The response was {response.text}")
 
 .. note::
 
-    It's highly recommended that you add a wildcard keyword argument in your listeners
-    (the \**kw in the code above), to prevent your code from breaking if new arguments are
-    added in a future version.
-
-.. seealso::
-
     To see all available events, please see :ref:`events`.
 
+    In the above example the wildcard keyword argument (\**kwargs) will be empty but it 
+    is prevents the code from breaking if new arguments are added in some future version of Locust.
+
+    It is entirely possible to implement a client that does not support all parameters 
+    (some non-HTTP protocols might not have a concept of `response_length` or `response` object).
+
+.. _request_context:
+
+Request context
+==================
+
+The :py:attr:`request event <locust.event.Events.request>` has a context parameter that enable you to pass data `about` the request (things like username, tags etc). It can be set directly in the call to the request method or at the User level, by overriding the User.context() method. 
+
+Context from request method::
+
+    class MyUser(HttpUser):
+        @task
+        def t(self):
+            self.client.post("/login", json={"username": "foo"}, context={"username": "foo"})
+
+        @events.request.add_listener
+        def on_request(context, **kwargs):
+            print(context["username"])
+    
+Context from User class::
+
+    class MyUser(HttpUser):
+        def context(self):
+            return {"username": self.username}
+
+        @task
+        def t(self):
+            self.username = "foo"
+            self.client.post("/login", json={"username": self.username})
+
+        @events.request.add_listener
+        def on_request(context, **kwargs):
+            print(context["username"])
 
 
 Adding Web Routes

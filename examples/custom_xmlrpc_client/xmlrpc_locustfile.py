@@ -1,63 +1,65 @@
 import time
 from xmlrpc.client import ServerProxy, Fault
 
-from locust import User, task, between
+from locust import User, task
 
 
 class XmlRpcClient(ServerProxy):
     """
-    Simple, sample XML RPC client implementation that wraps xmlrpclib.ServerProxy and
-    fires locust events on request_success and request_failure, so that all requests
-    gets tracked in locust's statistics.
+    XmlRpcClient is a wrapper around the standard library's ServerProxy.
+    It proxies any function calls and fires the *request* event when they finish,
+    so that the calls get recorded in Locust.
     """
 
-    _locust_environment = None
+    def __init__(self, host, request_event):
+        super().__init__(host)
+        self._request_event = request_event
 
     def __getattr__(self, name):
         func = ServerProxy.__getattr__(self, name)
 
         def wrapper(*args, **kwargs):
-            start_time = time.time()
+            start_time = time.perf_counter()
+            request_meta = {
+                "request_type": "xmlrpc",
+                "name": name,
+                "response_length": 0,  # calculating this for an xmlrpc.client response would be too hard
+                "response": None,
+                "context": {},  # see HttpUser if you actually want to implement contexts
+                "exception": None,
+            }
             try:
-                result = func(*args, **kwargs)
+                request_meta["response"] = func(*args, **kwargs)
             except Fault as e:
-                total_time = int((time.time() - start_time) * 1000)
-                self._locust_environment.events.request_failure.fire(
-                    request_type="xmlrpc", name=name, response_time=total_time, exception=e
-                )
-            else:
-                total_time = int((time.time() - start_time) * 1000)
-                self._locust_environment.events.request_success.fire(
-                    request_type="xmlrpc", name=name, response_time=total_time, response_length=0
-                )
-                # In this example, I've hardcoded response_length=0. If we would want the response length to be
-                # reported correctly in the statistics, we would probably need to hook in at a lower level
+                request_meta["exception"] = e
+            request_meta["response_time"] = (time.perf_counter() - start_time) * 1000
+            self._request_event.fire(**request_meta)  # This is what makes the request actually get logged in Locust
+            return request_meta["response"]
 
         return wrapper
 
 
 class XmlRpcUser(User):
     """
-    This is the abstract User class which should be subclassed. It provides an XML-RPC client
-    that can be used to make XML-RPC requests that will be tracked in Locust's statistics.
+    A minimal Locust user class that provides an XmlRpcClient to its subclasses
     """
 
-    abstract = True
+    abstract = True  # dont instantiate this as an actual user when running Locust
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.client = XmlRpcClient(self.host)
-        self.client._locust_environment = self.environment
+    def __init__(self, environment):
+        super().__init__(environment)
+        self.client = XmlRpcClient(self.host, request_event=environment.events.request)
 
 
-class ApiUser(XmlRpcUser):
+# The real user class that will be instantiated and run by Locust
+# This is the only thing that is actually specific to the service that we are testing.
+class MyUser(XmlRpcUser):
     host = "http://127.0.0.1:8877/"
-    wait_time = between(0.1, 1)
 
-    @task(10)
+    @task
     def get_time(self):
         self.client.get_time()
 
-    @task(5)
+    @task
     def get_random_number(self):
         self.client.get_random_number(0, 100)

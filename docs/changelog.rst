@@ -4,6 +4,36 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.5.3
+=====
+
+* Fix an issue with custom Users calling request_success/_failure.fire() not being added to statistics https://github.com/locustio/locust/pull/1761
+
+1.5.2
+=====
+
+* Pin version of flask to 1.1.2, fixing https://github.com/locustio/locust/issues/1759
+* Fix issue with GRPC compatibility and add GRPC example to documentation https://github.com/locustio/locust/pull/1755
+* Use time.perf_counter() to calculate elapsed times everywhere, should only matter for Windows https://github.com/locustio/locust/pull/1758
+
+1.5.1
+=====
+
+* Fixed an issue with 1.5.0 where an extra parameter (start_time) was passed to request event https://github.com/locustio/locust/pull/1754
+
+1.5.0
+=====
+
+* Unify request_success/request_failure into a single event called request (the old ones are deprecated but still work) https://github.com/locustio/locust/issues/1724
+* Add the response object and context as parameters to the request event. context is used to forward information to the request event handler (can be used for things like username, tags etc)
+
+1.4.4
+=====
+
+* Ensure runner.quit finishes even when users are broken https://github.com/locustio/locust/pull/1728
+* Make runner / user count available to LoadTestShape https://github.com/locustio/locust/pull/1719
+* Other small fixes
+
 1.4.3
 =====
 
