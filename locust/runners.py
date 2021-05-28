@@ -740,7 +740,6 @@ class WorkerRunner(DistributedRunner):
         self.client = rpc.Client(master_host, master_port, self.client_id)
         self.greenlet.spawn(self.heartbeat).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.worker).link_exception(greenlet_exception_handler)
-        self.client.send(Message("client_ready", None, self.client_id))
         self.greenlet.spawn(self.stats_reporter).link_exception(greenlet_exception_handler)
 
         # register listener for when all users have spawned, and report it to the master node
@@ -768,6 +767,10 @@ class WorkerRunner(DistributedRunner):
             self.client.send(Message("exception", {"msg": str(exception), "traceback": formatted_tb}, self.client_id))
 
         self.environment.events.user_error.add_listener(on_user_error)
+
+        def on_init(environment, **kw):
+            self.client.send(Message("client_ready", None, self.client_id))
+        self.environment.events.init.add_listener(on_init)
 
     def heartbeat(self):
         while True:
