@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.3](https://github.com/locustio/locust/tree/1.5.3) (2021-05-17)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.5.2...1.5.3)
+
+**Merged pull requests:**
+
+- Register stats from request\_success and request\_failure [\#1761](https://github.com/locustio/locust/pull/1761) ([DennisKrone](https://github.com/DennisKrone))
+
 ## [1.5.2](https://github.com/locustio/locust/tree/1.5.2) (2021-05-12)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.5.1...1.5.2)

@@ -11,7 +11,7 @@ Locust is an easy to use, scriptable and scalable performance testing tool. You 
 
 ## Features
 
-#### Write user test scenarios in plain-old Python
+#### Write user test scenarios in plain old Python
 
 If you want your users to loop, perform some conditional behaviour or do some calculations, you just use the regular programming constructs provided by Python. Locust runs every user inside its own greenlet (a lightweight process/coroutine). This enables you to write your tests like normal (blocking) Python code instead of having to use callbacks or some other mechanism. Because your scenarios are “just python” you can use your regular IDE, and version control your tests as regular code (as opposed to some other tools that use XML or binary formats)
 
