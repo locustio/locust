@@ -76,22 +76,39 @@ def _find_ideal_users_to_add_or_remove(
 
     number_of_users_to_add_or_remove = abs(number_of_users_to_add_or_remove)
 
-    user_class_occurrences_candidates: Dict[float, Dict[str, int]] = {}
+    assert number_of_users_to_add_or_remove <= len(user_classes), number_of_users_to_add_or_remove
 
-    for user_classes_combination in combinations_with_replacement(user_classes, number_of_users_to_add_or_remove):
-        user_class_occurrences_candidate = {
-            user_class.__name__: user_class_occurrences[user_class.__name__]
-            + sign * sum(1 for user_class_ in user_classes_combination if user_class_.__name__ == user_class.__name__)
-            for user_class in user_classes
-        }
-        distance = distance_from_desired_distribution(
-            user_classes,
-            user_class_occurrences_candidate,
-        )
-        if distance not in user_class_occurrences_candidates:
-            user_class_occurrences_candidates[distance] = user_class_occurrences_candidate.copy()
+    # Formula for combination with replacement
+    # (https://www.tutorialspoint.com/statistics/combination_with_replacement.htm)
+    number_of_combinations = math.factorial(len(user_classes) + number_of_users_to_add_or_remove - 1) / (
+        math.factorial(number_of_users_to_add_or_remove) * math.factorial(len(user_classes) - 1)
+    )
 
-    return user_class_occurrences_candidates[min(user_class_occurrences_candidates.keys())]
+    # If the number of combinations with replacement is above this threshold, we simply add/remove
+    # users for the first "number_of_users_to_add_or_remove" users. Otherwise, computing the best
+    # distribution is too expensive in terms of computation.
+    max_number_of_combinations_threshold = 1000
+
+    if number_of_combinations <= max_number_of_combinations_threshold:
+        user_class_occurrences_candidates: Dict[float, Dict[str, int]] = {}
+        for user_classes_combination in combinations_with_replacement(user_classes, number_of_users_to_add_or_remove):
+            user_class_occurrences_candidate = user_class_occurrences.copy()
+            for user_class in user_classes_combination:
+                user_class_occurrences_candidate[user_class.__name__] += sign
+            distance = distance_from_desired_distribution(
+                user_classes,
+                user_class_occurrences_candidate,
+            )
+            if distance not in user_class_occurrences_candidates:
+                user_class_occurrences_candidates[distance] = user_class_occurrences_candidate.copy()
+
+        return user_class_occurrences_candidates[min(user_class_occurrences_candidates.keys())]
+
+    else:
+        user_class_occurrences_candidate = user_class_occurrences.copy()
+        for user_class in user_classes[:number_of_users_to_add_or_remove]:
+            user_class_occurrences_candidate[user_class.__name__] += sign
+        return user_class_occurrences_candidate
 
 
 def distance_from_desired_distribution(

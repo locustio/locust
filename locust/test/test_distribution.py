@@ -1,3 +1,4 @@
+import time
 import unittest
 
 from locust import User
@@ -274,25 +275,28 @@ class TestDistribution(unittest.TestCase):
         class User15(User):
             weight = 69
 
-        number_of_users = 1044523783783
-        user_class_occurrences = weight_users(
-            user_classes=[
-                User1,
-                User2,
-                User3,
-                User4,
-                User5,
-                User6,
-                User7,
-                User8,
-                User9,
-                User10,
-                User11,
-                User12,
-                User13,
-                User14,
-                User15,
-            ],
-            number_of_users=number_of_users,
-        )
-        self.assertEqual(sum(user_class_occurrences.values()), number_of_users)
+        for number_of_users in range(1044523783783, 1044523783783 + 1000):
+            ts = time.perf_counter_ns()
+            user_class_occurrences = weight_users(
+                user_classes=[
+                    User1,
+                    User2,
+                    User3,
+                    User4,
+                    User5,
+                    User6,
+                    User7,
+                    User8,
+                    User9,
+                    User10,
+                    User11,
+                    User12,
+                    User13,
+                    User14,
+                    User15,
+                ],
+                number_of_users=number_of_users,
+            )
+            delta_ms = (time.perf_counter_ns() - ts) / 1e6
+            self.assertEqual(sum(user_class_occurrences.values()), number_of_users)
+            self.assertLessEqual(delta_ms, 100)
