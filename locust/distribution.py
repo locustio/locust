@@ -60,11 +60,13 @@ def weight_users(
         return user_class_occurrences
 
     else:
-        return _find_ideal_users_to_add_or_remove(
+        user_class_occurrences = _find_ideal_users_to_add_or_remove(
             user_classes,
             number_of_users - sum(user_class_occurrences.values()),
             user_class_occurrences.copy(),
         )
+        assert sum(user_class_occurrences.values()) == number_of_users
+        return user_class_occurrences
 
 
 def _find_ideal_users_to_add_or_remove(
