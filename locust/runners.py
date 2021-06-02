@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
+import os
 import socket
 import sys
 import time
@@ -994,6 +995,10 @@ class WorkerRunner(DistributedRunner):
             elif msg.type == "stop":
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))
+                # +additional_wait is just a small buffer to account for the random network latencies and/or other
+                # random delays inherent to distributed systems.
+                additional_wait = int(os.getenv("WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP", 0))
+                gevent.sleep((self.environment.stop_timeout or 0) + additional_wait)
                 self.client.send(Message("client_ready", None, self.client_id))
                 self.worker_state = STATE_INIT
             elif msg.type == "quit":

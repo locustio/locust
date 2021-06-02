@@ -702,8 +702,9 @@ class TestMasterWorkerRunners(LocustTestCase):
                     return None
 
         with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            stop_timeout = 20
             master_env = Environment(
-                user_classes=[TestUser1, TestUser2, TestUser3], shape_class=TestShape(), stop_timeout=20
+                user_classes=[TestUser1, TestUser2, TestUser3], shape_class=TestShape(), stop_timeout=stop_timeout
             )
             master_env.shape_class.reset_time()
             master = master_env.create_master_runner("*", 0)
@@ -717,7 +718,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             # Give workers time to connect
             sleep(0.1)
 
-            self.assertEqual("ready", master.state)
+            self.assertEqual(STATE_INIT, master.state)
             self.assertEqual(5, len(master.clients.ready))
 
             # Re-order `workers` so that it is sorted by `id`.
@@ -730,11 +731,11 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             # First stage
             ts = time.time()
-            while master.state != "spawning":
+            while master.state != STATE_SPAWNING:
                 self.assertTrue(time.time() - ts <= 1)
                 sleep()
             sleep(5 - (time.time() - ts))  # runtime = 5s
-            self.assertEqual("running", master.state)
+            self.assertEqual(STATE_RUNNING, master.state)
             w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
             w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
             w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
@@ -754,11 +755,11 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             # Second stage
             ts = time.time()
-            while master.state != "spawning":
+            while master.state != STATE_SPAWNING:
                 self.assertTrue(time.time() - ts <= 1)
                 sleep()
             sleep(5 - (time.time() - ts))  # runtime = 15s
-            self.assertEqual("running", master.state)
+            self.assertEqual(STATE_RUNNING, master.state)
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
             w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
             w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
@@ -778,15 +779,15 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             # Third stage
             ts = time.time()
-            while master.state != "spawning":
+            while master.state != STATE_SPAWNING:
                 self.assertTrue(time.time() - ts <= 1)
                 sleep()
             sleep(5 - (time.time() - ts))  # runtime = 25s
             ts = time.time()
-            while master.state != "running":
+            while master.state != STATE_RUNNING:
                 self.assertTrue(time.time() - ts <= 1)
                 sleep()
-            self.assertEqual("running", master.state)
+            self.assertEqual(STATE_RUNNING, master.state)
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
@@ -806,7 +807,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             # Fourth stage
             ts = time.time()
-            while master.state != "spawning":
+            while master.state != STATE_SPAWNING:
                 self.assertTrue(time.time() - ts <= 1)
                 sleep()
             sleep(5 - (time.time() - ts))  # runtime = 35s
@@ -814,7 +815,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             # Fourth stage - Excess TestUser3 have been stopped but
             #                TestUser1/TestUser2 have not reached stop timeout yet, so
             #                their number are unchanged
-            self.assertEqual("spawning", master.state)
+            self.assertEqual(STATE_SPAWNING, master.state)
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
             w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
             w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
@@ -835,7 +836,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             # Fourth stage - TestUser2/TestUser3 are now at the desired
             #                number, but TestUser1 is still unchanged
             ts = time.time()
-            while master.state != "spawning":
+            while master.state != STATE_SPAWNING:
                 self.assertTrue(time.time() - ts <= 1)
                 sleep()
             delta = time.time() - ts
@@ -858,7 +859,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             # Fourth stage - All users are now at the desired number
             ts = time.time()
-            while master.state != "running":
+            while master.state != STATE_RUNNING:
                 self.assertTrue(time.time() - ts <= 1)
                 sleep()
             delta = time.time() - ts
@@ -881,9 +882,25 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             # Sleep stop_timeout and make sure the test has stopped
             sleep(1)  # runtime = 61s
-            self.assertEqual("stopping", master.state)
-            sleep(20)  # runtime = 81s
-            self.assertEqual("stopped", master.state)
+            self.assertEqual(STATE_STOPPING, master.state)
+            sleep(stop_timeout)  # runtime = 81s
+            self.assertEqual(STATE_STOPPED, master.state)
+
+            # We wait for "stop_timeout" seconds to let the workers reconnect as "ready" with the master.
+            # The reason for waiting an additional "stop_timeout" when we already waited for "stop_timeout"
+            # above is that when a worker receives the stop message, it can take up to "stop_timeout"
+            # for the worker to send the "client_stopped" message then an additional "stop_timeout" seconds
+            # to send the "client_ready" message.
+            ts = time.time()
+            while len(master.clients.ready) != len(workers):
+                self.assertTrue(
+                    time.time() - ts <= stop_timeout,
+                    f"expected {len(workers)} workers to be ready but only {len(master.clients.ready)} workers are",
+                )
+                sleep()
+            sleep(1)
+
+            # Check that no users are running
             w1 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
             w2 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
             w3 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
