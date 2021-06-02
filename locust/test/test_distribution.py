@@ -276,7 +276,7 @@ class TestDistribution(unittest.TestCase):
             weight = 69
 
         for number_of_users in range(1044523783783, 1044523783783 + 1000):
-            ts = time.perf_counter_ns()
+            ts = time.perf_counter()
             user_class_occurrences = weight_users(
                 user_classes=[
                     User1,
@@ -297,6 +297,6 @@ class TestDistribution(unittest.TestCase):
                 ],
                 number_of_users=number_of_users,
             )
-            delta_ms = (time.perf_counter_ns() - ts) / 1e6
+            delta_ms = 1e3 * (time.perf_counter() - ts)
             self.assertEqual(sum(user_class_occurrences.values()), number_of_users)
             self.assertLessEqual(delta_ms, 100)
