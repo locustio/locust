@@ -662,6 +662,16 @@ class MasterRunner(DistributedRunner):
                 logger.debug("Sending spawn message to %i client(s)" % len(dispatch_greenlets))
                 dispatch_greenlets.join()
 
+                logger.debug(
+                    "Currently spawned users: %s (%i total running)"
+                    % (
+                        ", ".join(
+                            "%s: %d" % (name, count) for name, count in self.reported_user_class_occurrences.items()
+                        ),
+                        sum(self.reported_user_class_occurrences.values()),
+                    )
+                )
+
         except KeyboardInterrupt:
             # We need to catch keyboard interrupt. Otherwise, if KeyboardInterrupt is received while in
             # a gevent.sleep inside the dispatch_users function, locust won't gracefully shutdown.
