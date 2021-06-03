@@ -140,6 +140,9 @@ def get_users_to_dispatch_for_current_iteration(
     number_of_users_in_current_dispatch = 0
 
     for i, user_class in enumerate(itertools.cycle(user_class_occurrences.keys())):
+        # For large number of user classes and large number of workers, this assertion might fail.
+        # If this happens, you can remove it or increase the threshold. Right now, the assertion
+        # is there as a safeguard for situations that can't be easily tested (i.e. large scale distributed tests).
         assert i < 5000, "Looks like dispatch is stuck in an infinite loop (iteration {})".format(i)
 
         if sum(map(sum, map(dict.values, effective_balanced_users.values()))) == 0:
@@ -152,7 +155,9 @@ def get_users_to_dispatch_for_current_iteration(
             continue
 
         for j, worker_node_id in enumerate(itertools.cycle(effective_balanced_users.keys())):
-            assert j < 100, "Looks like dispatch is stuck in an infinite loop (iteration {})".format(j)
+            assert j < int(
+                2 * len(effective_balanced_users)
+            ), "Looks like dispatch is stuck in an infinite loop (iteration {})".format(j)
             if effective_balanced_users[worker_node_id][user_class] == 0:
                 continue
             dispatched_users[worker_node_id][user_class] += 1
