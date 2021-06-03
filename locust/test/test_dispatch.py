@@ -1,6 +1,7 @@
-import random
+import itertools
 import time
 import unittest
+from typing import Dict
 
 from locust.dispatch import (
     all_users_have_been_dispatched,
@@ -1915,40 +1916,71 @@ class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(unittest.TestCase)
 class TestDispatchUsersToWorkersFuzzy(unittest.TestCase):
     def test_dispatch_users_to_workers(self):
         """
-        This "fuzzy" test uses the "dispatch_users" with various random
+        This "fuzzy" test uses the "dispatch_users" with various
         input parameters to validate that the dispatch logic does not get stuck
         in some infinite loop or other unforeseen situations.
         """
+        weights_iterator = itertools.cycle([5, 4, 9, 4, 9, 8, 4, 10, 1, 5])
+        number_of_prior_users_iterator = itertools.cycle([0, 1, 3, 10, 20])
+        spawn_rate_multipliers_iterator = itertools.cycle(
+            [
+                0.770798258958361,
+                0.6310883490428525,
+                0.08332730831289559,
+                0.5498638520309477,
+                0.33919312148903324,
+                0.275113942104787,
+                0.4120114294121081,
+                0.9757043117340924,
+                0.5950736075658479,
+                0.42576147123568686,
+                0.001,
+            ]
+        )
 
-        for _ in range(20):
-            for max_prior_users in [0, 3, 5]:
-                number_of_user_classes = random.randint(1, 30)
-                number_of_workers = random.randint(1, 30)
+        # We repeat the test cases thrice so that we cover enough of the
+        # values in the above iterators.
+        for _ in range(5):
+            for number_of_user_classes in [1, 5, 10, 20, 30, 40, 50, 100]:
+                for number_of_workers in [1, 2, 5, 10, 30, 80, 100, 500]:
+                    worker_nodes = []
+                    for i in range(1, number_of_workers + 1):
+                        worker_node = WorkerNode(str(i))
+                        worker_node.user_class_occurrences = {
+                            f"User{i}": next(number_of_prior_users_iterator)
+                            for i in range(1, number_of_user_classes + 1)
+                        }
+                        worker_nodes.append(worker_node)
 
-                worker_nodes = []
-                for i in range(1, number_of_workers + 1):
-                    worker_node = WorkerNode(str(i))
-                    worker_node.user_class_occurrences = {
-                        f"User{i}": random.randint(0, max_prior_users)
-                        for i in range(1, random.randint(1, number_of_user_classes + 1))
+                    user_class_occurrences = {
+                        f"User{i}": next(weights_iterator) for i in range(1, number_of_user_classes + 1)
                     }
-                    worker_nodes.append(worker_node)
 
-                user_class_occurrences = {
-                    f"User{i}": random.randint(0, 50) for i in range(1, number_of_user_classes + 1)
-                }
-                total_number_of_users = sum(user_class_occurrences.values())
-                # We limit the maximum total dispatch to around 10s (i.e. total_number_of_users / 10)
-                # so that the test does take too much time.
-                spawn_rate = max(total_number_of_users / 10, 100 * random.random())
+                    # We limit the maximum total dispatch to around 10s (i.e. total_number_of_users / 10)
+                    # so that the test does take too much time.
+                    total_number_of_users = sum(user_class_occurrences.values())
+                    spawn_rate = max(total_number_of_users / 10, 100 * next(spawn_rate_multipliers_iterator))
 
-                users_dispatcher = dispatch_users(
-                    worker_nodes=worker_nodes,
-                    user_class_occurrences=user_class_occurrences,
-                    spawn_rate=spawn_rate,
-                )
+                    users_dispatcher = dispatch_users(
+                        worker_nodes=worker_nodes,
+                        user_class_occurrences=user_class_occurrences,
+                        spawn_rate=spawn_rate,
+                    )
 
-                dispatched = list(users_dispatcher)
+                    # The dispatch should not take more than 20s. More than
+                    # that would be a sign of performance issue.
+                    ts = time.perf_counter()
+                    dispatched = list(users_dispatcher)
+                    self.assertLessEqual(
+                        time.perf_counter() - ts,
+                        20,
+                        "number_of_user_classes: {} - number_of_workers: {} - total_number_of_users: {} - spawn_rate: {}".format(
+                            number_of_user_classes,
+                            number_of_workers,
+                            total_number_of_users,
+                            spawn_rate,
+                        ),
+                    )
 
 
 class TestNumberOfUsersLeftToDispatch(unittest.TestCase):
