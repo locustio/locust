@@ -201,7 +201,7 @@ def go_to_next_user_class(
     a ramp up.
     """
     dispatched_user_class_occurrences = {
-        user_class: sum(x[user_class] for x in dispatched_users.values())
+        user_class: sum(map(operator.itemgetter(user_class), dispatched_users.values()))
         for user_class in user_class_occurrences.keys()
     }
     if all(n > 0 for n in dispatched_user_class_occurrences.values()):
@@ -217,7 +217,7 @@ def go_to_next_user_class(
         for user_class in filter(
             functools.partial(operator.ne, current_user_class), sorted(user_class_occurrences.keys())
         ):
-            if sum(x[user_class] for x in effective_balanced_users.values()) == 0:
+            if sum(map(operator.itemgetter(user_class), effective_balanced_users.values())) == 0:
                 # No more users of class `user_class` to dispatch
                 continue
             if (
@@ -365,12 +365,14 @@ def balance_users_among_workers(
                 break
             if (
                 sum(balanced_users[worker_node.id].values()) == users_per_worker
-                and total_users - sum(map(sum, map(lambda x: x.values(), balanced_users.values()))) > remainder
+                and total_users - sum(map(sum, map(operator.methodcaller("values"), balanced_users.values())))
+                > remainder
             ):
                 continue
             elif (
                 sum(balanced_users[worker_node.id].values()) == users_per_worker + 1
-                and total_users - sum(map(sum, map(lambda x: x.values(), balanced_users.values()))) < remainder
+                and total_users - sum(map(sum, map(operator.methodcaller("values"), balanced_users.values())))
+                < remainder
             ):
                 continue
             balanced_users[worker_node.id][user_class] += 1
