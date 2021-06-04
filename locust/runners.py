@@ -359,6 +359,8 @@ class Runner:
         """
         Stop a running load test by stopping all running users
         """
+        if self.state == STATE_STOPPED:
+            return
         logger.debug("Stopping all users")
         self.update_state(STATE_CLEANUP)
         # if we are currently spawning users we need to kill the spawning greenlet first
@@ -367,6 +369,7 @@ class Runner:
         self.stop_users(self.user_count)
         self.update_state(STATE_STOPPED)
         self.cpu_log_warning()
+        self.environment.events.test_stop.fire(environment=self.environment)
 
     def quit(self):
         """
@@ -415,12 +418,6 @@ class LocalRunner(Runner):
             lambda: super(LocalRunner, self).start(user_count, spawn_rate, wait=wait)
         )
         self.spawning_greenlet.link_exception(greenlet_exception_handler)
-
-    def stop(self):
-        if self.state == STATE_STOPPED:
-            return
-        super().stop()
-        self.environment.events.test_stop.fire(environment=self.environment)
 
 
 class DistributedRunner(Runner):
