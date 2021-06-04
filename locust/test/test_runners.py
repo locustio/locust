@@ -1352,7 +1352,7 @@ class TestWorkerRunner(LocustTestCase):
             test_start_run = [False]
 
             @environment.events.test_start.add_listener
-            def on_test_start(_environment, **kw):
+            def on_test_start(*args, **kw):
                 test_start_run[0] = True
 
             worker = self.get_runner(environment=environment, user_classes=[MyTestUser])
@@ -1383,8 +1383,8 @@ class TestWorkerRunner(LocustTestCase):
             worker.user_greenlets.join()
             # check that locust user got to finish
             self.assertEqual(2, MyTestUser._test_state)
-            # make sure the test_start was never fired on the worker
-            self.assertFalse(test_start_run[0])
+            # make sure the test_start was fired on the worker
+            self.assertTrue(test_start_run[0])
 
     def test_worker_without_stop_timeout(self):
         class MyTestUser(User):
