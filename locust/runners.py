@@ -305,6 +305,7 @@ class Runner:
             self.cpu_warning_emitted = False
             self.worker_cpu_warning_emitted = False
             self.target_user_count = user_count
+            self.environment.events.test_start.fire(environment=self.environment)
 
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
             logger.debug(
@@ -406,10 +407,6 @@ class LocalRunner(Runner):
             logger.warning(
                 "Your selected spawn rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?"
             )
-
-        if self.state != STATE_RUNNING and self.state != STATE_SPAWNING:
-            # if we're not already running we'll fire the test_start event
-            self.environment.events.test_start.fire(environment=self.environment)
 
         if self.spawning_greenlet:
             # kill existing spawning_greenlet before we start a new one
