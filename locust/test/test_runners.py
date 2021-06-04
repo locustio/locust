@@ -537,16 +537,16 @@ class TestMasterWorkerRunners(LocustTestCase):
             # make sure users are killed
             self.assertEqual(0, worker.user_count)
 
-        # check the test_stop event was called one time in master and zero times in workder
+        # check the test_stop event was called one time in master and one time in worker
         self.assertEqual(
             1,
             test_stop_count["master"],
             "The test_stop event was not called exactly one time in the master node",
         )
         self.assertEqual(
-            0,
+            1,
             test_stop_count["worker"],
-            "The test_stop event was called in the worker node",
+            "The test_stop event was not called exactly one time in the worker node",
         )
 
     def test_distributed_shape(self):
@@ -1349,12 +1349,6 @@ class TestWorkerRunner(LocustTestCase):
 
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             environment = Environment()
-            test_start_run = [False]
-
-            @environment.events.test_start.add_listener
-            def on_test_start(*args, **kw):
-                test_start_run[0] = True
-
             worker = self.get_runner(environment=environment, user_classes=[MyTestUser])
             self.assertEqual(1, len(client.outbox))
             self.assertEqual("client_ready", client.outbox[0].type)
@@ -1383,8 +1377,6 @@ class TestWorkerRunner(LocustTestCase):
             worker.user_greenlets.join()
             # check that locust user got to finish
             self.assertEqual(2, MyTestUser._test_state)
-            # make sure the test_start was fired on the worker
-            self.assertTrue(test_start_run[0])
 
     def test_worker_without_stop_timeout(self):
         class MyTestUser(User):
@@ -1469,6 +1461,153 @@ class TestWorkerRunner(LocustTestCase):
             worker.spawning_greenlet.join()
             self.assertEqual(9, len(worker.user_greenlets))
             worker.quit()
+
+    def test_start_event(self):
+        class MyTestUser(User):
+            _test_state = 0
+
+            @task
+            def the_task(self):
+                MyTestUser._test_state = 1
+                gevent.sleep(0.2)
+                MyTestUser._test_state = 2
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            environment = Environment()
+            run_count = [0]
+
+            @environment.events.test_start.add_listener
+            def on_test_start(*args, **kw):
+                run_count[0] += 1
+
+            worker = self.get_runner(environment=environment, user_classes=[MyTestUser])
+            self.assertEqual(1, len(client.outbox))
+            self.assertEqual("client_ready", client.outbox[0].type)
+            client.mocked_send(
+                Message(
+                    "spawn",
+                    {
+                        "spawn_rate": 1,
+                        "num_users": 1,
+                        "host": "",
+                        "stop_timeout": None,
+                    },
+                    "dummy_client_id",
+                )
+            )
+            # wait for worker to spawn locusts
+            self.assertIn("spawning", [m.type for m in client.outbox])
+            worker.spawning_greenlet.join()
+            self.assertEqual(1, len(worker.user_greenlets))
+            self.assertEqual(1, run_count[0])
+
+            # check that locust has started running
+            gevent.sleep(0.01)
+            self.assertEqual(1, MyTestUser._test_state)
+
+            # change number of users and check that test_start isn't fired again
+            client.mocked_send(
+                Message(
+                    "spawn",
+                    {
+                        "spawn_rate": 1,
+                        "num_users": 1,
+                        "host": "",
+                        "stop_timeout": None,
+                    },
+                    "dummy_client_id",
+                )
+            )
+            self.assertEqual(1, run_count[0])
+
+            # stop and start to make sure test_start is fired again
+            client.mocked_send(Message("stop", None, "dummy_client_id"))
+            client.mocked_send(
+                Message(
+                    "spawn",
+                    {
+                        "spawn_rate": 1,
+                        "num_users": 1,
+                        "host": "",
+                        "stop_timeout": None,
+                    },
+                    "dummy_client_id",
+                )
+            )
+            gevent.sleep(0.01)
+            self.assertEqual(2, run_count[0])
+
+            client.mocked_send(Message("stop", None, "dummy_client_id"))
+
+    def test_stop_event(self):
+        class MyTestUser(User):
+            _test_state = 0
+
+            @task
+            def the_task(self):
+                MyTestUser._test_state = 1
+                gevent.sleep(0.2)
+                MyTestUser._test_state = 2
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            environment = Environment()
+            run_count = [0]
+
+            @environment.events.test_stop.add_listener
+            def on_test_stop(*args, **kw):
+                run_count[0] += 1
+
+            worker = self.get_runner(environment=environment, user_classes=[MyTestUser])
+            self.assertEqual(1, len(client.outbox))
+            self.assertEqual("client_ready", client.outbox[0].type)
+            client.mocked_send(
+                Message(
+                    "spawn",
+                    {
+                        "spawn_rate": 1,
+                        "num_users": 1,
+                        "host": "",
+                        "stop_timeout": None,
+                    },
+                    "dummy_client_id",
+                )
+            )
+
+            # wait for worker to spawn locusts
+            self.assertIn("spawning", [m.type for m in client.outbox])
+            worker.spawning_greenlet.join()
+            self.assertEqual(1, len(worker.user_greenlets))
+
+            # check that locust has started running
+            gevent.sleep(0.01)
+            self.assertEqual(1, MyTestUser._test_state)
+
+            # stop and make sure test_stop is fired
+            client.mocked_send(Message("stop", None, "dummy_client_id"))
+            gevent.sleep(0.01)
+            self.assertEqual(1, run_count[0])
+
+            # stop while stopped and make sure the event isn't fired again
+            client.mocked_send(Message("stop", None, "dummy_client_id"))
+            gevent.sleep(0.01)
+            self.assertEqual(1, run_count[0])
+
+            # start and stop to check that the event is fired again
+            client.mocked_send(
+                Message(
+                    "spawn",
+                    {
+                        "spawn_rate": 1,
+                        "num_users": 1,
+                        "host": "",
+                        "stop_timeout": None,
+                    },
+                    "dummy_client_id",
+                )
+            )
+            client.mocked_send(Message("stop", None, "dummy_client_id"))
+            gevent.sleep(0.01)
+            self.assertEqual(2, run_count[0])
 
 
 class TestMessageSerializing(unittest.TestCase):
