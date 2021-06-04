@@ -98,10 +98,10 @@ def dispatch_users(
                 user_class_occurrences, dispatched_users, effective_balanced_users, number_of_users_per_dispatch
             )
 
-            ts = time.time()
+            ts = time.perf_counter()
             yield users_to_dispatch
             if sum(sum(x.values()) for x in effective_balanced_users.values()) > 0:
-                delta = time.time() - ts
+                delta = time.perf_counter() - ts
                 sleep_duration = max(0.0, wait_between_dispatch - delta)
                 assert sleep_duration <= 10, sleep_duration
                 gevent.sleep(sleep_duration)
@@ -118,9 +118,9 @@ def dispatch_users(
                 user_class_occurrences, dispatched_users, effective_balanced_users, number_of_users_per_dispatch
             )
 
-            ts = time.time()
+            ts = time.perf_counter()
             yield users_to_dispatch
-            delta = time.time() - ts
+            delta = time.perf_counter() - ts
             sleep_duration = max(0.0, wait_between_dispatch - delta)
             assert sleep_duration <= 10, sleep_duration
             gevent.sleep(sleep_duration)
