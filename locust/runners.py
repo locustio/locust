@@ -735,7 +735,7 @@ class MasterRunner(DistributedRunner):
         :param data: Optional data to send
         """
         for client in self.clients.all:
-            logger.debug("Sending {msg_type} message to client {client_id}")
+            logger.debug(f"Sending {msg_type} message to client {client.id}")
             self.server.send_to_client(Message(msg_type, data, client.id))
 
 
