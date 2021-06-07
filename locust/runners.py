@@ -432,7 +432,7 @@ class DistributedRunner(Runner):
         super().__init__(*args, **kwargs)
         setup_distributed_stats_event_listeners(self.environment.events, self.stats)
 
-    def add_message(self, msg_type, listener):
+    def register_message(self, msg_type, listener):
         self.custom_messages[msg_type] = listener
 
 class WorkerNode:
@@ -713,7 +713,7 @@ class MasterRunner(DistributedRunner):
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
             elif msg.type in self.custom_messages:
-                self.custom_messages[msg.type](msg)
+                self.custom_messages[msg.type](environment=self.environment, msg=msg)
 
             self.check_stopped()
 
@@ -841,7 +841,7 @@ class WorkerRunner(DistributedRunner):
                 self.greenlet.kill(block=True)
             elif msg.type in self.custom_messages:
                 logger.debug("Recieved {msg_type} message on from master")
-                self.custom_messages[msg.type](msg)
+                self.custom_messages[msg.type](environment=self.environment, msg=msg)
 
     def stats_reporter(self):
         while True:

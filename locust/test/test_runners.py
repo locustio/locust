@@ -1357,7 +1357,7 @@ class TestMasterRunner(LocustTestCase):
                 test_custom_msg_data[0] = msg.data
             
             master = self.get_runner()
-            master.add_message("test_custom_msg", on_custom_msg)
+            master.register_message("test_custom_msg", on_custom_msg)
 
             server.mocked_send(
                 Message("test_custom_msg", {'test_data': 123}, "dummy_id")
@@ -1548,7 +1548,7 @@ class TestWorkerRunner(LocustTestCase):
                 test_custom_msg_data[0] = msg.data
             
             worker = self.get_runner(environment=environment, user_classes=[MyUser])
-            worker.add_message("test_custom_msg", on_custom_msg)
+            worker.register_message("test_custom_msg", on_custom_msg)
 
             client.mocked_send(
                 Message("test_custom_msg", {'test_data': 123}, "dummy_client_id")
