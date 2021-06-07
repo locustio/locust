@@ -433,6 +433,12 @@ class DistributedRunner(Runner):
         setup_distributed_stats_event_listeners(self.environment.events, self.stats)
 
     def register_message(self, msg_type, listener):
+        """
+        Register a listener for a custom message from another node
+
+        :param msg_type: The type of the message to listen for
+        :param listener: The function to execute when the message is received
+        """
         self.custom_messages[msg_type] = listener
 
 class WorkerNode:
@@ -722,6 +728,12 @@ class MasterRunner(DistributedRunner):
         return len(self.clients.ready) + len(self.clients.spawning) + len(self.clients.running)
 
     def send_message(self, msg_type, data=None):
+        """
+        Sends a message to all attached worker nodes
+
+        :param msg_type: The type of the message to send
+        :param data: Optional data to send
+        """
         for client in self.clients.all:
             logger.debug("Sending {msg_type} message to client {client_id}")
             self.server.send_to_client(Message(msg_type, data, client.id))
@@ -852,6 +864,12 @@ class WorkerRunner(DistributedRunner):
             gevent.sleep(WORKER_REPORT_INTERVAL)
 
     def send_message(self, msg_type, data=None):
+        """
+        Sends a message to master node
+
+        :param msg_type: The type of the message to send
+        :param data: Optional data to send
+        """
         logger.debug("Sending {msg_type} message to master")
         self.client.send(Message(msg_type, data, self.client_id))
 

@@ -130,9 +130,10 @@ Runner classes
 .. autoclass:: locust.runners.LocalRunner
 
 .. autoclass:: locust.runners.MasterRunner
+    :members: register_message, send_message
 
 .. autoclass:: locust.runners.WorkerRunner
-
+    :members: register_message, send_message
 
 Web UI class
 ============
