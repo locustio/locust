@@ -99,7 +99,7 @@ class WebUI:
         self.tls_key = tls_key
         app = Flask(__name__)
         self.app = app
-        app.jinja_options["extensions"].append("jinja2.ext.do")
+        app.jinja_env.add_extension("jinja2.ext.do")
         app.debug = True
         app.root_path = os.path.dirname(os.path.abspath(__file__))
         self.app.config["BASIC_AUTH_ENABLED"] = False
@@ -215,8 +215,8 @@ class WebUI:
                     os.path.abspath(self.stats_csv_writer.stats_history_file_name()),
                     mimetype="text/csv",
                     as_attachment=True,
-                    attachment_filename=_download_csv_suggest_file_name("requests_full_history"),
-                    add_etags=True,
+                    download_name=_download_csv_suggest_file_name("requests_full_history"),
+                    etag=True,
                     cache_timeout=None,
                     conditional=True,
                     last_modified=None,
