@@ -441,6 +441,7 @@ class DistributedRunner(Runner):
         """
         self.custom_messages[msg_type] = listener
 
+
 class WorkerNode:
     def __init__(self, id, state=STATE_INIT, heartbeat_liveness=HEARTBEAT_LIVENESS):
         self.id = id
@@ -727,17 +728,22 @@ class MasterRunner(DistributedRunner):
     def worker_count(self):
         return len(self.clients.ready) + len(self.clients.spawning) + len(self.clients.running)
 
-    def send_message(self, msg_type, data=None):
+    def send_message(self, msg_type, data=None, client_id=None):
         """
-        Sends a message to all attached worker nodes
+        Sends a message to attached worker node(s)
 
         :param msg_type: The type of the message to send
         :param data: Optional data to send
+        :param client_id: Optional id of the target worker node.
+                            If None, will send to all attached workers
         """
-        for client in self.clients.all:
-            logger.debug(f"Sending {msg_type} message to client {client.id}")
-            self.server.send_to_client(Message(msg_type, data, client.id))
-
+        if client_id:
+            logger.debug(f"Sending {msg_type} message to client {client_id}")
+            self.server.send_to_client(Message(msg_type, data, client_id))
+        else:
+            for client in self.clients.all:
+                logger.debug(f"Sending {msg_type} message to client {client.id}")
+                self.server.send_to_client(Message(msg_type, data, client.id))
 
 
 class WorkerRunner(DistributedRunner):

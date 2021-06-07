@@ -1338,7 +1338,7 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(5, len(server.outbox))
             for _, msg in server.outbox:
                 self.assertEqual("test_custom_msg", msg.type)
-                self.assertEqual(123, msg.data['test_data'])            
+                self.assertEqual(123, msg.data['test_data'])
 
     def test_custom_message_receive(self):
         class MyUser(User):
@@ -1355,7 +1355,7 @@ class TestMasterRunner(LocustTestCase):
             def on_custom_msg(msg, **kw):
                 test_custom_msg[0] = True
                 test_custom_msg_data[0] = msg.data
-            
+
             master = self.get_runner()
             master.register_message("test_custom_msg", on_custom_msg)
 
@@ -1364,7 +1364,9 @@ class TestMasterRunner(LocustTestCase):
             )
 
             self.assertTrue(test_custom_msg[0])
-            self.assertEqual(123, test_custom_msg_data[0]['test_data'])            
+            self.assertEqual(123, test_custom_msg_data[0]['test_data'])
+
+
 class TestWorkerRunner(LocustTestCase):
     def setUp(self):
         super().setUp()
@@ -1527,7 +1529,7 @@ class TestWorkerRunner(LocustTestCase):
             client.outbox.clear()
             worker.send_message('test_custom_msg', {'test_data': 123})
             self.assertEqual("test_custom_msg", client.outbox[0].type)
-            self.assertEqual(123, client.outbox[0].data['test_data'])            
+            self.assertEqual(123, client.outbox[0].data['test_data'])
             worker.quit()
 
     def test_custom_message_receive(self):
@@ -1546,7 +1548,7 @@ class TestWorkerRunner(LocustTestCase):
             def on_custom_msg(msg, **kw):
                 test_custom_msg[0] = True
                 test_custom_msg_data[0] = msg.data
-            
+
             worker = self.get_runner(environment=environment, user_classes=[MyUser])
             worker.register_message("test_custom_msg", on_custom_msg)
 
@@ -1555,8 +1557,9 @@ class TestWorkerRunner(LocustTestCase):
             )
 
             self.assertTrue(test_custom_msg[0])
-            self.assertEqual(123, test_custom_msg_data[0]['test_data'])            
+            self.assertEqual(123, test_custom_msg_data[0]['test_data'])
             worker.quit()
+
 
 class TestMessageSerializing(unittest.TestCase):
     def test_message_serialize(self):
