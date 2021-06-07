@@ -1321,7 +1321,50 @@ class TestMasterRunner(LocustTestCase):
                 self.assertEqual(1, len(master.clients))
                 master.quit()
 
+    def test_custom_message_send(self):
+        class MyUser(User):
+            wait_time = constant(1)
 
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner()
+            for i in range(5):
+                master.clients[i] = WorkerNode(i)
+            master.send_message("test_custom_msg", {"test_data": 123})
+
+            self.assertEqual(5, len(server.outbox))
+            for _, msg in server.outbox:
+                self.assertEqual("test_custom_msg", msg.type)
+                self.assertEqual(123, msg.data['test_data'])            
+
+    def test_custom_message_receive(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            test_custom_msg = [False]
+            test_custom_msg_data = [{}]
+
+            def on_custom_msg(msg, **kw):
+                test_custom_msg[0] = True
+                test_custom_msg_data[0] = msg.data
+            
+            master = self.get_runner()
+            master.add_message("test_custom_msg", on_custom_msg)
+
+            server.mocked_send(
+                Message("test_custom_msg", {'test_data': 123}, "dummy_id")
+            )
+
+            self.assertTrue(test_custom_msg[0])
+            self.assertEqual(123, test_custom_msg_data[0]['test_data'])            
 class TestWorkerRunner(LocustTestCase):
     def setUp(self):
         super().setUp()
@@ -1470,6 +1513,50 @@ class TestWorkerRunner(LocustTestCase):
             self.assertEqual(9, len(worker.user_greenlets))
             worker.quit()
 
+    def test_custom_message_send(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            environment = Environment()
+            worker = self.get_runner(environment=environment, user_classes=[MyUser])
+            client.outbox.clear()
+            worker.send_message('test_custom_msg', {'test_data': 123})
+            self.assertEqual("test_custom_msg", client.outbox[0].type)
+            self.assertEqual(123, client.outbox[0].data['test_data'])            
+            worker.quit()
+
+    def test_custom_message_receive(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            environment = Environment()
+            test_custom_msg = [False]
+            test_custom_msg_data = [{}]
+
+            def on_custom_msg(msg, **kw):
+                test_custom_msg[0] = True
+                test_custom_msg_data[0] = msg.data
+            
+            worker = self.get_runner(environment=environment, user_classes=[MyUser])
+            worker.add_message("test_custom_msg", on_custom_msg)
+
+            client.mocked_send(
+                Message("test_custom_msg", {'test_data': 123}, "dummy_client_id")
+            )
+
+            self.assertTrue(test_custom_msg[0])
+            self.assertEqual(123, test_custom_msg_data[0]['test_data'])            
+            worker.quit()
 
 class TestMessageSerializing(unittest.TestCase):
     def test_message_serialize(self):
