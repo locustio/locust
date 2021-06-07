@@ -428,9 +428,12 @@ class LocalRunner(Runner):
 
 class DistributedRunner(Runner):
     def __init__(self, *args, **kwargs):
+        self.custom_messages = {}
         super().__init__(*args, **kwargs)
         setup_distributed_stats_event_listeners(self.environment.events, self.stats)
 
+    def add_message(self, msg_type, listener):
+        self.custom_messages[msg_type] = listener
 
 class WorkerNode:
     def __init__(self, id, state=STATE_INIT, heartbeat_liveness=HEARTBEAT_LIVENESS):
@@ -709,12 +712,20 @@ class MasterRunner(DistributedRunner):
                             self.quit()
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
+            elif msg.type in self.custom_messages:
+                self.custom_messages[msg.type](msg)
 
             self.check_stopped()
 
     @property
     def worker_count(self):
         return len(self.clients.ready) + len(self.clients.spawning) + len(self.clients.running)
+
+    def send_message(self, msg_type, data=None):
+        for client in self.clients.all:
+            logger.debug("Sending {msg_type} message to client {client_id}")
+            self.server.send_to_client(Message(msg_type, data, client.id))
+
 
 
 class WorkerRunner(DistributedRunner):
@@ -828,6 +839,9 @@ class WorkerRunner(DistributedRunner):
                 self.stop()
                 self._send_stats()  # send a final report, in case there were any samples not yet reported
                 self.greenlet.kill(block=True)
+            elif msg.type in self.custom_messages:
+                logger.debug("Recieved {msg_type} message on from master")
+                self.custom_messages[msg.type](msg)
 
     def stats_reporter(self):
         while True:
@@ -836,6 +850,10 @@ class WorkerRunner(DistributedRunner):
             except RPCError as e:
                 logger.error("Temporary connection lost to master server: %s, will retry later." % (e))
             gevent.sleep(WORKER_REPORT_INTERVAL)
+
+    def send_message(self, msg_type, data=None):
+        logger.debug("Sending {msg_type} message to master")
+        self.client.send(Message(msg_type, data, self.client_id))
 
     def _send_stats(self):
         data = {}
