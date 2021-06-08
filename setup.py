@@ -14,6 +14,12 @@ _init_file = os.path.join(ROOT_PATH, "locust", "__init__.py")
 with open(_init_file, "rb") as f:
     version = str(ast.literal_eval(_version_re.search(f.read().decode("utf-8")).group(1)))
 
+tests_require = [
+    "cryptography",
+    "mock",
+    "pyquery",
+],
+
 setup(
     name="locust",
     version=version,
@@ -30,12 +36,9 @@ setup(
         "Flask-BasicAuth>=0.2.0",
     ],
     test_suite="locust.test",
-    tests_require=[
-        "cryptography",
-        "mock",
-        "pyquery",
-    ],
+    tests_require=tests_require,
     extras_require={
         ":sys_platform == 'win32'": ["pywin32"],
+        "tests": tests_require
     },
 )
