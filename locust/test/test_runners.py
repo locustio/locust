@@ -1338,7 +1338,7 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(5, len(server.outbox))
             for _, msg in server.outbox:
                 self.assertEqual("test_custom_msg", msg.type)
-                self.assertEqual(123, msg.data['test_data'])
+                self.assertEqual(123, msg.data["test_data"])
 
     def test_custom_message_receive(self):
         class MyUser(User):
@@ -1359,12 +1359,10 @@ class TestMasterRunner(LocustTestCase):
             master = self.get_runner()
             master.register_message("test_custom_msg", on_custom_msg)
 
-            server.mocked_send(
-                Message("test_custom_msg", {'test_data': 123}, "dummy_id")
-            )
+            server.mocked_send(Message("test_custom_msg", {"test_data": 123}, "dummy_id"))
 
             self.assertTrue(test_custom_msg[0])
-            self.assertEqual(123, test_custom_msg_data[0]['test_data'])
+            self.assertEqual(123, test_custom_msg_data[0]["test_data"])
 
 
 class TestWorkerRunner(LocustTestCase):
@@ -1527,9 +1525,9 @@ class TestWorkerRunner(LocustTestCase):
             environment = Environment()
             worker = self.get_runner(environment=environment, user_classes=[MyUser])
             client.outbox.clear()
-            worker.send_message('test_custom_msg', {'test_data': 123})
+            worker.send_message("test_custom_msg", {"test_data": 123})
             self.assertEqual("test_custom_msg", client.outbox[0].type)
-            self.assertEqual(123, client.outbox[0].data['test_data'])
+            self.assertEqual(123, client.outbox[0].data["test_data"])
             worker.quit()
 
     def test_custom_message_receive(self):
@@ -1552,12 +1550,10 @@ class TestWorkerRunner(LocustTestCase):
             worker = self.get_runner(environment=environment, user_classes=[MyUser])
             worker.register_message("test_custom_msg", on_custom_msg)
 
-            client.mocked_send(
-                Message("test_custom_msg", {'test_data': 123}, "dummy_client_id")
-            )
+            client.mocked_send(Message("test_custom_msg", {"test_data": 123}, "dummy_client_id"))
 
             self.assertTrue(test_custom_msg[0])
-            self.assertEqual(123, test_custom_msg_data[0]['test_data'])
+            self.assertEqual(123, test_custom_msg_data[0]["test_data"])
             worker.quit()
 
 

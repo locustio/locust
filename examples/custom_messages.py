@@ -6,8 +6,8 @@ usernames = []
 
 def setup_test_users(environment, msg, **kwargs):
     # Fired when the worker recieves a message of type 'test_users'
-    usernames.extend(map(lambda u: u['name'], msg.data))
-    environment.runner.send_message('acknowledge_users', f"Thanks for the {len(msg.data)} users!")
+    usernames.extend(map(lambda u: u["name"], msg.data))
+    environment.runner.send_message("acknowledge_users", f"Thanks for the {len(msg.data)} users!")
 
 
 def on_acknowledge(msg, **kwargs):
@@ -18,9 +18,9 @@ def on_acknowledge(msg, **kwargs):
 @events.init.add_listener
 def on_locust_init(environment, **_kwargs):
     if isinstance(environment.runner, WorkerRunner):
-        environment.runner.register_message('test_users', setup_test_users)
+        environment.runner.register_message("test_users", setup_test_users)
     elif isinstance(environment.runner, MasterRunner):
-        environment.runner.register_message('acknowledge_users', on_acknowledge)
+        environment.runner.register_message("acknowledge_users", on_acknowledge)
 
 
 @events.test_start.add_listener
@@ -44,7 +44,7 @@ def on_test_start(environment, **_kwargs):
                 end_index = len(users)
 
             data = users[start_index:end_index]
-            environment.runner.send_message('test_users', data, worker)
+            environment.runner.send_message("test_users", data, worker)
 
 
 class WebsiteUser(HttpUser):
