@@ -117,19 +117,19 @@ def distance_from_desired_distribution(
     user_classes: List[Type[User]],
     user_class_occurrences: Dict[str, int],
 ) -> float:
-    user_class_2_actual_percentage = {
-        user_class: 100 * occurrences / sum(user_class_occurrences.values())
+    user_class_2_actual_ratio = {
+        user_class: occurrences / sum(user_class_occurrences.values())
         for user_class, occurrences in user_class_occurrences.items()
     }
 
-    user_class_2_expected_percentage = {
-        user_class.__name__: 100 * user_class.weight / sum(map(attrgetter("weight"), user_classes))
+    user_class_2_expected_ratio = {
+        user_class.__name__: user_class.weight / sum(map(attrgetter("weight"), user_classes))
         for user_class in user_classes
     }
 
     differences = [
-        user_class_2_actual_percentage[user_class] - expected_percentage
-        for user_class, expected_percentage in user_class_2_expected_percentage.items()
+        user_class_2_actual_ratio[user_class] - expected_ratio
+        for user_class, expected_ratio in user_class_2_expected_ratio.items()
     ]
 
     return math.sqrt(math.fsum(map(lambda x: x ** 2, differences)))
