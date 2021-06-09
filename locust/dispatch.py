@@ -94,7 +94,7 @@ def dispatch_users(
 
     if less_users_than_desired:
         while sum(sum(x.values()) for x in effective_balanced_users.values()) > 0:
-            users_to_dispatch = get_users_to_dispatch_for_current_iteration(
+            users_to_dispatch = users_to_dispatch_for_current_iteration(
                 user_class_occurrences, dispatched_users, effective_balanced_users, number_of_users_per_dispatch
             )
 
@@ -114,7 +114,7 @@ def dispatch_users(
 
     else:
         while not all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences):
-            users_to_dispatch = get_users_to_dispatch_for_current_iteration(
+            users_to_dispatch = users_to_dispatch_for_current_iteration(
                 user_class_occurrences, dispatched_users, effective_balanced_users, number_of_users_per_dispatch
             )
 
@@ -131,7 +131,7 @@ def dispatch_users(
         yield balanced_users
 
 
-def get_users_to_dispatch_for_current_iteration(
+def users_to_dispatch_for_current_iteration(
     user_class_occurrences: Dict[str, int],
     dispatched_users: Dict[str, Dict[str, int]],
     effective_balanced_users: Dict[str, Dict[str, int]],
