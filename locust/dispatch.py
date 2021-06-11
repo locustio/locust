@@ -95,7 +95,11 @@ def dispatch_users(
     if less_users_than_desired:
         while sum(sum(x.values()) for x in effective_balanced_users.values()) > 0:
             users_to_dispatch = users_to_dispatch_for_current_iteration(
-                user_class_occurrences, dispatched_users, effective_balanced_users, number_of_users_per_dispatch
+                user_class_occurrences,
+                dispatched_users,
+                effective_balanced_users,
+                balanced_users,
+                number_of_users_per_dispatch,
             )
 
             ts = time.perf_counter()
@@ -113,75 +117,101 @@ def dispatch_users(
         yield balanced_users
 
     else:
-        while not all_users_have_been_dispatched(dispatched_users, effective_balanced_users, user_class_occurrences):
+        while not all_users_have_been_dispatched(effective_balanced_users):
             users_to_dispatch = users_to_dispatch_for_current_iteration(
-                user_class_occurrences, dispatched_users, effective_balanced_users, number_of_users_per_dispatch
+                user_class_occurrences,
+                dispatched_users,
+                effective_balanced_users,
+                balanced_users,
+                number_of_users_per_dispatch,
             )
 
             ts = time.perf_counter()
             yield users_to_dispatch
             delta = time.perf_counter() - ts
-            sleep_duration = max(0.0, wait_between_dispatch - delta)
+            sleep_duration = (
+                max(0.0, wait_between_dispatch - delta)
+                if not all_users_have_been_dispatched(effective_balanced_users)
+                else 0
+            )
             assert sleep_duration <= 10, sleep_duration
             gevent.sleep(sleep_duration)
-
-        # If we are here, it means we have an excess of users for one or more user classes.
-        # Hence, we need to dispatch a last set of users that will bring the users
-        # distribution to the desired one.
-        yield balanced_users
 
 
 def users_to_dispatch_for_current_iteration(
     user_class_occurrences: Dict[str, int],
     dispatched_users: Dict[str, Dict[str, int]],
     effective_balanced_users: Dict[str, Dict[str, int]],
+    balanced_users: Dict[str, Dict[str, int]],
     number_of_users_per_dispatch: int,
 ) -> Dict[str, Dict[str, int]]:
-    ts_dispatch = time.perf_counter()
+    if all(
+        sum(map(operator.itemgetter(user_class), dispatched_users.values())) >= user_count
+        for user_class, user_count in user_class_occurrences.items()
+    ):
+        dispatched_users.update(balanced_users)
+        effective_balanced_users.update(
+            {
+                worker_node_id: {user_class: 0 for user_class in user_class_occurrences.keys()}
+                for worker_node_id, user_class_occurrences in dispatched_users.items()
+            }
+        )
 
-    number_of_workers = len(effective_balanced_users)
+    else:
+        ts_dispatch = time.perf_counter()
 
-    number_of_users_in_current_dispatch = 0
+        number_of_workers = len(effective_balanced_users)
 
-    for i, user_class in enumerate(itertools.cycle(user_class_occurrences.keys())):
-        # For large number of user classes and large number of workers, this assertion might fail.
-        # If this happens, you can remove it or increase the threshold. Right now, the assertion
-        # is there as a safeguard for situations that can't be easily tested (i.e. large scale distributed tests).
-        assert i < 5000, "Looks like dispatch is stuck in an infinite loop (iteration {})".format(i)
+        number_of_users_in_current_dispatch = 0
 
-        if sum(map(sum, map(dict.values, effective_balanced_users.values()))) == 0:
-            break
+        for i, user_class in enumerate(itertools.cycle(user_class_occurrences.keys())):
+            # For large number of user classes and large number of workers, this assertion might fail.
+            # If this happens, you can remove it or increase the threshold. Right now, the assertion
+            # is there as a safeguard for situations that can't be easily tested (i.e. large scale distributed tests).
+            assert i < 5000, "Looks like dispatch is stuck in an infinite loop (iteration {})".format(i)
 
-        if all_users_of_current_class_have_been_dispatched(effective_balanced_users, user_class):
-            continue
+            if sum(map(sum, map(dict.values, effective_balanced_users.values()))) == 0:
+                break
 
-        if go_to_next_user_class(user_class, user_class_occurrences, dispatched_users, effective_balanced_users):
-            continue
+            if all(
+                sum(map(operator.itemgetter(user_class_), dispatched_users.values())) >= user_count
+                for user_class_, user_count in user_class_occurrences.items()
+            ):
+                break
 
-        for j, worker_node_id in enumerate(itertools.cycle(effective_balanced_users.keys())):
-            assert j < int(
-                2 * number_of_workers
-            ), "Looks like dispatch is stuck in an infinite loop (iteration {})".format(j)
-            if effective_balanced_users[worker_node_id][user_class] == 0:
+            if (
+                sum(map(operator.itemgetter(user_class), dispatched_users.values()))
+                >= user_class_occurrences[user_class]
+            ):
                 continue
-            dispatched_users[worker_node_id][user_class] += 1
-            effective_balanced_users[worker_node_id][user_class] -= 1
-            number_of_users_in_current_dispatch += 1
-            break
 
-        if number_of_users_in_current_dispatch == number_of_users_per_dispatch:
-            break
+            if go_to_next_user_class(user_class, user_class_occurrences, dispatched_users, effective_balanced_users):
+                continue
 
-    # Another assertion to safeguard against unforeseen situations. Ideally,
-    # we want each dispatch loop to be as short as possible to compute, but with
-    # a large amount of workers/user classes, it can take longer to come up with the dispatch solution.
-    # If the assertion is raised, then it could be a sign that the code needs to be optimized for the
-    # case that caused the assertion to be raised.
-    assert time.perf_counter() - ts_dispatch < (
-        0.5 if number_of_workers < 100 else 1 if number_of_workers < 250 else 1.5 if number_of_workers < 350 else 3
-    ), "Dispatch iteration took too much time: {}s (len(workers) = {}, len(user_classes) = {})".format(
-        time.perf_counter() - ts_dispatch, number_of_workers, len(user_class_occurrences)
-    )
+            for j, worker_node_id in enumerate(itertools.cycle(effective_balanced_users.keys())):
+                assert j < int(
+                    2 * number_of_workers
+                ), "Looks like dispatch is stuck in an infinite loop (iteration {})".format(j)
+                if effective_balanced_users[worker_node_id][user_class] == 0:
+                    continue
+                dispatched_users[worker_node_id][user_class] += 1
+                effective_balanced_users[worker_node_id][user_class] -= 1
+                number_of_users_in_current_dispatch += 1
+                break
+
+            if number_of_users_in_current_dispatch == number_of_users_per_dispatch:
+                break
+
+        # Another assertion to safeguard against unforeseen situations. Ideally,
+        # we want each dispatch loop to be as short as possible to compute, but with
+        # a large amount of workers/user classes, it can take longer to come up with the dispatch solution.
+        # If the assertion is raised, then it could be a sign that the code needs to be optimized for the
+        # case that caused the assertion to be raised.
+        assert time.perf_counter() - ts_dispatch < (
+            0.5 if number_of_workers < 100 else 1 if number_of_workers < 250 else 1.5 if number_of_workers < 350 else 3
+        ), "Dispatch iteration took too much time: {}s (len(workers) = {}, len(user_classes) = {})".format(
+            time.perf_counter() - ts_dispatch, number_of_workers, len(user_class_occurrences)
+        )
 
     return {
         worker_node_id: dict(sorted(user_class_occurrences.items(), key=lambda x: x[0]))
@@ -320,23 +350,12 @@ def number_of_users_left_to_dispatch(
     )
 
 
-def all_users_have_been_dispatched(
-    dispatched_users: Dict[str, Dict[str, int]],
-    effective_balanced_users: Dict[str, Dict[str, int]],
-    user_class_occurrences: Dict[str, int],
-) -> bool:
+def all_users_have_been_dispatched(effective_balanced_users: Dict[str, Dict[str, int]]) -> bool:
     return all(
-        sum(x[user_class] for x in dispatched_users.values())
-        >= sum(x[user_class] for x in effective_balanced_users.values())
-        for user_class in user_class_occurrences.keys()
+        user_count == 0
+        for user_class_occurrences in effective_balanced_users.values()
+        for user_count in user_class_occurrences.values()
     )
-
-
-def all_users_of_current_class_have_been_dispatched(
-    effective_balanced_users: Dict[str, Dict[str, int]],
-    user_class: str,
-) -> bool:
-    return all(x[user_class] == 0 for x in effective_balanced_users.values())
 
 
 def balance_users_among_workers(
