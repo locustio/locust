@@ -101,8 +101,8 @@ def dispatch_users(
     # The amount of users in each user class
     # is less than the desired amount
     less_users_than_desired = all(
-        sum(x[user_class] for x in dispatched_users.values())
-        < sum(x[user_class] for x in effective_balanced_users.values())
+        number_of_dispatched_users_for_user_class(dispatched_users, user_class)
+        < sum(map(itemgetter(user_class), effective_balanced_users.values()))
         for user_class in user_class_occurrences.keys()
     )
 
@@ -160,9 +160,12 @@ def users_to_dispatch_for_current_iteration(
     number_of_users_per_dispatch: int,
 ) -> Dict[str, Dict[str, int]]:
     if all(
-        sum(map(itemgetter(user_class), dispatched_users.values())) >= user_count
+        number_of_dispatched_users_for_user_class(dispatched_users, user_class) >= user_count
         for user_class, user_count in user_class_occurrences.items()
     ):
+        # User count for every user class is greater than or equal to the target user count of each class.
+        # This means that we're at the last iteration of this dispatch cycle. If some user classes are in
+        # excess, this last iteration will stop those excess users.
         dispatched_users.update(balanced_users)
         effective_balanced_users.update(
             {
@@ -184,17 +187,17 @@ def users_to_dispatch_for_current_iteration(
             # is there as a safeguard for situations that can't be easily tested (i.e. large scale distributed tests).
             assert i < 5000, "Looks like dispatch is stuck in an infinite loop (iteration {})".format(i)
 
-            if sum(map(sum, map(dict.values, effective_balanced_users.values()))) == 0:
+            if all_users_have_been_dispatched(effective_balanced_users):
                 break
 
             if all(
-                sum(map(itemgetter(user_class), dispatched_users.values())) >= user_count
+                number_of_dispatched_users_for_user_class(dispatched_users, user_class) >= user_count
                 for user_class, user_count in user_class_occurrences.items()
             ):
                 break
 
             if (
-                sum(map(itemgetter(current_user_class), dispatched_users.values()))
+                number_of_dispatched_users_for_user_class(dispatched_users, current_user_class)
                 >= user_class_occurrences[current_user_class]
             ):
                 continue
@@ -233,6 +236,10 @@ def users_to_dispatch_for_current_iteration(
         worker_node_id: dict(sorted(user_class_occurrences.items(), key=itemgetter(0)))
         for worker_node_id, user_class_occurrences in sorted(dispatched_users.items(), key=itemgetter(0))
     }
+
+
+def number_of_dispatched_users_for_user_class(dispatched_users: Dict[str, Dict[str, int]], user_class: str) -> int:
+    return sum(map(itemgetter(user_class), dispatched_users.values()))
 
 
 def go_to_next_user_class(
@@ -370,11 +377,7 @@ def number_of_users_left_to_dispatch(
 
 
 def all_users_have_been_dispatched(effective_balanced_users: Dict[str, Dict[str, int]]) -> bool:
-    return all(
-        user_count == 0
-        for user_class_occurrences in effective_balanced_users.values()
-        for user_count in user_class_occurrences.values()
-    )
+    return sum(map(sum, map(dict.values, effective_balanced_users.values()))) == 0
 
 
 def balance_users_among_workers(
@@ -390,28 +393,49 @@ def balance_users_among_workers(
         for worker_node in worker_nodes
     }
 
+    # We need to copy to prevent modifying `user_class_occurrences` for the parent scopes.
     user_class_occurrences = user_class_occurrences.copy()
 
     total_users = sum(user_class_occurrences.values())
+
+    # If `remainder > 0`, it means that some workers will have `users_per_worker + 1` users.
     users_per_worker, remainder = divmod(total_users, len(worker_nodes))
 
     for user_class in sorted(user_class_occurrences.keys()):
         if sum(user_class_occurrences.values()) == 0:
+            # No more users of any user class to assign to workers, so we can exit this loop.
             break
+
+        # Assign users of `user_class` to the workers in a round-robin fashion.
         for worker_node in itertools.cycle(worker_nodes):
             if user_class_occurrences[user_class] == 0:
                 break
+
+            number_of_users_left_to_assign = total_users - number_of_assigned_users_across_workers(balanced_users)
+
             if (
-                sum(balanced_users[worker_node.id].values()) == users_per_worker
-                and total_users - sum(map(sum, map(methodcaller("values"), balanced_users.values()))) > remainder
+                number_of_assigned_users_for_worker(balanced_users, worker_node) == users_per_worker
+                and number_of_users_left_to_assign > remainder
             ):
                 continue
+
             elif (
-                sum(balanced_users[worker_node.id].values()) == users_per_worker + 1
-                and total_users - sum(map(sum, map(methodcaller("values"), balanced_users.values()))) < remainder
+                number_of_assigned_users_for_worker(balanced_users, worker_node) == users_per_worker + 1
+                and number_of_users_left_to_assign < remainder
             ):
                 continue
+
             balanced_users[worker_node.id][user_class] += 1
             user_class_occurrences[user_class] -= 1
 
     return balanced_users
+
+
+def number_of_assigned_users_for_worker(
+    balanced_users: Dict[str, Dict[str, int]], worker_node  # type: WorkerNode
+) -> int:
+    return sum(balanced_users[worker_node.id].values())
+
+
+def number_of_assigned_users_across_workers(balanced_users: Dict[str, Dict[str, int]]) -> int:
+    return sum(map(sum, map(methodcaller("values"), balanced_users.values())))
