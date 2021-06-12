@@ -33,7 +33,7 @@ def weight_users(
     if len(user_classes) == 0:
         return {}
 
-    user_classes = sorted(user_classes, key=lambda u: u.__name__)
+    user_classes = sorted(user_classes, key=attrgetter("__name__"))
 
     user_class_occurrences = {user_class.__name__: 0 for user_class in user_classes}
 
@@ -43,7 +43,7 @@ def weight_users(
                 user_class.__name__: 1
                 for user_class in sorted(
                     user_classes,
-                    key=lambda user_class: user_class.weight,
+                    key=attrgetter("weight"),
                     reverse=True,
                 )[:number_of_users]
             }
