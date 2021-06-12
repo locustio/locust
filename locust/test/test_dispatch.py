@@ -2298,7 +2298,6 @@ class TestDispatch(unittest.TestCase):
             worker_node.user_class_occurrences = {"User1": 0}
 
         worker_nodes_iterator = itertools.cycle(worker_nodes)
-
         user_count = 0
         while user_count < 25:
             next(worker_nodes_iterator).user_class_occurrences["User1"] += 1

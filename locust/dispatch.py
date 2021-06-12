@@ -1,10 +1,14 @@
 import functools
 import itertools
 import math
-import operator
 import time
 from collections import namedtuple
 from copy import deepcopy
+from operator import (
+    itemgetter,
+    methodcaller,
+    ne,
+)
 from typing import (
     Dict,
     Generator,
@@ -25,30 +29,32 @@ def dispatch_users(
 ) -> Generator[Dict[str, Dict[str, int]], None, None]:
     """
     Generator function that dispatches the users
-    in `user_class_occurrences` to the workers.
-    The currently running users is also taken into
+    contained `user_class_occurrences` to the workers.
+    The users already running on the workers are also taken into
     account.
 
-    It waits an appropriate amount of time between each iteration
-    in order for the spawn rate to be respected, whether running in
+    The dispatcher waits an appropriate amount of time between each iteration
+    in order for the spawn rate to be respected whether running in
     local or distributed mode.
 
-    The spawn rate is only applicable when additional users are needed.
-    Hence, if `user_class_occurrences` contains less users than there are
-    currently running, this function won't wait and will only run for
-    one iteration. The logic for not stopping users at a rate of `spawn_rate`
+    The spawn rate is only applied when additional users are needed.
+    Hence, if `user_class_occurrences` contains less users than the ones running right now,
+    the dispatcher won't wait and will only run for
+    one iteration. The rationale for not stopping users at a rate of `spawn_rate`
     is that stopping them is a blocking operation, especially when
-    having a `stop_timeout` and users with tasks running for a few seconds or
-    more. If we were to dispatch multiple spawn messages to have a ramp down,
-    we'd run into problems where the previous spawning would be killed
-    by the new message. See the call to `self.spawning_greenlet.kill()` in
-    `:py:meth:`locust.runners.LocalRunner.start` and `:py:meth:`locust.runners.WorkerRunner.worker`.
+    a `stop_timeout` is specified. When a stop timeout is specified combined with users having long-running tasks,
+    attempting to to stop the users at `spawn_rate` will lead to weird behaviours (users being killed even though the
+    stop timeout is not reached yey).
 
     :param worker_nodes: List of worker nodes
     :param user_class_occurrences: Desired number of users for each class
     :param spawn_rate: The spawn rate
     """
-    # Get repeatable behaviour.
+    # NOTE: We use "sorted" in some places in this module. It is done to ensure repeatable behaviour.
+    #       This is especially important when iterating over a dictionary which, prior to py3.7, was
+    #       completely unordered. For >=Py3.7, a dictionary keeps the insertion order. Even then,
+    #       it is safer to sort the keys when repeatable behaviour is required.
+
     worker_nodes = sorted(worker_nodes, key=lambda w: w.id)
 
     # This represents the already running users among the workers
@@ -66,7 +72,11 @@ def dispatch_users(
         user_class_occurrences,
     )
 
-    # This represents the desired users distribution minus the already running users among the workers
+    # This represents the desired users distribution minus the already running users among the workers.
+    # The values inside this dictionary are updated during the current dispatch cycle. For example,
+    # if we dispatch 1 user of UserClass1 to worker 1, then we will decrement by 1 the user count
+    # for UserClass1 of worker 1. Naturally, the current dispatch cycle is done once all the values
+    # reach zero.
     effective_balanced_users = {
         worker_node.id: {
             user_class: max(
@@ -82,6 +92,10 @@ def dispatch_users(
 
     wait_between_dispatch = number_of_users_per_dispatch / spawn_rate
 
+    # We use deepcopy because we will update the values inside `dispatched_users`
+    # to keep track of the number of dispatched users for the current dispatch cycle.
+    # It is essentially the same thing as for the `effective_balanced_users` dictionary,
+    # but in reverse.
     dispatched_users = deepcopy(initial_dispatched_users)
 
     # The amount of users in each user class
@@ -129,11 +143,11 @@ def dispatch_users(
             ts = time.perf_counter()
             yield users_to_dispatch
             delta = time.perf_counter() - ts
-            sleep_duration = (
-                max(0.0, wait_between_dispatch - delta)
-                if not all_users_have_been_dispatched(effective_balanced_users)
-                else 0
-            )
+            if not all_users_have_been_dispatched(effective_balanced_users):
+                sleep_duration = max(0.0, wait_between_dispatch - delta)
+            else:
+                # We don't need to sleep if there's no more dispatch iteration
+                sleep_duration = 0
             assert sleep_duration <= 10, sleep_duration
             gevent.sleep(sleep_duration)
 
@@ -146,7 +160,7 @@ def users_to_dispatch_for_current_iteration(
     number_of_users_per_dispatch: int,
 ) -> Dict[str, Dict[str, int]]:
     if all(
-        sum(map(operator.itemgetter(user_class), dispatched_users.values())) >= user_count
+        sum(map(itemgetter(user_class), dispatched_users.values())) >= user_count
         for user_class, user_count in user_class_occurrences.items()
     ):
         dispatched_users.update(balanced_users)
@@ -164,7 +178,7 @@ def users_to_dispatch_for_current_iteration(
 
         number_of_users_in_current_dispatch = 0
 
-        for i, user_class in enumerate(itertools.cycle(user_class_occurrences.keys())):
+        for i, current_user_class in enumerate(itertools.cycle(sorted(user_class_occurrences.keys()))):
             # For large number of user classes and large number of workers, this assertion might fail.
             # If this happens, you can remove it or increase the threshold. Right now, the assertion
             # is there as a safeguard for situations that can't be easily tested (i.e. large scale distributed tests).
@@ -174,28 +188,30 @@ def users_to_dispatch_for_current_iteration(
                 break
 
             if all(
-                sum(map(operator.itemgetter(user_class_), dispatched_users.values())) >= user_count
-                for user_class_, user_count in user_class_occurrences.items()
+                sum(map(itemgetter(user_class), dispatched_users.values())) >= user_count
+                for user_class, user_count in user_class_occurrences.items()
             ):
                 break
 
             if (
-                sum(map(operator.itemgetter(user_class), dispatched_users.values()))
-                >= user_class_occurrences[user_class]
+                sum(map(itemgetter(current_user_class), dispatched_users.values()))
+                >= user_class_occurrences[current_user_class]
             ):
                 continue
 
-            if go_to_next_user_class(user_class, user_class_occurrences, dispatched_users, effective_balanced_users):
+            if go_to_next_user_class(
+                current_user_class, user_class_occurrences, dispatched_users, effective_balanced_users
+            ):
                 continue
 
-            for j, worker_node_id in enumerate(itertools.cycle(effective_balanced_users.keys())):
+            for j, worker_node_id in enumerate(itertools.cycle(sorted(effective_balanced_users.keys()))):
                 assert j < int(
                     2 * number_of_workers
                 ), "Looks like dispatch is stuck in an infinite loop (iteration {})".format(j)
-                if effective_balanced_users[worker_node_id][user_class] == 0:
+                if effective_balanced_users[worker_node_id][current_user_class] == 0:
                     continue
-                dispatched_users[worker_node_id][user_class] += 1
-                effective_balanced_users[worker_node_id][user_class] -= 1
+                dispatched_users[worker_node_id][current_user_class] += 1
+                effective_balanced_users[worker_node_id][current_user_class] -= 1
                 number_of_users_in_current_dispatch += 1
                 break
 
@@ -206,7 +222,7 @@ def users_to_dispatch_for_current_iteration(
         # we want each dispatch loop to be as short as possible to compute, but with
         # a large amount of workers/user classes, it can take longer to come up with the dispatch solution.
         # If the assertion is raised, then it could be a sign that the code needs to be optimized for the
-        # case that caused the assertion to be raised.
+        # situation that caused the assertion to be raised.
         assert time.perf_counter() - ts_dispatch < (
             0.5 if number_of_workers < 100 else 1 if number_of_workers < 250 else 1.5 if number_of_workers < 350 else 3
         ), "Dispatch iteration took too much time: {}s (len(workers) = {}, len(user_classes) = {})".format(
@@ -214,8 +230,8 @@ def users_to_dispatch_for_current_iteration(
         )
 
     return {
-        worker_node_id: dict(sorted(user_class_occurrences.items(), key=lambda x: x[0]))
-        for worker_node_id, user_class_occurrences in sorted(dispatched_users.items(), key=lambda x: x[0])
+        worker_node_id: dict(sorted(user_class_occurrences.items(), key=itemgetter(0)))
+        for worker_node_id, user_class_occurrences in sorted(dispatched_users.items(), key=itemgetter(0))
     }
 
 
@@ -231,30 +247,32 @@ def go_to_next_user_class(
     a ramp up.
     """
     dispatched_user_class_occurrences = {
-        user_class: sum(map(operator.itemgetter(user_class), dispatched_users.values()))
+        user_class: sum(map(itemgetter(user_class), dispatched_users.values()))
         for user_class in user_class_occurrences.keys()
     }
-    if all(n > 0 for n in dispatched_user_class_occurrences.values()):
+
+    if all(user_count > 0 for user_count in dispatched_user_class_occurrences.values()):
+        # We're here because each user class have at least one user running. Thus,
+        # we need to ensure that the distribution of users corresponds to the weights.
         if not current_user_class_will_keep_distribution_better_than_all_other_user_classes(
             current_user_class, user_class_occurrences, dispatched_user_class_occurrences
         ):
             return True
         else:
             return False
+
     else:
-        # Because each user class doesn't have at least one user, we use a simpler strategy
-        # that make sure the each user class appears once.
-        for user_class in filter(
-            functools.partial(operator.ne, current_user_class), sorted(user_class_occurrences.keys())
-        ):
-            if sum(map(operator.itemgetter(user_class), effective_balanced_users.values())) == 0:
+        # Because each user class doesn't have at least one running user, we use a simpler strategy
+        # that make sure each user class appears once.
+        for user_class in filter(functools.partial(ne, current_user_class), sorted(user_class_occurrences.keys())):
+            if sum(map(itemgetter(user_class), effective_balanced_users.values())) == 0:
                 # No more users of class `user_class` to dispatch
                 continue
             if (
                 dispatched_user_class_occurrences[current_user_class] - dispatched_user_class_occurrences[user_class]
                 >= 1
             ):
-                # There's already enough `current_user_class` for the current dispatch. Hence, we should
+                # There's already enough users for `current_user_class` in the current dispatch. Hence, we should
                 # not consider `current_user_class` and go to the next user class instead.
                 return True
         return False
@@ -300,8 +318,8 @@ def current_user_class_will_keep_distribution(
 # `actual_distance` corresponds to the distance from the ideal distribution for the current
 # dispatched users. `actual_distance_with_current_user_class` represents the distance
 # from the ideal distribution if we were to add one user of the given `current_user_class`.
-# Thus, we strive to find the right user class to add a user in that will give us
-# a `actual_distance_with_current_user_class` less than `actual_distance`.
+# Thus, we want to find the best user class, in which to add a user, that will give us
+# an `actual_distance_with_current_user_class` less than `actual_distance`.
 DistancesFromIdealDistribution = namedtuple(
     "DistancesFromIdealDistribution", "actual_distance actual_distance_with_current_user_class"
 )
@@ -312,7 +330,7 @@ def get_distances_from_ideal_distribution(
     user_class_occurrences: Dict[str, int],
     dispatched_user_class_occurrences: Dict[str, int],
 ) -> DistancesFromIdealDistribution:
-    user_classes = sorted(user_class_occurrences.keys())
+    user_classes = list(user_class_occurrences.keys())
     desired_weights = [
         user_class_occurrences[user_class] / sum(user_class_occurrences.values()) for user_class in user_classes
     ]
@@ -344,7 +362,8 @@ def number_of_users_left_to_dispatch(
     return sum(
         max(
             0,
-            sum(x[user_class] for x in balanced_users.values()) - sum(x[user_class] for x in dispatched_users.values()),
+            sum(map(itemgetter(user_class), balanced_users.values()))
+            - sum(map(itemgetter(user_class), dispatched_users.values())),
         )
         for user_class in user_class_occurrences.keys()
     )
@@ -384,14 +403,12 @@ def balance_users_among_workers(
                 break
             if (
                 sum(balanced_users[worker_node.id].values()) == users_per_worker
-                and total_users - sum(map(sum, map(operator.methodcaller("values"), balanced_users.values())))
-                > remainder
+                and total_users - sum(map(sum, map(methodcaller("values"), balanced_users.values()))) > remainder
             ):
                 continue
             elif (
                 sum(balanced_users[worker_node.id].values()) == users_per_worker + 1
-                and total_users - sum(map(sum, map(operator.methodcaller("values"), balanced_users.values())))
-                < remainder
+                and total_users - sum(map(sum, map(methodcaller("values"), balanced_users.values()))) < remainder
             ):
                 continue
             balanced_users[worker_node.id][user_class] += 1
