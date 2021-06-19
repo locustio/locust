@@ -173,7 +173,8 @@ class Runner:
 
         return bucket
 
-    def spawn_users(self, spawn_count, spawn_rate, wait=False):
+    def spawn_users(self, spawn_count, spawn_rate, wait=False, extra_data=None):
+        assert extra_data is None or len(extra_data) == spawn_count
         bucket = self.weight_users(spawn_count)
         spawn_count = len(bucket)
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
@@ -188,6 +189,7 @@ class Runner:
 
         def spawn():
             sleep_time = 1.0 / spawn_rate
+            new_users = []
             while True:
                 if not bucket:
                     logger.info(
@@ -198,21 +200,27 @@ class Runner:
                         )
                     )
                     self.environment.events.spawning_complete.fire(user_count=len(self.user_greenlets))
-                    return
+                    return new_users
 
                 user_class = bucket.pop(random.randint(0, len(bucket) - 1))
                 occurrence_count[user_class.__name__] += 1
-                new_user = user_class(self.environment)
+                if extra_data is not None:
+                    args, kwargs = extra_data[len(new_users)]
+                else:
+                    args, kwargs = tuple(), dict()
+                new_user = user_class(self.environment, *args, **kwargs)
+                new_users.append(new_user)
                 new_user.start(self.user_greenlets)
                 if len(self.user_greenlets) % 10 == 0:
                     logger.debug("%i users spawned" % len(self.user_greenlets))
                 if bucket:
                     gevent.sleep(sleep_time)
 
-        spawn()
+        spawned = spawn()
         if wait:
             self.user_greenlets.join()
             logger.info("All users stopped\n")
+        return spawned
 
     def stop_users(self, user_count, stop_rate=None):
         """
