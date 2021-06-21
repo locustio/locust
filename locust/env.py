@@ -75,7 +75,7 @@ class Environment:
     def __init__(
         self,
         *,
-        user_classes=None,
+        user_classes=[],
         shape_class=None,
         tags=None,
         exclude_tags=None,
@@ -91,7 +91,7 @@ class Environment:
         else:
             self.events = Events()
 
-        self.user_classes = user_classes or []
+        self.user_classes = user_classes
         self.shape_class = shape_class
         self.tags = tags
         self.exclude_tags = exclude_tags
