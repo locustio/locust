@@ -201,7 +201,7 @@ def users_to_dispatch_for_current_iteration(
             ):
                 continue
 
-            if go_to_next_user_class(
+            if try_next_user_class_to_stay_balanced_during_ramp_up(
                 current_user_class, user_classes_count, dispatched_users, effective_balanced_users
             ):
                 continue
@@ -241,7 +241,7 @@ def number_of_dispatched_users_for_user_class(dispatched_users: Dict[str, Dict[s
     return sum(map(itemgetter(user_class), dispatched_users.values()))
 
 
-def go_to_next_user_class(
+def try_next_user_class_to_stay_balanced_during_ramp_up(
     current_user_class: str,
     user_classes_count: Dict[str, int],
     dispatched_users: Dict[str, Dict[str, int]],
