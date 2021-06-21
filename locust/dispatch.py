@@ -24,12 +24,12 @@ if TYPE_CHECKING:
 
 def dispatch_users(
     worker_nodes,  # type: List[WorkerNode]
-    user_class_occurrences: Dict[str, int],
+    user_classes_count: Dict[str, int],
     spawn_rate: float,
 ) -> Generator[Dict[str, Dict[str, int]], None, None]:
     """
     Generator function that dispatches the users
-    contained `user_class_occurrences` to the workers.
+    contained `user_classes_count` to the workers.
     The users already running on the workers are also taken into
     account.
 
@@ -38,7 +38,7 @@ def dispatch_users(
     local or distributed mode.
 
     The spawn rate is only applied when additional users are needed.
-    Hence, if `user_class_occurrences` contains less users than the ones running right now,
+    Hence, if `user_classes_count` contains less users than the ones running right now,
     the dispatcher won't wait and will only run for
     one iteration. The rationale for not stopping users at a rate of `spawn_rate`
     is that stopping them is a blocking operation, especially when
@@ -47,7 +47,7 @@ def dispatch_users(
     stop timeout is not reached yey).
 
     :param worker_nodes: List of worker nodes
-    :param user_class_occurrences: Desired number of users for each class
+    :param user_classes_count: Desired number of users for each class
     :param spawn_rate: The spawn rate
     """
     # NOTE: We use "sorted" in some places in this module. It is done to ensure repeatable behaviour.
@@ -60,8 +60,7 @@ def dispatch_users(
     # This represents the already running users among the workers
     initial_dispatched_users = {
         worker_node.id: {
-            user_class: worker_node.user_class_occurrences.get(user_class, 0)
-            for user_class in user_class_occurrences.keys()
+            user_class: worker_node.user_classes_count.get(user_class, 0) for user_class in user_classes_count.keys()
         }
         for worker_node in worker_nodes
     }
@@ -69,7 +68,7 @@ def dispatch_users(
     # This represents the desired users distribution among the workers
     balanced_users = balance_users_among_workers(
         worker_nodes,
-        user_class_occurrences,
+        user_classes_count,
     )
 
     # This represents the desired users distribution minus the already running users among the workers.
@@ -83,7 +82,7 @@ def dispatch_users(
                 0,
                 balanced_users[worker_node.id][user_class] - initial_dispatched_users[worker_node.id][user_class],
             )
-            for user_class in user_class_occurrences.keys()
+            for user_class in user_classes_count.keys()
         }
         for worker_node in worker_nodes
     }
@@ -103,13 +102,13 @@ def dispatch_users(
     less_users_than_desired = all(
         number_of_dispatched_users_for_user_class(dispatched_users, user_class)
         < sum(map(itemgetter(user_class), effective_balanced_users.values()))
-        for user_class in user_class_occurrences.keys()
+        for user_class in user_classes_count.keys()
     )
 
     if less_users_than_desired:
         while sum(sum(x.values()) for x in effective_balanced_users.values()) > 0:
             users_to_dispatch = users_to_dispatch_for_current_iteration(
-                user_class_occurrences,
+                user_classes_count,
                 dispatched_users,
                 effective_balanced_users,
                 balanced_users,
@@ -125,7 +124,7 @@ def dispatch_users(
                 gevent.sleep(sleep_duration)
 
     elif (
-        number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_class_occurrences)
+        number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_classes_count)
         <= number_of_users_per_dispatch
     ):
         yield balanced_users
@@ -133,7 +132,7 @@ def dispatch_users(
     else:
         while not all_users_have_been_dispatched(effective_balanced_users):
             users_to_dispatch = users_to_dispatch_for_current_iteration(
-                user_class_occurrences,
+                user_classes_count,
                 dispatched_users,
                 effective_balanced_users,
                 balanced_users,
@@ -153,7 +152,7 @@ def dispatch_users(
 
 
 def users_to_dispatch_for_current_iteration(
-    user_class_occurrences: Dict[str, int],
+    user_classes_count: Dict[str, int],
     dispatched_users: Dict[str, Dict[str, int]],
     effective_balanced_users: Dict[str, Dict[str, int]],
     balanced_users: Dict[str, Dict[str, int]],
@@ -161,7 +160,7 @@ def users_to_dispatch_for_current_iteration(
 ) -> Dict[str, Dict[str, int]]:
     if all(
         number_of_dispatched_users_for_user_class(dispatched_users, user_class) >= user_count
-        for user_class, user_count in user_class_occurrences.items()
+        for user_class, user_count in user_classes_count.items()
     ):
         # User count for every user class is greater than or equal to the target user count of each class.
         # This means that we're at the last iteration of this dispatch cycle. If some user classes are in
@@ -169,8 +168,8 @@ def users_to_dispatch_for_current_iteration(
         dispatched_users.update(balanced_users)
         effective_balanced_users.update(
             {
-                worker_node_id: {user_class: 0 for user_class in user_class_occurrences.keys()}
-                for worker_node_id, user_class_occurrences in dispatched_users.items()
+                worker_node_id: {user_class: 0 for user_class in user_classes_count.keys()}
+                for worker_node_id, user_classes_count in dispatched_users.items()
             }
         )
 
@@ -181,7 +180,7 @@ def users_to_dispatch_for_current_iteration(
 
         number_of_users_in_current_dispatch = 0
 
-        for i, current_user_class in enumerate(itertools.cycle(sorted(user_class_occurrences.keys()))):
+        for i, current_user_class in enumerate(itertools.cycle(sorted(user_classes_count.keys()))):
             # For large number of user classes and large number of workers, this assertion might fail.
             # If this happens, you can remove it or increase the threshold. Right now, the assertion
             # is there as a safeguard for situations that can't be easily tested (i.e. large scale distributed tests).
@@ -192,18 +191,18 @@ def users_to_dispatch_for_current_iteration(
 
             if all(
                 number_of_dispatched_users_for_user_class(dispatched_users, user_class) >= user_count
-                for user_class, user_count in user_class_occurrences.items()
+                for user_class, user_count in user_classes_count.items()
             ):
                 break
 
             if (
                 number_of_dispatched_users_for_user_class(dispatched_users, current_user_class)
-                >= user_class_occurrences[current_user_class]
+                >= user_classes_count[current_user_class]
             ):
                 continue
 
             if go_to_next_user_class(
-                current_user_class, user_class_occurrences, dispatched_users, effective_balanced_users
+                current_user_class, user_classes_count, dispatched_users, effective_balanced_users
             ):
                 continue
 
@@ -229,12 +228,12 @@ def users_to_dispatch_for_current_iteration(
         assert time.perf_counter() - ts_dispatch < (
             0.5 if number_of_workers < 100 else 1 if number_of_workers < 250 else 1.5 if number_of_workers < 350 else 3
         ), "Dispatch iteration took too much time: {}s (len(workers) = {}, len(user_classes) = {})".format(
-            time.perf_counter() - ts_dispatch, number_of_workers, len(user_class_occurrences)
+            time.perf_counter() - ts_dispatch, number_of_workers, len(user_classes_count)
         )
 
     return {
-        worker_node_id: dict(sorted(user_class_occurrences.items(), key=itemgetter(0)))
-        for worker_node_id, user_class_occurrences in sorted(dispatched_users.items(), key=itemgetter(0))
+        worker_node_id: dict(sorted(user_classes_count.items(), key=itemgetter(0)))
+        for worker_node_id, user_classes_count in sorted(dispatched_users.items(), key=itemgetter(0))
     }
 
 
@@ -244,7 +243,7 @@ def number_of_dispatched_users_for_user_class(dispatched_users: Dict[str, Dict[s
 
 def go_to_next_user_class(
     current_user_class: str,
-    user_class_occurrences: Dict[str, int],
+    user_classes_count: Dict[str, int],
     dispatched_users: Dict[str, Dict[str, int]],
     effective_balanced_users: Dict[str, Dict[str, int]],
 ) -> bool:
@@ -253,16 +252,16 @@ def go_to_next_user_class(
     the distribution of user class stays approximately balanced during
     a ramp up.
     """
-    dispatched_user_class_occurrences = {
+    dispatched_user_classes_count = {
         user_class: sum(map(itemgetter(user_class), dispatched_users.values()))
-        for user_class in user_class_occurrences.keys()
+        for user_class in user_classes_count.keys()
     }
 
-    if all(user_count > 0 for user_count in dispatched_user_class_occurrences.values()):
+    if all(user_count > 0 for user_count in dispatched_user_classes_count.values()):
         # We're here because each user class have at least one user running. Thus,
         # we need to ensure that the distribution of users corresponds to the weights.
         if not current_user_class_will_keep_distribution_better_than_all_other_user_classes(
-            current_user_class, user_class_occurrences, dispatched_user_class_occurrences
+            current_user_class, user_classes_count, dispatched_user_classes_count
         ):
             return True
         else:
@@ -271,14 +270,11 @@ def go_to_next_user_class(
     else:
         # Because each user class doesn't have at least one running user, we use a simpler strategy
         # that make sure each user class appears once.
-        for user_class in filter(functools.partial(ne, current_user_class), sorted(user_class_occurrences.keys())):
+        for user_class in filter(functools.partial(ne, current_user_class), sorted(user_classes_count.keys())):
             if sum(map(itemgetter(user_class), effective_balanced_users.values())) == 0:
                 # No more users of class `user_class` to dispatch
                 continue
-            if (
-                dispatched_user_class_occurrences[current_user_class] - dispatched_user_class_occurrences[user_class]
-                >= 1
-            ):
+            if dispatched_user_classes_count[current_user_class] - dispatched_user_classes_count[user_class] >= 1:
                 # There's already enough users for `current_user_class` in the current dispatch. Hence, we should
                 # not consider `current_user_class` and go to the next user class instead.
                 return True
@@ -287,17 +283,15 @@ def go_to_next_user_class(
 
 def current_user_class_will_keep_distribution_better_than_all_other_user_classes(
     current_user_class: str,
-    user_class_occurrences: Dict[str, int],
-    dispatched_user_class_occurrences: Dict[str, int],
+    user_classes_count: Dict[str, int],
+    dispatched_user_classes_count: Dict[str, int],
 ) -> bool:
     distances = get_distances_from_ideal_distribution(
-        current_user_class, user_class_occurrences, dispatched_user_class_occurrences
+        current_user_class, user_classes_count, dispatched_user_classes_count
     )
     if distances.actual_distance_with_current_user_class > distances.actual_distance and all(
-        not current_user_class_will_keep_distribution(
-            user_class, user_class_occurrences, dispatched_user_class_occurrences
-        )
-        for user_class in user_class_occurrences.keys()
+        not current_user_class_will_keep_distribution(user_class, user_classes_count, dispatched_user_classes_count)
+        for user_class in user_classes_count.keys()
         if user_class != current_user_class
     ):
         # If we are here, it means that if one user of `current_user_class` is added
@@ -311,11 +305,11 @@ def current_user_class_will_keep_distribution_better_than_all_other_user_classes
 
 def current_user_class_will_keep_distribution(
     current_user_class: str,
-    user_class_occurrences: Dict[str, int],
-    dispatched_user_class_occurrences: Dict[str, int],
+    user_classes_count: Dict[str, int],
+    dispatched_user_classes_count: Dict[str, int],
 ) -> bool:
     distances = get_distances_from_ideal_distribution(
-        current_user_class, user_class_occurrences, dispatched_user_class_occurrences
+        current_user_class, user_classes_count, dispatched_user_classes_count
     )
     if distances.actual_distance_with_current_user_class <= distances.actual_distance:
         return True
@@ -334,24 +328,22 @@ DistancesFromIdealDistribution = namedtuple(
 
 def get_distances_from_ideal_distribution(
     current_user_class: str,
-    user_class_occurrences: Dict[str, int],
-    dispatched_user_class_occurrences: Dict[str, int],
+    user_classes_count: Dict[str, int],
+    dispatched_user_classes_count: Dict[str, int],
 ) -> DistancesFromIdealDistribution:
-    user_classes = list(user_class_occurrences.keys())
-    desired_weights = [
-        user_class_occurrences[user_class] / sum(user_class_occurrences.values()) for user_class in user_classes
-    ]
+    user_classes = list(user_classes_count.keys())
+    desired_weights = [user_classes_count[user_class] / sum(user_classes_count.values()) for user_class in user_classes]
     actual_weights = [
-        dispatched_user_class_occurrences[user_class] / sum(dispatched_user_class_occurrences.values())
+        dispatched_user_classes_count[user_class] / sum(dispatched_user_classes_count.values())
         for user_class in user_classes
     ]
     actual_weights_with_current_user_class = [
         (
-            dispatched_user_class_occurrences[user_class] + 1
+            dispatched_user_classes_count[user_class] + 1
             if user_class == current_user_class
-            else dispatched_user_class_occurrences[user_class]
+            else dispatched_user_classes_count[user_class]
         )
-        / (sum(dispatched_user_class_occurrences.values()) + 1)
+        / (sum(dispatched_user_classes_count.values()) + 1)
         for user_class in user_classes
     ]
     actual_distance = math.sqrt(sum(map(lambda x: (x[1] - x[0]) ** 2, zip(actual_weights, desired_weights))))
@@ -364,7 +356,7 @@ def get_distances_from_ideal_distribution(
 def number_of_users_left_to_dispatch(
     dispatched_users: Dict[str, Dict[str, int]],
     balanced_users: Dict[str, Dict[str, int]],
-    user_class_occurrences: Dict[str, int],
+    user_classes_count: Dict[str, int],
 ) -> int:
     return sum(
         max(
@@ -372,7 +364,7 @@ def number_of_users_left_to_dispatch(
             sum(map(itemgetter(user_class), balanced_users.values()))
             - sum(map(itemgetter(user_class), dispatched_users.values())),
         )
-        for user_class in user_class_occurrences.keys()
+        for user_class in user_classes_count.keys()
     )
 
 
@@ -382,33 +374,33 @@ def all_users_have_been_dispatched(effective_balanced_users: Dict[str, Dict[str,
 
 def balance_users_among_workers(
     worker_nodes,  # type: List[WorkerNode]
-    user_class_occurrences: Dict[str, int],
+    user_classes_count: Dict[str, int],
 ) -> Dict[str, Dict[str, int]]:
     """
     Balance the users among the workers so that
     each worker gets around the same number of users of each user class
     """
     balanced_users = {
-        worker_node.id: {user_class: 0 for user_class in sorted(user_class_occurrences.keys())}
+        worker_node.id: {user_class: 0 for user_class in sorted(user_classes_count.keys())}
         for worker_node in worker_nodes
     }
 
-    # We need to copy to prevent modifying `user_class_occurrences` for the parent scopes.
-    user_class_occurrences = user_class_occurrences.copy()
+    # We need to copy to prevent modifying `user_classes_count` for the parent scopes.
+    user_classes_count = user_classes_count.copy()
 
-    total_users = sum(user_class_occurrences.values())
+    total_users = sum(user_classes_count.values())
 
     # If `remainder > 0`, it means that some workers will have `users_per_worker + 1` users.
     users_per_worker, remainder = divmod(total_users, len(worker_nodes))
 
-    for user_class in sorted(user_class_occurrences.keys()):
-        if sum(user_class_occurrences.values()) == 0:
+    for user_class in sorted(user_classes_count.keys()):
+        if sum(user_classes_count.values()) == 0:
             # No more users of any user class to assign to workers, so we can exit this loop.
             break
 
         # Assign users of `user_class` to the workers in a round-robin fashion.
         for worker_node in itertools.cycle(worker_nodes):
-            if user_class_occurrences[user_class] == 0:
+            if user_classes_count[user_class] == 0:
                 break
 
             number_of_users_left_to_assign = total_users - number_of_assigned_users_across_workers(balanced_users)
@@ -426,7 +418,7 @@ def balance_users_among_workers(
                 continue
 
             balanced_users[worker_node.id][user_class] += 1
-            user_class_occurrences[user_class] -= 1
+            user_classes_count[user_class] -= 1
 
     return balanced_users
 

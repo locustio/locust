@@ -430,15 +430,15 @@ class TestLocustRunner(LocustTestCase):
 
         runner.start(user_count=10, spawn_rate=5, wait=False)
         runner.spawning_greenlet.join()
-        self.assertDictEqual({"MyUser1": 5, "MyUser2": 5}, runner.user_class_occurrences)
+        self.assertDictEqual({"MyUser1": 5, "MyUser2": 5}, runner.user_classes_count)
 
         runner.start(user_count=5, spawn_rate=5, wait=False)
         runner.spawning_greenlet.join()
-        self.assertDictEqual({"MyUser1": 3, "MyUser2": 2}, runner.user_class_occurrences)
+        self.assertDictEqual({"MyUser1": 3, "MyUser2": 2}, runner.user_classes_count)
 
         runner.quit()
 
-    def test_user_class_occurrences(self):
+    def test_user_classes_count(self):
         class MyUser1(User):
             wait_time = constant(0)
 
@@ -458,11 +458,11 @@ class TestLocustRunner(LocustTestCase):
 
         runner.start(user_count=10, spawn_rate=5, wait=False)
         runner.spawning_greenlet.join()
-        self.assertDictEqual({"MyUser1": 5, "MyUser2": 5}, runner.user_class_occurrences)
+        self.assertDictEqual({"MyUser1": 5, "MyUser2": 5}, runner.user_classes_count)
 
         runner.start(user_count=5, spawn_rate=5, wait=False)
         runner.spawning_greenlet.join()
-        self.assertDictEqual({"MyUser1": 3, "MyUser2": 2}, runner.user_class_occurrences)
+        self.assertDictEqual({"MyUser1": 3, "MyUser2": 2}, runner.user_classes_count)
 
         runner.quit()
 
@@ -625,7 +625,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.assertEqual(
                     9, test_shape.get_current_user_count(), "Shape is not seeing stage 1 runner user count correctly"
                 )
-            self.assertDictEqual(master.reported_user_class_occurrences, {"TestUser": 9})
+            self.assertDictEqual(master.reported_user_classes_count, {"TestUser": 9})
 
             # Ensure new stage with more users has been reached
             sleep(2)
@@ -634,7 +634,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.assertEqual(
                     21, test_shape.get_current_user_count(), "Shape is not seeing stage 2 runner user count correctly"
                 )
-            self.assertDictEqual(master.reported_user_class_occurrences, {"TestUser": 21})
+            self.assertDictEqual(master.reported_user_classes_count, {"TestUser": 21})
 
             # Ensure new stage with less users has been reached
             sleep(2)
@@ -643,7 +643,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.assertEqual(
                     3, test_shape.get_current_user_count(), "Shape is not seeing stage 3 runner user count correctly"
                 )
-            self.assertDictEqual(master.reported_user_class_occurrences, {"TestUser": 3})
+            self.assertDictEqual(master.reported_user_classes_count, {"TestUser": 3})
 
             # Ensure test stops at the end
             sleep(2)
@@ -652,7 +652,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.assertEqual(
                     0, test_shape.get_current_user_count(), "Shape is not seeing stopped runner user count correctly"
                 )
-            self.assertDictEqual(master.reported_user_class_occurrences, {"TestUser": 0})
+            self.assertDictEqual(master.reported_user_classes_count, {"TestUser": 0})
 
             self.assertEqual("stopped", master.state)
 
@@ -746,16 +746,16 @@ class TestMasterWorkerRunners(LocustTestCase):
             w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
             w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
             w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
-            self.assertDictEqual(w1, workers[0].user_class_occurrences)
-            self.assertDictEqual(w2, workers[1].user_class_occurrences)
-            self.assertDictEqual(w3, workers[2].user_class_occurrences)
-            self.assertDictEqual(w4, workers[3].user_class_occurrences)
-            self.assertDictEqual(w5, workers[4].user_class_occurrences)
-            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_class_occurrences)
-            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_class_occurrences)
-            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
-            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
-            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
+            self.assertDictEqual(w1, workers[0].user_classes_count)
+            self.assertDictEqual(w2, workers[1].user_classes_count)
+            self.assertDictEqual(w3, workers[2].user_classes_count)
+            self.assertDictEqual(w4, workers[3].user_classes_count)
+            self.assertDictEqual(w5, workers[4].user_classes_count)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_classes_count)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_classes_count)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
             sleep(5)  # runtime = 10s
 
             # Second stage
@@ -770,16 +770,16 @@ class TestMasterWorkerRunners(LocustTestCase):
             w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
             w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 1}
             w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 2}
-            self.assertDictEqual(w1, workers[0].user_class_occurrences)
-            self.assertDictEqual(w2, workers[1].user_class_occurrences)
-            self.assertDictEqual(w3, workers[2].user_class_occurrences)
-            self.assertDictEqual(w4, workers[3].user_class_occurrences)
-            self.assertDictEqual(w5, workers[4].user_class_occurrences)
-            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_class_occurrences)
-            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_class_occurrences)
-            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
-            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
-            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
+            self.assertDictEqual(w1, workers[0].user_classes_count)
+            self.assertDictEqual(w2, workers[1].user_classes_count)
+            self.assertDictEqual(w3, workers[2].user_classes_count)
+            self.assertDictEqual(w4, workers[3].user_classes_count)
+            self.assertDictEqual(w5, workers[4].user_classes_count)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_classes_count)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_classes_count)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
             sleep(5)  # runtime = 20s
 
             # Third stage
@@ -798,16 +798,16 @@ class TestMasterWorkerRunners(LocustTestCase):
             w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             w4 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             w5 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
-            self.assertDictEqual(w1, workers[0].user_class_occurrences)
-            self.assertDictEqual(w2, workers[1].user_class_occurrences)
-            self.assertDictEqual(w3, workers[2].user_class_occurrences)
-            self.assertDictEqual(w4, workers[3].user_class_occurrences)
-            self.assertDictEqual(w5, workers[4].user_class_occurrences)
-            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_class_occurrences)
-            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_class_occurrences)
-            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
-            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
-            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
+            self.assertDictEqual(w1, workers[0].user_classes_count)
+            self.assertDictEqual(w2, workers[1].user_classes_count)
+            self.assertDictEqual(w3, workers[2].user_classes_count)
+            self.assertDictEqual(w4, workers[3].user_classes_count)
+            self.assertDictEqual(w5, workers[4].user_classes_count)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_classes_count)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_classes_count)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
             sleep(10 - (time.time() - ts))  # runtime = 40s
 
             # Fourth stage
@@ -826,16 +826,16 @@ class TestMasterWorkerRunners(LocustTestCase):
             w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
             w4 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
             w5 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
-            self.assertDictEqual(w1, workers[0].user_class_occurrences)
-            self.assertDictEqual(w2, workers[1].user_class_occurrences)
-            self.assertDictEqual(w3, workers[2].user_class_occurrences)
-            self.assertDictEqual(w4, workers[3].user_class_occurrences)
-            self.assertDictEqual(w5, workers[4].user_class_occurrences)
-            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_class_occurrences)
-            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_class_occurrences)
-            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
-            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
-            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
+            self.assertDictEqual(w1, workers[0].user_classes_count)
+            self.assertDictEqual(w2, workers[1].user_classes_count)
+            self.assertDictEqual(w3, workers[2].user_classes_count)
+            self.assertDictEqual(w4, workers[3].user_classes_count)
+            self.assertDictEqual(w5, workers[4].user_classes_count)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_classes_count)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_classes_count)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
             sleep(1)  # runtime = 46s
 
             # Fourth stage - All users are now at the desired number
@@ -849,16 +849,16 @@ class TestMasterWorkerRunners(LocustTestCase):
             w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
             w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
             w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
-            self.assertDictEqual(w1, workers[0].user_class_occurrences)
-            self.assertDictEqual(w2, workers[1].user_class_occurrences)
-            self.assertDictEqual(w3, workers[2].user_class_occurrences)
-            self.assertDictEqual(w4, workers[3].user_class_occurrences)
-            self.assertDictEqual(w5, workers[4].user_class_occurrences)
-            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_class_occurrences)
-            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_class_occurrences)
-            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
-            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
-            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
+            self.assertDictEqual(w1, workers[0].user_classes_count)
+            self.assertDictEqual(w2, workers[1].user_classes_count)
+            self.assertDictEqual(w3, workers[2].user_classes_count)
+            self.assertDictEqual(w4, workers[3].user_classes_count)
+            self.assertDictEqual(w5, workers[4].user_classes_count)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_classes_count)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_classes_count)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
             sleep(10 - delta)  # runtime = 56s
 
             # Sleep stop_timeout and make sure the test has stopped
@@ -886,16 +886,16 @@ class TestMasterWorkerRunners(LocustTestCase):
             w3 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
             w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
             w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
-            self.assertDictEqual(w1, workers[0].user_class_occurrences)
-            self.assertDictEqual(w2, workers[1].user_class_occurrences)
-            self.assertDictEqual(w3, workers[2].user_class_occurrences)
-            self.assertDictEqual(w4, workers[3].user_class_occurrences)
-            self.assertDictEqual(w5, workers[4].user_class_occurrences)
-            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_class_occurrences)
-            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_class_occurrences)
-            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_class_occurrences)
-            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_class_occurrences)
-            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_class_occurrences)
+            self.assertDictEqual(w1, workers[0].user_classes_count)
+            self.assertDictEqual(w2, workers[1].user_classes_count)
+            self.assertDictEqual(w3, workers[2].user_classes_count)
+            self.assertDictEqual(w4, workers[3].user_classes_count)
+            self.assertDictEqual(w5, workers[4].user_classes_count)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_classes_count)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_classes_count)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
 
             ts = time.time()
             while master.state != STATE_STOPPED:
@@ -1269,12 +1269,12 @@ class TestMasterRunner(LocustTestCase):
             master.start(100, 20)
             self.assertEqual(5, len(server.outbox))
             for i, (_, msg) in enumerate(server.outbox.copy()):
-                self.assertDictEqual({"TestUser": int((i + 1) * 20)}, msg.data["user_class_occurrences"])
+                self.assertDictEqual({"TestUser": int((i + 1) * 20)}, msg.data["user_classes_count"])
                 server.outbox.pop()
 
             # Normally, this attribute would be updated when the
             # master receives the report from the worker.
-            master.clients["zeh_fake_client1"].user_class_occurrences = {"TestUser": 100}
+            master.clients["zeh_fake_client1"].user_classes_count = {"TestUser": 100}
 
             # let another worker connect
             server.mocked_send(Message("client_ready", None, "zeh_fake_client2"))
@@ -1282,9 +1282,9 @@ class TestMasterRunner(LocustTestCase):
             sleep(0.1)  # give time for messages to be sent to clients
             self.assertEqual(2, len(server.outbox))
             client_id, msg = server.outbox.pop()
-            self.assertEqual({"TestUser": 50}, msg.data["user_class_occurrences"])
+            self.assertEqual({"TestUser": 50}, msg.data["user_classes_count"])
             client_id, msg = server.outbox.pop()
-            self.assertEqual({"TestUser": 50}, msg.data["user_class_occurrences"])
+            self.assertEqual({"TestUser": 50}, msg.data["user_classes_count"])
 
     def test_sends_spawn_data_to_ready_running_spawning_workers(self):
         """Sends spawn job to running, ready, or spawning workers"""
@@ -1449,7 +1449,7 @@ class TestMasterRunner(LocustTestCase):
             master.start(7, 7)
             self.assertEqual(5, len(server.outbox))
 
-            num_users = sum(sum(msg.data["user_class_occurrences"].values()) for _, msg in server.outbox if msg.data)
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
 
             self.assertEqual(7, num_users, "Total number of locusts that would have been spawned is not 7")
 
@@ -1468,7 +1468,7 @@ class TestMasterRunner(LocustTestCase):
             master.start(2, 2)
             self.assertEqual(5, len(server.outbox))
 
-            num_users = sum(sum(msg.data["user_class_occurrences"].values()) for _, msg in server.outbox if msg.data)
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
 
             self.assertEqual(2, num_users, "Total number of locusts that would have been spawned is not 2")
 
@@ -1501,14 +1501,14 @@ class TestMasterRunner(LocustTestCase):
             sleep(0.5)
 
             # Wait for shape_worker to update user_count
-            num_users = sum(sum(msg.data["user_class_occurrences"].values()) for _, msg in server.outbox if msg.data)
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
             self.assertEqual(
                 1, num_users, "Total number of users in first stage of shape test is not 1: %i" % num_users
             )
 
             # Wait for shape_worker to update user_count again
             sleep(2)
-            num_users = sum(sum(msg.data["user_class_occurrences"].values()) for _, msg in server.outbox if msg.data)
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
             self.assertEqual(
                 3, num_users, "Total number of users in second stage of shape test is not 3: %i" % num_users
             )
@@ -1546,7 +1546,7 @@ class TestMasterRunner(LocustTestCase):
             sleep(0.5)
 
             # Wait for shape_worker to update user_count
-            num_users = sum(sum(msg.data["user_class_occurrences"].values()) for _, msg in server.outbox if msg.data)
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
             self.assertEqual(
                 5, num_users, "Total number of users in first stage of shape test is not 5: %i" % num_users
             )
@@ -1557,7 +1557,7 @@ class TestMasterRunner(LocustTestCase):
             for _, msg in server.outbox:
                 if not msg.data:
                     continue
-                msgs[msg.node_id][msg.data["timestamp"]] = sum(msg.data["user_class_occurrences"].values())
+                msgs[msg.node_id][msg.data["timestamp"]] = sum(msg.data["user_classes_count"].values())
             # Count users for the last received messages
             num_users = sum(v[max(v.keys())] for v in msgs.values())
             self.assertEqual(
@@ -1658,17 +1658,17 @@ class TestMasterRunner(LocustTestCase):
             server.mocked_send(Message("client_ready", None, "fake_client1"))
 
             master.start(7, 7)
-            self.assertEqual({"MyUser1": 3, "MyUser2": 4}, master.target_user_class_occurrences)
+            self.assertEqual({"MyUser1": 3, "MyUser2": 4}, master.target_user_classes_count)
             self.assertEqual(7, master.target_user_count)
             self.assertEqual(7, master.spawn_rate)
 
             master.start(10, 10)
-            self.assertEqual({"MyUser1": 5, "MyUser2": 5}, master.target_user_class_occurrences)
+            self.assertEqual({"MyUser1": 5, "MyUser2": 5}, master.target_user_classes_count)
             self.assertEqual(10, master.target_user_count)
             self.assertEqual(10, master.spawn_rate)
 
             master.start(1, 3)
-            self.assertEqual({"MyUser1": 1, "MyUser2": 0}, master.target_user_class_occurrences)
+            self.assertEqual({"MyUser1": 1, "MyUser2": 0}, master.target_user_classes_count)
             self.assertEqual(1, master.target_user_count)
             self.assertEqual(3, master.spawn_rate)
 
@@ -1728,7 +1728,7 @@ class TestWorkerRunner(LocustTestCase):
                     "spawn",
                     {
                         "timestamp": 1605538584,
-                        "user_class_occurrences": {"MyTestUser": 1},
+                        "user_classes_count": {"MyTestUser": 1},
                         "host": "",
                         "stop_timeout": 1,
                     },
@@ -1770,7 +1770,7 @@ class TestWorkerRunner(LocustTestCase):
                     "spawn",
                     {
                         "timestamp": 1605538584,
-                        "user_class_occurrences": {"MyTestUser": 1},
+                        "user_classes_count": {"MyTestUser": 1},
                         "host": "",
                         "stop_timeout": None,
                     },
@@ -1814,7 +1814,7 @@ class TestWorkerRunner(LocustTestCase):
                     "spawn",
                     {
                         "timestamp": 1605538584,
-                        "user_class_occurrences": {"MyUser": 10},
+                        "user_classes_count": {"MyUser": 10},
                         "host": "",
                         "stop_timeout": None,
                     },
@@ -1832,7 +1832,7 @@ class TestWorkerRunner(LocustTestCase):
                     "spawn",
                     {
                         "timestamp": 1605538584,
-                        "user_class_occurrences": {"MyUser": 9},
+                        "user_classes_count": {"MyUser": 9},
                         "host": "",
                         "stop_timeout": None,
                     },
@@ -1849,7 +1849,7 @@ class TestWorkerRunner(LocustTestCase):
                     "spawn",
                     {
                         "timestamp": 1605538583,
-                        "user_class_occurrences": {"MyUser": 2},
+                        "user_classes_count": {"MyUser": 2},
                         "host": "",
                         "stop_timeout": None,
                     },
@@ -1866,7 +1866,7 @@ class TestWorkerRunner(LocustTestCase):
                     "spawn",
                     {
                         "timestamp": 1605538585,
-                        "user_class_occurrences": {"MyUser": 2},
+                        "user_classes_count": {"MyUser": 2},
                         "host": "",
                         "stop_timeout": None,
                     },
@@ -1880,7 +1880,7 @@ class TestWorkerRunner(LocustTestCase):
 
     def test_worker_messages_sent_to_master(self):
         """
-        Ensure that worker includes both "user_count" and "user_class_occurrences"
+        Ensure that worker includes both "user_count" and "user_classes_count"
         when reporting to the master.
         """
 
@@ -1906,7 +1906,7 @@ class TestWorkerRunner(LocustTestCase):
                     "spawn",
                     {
                         "timestamp": 1605538584,
-                        "user_class_occurrences": {"MyUser": 10},
+                        "user_classes_count": {"MyUser": 10},
                         "host": "",
                         "stop_timeout": None,
                     },
@@ -1923,16 +1923,16 @@ class TestWorkerRunner(LocustTestCase):
             message = next((m for m in reversed(client.outbox) if m.type == "stats"), None)
             self.assertIsNotNone(message)
             self.assertIn("user_count", message.data)
-            self.assertIn("user_class_occurrences", message.data)
+            self.assertIn("user_classes_count", message.data)
             self.assertEqual(message.data["user_count"], 10)
-            self.assertEqual(message.data["user_class_occurrences"]["MyUser"], 10)
+            self.assertEqual(message.data["user_classes_count"]["MyUser"], 10)
 
             message = next((m for m in client.outbox if m.type == "spawning_complete"), None)
             self.assertIsNotNone(message)
             self.assertIn("user_count", message.data)
-            self.assertIn("user_class_occurrences", message.data)
+            self.assertIn("user_classes_count", message.data)
             self.assertEqual(message.data["user_count"], 10)
-            self.assertEqual(message.data["user_class_occurrences"]["MyUser"], 10)
+            self.assertEqual(message.data["user_classes_count"]["MyUser"], 10)
 
             worker.quit()
 
@@ -1959,7 +1959,7 @@ class TestWorkerRunner(LocustTestCase):
                     "spawn",
                     {
                         "timestamp": 1605538584,
-                        "user_class_occurrences": {"MyUser": 10},
+                        "user_classes_count": {"MyUser": 10},
                         "host": "",
                         "stop_timeout": None,
                     },
@@ -1973,7 +1973,7 @@ class TestWorkerRunner(LocustTestCase):
                     "spawn",
                     {
                         "timestamp": 1605538585,
-                        "user_class_occurrences": {"MyUser": 9},
+                        "user_classes_count": {"MyUser": 9},
                         "host": "",
                         "stop_timeout": None,
                     },
@@ -2009,7 +2009,7 @@ class TestWorkerRunner(LocustTestCase):
                     "spawn",
                     {
                         "timestamp": 1605538584,
-                        "user_class_occurrences": {"MyUser1": 10, "MyUser2": 10},
+                        "user_classes_count": {"MyUser1": 10, "MyUser2": 10},
                         "host": "",
                         "stop_timeout": None,
                     },
@@ -2017,8 +2017,8 @@ class TestWorkerRunner(LocustTestCase):
                 )
             )
             worker.spawning_greenlet.join()
-            self.assertDictEqual(worker.user_class_occurrences, {"MyUser1": 10, "MyUser2": 10})
-            self.assertDictEqual(worker.target_user_class_occurrences, {"MyUser1": 10, "MyUser2": 10})
+            self.assertDictEqual(worker.user_classes_count, {"MyUser1": 10, "MyUser2": 10})
+            self.assertDictEqual(worker.target_user_classes_count, {"MyUser1": 10, "MyUser2": 10})
             self.assertEqual(worker.target_user_count, 20)
 
             client.mocked_send(
@@ -2026,7 +2026,7 @@ class TestWorkerRunner(LocustTestCase):
                     "spawn",
                     {
                         "timestamp": 1605538585,
-                        "user_class_occurrences": {"MyUser1": 1, "MyUser2": 2},
+                        "user_classes_count": {"MyUser1": 1, "MyUser2": 2},
                         "host": "",
                         "stop_timeout": None,
                     },
@@ -2034,8 +2034,8 @@ class TestWorkerRunner(LocustTestCase):
                 )
             )
             worker.spawning_greenlet.join()
-            self.assertDictEqual(worker.user_class_occurrences, {"MyUser1": 1, "MyUser2": 2})
-            self.assertDictEqual(worker.target_user_class_occurrences, {"MyUser1": 1, "MyUser2": 2})
+            self.assertDictEqual(worker.user_classes_count, {"MyUser1": 1, "MyUser2": 2})
+            self.assertDictEqual(worker.target_user_classes_count, {"MyUser1": 1, "MyUser2": 2})
             self.assertEqual(worker.target_user_count, 3)
 
             worker.quit()

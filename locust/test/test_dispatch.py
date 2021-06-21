@@ -17,31 +17,31 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
 
         balanced_users = balance_users_among_workers(
             worker_nodes=[worker_node1],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
         )
         self.assertDictEqual(balanced_users, {"1": {"User1": 3, "User2": 3, "User3": 3}})
 
         balanced_users = balance_users_among_workers(
             worker_nodes=[worker_node1],
-            user_class_occurrences={"User1": 5, "User2": 4, "User3": 2},
+            user_classes_count={"User1": 5, "User2": 4, "User3": 2},
         )
         self.assertDictEqual(balanced_users, {"1": {"User1": 5, "User2": 4, "User3": 2}})
 
         balanced_users = balance_users_among_workers(
             worker_nodes=[worker_node1],
-            user_class_occurrences={"User1": 1, "User2": 1, "User3": 1},
+            user_classes_count={"User1": 1, "User2": 1, "User3": 1},
         )
         self.assertDictEqual(balanced_users, {"1": {"User1": 1, "User2": 1, "User3": 1}})
 
         balanced_users = balance_users_among_workers(
             worker_nodes=[worker_node1],
-            user_class_occurrences={"User1": 1, "User2": 1, "User3": 0},
+            user_classes_count={"User1": 1, "User2": 1, "User3": 0},
         )
         self.assertDictEqual(balanced_users, {"1": {"User1": 1, "User2": 1, "User3": 0}})
 
         balanced_users = balance_users_among_workers(
             worker_nodes=[worker_node1],
-            user_class_occurrences={"User1": 0, "User2": 0, "User3": 0},
+            user_classes_count={"User1": 0, "User2": 0, "User3": 0},
         )
         self.assertDictEqual(balanced_users, {"1": {"User1": 0, "User2": 0, "User3": 0}})
 
@@ -52,7 +52,7 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
 
         balanced_users = balance_users_among_workers(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
         )
         expected_balanced_users = {
             "1": {"User1": 1, "User2": 1, "User3": 1},
@@ -63,7 +63,7 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
 
         balanced_users = balance_users_among_workers(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 5, "User2": 4, "User3": 2},
+            user_classes_count={"User1": 5, "User2": 4, "User3": 2},
         )
         expected_balanced_users = {
             "1": {"User1": 2, "User2": 1, "User3": 1},
@@ -74,7 +74,7 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
 
         balanced_users = balance_users_among_workers(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 1, "User2": 1, "User3": 1},
+            user_classes_count={"User1": 1, "User2": 1, "User3": 1},
         )
         expected_balanced_users = {
             "1": {"User1": 1, "User2": 0, "User3": 0},
@@ -85,7 +85,7 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
 
         balanced_users = balance_users_among_workers(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 1, "User2": 1, "User3": 0},
+            user_classes_count={"User1": 1, "User2": 1, "User3": 0},
         )
         expected_balanced_users = {
             "1": {"User1": 1, "User2": 0, "User3": 0},
@@ -96,7 +96,7 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
 
         balanced_users = balance_users_among_workers(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 0, "User2": 0, "User3": 0},
+            user_classes_count={"User1": 0, "User2": 0, "User3": 0},
         )
         expected_balanced_users = {
             "1": {"User1": 0, "User2": 0, "User3": 0},
@@ -110,7 +110,7 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
 
         balanced_users = balance_users_among_workers(
             worker_nodes=worker_nodes,
-            user_class_occurrences={"User1": 10, "User2": 5, "User3": 5, "User4": 5, "User5": 5},
+            user_classes_count={"User1": 10, "User2": 5, "User3": 5, "User4": 5, "User5": 5},
         )
         expected_balanced_users = {
             "1": {"User1": 1, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 3 users
@@ -128,7 +128,7 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
 
         balanced_users = balance_users_among_workers(
             worker_nodes=worker_nodes,
-            user_class_occurrences={"User1": 11, "User2": 5, "User3": 5, "User4": 5, "User5": 5},
+            user_classes_count={"User1": 11, "User2": 5, "User3": 5, "User4": 5, "User5": 5},
         )
         expected_balanced_users = {
             "1": {"User1": 2, "User2": 1, "User3": 0, "User4": 0, "User5": 1},  # 4 users
@@ -146,7 +146,7 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
 
         balanced_users = balance_users_among_workers(
             worker_nodes=worker_nodes,
-            user_class_occurrences={"User1": 11, "User2": 5, "User3": 5, "User4": 5, "User5": 6},
+            user_classes_count={"User1": 11, "User2": 5, "User3": 5, "User4": 5, "User5": 6},
         )
         expected_balanced_users = {
             "1": {"User1": 2, "User2": 1, "User3": 0, "User4": 0, "User5": 1},  # 4 users
@@ -164,7 +164,7 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
 
         balanced_users = balance_users_among_workers(
             worker_nodes=worker_nodes,
-            user_class_occurrences={"User1": 11, "User2": 5, "User3": 5, "User4": 6, "User5": 6},
+            user_classes_count={"User1": 11, "User2": 5, "User3": 5, "User4": 6, "User5": 6},
         )
         expected_balanced_users = {
             "1": {"User1": 2, "User2": 1, "User3": 0, "User4": 0, "User5": 1},  # 4 users
@@ -182,7 +182,7 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
 
         balanced_users = balance_users_among_workers(
             worker_nodes=worker_nodes,
-            user_class_occurrences={"User1": 11, "User2": 5, "User3": 6, "User4": 6, "User5": 6},
+            user_classes_count={"User1": 11, "User2": 5, "User3": 6, "User4": 6, "User5": 6},
         )
         expected_balanced_users = {
             "1": {"User1": 2, "User2": 1, "User3": 0, "User4": 0, "User5": 1},  # 4 users
@@ -200,7 +200,7 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
 
         balanced_users = balance_users_among_workers(
             worker_nodes=worker_nodes,
-            user_class_occurrences={"User1": 11, "User2": 6, "User3": 6, "User4": 6, "User5": 6},
+            user_classes_count={"User1": 11, "User2": 6, "User3": 6, "User4": 6, "User5": 6},
         )
         expected_balanced_users = {
             "1": {"User1": 2, "User2": 1, "User3": 0, "User4": 0, "User5": 1},  # 4 users
@@ -218,7 +218,7 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
 
         balanced_users = balance_users_among_workers(
             worker_nodes=worker_nodes,
-            user_class_occurrences={"User1": 11, "User2": 6, "User3": 6, "User4": 6, "User5": 7},
+            user_classes_count={"User1": 11, "User2": 6, "User3": 6, "User4": 6, "User5": 7},
         )
         expected_balanced_users = {
             "1": {"User1": 2, "User2": 1, "User3": 0, "User4": 0, "User5": 1},  # 4 users
@@ -236,7 +236,7 @@ class TestBalanceUsersAmongWorkers(unittest.TestCase):
 
         balanced_users = balance_users_among_workers(
             worker_nodes=worker_nodes,
-            user_class_occurrences={"User1": 11, "User2": 6, "User3": 6, "User4": 6, "User5": 11},
+            user_classes_count={"User1": 11, "User2": 6, "User3": 6, "User4": 6, "User5": 11},
         )
         expected_balanced_users = {
             "1": {"User1": 2, "User2": 1, "User3": 1, "User4": 0, "User5": 0},  # 4 users
@@ -261,7 +261,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=0.15,
         )
 
@@ -387,7 +387,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=0.5,
         )
 
@@ -511,7 +511,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=1,
         )
 
@@ -635,7 +635,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=2,
         )
 
@@ -711,7 +711,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=2.4,
         )
 
@@ -789,7 +789,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=3,
         )
 
@@ -841,7 +841,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=4,
         )
 
@@ -893,7 +893,7 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=9,
         )
 
@@ -918,15 +918,15 @@ class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
 class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_15(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {}
+        worker_node1.user_classes_count = {}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 1}
+        worker_node2.user_classes_count = {"User1": 1}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 1}
+        worker_node3.user_classes_count = {"User2": 1}
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=0.15,
         )
 
@@ -1023,15 +1023,15 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_5(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {}
+        worker_node1.user_classes_count = {}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 1}
+        worker_node2.user_classes_count = {"User1": 1}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 1}
+        worker_node3.user_classes_count = {"User2": 1}
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=0.5,
         )
 
@@ -1126,15 +1126,15 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_1(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {}
+        worker_node1.user_classes_count = {}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 1}
+        worker_node2.user_classes_count = {"User1": 1}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 1}
+        worker_node3.user_classes_count = {"User2": 1}
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=1,
         )
 
@@ -1229,15 +1229,15 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_2(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {}
+        worker_node1.user_classes_count = {}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 1}
+        worker_node2.user_classes_count = {"User1": 1}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 1}
+        worker_node3.user_classes_count = {"User2": 1}
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=2,
         )
 
@@ -1296,15 +1296,15 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_2_4(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {}
+        worker_node1.user_classes_count = {}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 1}
+        worker_node2.user_classes_count = {"User1": 1}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 1}
+        worker_node3.user_classes_count = {"User2": 1}
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=2.4,
         )
 
@@ -1365,15 +1365,15 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_3(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {}
+        worker_node1.user_classes_count = {}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 1}
+        worker_node2.user_classes_count = {"User1": 1}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 1}
+        worker_node3.user_classes_count = {"User2": 1}
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=3,
         )
 
@@ -1420,15 +1420,15 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_4(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {}
+        worker_node1.user_classes_count = {}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 1}
+        worker_node2.user_classes_count = {"User1": 1}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 1}
+        worker_node3.user_classes_count = {"User2": 1}
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=4,
         )
 
@@ -1463,15 +1463,15 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_9(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {}
+        worker_node1.user_classes_count = {}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 1}
+        worker_node2.user_classes_count = {"User1": 1}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 1}
+        worker_node3.user_classes_count = {"User2": 1}
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=9,
         )
 
@@ -1496,15 +1496,15 @@ class TestDispatchUsersToWorkersHavingLessUsersThanTheTarget(unittest.TestCase):
 class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.TestCase):
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_15(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {}
+        worker_node1.user_classes_count = {}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 5}
+        worker_node2.user_classes_count = {"User1": 5}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 7}
+        worker_node3.user_classes_count = {"User2": 7}
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=0.15,
         )
 
@@ -1565,15 +1565,15 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_0_5(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {}
+        worker_node1.user_classes_count = {}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 5}
+        worker_node2.user_classes_count = {"User1": 5}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 7}
+        worker_node3.user_classes_count = {"User2": 7}
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=0.5,
         )
 
@@ -1632,15 +1632,15 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_1(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {}
+        worker_node1.user_classes_count = {}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 5}
+        worker_node2.user_classes_count = {"User1": 5}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 7}
+        worker_node3.user_classes_count = {"User2": 7}
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=1,
         )
 
@@ -1699,15 +1699,15 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_2(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {}
+        worker_node1.user_classes_count = {}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 5}
+        worker_node2.user_classes_count = {"User1": 5}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 7}
+        worker_node3.user_classes_count = {"User2": 7}
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=2,
         )
 
@@ -1754,15 +1754,15 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_2_4(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {}
+        worker_node1.user_classes_count = {}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 5}
+        worker_node2.user_classes_count = {"User1": 5}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 7}
+        worker_node3.user_classes_count = {"User2": 7}
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=2.4,
         )
 
@@ -1811,15 +1811,15 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_3(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {}
+        worker_node1.user_classes_count = {}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 5}
+        worker_node2.user_classes_count = {"User1": 5}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 7}
+        worker_node3.user_classes_count = {"User2": 7}
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=3,
         )
 
@@ -1842,15 +1842,15 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_4(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {}
+        worker_node1.user_classes_count = {}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 5}
+        worker_node2.user_classes_count = {"User1": 5}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 7}
+        worker_node3.user_classes_count = {"User2": 7}
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=4,
         )
 
@@ -1873,15 +1873,15 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
 
     def test_dispatch_users_to_3_workers_with_spawn_rate_of_9(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {}
+        worker_node1.user_classes_count = {}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 5}
+        worker_node2.user_classes_count = {"User1": 5}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 7}
+        worker_node3.user_classes_count = {"User2": 7}
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+            user_classes_count={"User1": 3, "User2": 3, "User3": 3},
             spawn_rate=9,
         )
 
@@ -1906,16 +1906,16 @@ class TestDispatchUsersToWorkersHavingLessAndMoreUsersThanTheTarget(unittest.Tes
 class TestDispatchUsersToWorkersHavingMoreUsersThanTheTarget(unittest.TestCase):
     def test_dispatch_users_to_3_workers(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {"User3": 15}
+        worker_node1.user_classes_count = {"User3": 15}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 5}
+        worker_node2.user_classes_count = {"User1": 5}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User2": 7}
+        worker_node3.user_classes_count = {"User2": 7}
 
         for spawn_rate in [0.15, 0.5, 1, 2, 2.4, 3, 4, 9]:
             users_dispatcher = dispatch_users(
                 worker_nodes=[worker_node1, worker_node2, worker_node3],
-                user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+                user_classes_count={"User1": 3, "User2": 3, "User3": 3},
                 spawn_rate=spawn_rate,
             )
 
@@ -1940,16 +1940,16 @@ class TestDispatchUsersToWorkersHavingMoreUsersThanTheTarget(unittest.TestCase):
 class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(unittest.TestCase):
     def test_dispatch_users_to_3_workers(self):
         worker_node1 = WorkerNode("1")
-        worker_node1.user_class_occurrences = {"User1": 1, "User2": 1, "User3": 1}
+        worker_node1.user_classes_count = {"User1": 1, "User2": 1, "User3": 1}
         worker_node2 = WorkerNode("2")
-        worker_node2.user_class_occurrences = {"User1": 1, "User2": 1, "User3": 1}
+        worker_node2.user_classes_count = {"User1": 1, "User2": 1, "User3": 1}
         worker_node3 = WorkerNode("3")
-        worker_node3.user_class_occurrences = {"User1": 1, "User2": 1, "User3": 1}
+        worker_node3.user_classes_count = {"User1": 1, "User2": 1, "User3": 1}
 
         for spawn_rate in [0.15, 0.5, 1, 2, 2.4, 3, 4, 9]:
             users_dispatcher = dispatch_users(
                 worker_nodes=[worker_node1, worker_node2, worker_node3],
-                user_class_occurrences={"User1": 3, "User2": 3, "User3": 3},
+                user_classes_count={"User1": 3, "User2": 3, "User3": 3},
                 spawn_rate=spawn_rate,
             )
 
@@ -1986,7 +1986,7 @@ class TestDistributionIsKeptDuringDispatch(unittest.TestCase):
 
         users_dispatcher = dispatch_users(
             worker_nodes=[worker_node1, worker_node2, worker_node3, worker_node4],
-            user_class_occurrences={"User1": 25, "User2": 50},
+            user_classes_count={"User1": 25, "User2": 50},
             spawn_rate=5,
         )
 
@@ -2295,17 +2295,17 @@ class TestDispatch(unittest.TestCase):
         worker_nodes = [WorkerNode(str(i)) for i in range(1, 21)]
 
         for worker_node in worker_nodes:
-            worker_node.user_class_occurrences = {"User1": 0}
+            worker_node.user_classes_count = {"User1": 0}
 
         worker_nodes_iterator = itertools.cycle(worker_nodes)
         user_count = 0
         while user_count < 25:
-            next(worker_nodes_iterator).user_class_occurrences["User1"] += 1
+            next(worker_nodes_iterator).user_classes_count["User1"] += 1
             user_count += 1
 
         users_dispatcher = dispatch_users(
             worker_nodes=worker_nodes,
-            user_class_occurrences={"User1": 50},
+            user_classes_count={"User1": 50},
             spawn_rate=1,
         )
 
@@ -2361,24 +2361,24 @@ class TestDispatchUsersToWorkersFuzzy(unittest.TestCase):
                     worker_nodes = []
                     for i in range(1, number_of_workers + 1):
                         worker_node = WorkerNode(str(i))
-                        worker_node.user_class_occurrences = {
+                        worker_node.user_classes_count = {
                             f"User{i}": next(number_of_prior_users_iterator)
                             for i in range(1, number_of_user_classes + 1)
                         }
                         worker_nodes.append(worker_node)
 
-                    user_class_occurrences = {
+                    user_classes_count = {
                         f"User{i}": next(weights_iterator) for i in range(1, number_of_user_classes + 1)
                     }
 
                     # We limit the maximum total dispatch to around 10s (i.e. total_number_of_users / 10)
                     # so that the test does take too much time.
-                    total_number_of_users = sum(user_class_occurrences.values())
+                    total_number_of_users = sum(user_classes_count.values())
                     spawn_rate = max(total_number_of_users / 10, 100 * next(spawn_rate_multipliers_iterator))
 
                     users_dispatcher = dispatch_users(
                         worker_nodes=worker_nodes,
-                        user_class_occurrences=user_class_occurrences,
+                        user_classes_count=user_classes_count,
                         spawn_rate=spawn_rate,
                     )
 
@@ -2407,7 +2407,7 @@ class TestDispatchUsersToWorkersFuzzy(unittest.TestCase):
 
 class TestNumberOfUsersLeftToDispatch(unittest.TestCase):
     def test_number_of_users_left_to_dispatch(self):
-        user_class_occurrences = {"User1": 6, "User2": 2, "User3": 8}
+        user_classes_count = {"User1": 6, "User2": 2, "User3": 8}
         balanced_users = {
             "Worker1": {"User1": 3, "User2": 1, "User3": 4},
             "Worker2": {"User1": 3, "User2": 1, "User3": 4},
@@ -2417,28 +2417,28 @@ class TestNumberOfUsersLeftToDispatch(unittest.TestCase):
             "Worker1": {"User1": 5, "User2": 2, "User3": 6},
             "Worker2": {"User1": 5, "User2": 2, "User3": 6},
         }
-        result = number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_class_occurrences)
+        result = number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_classes_count)
         self.assertEqual(0, result)
 
         dispatched_users = {
             "Worker1": {"User1": 2, "User2": 0, "User3": 4},
             "Worker2": {"User1": 2, "User2": 0, "User3": 4},
         }
-        result = number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_class_occurrences)
+        result = number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_classes_count)
         self.assertEqual(4, result)
 
         dispatched_users = {
             "Worker1": {"User1": 3, "User2": 1, "User3": 4},
             "Worker2": {"User1": 3, "User2": 0, "User3": 4},
         }
-        result = number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_class_occurrences)
+        result = number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_classes_count)
         self.assertEqual(1, result)
 
         dispatched_users = {
             "Worker1": {"User1": 3, "User2": 1, "User3": 4},
             "Worker2": {"User1": 3, "User2": 1, "User3": 4},
         }
-        result = number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_class_occurrences)
+        result = number_of_users_left_to_dispatch(dispatched_users, balanced_users, user_classes_count)
         self.assertEqual(0, result)
 
 

@@ -10,7 +10,7 @@ from .testcases import LocustTestCase
 
 
 class TestEnvironment(LocustTestCase):
-    def test_user_class_occurrences(self):
+    def test_user_classes_count(self):
         class MyUser1(User):
             wait_time = constant(0)
 
