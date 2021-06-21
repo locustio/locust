@@ -393,7 +393,7 @@ class Runner:
             self.spawning_greenlet.kill(block=True)
 
         if self.environment.shape_class is not None and self.shape_greenlet is not greenlet.getcurrent():
-            # If the test was not started yet and that locust is
+            # If the test was not started yet and locust is
             # stopped/quit, shape_greenlet will be None.
             if self.shape_greenlet is not None:
                 self.shape_greenlet.kill(block=True)
