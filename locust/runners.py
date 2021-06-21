@@ -298,12 +298,6 @@ class Runner:
         local_worker_node = WorkerNode(id="local")
         local_worker_node.user_classes_count = self.user_classes_count
 
-        users_dispatcher = dispatch_users(
-            worker_nodes=[local_worker_node],
-            user_classes_count=self.target_user_classes_count,
-            spawn_rate=spawn_rate,
-        )
-
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
             logger.debug(
                 "Updating running test with %d users, %.2f spawn rate and wait=%r" % (user_count, spawn_rate, wait)
@@ -311,7 +305,11 @@ class Runner:
             self.update_state(STATE_SPAWNING)
 
         try:
-            for dispatched_users in users_dispatcher:
+            for dispatched_users in dispatch_users(
+                worker_nodes=[local_worker_node],
+                user_classes_count=self.target_user_classes_count,
+                spawn_rate=spawn_rate,
+            ):
                 user_classes_spawn_count = {}
                 user_classes_stop_count = {}
                 user_classes_count = dispatched_users[local_worker_node.id]
