@@ -220,6 +220,12 @@ def setup_parser_arguments(parser):
         help="Optional path to TLS private key to use to serve over HTTPS",
         env_var="LOCUST_TLS_KEY",
     )
+    web_ui_group.add_argument(
+        "--enable-cors",
+        action="store_true",
+        help="Enable Cross-Origin Resource Sharing to access the Locust API externally",
+        env_var="ENABLE_CORS"
+    )
 
     master_group = parser.add_argument_group(
         "Master options",
