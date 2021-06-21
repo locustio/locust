@@ -49,9 +49,10 @@ def weight_users(
     # user class will be chosen. The greater number of users is, the better the actual distribution
     # of users will match the desired one (as dictated by the weight attributes).
     weights = list(map(attrgetter("weight"), user_classes))
+    relative_weights = [weight / sum(weights) for weight in weights]
     user_classes_count = {
         user_class.__name__: round(relative_weight * user_count) or 1
-        for user_class, relative_weight in zip(user_classes, (weight / sum(weights) for weight in weights))
+        for user_class, relative_weight in zip(user_classes, relative_weights)
     }
 
     if sum(user_classes_count.values()) == user_count:
