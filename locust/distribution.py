@@ -17,13 +17,6 @@ def weight_users(
     """
     Compute the desired state of users using the weight of each user class.
 
-    If `number_of_users` is less than `len(user_classes)`, at most one user of each user class
-    is chosen. User classes with higher weight are chosen first.
-
-    If `number_of_users` is greater than or equal to `len(user_classes)`, at least one user of each
-    user class will be chosen. The greater `number_of_users` is, the better the actual distribution
-    of users will match the desired one (as dictated by the weight attributes).
-
     :param user_classes: the list of user class
     :param user_count: total number of users
     :return: the set of users to run
@@ -37,6 +30,8 @@ def weight_users(
 
     user_classes_count = {user_class.__name__: 0 for user_class in user_classes}
 
+    # If the number of users is less than the number of user classes, at most one user of each user class
+    # is chosen. User classes with higher weight are chosen first.
     if user_count <= len(user_classes):
         user_classes_count.update(
             {
@@ -50,6 +45,9 @@ def weight_users(
         )
         return user_classes_count
 
+    # If the number of users is greater than or equal to the number of user classes, at least one user of each
+    # user class will be chosen. The greater number of users is, the better the actual distribution
+    # of users will match the desired one (as dictated by the weight attributes).
     weights = list(map(attrgetter("weight"), user_classes))
     user_classes_count = {
         user_class.__name__: round(relative_weight * user_count) or 1
