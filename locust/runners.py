@@ -295,12 +295,11 @@ class Runner:
 
         self.target_user_classes_count = weight_users(self.user_classes, user_count)
 
-        # Dummy worker node since dispatch_users needs it
-        dummy_worker_node = WorkerNode(id="dummy")
-        dummy_worker_node.user_classes_count = self.user_classes_count
+        local_worker_node = WorkerNode(id="local")
+        local_worker_node.user_classes_count = self.user_classes_count
 
         users_dispatcher = dispatch_users(
-            worker_nodes=[dummy_worker_node],
+            worker_nodes=[local_worker_node],
             user_classes_count=self.target_user_classes_count,
             spawn_rate=spawn_rate,
         )
@@ -315,7 +314,7 @@ class Runner:
             for dispatched_users in users_dispatcher:
                 user_classes_spawn_count = {}
                 user_classes_stop_count = {}
-                user_classes_count = dispatched_users[dummy_worker_node.id]
+                user_classes_count = dispatched_users[local_worker_node.id]
                 logger.info("Updating running test with %d users" % (sum(user_classes_count.values()),))
                 for user_class, user_class_count in user_classes_count.items():
                     logger.debug(
