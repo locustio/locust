@@ -720,7 +720,10 @@ class MasterRunner(DistributedRunner):
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
             elif msg.type in self.custom_messages:
+                logger.debug(f"Recieved {msg.type} message from worker {msg.node_id}")
                 self.custom_messages[msg.type](environment=self.environment, msg=msg)
+            else:
+                logger.warning(f"Unknown message type recieved from worker {msg.node_id}: {msg.type}")
 
             self.check_stopped()
 
@@ -858,8 +861,10 @@ class WorkerRunner(DistributedRunner):
                 self._send_stats()  # send a final report, in case there were any samples not yet reported
                 self.greenlet.kill(block=True)
             elif msg.type in self.custom_messages:
-                logger.debug("Recieved {msg_type} message on from master")
+                logger.debug(f"Recieved {msg.type} message from master")
                 self.custom_messages[msg.type](environment=self.environment, msg=msg)
+            else:
+                logger.warning(f"Unknown message type recieved: {msg.type}")
 
     def stats_reporter(self):
         while True:

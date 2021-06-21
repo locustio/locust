@@ -1364,6 +1364,30 @@ class TestMasterRunner(LocustTestCase):
             self.assertTrue(test_custom_msg[0])
             self.assertEqual(123, test_custom_msg_data[0]["test_data"])
 
+    def test_undefined_custom_message_receive(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            test_custom_msg = [False]
+
+            def on_custom_msg(msg, **kw):
+                test_custom_msg[0] = True
+
+            master = self.get_runner()
+            master.register_message("test_custom_msg", on_custom_msg)
+
+            server.mocked_send(Message("unregistered_custom_msg", {}, "dummy_id"))
+
+            self.assertFalse(test_custom_msg[0])
+            self.assertEqual(1, len(self.mocked_log.warning))
+            msg = self.mocked_log.warning[0]
+            self.assertIn("Unknown message type recieved from worker", msg)
+
 
 class TestWorkerRunner(LocustTestCase):
     def setUp(self):
@@ -1555,6 +1579,32 @@ class TestWorkerRunner(LocustTestCase):
             self.assertTrue(test_custom_msg[0])
             self.assertEqual(123, test_custom_msg_data[0]["test_data"])
             worker.quit()
+
+    def test_undefined_custom_message_receive(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            environment = Environment()
+
+            test_custom_msg = [False]
+
+            def on_custom_msg(msg, **kw):
+                test_custom_msg[0] = True
+
+            worker = self.get_runner(environment=environment, user_classes=[MyUser])
+            worker.register_message("test_custom_msg", on_custom_msg)
+
+            client.mocked_send(Message("unregistered_custom_msg", {}, "dummy_id"))
+
+            self.assertFalse(test_custom_msg[0])
+            self.assertEqual(1, len(self.mocked_log.warning))
+            msg = self.mocked_log.warning[0]
+            self.assertIn("Unknown message type recieved", msg)
 
 
 class TestMessageSerializing(unittest.TestCase):
