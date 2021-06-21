@@ -92,6 +92,7 @@ def _find_ideal_users_to_add_or_remove(
     if number_of_combinations <= max_number_of_combinations_threshold:
         user_classes_count_candidates: Dict[float, Dict[str, int]] = {}
         for user_classes_combination in combinations_with_replacement(user_classes, user_count_to_add_or_remove):
+            # Copy in order to not mutate `user_classes_count` for the parent scope
             user_classes_count_candidate = user_classes_count.copy()
             for user_class in user_classes_combination:
                 user_classes_count_candidate[user_class.__name__] += sign
@@ -105,6 +106,7 @@ def _find_ideal_users_to_add_or_remove(
         return user_classes_count_candidates[min(user_classes_count_candidates.keys())]
 
     else:
+        # Copy in order to not mutate `user_classes_count` for the parent scope
         user_classes_count_candidate = user_classes_count.copy()
         for user_class in user_classes[:user_count_to_add_or_remove]:
             user_classes_count_candidate[user_class.__name__] += sign
