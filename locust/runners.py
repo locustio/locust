@@ -634,14 +634,12 @@ class MasterRunner(DistributedRunner):
 
         self.update_state(STATE_SPAWNING)
 
-        users_dispatcher = dispatch_users(
-            worker_nodes=self.clients.ready + self.clients.running + self.clients.spawning,
-            user_classes_count=self.target_user_classes_count,
-            spawn_rate=spawn_rate,
-        )
-
         try:
-            for dispatched_users in users_dispatcher:
+            for dispatched_users in dispatch_users(
+                worker_nodes=self.clients.ready + self.clients.running + self.clients.spawning,
+                user_classes_count=self.target_user_classes_count,
+                spawn_rate=spawn_rate,
+            ):
                 dispatch_greenlets = Group()
                 for worker_node_id, worker_user_classes_count in dispatched_users.items():
                     data = {
