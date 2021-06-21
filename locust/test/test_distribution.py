@@ -9,13 +9,13 @@ class TestDistribution(unittest.TestCase):
     def test_distribution_no_user_classes(self):
         user_classes_count = weight_users(
             user_classes=[],
-            number_of_users=0,
+            user_count=0,
         )
         self.assertDictEqual(user_classes_count, {})
 
         user_classes_count = weight_users(
             user_classes=[],
-            number_of_users=1,
+            user_count=1,
         )
         self.assertDictEqual(user_classes_count, {})
 
@@ -31,19 +31,19 @@ class TestDistribution(unittest.TestCase):
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=0,
+            user_count=0,
         )
         self.assertDictEqual(user_classes_count, {"User1": 0, "User2": 0, "User3": 0})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=1,
+            user_count=1,
         )
         self.assertDictEqual(user_classes_count, {"User1": 1, "User2": 0, "User3": 0})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=2,
+            user_count=2,
         )
         self.assertDictEqual(user_classes_count, {"User1": 1, "User2": 1, "User3": 0})
 
@@ -59,25 +59,25 @@ class TestDistribution(unittest.TestCase):
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=3,
+            user_count=3,
         )
         self.assertDictEqual(user_classes_count, {"User1": 1, "User2": 1, "User3": 1})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=4,
+            user_count=4,
         )
         self.assertDictEqual(user_classes_count, {"User1": 2, "User2": 1, "User3": 1})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=5,
+            user_count=5,
         )
         self.assertDictEqual(user_classes_count, {"User1": 1, "User2": 2, "User3": 2})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=6,
+            user_count=6,
         )
         self.assertDictEqual(user_classes_count, {"User1": 2, "User2": 2, "User3": 2})
 
@@ -93,19 +93,19 @@ class TestDistribution(unittest.TestCase):
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=0,
+            user_count=0,
         )
         self.assertDictEqual(user_classes_count, {"User1": 0, "User2": 0, "User3": 0})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=1,
+            user_count=1,
         )
         self.assertDictEqual(user_classes_count, {"User1": 0, "User2": 0, "User3": 1})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=2,
+            user_count=2,
         )
         self.assertDictEqual(user_classes_count, {"User1": 0, "User2": 1, "User3": 1})
 
@@ -121,37 +121,37 @@ class TestDistribution(unittest.TestCase):
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=3,
+            user_count=3,
         )
         self.assertDictEqual(user_classes_count, {"User1": 1, "User2": 1, "User3": 1})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=4,
+            user_count=4,
         )
         self.assertDictEqual(user_classes_count, {"User1": 1, "User2": 1, "User3": 2})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=5,
+            user_count=5,
         )
         self.assertDictEqual(user_classes_count, {"User1": 1, "User2": 2, "User3": 2})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=6,
+            user_count=6,
         )
         self.assertDictEqual(user_classes_count, {"User1": 1, "User2": 2, "User3": 3})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=10,
+            user_count=10,
         )
         self.assertDictEqual(user_classes_count, {"User1": 2, "User2": 3, "User3": 5})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=11,
+            user_count=11,
         )
         self.assertDictEqual(user_classes_count, {"User1": 2, "User2": 4, "User3": 5})
 
@@ -167,19 +167,19 @@ class TestDistribution(unittest.TestCase):
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=0,
+            user_count=0,
         )
         self.assertDictEqual(user_classes_count, {"User1": 0, "User2": 0, "User3": 0})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=1,
+            user_count=1,
         )
         self.assertDictEqual(user_classes_count, {"User1": 0, "User2": 1, "User3": 0})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=2,
+            user_count=2,
         )
         self.assertDictEqual(user_classes_count, {"User1": 0, "User2": 1, "User3": 1})
 
@@ -195,37 +195,37 @@ class TestDistribution(unittest.TestCase):
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=3,
+            user_count=3,
         )
         self.assertDictEqual(user_classes_count, {"User1": 1, "User2": 1, "User3": 1})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=4,
+            user_count=4,
         )
         self.assertDictEqual(user_classes_count, {"User1": 1, "User2": 1, "User3": 2})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=5,
+            user_count=5,
         )
         self.assertDictEqual(user_classes_count, {"User1": 1, "User2": 2, "User3": 2})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=6,
+            user_count=6,
         )
         self.assertDictEqual(user_classes_count, {"User1": 1, "User2": 3, "User3": 2})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=10,
+            user_count=10,
         )
         self.assertDictEqual(user_classes_count, {"User1": 2, "User2": 4, "User3": 4})
 
         user_classes_count = weight_users(
             user_classes=[User1, User2, User3],
-            number_of_users=11,
+            user_count=11,
         )
         self.assertDictEqual(user_classes_count, {"User1": 2, "User2": 5, "User3": 4})
 
@@ -275,7 +275,7 @@ class TestDistribution(unittest.TestCase):
         class User15(User):
             weight = 69
 
-        for number_of_users in range(1044523783783, 1044523783783 + 1000):
+        for user_count in range(1044523783783, 1044523783783 + 1000):
             ts = time.perf_counter()
             user_classes_count = weight_users(
                 user_classes=[
@@ -295,8 +295,8 @@ class TestDistribution(unittest.TestCase):
                     User14,
                     User15,
                 ],
-                number_of_users=number_of_users,
+                user_count=user_count,
             )
             delta_ms = 1e3 * (time.perf_counter() - ts)
-            self.assertEqual(sum(user_classes_count.values()), number_of_users)
+            self.assertEqual(sum(user_classes_count.values()), user_count)
             self.assertLessEqual(delta_ms, 100)
