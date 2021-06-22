@@ -87,7 +87,8 @@ class UsersDispatcher(Iterator):
         # but in reverse.
         self._dispatched_users = deepcopy(self._initial_dispatched_users())
 
-        self.__dispatch_generator = self._dispatch_generator()
+        # Initialize the generator that is used in `__next__`
+        self._dispatcher_generator = self._dispatcher()
 
     @functools.lru_cache()
     def _initial_dispatched_users(self) -> Dict[str, Dict[str, int]]:
@@ -101,9 +102,9 @@ class UsersDispatcher(Iterator):
         }
 
     def __next__(self) -> Dict[str, Dict[str, int]]:
-        return next(self.__dispatch_generator)
+        return next(self._dispatcher_generator)
 
-    def _dispatch_generator(self) -> Generator[Dict[str, Dict[str, int]], None, None]:
+    def _dispatcher(self) -> Generator[Dict[str, Dict[str, int]], None, None]:
         """Main iterator logic for dispatching users during a ramp-up"""
         if self._desired_users_assignment_can_be_obtained_in_a_single_dispatch_iteration:
             yield self._desired_users_assigned_to_workers()
