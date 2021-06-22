@@ -2,7 +2,6 @@ import functools
 import itertools
 import math
 import time
-from collections import namedtuple
 from copy import deepcopy
 from operator import itemgetter, methodcaller, ne
 from typing import Dict, Generator, List, TYPE_CHECKING
@@ -12,11 +11,6 @@ from collections.abc import Iterator
 
 if TYPE_CHECKING:
     from locust.runners import WorkerNode
-
-
-_DistancesFromIdealDistribution = namedtuple(
-    "DistancesFromIdealDistribution", "actual_distance actual_distance_with_current_user_class"
-)
 
 
 class UsersDispatcher(Iterator):
@@ -340,8 +334,11 @@ class UsersDispatcher(Iterator):
     def _current_user_class_will_keep_distribution_better_than_all_other_user_classes(
         self, current_user_class: str
     ) -> bool:
-        distances = self._distances_from_ideal_distribution(current_user_class)
-        if distances.actual_distance_with_current_user_class > distances.actual_distance and all(
+        actual_distance = self._actual_distance_from_ideal_distribution()
+        actual_distance_with_current_user_class = self._actual_distance_from_ideal_distribution_with_current_user_class(
+            current_user_class
+        )
+        if actual_distance_with_current_user_class > actual_distance and all(
             not self._current_user_class_will_keep_distribution(user_class)
             for user_class in self._user_classes_count.keys()
             if user_class != current_user_class
@@ -350,27 +347,30 @@ class UsersDispatcher(Iterator):
             # then the distribution will be the best we can get. In other words, adding
             # one user of any other user class won't yield a better distribution.
             return True
-        if distances.actual_distance_with_current_user_class <= distances.actual_distance:
+        if actual_distance_with_current_user_class <= actual_distance:
             return True
         return False
 
     def _current_user_class_will_keep_distribution(self, current_user_class: str) -> bool:
-        distances = self._distances_from_ideal_distribution(current_user_class)
-        if distances.actual_distance_with_current_user_class <= distances.actual_distance:
+        if (
+            self._actual_distance_from_ideal_distribution_with_current_user_class(current_user_class)
+            <= self._actual_distance_from_ideal_distribution()
+        ):
             return True
         return False
 
-    def _distances_from_ideal_distribution(self, current_user_class) -> _DistancesFromIdealDistribution:
-        user_classes = list(self._user_classes_count.keys())
-
-        desired_weights = [
-            self._user_classes_count[user_class] / sum(self._user_classes_count.values()) for user_class in user_classes
-        ]
+    def _actual_distance_from_ideal_distribution(self) -> float:
+        user_classes = sorted(self._user_classes_count.keys())
 
         actual_weights = [
             self._dispatched_user_classes_count()[user_class] / sum(self._dispatched_user_classes_count().values())
             for user_class in user_classes
         ]
+
+        return math.sqrt(sum(map(lambda x: (x[1] - x[0]) ** 2, zip(actual_weights, self._desired_weights()))))
+
+    def _actual_distance_from_ideal_distribution_with_current_user_class(self, current_user_class: str) -> float:
+        user_classes = sorted(self._user_classes_count.keys())
 
         actual_weights_with_current_user_class = [
             (
@@ -382,18 +382,16 @@ class UsersDispatcher(Iterator):
             for user_class in user_classes
         ]
 
-        actual_distance = math.sqrt(sum(map(lambda x: (x[1] - x[0]) ** 2, zip(actual_weights, desired_weights))))
-
-        actual_distance_with_current_user_class = math.sqrt(
-            sum(map(lambda x: (x[1] - x[0]) ** 2, zip(actual_weights_with_current_user_class, desired_weights)))
+        return math.sqrt(
+            sum(map(lambda x: (x[1] - x[0]) ** 2, zip(actual_weights_with_current_user_class, self._desired_weights())))
         )
 
-        # `actual_distance` corresponds to the distance from the ideal distribution given the
-        # users dispatched at this time. `actual_distance_with_current_user_class` represents the distance
-        # from the ideal distribution if we were to add one user of the given `current_user_class`.
-        # Thus, we want to find the best user class, in which to add a user, that will give us
-        # an `actual_distance_with_current_user_class` less than `actual_distance`.
-        return _DistancesFromIdealDistribution(actual_distance, actual_distance_with_current_user_class)
+    @functools.lru_cache()
+    def _desired_weights(self) -> List[float]:
+        return [
+            self._user_classes_count[user_class] / sum(self._user_classes_count.values())
+            for user_class in sorted(self._user_classes_count.keys())
+        ]
 
     @functools.lru_cache()
     def _dispatched_user_classes_count(self) -> Dict[str, int]:
