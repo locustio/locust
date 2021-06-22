@@ -1296,9 +1296,9 @@ class TestMasterRunner(LocustTestCase):
 
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner(user_classes=[TestUser])
-            master.clients[1] = WorkerNode(1)
-            master.clients[2] = WorkerNode(2)
-            master.clients[3] = WorkerNode(3)
+            master.clients[1] = WorkerNode("1")
+            master.clients[2] = WorkerNode("2")
+            master.clients[3] = WorkerNode("3")
             master.clients[1].state = STATE_INIT
             master.clients[2].state = STATE_SPAWNING
             master.clients[3].state = STATE_RUNNING
