@@ -347,9 +347,7 @@ class UsersDispatcher(Iterator):
             # then the distribution will be the best we can get. In other words, adding
             # one user of any other user class won't yield a better distribution.
             return True
-        if actual_distance_with_current_user_class <= actual_distance:
-            return True
-        return False
+        return actual_distance_with_current_user_class <= actual_distance
 
     def _current_user_class_will_keep_distribution(self, current_user_class: str) -> bool:
         if (
