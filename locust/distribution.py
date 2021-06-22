@@ -1,19 +1,12 @@
 import math
 from itertools import combinations_with_replacement
 from operator import attrgetter
-from typing import (
-    Dict,
-    List,
-    Type,
-)
+from typing import Dict, List, Type
 
 from locust import User
 
 
-def weight_users(
-    user_classes: List[Type[User]],
-    user_count: int,
-) -> Dict[str, int]:
+def weight_users(user_classes: List[Type[User]], user_count: int) -> Dict[str, int]:
     """
     Compute the desired state of users using the weight of each user class.
 
@@ -36,11 +29,7 @@ def weight_users(
         user_classes_count.update(
             {
                 user_class.__name__: 1
-                for user_class in sorted(
-                    user_classes,
-                    key=attrgetter("weight"),
-                    reverse=True,
-                )[:user_count]
+                for user_class in sorted(user_classes, key=attrgetter("weight"), reverse=True)[:user_count]
             }
         )
         return user_classes_count
@@ -60,18 +49,14 @@ def weight_users(
 
     else:
         user_classes_count = _find_ideal_users_to_add_or_remove(
-            user_classes,
-            user_count - sum(user_classes_count.values()),
-            user_classes_count,
+            user_classes, user_count - sum(user_classes_count.values()), user_classes_count
         )
         assert sum(user_classes_count.values()) == user_count
         return user_classes_count
 
 
 def _find_ideal_users_to_add_or_remove(
-    user_classes: List[Type[User]],
-    user_count_to_add_or_remove: int,
-    user_classes_count: Dict[str, int],
+    user_classes: List[Type[User]], user_count_to_add_or_remove: int, user_classes_count: Dict[str, int]
 ) -> Dict[str, int]:
     sign = -1 if user_count_to_add_or_remove < 0 else 1
 
@@ -97,10 +82,7 @@ def _find_ideal_users_to_add_or_remove(
             user_classes_count_candidate = user_classes_count.copy()
             for user_class in user_classes_combination:
                 user_classes_count_candidate[user_class.__name__] += sign
-            distance = distance_from_desired_distribution(
-                user_classes,
-                user_classes_count_candidate,
-            )
+            distance = distance_from_desired_distribution(user_classes, user_classes_count_candidate)
             if distance not in user_classes_count_candidates:
                 user_classes_count_candidates[distance] = user_classes_count_candidate.copy()
 
@@ -114,10 +96,7 @@ def _find_ideal_users_to_add_or_remove(
         return user_classes_count_candidate
 
 
-def distance_from_desired_distribution(
-    user_classes: List[Type[User]],
-    user_classes_count: Dict[str, int],
-) -> float:
+def distance_from_desired_distribution(user_classes: List[Type[User]], user_classes_count: Dict[str, int]) -> float:
     actual_ratio_of_user_class = {
         user_class: user_class_count / sum(user_classes_count.values())
         for user_class, user_class_count in user_classes_count.items()
