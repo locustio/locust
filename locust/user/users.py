@@ -199,6 +199,11 @@ class User(object, metaclass=UserMeta):
         """
         return {}
 
+    @classmethod
+    def fullname(cls) -> str:
+        """Fully qualified name of the user class, e.g. my_package.my_module.MyUserClass"""
+        return ".".join(filter(lambda x: x != "<locals>", (cls.__module__ + "." + cls.__qualname__).split(".")))
+
 
 class HttpUser(User):
     """

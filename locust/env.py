@@ -1,3 +1,4 @@
+from operator import methodcaller
 from typing import (
     Dict,
     List,
@@ -103,6 +104,14 @@ class Environment:
         self.parsed_options = parsed_options
 
         self._filter_tasks_by_tags()
+
+        # Validate there's no class with the same name but in different modules
+        if len(set(user_class.__name__ for user_class in self.user_classes)) != len(self.user_classes):
+            raise ValueError(
+                "The following user classes have the same class name: {}".format(
+                    ", ".join(map(methodcaller("fullname"), self.user_classes))
+                )
+            )
 
     def _create_runner(
         self,
