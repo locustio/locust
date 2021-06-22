@@ -26,6 +26,7 @@ from .util.cache import memoize
 from .util.rounding import proper_round
 from .util.timespan import parse_timespan
 from .html import get_html_report
+from flask_cors import CORS
 
 
 logger = logging.getLogger(__name__)
@@ -98,6 +99,7 @@ class WebUI:
         self.tls_cert = tls_cert
         self.tls_key = tls_key
         app = Flask(__name__)
+        CORS(app)
         self.app = app
         app.jinja_options["extensions"].append("jinja2.ext.do")
         app.debug = True
