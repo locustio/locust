@@ -52,6 +52,8 @@ class UsersDispatcher(Iterator):
 
         self._user_classes_count = user_classes_count
 
+        self._sorted_user_classes = sorted(user_classes_count.keys())
+
         self._spawn_rate = spawn_rate
 
         # This represents the desired users distribution minus the already running users among the workers.
@@ -153,7 +155,7 @@ class UsersDispatcher(Iterator):
 
             user_count_in_current_dispatch = 0
 
-            for i, current_user_class in enumerate(itertools.cycle(sorted(self._user_classes_count.keys()))):
+            for i, current_user_class in enumerate(itertools.cycle(self._sorted_user_classes)):
                 # For large number of user classes and large number of workers, this assertion might fail.
                 # If this happens, you can remove it or increase the threshold. Right now, the assertion
                 # is there as a safeguard for situations that can't be easily tested (i.e. large scale distributed tests).
@@ -227,7 +229,7 @@ class UsersDispatcher(Iterator):
         the same number of users of each user class
         """
         assigned_users = {
-            worker_node.id: {user_class: 0 for user_class in sorted(self._user_classes_count.keys())}
+            worker_node.id: {user_class: 0 for user_class in self._sorted_user_classes}
             for worker_node in self._worker_nodes
         }
 
@@ -239,7 +241,7 @@ class UsersDispatcher(Iterator):
         # If `remainder > 0`, it means that some workers will have `users_per_worker + 1` users.
         users_per_worker, remainder = divmod(user_count, len(self._worker_nodes))
 
-        for user_class in sorted(user_classes_count.keys()):
+        for user_class in self._sorted_user_classes:
             if sum(user_classes_count.values()) == 0:
                 # No more users of any user class to assign to workers, so we can exit this loop.
                 break
@@ -310,9 +312,7 @@ class UsersDispatcher(Iterator):
         else:
             # Because each user class doesn't have at least one running user, we use a simpler strategy
             # that make sure each user class appears once.
-            for next_user_class in filter(
-                functools.partial(ne, current_user_class), sorted(self._user_classes_count.keys())
-            ):
+            for next_user_class in filter(functools.partial(ne, current_user_class), self._sorted_user_classes):
                 # TODO: Put in function `user_class_count_left_to_dispatch`
                 if sum(map(itemgetter(next_user_class), self._effective_assigned_users.values())) == 0:
                     # No more users of class `next_user_class` to dispatch
@@ -360,18 +360,14 @@ class UsersDispatcher(Iterator):
         return False
 
     def _actual_distance_from_ideal_distribution(self) -> float:
-        user_classes = sorted(self._user_classes_count.keys())
-
         actual_weights = [
             self._dispatched_user_classes_count()[user_class] / sum(self._dispatched_user_classes_count().values())
-            for user_class in user_classes
+            for user_class in self._sorted_user_classes
         ]
 
         return math.sqrt(sum(map(lambda x: (x[1] - x[0]) ** 2, zip(actual_weights, self._desired_weights()))))
 
     def _actual_distance_from_ideal_distribution_with_current_user_class(self, current_user_class: str) -> float:
-        user_classes = sorted(self._user_classes_count.keys())
-
         actual_weights_with_current_user_class = [
             (
                 self._dispatched_user_classes_count()[user_class] + 1
@@ -379,7 +375,7 @@ class UsersDispatcher(Iterator):
                 else self._dispatched_user_classes_count()[user_class]
             )
             / (sum(self._dispatched_user_classes_count().values()) + 1)
-            for user_class in user_classes
+            for user_class in self._sorted_user_classes
         ]
 
         return math.sqrt(
@@ -390,7 +386,7 @@ class UsersDispatcher(Iterator):
     def _desired_weights(self) -> List[float]:
         return [
             self._user_classes_count[user_class] / sum(self._user_classes_count.values())
-            for user_class in sorted(self._user_classes_count.keys())
+            for user_class in self._sorted_user_classes
         ]
 
     @functools.lru_cache()
