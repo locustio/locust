@@ -291,7 +291,6 @@ def main():
                 tls_key=options.tls_key,
                 stats_csv_writer=stats_csv_writer,
                 delayed_start=True,
-                enable_cors=options.enable_cors
             )
         except AuthCredentialsError:
             logger.error("Credentials supplied with --web-auth should have the format: username:password")

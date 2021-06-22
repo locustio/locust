@@ -76,7 +76,6 @@ class WebUI:
         tls_key=None,
         stats_csv_writer=None,
         delayed_start=False,
-        enable_cors=False
     ):
         """
         Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
@@ -91,8 +90,6 @@ class WebUI:
         tls_key: A path to a TLS private key
         delayed_start: Whether or not to delay starting web UI until `start()` is called. Delaying web UI start
                        allows for adding Flask routes or Blueprints before accepting requests, avoiding errors.
-        enable_cors: Whether or not to enable Cross-Origin Resource Sharing. This is can be useful when integrating the
-                     Locust API with external services.
         """
         environment.web_ui = self
         self.stats_csv_writer = stats_csv_writer or StatsCSV(environment, stats_module.PERCENTILES_TO_REPORT)
@@ -102,6 +99,7 @@ class WebUI:
         self.tls_cert = tls_cert
         self.tls_key = tls_key
         app = Flask(__name__)
+        CORS(app)
         self.app = app
         app.jinja_options["extensions"].append("jinja2.ext.do")
         app.debug = True
@@ -109,7 +107,6 @@ class WebUI:
         self.app.config["BASIC_AUTH_ENABLED"] = False
         self.auth = None
         self.greenlet = None
-        self.enable_cors = enable_cors
 
         if auth_credentials is not None:
             credentials = auth_credentials.split(":")
@@ -127,9 +124,6 @@ class WebUI:
             self.update_template_args()
         if not delayed_start:
             self.start()
-
-        if enable_cors:
-            CORS(app)
 
         @app.route("/")
         @self.auth_required_if_enabled

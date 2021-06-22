@@ -151,7 +151,6 @@ class Environment:
         tls_key=None,
         stats_csv_writer=None,
         delayed_start=False,
-        enable_cors=False
     ):
         """
         Creates a :class:`WebUI <locust.web.WebUI>` instance for this Environment and start running the web server
@@ -167,8 +166,6 @@ class Environment:
         :param stats_csv_writer: `StatsCSV <stats_csv.StatsCSV>` instance.
         :param delayed_start: Whether or not to delay starting web UI until `start()` is called. Delaying web UI start
                               allows for adding Flask routes or Blueprints before accepting requests, avoiding errors.
-        :param enable_cors: Whether or not to enable Cross-Origin Resource Sharing. This is can be useful when integrating
-                            the Locust API with external services.
         """
         self.web_ui = WebUI(
             self,
@@ -179,7 +176,6 @@ class Environment:
             tls_key=tls_key,
             stats_csv_writer=stats_csv_writer,
             delayed_start=delayed_start,
-            enable_cors=enable_cors
         )
         return self.web_ui
 
