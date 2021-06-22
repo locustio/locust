@@ -22,7 +22,7 @@ import psutil
 from gevent.pool import Group
 
 from . import User
-from .dispatch import dispatch_users
+from .dispatch import UsersDispatcher
 from .distribution import weight_users
 from .exception import RPCError
 from .log import greenlet_exception_logger
@@ -305,7 +305,7 @@ class Runner:
             self.update_state(STATE_SPAWNING)
 
         try:
-            for dispatched_users in dispatch_users(
+            for dispatched_users in UsersDispatcher(
                 worker_nodes=[local_worker_node],
                 user_classes_count=self.target_user_classes_count,
                 spawn_rate=spawn_rate,
@@ -635,7 +635,7 @@ class MasterRunner(DistributedRunner):
         self.update_state(STATE_SPAWNING)
 
         try:
-            for dispatched_users in dispatch_users(
+            for dispatched_users in UsersDispatcher(
                 worker_nodes=self.clients.ready + self.clients.running + self.clients.spawning,
                 user_classes_count=self.target_user_classes_count,
                 spawn_rate=spawn_rate,
