@@ -287,11 +287,8 @@ class UsersDispatcher(Iterator):
 
     @property
     def _all_users_have_been_dispatched(self) -> bool:
-        return self._user_count_left_to_dispatch == 0
-
-    @property
-    def _user_count_left_to_dispatch(self) -> int:
-        return sum(map(sum, map(dict.values, self._effective_assigned_users.values())))
+        user_count_left_to_dispatch = sum(map(sum, map(dict.values, self._effective_assigned_users.values())))
+        return user_count_left_to_dispatch == 0
 
     def _try_next_user_class_to_stay_balanced_during_ramp_up(self, current_user_class: str) -> bool:
         """
