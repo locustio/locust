@@ -155,7 +155,7 @@ class UsersDispatcher(Iterator):
 
             user_count_in_current_dispatch = 0
 
-            for i, current_user_class in enumerate(itertools.cycle(self._sorted_user_classes)):
+            for i, user_class_to_add in enumerate(itertools.cycle(self._sorted_user_classes)):
                 # For large number of user classes and large number of workers, this assertion might fail.
                 # If this happens, you can remove it or increase the threshold. Right now, the assertion
                 # is there as a safeguard for situations that can't be easily tested (i.e. large scale distributed tests).
@@ -170,23 +170,20 @@ class UsersDispatcher(Iterator):
                 ):
                     break
 
-                if (
-                    self._dispatched_user_class_count(current_user_class)
-                    >= self._user_classes_count[current_user_class]
-                ):
+                if self._dispatched_user_class_count(user_class_to_add) >= self._user_classes_count[user_class_to_add]:
                     continue
 
-                if self._try_next_user_class_to_stay_balanced_during_ramp_up(current_user_class):
+                if self._try_next_user_class_in_order_to_stay_balanced_during_ramp_up(user_class_to_add):
                     continue
 
                 for j, worker_node_id in enumerate(itertools.cycle(sorted(self._effective_assigned_users.keys()))):
                     assert j < int(
                         2 * self._number_of_workers
                     ), "Looks like dispatch is stuck in an infinite loop (iteration {})".format(j)
-                    if self._effective_assigned_users[worker_node_id][current_user_class] == 0:
+                    if self._effective_assigned_users[worker_node_id][user_class_to_add] == 0:
                         continue
-                    self._dispatched_users[worker_node_id][current_user_class] += 1
-                    self._effective_assigned_users[worker_node_id][current_user_class] -= 1
+                    self._dispatched_users[worker_node_id][user_class_to_add] += 1
+                    self._effective_assigned_users[worker_node_id][user_class_to_add] -= 1
                     user_count_in_current_dispatch += 1
                     break
 
@@ -287,7 +284,7 @@ class UsersDispatcher(Iterator):
         user_count_left_to_dispatch = sum(map(sum, map(dict.values, self._effective_assigned_users.values())))
         return user_count_left_to_dispatch == 0
 
-    def _try_next_user_class_to_stay_balanced_during_ramp_up(self, current_user_class: str) -> bool:
+    def _try_next_user_class_in_order_to_stay_balanced_during_ramp_up(self, user_class_to_add: str) -> bool:
         """
         Whether to skip to next user class or not. This is done so that
         the distribution of user class stays approximately balanced during
@@ -295,15 +292,15 @@ class UsersDispatcher(Iterator):
         """
         # For performance reasons, we use `functools.lru_cache()` on the `self._dispatched_user_classes_count`
         # method because its value does not change within the scope of the current method. However, the next time
-        # `self._try_next_user_class_to_stay_balanced_during_ramp_up` is invoked, we need
+        # `self._try_next_user_class_in_order_to_stay_balanced_during_ramp_up` is invoked, we need
         # `self._dispatched_user_classes_count` to be recomputed.
         self._dispatched_user_classes_count.cache_clear()
 
         if all(user_count > 0 for user_count in self._dispatched_user_classes_count().values()):
             # We're here because each user class have at least one user running. Thus,
             # we need to ensure that the distribution of users corresponds to the weights.
-            if not self._current_user_class_will_keep_distribution_better_than_all_other_user_classes(
-                current_user_class
+            if not self._adding_this_user_class_respects_distribution_better_than_adding_any_other_user_class(
+                user_class_to_add
             ):
                 return True
             else:
@@ -312,18 +309,17 @@ class UsersDispatcher(Iterator):
         else:
             # Because each user class doesn't have at least one running user, we use a simpler strategy
             # that make sure each user class appears once.
-            for next_user_class in filter(functools.partial(ne, current_user_class), self._sorted_user_classes):
-                # TODO: Put in function `user_class_count_left_to_dispatch`
+            for next_user_class in filter(functools.partial(ne, user_class_to_add), self._sorted_user_classes):
                 if sum(map(itemgetter(next_user_class), self._effective_assigned_users.values())) == 0:
                     # No more users of class `next_user_class` to dispatch
                     continue
                 if (
-                    self._dispatched_user_classes_count()[current_user_class]
+                    self._dispatched_user_classes_count()[user_class_to_add]
                     - self._dispatched_user_classes_count()[next_user_class]
                     >= 1
                 ):
-                    # There's already enough users for `current_user_class` in the current dispatch. Hence, we should
-                    # not consider `current_user_class` and go to the next user class instead.
+                    # There's already enough users for `user_class_to_add` in the current dispatch. Hence, we should
+                    # not consider `user_class_to_add` and go to the next user class instead.
                     return True
             return False
 
@@ -331,45 +327,49 @@ class UsersDispatcher(Iterator):
         """Number of dispatched users for the given user class"""
         return sum(map(itemgetter(user_class), self._dispatched_users.values()))
 
-    def _current_user_class_will_keep_distribution_better_than_all_other_user_classes(
-        self, current_user_class: str
+    def _adding_this_user_class_respects_distribution_better_than_adding_any_other_user_class(
+        self, user_class_to_add: str
     ) -> bool:
-        actual_distance = self._actual_distance_from_ideal_distribution()
-        actual_distance_with_current_user_class = self._actual_distance_from_ideal_distribution_with_current_user_class(
-            current_user_class
+        distance = self._distance_from_ideal_distribution()
+        distance_after_adding_user_class = self._distance_from_ideal_distribution_after_adding_this_user_class(
+            user_class_to_add
         )
-        if actual_distance_with_current_user_class > actual_distance and all(
-            not self._current_user_class_will_keep_distribution(user_class)
+        if distance_after_adding_user_class > distance and all(
+            not self._adding_this_user_class_respects_distribution(user_class)
             for user_class in self._user_classes_count.keys()
-            if user_class != current_user_class
+            if user_class != user_class_to_add
         ):
-            # If we are here, it means that if one user of `current_user_class` is added
+            # If we are here, it means that if one user of `user_class_to_add` is added
             # then the distribution will be the best we can get. In other words, adding
             # one user of any other user class won't yield a better distribution.
             return True
-        return actual_distance_with_current_user_class <= actual_distance
+        return distance_after_adding_user_class <= distance
 
-    def _current_user_class_will_keep_distribution(self, current_user_class: str) -> bool:
+    def _adding_this_user_class_respects_distribution(self, user_class_to_add: str) -> bool:
         if (
-            self._actual_distance_from_ideal_distribution_with_current_user_class(current_user_class)
-            <= self._actual_distance_from_ideal_distribution()
+            self._distance_from_ideal_distribution_after_adding_this_user_class(user_class_to_add)
+            <= self._distance_from_ideal_distribution()
         ):
             return True
         return False
 
-    def _actual_distance_from_ideal_distribution(self) -> float:
-        actual_weights = [
+    def _distance_from_ideal_distribution(self) -> float:
+        """How far are we from the ideal distribution given the current set of running users?"""
+        weights = [
             self._dispatched_user_classes_count()[user_class] / sum(self._dispatched_user_classes_count().values())
             for user_class in self._sorted_user_classes
         ]
 
-        return math.sqrt(sum(map(lambda x: (x[1] - x[0]) ** 2, zip(actual_weights, self._desired_weights()))))
+        return math.sqrt(sum(map(lambda x: (x[1] - x[0]) ** 2, zip(weights, self._desired_weights()))))
 
-    def _actual_distance_from_ideal_distribution_with_current_user_class(self, current_user_class: str) -> float:
-        actual_weights_with_current_user_class = [
+    def _distance_from_ideal_distribution_after_adding_this_user_class(self, user_class_to_add: str) -> float:
+        """
+        How far are we from the ideal distribution if we were to add `user_class_to_add` to the pool of running users?
+        """
+        weights_with_added_user_class = [
             (
                 self._dispatched_user_classes_count()[user_class] + 1
-                if user_class == current_user_class
+                if user_class == user_class_to_add
                 else self._dispatched_user_classes_count()[user_class]
             )
             / (sum(self._dispatched_user_classes_count().values()) + 1)
@@ -377,7 +377,7 @@ class UsersDispatcher(Iterator):
         ]
 
         return math.sqrt(
-            sum(map(lambda x: (x[1] - x[0]) ** 2, zip(actual_weights_with_current_user_class, self._desired_weights())))
+            sum(map(lambda x: (x[1] - x[0]) ** 2, zip(weights_with_added_user_class, self._desired_weights())))
         )
 
     @functools.lru_cache()
