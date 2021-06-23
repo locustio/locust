@@ -173,8 +173,7 @@ class Runner:
 
         return bucket
 
-    def spawn_users(self, spawn_count, spawn_rate, wait=False, extra_data=None):
-        assert extra_data is None or len(extra_data) == spawn_count
+    def spawn_users(self, spawn_count, spawn_rate, wait=False):
         bucket = self.weight_users(spawn_count)
         spawn_count = len(bucket)
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
@@ -204,11 +203,7 @@ class Runner:
 
                 user_class = bucket.pop(random.randint(0, len(bucket) - 1))
                 occurrence_count[user_class.__name__] += 1
-                if extra_data is not None:
-                    args, kwargs = extra_data[len(new_users)]
-                else:
-                    args, kwargs = tuple(), dict()
-                new_user = user_class(self.environment, *args, **kwargs)
+                new_user = user_class(self.environment)
                 new_users.append(new_user)
                 new_user.start(self.user_greenlets)
                 if len(self.user_greenlets) % 10 == 0:

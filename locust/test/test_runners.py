@@ -138,40 +138,6 @@ class TestLocustRunner(LocustTestCase):
         finally:
             runners.CPU_MONITOR_INTERVAL = _monitor_interval
 
-    def test_spawn_user_with_extra_args(self):
-        class BaseUser(User):
-            wait_time = constant(1)
-
-            def __init__(self, environment, arg1, arg2, arg3):
-                super(BaseUser, self).__init__(environment)
-                self.arg1 = arg1
-                self.arg2 = arg2
-                self.arg3 = arg3
-
-        env = Environment(user_classes=[BaseUser])
-        runner = env.create_local_runner()
-        users = runner.spawn_users(
-            2, spawn_rate=2, wait=False, extra_data=[(("a", "b"), {"arg3": "c"}), (("x",), {"arg2": "y", "arg3": "z"})]
-        )
-        self.assertEqual(2, len(users))
-        self.assertEqual(env, users[0].environment)
-        self.assertEqual("a", users[0].arg1)
-        self.assertEqual("b", users[0].arg2)
-        self.assertEqual("c", users[0].arg3)
-
-        self.assertEqual(env, users[1].environment)
-        self.assertEqual("x", users[1].arg1)
-        self.assertEqual("y", users[1].arg2)
-        self.assertEqual("z", users[1].arg3)
-
-        self.assertEqual(2, len(runner.user_greenlets))
-        g1 = list(runner.user_greenlets)[0]
-        g2 = list(runner.user_greenlets)[1]
-        runner.stop_users(2)
-        self.assertEqual(0, len(runner.user_greenlets))
-        self.assertTrue(g1.dead)
-        self.assertTrue(g2.dead)
-
     def test_weight_locusts(self):
         class BaseUser(User):
             pass
@@ -220,7 +186,8 @@ class TestLocustRunner(LocustTestCase):
                     triggered[0] = True
 
         runner = Environment(user_classes=[BaseUser]).create_local_runner()
-        runner.spawn_users(2, spawn_rate=2, wait=False)
+        users = runner.spawn_users(2, spawn_rate=2, wait=False)
+        self.assertEqual(2, len(users))
         self.assertEqual(2, len(runner.user_greenlets))
         g1 = list(runner.user_greenlets)[0]
         g2 = list(runner.user_greenlets)[1]
@@ -407,7 +374,8 @@ class TestLocustRunner(LocustTestCase):
                 BaseUser.stop_triggered = True
 
         runner = Environment(user_classes=[BaseUser]).create_local_runner()
-        runner.spawn_users(1, 1, wait=False)
+        users = runner.spawn_users(1, 1, wait=False)
+        self.assertEqual(1, len(users))
         timeout = gevent.Timeout(0.5)
         timeout.start()
         try:
@@ -432,7 +400,8 @@ class TestLocustRunner(LocustTestCase):
                 BaseUser.stop_count += 1
 
         runner = Environment(user_classes=[BaseUser]).create_local_runner()
-        runner.spawn_users(10, 10, wait=False)
+        users = runner.spawn_users(10, 10, wait=False)
+        self.assertEqual(10, len(users))
         timeout = gevent.Timeout(0.3)
         timeout.start()
         try:
