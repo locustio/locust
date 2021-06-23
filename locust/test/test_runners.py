@@ -1731,7 +1731,7 @@ class TestMasterRunner(LocustTestCase):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner()
             for i in range(5):
-                master.clients[i] = WorkerNode(i)
+                master.clients[i] = WorkerNode(str(i))
             master.send_message("test_custom_msg", {"test_data": 123})
 
             self.assertEqual(5, len(server.outbox))
