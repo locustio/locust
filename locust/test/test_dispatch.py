@@ -15,35 +15,35 @@ class TestAssignUsersToWorkers(unittest.TestCase):
             worker_nodes=[worker_node1], user_classes_count={"User1": 3, "User2": 3, "User3": 3}, spawn_rate=1
         )
         self.assertDictEqual(
-            users_dispatcher._desired_users_assigned_to_workers(), {"1": {"User1": 3, "User2": 3, "User3": 3}}
+            users_dispatcher._desired_users_assigned_to_workers, {"1": {"User1": 3, "User2": 3, "User3": 3}}
         )
 
         users_dispatcher = UsersDispatcher(
             worker_nodes=[worker_node1], user_classes_count={"User1": 5, "User2": 4, "User3": 2}, spawn_rate=1
         )
         self.assertDictEqual(
-            users_dispatcher._desired_users_assigned_to_workers(), {"1": {"User1": 5, "User2": 4, "User3": 2}}
+            users_dispatcher._desired_users_assigned_to_workers, {"1": {"User1": 5, "User2": 4, "User3": 2}}
         )
 
         users_dispatcher = UsersDispatcher(
             worker_nodes=[worker_node1], user_classes_count={"User1": 1, "User2": 1, "User3": 1}, spawn_rate=1
         )
         self.assertDictEqual(
-            users_dispatcher._desired_users_assigned_to_workers(), {"1": {"User1": 1, "User2": 1, "User3": 1}}
+            users_dispatcher._desired_users_assigned_to_workers, {"1": {"User1": 1, "User2": 1, "User3": 1}}
         )
 
         users_dispatcher = UsersDispatcher(
             worker_nodes=[worker_node1], user_classes_count={"User1": 1, "User2": 1, "User3": 0}, spawn_rate=1
         )
         self.assertDictEqual(
-            users_dispatcher._desired_users_assigned_to_workers(), {"1": {"User1": 1, "User2": 1, "User3": 0}}
+            users_dispatcher._desired_users_assigned_to_workers, {"1": {"User1": 1, "User2": 1, "User3": 0}}
         )
 
         users_dispatcher = UsersDispatcher(
             worker_nodes=[worker_node1], user_classes_count={"User1": 0, "User2": 0, "User3": 0}, spawn_rate=1
         )
         self.assertDictEqual(
-            users_dispatcher._desired_users_assigned_to_workers(), {"1": {"User1": 0, "User2": 0, "User3": 0}}
+            users_dispatcher._desired_users_assigned_to_workers, {"1": {"User1": 0, "User2": 0, "User3": 0}}
         )
 
     def test_assign_users_to_3_workers(self):
@@ -61,7 +61,7 @@ class TestAssignUsersToWorkers(unittest.TestCase):
             "2": {"User1": 1, "User2": 1, "User3": 1},
             "3": {"User1": 1, "User2": 1, "User3": 1},
         }
-        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers(), expected_balanced_users)
+        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers, expected_balanced_users)
 
         users_dispatcher = UsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
@@ -73,7 +73,7 @@ class TestAssignUsersToWorkers(unittest.TestCase):
             "2": {"User1": 2, "User2": 1, "User3": 1},
             "3": {"User1": 1, "User2": 2, "User3": 0},
         }
-        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers(), expected_balanced_users)
+        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers, expected_balanced_users)
 
         users_dispatcher = UsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
@@ -85,7 +85,7 @@ class TestAssignUsersToWorkers(unittest.TestCase):
             "2": {"User1": 0, "User2": 1, "User3": 0},
             "3": {"User1": 0, "User2": 0, "User3": 1},
         }
-        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers(), expected_balanced_users)
+        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers, expected_balanced_users)
 
         users_dispatcher = UsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
@@ -97,7 +97,7 @@ class TestAssignUsersToWorkers(unittest.TestCase):
             "2": {"User1": 0, "User2": 1, "User3": 0},
             "3": {"User1": 0, "User2": 0, "User3": 0},
         }
-        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers(), expected_balanced_users)
+        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers, expected_balanced_users)
 
         users_dispatcher = UsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3],
@@ -109,7 +109,7 @@ class TestAssignUsersToWorkers(unittest.TestCase):
             "2": {"User1": 0, "User2": 0, "User3": 0},
             "3": {"User1": 0, "User2": 0, "User3": 0},
         }
-        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers(), expected_balanced_users)
+        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers, expected_balanced_users)
 
     def test_assign_5_users_to_10_workers(self):
         # Prepend "0" to worker name under 10, because workers are sorted in alphabetical orders.
@@ -134,7 +134,7 @@ class TestAssignUsersToWorkers(unittest.TestCase):
             "09": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
             "10": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
         }
-        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers(), expected_balanced_users)
+        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers, expected_balanced_users)
 
         users_dispatcher = UsersDispatcher(
             worker_nodes=worker_nodes,
@@ -153,7 +153,7 @@ class TestAssignUsersToWorkers(unittest.TestCase):
             "09": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
             "10": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
         }
-        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers(), expected_balanced_users)
+        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers, expected_balanced_users)
 
         users_dispatcher = UsersDispatcher(
             worker_nodes=worker_nodes,
@@ -172,7 +172,7 @@ class TestAssignUsersToWorkers(unittest.TestCase):
             "09": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
             "10": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
         }
-        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers(), expected_balanced_users)
+        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers, expected_balanced_users)
 
         users_dispatcher = UsersDispatcher(
             worker_nodes=worker_nodes,
@@ -191,7 +191,7 @@ class TestAssignUsersToWorkers(unittest.TestCase):
             "09": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
             "10": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
         }
-        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers(), expected_balanced_users)
+        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers, expected_balanced_users)
 
         users_dispatcher = UsersDispatcher(
             worker_nodes=worker_nodes,
@@ -210,7 +210,7 @@ class TestAssignUsersToWorkers(unittest.TestCase):
             "09": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
             "10": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
         }
-        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers(), expected_balanced_users)
+        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers, expected_balanced_users)
 
         users_dispatcher = UsersDispatcher(
             worker_nodes=worker_nodes,
@@ -229,7 +229,7 @@ class TestAssignUsersToWorkers(unittest.TestCase):
             "09": {"User1": 1, "User2": 0, "User3": 0, "User4": 2, "User5": 0},  # 3 users
             "10": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
         }
-        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers(), expected_balanced_users)
+        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers, expected_balanced_users)
 
         users_dispatcher = UsersDispatcher(
             worker_nodes=worker_nodes,
@@ -248,7 +248,7 @@ class TestAssignUsersToWorkers(unittest.TestCase):
             "09": {"User1": 1, "User2": 0, "User3": 0, "User4": 2, "User5": 0},  # 3 users
             "10": {"User1": 1, "User2": 0, "User3": 0, "User4": 1, "User5": 1},  # 3 users
         }
-        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers(), expected_balanced_users)
+        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers, expected_balanced_users)
 
         users_dispatcher = UsersDispatcher(
             worker_nodes=worker_nodes,
@@ -267,7 +267,7 @@ class TestAssignUsersToWorkers(unittest.TestCase):
             "09": {"User1": 1, "User2": 0, "User3": 0, "User4": 0, "User5": 3},  # 4 users
             "10": {"User1": 1, "User2": 0, "User3": 0, "User4": 0, "User5": 3},  # 4 users
         }
-        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers(), expected_balanced_users)
+        self.assertDictEqual(users_dispatcher._desired_users_assigned_to_workers, expected_balanced_users)
 
 
 class TestDispatchUsersWithWorkersWithoutPriorUsers(unittest.TestCase):
