@@ -164,8 +164,6 @@ class UsersDispatcher(Iterator):
             )
 
         else:
-            ts_dispatch = time.perf_counter()
-
             user_count_in_current_dispatch = 0
 
             for i, user_class_to_add in enumerate(itertools.cycle(self._user_classes)):
