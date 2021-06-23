@@ -1720,7 +1720,7 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(1, master.target_user_count)
             self.assertEqual(3, master.spawn_rate)
 
-   def test_custom_message_send(self):
+    def test_custom_message_send(self):
         class MyUser(User):
             wait_time = constant(1)
 
@@ -1800,7 +1800,7 @@ def _patch_env(name: str, value: str):
         else:
             os.environ[name] = prev_value
 
- 
+
 class TestWorkerRunner(LocustTestCase):
     def setUp(self):
         super().setUp()
