@@ -203,30 +203,10 @@ class UsersDispatcher(Iterator):
                 if user_count_in_current_dispatch == self._user_count_per_dispatch:
                     break
 
-            self._assert_computation_duration_of_dispatch_is_reasonable(duration=time.perf_counter() - ts_dispatch)
-
         return {
             worker_node_id: dict(sorted(user_classes_count.items(), key=itemgetter(0)))
             for worker_node_id, user_classes_count in sorted(self._dispatched_users.items(), key=itemgetter(0))
         }
-
-    def _assert_computation_duration_of_dispatch_is_reasonable(self, duration: float) -> None:
-        # Safeguard against unforeseen performance issues. Ideally,
-        # we want each dispatch loop to be as short as possible to compute, but with
-        # a large amount of workers/user classes, it can take longer to come up with the dispatch solution.
-        # If the assertion is raised, then it could be a sign that the code needs to be optimized for the
-        # situation that caused the assertion to be raised.
-        assert duration < (
-            0.5
-            if self._number_of_workers < 100
-            else 1
-            if self._number_of_workers < 250
-            else 1.5
-            if self._number_of_workers < 350
-            else 3
-        ), "Dispatch iteration took too much time: {}s (len(workers) = {}, len(user_classes) = {})".format(
-            duration, self._number_of_workers, len(self._user_classes_count)
-        )
 
     @property
     def _number_of_workers(self) -> int:
