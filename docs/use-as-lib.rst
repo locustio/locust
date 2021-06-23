@@ -26,12 +26,6 @@ The :py:class:`Environment <locust.env.Environment>` instance's
     env.runner.start(5000, spawn_rate=20)
     env.runner.greenlet.join()
 
-Once the test is started, you can pass arguments to your user class when spawning new users:
-
-.. code-block:: python
-
-    env.runner.spawn_user(2, extra_data=[(('arg1', ), {'kwarg': 1}), (('arg2', ), {'kwarg': 2})])
-
 We could also use the :py:class:`Environment <locust.env.Environment>` instance's 
 :py:meth:`create_web_ui <locust.env.Environment.create_web_ui>` method to start a Web UI that can be used 
 to view the stats, and to control the runner (e.g. start and stop load tests):
