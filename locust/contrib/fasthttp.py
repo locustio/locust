@@ -417,7 +417,7 @@ class ResponseContextManager(FastResponse):
         self._cached_content = response.content
         # store reference to locust Environment
         self._environment = environment
-        self._request_meta = request_meta
+        self.request_meta = request_meta
 
     def __enter__(self):
         return self
@@ -429,14 +429,14 @@ class ResponseContextManager(FastResponse):
             if self._manual_result is True:
                 self._report_request()
             elif isinstance(self._manual_result, Exception):
-                self._request_meta["exception"] = self._manual_result
+                self.request_meta["exception"] = self._manual_result
                 self._report_request()
 
             return exc is None
 
         if exc:
             if isinstance(value, ResponseError):
-                self._request_meta["exception"] = value
+                self.request_meta["exception"] = value
                 self._report_request()
             else:
                 return False
@@ -444,13 +444,13 @@ class ResponseContextManager(FastResponse):
             try:
                 self.raise_for_status()
             except FAILURE_EXCEPTIONS as e:
-                self._request_meta["exception"] = e
+                self.request_meta["exception"] = e
             self._report_request()
 
         return True
 
     def _report_request(self):
-        self._environment.events.request.fire(**self._request_meta)
+        self._environment.events.request.fire(**self.request_meta)
 
     def success(self):
         """
