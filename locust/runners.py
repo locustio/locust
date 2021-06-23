@@ -69,6 +69,7 @@ class Runner:
         self.greenlet.spawn(self.monitor_cpu).link_exception(greenlet_exception_handler)
         self.exceptions = {}
         self.target_user_count = None
+        self.custom_messages = {}
 
         # set up event listeners for recording requests
         def on_request_success(request_type, name, response_time, response_length, **_kwargs):
@@ -381,6 +382,15 @@ class Runner:
         row["nodes"].add(node_id)
         self.exceptions[key] = row
 
+    def register_message(self, msg_type, listener):
+        """
+        Register a listener for a custom message from another node
+
+        :param msg_type: The type of the message to listen for
+        :param listener: The function to execute when the message is received
+        """
+        self.custom_messages[msg_type] = listener
+
 
 class LocalRunner(Runner):
     """
@@ -424,6 +434,21 @@ class LocalRunner(Runner):
             return
         super().stop()
         self.environment.events.test_stop.fire(environment=self.environment)
+
+    def send_message(self, msg_type, data=None):
+        """
+        Emulates internodal messaging by calling registered listeners
+
+        :param msg_type: The type of the message to emulate sending
+        :param data: Optional data to include
+        """
+        logger.debug(f"Running locally: sending {msg_type} message to self")
+        if msg_type in self.custom_messages:
+            listener = self.custom_messages[msg_type]
+            msg = Message(msg_type, data, "local")
+            listener(environment=self.environment, msg=msg)
+        else:
+            logger.warning(f"Unknown message type recieved: {msg_type}")
 
 
 class DistributedRunner(Runner):
@@ -709,12 +734,34 @@ class MasterRunner(DistributedRunner):
                             self.quit()
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
+            elif msg.type in self.custom_messages:
+                logger.debug(f"Recieved {msg.type} message from worker {msg.node_id}")
+                self.custom_messages[msg.type](environment=self.environment, msg=msg)
+            else:
+                logger.warning(f"Unknown message type recieved from worker {msg.node_id}: {msg.type}")
 
             self.check_stopped()
 
     @property
     def worker_count(self):
         return len(self.clients.ready) + len(self.clients.spawning) + len(self.clients.running)
+
+    def send_message(self, msg_type, data=None, client_id=None):
+        """
+        Sends a message to attached worker node(s)
+
+        :param msg_type: The type of the message to send
+        :param data: Optional data to send
+        :param client_id: Optional id of the target worker node.
+                            If None, will send to all attached workers
+        """
+        if client_id:
+            logger.debug(f"Sending {msg_type} message to client {client_id}")
+            self.server.send_to_client(Message(msg_type, data, client_id))
+        else:
+            for client in self.clients.all:
+                logger.debug(f"Sending {msg_type} message to client {client.id}")
+                self.server.send_to_client(Message(msg_type, data, client.id))
 
 
 class WorkerRunner(DistributedRunner):
@@ -828,6 +875,11 @@ class WorkerRunner(DistributedRunner):
                 self.stop()
                 self._send_stats()  # send a final report, in case there were any samples not yet reported
                 self.greenlet.kill(block=True)
+            elif msg.type in self.custom_messages:
+                logger.debug(f"Recieved {msg.type} message from master")
+                self.custom_messages[msg.type](environment=self.environment, msg=msg)
+            else:
+                logger.warning(f"Unknown message type recieved: {msg.type}")
 
     def stats_reporter(self):
         while True:
@@ -836,6 +888,16 @@ class WorkerRunner(DistributedRunner):
             except RPCError as e:
                 logger.error("Temporary connection lost to master server: %s, will retry later." % (e))
             gevent.sleep(WORKER_REPORT_INTERVAL)
+
+    def send_message(self, msg_type, data=None):
+        """
+        Sends a message to master node
+
+        :param msg_type: The type of the message to send
+        :param data: Optional data to send
+        """
+        logger.debug(f"Sending {msg_type} message to master")
+        self.client.send(Message(msg_type, data, self.client_id))
 
     def _send_stats(self):
         data = {}
