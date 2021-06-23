@@ -69,6 +69,7 @@ class Runner:
         self.greenlet.spawn(self.monitor_cpu).link_exception(greenlet_exception_handler)
         self.exceptions = {}
         self.target_user_count = None
+        self.custom_messages = {}
 
         # set up event listeners for recording requests
         def on_request_success(request_type, name, response_time, response_length, **_kwargs):
@@ -381,6 +382,15 @@ class Runner:
         row["nodes"].add(node_id)
         self.exceptions[key] = row
 
+    def register_message(self, msg_type, listener):
+        """
+        Register a listener for a custom message from another node
+
+        :param msg_type: The type of the message to listen for
+        :param listener: The function to execute when the message is received
+        """
+        self.custom_messages[msg_type] = listener
+
 
 class LocalRunner(Runner):
     """
@@ -425,21 +435,26 @@ class LocalRunner(Runner):
         super().stop()
         self.environment.events.test_stop.fire(environment=self.environment)
 
+    def send_message(self, msg_type, data=None):
+        """
+        Emulates internodal messaging by calling registered listeners
+
+        :param msg_type: The type of the message to emulate sending
+        :param data: Optional data to include
+        """
+        logger.debug(f"Running locally: sending {msg_type} message to self")
+        if msg_type in self.custom_messages:
+            listener = self.custom_messages[msg_type]
+            msg = Message(msg_type, data, "local")
+            listener(environment=self.environment, msg=msg)
+        else:
+            logger.warning(f"Unknown message type recieved: {msg_type}")
+
 
 class DistributedRunner(Runner):
     def __init__(self, *args, **kwargs):
-        self.custom_messages = {}
         super().__init__(*args, **kwargs)
         setup_distributed_stats_event_listeners(self.environment.events, self.stats)
-
-    def register_message(self, msg_type, listener):
-        """
-        Register a listener for a custom message from another node
-
-        :param msg_type: The type of the message to listen for
-        :param listener: The function to execute when the message is received
-        """
-        self.custom_messages[msg_type] = listener
 
 
 class WorkerNode:
@@ -881,7 +896,7 @@ class WorkerRunner(DistributedRunner):
         :param msg_type: The type of the message to send
         :param data: Optional data to send
         """
-        logger.debug("Sending {msg_type} message to master")
+        logger.debug(f"Sending {msg_type} message to master")
         self.client.send(Message(msg_type, data, self.client_id))
 
     def _send_stats(self):
