@@ -438,6 +438,54 @@ class TestLocustRunner(LocustTestCase):
         user_count = len(runner.user_greenlets)
         self.assertTrue(user_count == 2, "User count has not decreased correctly to 2, it is : %i" % user_count)
 
+    def test_custom_message(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        test_custom_msg = [False]
+        test_custom_msg_data = [{}]
+
+        def on_custom_msg(msg, **kw):
+            test_custom_msg[0] = True
+            test_custom_msg_data[0] = msg.data
+
+        environment = Environment(user_classes=[MyUser])
+        runner = LocalRunner(environment)
+
+        runner.register_message("test_custom_msg", on_custom_msg)
+        runner.send_message("test_custom_msg", {"test_data": 123})
+
+        self.assertTrue(test_custom_msg[0])
+        self.assertEqual(123, test_custom_msg_data[0]["test_data"])
+
+    def test_undefined_custom_message(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        test_custom_msg = [False]
+
+        def on_custom_msg(msg, **kw):
+            test_custom_msg[0] = True
+
+        environment = Environment(user_classes=[MyUser])
+        runner = LocalRunner(environment)
+
+        runner.register_message("test_custom_msg", on_custom_msg)
+        runner.send_message("test_different_custom_msg")
+
+        self.assertFalse(test_custom_msg[0])
+        self.assertEqual(1, len(self.mocked_log.warning))
+        msg = self.mocked_log.warning[0]
+        self.assertIn("Unknown message type recieved", msg)
+
 
 class TestMasterWorkerRunners(LocustTestCase):
     def test_distributed_integration_run(self):
