@@ -90,8 +90,8 @@ nodes has connected before the test is started.
 Communicating across nodes
 =============================================
 
-When running Locust in distributed mode, you may want to communicate between nodes in order to coordinate 
-data. This can be easily accomplished with custom messages using the built in messaging hooks:
+When running Locust in distributed mode, you may want to communicate between master and worker nodes in 
+order to coordinate data. This can be easily accomplished with custom messages using the built in messaging hooks:
 
 .. code-block:: python
 
@@ -110,20 +110,26 @@ data. This can be easily accomplished with custom messages using the built in me
 
     @events.init.add_listener
     def on_locust_init(environment, **_kwargs):
-        if isinstance(environment.runner, WorkerRunner):
+        if not isinstance(environment.runner, MasterRunner):
             environment.runner.register_message('test_users', setup_test_users)
-        elif isinstance(environment.runner, MasterRunner):
+        if not isinstance(environment.runner, WorkerRunner):
             environment.runner.register_message('acknowledge_users', on_acknowledge)
 
     @events.test_start.add_listener
     def on_test_start(environment, **_kwargs):
-        if isinstance(environment.runner, MasterRunner):
+        if not isinstance(environment.runner, MasterRunner):
             users = [
                 {"name": "User1"},
                 {"name": "User2"},
                 {"name": "User3"},
             ]
             environment.runner.send_message('test_users', users)  
+
+Note that when running locally (i.e. non-distributed), this functionality will be preserved; 
+the messages will simply be handled by the same runner that sends them.  
+
+A more complete example can be found in the `examples directory <https://github.com/locustio/locust/tree/master/examples>`_ of the Locust 
+source code.
 
 
 Running distributed with Docker

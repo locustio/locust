@@ -17,9 +17,9 @@ def on_acknowledge(msg, **kwargs):
 
 @events.init.add_listener
 def on_locust_init(environment, **_kwargs):
-    if isinstance(environment.runner, WorkerRunner):
+    if not isinstance(environment.runner, MasterRunner):
         environment.runner.register_message("test_users", setup_test_users)
-    elif isinstance(environment.runner, MasterRunner):
+    if not isinstance(environment.runner, WorkerRunner):
         environment.runner.register_message("acknowledge_users", on_acknowledge)
 
 
@@ -27,7 +27,7 @@ def on_locust_init(environment, **_kwargs):
 def on_test_start(environment, **_kwargs):
     # When the test is started, evenly divides list between
     # worker nodes to ensure unique data across threads
-    if isinstance(environment.runner, MasterRunner):
+    if not isinstance(environment.runner, WorkerRunner):
         users = []
         for i in range(environment.runner.target_user_count):
             users.append({"name": f"User{i}"})
