@@ -868,7 +868,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             # Fourth stage - Excess TestUser1 have been stopped but
             #                TestUser2/TestUser3 have not reached stop timeout yet, so
             #                their number are unchanged
-            self.assertEqual(master.state, STATE_SPAWNING)
+            self.assertEqual(master.state, STATE_RUNNING)
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
             w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
@@ -950,6 +950,8 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.assertTrue(time.time() - ts <= 5, master.state)
                 sleep()
 
+            master.stop()
+
     def test_distributed_shape_stop_and_restart(self):
         """
         Test stopping and then restarting a LoadTestShape
@@ -1000,6 +1002,81 @@ class TestMasterWorkerRunners(LocustTestCase):
             for worker in workers:
                 self.assertEqual(2, worker.user_count, "Shape test has not started again correctly")
             master.stop()
+
+    def test_distributed_shape_statuses_transition(self):
+        """
+        Full integration test that starts both a MasterRunner and five WorkerRunner instances
+        The goal of this test is to validate the status on the master is correctly transitioned for each of the
+        test phases.
+        """
+
+        class TestUser1(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        class TestShape(LoadTestShape):
+            def tick(self):
+                run_time = self.get_run_time()
+                if run_time < 10:
+                    return 5, 1
+                elif run_time < 20:
+                    return 10, 1
+                elif run_time < 30:
+                    return 15, 1
+                else:
+                    return None
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            stop_timeout = 0
+            master_env = Environment(user_classes=[TestUser1], shape_class=TestShape(), stop_timeout=stop_timeout)
+            master_env.shape_class.reset_time()
+            master = master_env.create_master_runner("*", 0)
+
+            workers = []
+            for i in range(5):
+                worker_env = Environment(user_classes=[TestUser1])
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+
+            # Give workers time to connect
+            sleep(0.1)
+
+            self.assertEqual(STATE_INIT, master.state)
+            self.assertEqual(5, len(master.clients.ready))
+
+            statuses = []
+
+            ts = time.perf_counter()
+
+            master.start_shape()
+
+            while master.state != STATE_STOPPED:
+                self.assertTrue(time.perf_counter() - ts <= 40)
+                statuses.append((time.perf_counter() - ts, master.state, master.user_count))
+                sleep(0.1)
+
+            self.assertEqual(statuses[0][1], STATE_INIT)
+
+            stage = 1
+            for (t1, state1, user_count1), (t2, state2, user_count2) in zip(statuses[:-1], statuses[1:]):
+                if state1 == STATE_SPAWNING and state2 == STATE_RUNNING and stage == 1:
+                    self.assertTrue(4 <= t2 <= 6)
+                elif state1 == STATE_RUNNING and state2 == STATE_SPAWNING and stage == 1:
+                    self.assertTrue(9 <= t2 <= 11)
+                    stage += 1
+                elif state1 == STATE_SPAWNING and state2 == STATE_RUNNING and stage == 2:
+                    self.assertTrue(14 <= t2 <= 16)
+                elif state1 == STATE_RUNNING and state2 == STATE_SPAWNING and stage == 2:
+                    self.assertTrue(19 <= t2 <= 21)
+                    stage += 1
+                elif state1 == STATE_SPAWNING and state2 == STATE_RUNNING and stage == 3:
+                    self.assertTrue(24 <= t2 <= 26)
+                elif state1 == STATE_RUNNING and state2 == STATE_SPAWNING and stage == 3:
+                    self.assertTrue(29 <= t2 <= 31)
+                    stage += 1
+                elif state1 == STATE_RUNNING and state2 == STATE_STOPPED and stage == 3:
+                    self.assertTrue(31 <= t2 <= 31)
 
 
 class TestMasterRunner(LocustTestCase):

@@ -709,6 +709,8 @@ class MasterRunner(DistributedRunner):
         finally:
             timeout.cancel()
 
+        self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
+
         logger.info(
             "All users spawned: %s (%i total running)"
             % (
@@ -842,10 +844,6 @@ class MasterRunner(DistributedRunner):
             elif msg.type == "spawning_complete":
                 self.clients[msg.node_id].state = STATE_RUNNING
                 self.clients[msg.node_id].user_classes_count = msg.data["user_classes_count"]
-                if len(self.clients.spawning) == 0:
-                    self.environment.events.spawning_complete.fire(
-                        user_count=sum(self.target_user_classes_count.values())
-                    )
             elif msg.type == "quit":
                 if msg.node_id in self.clients:
                     del self.clients[msg.node_id]
