@@ -1060,24 +1060,25 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertEqual(statuses[0][1], STATE_INIT)
 
             stage = 1
+            tolerance = 1  # in s
             for (t1, state1, user_count1), (t2, state2, user_count2) in zip(statuses[:-1], statuses[1:]):
                 if state1 == STATE_SPAWNING and state2 == STATE_RUNNING and stage == 1:
-                    self.assertTrue(4 <= t2 <= 6)
+                    self.assertTrue(5 - tolerance <= t2 <= 5 + tolerance)
                 elif state1 == STATE_RUNNING and state2 == STATE_SPAWNING and stage == 1:
-                    self.assertTrue(9 <= t2 <= 11)
+                    self.assertTrue(10 - tolerance <= t2 <= 10 + tolerance)
                     stage += 1
                 elif state1 == STATE_SPAWNING and state2 == STATE_RUNNING and stage == 2:
-                    self.assertTrue(14 <= t2 <= 16)
+                    self.assertTrue(15 - tolerance <= t2 <= 15 + tolerance)
                 elif state1 == STATE_RUNNING and state2 == STATE_SPAWNING and stage == 2:
-                    self.assertTrue(19 <= t2 <= 21)
+                    self.assertTrue(20 - tolerance <= t2 <= 20 + tolerance)
                     stage += 1
                 elif state1 == STATE_SPAWNING and state2 == STATE_RUNNING and stage == 3:
-                    self.assertTrue(24 <= t2 <= 26)
+                    self.assertTrue(25 - tolerance <= t2 <= 25 + tolerance)
                 elif state1 == STATE_RUNNING and state2 == STATE_SPAWNING and stage == 3:
-                    self.assertTrue(29 <= t2 <= 31)
+                    self.assertTrue(30 - tolerance <= t2 <= 30 + tolerance)
                     stage += 1
                 elif state1 == STATE_RUNNING and state2 == STATE_STOPPED and stage == 3:
-                    self.assertTrue(31 <= t2 <= 31)
+                    self.assertTrue(30 - tolerance <= t2 <= 30 + tolerance)
 
 
 class TestMasterRunner(LocustTestCase):
