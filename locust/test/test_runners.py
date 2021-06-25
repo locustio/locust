@@ -751,9 +751,10 @@ class TestMasterWorkerRunners(LocustTestCase):
                 else:
                     return None
 
-        worker_additional_wait_before_ready_after_stop = 5
+        locust_worker_additional_wait_before_ready_after_stop = 5
         with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3), _patch_env(
-            "WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP", str(worker_additional_wait_before_ready_after_stop)
+            "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
+            str(locust_worker_additional_wait_before_ready_after_stop),
         ):
             stop_timeout = 5
             master_env = Environment(
@@ -922,7 +923,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             ts = time.time()
             while len(master.clients.ready) != len(workers):
                 self.assertTrue(
-                    time.time() - ts <= stop_timeout + worker_additional_wait_before_ready_after_stop,
+                    time.time() - ts <= stop_timeout + locust_worker_additional_wait_before_ready_after_stop,
                     f"expected {len(workers)} workers to be ready but only {len(master.clients.ready)} workers are",
                 )
                 sleep()
