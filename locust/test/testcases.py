@@ -15,7 +15,7 @@ from locust import log
 from locust.event import Events
 from locust.env import Environment
 from locust.test.mock_logging import MockedLoggingHandler
-
+from locust.test.util import clear_all_functools_lru_cache
 
 app = Flask(__name__)
 app.jinja_options["extensions"].append("jinja2.ext.do")
@@ -182,6 +182,8 @@ class LocustTestCase(unittest.TestCase):
         logging.root.removeHandler(self._logger_class)
         [logging.root.addHandler(h) for h in self._root_log_handlers]
         self.mocked_log.reset()
+
+        clear_all_functools_lru_cache()
 
 
 class WebserverTestCase(LocustTestCase):
