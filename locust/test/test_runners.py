@@ -1865,6 +1865,32 @@ class TestMasterRunner(LocustTestCase):
             msg = self.mocked_log.warning[0]
             self.assertIn("Unknown message type recieved from worker", msg)
 
+    def test_wait_for_workers_report_after_ramp_up(self):
+        def assert_cache_hits():
+            self.assertEqual(master._wait_for_workers_report_after_ramp_up.cache_info().hits, 0)
+            master._wait_for_workers_report_after_ramp_up()
+            self.assertEqual(master._wait_for_workers_report_after_ramp_up.cache_info().hits, 1)
+
+        master = self.get_runner()
+
+        master._wait_for_workers_report_after_ramp_up.cache_clear()
+        self.assertEqual(master._wait_for_workers_report_after_ramp_up(), 0.1)
+        assert_cache_hits()
+
+        master._wait_for_workers_report_after_ramp_up.cache_clear()
+        with _patch_env("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "5.7"):
+            self.assertEqual(master._wait_for_workers_report_after_ramp_up(), 5.7)
+            assert_cache_hits()
+
+        master._wait_for_workers_report_after_ramp_up.cache_clear()
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=1.5), _patch_env(
+            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "5.7 * WORKER_REPORT_INTERVAL"
+        ):
+            self.assertEqual(master._wait_for_workers_report_after_ramp_up(), 5.7 * 1.5)
+            assert_cache_hits()
+
+        master._wait_for_workers_report_after_ramp_up.cache_clear()
+
 
 @contextmanager
 def _patch_env(name: str, value: str):
