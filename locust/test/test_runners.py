@@ -1901,7 +1901,7 @@ def _patch_env(name: str, value: str):
         yield
     finally:
         if prev_value is None:
-            os.unsetenv(name)
+            del os.environ[name]
         else:
             os.environ[name] = prev_value
 
