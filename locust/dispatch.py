@@ -197,15 +197,6 @@ class UsersDispatcher(Iterator):
             # is there as a safeguard for situations that can't be easily tested (i.e. large scale distributed tests).
             assert i < 5000, "Looks like dispatch is stuck in an infinite loop (iteration {})".format(i)
 
-            if self._all_users_have_been_dispatched:
-                break
-
-            if all(
-                self._dispatched_user_class_count(user_class) >= user_count
-                for user_class, user_count in self._user_classes_count.items()
-            ):
-                break
-
             if self._dispatched_user_class_count(user_class_to_add) >= self._user_classes_count[user_class_to_add]:
                 continue
 
@@ -402,12 +393,6 @@ class UsersDispatcher(Iterator):
             for worker_node_id, user_count in workers_user_count.items()
             if user_count < sum(self._desired_users_assigned_to_workers[worker_node_id].values())
         }
-
-        if worker_node_id_to_add_user_on not in workers_user_count_without_excess_users:
-            return True
-
-        if len(workers_user_count_without_excess_users) == 1:
-            return False
 
         if workers_user_count_without_excess_users[worker_node_id_to_add_user_on] + 1 - min(
             workers_user_count.values()
