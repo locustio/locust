@@ -869,7 +869,11 @@ class TestMasterWorkerRunners(LocustTestCase):
             # Fourth stage - Excess TestUser1 have been stopped but
             #                TestUser2/TestUser3 have not reached stop timeout yet, so
             #                their number are unchanged
-            self.assertEqual(master.state, STATE_RUNNING)
+            ts = time.time()
+            while master.state != STATE_RUNNING:
+                self.assertTrue(time.time() - ts <= 1, master.state)
+                sleep()
+            delta = time.time() - ts
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
             w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
@@ -885,7 +889,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
             self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
             self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
-            sleep(1)  # runtime = 46s
+            sleep(1 - delta)  # runtime = 46s
 
             # Fourth stage - All users are now at the desired number
             ts = time.time()
