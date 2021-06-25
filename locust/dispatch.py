@@ -213,16 +213,6 @@ class UsersDispatcher(Iterator):
                         break
                     if self._users_left_to_assigned[worker_node_id][user_class_to_add] == 0:
                         continue
-                    # if self._desired_users_assignment_can_be_obtained_in_a_single_dispatch_iteration:
-                    #     self._dispatched_users.update(self._desired_users_assigned_to_workers)
-                    #     self._users_left_to_assigned.update(
-                    #         {
-                    #             worker_node_id: {user_class: 0 for user_class in user_classes_count.keys()}
-                    #             for worker_node_id, user_classes_count in self._dispatched_users.items()
-                    #         }
-                    #     )
-                    #     user_count_in_current_dispatch = self._user_count_per_dispatch
-                    #     break
                     if self._try_next_worker_in_order_to_stay_balanced_during_ramp_up(
                         worker_node_id, user_class_to_add
                     ):
