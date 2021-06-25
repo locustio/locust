@@ -785,7 +785,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             # First stage
             ts = time.time()
             while master.state != STATE_SPAWNING:
-                self.assertTrue(time.time() - ts <= 1)
+                self.assertTrue(time.time() - ts <= 1, master.state)
                 sleep()
             sleep(5 - (time.time() - ts))  # runtime = 5s
             self.assertEqual(STATE_RUNNING, master.state)
@@ -809,7 +809,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             # Second stage
             ts = time.time()
             while master.state != STATE_SPAWNING:
-                self.assertTrue(time.time() - ts <= 1)
+                self.assertTrue(time.time() - ts <= 1, master.state)
                 sleep()
             sleep(5 - (time.time() - ts))  # runtime = 15s
             self.assertEqual(STATE_RUNNING, master.state)
@@ -833,12 +833,12 @@ class TestMasterWorkerRunners(LocustTestCase):
             # Third stage
             ts = time.time()
             while master.state != STATE_SPAWNING:
-                self.assertTrue(time.time() - ts <= 1)
+                self.assertTrue(time.time() - ts <= 1, master.state)
                 sleep()
             sleep(10 - (time.time() - ts))  # runtime = 30s
             ts = time.time()
             while master.state != STATE_RUNNING:
-                self.assertTrue(time.time() - ts <= 1)
+                self.assertTrue(time.time() - ts <= 1, master.state)
                 sleep()
             self.assertEqual(STATE_RUNNING, master.state)
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
@@ -861,7 +861,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             # Fourth stage
             ts = time.time()
             while master.state != STATE_SPAWNING:
-                self.assertTrue(time.time() - ts <= 1)
+                self.assertTrue(time.time() - ts <= 1, master.state)
                 sleep()
             sleep(5 - (time.time() - ts))  # runtime = 45s
 
@@ -889,7 +889,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             # Fourth stage - All users are now at the desired number
             ts = time.time()
             while master.state != STATE_RUNNING:
-                self.assertTrue(time.time() - ts <= 1)
+                self.assertTrue(time.time() - ts <= 1, master.state)
                 sleep()
             delta = time.time() - ts
             w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
