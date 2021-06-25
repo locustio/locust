@@ -138,6 +138,9 @@ class UsersDispatcher(Iterator):
             # The spawn rate greater than the remaining users to dispatch
             return True
 
+        # Workers having already more users than desired will show up zero
+        # users left to dispatch in the following dictionary. And this, even
+        # if these workers are missing users in one or more user classes.
         user_classes_count_left_to_dispatch_excluding_excess_users = {
             user_class: max(
                 0,
@@ -147,6 +150,13 @@ class UsersDispatcher(Iterator):
             for user_class in self._user_classes_count.keys()
         }
 
+        # This condition is to cover a corner case for which there exists no dispatch solution that won't
+        # violate the following constraints:
+        #   - No worker run excess users at any point (except for the possible excess users already running)
+        #   - No worker run excess users of any user class at any point (except for the
+        #     possible excess users already running)
+        #   - The total user count is never exceeded (except for the possible excess users already running)
+        # In a situation like this, we have no choice but to immediately dispatch the final users immediately.
         workers_user_count = self._workers_user_count
         if (
             sum(
