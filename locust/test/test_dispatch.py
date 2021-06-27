@@ -2089,6 +2089,359 @@ class TestDispatch(unittest.TestCase):
         delta = time.time() - ts
         self.assertTrue(0 <= delta <= 0.02, delta)
 
+    def test_dispatch_from_5_to_10_users_to_10_workers(self):
+        worker_nodes = [WorkerNode("0{}".format(i) if i < 10 else str(i)) for i in range(1, 11)]
+        worker_nodes[1].user_classes_count = {"TestUser6": 1}
+        worker_nodes[3].user_classes_count = {"TestUser4": 1}
+        worker_nodes[4].user_classes_count = {"TestUser5": 1}
+        worker_nodes[5].user_classes_count = {"TestUser10": 1}
+        worker_nodes[9].user_classes_count = {"TestUser1": 1}
+
+        users_dispatcher = UsersDispatcher(
+            worker_nodes=worker_nodes,
+            user_classes_count={
+                "TestUser1": 1,
+                "TestUser2": 1,
+                "TestUser3": 1,
+                "TestUser4": 1,
+                "TestUser5": 1,
+                "TestUser6": 1,
+                "TestUser7": 1,
+                "TestUser8": 1,
+                "TestUser9": 1,
+                "TestUser10": 1,
+            },
+            spawn_rate=1,
+        )
+
+        list(users_dispatcher)
+
+        sleep_time = 1
+
+        # TODO
+        # ts = time.time()
+        # self.assertDictEqual(
+        #     next(users_dispatcher),
+        #     {
+        #         "1": {"User1": 0, "User2": 0, "User3": 1},
+        #         "2": {"User1": 1, "User2": 0, "User3": 0},
+        #         "3": {"User1": 0, "User2": 1, "User3": 0},
+        #     },
+        # )
+        # delta = time.time() - ts
+        # self.assertTrue(0 <= delta <= 0.02, delta)
+        #
+        # ts = time.time()
+        # self.assertDictEqual(
+        #     next(users_dispatcher),
+        #     {
+        #         "1": {"User1": 1, "User2": 0, "User3": 1},
+        #         "2": {"User1": 1, "User2": 0, "User3": 0},
+        #         "3": {"User1": 0, "User2": 1, "User3": 0},
+        #     },
+        # )
+        # delta = time.time() - ts
+        # self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
+        #
+        # ts = time.time()
+        # self.assertDictEqual(
+        #     next(users_dispatcher),
+        #     {
+        #         "1": {"User1": 1, "User2": 0, "User3": 1},
+        #         "2": {"User1": 1, "User2": 1, "User3": 0},
+        #         "3": {"User1": 0, "User2": 1, "User3": 0},
+        #     },
+        # )
+        # delta = time.time() - ts
+        # self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
+        #
+        # ts = time.time()
+        # self.assertDictEqual(
+        #     next(users_dispatcher),
+        #     {
+        #         "1": {"User1": 1, "User2": 0, "User3": 1},
+        #         "2": {"User1": 1, "User2": 1, "User3": 0},
+        #         "3": {"User1": 0, "User2": 1, "User3": 1},
+        #     },
+        # )
+        # delta = time.time() - ts
+        # self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
+        #
+        # ts = time.time()
+        # self.assertDictEqual(
+        #     next(users_dispatcher),
+        #     {
+        #         "1": {"User1": 1, "User2": 0, "User3": 1},
+        #         "2": {"User1": 1, "User2": 1, "User3": 0},
+        #         "3": {"User1": 1, "User2": 1, "User3": 1},
+        #     },
+        # )
+        # delta = time.time() - ts
+        # self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
+        #
+        # ts = time.time()
+        # self.assertDictEqual(
+        #     next(users_dispatcher),
+        #     {
+        #         "1": {"User1": 1, "User2": 1, "User3": 1},
+        #         "2": {"User1": 1, "User2": 1, "User3": 0},
+        #         "3": {"User1": 1, "User2": 1, "User3": 1},
+        #     },
+        # )
+        # delta = time.time() - ts
+        # self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
+        #
+        # ts = time.time()
+        # self.assertDictEqual(
+        #     next(users_dispatcher),
+        #     {
+        #         "1": {"User1": 1, "User2": 1, "User3": 1},
+        #         "2": {"User1": 1, "User2": 1, "User3": 1},
+        #         "3": {"User1": 1, "User2": 1, "User3": 1},
+        #     },
+        # )
+        # delta = time.time() - ts
+        # self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
+        #
+        # ts = time.time()
+        # self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        # delta = time.time() - ts
+        # self.assertTrue(0 <= delta <= 0.02, delta)
+
+    def test_dispatch_from_20_to_55_users_to_10_workers(self):
+        worker_nodes = [WorkerNode("0{}".format(i) if i < 10 else str(i)) for i in range(1, 11)]
+        worker_nodes[0].user_classes_count = {
+            "TestUser1": 1,
+            "TestUser10": 1,
+            "TestUser2": 0,
+            "TestUser3": 0,
+            "TestUser4": 0,
+            "TestUser5": 0,
+            "TestUser6": 0,
+            "TestUser7": 0,
+            "TestUser8": 0,
+            "TestUser9": 0,
+        }
+        worker_nodes[1].user_classes_count = {
+            "TestUser1": 0,
+            "TestUser10": 1,
+            "TestUser2": 1,
+            "TestUser3": 0,
+            "TestUser4": 0,
+            "TestUser5": 0,
+            "TestUser6": 0,
+            "TestUser7": 0,
+            "TestUser8": 0,
+            "TestUser9": 0,
+        }
+        worker_nodes[2].user_classes_count = {
+            "TestUser1": 0,
+            "TestUser10": 0,
+            "TestUser2": 1,
+            "TestUser3": 1,
+            "TestUser4": 0,
+            "TestUser5": 0,
+            "TestUser6": 0,
+            "TestUser7": 0,
+            "TestUser8": 0,
+            "TestUser9": 0,
+        }
+        worker_nodes[3].user_classes_count = {
+            "TestUser1": 0,
+            "TestUser10": 0,
+            "TestUser2": 0,
+            "TestUser3": 0,
+            "TestUser4": 1,
+            "TestUser5": 1,
+            "TestUser6": 0,
+            "TestUser7": 0,
+            "TestUser8": 0,
+            "TestUser9": 0,
+        }
+        worker_nodes[4].user_classes_count = {
+            "TestUser1": 0,
+            "TestUser10": 0,
+            "TestUser2": 0,
+            "TestUser3": 0,
+            "TestUser4": 1,
+            "TestUser5": 1,
+            "TestUser6": 0,
+            "TestUser7": 0,
+            "TestUser8": 0,
+            "TestUser9": 0,
+        }
+        worker_nodes[5].user_classes_count = {
+            "TestUser1": 0,
+            "TestUser10": 0,
+            "TestUser2": 0,
+            "TestUser3": 0,
+            "TestUser4": 1,
+            "TestUser5": 1,
+            "TestUser6": 0,
+            "TestUser7": 0,
+            "TestUser8": 0,
+            "TestUser9": 0,
+        }
+        worker_nodes[6].user_classes_count = {
+            "TestUser1": 0,
+            "TestUser10": 0,
+            "TestUser2": 0,
+            "TestUser3": 0,
+            "TestUser4": 0,
+            "TestUser5": 0,
+            "TestUser6": 1,
+            "TestUser7": 1,
+            "TestUser8": 0,
+            "TestUser9": 0,
+        }
+        worker_nodes[7].user_classes_count = {
+            "TestUser1": 0,
+            "TestUser10": 0,
+            "TestUser2": 0,
+            "TestUser3": 0,
+            "TestUser4": 0,
+            "TestUser5": 0,
+            "TestUser6": 1,
+            "TestUser7": 0,
+            "TestUser8": 1,
+            "TestUser9": 0,
+        }
+        worker_nodes[8].user_classes_count = {
+            "TestUser1": 0,
+            "TestUser10": 0,
+            "TestUser2": 0,
+            "TestUser3": 0,
+            "TestUser4": 0,
+            "TestUser5": 0,
+            "TestUser6": 1,
+            "TestUser7": 0,
+            "TestUser8": 0,
+            "TestUser9": 1,
+        }
+        worker_nodes[9].user_classes_count = {
+            "TestUser1": 0,
+            "TestUser10": 0,
+            "TestUser2": 0,
+            "TestUser3": 0,
+            "TestUser4": 0,
+            "TestUser5": 0,
+            "TestUser6": 1,
+            "TestUser7": 0,
+            "TestUser8": 0,
+            "TestUser9": 1,
+        }
+
+        users_dispatcher = UsersDispatcher(
+            worker_nodes=worker_nodes,
+            user_classes_count={
+                "TestUser1": 2,
+                "TestUser10": 5,
+                "TestUser2": 5,
+                "TestUser3": 3,
+                "TestUser4": 8,
+                "TestUser5": 10,
+                "TestUser6": 11,
+                "TestUser7": 4,
+                "TestUser8": 2,
+                "TestUser9": 5,
+            },
+            spawn_rate=2,
+        )
+
+        list(users_dispatcher)
+
+        sleep_time = 1
+
+        # TODO
+        # ts = time.time()
+        # self.assertDictEqual(
+        #     next(users_dispatcher),
+        #     {
+        #         "1": {"User1": 0, "User2": 0, "User3": 1},
+        #         "2": {"User1": 1, "User2": 0, "User3": 0},
+        #         "3": {"User1": 0, "User2": 1, "User3": 0},
+        #     },
+        # )
+        # delta = time.time() - ts
+        # self.assertTrue(0 <= delta <= 0.02, delta)
+        #
+        # ts = time.time()
+        # self.assertDictEqual(
+        #     next(users_dispatcher),
+        #     {
+        #         "1": {"User1": 1, "User2": 0, "User3": 1},
+        #         "2": {"User1": 1, "User2": 0, "User3": 0},
+        #         "3": {"User1": 0, "User2": 1, "User3": 0},
+        #     },
+        # )
+        # delta = time.time() - ts
+        # self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
+        #
+        # ts = time.time()
+        # self.assertDictEqual(
+        #     next(users_dispatcher),
+        #     {
+        #         "1": {"User1": 1, "User2": 0, "User3": 1},
+        #         "2": {"User1": 1, "User2": 1, "User3": 0},
+        #         "3": {"User1": 0, "User2": 1, "User3": 0},
+        #     },
+        # )
+        # delta = time.time() - ts
+        # self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
+        #
+        # ts = time.time()
+        # self.assertDictEqual(
+        #     next(users_dispatcher),
+        #     {
+        #         "1": {"User1": 1, "User2": 0, "User3": 1},
+        #         "2": {"User1": 1, "User2": 1, "User3": 0},
+        #         "3": {"User1": 0, "User2": 1, "User3": 1},
+        #     },
+        # )
+        # delta = time.time() - ts
+        # self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
+        #
+        # ts = time.time()
+        # self.assertDictEqual(
+        #     next(users_dispatcher),
+        #     {
+        #         "1": {"User1": 1, "User2": 0, "User3": 1},
+        #         "2": {"User1": 1, "User2": 1, "User3": 0},
+        #         "3": {"User1": 1, "User2": 1, "User3": 1},
+        #     },
+        # )
+        # delta = time.time() - ts
+        # self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
+        #
+        # ts = time.time()
+        # self.assertDictEqual(
+        #     next(users_dispatcher),
+        #     {
+        #         "1": {"User1": 1, "User2": 1, "User3": 1},
+        #         "2": {"User1": 1, "User2": 1, "User3": 0},
+        #         "3": {"User1": 1, "User2": 1, "User3": 1},
+        #     },
+        # )
+        # delta = time.time() - ts
+        # self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
+        #
+        # ts = time.time()
+        # self.assertDictEqual(
+        #     next(users_dispatcher),
+        #     {
+        #         "1": {"User1": 1, "User2": 1, "User3": 1},
+        #         "2": {"User1": 1, "User2": 1, "User3": 1},
+        #         "3": {"User1": 1, "User2": 1, "User3": 1},
+        #     },
+        # )
+        # delta = time.time() - ts
+        # self.assertTrue(sleep_time - 0.02 <= delta <= sleep_time + 0.02, delta)
+        #
+        # ts = time.time()
+        # self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        # delta = time.time() - ts
+        # self.assertTrue(0 <= delta <= 0.02, delta)
+
 
 def _aggregate_dispatched_users(d: Dict[str, Dict[str, int]]) -> Dict[str, int]:
     user_classes = list(next(iter(d.values())).keys())
