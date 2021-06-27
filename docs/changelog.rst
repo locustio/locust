@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.6.0
+=====
+
+* Allow cross process communication using custom messages https://github.com/locustio/locust/pull/1782
+* Fix: status "stopped" instead of "spawning", tick\(\) method of LoadShape called only once https://github.com/locustio/locust/pull/1769
+* Other small fixes (see https://github.com/locustio/locust/blob/master/CHANGELOG.md)
+
 1.5.3
 =====
 

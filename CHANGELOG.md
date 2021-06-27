@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.6.0](https://github.com/locustio/locust/tree/1.6.0) (2021-06-26)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.5.3...1.6.0)
+
+**Fixed bugs:**
+
+- status "stopped" instead of "spawning", tick\(\) method of LoadShape called only once [\#1762](https://github.com/locustio/locust/issues/1762)
+
+**Closed issues:**
+
+- Allow master node to supply data to worker nodes directly [\#1780](https://github.com/locustio/locust/issues/1780)
+
+**Merged pull requests:**
+
+- Add CORS functionality to Locust [\#1793](https://github.com/locustio/locust/pull/1793) ([KasimAhmic](https://github.com/KasimAhmic))
+- Make FastHttpUser use the same name for request\_meta as HttpUser \(no leading underscore\) [\#1788](https://github.com/locustio/locust/pull/1788) ([cyberw](https://github.com/cyberw))
+- Ensure that the exception dictionaries are not mutated when generating a html report [\#1784](https://github.com/locustio/locust/pull/1784) ([mboutet](https://github.com/mboutet))
+- Allow cross process communication using custom messages [\#1782](https://github.com/locustio/locust/pull/1782) ([nathan-beam](https://github.com/nathan-beam))
+- modified check\_stopped condition [\#1769](https://github.com/locustio/locust/pull/1769) ([stanislawskwark](https://github.com/stanislawskwark))
+
 ## [1.5.3](https://github.com/locustio/locust/tree/1.5.3) (2021-05-17)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.5.2...1.5.3)
@@ -1707,8 +1727,8 @@
 - bump requests dependency to most recent pre 1.0 version \(i.e. most recen... [\#76](https://github.com/locustio/locust/pull/76) ([sanga](https://github.com/sanga))
 - Stats refactoring [\#74](https://github.com/locustio/locust/pull/74) ([heyman](https://github.com/heyman))
 - Enhancement/url error [\#72](https://github.com/locustio/locust/pull/72) ([krallin](https://github.com/krallin))
-- Include method name in command line logging [\#66](https://github.com/locustio/locust/pull/66) ([rory](https://github.com/rory))
-- use correct python special method name [\#64](https://github.com/locustio/locust/pull/64) ([rory](https://github.com/rory))
+- Include method name in command line logging [\#66](https://github.com/locustio/locust/pull/66) ([amandasaurus](https://github.com/amandasaurus))
+- use correct python special method name [\#64](https://github.com/locustio/locust/pull/64) ([amandasaurus](https://github.com/amandasaurus))
 - Small fixes [\#63](https://github.com/locustio/locust/pull/63) ([sanga](https://github.com/sanga))
 - Use shutdown function when num\_requests are done [\#60](https://github.com/locustio/locust/pull/60) ([afajl](https://github.com/afajl))
 - Update docs/api.rst [\#55](https://github.com/locustio/locust/pull/55) ([cbrinley](https://github.com/cbrinley))
