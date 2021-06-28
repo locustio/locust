@@ -107,6 +107,7 @@ class WebUI:
         self.app.config["BASIC_AUTH_ENABLED"] = False
         self.auth = None
         self.greenlet = None
+        self._swarm_greenlet = None
 
         if auth_credentials is not None:
             credentials = auth_credentials.split(":")
@@ -150,12 +151,19 @@ class WebUI:
             user_count = int(request.form["user_count"])
             spawn_rate = float(request.form["spawn_rate"])
 
-            environment.runner.start(user_count, spawn_rate)
+            if self._swarm_greenlet is not None:
+                self._swarm_greenlet.kill(block=True)
+                self._swarm_greenlet = None
+            self._swarm_greenlet = gevent.spawn(environment.runner.start, user_count, spawn_rate)
+            self._swarm_greenlet.link_exception(greenlet_exception_handler)
             return jsonify({"success": True, "message": "Swarming started", "host": environment.host})
 
         @app.route("/stop")
         @self.auth_required_if_enabled
         def stop():
+            if self._swarm_greenlet is not None:
+                self._swarm_greenlet.kill(block=True)
+                self._swarm_greenlet = None
             environment.runner.stop()
             return jsonify({"success": True, "message": "Test stopped"})
 

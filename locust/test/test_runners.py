@@ -1,11 +1,15 @@
+import json
 import os
+import random
 import time
 import unittest
 from collections import defaultdict
 from contextlib import contextmanager
+from operator import itemgetter
 
 import gevent
 import mock
+import requests
 from gevent import sleep
 from gevent.pool import Group
 from gevent.queue import Queue
@@ -513,6 +517,88 @@ class TestLocustRunner(LocustTestCase):
         self.assertEqual(1, len(self.mocked_log.warning))
         msg = self.mocked_log.warning[0]
         self.assertIn("Unknown message type recieved", msg)
+
+    def test_swarm_endpoint_is_non_blocking(self):
+        class TestUser1(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        class TestUser2(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        stop_timeout = 0
+        env = Environment(user_classes=[TestUser1, TestUser2], stop_timeout=stop_timeout)
+        local_runner = env.create_local_runner()
+        web_ui = env.create_web_ui("127.0.0.1", 0)
+
+        gevent.sleep(0.1)
+
+        ts = time.perf_counter()
+        response = requests.post(
+            "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
+            data={"user_count": 20, "spawn_rate": 1, "host": "https://localhost"},
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(0 <= time.perf_counter() - ts <= 1, "swarm endpoint is blocking")
+
+        ts = time.perf_counter()
+        while local_runner.state != STATE_RUNNING:
+            self.assertTrue(time.perf_counter() - ts <= 20, local_runner.state)
+            gevent.sleep(0.1)
+
+        self.assertTrue(19 <= time.perf_counter() - ts <= 21)
+
+        self.assertEqual(local_runner.user_count, 20)
+
+        local_runner.stop()
+        web_ui.stop()
+
+    def test_can_call_stop_endpoint_if_currently_swarming(self):
+        class TestUser1(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        class TestUser2(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        stop_timeout = 5
+        env = Environment(user_classes=[TestUser1, TestUser2], stop_timeout=stop_timeout)
+        local_runner = env.create_local_runner()
+        web_ui = env.create_web_ui("127.0.0.1", 0)
+
+        gevent.sleep(0.1)
+
+        ts = time.perf_counter()
+        response = requests.post(
+            "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
+            data={"user_count": 20, "spawn_rate": 1, "host": "https://localhost"},
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(0 <= time.perf_counter() - ts <= 1, "swarm endpoint is blocking")
+
+        gevent.sleep(5)
+
+        self.assertEqual(local_runner.state, STATE_SPAWNING)
+        self.assertLessEqual(local_runner.user_count, 10)
+
+        ts = time.perf_counter()
+        response = requests.get(
+            "http://127.0.0.1:{}/stop".format(web_ui.server.server_port),
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(stop_timeout <= time.perf_counter() - ts <= stop_timeout + 5, "stop endpoint took too long")
+
+        self.assertEqual(local_runner.state, STATE_STOPPED)
+        self.assertLessEqual(local_runner.user_count, 0)
+
+        local_runner.stop()
+        web_ui.stop()
 
 
 class TestMasterWorkerRunners(LocustTestCase):
@@ -1225,6 +1311,110 @@ class TestMasterWorkerRunners(LocustTestCase):
                     stage += 1
                 elif state1 == STATE_RUNNING and state2 == STATE_STOPPED and stage == 3:
                     self.assertTrue(30 - tolerance <= t2 <= 30 + tolerance)
+
+    def test_swarm_endpoint_is_non_blocking(self):
+        class TestUser1(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        class TestUser2(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            stop_timeout = 0
+            master_env = Environment(user_classes=[TestUser1, TestUser2], stop_timeout=stop_timeout)
+            master = master_env.create_master_runner("*", 0)
+            web_ui = master_env.create_web_ui("127.0.0.1", 0)
+
+            workers = []
+            for i in range(2):
+                worker_env = Environment(user_classes=[TestUser1, TestUser2])
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+
+            # Give workers time to connect
+            sleep(0.1)
+
+            self.assertEqual(STATE_INIT, master.state)
+            self.assertEqual(len(master.clients.ready), len(workers))
+
+            ts = time.perf_counter()
+            response = requests.post(
+                "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
+                data={"user_count": 20, "spawn_rate": 1, "host": "https://localhost"},
+            )
+            self.assertEqual(200, response.status_code)
+            self.assertTrue(0 <= time.perf_counter() - ts <= 1, "swarm endpoint is blocking")
+
+            ts = time.perf_counter()
+            while master.state != STATE_RUNNING:
+                self.assertTrue(time.perf_counter() - ts <= 20, master.state)
+                gevent.sleep(0.1)
+
+            self.assertTrue(19 <= time.perf_counter() - ts <= 21)
+
+            self.assertEqual(master.user_count, 20)
+
+            master.stop()
+            web_ui.stop()
+
+    def test_can_call_stop_endpoint_if_currently_swarming(self):
+        class TestUser1(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        class TestUser2(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            stop_timeout = 5
+            master_env = Environment(user_classes=[TestUser1, TestUser2], stop_timeout=stop_timeout)
+            master = master_env.create_master_runner("*", 0)
+            web_ui = master_env.create_web_ui("127.0.0.1", 0)
+
+            workers = []
+            for i in range(2):
+                worker_env = Environment(user_classes=[TestUser1, TestUser2])
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+
+            # Give workers time to connect
+            sleep(0.1)
+
+            self.assertEqual(STATE_INIT, master.state)
+            self.assertEqual(len(master.clients.ready), len(workers))
+
+            ts = time.perf_counter()
+            response = requests.post(
+                "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
+                data={"user_count": 20, "spawn_rate": 1, "host": "https://localhost"},
+            )
+            self.assertEqual(200, response.status_code)
+            self.assertTrue(0 <= time.perf_counter() - ts <= 1, "swarm endpoint is blocking")
+
+            gevent.sleep(5)
+
+            self.assertEqual(master.state, STATE_SPAWNING)
+            self.assertLessEqual(master.user_count, 10)
+
+            ts = time.perf_counter()
+            response = requests.get(
+                "http://127.0.0.1:{}/stop".format(web_ui.server.server_port),
+            )
+            self.assertEqual(200, response.status_code)
+            self.assertTrue(stop_timeout <= time.perf_counter() - ts <= stop_timeout + 5, "stop endpoint took too long")
+
+            self.assertEqual(master.state, STATE_STOPPED)
+            self.assertLessEqual(master.user_count, 0)
+
+            master.stop()
+            web_ui.stop()
 
 
 class TestMasterRunner(LocustTestCase):
