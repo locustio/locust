@@ -957,6 +957,148 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             master.stop()
 
+    @unittest.skip
+    def test_distributed_shape_fuzzy_test(self):
+        """
+        Incredibility useful test to find issues with dispatch logic. This test allowed to find
+        multiple small corner cases with the new dispatch logic of locust v2.
+
+        The test is disabled by default because it takes a lot of time to run and has randomness to it.
+        However, it is advised to run it a few times (you can run it in parallel) when modifying the dispatch logic.
+        """
+
+        class BaseUser(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        class TestUser01(BaseUser):
+            pass
+
+        class TestUser02(BaseUser):
+            pass
+
+        class TestUser03(BaseUser):
+            pass
+
+        class TestUser04(BaseUser):
+            pass
+
+        class TestUser05(BaseUser):
+            pass
+
+        class TestUser06(BaseUser):
+            pass
+
+        class TestUser07(BaseUser):
+            pass
+
+        class TestUser08(BaseUser):
+            pass
+
+        class TestUser09(BaseUser):
+            pass
+
+        class TestUser10(BaseUser):
+            pass
+
+        class TestUser11(BaseUser):
+            pass
+
+        class TestUser12(BaseUser):
+            pass
+
+        class TestUser13(BaseUser):
+            pass
+
+        class TestUser14(BaseUser):
+            pass
+
+        class TestUser15(BaseUser):
+            pass
+
+        class TestShape(LoadTestShape):
+            def __init__(self):
+                super().__init__()
+
+                self.stages = []
+                runtime = 0
+                for _ in range(100):
+                    runtime += random.uniform(3, 15)
+                    self.stages.append((runtime, random.randint(1, 100), random.uniform(0.1, 10)))
+
+            def tick(self):
+                run_time = self.get_run_time()
+                for stage in self.stages:
+                    if run_time < stage[0]:
+                        return stage[1], stage[2]
+
+        user_classes = [
+            TestUser01,
+            TestUser02,
+            TestUser03,
+            TestUser04,
+            TestUser05,
+            TestUser06,
+            TestUser07,
+            TestUser08,
+            TestUser09,
+            TestUser10,
+            TestUser11,
+            TestUser12,
+            TestUser13,
+            TestUser14,
+            TestUser15,
+        ]
+
+        chosen_user_classes = random.sample(user_classes, k=random.randint(1, len(user_classes)))
+
+        for user_class in chosen_user_classes:
+            user_class.weight = random.uniform(1, 20)
+
+        locust_worker_additional_wait_before_ready_after_stop = 5
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3), _patch_env(
+            "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
+            str(locust_worker_additional_wait_before_ready_after_stop),
+        ):
+            stop_timeout = 5
+            master_env = Environment(
+                user_classes=chosen_user_classes, shape_class=TestShape(), stop_timeout=stop_timeout
+            )
+            master_env.shape_class.reset_time()
+            master = master_env.create_master_runner("*", 0)
+
+            workers = []
+            for i in range(random.randint(1, 30)):
+                worker_env = Environment(user_classes=chosen_user_classes)
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+
+            # Give workers time to connect
+            sleep(0.1)
+
+            self.assertEqual(STATE_INIT, master.state)
+            self.assertEqual(len(workers), len(master.clients.ready))
+
+            # Start a shape test
+            master.start_shape()
+
+            ts = time.time()
+            while master.state != STATE_STOPPED:
+                self.assertTrue(time.time() - ts <= master_env.shape_class.stages[-1][0] + 60, master.state)
+                print(
+                    "{:.2f}/{:.2f} | {} | {:.0f} | ".format(
+                        time.time() - ts,
+                        master_env.shape_class.stages[-1][0],
+                        master.state,
+                        sum(master.reported_user_classes_count.values()),
+                    )
+                    + json.dumps(dict(sorted(master.reported_user_classes_count.items(), key=itemgetter(0))))
+                )
+                sleep(1)
+
+            master.stop()
+
     def test_distributed_shape_stop_and_restart(self):
         """
         Test stopping and then restarting a LoadTestShape
