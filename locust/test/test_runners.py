@@ -1199,7 +1199,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             master.start_shape()
 
             while master.state != STATE_STOPPED:
-                self.assertTrue(time.perf_counter() - ts <= 40)
+                self.assertTrue(time.perf_counter() - ts <= 40, master.state)
                 statuses.append((time.perf_counter() - ts, master.state, master.user_count))
                 sleep(0.1)
 
