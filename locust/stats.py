@@ -553,6 +553,8 @@ class StatsEntry:
             raise ValueError(
                 "StatsEntry.use_response_times_cache must be set to True if we should be able to calculate the _current_ response time percentile"
             )
+        if self.stats.last_request_timestamp is None:
+            return 0
         # First, we want to determine which of the cached response_times dicts we should
         # use to get response_times for approximately 10 seconds ago.
         t = int(time.time())
