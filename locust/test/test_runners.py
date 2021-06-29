@@ -1264,7 +1264,11 @@ class TestMasterWorkerRunners(LocustTestCase):
                 else:
                     return None
 
-        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+        locust_worker_additional_wait_before_ready_after_stop = 2
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3), _patch_env(
+            "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
+            str(locust_worker_additional_wait_before_ready_after_stop),
+        ):
             stop_timeout = 0
             master_env = Environment(user_classes=[TestUser1], shape_class=TestShape(), stop_timeout=stop_timeout)
             master_env.shape_class.reset_time()
@@ -1289,7 +1293,11 @@ class TestMasterWorkerRunners(LocustTestCase):
             master.start_shape()
 
             while master.state != STATE_STOPPED:
-                self.assertTrue(time.perf_counter() - ts <= 45, master.state)
+                # +5s buffer to let master stop
+                self.assertTrue(
+                    time.perf_counter() - ts <= 30 + locust_worker_additional_wait_before_ready_after_stop + 5,
+                    master.state,
+                )
                 statuses.append((time.perf_counter() - ts, master.state, master.user_count))
                 sleep(0.1)
 
@@ -2963,7 +2971,7 @@ class TestStopTimeout(LocustTestCase):
         runner.spawning_greenlet.join()
         delta = time.time() - ts
         self.assertTrue(
-            0 <= delta <= 0.01, "Expected user count to increase to 10 instantaneously, instead it took %f" % delta
+            0 <= delta <= 0.05, "Expected user count to increase to 10 instantaneously, instead it took %f" % delta
         )
         self.assertTrue(
             runner.user_count == 10, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
@@ -2973,7 +2981,7 @@ class TestStopTimeout(LocustTestCase):
         runner.start(2, 4, wait=False)
         runner.spawning_greenlet.join()
         delta = time.time() - ts
-        self.assertTrue(1 <= delta <= 1.01, "Expected user count to decrease to 2 in 1s, instead it took %f" % delta)
+        self.assertTrue(1 <= delta <= 1.05, "Expected user count to decrease to 2 in 1s, instead it took %f" % delta)
         self.assertTrue(
             runner.user_count == 2, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
         )
