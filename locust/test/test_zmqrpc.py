@@ -3,7 +3,6 @@ import zmq
 from locust.rpc import zmqrpc, Message
 from locust.test.testcases import LocustTestCase
 from locust.exception import RPCError
-from locust.test.util import get_free_tcp_port
 
 
 class ZMQRPC_tests(LocustTestCase):
@@ -47,10 +46,9 @@ class ZMQRPC_tests(LocustTestCase):
             server.recv_from_client()
 
     def test_rpc_error(self):
-        port = get_free_tcp_port()
-        server = zmqrpc.Server("127.0.0.1", port)
+        server = zmqrpc.Server("127.0.0.1", 0)
         with self.assertRaises(RPCError):
-            server = zmqrpc.Server("127.0.0.1", port)
+            server = zmqrpc.Server("127.0.0.1", server.port)
         server.close()
         with self.assertRaises(RPCError):
             server.send_to_client(Message("test", "message", "identity"))
