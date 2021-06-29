@@ -8,7 +8,7 @@ from locust.dispatch import UsersDispatcher
 from locust.runners import WorkerNode
 from locust.test.util import clear_all_functools_lru_cache
 
-_TOLERANCE = 0.05
+_TOLERANCE = 0.025
 
 
 class TestAssignUsersToWorkers(unittest.TestCase):
