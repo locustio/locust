@@ -594,7 +594,11 @@ class TestLocustRunner(LocustTestCase):
         self.assertEqual(200, response.status_code)
         self.assertTrue(stop_timeout <= time.perf_counter() - ts <= stop_timeout + 5, "stop endpoint took too long")
 
-        self.assertEqual(local_runner.state, STATE_STOPPED)
+        ts = time.perf_counter()
+        while local_runner.state != STATE_STOPPED:
+            self.assertTrue(time.perf_counter() - ts <= 2)
+            gevent.sleep(0.1)
+
         self.assertLessEqual(local_runner.user_count, 0)
 
         local_runner.stop()
@@ -1285,7 +1289,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             master.start_shape()
 
             while master.state != STATE_STOPPED:
-                self.assertTrue(time.perf_counter() - ts <= 40, master.state)
+                self.assertTrue(time.perf_counter() - ts <= 45, master.state)
                 statuses.append((time.perf_counter() - ts, master.state, master.user_count))
                 sleep(0.1)
 
@@ -1410,7 +1414,11 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertEqual(200, response.status_code)
             self.assertTrue(stop_timeout <= time.perf_counter() - ts <= stop_timeout + 5, "stop endpoint took too long")
 
-            self.assertEqual(master.state, STATE_STOPPED)
+            ts = time.perf_counter()
+            while master.state != STATE_STOPPED:
+                self.assertTrue(time.perf_counter() - ts <= 2)
+                gevent.sleep(0.1)
+
             self.assertLessEqual(master.user_count, 0)
 
             master.stop()
