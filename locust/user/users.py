@@ -153,7 +153,7 @@ class User(object, metaclass=UserMeta):
         Start a greenlet that runs this User instance.
 
         :param group: Group instance where the greenlet will be spawned.
-        :type gevent_group: gevent.pool.Group
+        :type group: gevent.pool.Group
         :returns: The spawned greenlet.
         """
 
