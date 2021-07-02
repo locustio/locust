@@ -93,7 +93,7 @@ class User(object, metaclass=UserMeta):
             tasks = {ThreadPage:15, write_post:1}
     """
 
-    weight = 10
+    weight = 1
     """Probability of user class being chosen. The higher the weight, the greater the chance of it being chosen."""
 
     abstract = True
