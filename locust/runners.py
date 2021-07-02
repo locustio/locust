@@ -1021,6 +1021,10 @@ class WorkerRunner(DistributedRunner):
             self.cpu_warning_emitted = False
             self.worker_cpu_warning_emitted = False
 
+        for user_class in self.user_classes:
+            if self.environment.host is not None:
+                user_class.host = self.environment.host
+
         user_classes_spawn_count = {}
         user_classes_stop_count = {}
 
