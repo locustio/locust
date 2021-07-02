@@ -10,6 +10,10 @@ import time
 import traceback
 from collections import defaultdict
 from collections.abc import MutableMapping
+from operator import (
+    itemgetter,
+    methodcaller,
+)
 from typing import (
     Dict,
     Iterator,
@@ -186,16 +190,10 @@ class Runner:
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
             self.update_state(STATE_SPAWNING)
 
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(
-                "Spawning additional %s (%s already running)..."
-                % (json.dumps(user_classes_spawn_count), json.dumps(self.user_classes_count))
-            )
-        elif sum(user_classes_spawn_count.values()) > 0:
-            logger.info(
-                "Spawning additional %s (%s already running)..."
-                % (sum(user_classes_spawn_count.values()), sum(self.user_classes_count.values()))
-            )
+        logger.debug(
+            "Spawning additional %s (%s already running)..."
+            % (json.dumps(user_classes_spawn_count), json.dumps(self.user_classes_count))
+        )
 
         def spawn(user_class: str, spawn_count: int):
             n = 0
@@ -262,11 +260,9 @@ class Runner:
             )
             stop_group.kill(block=True)
 
-        msg = "%i Users have been stopped, %g still running" % (sum(user_classes_stop_count.values()), self.user_count)
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(msg)
-        elif sum(user_classes_stop_count.values()) > 0:
-            logger.info(msg)
+        logger.debug(
+            "%g users have been stopped, %g still running", sum(user_classes_stop_count.values()), self.user_count
+        )
 
     def monitor_cpu(self):
         process = psutil.Process()
@@ -308,10 +304,9 @@ class Runner:
         local_worker_node.user_classes_count = self.user_classes_count
 
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
-            logger.debug(
-                "Updating running test with %d users, %.2f spawn rate and wait=%r" % (user_count, spawn_rate, wait)
-            )
             self.update_state(STATE_SPAWNING)
+
+        logger.info("Updating test with %d users, %.2f spawn rate and wait=%r" % (user_count, spawn_rate, wait))
 
         try:
             for dispatched_users in UsersDispatcher(
@@ -322,12 +317,8 @@ class Runner:
                 user_classes_spawn_count = {}
                 user_classes_stop_count = {}
                 user_classes_count = dispatched_users[local_worker_node.id]
-                logger.info("Updating running test with %d users" % (sum(user_classes_count.values()),))
+                logger.debug("Updating running test with %s" % _format_user_classes_count_for_log(user_classes_count))
                 for user_class, user_class_count in user_classes_count.items():
-                    logger.debug(
-                        "Updating running test with %d users of class %s and wait=%r"
-                        % (user_class_count, user_class, wait)
-                    )
                     if self.user_classes_count[user_class] > user_class_count:
                         user_classes_stop_count[user_class] = self.user_classes_count[user_class] - user_class_count
                     elif self.user_classes_count[user_class] < user_class_count:
@@ -348,13 +339,7 @@ class Runner:
             # a gevent.sleep inside the dispatch_users function, locust won't gracefully shutdown.
             self.quit()
 
-        logger.info(
-            "All users spawned: %s (%i total running)"
-            % (
-                ", ".join("%s: %d" % (name, count) for name, count in self.user_classes_count.items()),
-                sum(self.user_classes_count.values()),
-            )
-        )
+        logger.info("All users spawned: %s" % _format_user_classes_count_for_log(self.user_classes_count))
 
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
 
@@ -660,15 +645,22 @@ class MasterRunner(DistributedRunner):
 
         self.spawn_rate = spawn_rate
 
-        worker_spawn_rate = float(spawn_rate) / (num_workers or 1)
         logger.info(
-            "Sending spawn jobs of %d users and %.2f spawn rate to %d ready clients"
-            % (user_count, worker_spawn_rate, num_workers)
+            "Sending spawn jobs of %d users at %.2f spawn rate to %d ready clients"
+            % (user_count, spawn_rate, num_workers)
         )
 
-        if worker_spawn_rate > 100:
+        # Prior to the refactoring from https://github.com/locustio/locust/pull/1621, this warning
+        # was logged if `spawn_rate / number_of_workers` was above 100. However, the master
+        # is now responsible for dispatching and controlling the spawn rate which is more CPU intensive for
+        # the master. The number 100 is a little arbitrary as the computational load on the master greatly
+        # depends on the number of workers and the number of user classes. For instance, 5 user classes and 5 workers
+        # can easily do 200/s. However, 200/s with 50 workers and 20 user classes will likely make the dispatch very
+        # slow because of the required computations. I (@mboutet) doubt that many Locust's users are spawning
+        # that rapidly. If so, then they'll likely open issues on GitHub in which case I'll (@mboutet) take a look.
+        if spawn_rate > 100:
             logger.warning(
-                "Your selected spawn rate is very high (>100/worker), and this is known to sometimes cause issues. Do you really need to ramp up that fast?"
+                "Your selected spawn rate is high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?"
             )
 
         if self.state != STATE_RUNNING and self.state != STATE_SPAWNING:
@@ -701,15 +693,16 @@ class MasterRunner(DistributedRunner):
                             Message("spawn", data, worker_node_id),
                         )
                     )
-                logger.debug("Sending spawn message to %i client(s)" % len(dispatch_greenlets))
+                dispatched_user_count = sum(map(sum, map(methodcaller("values"), dispatched_users.values())))
+                logger.debug(
+                    "Sending spawn messages for %g total users to %i client(s)",
+                    dispatched_user_count,
+                    len(dispatch_greenlets),
+                )
                 dispatch_greenlets.join()
 
                 logger.debug(
-                    "Currently spawned users: %s (%i total running)"
-                    % (
-                        ", ".join("%s: %d" % (name, count) for name, count in self.reported_user_classes_count.items()),
-                        sum(self.reported_user_classes_count.values()),
-                    )
+                    "Currently spawned users: %s" % _format_user_classes_count_for_log(self.reported_user_classes_count)
                 )
 
         except KeyboardInterrupt:
@@ -732,13 +725,7 @@ class MasterRunner(DistributedRunner):
 
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
 
-        logger.info(
-            "All users spawned: %s (%i total running)"
-            % (
-                ", ".join("%s: %d" % (name, count) for name, count in self.reported_user_classes_count.items()),
-                sum(self.reported_user_classes_count.values()),
-            )
-        )
+        logger.info("All users spawned: %s" % _format_user_classes_count_for_log(self.reported_user_classes_count))
 
     @functools.lru_cache()
     def _wait_for_workers_report_after_ramp_up(self) -> float:
@@ -1135,3 +1122,10 @@ class WorkerRunner(DistributedRunner):
         data = {}
         self.environment.events.report_to_master.fire(client_id=self.client_id, data=data)
         self.client.send(Message("stats", data, self.client_id))
+
+
+def _format_user_classes_count_for_log(user_classes_count: Dict[str, int]) -> str:
+    return "{} ({} total users)".format(
+        json.dumps(dict(sorted(user_classes_count.items(), key=itemgetter(0)))),
+        sum(user_classes_count.values()),
+    )
