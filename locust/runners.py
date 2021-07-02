@@ -381,6 +381,19 @@ class Runner:
             else:
                 user_count, spawn_rate = new_state
                 logger.info("Shape test updating to %d users at %.2f spawn rate" % (user_count, spawn_rate))
+                # TODO: This `self.start()` call is blocking until the ramp-up is completed. This can leads
+                #       to unexpected behaviours such as the one in the following example:
+                #       A load test shape has the following stages:
+                #           stage 1: (user_count=100, spawn_rate=1) for t < 50s
+                #           stage 2: (user_count=120, spawn_rate=1) for t < 100s
+                #           stage 3: (user_count=130, spawn_rate=1) for t < 120s
+                #        Because the first stage will take 100s to complete, the second stage
+                #        will be skipped completely because the shape worker will be blocked
+                #        at the `self.start()` of the first stage.
+                #        Of couse, this isn't a problem if the load test shape is well-defined.
+                #        We should probably use a `gevent.timeout` with a duration a little over
+                #        `(user_count - prev_user_count) / spawn_rate` in order to limit the runtime
+                #        of each load test shape stage.
                 self.start(user_count=user_count, spawn_rate=spawn_rate)
                 self.shape_last_state = new_state
 
