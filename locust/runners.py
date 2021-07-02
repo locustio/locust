@@ -150,9 +150,15 @@ class Runner:
             try:
                 user = user_greenlet.args[0]
             except IndexError:
-                logger.error(
-                    "While calculating number of running users, we encountered a user that didnt have proper args %s",
+                # TODO: Find out why args is sometimes empty. In gevent code,
+                #       the supplied args are cleared in the gevent.greenlet.Greenlet.__free,
+                #       so it seems a good place to start investigating. My suspicion is that
+                #       the supplied args are emptied whenever the greenlet is dead, so we can
+                #       simply ignore the greenlets with empty args.
+                logger.debug(
+                    "ERROR: While calculating number of running users, we encountered a user that didnt have proper args %s (user_greenlet.dead=%s)",
                     user_greenlet,
+                    user_greenlet.dead,
                 )
                 continue
             user_classes_count[user.__class__.__name__] += 1
