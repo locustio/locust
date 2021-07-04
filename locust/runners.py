@@ -306,7 +306,7 @@ class Runner:
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
             self.update_state(STATE_SPAWNING)
 
-        logger.info("Updating test with %d users, %.2f spawn rate and wait=%r" % (user_count, spawn_rate, wait))
+        logger.info("Ramping to %d users using a %.2f spawn rate" % (user_count, spawn_rate))
 
         try:
             for dispatched_users in UsersDispatcher(
@@ -317,7 +317,7 @@ class Runner:
                 user_classes_spawn_count = {}
                 user_classes_stop_count = {}
                 user_classes_count = dispatched_users[local_worker_node.id]
-                logger.debug("Updating running test with %s" % _format_user_classes_count_for_log(user_classes_count))
+                logger.debug("Ramping to %s" % _format_user_classes_count_for_log(user_classes_count))
                 for user_class, user_class_count in user_classes_count.items():
                     if self.user_classes_count[user_class] > user_class_count:
                         user_classes_stop_count[user_class] = self.user_classes_count[user_class] - user_class_count
