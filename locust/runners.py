@@ -650,17 +650,21 @@ class MasterRunner(DistributedRunner):
             % (user_count, spawn_rate, num_workers)
         )
 
-        # Prior to the refactoring from https://github.com/locustio/locust/pull/1621, this warning
-        # was logged if `spawn_rate / number_of_workers` was above 100. However, the master
-        # is now responsible for dispatching and controlling the spawn rate which is more CPU intensive for
-        # the master. The number 100 is a little arbitrary as the computational load on the master greatly
-        # depends on the number of workers and the number of user classes. For instance, 5 user classes and 5 workers
-        # can easily do 200/s. However, 200/s with 50 workers and 20 user classes will likely make the dispatch very
-        # slow because of the required computations. I (@mboutet) doubt that many Locust's users are spawning
-        # that rapidly. If so, then they'll likely open issues on GitHub in which case I'll (@mboutet) take a look.
+        worker_spawn_rate = float(spawn_rate) / (num_workers or 1)
+        if worker_spawn_rate > 100:
+            logger.warning(
+                "Your selected spawn rate is very high (>100/worker), and this is known to sometimes cause issues. Do you really need to ramp up that fast?"
+            )
+
+        # Since https://github.com/locustio/locust/pull/1621, the master is responsible for dispatching and controlling
+        # the total spawn rate which is more CPU intensive for the master. The number 100 is a little arbitrary as the computational
+        # load on the master greatly depends on the number of workers and the number of user classes. For instance,
+        # 5 user classes and 5 workers can easily do 200/s. However, 200/s with 50 workers and 20 user classes will likely make the
+        # dispatch very slow because of the required computations. I (@mboutet) doubt that many Locust's users are
+        # spawning that rapidly. If so, then they'll likely open issues on GitHub in which case I'll (@mboutet) take a look.
         if spawn_rate > 100:
             logger.warning(
-                "Your selected spawn rate is high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?"
+                "Your selected total spawn rate is high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?"
             )
 
         if self.state != STATE_RUNNING and self.state != STATE_SPAWNING:
