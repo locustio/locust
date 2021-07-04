@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from jinja2 import Environment, FileSystemLoader
 import os
 import pathlib
