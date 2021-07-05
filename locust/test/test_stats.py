@@ -445,31 +445,37 @@ class TestCsvStats(LocustTestCase):
         environment = Environment(user_classes=[TestUser])
         stats_writer = StatsCSVFileWriter(environment, PERCENTILES_TO_REPORT, self.STATS_BASE_NAME, full_history=True)
         runner = environment.create_local_runner()
-        runner.start(3, 5)  # spawn a user every _TEST_CSV_STATS_INTERVAL_SEC second
+        # spawn a user every _TEST_CSV_STATS_INTERVAL_SEC second
+        user_count = 15
+        spawn_rate = 5
+        assert 1 / 5 == _TEST_CSV_STATS_INTERVAL_SEC
+        runner_greenlet = gevent.spawn(runner.start, user_count, spawn_rate)
         gevent.sleep(0.1)
 
         greenlet = gevent.spawn(stats_writer)
-        gevent.sleep(0.6)
+        gevent.sleep(user_count / spawn_rate)
         gevent.kill(greenlet)
         stats_writer.close_files()
         runner.stop()
+        gevent.kill(runner_greenlet)
 
         with open(self.STATS_HISTORY_FILENAME) as f:
             reader = csv.DictReader(f)
             rows = [r for r in reader]
 
-        self.assertEqual(6, len(rows))
-        for i in range(3):
-            row = rows.pop(0)
-            self.assertEqual("%i" % (i + 1), row["User Count"])
-            self.assertEqual("/", row["Name"])
-            self.assertEqual("%i" % (i + 1), row["Total Request Count"])
-            self.assertGreaterEqual(int(row["Timestamp"]), start_time)
-            row = rows.pop(0)
-            self.assertEqual("%i" % (i + 1), row["User Count"])
-            self.assertEqual("Aggregated", row["Name"])
-            self.assertEqual("%i" % (i + 1), row["Total Request Count"])
-            self.assertGreaterEqual(int(row["Timestamp"]), start_time)
+        self.assertEqual(2 * user_count, len(rows))
+        for i in range(int(user_count / spawn_rate)):
+            for _ in range(spawn_rate):
+                row = rows.pop(0)
+                self.assertEqual("%i" % ((i + 1) * spawn_rate), row["User Count"])
+                self.assertEqual("/", row["Name"])
+                self.assertEqual("%i" % ((i + 1) * spawn_rate), row["Total Request Count"])
+                self.assertGreaterEqual(int(row["Timestamp"]), start_time)
+                row = rows.pop(0)
+                self.assertEqual("%i" % ((i + 1) * spawn_rate), row["User Count"])
+                self.assertEqual("Aggregated", row["Name"])
+                self.assertEqual("%i" % ((i + 1) * spawn_rate), row["Total Request Count"])
+                self.assertGreaterEqual(int(row["Timestamp"]), start_time)
 
     def test_requests_csv_quote_escaping(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
