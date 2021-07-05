@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.0.0b1](https://github.com/locustio/locust/tree/2.0.0b1) (2021-07-05)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.0.0b0...2.0.0b1)
+
+**Merged pull requests:**
+
+- Check version of workers when they connect. Warn if there is a mismatch, refuse 1.x workers to connect [\#1805](https://github.com/locustio/locust/pull/1805) ([cyberw](https://github.com/cyberw))
+- Change the default User weight to 1 instead of 10. [\#1803](https://github.com/locustio/locust/pull/1803) ([cyberw](https://github.com/cyberw))
+- Upgrade to flask 2 [\#1764](https://github.com/locustio/locust/pull/1764) ([corenting](https://github.com/corenting))
+
 ## [2.0.0b0](https://github.com/locustio/locust/tree/2.0.0b0) (2021-07-05)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.6.0...2.0.0b0)

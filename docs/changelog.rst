@@ -7,6 +7,9 @@ For full details of the Locust changelog, please see https://github.com/locustio
 2.0.0
 =====
 
+* Check version of workers when they connect. Warn if there is a mismatch, refuse 1.x workers to connect https://github.com/locustio/locust/pull/1805 (2.0.0b1)
+* Change the default User weight to 1 instead of 10 https://github.com/locustio/locust/pull/1803 (2.0.0b1)
+* Upgrade to flask 2 https://github.com/locustio/locust/pull/1764 (2.0.0b1)
 * Move User selection responsibility from worker to master in order to fix unbalanced distribution of users and uneven ramp-up https://github.com/locustio/locust/pull/1621 (2.0.0b0)
 
 1.6.0
