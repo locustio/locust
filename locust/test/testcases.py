@@ -18,7 +18,7 @@ from locust.test.mock_logging import MockedLoggingHandler
 from locust.test.util import clear_all_functools_lru_cache
 
 app = Flask(__name__)
-app.jinja_options["extensions"].append("jinja2.ext.do")
+app.jinja_env.add_extension("jinja2.ext.do")
 
 
 @app.route("/ultra_fast")
@@ -102,7 +102,7 @@ def basic_auth():
 def no_content_length():
     r = send_file(
         BytesIO("This response does not have content-length in the header".encode("utf-8")),
-        add_etags=False,
+        etag=False,
         mimetype="text/plain",
     )
     r.headers.remove("Content-Length")
