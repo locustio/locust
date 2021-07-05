@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.0.0
+=====
+
+* Move User selection responsibility from worker to master in order to fix unbalanced distribution of users and uneven ramp-up https://github.com/locustio/locust/pull/1621 (2.0.0b0)
+
 1.6.0
 =====
 

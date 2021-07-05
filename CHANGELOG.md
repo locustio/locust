@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0b0](https://github.com/locustio/locust/tree/2.0.0b0) (2021-07-05)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.6.0...2.0.0b0)
+
+**Fixed bugs:**
+
+- Distribution of user classes is not respected and some user classes are just never spawned [\#1618](https://github.com/locustio/locust/issues/1618)
+
+**Closed issues:**
+
+- Hatch rate in distributed mode spawns users in batches equal to number of slaves [\#896](https://github.com/locustio/locust/issues/896)
+
+**Merged pull requests:**
+
+- Move User selection responsibility from worker to master in order to fix unbalanced distribution of users and uneven ramp-up [\#1621](https://github.com/locustio/locust/pull/1621) ([mboutet](https://github.com/mboutet))
+
 ## [1.6.0](https://github.com/locustio/locust/tree/1.6.0) (2021-06-26)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.5.3...1.6.0)

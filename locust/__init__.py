@@ -13,7 +13,7 @@ from .event import Events
 
 events = Events()
 
-__version__ = "1.6.0"
+__version__ = "2.0.0b0"
 __all__ = (
     "SequentialTaskSet",
     "wait_time",
