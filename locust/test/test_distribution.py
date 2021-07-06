@@ -452,6 +452,3 @@ class TestDistributionDoNotSpawnAtLeastOneUserOfEachUserClass(unittest.TestCase)
             delta_ms = 1e3 * (time.perf_counter() - ts)
             self.assertEqual(sum(user_classes_count.values()), user_count)
             self.assertLessEqual(delta_ms, 100)
-
-    def tearDown(self) -> None:
-        super().tearDown()
