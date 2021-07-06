@@ -75,3 +75,16 @@ def clear_all_functools_lru_cache() -> None:
         assert len(wrappers) > 0
         for wrapper in wrappers:
             wrapper.cache_clear()
+
+
+@contextmanager
+def patch_env(name: str, value: str):
+    prev_value = os.getenv(name)
+    os.environ[name] = value
+    try:
+        yield
+    finally:
+        if prev_value is None:
+            del os.environ[name]
+        else:
+            os.environ[name] = prev_value

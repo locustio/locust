@@ -1,4 +1,5 @@
 import math
+import os
 from itertools import combinations_with_replacement
 from operator import attrgetter
 from typing import Dict, List, Type
@@ -23,9 +24,16 @@ def weight_users(user_classes: List[Type[User]], user_count: int) -> Dict[str, i
 
     user_classes_count = {user_class.__name__: 0 for user_class in user_classes}
 
-    # If the number of users is less than the number of user classes, at most one user of each user class
-    # is chosen. User classes with higher weight are chosen first.
-    if user_count <= len(user_classes):
+    if user_count == 0:
+        return user_classes_count
+
+    spawn_at_least_one_user_of_each_user_class = {"true": True, "false": False}[
+        os.getenv("LOCUST_SPAWN_AT_LEAST_ONE_USER_OF_EACH_USER_CLASS", "true").lower()
+    ]
+
+    if spawn_at_least_one_user_of_each_user_class and user_count <= len(user_classes):
+        # If the number of users is less than the number of user classes, at most one user of each user class
+        # is chosen. User classes with higher weight are chosen first.
         user_classes_count.update(
             {
                 user_class.__name__: 1
@@ -34,25 +42,37 @@ def weight_users(user_classes: List[Type[User]], user_count: int) -> Dict[str, i
         )
         return user_classes_count
 
-    # If the number of users is greater than or equal to the number of user classes, at least one user of each
-    # user class will be chosen. The greater number of users is, the better the actual distribution
-    # of users will match the desired one (as dictated by the weight attributes).
-    weights = list(map(attrgetter("weight"), user_classes))
-    relative_weights = [weight / sum(weights) for weight in weights]
-    user_classes_count = {
-        user_class.__name__: round(relative_weight * user_count) or 1
-        for user_class, relative_weight in zip(user_classes, relative_weights)
-    }
+    user_classes_count = _approximate_user_classes_count(
+        user_classes, user_count, spawn_at_least_one_user_of_each_user_class
+    )
 
     if sum(user_classes_count.values()) == user_count:
         return user_classes_count
 
+    user_classes_count = _find_ideal_users_to_add_or_remove(
+        user_classes, user_count - sum(user_classes_count.values()), user_classes_count
+    )
+    assert sum(user_classes_count.values()) == user_count
+    return user_classes_count
+
+
+def _approximate_user_classes_count(
+    user_classes: List[Type[User]], user_count: int, spawn_at_least_one_user_of_each_user_class: bool
+) -> Dict[str, int]:
+    if spawn_at_least_one_user_of_each_user_class:
+        # If the number of users is greater than or equal to the number of user classes, at least one user of each
+        # user class will be chosen. The greater number of users is, the better the actual distribution
+        # of users will match the desired one (as dictated by the weight attributes).
+        min_user_class_count = 1
     else:
-        user_classes_count = _find_ideal_users_to_add_or_remove(
-            user_classes, user_count - sum(user_classes_count.values()), user_classes_count
-        )
-        assert sum(user_classes_count.values()) == user_count
-        return user_classes_count
+        min_user_class_count = 0
+
+    weights = list(map(attrgetter("weight"), user_classes))
+    relative_weights = [weight / sum(weights) for weight in weights]
+    return {
+        user_class.__name__: round(relative_weight * user_count) or min_user_class_count
+        for user_class, relative_weight in zip(user_classes, relative_weights)
+    }
 
 
 def _find_ideal_users_to_add_or_remove(
