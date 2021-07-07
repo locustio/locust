@@ -30,7 +30,6 @@ from gevent.pool import Group
 from . import User
 from locust import __version__
 from .dispatch import UsersDispatcher
-from .distribution import distribute_users
 from .exception import RPCError
 from .log import greenlet_exception_logger
 from .rpc import (
