@@ -114,18 +114,17 @@ class UsersDispatcher(Iterator):
         #       to set the workers with the adequate users. After having done that,
         #       we need to update `self._users_on_workers` and `self._current_user_count`.
 
-        if self._current_user_count < self._target_user_count:
-            while self._current_user_count < self._target_user_count:
-                with self._wait_between_dispatch_iteration_context():
-                    yield self._ramp_up()
-
-        elif self._current_user_count > self._target_user_count:
-            while self._current_user_count > self._target_user_count:
-                with self._wait_between_dispatch_iteration_context():
-                    yield self._ramp_down()
-
-        else:
+        if self._current_user_count == self._target_user_count:
             yield self._initial_users_on_workers
+            return
+
+        while self._current_user_count < self._target_user_count:
+            with self._wait_between_dispatch_iteration_context():
+                yield self._ramp_up()
+
+        while self._current_user_count > self._target_user_count:
+            with self._wait_between_dispatch_iteration_context():
+                yield self._ramp_down()
 
     @contextlib.contextmanager
     def _wait_between_dispatch_iteration_context(self) -> None:
