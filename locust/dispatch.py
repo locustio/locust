@@ -139,7 +139,7 @@ class UsersDispatcher(Iterator):
 
         self._dispatch_iteration_durations.append(delta)
 
-        print("Dispatch cycle took {:.3f}ms".format(delta * 1000))
+        # print("Dispatch cycle took {:.3f}ms".format(delta * 1000))
 
         if self._current_user_count == self._target_user_count:
             # No sleep when this is the last dispatch iteration
