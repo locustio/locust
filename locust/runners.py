@@ -30,7 +30,7 @@ from gevent.pool import Group
 from . import User
 from locust import __version__
 from .dispatch import UsersDispatcher
-from .distribution import weight_users
+from .distribution import distribute_users
 from .exception import RPCError
 from .log import greenlet_exception_logger
 from .rpc import (
@@ -299,7 +299,7 @@ class Runner:
             if self.environment.host is not None:
                 user_class.host = self.environment.host
 
-        self.target_user_classes_count = weight_users(self.user_classes, user_count)
+        self.target_user_classes_count = distribute_users(self.user_classes, user_count)
 
         local_worker_node = WorkerNode(id="local")
         local_worker_node.user_classes_count = self.user_classes_count
@@ -642,7 +642,7 @@ class MasterRunner(DistributedRunner):
             if self.environment.host is not None:
                 user_class.host = self.environment.host
 
-        self.target_user_classes_count = weight_users(self.user_classes, user_count)
+        self.target_user_classes_count = distribute_users(self.user_classes, user_count)
 
         self.spawn_rate = spawn_rate
 

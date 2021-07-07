@@ -1,3 +1,4 @@
+import contextlib
 import functools
 import itertools
 import json
@@ -6,10 +7,14 @@ import tempfile
 import time
 from collections.abc import Iterator
 from copy import deepcopy
-from operator import add, itemgetter, lt, methodcaller, ne, sub
-from typing import Dict, Generator, List, TYPE_CHECKING, Tuple
+from operator import add, attrgetter, itemgetter, lt, methodcaller, ne, sub
+from typing import Dict, Generator, List, TYPE_CHECKING, Tuple, Type
 
 import gevent
+import roundrobin
+
+from locust import User
+from locust.distribution import distribute_users
 
 if TYPE_CHECKING:
     from locust.runners import WorkerNode
@@ -27,21 +32,10 @@ if TYPE_CHECKING:
 class UsersDispatcher(Iterator):
     """
     Iterator that dispatches the users to the workers.
-    The users already running on the workers are also taken into
-    account.
 
     The dispatcher waits an appropriate amount of time between each iteration
     in order for the spawn rate to be respected whether running in
     local or distributed mode.
-
-    The spawn rate is only applied when additional users are needed.
-    Hence, if the desired user count contains less users than what is currently running,
-    the dispatcher won't wait and will only run for
-    one iteration. The rationale for not stopping users at the spawn rate
-    is that stopping them is a blocking operation, especially when
-    a stop timeout is specified. When a stop timeout is specified combined with users having long-running tasks,
-    attempting to stop the users at a spawn rate will lead to weird behaviours (users being killed even though the
-    stop timeout is not reached yet).
 
     The terminology used in the users dispatcher is:
       - Dispatch cycle
@@ -58,10 +52,19 @@ class UsersDispatcher(Iterator):
             from 10 to 100.
     """
 
-    def __init__(self, worker_nodes: "List[WorkerNode]", user_classes_count: Dict[str, int], spawn_rate: float):
+    def __init__(
+        self,
+        worker_nodes: "List[WorkerNode]",
+        user_classes: List[Type[User]],
+        previous_target_user_count: int,
+        target_user_count: int,
+        spawn_rate: float,
+    ):
         """
         :param worker_nodes: List of worker nodes
-        :param user_classes_count: Desired number of users for each class
+        :param user_classes: The user classes
+        :param previous_target_user_count: The desired user count at the end of the previous dispatch cycle
+        :param target_user_count: The desired user count at the end of the dispatch cycle
         :param spawn_rate: The spawn rate
         """
         # NOTE: We use "sorted" in some places in this module. It is done to ensure repeatable behaviour.
@@ -69,637 +72,212 @@ class UsersDispatcher(Iterator):
         #       completely unordered. For >=Py3.7, a dictionary keeps the insertion order. Even then,
         #       it is safer to sort the keys when repeatable behaviour is required.
         self._worker_nodes = sorted(worker_nodes, key=lambda w: w.id)
-        self._worker_node_ids: List[str] = [w.id for w in self._worker_nodes]
 
-        self._user_classes_count = user_classes_count
+        self._worker_nodes_id: List[str] = [w.id for w in self._worker_nodes]  # TODO: Needed?
 
-        self._user_classes = sorted(user_classes_count.keys())
+        self._worker_count = len(self._worker_nodes)
 
-        # Represents the already running users among the workers at the start of this dispatch cycle
-        self._initial_dispatched_users = {
-            worker_node.id: {
-                user_class: worker_node.user_classes_count.get(user_class, 0)
-                for user_class in self._user_classes_count.keys()
-            }
-            for worker_node in self._worker_nodes
-        }
+        self._user_classes = sorted(user_classes, key=attrgetter("__name__"))
 
-        self._desired_user_count = sum(self._user_classes_count.values())
+        self._previous_target_user_count = previous_target_user_count
+
+        self._target_user_count = target_user_count
 
         self._spawn_rate = spawn_rate
 
-        self._desired_users_assigned_to_workers = _WorkersUsersAssignor(
-            user_classes_count, worker_nodes
-        ).desired_users_assigned_to_workers
-
-        # This represents the desired users distribution minus the already running users among the workers.
-        # The values inside this dictionary are updated during the current dispatch cycle. For example,
-        # if we dispatch 1 user of UserClass1 to worker 1, then we will decrement by 1 the user count
-        # for UserClass1 of worker 1. Naturally, the current dispatch cycle is done once all the values
-        # reach zero.
-        self._users_left_to_assigned = {
+        self._initial_users_on_workers = {
             worker_node.id: {
-                user_class: max(
-                    0,
-                    self._desired_users_assigned_to_workers[worker_node.id][user_class]
-                    - self._initial_dispatched_users[worker_node.id][user_class],
-                )
-                for user_class in self._user_classes_count.keys()
+                user_class.__name__: worker_node.user_classes_count.get(user_class.__name__, 0)
+                for user_class in self._user_classes
             }
-            for worker_node in self._worker_nodes
+            for worker_node in worker_nodes
         }
 
-        self._user_count_per_dispatch = max(1, math.floor(self._spawn_rate))
+        self._users_on_workers = deepcopy(self._initial_users_on_workers)
 
-        self._wait_between_dispatch = self._user_count_per_dispatch / self._spawn_rate
+        self._user_count_per_dispatch_iteration = max(1, math.floor(self._spawn_rate))
 
-        # The user count for each user class to dispatch at each dispatch iteration
-        self._user_classes_count_per_dispatch = {
-            user_class: math.floor(
-                self._user_count_per_dispatch * (user_count / sum(self._user_classes_count.values()))
-            )
-            for user_class, user_count in self._user_classes_count.items()
-        }
+        self._wait_between_dispatch = self._user_count_per_dispatch_iteration / self._spawn_rate
 
-        # We use deepcopy because we will update the values inside `dispatched_users`
-        # to keep track of the number of dispatched users for the current dispatch cycle.
-        # It is essentially the same thing as for the `effective_assigned_users` dictionary,
-        # but in reverse.
-        self._dispatched_users = deepcopy(self._initial_dispatched_users)
-
-        # Initialize the generator that is used in `__next__`
         self._dispatcher_generator = self._dispatcher()
 
-        self._iteration = 0
+        self._user_gen_generator = self._user_gen()
 
-        self._workers_desired_user_count = {
-            worker_node_id: sum(desired_users_on_worker.values())
-            for worker_node_id, desired_users_on_worker in self._desired_users_assigned_to_workers.items()
-        }
+        self._user_gen2_generator = self._user_gen2()
 
-        # Cache for the `UsersDispatcher._workers_user_count` method
-        self._worker_is_full_cache = {}
+        self._worker_names_generator = itertools.cycle(self._worker_nodes_id)
 
-        # Cache for the `UsersDispatcher.distance_from_ideal_distribution` method
-        self._distance_from_ideal_distribution_cache = None
+        self._iteration = 0  # TODO: Needed?
 
-        # Cache for the `UsersDispatcher._adding_this_user_class_respects_distribution` method
-        self._adding_this_user_class_respects_distribution_cache = {}
+        self._current_user_count = sum(map(sum, map(dict.values, self._users_on_workers.values())))
 
-        # Cache for the `UsersDispatcher._user_class_cannot_be_assigned_to_any_worker` method
-        self._user_class_cannot_be_assigned_to_any_worker_cache = {}
+        self._active_users = []
 
-        # Cache for the `UsersDispatcher._dispatched_user_count` property
-        self._dispatched_user_count_cache = None
+        self._stopped_users = []
 
-        # Cache for the `UsersDispatcher._workers_user_count` property
-        self._workers_user_count_cache = None
+        #
+        user_classes_count = distribute_users(self._user_classes, self._target_user_count)
+        distributed_users = []
+        for user_class in itertools.cycle(self._user_classes):
+            if sum(user_classes_count.values()) == 0:
+                break
+            if user_classes_count[user_class.__name__] > 0:
+                distributed_users.append(user_class.__name__)
+                user_classes_count[user_class.__name__] -= 1
+
+        # self._distributed_users_iterator = itertools.cycle(distributed_users)
+        self._distributed_users_iterator = roundrobin.smooth(
+            [(user_class.__name__, user_class.weight) for user_class in self._user_classes]
+        )
+
+        self._dispatch_iteration_durations = []
+
+    @property
+    def dispatch_iteration_durations(self) -> List[float]:
+        return self._dispatch_iteration_durations
 
     def __next__(self) -> Dict[str, Dict[str, int]]:
-        self._iteration += 1
         return next(self._dispatcher_generator)
 
     def _dispatcher(self) -> Generator[Dict[str, Dict[str, int]], None, None]:
         """Main iterator logic for dispatching users during this dispatch cycle"""
-        if self._desired_users_assignment_can_be_obtained_in_a_single_dispatch_iteration:
-            yield self._desired_users_assigned_to_workers
+        # TODO: Ensure initial users on worker is ok. If not, send a single dispatch
+        #       to first set the workers with the adequate users. After having done that,
+        #       we need to update `self._users_on_workers` and `self._current_user_count`
+
+        if self._current_user_count < self._target_user_count:
+            while self._current_user_count < self._target_user_count:
+                with self._wait_between_dispatch_iteration_context():
+                    yield self._ramp_up()
+                    self._iteration += 1
+
+        elif self._current_user_count > self._target_user_count:
+            while self._current_user_count > self._target_user_count:
+                with self._wait_between_dispatch_iteration_context():
+                    yield self._ramp_down()
+                    self._iteration += 1
 
         else:
-            while not self._all_users_have_been_dispatched:
-                ts = time.perf_counter()
-                yield self._users_to_dispatch_for_current_iteration()
-                if not self._all_users_have_been_dispatched:
-                    delta = time.perf_counter() - ts
-                    sleep_duration = max(0.0, self._wait_between_dispatch - delta)
-                    assert sleep_duration <= 10, sleep_duration
-                    print(
-                        "dispatch_iteration_compute_time = {:.2f}ms | sleep_duration = {:.2f}ms".format(
-                            delta * 1000, sleep_duration * 1000
-                        )
-                    )
-                    gevent.sleep(sleep_duration)
+            yield self._initial_users_on_workers
+            self._iteration += 1
 
-    @property
-    def _desired_users_assignment_can_be_obtained_in_a_single_dispatch_iteration(self) -> bool:
-        if self._dispatched_user_count >= self._desired_user_count:
-            # There is already more users running in total than the total desired user count
-            return True
+    @contextlib.contextmanager
+    def _wait_between_dispatch_iteration_context(self) -> None:
+        t0_rel = time.perf_counter()
 
-        if self._dispatched_user_count + self._user_count_per_dispatch > self._desired_user_count:
-            # The spawn rate greater than the remaining users to dispatch
-            return True
+        # We don't use `try: ... finally: ...` because we don't want to sleep
+        # if there's an exception within the context.
+        yield
 
-        # Workers having already more users than desired will show up zero
-        # users left to dispatch in the following dictionary. And this, even
-        # if these workers are missing users in one or more user classes.
-        user_classes_count_left_to_dispatch_excluding_excess_users = {
-            user_class: max(
-                0,
-                sum(map(itemgetter(user_class), self._desired_users_assigned_to_workers.values()))
-                - self._dispatched_user_class_count(user_class),
-            )
-            for user_class in self._user_classes_count.keys()
-        }
+        delta = time.perf_counter() - t0_rel
 
-        # This condition is to cover a corner case for which there exists no dispatch solution that won't
-        # violate the following constraints:
-        #   - No worker run excess users at any point (except for the possible excess users already running)
-        #   - No worker run excess users of any user class at any point (except for the
-        #     possible excess users already running)
-        #   - The total user count is never exceeded (except for the possible excess users already running)
-        # In a situation like this, we have no choice but to immediately dispatch the final users immediately.
-        workers_user_count = self._workers_user_count
-        if (
-            sum(
-                1
-                for user_class, user_class_count_left_to_dispatch in user_classes_count_left_to_dispatch_excluding_excess_users.items()
-                if user_class_count_left_to_dispatch != 0
-                for worker_node in self._worker_nodes
-                if (
-                    workers_user_count[worker_node.id]
-                    < sum(self._desired_users_assigned_to_workers[worker_node.id].values())
-                )
-                if (
-                    (
-                        self._desired_users_assigned_to_workers[worker_node.id][user_class]
-                        - self._dispatched_users[worker_node.id][user_class]
-                    )
-                    > 0
-                )
-            )
-            == 0
-        ):
-            return True
+        self._dispatch_iteration_durations.append(delta)
 
-        user_count_left_to_dispatch_excluding_excess_users = sum(
-            user_classes_count_left_to_dispatch_excluding_excess_users.values()
-        )
-        return self._user_count_per_dispatch >= user_count_left_to_dispatch_excluding_excess_users
+        print("Dispatch cycle took {:.3f}ms".format(delta * 1000))
 
-    # @profile
-    def _users_to_dispatch_for_current_iteration(self) -> Dict[str, Dict[str, int]]:
-        """
-        Compute the users to dispatch for the current dispatch iteration.
-        """
-        user_count_in_current_dispatch = 0
+        if self._current_user_count == self._target_user_count:
+            # No sleep when this is the last dispatch iteration
+            return
 
-        for i, user_class_to_add in enumerate(itertools.cycle(self._user_classes)):
-            # For large number of user classes and large number of workers, this assertion might fail.
-            # If this happens, you can remove it or increase the threshold. Right now, the assertion
-            # is there as a safeguard for situations that can't be easily tested (i.e. large scale distributed tests).
-            assert i < 100 * len(
-                self._user_classes
-            ), "Looks like dispatch is stuck in an infinite loop (iteration {}). Crash dump:\n{}\nAlso written to {}".format(
-                i, *self._crash_dump()
-            )
+        sleep_duration = max(0.0, self._wait_between_dispatch - delta)
+        gevent.sleep(sleep_duration)
 
-            if all(self._user_class_cannot_be_assigned_to_any_worker(user_class) for user_class in self._user_classes):
-                # This means that we're at the last iteration of this dispatch cycle. If some user
-                # classes are in excess, this last iteration will stop those excess users.
-                self._dispatched_users.update(self._desired_users_assigned_to_workers)
-                self._users_left_to_assigned.update(
-                    {
-                        worker_node_id: {user_class: 0 for user_class in user_classes_count.keys()}
-                        for worker_node_id, user_classes_count in self._dispatched_users.items()
-                    }
-                )
-                break
-
-            if self._dispatched_user_class_count(user_class_to_add) >= self._user_classes_count[user_class_to_add]:
-                continue
-
-            if self._user_class_cannot_be_assigned_to_any_worker(user_class_to_add):
-                continue
-
-            if self._try_next_user_class_in_order_to_stay_balanced_during_ramp_up(user_class_to_add):
-                continue
-
-            user_class_count_to_add_current_dispatch = self._user_classes_count_per_dispatch[user_class_to_add]
-
-            for j, worker_node_id in enumerate(itertools.cycle(self._worker_node_ids)):
-                assert j < int(
-                    2 * self._number_of_workers
-                ), "Looks like dispatch is stuck in an infinite loop (iteration {}). Crash dump:\n{}\nAlso written to {}".format(
-                    j, *self._crash_dump()
-                )
-                if self._worker_is_full(worker_node_id):
-                    continue
-                if self._dispatched_user_count == self._desired_user_count or (
-                    self._user_count_per_dispatch - user_count_in_current_dispatch >= self._user_count_left_to_assigned
-                ):
-                    # This means that we're at the last iteration of this dispatch cycle. If some user
-                    # classes are in excess, this last iteration will stop those excess users.
-                    self._dispatched_users.update(self._desired_users_assigned_to_workers)
-                    self._users_left_to_assigned.update(
-                        {
-                            worker_node_id: {user_class: 0 for user_class in user_classes_count.keys()}
-                            for worker_node_id, user_classes_count in self._dispatched_users.items()
-                        }
-                    )
-                    break
-                if self._users_left_to_assigned[worker_node_id][user_class_to_add] == 0:
-                    continue
-                if self._try_next_worker_in_order_to_stay_balanced_during_ramp_up(worker_node_id, user_class_to_add):
-                    continue
-                self._dispatched_users[worker_node_id][user_class_to_add] += 1
-                self._users_left_to_assigned[worker_node_id][user_class_to_add] -= 1
-                user_count_in_current_dispatch += 1
-                user_class_count_to_add_current_dispatch -= 1
-                del self._worker_is_full_cache[worker_node_id]
-                self._distance_from_ideal_distribution_cache = None
-                self._dispatched_user_count_cache = None
-                self._workers_user_count_cache = None
-                self._dispatched_user_classes_count.cache_clear()
-                self._adding_this_user_class_respects_distribution_cache.clear()
-                self._user_class_cannot_be_assigned_to_any_worker_cache.clear()
-                if (
-                    user_class_count_to_add_current_dispatch <= 0
-                    or user_count_in_current_dispatch == self._user_count_per_dispatch
-                    or self._users_left_to_assigned[worker_node_id][user_class_to_add] == 0
-                ):
-                    break
-                # break
-
-            if user_count_in_current_dispatch == self._user_count_per_dispatch:
-                break
-
-            if self._dispatched_user_count == self._desired_user_count:
-                break
-
-        return {
-            worker_node_id: dict(sorted(user_classes_count.items(), key=itemgetter(0)))
-            for worker_node_id, user_classes_count in sorted(self._dispatched_users.items(), key=itemgetter(0))
-        }
-
-    def _crash_dump(self) -> Tuple[str, str]:
-        """Parameters necessary to debug infinite loop issues.
-
-        Users encountering an infinite loop issue should provide these informations.
-        """
-        crash_dump = json.dumps(
-            {
-                "spawn_rate": self._spawn_rate,
-                "initial_dispatched_users": self._initial_dispatched_users,
-                "desired_users_assigned_to_workers": self._desired_users_assigned_to_workers,
-                "dispatched_users": self._dispatched_users,
-                "user_classes_count": self._user_classes_count,
-                "initial_user_count": sum(map(sum, map(dict.values, self._initial_dispatched_users.values()))),
-                "desired_user_count": sum(self._user_classes_count.values()),
-                "number_of_workers": self._number_of_workers,
-            },
-            indent="  ",
-        )
-        fp = tempfile.NamedTemporaryFile(
-            prefix="locust-dispatcher-crash-dump-", suffix=".json", mode="wt", delete=False
-        )
-        try:
-            fp.write(crash_dump)
-        finally:
-            fp.close()
-        return crash_dump, fp.name
-
-    @property
-    def _number_of_workers(self) -> int:
-        return len(self._users_left_to_assigned)
-
-    @property
-    def _all_users_have_been_dispatched(self) -> bool:
-        return self._user_count_left_to_assigned == 0
-
-    @property
-    def _user_count_left_to_assigned(self) -> int:
-        return sum(map(sum, map(dict.values, self._users_left_to_assigned.values())))
-
-    # @profile
-    def _try_next_user_class_in_order_to_stay_balanced_during_ramp_up(self, user_class_to_add: str) -> bool:
-        """
-        Whether to skip to the next user class or not. This is done so that
-        the distribution of user class stays approximately balanced from one dispatch
-        iteration to another.
-        """
-        # For performance reasons, we use `functools.lru_cache()` on the `self._dispatched_user_classes_count`
-        # method because its value does not change within the scope of the current method. However, the next time
-        # `self._try_next_user_class_in_order_to_stay_balanced_during_ramp_up` is invoked, we need
-        # `self._dispatched_user_classes_count` to be recomputed.
-        # self._dispatched_user_classes_count.cache_clear()
-
-        if all(user_count > 0 for user_count in self._dispatched_user_classes_count().values()):
-            # We're here because each user class have at least one user running. Thus,
-            # we need to ensure that the distribution of users corresponds to the weights.
-            if not self._adding_this_user_class_respects_distribution_better_than_adding_any_other_user_class(
-                user_class_to_add
+    def _ramp_up(self) -> Dict[str, Dict[str, int]]:
+        initial_user_count = self._current_user_count
+        for user in self._user_gen2_generator:
+            worker_name = next(self._worker_names_generator)
+            self._users_on_workers[worker_name][user] += 1
+            self._current_user_count += 1
+            if self._current_user_count >= min(
+                initial_user_count + self._user_count_per_dispatch_iteration, self._target_user_count
             ):
-                return True
-            else:
-                return False
+                return deepcopy(self._users_on_workers)
 
-        else:
-            # Because each user class doesn't have at least one running user, we use a simpler strategy
-            # that makes sure each user class appears once.
-            #
-            # The following code checks if another user class that would better preserves the distribution exists.
-            # If no such user class exists, this code will evaluate to `False` and the current user class
-            # will be considered as the next user class to be added to the pool of running users.
-            return any(
-                True
-                for next_user_class in filter(functools.partial(ne, user_class_to_add), self._user_classes)
-                if sum(map(itemgetter(next_user_class), self._users_left_to_assigned.values())) > 0
-                if self._dispatched_user_class_count(next_user_class) < self._user_classes_count[next_user_class]
-                if not self._user_class_cannot_be_assigned_to_any_worker(next_user_class)
+        # while True:
+        #     # Respawn stopped users if any exist
+        #     while self._stopped_users:
+        #         worker_name, user = self._stopped_users.pop()
+        #         self._active_users.append([worker_name, user])
+        #         self._users_on_workers[worker_name][user] += 1
+        #         self._current_user_count += 1
+        #         if self._current_user_count >= self._target_user_count:
+        #             assert False
+        #             # return
+        #
+        #     for users in self._user_gen_generator:
+        #         for user in users:
+        #             users_on_selected_worker = None
+        #             for worker_name, users_on_worker in self._users_on_workers.items():
+        #                 # The condition on the right means the previous selected worker has
+        #                 # more users of class `user` than the current `worker_name`. Thus,
+        #                 # we should assign the `user` to the curent `worker_name`.
+        #                 if (
+        #                     users_on_selected_worker is None
+        #                     or self._users_on_workers[worker_name][user] < users_on_selected_worker[user]
+        #                 ):
+        #                     users_on_selected_worker = users_on_worker
+        #                     selected_worker_name = worker_name
+        #             self._active_users.append([selected_worker_name, user])
+        #             self._users_on_workers[selected_worker_name][user] += 1
+        #             self._current_user_count += 1
+        #             if self._current_user_count >= initial_user_count + self._user_count_per_dispatch_iteration:
+        #                 return deepcopy(self._users_on_workers)
+
+    def _user_gen2(self) -> Generator[str, None, None]:
+        gen = roundrobin.smooth([(user_class.__name__, user_class.weight) for user_class in self._user_classes])
+        while True:
+            yield gen()
+
+    def _ramp_down(self) -> Dict[str, Dict[str, int]]:
+        initial_user_count = self._current_user_count
+        for user in self._user_gen2_generator:
+            while True:
+                worker_name = next(self._worker_names_generator)
+                if self._users_on_workers[worker_name][user] == 0:
+                    continue
+                self._users_on_workers[worker_name][user] -= 1
+                self._current_user_count -= 1
                 if (
-                    self._dispatched_user_classes_count()[user_class_to_add]
-                    - self._dispatched_user_classes_count()[next_user_class]
-                    >= 1
-                )
-            )
-
-    # @profile
-    def _adding_this_user_class_respects_distribution_better_than_adding_any_other_user_class(
-        self, user_class_to_add: str
-    ) -> bool:
-        distance = self._distance_from_ideal_distribution()
-        distance_after_adding_user_class = self._distance_from_ideal_distribution_after_adding_this_user_class(
-            user_class_to_add
-        )
-        if distance_after_adding_user_class > distance and all(
-            not self._adding_this_user_class_respects_distribution(user_class)
-            for user_class in filter(functools.partial(ne, user_class_to_add), self._user_classes_count.keys())
-            if not self._user_class_cannot_be_assigned_to_any_worker(user_class)
-        ):
-            # If we are here, it means that if one user of `user_class_to_add` is added
-            # then the distribution will be the best we can get. In other words, adding
-            # one user of any other user class won't yield a better distribution.
-            return True
-        return distance_after_adding_user_class <= distance
-
-    # @profile
-    def _adding_this_user_class_respects_distribution(self, user_class_to_add: str) -> bool:
-        if user_class_to_add in self._adding_this_user_class_respects_distribution_cache:
-            return self._adding_this_user_class_respects_distribution_cache[user_class_to_add]
-        result = (
-            self._distance_from_ideal_distribution_after_adding_this_user_class(user_class_to_add)
-            <= self._distance_from_ideal_distribution()
-        )
-        self._adding_this_user_class_respects_distribution_cache[user_class_to_add] = result
-        return result
-
-    # @profile
-    def _distance_from_ideal_distribution(self) -> float:
-        """How far are we from the ideal distribution given the current set of running users?"""
-        if self._distance_from_ideal_distribution_cache is not None:
-            return self._distance_from_ideal_distribution_cache
-        weights = [
-            self._dispatched_user_classes_count()[user_class] / sum(self._dispatched_user_classes_count().values())
-            for user_class in self._user_classes
-        ]
-        value = math.sqrt(sum(map(lambda x: (x[1] - x[0]) ** 2, zip(weights, self._desired_relative_weights()))))
-        self._distance_from_ideal_distribution_cache = value
-        return value
-
-    # @profile
-    def _distance_from_ideal_distribution_after_adding_this_user_class(self, user_class_to_add: str) -> float:
-        """
-        How far are we from the ideal distribution if we were to add `user_class_to_add` to the pool of running users?
-        """
-        dispatched_user_classes_count = self._dispatched_user_classes_count()
-        denominator = sum(dispatched_user_classes_count.values()) + 1
-        relative_weights_with_added_user_class = [
-            (
-                dispatched_user_classes_count[user_class] + 1
-                if user_class == user_class_to_add
-                else dispatched_user_classes_count[user_class]
-            )
-            / denominator
-            for user_class in self._user_classes
-        ]
-
-        return math.sqrt(
-            sum(
-                map(
-                    lambda x: (x[1] - x[0]) ** 2,
-                    zip(relative_weights_with_added_user_class, self._desired_relative_weights()),
-                )
-            )
-        )
-
-    @functools.lru_cache()
-    def _desired_relative_weights(self) -> List[float]:
-        """The relative weight of each user class we desire"""
-        return [self._user_classes_count[user_class] / self._desired_user_count for user_class in self._user_classes]
-
-    @functools.lru_cache()
-    def _dispatched_user_classes_count(self) -> Dict[str, int]:
-        """The user count for each user class that are dispatched at this time"""
-        return {
-            user_class: self._dispatched_user_class_count(user_class) for user_class in self._user_classes_count.keys()
-        }
-
-    # @profile
-    def _try_next_worker_in_order_to_stay_balanced_during_ramp_up(
-        self, worker_node_id_to_add_user_on: str, user_class: str
-    ) -> bool:
-        """
-        Whether to skip to the next worker or not. This is done so that
-        each worker runs approximately the same amount of users during a ramp-up.
-        """
-        if self._dispatched_user_count == 0:
-            return False
-
-        workers_user_count = self._workers_user_count
-
-        # Should be set at 2 for best results. Use a value higher than 2 if you have a lot of workers.
-        # Higher values will result in a less ideal "round-robin" dispatch to the workers.
-        allowable_skew = 2
-
-        # Represents the ideal workers on which we'd want to add the user class
-        # because these workers contain less users than all the other workers.
-        # Equivalent of:
-        #   ideal_worker_node_ids = [
-        #     ideal_worker_node_id
-        #     for ideal_worker_node_id in workers_user_count.keys()
-        #     if workers_user_count[ideal_worker_node_id] + 1 - min(workers_user_count.values()) < 2
-        #   ]
-        # We need to use this less-readable version, otherwise it's too slow.
-        min_workers_user_count = min(workers_user_count.values())
-        ideal_worker_node_ids = list(
-            map(
-                itemgetter(0),
-                filter(
-                    lambda x: lt(sub(add(x[1], 1), min_workers_user_count), allowable_skew), workers_user_count.items()
-                ),
-            )
-        )
-
-        if worker_node_id_to_add_user_on in ideal_worker_node_ids:
-            return False
-
-        # Only keep the workers having less users than the target value as
-        # we can't add users to those workers anyway.
-        workers_user_count_without_excess_users = {
-            worker_node_id: user_count
-            for worker_node_id, user_count in workers_user_count.items()
-            if user_count < sum(self._desired_users_assigned_to_workers[worker_node_id].values())
-        }
-
-        ideal_worker_on_which_to_add_user_exists = any(
-            self._users_left_to_assigned[ideal_worker_node_id][user_class] > 0
-            for ideal_worker_node_id in ideal_worker_node_ids
-        )
-
-        if worker_node_id_to_add_user_on not in workers_user_count_without_excess_users:
-            return ideal_worker_on_which_to_add_user_exists
-
-        if (
-            workers_user_count_without_excess_users[worker_node_id_to_add_user_on]
-            + 1
-            - min(workers_user_count.values())
-            >= allowable_skew
-            and ideal_worker_on_which_to_add_user_exists
-        ):
-            # Adding the user to the current worker will result in this worker having more than 1
-            # extra users compared to the other workers (condition on the left of the `and` above).
-            # Moreover, we know there exists at least one other worker that would better host
-            # the new user (condition on the right of the `and` above). Thus, we skip to the next worker node.
-            return True
-
-        return False
-
-    @property
-    # @profile
-    def _workers_user_count(self) -> Dict[str, int]:
-        """User count currently running on each of the workers"""
-        # Equivalent of:
-        #    {
-        #       worker_node_id: sum(dispatched_users_on_worker.values())
-        #       for worker_node_id, dispatched_users_on_worker in self._dispatched_users.items()
-        #    }
-        # but optimized for more performance that is needed.
-        if self._workers_user_count_cache is not None:
-            return self._workers_user_count_cache
-        result = dict(zip(self._dispatched_users.keys(), map(sum, map(dict.values, self._dispatched_users.values()))))
-        self._workers_user_count_cache = result
-        return result
-
-    def _dispatched_user_class_count(self, user_class: str) -> int:
-        """Number of dispatched users at this time for the given user class"""
-        return sum(map(itemgetter(user_class), self._dispatched_users.values()))
-
-    @property
-    def _dispatched_user_count(self) -> int:
-        """Number of dispatched users at this time"""
-        if self._dispatched_user_count_cache is not None:
-            return self._dispatched_user_count_cache
-        result = sum(map(sum, map(dict.values, self._dispatched_users.values())))
-        self._dispatched_user_count_cache = result
-        return result
-
-    # @profile
-    def _user_class_cannot_be_assigned_to_any_worker(self, user_class_to_add: str) -> bool:
-        """No worker has enough place to accept this user class"""
-        if user_class_to_add in self._user_class_cannot_be_assigned_to_any_worker_cache:
-            return self._user_class_cannot_be_assigned_to_any_worker_cache[user_class_to_add]
-
-        effective_user_count_of_that_user_class_that_can_be_added = sum(
-            self._desired_users_assigned_to_workers[worker_node.id][user_class_to_add]
-            - self._dispatched_users[worker_node.id][user_class_to_add]
-            for worker_node in self._worker_nodes
-        )
-        if effective_user_count_of_that_user_class_that_can_be_added <= 0:
-            self._user_class_cannot_be_assigned_to_any_worker_cache[user_class_to_add] = True
-            return True
-
-        if any(
-            True
-            for worker_node in self._worker_nodes
-            if not self._worker_is_full(worker_node.id)
-            if self._users_left_to_assigned[worker_node.id][user_class_to_add] > 0
-        ):
-            self._user_class_cannot_be_assigned_to_any_worker_cache[user_class_to_add] = False
-            return False
-
-        self._user_class_cannot_be_assigned_to_any_worker_cache[user_class_to_add] = True
-        return True
-
-    def _worker_is_full(self, worker_node_id: str) -> bool:
-        """The worker cannot accept more users without exceeding the maximum user count it can run"""
-        result = self._worker_is_full_cache.get(
-            worker_node_id, self._workers_user_count[worker_node_id] >= self._workers_desired_user_count[worker_node_id]
-        )
-        self._worker_is_full_cache[worker_node_id] = result
-        return result
-
-
-class _WorkersUsersAssignor:
-    """Helper to compute the users assigned to the workers"""
-
-    def __init__(self, user_classes_count: Dict[str, int], worker_nodes: "List[WorkerNode]"):
-        self._user_classes_count = user_classes_count
-        self._user_classes = sorted(user_classes_count.keys())
-        self._worker_nodes = sorted(worker_nodes, key=lambda w: w.id)
-
-    @property
-    def desired_users_assigned_to_workers(self) -> Dict[str, Dict[str, int]]:
-        """The users assigned to the workers.
-
-        The assignment is done in a way that each worker gets around the same number of users of each user class.
-        If some user classes are more represented than others, then it is not possible to equally distribute
-        the users from each user class to all workers. It is done in a best-effort.
-
-        The assignment also ensures that each worker runs the same amount of users (irrespective of the user class
-        of those users). If the total user count does not yield an integer when divided by the number of workers,
-        then some workers will have one more user than the others.
-        """
-        assigned_users = {
-            worker_node.id: {user_class: 0 for user_class in self._user_classes} for worker_node in self._worker_nodes
-        }
-
-        # We need to copy to prevent modifying `user_classes_count`.
-        user_classes_count = self._user_classes_count.copy()
-
-        user_count = sum(user_classes_count.values())
-
-        # If `remainder > 0`, it means that some workers will have `users_per_worker + 1` users.
-        users_per_worker, remainder = divmod(user_count, len(self._worker_nodes))
-
-        for user_class in self._user_classes:
-            if sum(user_classes_count.values()) == 0:
-                # No more users of any user class to assign to workers, so we can exit this loop.
+                    self._current_user_count == 0
+                    or self._current_user_count <= initial_user_count - self._user_count_per_dispatch_iteration
+                ):
+                    return deepcopy(self._users_on_workers)
                 break
 
-            # Assign users of `user_class` to the workers in a round-robin fashion.
-            for worker_node in itertools.cycle(self._worker_nodes):
-                if user_classes_count[user_class] == 0:
-                    break
+        # while self._current_user_count > initial_user_count - self._user_count_per_dispatch_iteration:
+        #     worker_name, user = self._active_users.pop()
+        #     self._stopped_users.append([worker_name, user])
+        #     self._users_on_workers[worker_name][user] -= 1
+        #     self._current_user_count -= 1
+        # return deepcopy(self._users_on_workers)
 
-                number_of_users_left_to_assign = user_count - self._number_of_assigned_users_across_workers(
-                    assigned_users
-                )
+    def _user_gen(self):
+        # ensure_all_users_get_picked = []
+        # other_users = []
+        # for u in self._user_classes:
+        #     for i in range(u.weight):
+        #         if i == 0:
+        #             ensure_all_users_get_picked.append(u.__name__)
+        #         else:
+        #             other_users.append(u.__name__)
+        #
+        # # other_users needs to be shuffled better. should be fairly easy,
+        # # but I couldn't immediately find a good solution and I want to get stuck in the weeds...
+        # weighted_users = ensure_all_users_get_picked + other_users
 
-                if (
-                    self._number_of_assigned_users_for_worker(assigned_users, worker_node) == users_per_worker
-                    and number_of_users_left_to_assign > remainder
-                ):
-                    continue
+        user_classes_count = distribute_users(self._user_classes, self._target_user_count)
+        distributed_users = []
+        for user_class in itertools.cycle(self._user_classes):
+            if sum(user_classes_count.values()) == 0:
+                break
+            if user_classes_count[user_class.__name__] > 0:
+                distributed_users.append(user_class.__name__)
+                user_classes_count[user_class.__name__] -= 1
 
-                elif (
-                    self._number_of_assigned_users_for_worker(assigned_users, worker_node) == users_per_worker + 1
-                    and number_of_users_left_to_assign < remainder
-                ):
-                    continue
+        distributed_users_iterator = itertools.cycle(distributed_users)
+        while True:
+            yield next(self._batch_iter(self._user_count_per_dispatch_iteration, distributed_users_iterator))
+            # yield next(self._batch_iter(self._worker_count, distributed_users_iterator))
 
-                assigned_users[worker_node.id][user_class] += 1
-                user_classes_count[user_class] -= 1
-
-        return assigned_users
-
-    @staticmethod
-    def _number_of_assigned_users_for_worker(
-        assigned_users: Dict[str, Dict[str, int]], worker_node: "WorkerNode"
-    ) -> int:
-        """User count running on the given worker"""
-        return sum(assigned_users[worker_node.id].values())
-
-    @staticmethod
-    def _number_of_assigned_users_across_workers(assigned_users: Dict[str, Dict[str, int]]) -> int:
-        """Total user count running on the workers"""
-        return sum(map(sum, map(methodcaller("values"), assigned_users.values())))
+    def _batch_iter(self, batch_size, iterator):
+        yield [next(iterator) for _ in range(batch_size)]

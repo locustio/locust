@@ -6,7 +6,7 @@ from typing import Dict, List, Type
 from locust import User
 
 
-def weight_users(user_classes: List[Type[User]], user_count: int) -> Dict[str, int]:
+def distribute_users(user_classes: List[Type[User]], user_count: int) -> Dict[str, int]:
     """
     Compute the desired state of users using the weight of each user class.
 
@@ -15,6 +15,8 @@ def weight_users(user_classes: List[Type[User]], user_count: int) -> Dict[str, i
     :return: the set of users to run
     """
     assert user_count >= 0
+
+    assert len(set(user_classes)) == len(user_classes), "One or more duplicated user classes"
 
     if len(user_classes) == 0:
         return {}
@@ -32,6 +34,7 @@ def weight_users(user_classes: List[Type[User]], user_count: int) -> Dict[str, i
                 for user_class in sorted(user_classes, key=attrgetter("weight"), reverse=True)[:user_count]
             }
         )
+        assert sum(user_classes_count.values()) == user_count
         return user_classes_count
 
     # If the number of users is greater than or equal to the number of user classes, at least one user of each
@@ -44,15 +47,17 @@ def weight_users(user_classes: List[Type[User]], user_count: int) -> Dict[str, i
         for user_class, relative_weight in zip(user_classes, relative_weights)
     }
 
-    if sum(user_classes_count.values()) == user_count:
+    current_user_count = sum(user_classes_count.values())
+
+    if user_count == current_user_count:
         return user_classes_count
 
-    else:
-        user_classes_count = _find_ideal_users_to_add_or_remove(
-            user_classes, user_count - sum(user_classes_count.values()), user_classes_count
-        )
-        assert sum(user_classes_count.values()) == user_count
-        return user_classes_count
+    # Last fine-grained adjustment to get to an optimal distribution
+    user_classes_count = _find_ideal_users_to_add_or_remove(
+        user_classes, user_count - current_user_count, user_classes_count
+    )
+    assert sum(user_classes_count.values()) == user_count
+    return user_classes_count
 
 
 def _find_ideal_users_to_add_or_remove(
