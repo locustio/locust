@@ -26,6 +26,14 @@ The :py:class:`Environment <locust.env.Environment>` instance's
     env.runner.start(5000, spawn_rate=20)
     env.runner.greenlet.join()
 
+It is also possible to bypass the dispatch and distribution logic, and manually control the spawned users:
+
+.. code-block:: python
+
+    new_users = env.runner.spawn_users({MyUserClass.__name__: 2})
+    new_users[1].my_custom_token = "custom-token-2"
+    new_users[0].my_custom_token = "custom-token-1"
+
 We could also use the :py:class:`Environment <locust.env.Environment>` instance's 
 :py:meth:`create_web_ui <locust.env.Environment.create_web_ui>` method to start a Web UI that can be used 
 to view the stats, and to control the runner (e.g. start and stop load tests):
