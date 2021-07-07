@@ -110,9 +110,9 @@ class UsersDispatcher(Iterator):
         return next(self._dispatcher_generator)
 
     def _dispatcher(self) -> Generator[Dict[str, Dict[str, int]], None, None]:
-        # TODO: Ensure initial users on worker is ok. If not, send a single dispatch
-        #       to first set the workers with the adequate users. After having done that,
-        #       we need to update `self._users_on_workers` and `self._current_user_count`
+        # TODO: Ensure initial users on workers are ok. If not, send a single dispatch
+        #       to set the workers with the adequate users. After having done that,
+        #       we need to update `self._users_on_workers` and `self._current_user_count`.
 
         if self._current_user_count < self._target_user_count:
             while self._current_user_count < self._target_user_count:
