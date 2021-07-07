@@ -1,33 +1,51 @@
-import mock
+import json
+import os
+import random
+import time
 import unittest
+from collections import defaultdict
+from contextlib import contextmanager
+from operator import itemgetter
 
 import gevent
+import mock
+import requests
 from gevent import sleep
+from gevent.pool import Group
 from gevent.queue import Queue
-import greenlet
 
 import locust
-from locust import runners, constant, LoadTestShape
-from locust.main import create_environment
-from locust.user import User, TaskSet, task
+from locust import (
+    LoadTestShape,
+    constant,
+    runners,
+    __version__,
+)
 from locust.env import Environment
-from locust.exception import RPCError, StopUser
+from locust.exception import (
+    RPCError,
+    StopUser,
+)
+from locust.main import create_environment
 from locust.rpc import Message
-
 from locust.runners import (
     LocalRunner,
-    WorkerNode,
-    WorkerRunner,
     STATE_INIT,
     STATE_SPAWNING,
     STATE_RUNNING,
     STATE_MISSING,
     STATE_STOPPING,
     STATE_STOPPED,
+    WorkerNode,
+    WorkerRunner,
 )
 from locust.stats import RequestStats
-from locust.test.testcases import LocustTestCase
-
+from .testcases import LocustTestCase
+from locust.user import (
+    TaskSet,
+    User,
+    task,
+)
 
 NETWORK_BROKEN = "network broken"
 
@@ -96,25 +114,6 @@ class HeyAnException(Exception):
 
 
 class TestLocustRunner(LocustTestCase):
-    def assert_locust_class_distribution(self, expected_distribution, classes):
-        # Construct a {UserClass => count} dict from a list of user classes
-        distribution = {}
-        for user_class in classes:
-            if not user_class in distribution:
-                distribution[user_class] = 0
-            distribution[user_class] += 1
-        expected_str = str({k.__name__: v for k, v in expected_distribution.items()})
-        actual_str = str({k.__name__: v for k, v in distribution.items()})
-        self.assertEqual(
-            expected_distribution,
-            distribution,
-            "Expected a User class distribution of %s but found %s"
-            % (
-                expected_str,
-                actual_str,
-            ),
-        )
-
     def test_cpu_warning(self):
         _monitor_interval = runners.CPU_MONITOR_INTERVAL
         runners.CPU_MONITOR_INTERVAL = 2.0
@@ -131,47 +130,12 @@ class TestLocustRunner(LocustTestCase):
             environment = Environment(user_classes=[CpuUser])
             runner = LocalRunner(environment)
             self.assertFalse(runner.cpu_warning_emitted)
-            runner.spawn_users(1, 1, wait=False)
+            runner.spawn_users({CpuUser.__name__: 1}, wait=False)
             sleep(2.5)
             runner.quit()
             self.assertTrue(runner.cpu_warning_emitted)
         finally:
             runners.CPU_MONITOR_INTERVAL = _monitor_interval
-
-    def test_weight_locusts(self):
-        class BaseUser(User):
-            pass
-
-        class L1(BaseUser):
-            weight = 101
-
-        class L2(BaseUser):
-            weight = 99
-
-        class L3(BaseUser):
-            weight = 100
-
-        runner = Environment(user_classes=[L1, L2, L3]).create_local_runner()
-        self.assert_locust_class_distribution({L1: 10, L2: 9, L3: 10}, runner.weight_users(29))
-        self.assert_locust_class_distribution({L1: 10, L2: 10, L3: 10}, runner.weight_users(30))
-        self.assert_locust_class_distribution({L1: 11, L2: 10, L3: 10}, runner.weight_users(31))
-
-    def test_weight_locusts_fewer_amount_than_user_classes(self):
-        class BaseUser(User):
-            pass
-
-        class L1(BaseUser):
-            weight = 101
-
-        class L2(BaseUser):
-            weight = 99
-
-        class L3(BaseUser):
-            weight = 100
-
-        runner = Environment(user_classes=[L1, L2, L3]).create_local_runner()
-        self.assertEqual(1, len(runner.weight_users(1)))
-        self.assert_locust_class_distribution({L1: 1}, runner.weight_users(1))
 
     def test_kill_locusts(self):
         triggered = [False]
@@ -186,12 +150,12 @@ class TestLocustRunner(LocustTestCase):
                     triggered[0] = True
 
         runner = Environment(user_classes=[BaseUser]).create_local_runner()
-        users = runner.spawn_users(2, spawn_rate=2, wait=False)
+        users = runner.spawn_users({BaseUser.__name__: 2}, wait=False)
         self.assertEqual(2, len(users))
         self.assertEqual(2, len(runner.user_greenlets))
         g1 = list(runner.user_greenlets)[0]
         g2 = list(runner.user_greenlets)[1]
-        runner.stop_users(2)
+        runner.stop_users({BaseUser.__name__: 2})
         self.assertEqual(0, len(runner.user_greenlets))
         self.assertTrue(g1.dead)
         self.assertTrue(g2.dead)
@@ -199,7 +163,7 @@ class TestLocustRunner(LocustTestCase):
 
     def test_start_event(self):
         class MyUser(User):
-            wait_time = constant(1)
+            wait_time = constant(2)
             task_run_count = 0
 
             @task
@@ -320,14 +284,15 @@ class TestLocustRunner(LocustTestCase):
                         exception=None,
                         context={},
                     )
-                    sleep(2)
+                    # Make sure each user only run this task once during the test
+                    sleep(30)
 
         environment = Environment(user_classes=[MyUser], reset_stats=True)
         runner = LocalRunner(environment)
-        runner.start(user_count=6, spawn_rate=12, wait=False)
-        sleep(0.25)
+        runner.start(user_count=6, spawn_rate=1, wait=False)
+        sleep(3)
         self.assertGreaterEqual(runner.stats.get("/test", "GET").num_requests, 3)
-        sleep(0.3)
+        sleep(3.25)
         self.assertLessEqual(runner.stats.get("/test", "GET").num_requests, 1)
         runner.quit()
 
@@ -374,7 +339,7 @@ class TestLocustRunner(LocustTestCase):
                 BaseUser.stop_triggered = True
 
         runner = Environment(user_classes=[BaseUser]).create_local_runner()
-        users = runner.spawn_users(1, 1, wait=False)
+        users = runner.spawn_users({BaseUser.__name__: 1}, wait=False)
         self.assertEqual(1, len(users))
         timeout = gevent.Timeout(0.5)
         timeout.start()
@@ -400,7 +365,7 @@ class TestLocustRunner(LocustTestCase):
                 BaseUser.stop_count += 1
 
         runner = Environment(user_classes=[BaseUser]).create_local_runner()
-        users = runner.spawn_users(10, 10, wait=False)
+        users = runner.spawn_users({BaseUser.__name__: 10}, wait=False)
         self.assertEqual(10, len(users))
         timeout = gevent.Timeout(0.3)
         timeout.start()
@@ -414,6 +379,12 @@ class TestLocustRunner(LocustTestCase):
         self.assertEqual(10, BaseUser.stop_count)  # verify that all users executed on_stop
 
     def test_stop_users_with_spawn_rate(self):
+        """
+        The spawn rate does not have an effect on the rate at which the users are stopped.
+        It is expected that the excess users will be stopped as soon as possible in parallel
+        (while respecting the stop_timeout).
+        """
+
         class MyUser(User):
             wait_time = constant(1)
 
@@ -425,21 +396,217 @@ class TestLocustRunner(LocustTestCase):
         runner = LocalRunner(environment)
 
         # Start load test, wait for users to start, then trigger ramp down
+        ts = time.time()
         runner.start(10, 10, wait=False)
-        sleep(1)
+        runner.spawning_greenlet.join()
+        delta = time.time() - ts
+        self.assertTrue(
+            0 <= delta <= 0.05, "Expected user count to increase to 10 instantaneously, instead it took %f" % delta
+        )
+        self.assertTrue(
+            runner.user_count == 10, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
+        )
+
+        ts = time.time()
         runner.start(2, 4, wait=False)
+        runner.spawning_greenlet.join()
+        delta = time.time() - ts
+        self.assertTrue(
+            0 <= delta <= 0.05, "Expected user count to decrease to 2 instantaneously, instead it took %f" % delta
+        )
+        self.assertTrue(
+            runner.user_count == 2, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
+        )
 
-        # Wait a moment and then ensure the user count has started to drop but
-        # not immediately to user_count
-        sleep(1)
-        user_count = len(runner.user_greenlets)
-        self.assertTrue(user_count > 5, "User count has decreased too quickly: %i" % user_count)
-        self.assertTrue(user_count < 10, "User count has not decreased at all: %i" % user_count)
+    def test_attributes_populated_when_calling_start(self):
+        class MyUser1(User):
+            wait_time = constant(0)
 
-        # Wait and ensure load test users eventually dropped to desired count
-        sleep(2)
-        user_count = len(runner.user_greenlets)
-        self.assertTrue(user_count == 2, "User count has not decreased correctly to 2, it is : %i" % user_count)
+            @task
+            def my_task(self):
+                pass
+
+        class MyUser2(User):
+            wait_time = constant(0)
+
+            @task
+            def my_task(self):
+                pass
+
+        environment = Environment(user_classes=[MyUser1, MyUser2])
+        runner = LocalRunner(environment)
+
+        runner.start(user_count=10, spawn_rate=5, wait=False)
+        runner.spawning_greenlet.join()
+        self.assertDictEqual({"MyUser1": 5, "MyUser2": 5}, runner.user_classes_count)
+
+        runner.start(user_count=5, spawn_rate=5, wait=False)
+        runner.spawning_greenlet.join()
+        self.assertDictEqual({"MyUser1": 3, "MyUser2": 2}, runner.user_classes_count)
+
+        runner.quit()
+
+    def test_user_classes_count(self):
+        class MyUser1(User):
+            wait_time = constant(0)
+
+            @task
+            def my_task(self):
+                pass
+
+        class MyUser2(User):
+            wait_time = constant(0)
+
+            @task
+            def my_task(self):
+                pass
+
+        environment = Environment(user_classes=[MyUser1, MyUser2])
+        runner = LocalRunner(environment)
+
+        runner.start(user_count=10, spawn_rate=5, wait=False)
+        runner.spawning_greenlet.join()
+        self.assertDictEqual({"MyUser1": 5, "MyUser2": 5}, runner.user_classes_count)
+
+        runner.start(user_count=5, spawn_rate=5, wait=False)
+        runner.spawning_greenlet.join()
+        self.assertDictEqual({"MyUser1": 3, "MyUser2": 2}, runner.user_classes_count)
+
+        runner.quit()
+
+    def test_custom_message(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        test_custom_msg = [False]
+        test_custom_msg_data = [{}]
+
+        def on_custom_msg(msg, **kw):
+            test_custom_msg[0] = True
+            test_custom_msg_data[0] = msg.data
+
+        environment = Environment(user_classes=[MyUser])
+        runner = LocalRunner(environment)
+
+        runner.register_message("test_custom_msg", on_custom_msg)
+        runner.send_message("test_custom_msg", {"test_data": 123})
+
+        self.assertTrue(test_custom_msg[0])
+        self.assertEqual(123, test_custom_msg_data[0]["test_data"])
+
+    def test_undefined_custom_message(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        test_custom_msg = [False]
+
+        def on_custom_msg(msg, **kw):
+            test_custom_msg[0] = True
+
+        environment = Environment(user_classes=[MyUser])
+        runner = LocalRunner(environment)
+
+        runner.register_message("test_custom_msg", on_custom_msg)
+        runner.send_message("test_different_custom_msg")
+
+        self.assertFalse(test_custom_msg[0])
+        self.assertEqual(1, len(self.mocked_log.warning))
+        msg = self.mocked_log.warning[0]
+        self.assertIn("Unknown message type recieved", msg)
+
+    def test_swarm_endpoint_is_non_blocking(self):
+        class TestUser1(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        class TestUser2(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        stop_timeout = 0
+        env = Environment(user_classes=[TestUser1, TestUser2], stop_timeout=stop_timeout)
+        local_runner = env.create_local_runner()
+        web_ui = env.create_web_ui("127.0.0.1", 0)
+
+        gevent.sleep(0.1)
+
+        ts = time.perf_counter()
+        response = requests.post(
+            "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
+            data={"user_count": 20, "spawn_rate": 1, "host": "https://localhost"},
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(0 <= time.perf_counter() - ts <= 1, "swarm endpoint is blocking")
+
+        ts = time.perf_counter()
+        while local_runner.state != STATE_RUNNING:
+            self.assertTrue(time.perf_counter() - ts <= 20, local_runner.state)
+            gevent.sleep(0.1)
+
+        self.assertTrue(19 <= time.perf_counter() - ts <= 21)
+
+        self.assertEqual(local_runner.user_count, 20)
+
+        local_runner.stop()
+        web_ui.stop()
+
+    def test_can_call_stop_endpoint_if_currently_swarming(self):
+        class TestUser1(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        class TestUser2(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        stop_timeout = 5
+        env = Environment(user_classes=[TestUser1, TestUser2], stop_timeout=stop_timeout)
+        local_runner = env.create_local_runner()
+        web_ui = env.create_web_ui("127.0.0.1", 0)
+
+        gevent.sleep(0.1)
+
+        ts = time.perf_counter()
+        response = requests.post(
+            "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
+            data={"user_count": 20, "spawn_rate": 1, "host": "https://localhost"},
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(0 <= time.perf_counter() - ts <= 1, "swarm endpoint is blocking")
+
+        gevent.sleep(5)
+
+        self.assertEqual(local_runner.state, STATE_SPAWNING)
+        self.assertLessEqual(local_runner.user_count, 10)
+
+        ts = time.perf_counter()
+        response = requests.get(
+            "http://127.0.0.1:{}/stop".format(web_ui.server.server_port),
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(stop_timeout <= time.perf_counter() - ts <= stop_timeout + 5, "stop endpoint took too long")
+
+        ts = time.perf_counter()
+        while local_runner.state != STATE_STOPPED:
+            self.assertTrue(time.perf_counter() - ts <= 2)
+            gevent.sleep(0.1)
+
+        self.assertLessEqual(local_runner.user_count, 0)
+
+        local_runner.stop()
+        web_ui.stop()
 
 
 class TestMasterWorkerRunners(LocustTestCase):
@@ -567,11 +734,11 @@ class TestMasterWorkerRunners(LocustTestCase):
             def tick(self):
                 run_time = self.get_run_time()
                 if run_time < 2:
-                    return (9, 9)
+                    return 9, 9
                 elif run_time < 4:
-                    return (21, 21)
+                    return 21, 21
                 elif run_time < 6:
-                    return (3, 21)
+                    return 3, 21
                 else:
                     return None
 
@@ -589,16 +756,19 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             # Give workers time to connect
             sleep(0.1)
+
             # Start a shape test
             master.start_shape()
             sleep(1)
 
-            # Ensure workers have connected and started the correct amounf of users
+            # Ensure workers have connected and started the correct amount of users
             for worker in workers:
                 self.assertEqual(3, worker.user_count, "Shape test has not reached stage 1")
                 self.assertEqual(
                     9, test_shape.get_current_user_count(), "Shape is not seeing stage 1 runner user count correctly"
                 )
+            self.assertDictEqual(master.reported_user_classes_count, {"TestUser": 9})
+
             # Ensure new stage with more users has been reached
             sleep(2)
             for worker in workers:
@@ -606,6 +776,8 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.assertEqual(
                     21, test_shape.get_current_user_count(), "Shape is not seeing stage 2 runner user count correctly"
                 )
+            self.assertDictEqual(master.reported_user_classes_count, {"TestUser": 21})
+
             # Ensure new stage with less users has been reached
             sleep(2)
             for worker in workers:
@@ -613,6 +785,8 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.assertEqual(
                     3, test_shape.get_current_user_count(), "Shape is not seeing stage 3 runner user count correctly"
                 )
+            self.assertDictEqual(master.reported_user_classes_count, {"TestUser": 3})
+
             # Ensure test stops at the end
             sleep(2)
             for worker in workers:
@@ -620,6 +794,404 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.assertEqual(
                     0, test_shape.get_current_user_count(), "Shape is not seeing stopped runner user count correctly"
                 )
+            self.assertDictEqual(master.reported_user_classes_count, {"TestUser": 0})
+
+            self.assertEqual("stopped", master.state)
+
+    def test_distributed_shape_with_stop_timeout(self):
+        """
+        Full integration test that starts both a MasterRunner and five WorkerRunner instances
+        and tests a basic LoadTestShape with scaling up and down users
+        """
+
+        class TestUser1(User):
+            def start(self, group: Group):
+                gevent.sleep(0.5)
+                return super().start(group)
+
+            @task
+            def my_task(self):
+                gevent.sleep(0)
+
+        class TestUser2(User):
+            def start(self, group: Group):
+                gevent.sleep(0.5)
+                return super().start(group)
+
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        class TestUser3(User):
+            def start(self, group: Group):
+                gevent.sleep(0.5)
+                return super().start(group)
+
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        class TestShape(LoadTestShape):
+            def tick(self):
+                run_time = self.get_run_time()
+                if run_time < 10:
+                    return 5, 3
+                elif run_time < 20:
+                    return 10, 3
+                elif run_time < 40:
+                    return 15, 3
+                elif run_time < 60:
+                    return 5, 3
+                else:
+                    return None
+
+        locust_worker_additional_wait_before_ready_after_stop = 5
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3), _patch_env(
+            "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
+            str(locust_worker_additional_wait_before_ready_after_stop),
+        ):
+            stop_timeout = 5
+            master_env = Environment(
+                user_classes=[TestUser1, TestUser2, TestUser3], shape_class=TestShape(), stop_timeout=stop_timeout
+            )
+            master_env.shape_class.reset_time()
+            master = master_env.create_master_runner("*", 0)
+
+            workers = []
+            for i in range(5):
+                worker_env = Environment(user_classes=[TestUser1, TestUser2, TestUser3])
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+
+            # Give workers time to connect
+            sleep(0.1)
+
+            self.assertEqual(STATE_INIT, master.state)
+            self.assertEqual(5, len(master.clients.ready))
+
+            # Re-order `workers` so that it is sorted by `id`.
+            # This is required because the dispatch is done
+            # on the sorted workers.
+            workers = sorted(workers, key=lambda w: w.client_id)
+
+            # Start a shape test
+            master.start_shape()
+
+            # First stage
+            ts = time.time()
+            while master.state != STATE_SPAWNING:
+                self.assertTrue(time.time() - ts <= 1, master.state)
+                sleep()
+            sleep(5 - (time.time() - ts))  # runtime = 5s
+            self.assertEqual(STATE_RUNNING, master.state)
+            w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
+            w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
+            w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
+            w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
+            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
+            self.assertDictEqual(w1, workers[0].user_classes_count)
+            self.assertDictEqual(w2, workers[1].user_classes_count)
+            self.assertDictEqual(w3, workers[2].user_classes_count)
+            self.assertDictEqual(w4, workers[3].user_classes_count)
+            self.assertDictEqual(w5, workers[4].user_classes_count)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_classes_count)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_classes_count)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
+            sleep(5)  # runtime = 10s
+
+            # Second stage
+            ts = time.time()
+            while master.state != STATE_SPAWNING:
+                self.assertTrue(time.time() - ts <= 1, master.state)
+                sleep()
+            sleep(5 - (time.time() - ts))  # runtime = 15s
+            self.assertEqual(STATE_RUNNING, master.state)
+            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 1}
+            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 2}
+            self.assertDictEqual(w1, workers[0].user_classes_count)
+            self.assertDictEqual(w2, workers[1].user_classes_count)
+            self.assertDictEqual(w3, workers[2].user_classes_count)
+            self.assertDictEqual(w4, workers[3].user_classes_count)
+            self.assertDictEqual(w5, workers[4].user_classes_count)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_classes_count)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_classes_count)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
+            sleep(5)  # runtime = 20s
+
+            # Third stage
+            ts = time.time()
+            while master.state != STATE_SPAWNING:
+                self.assertTrue(time.time() - ts <= 1, master.state)
+                sleep()
+            sleep(10 - (time.time() - ts))  # runtime = 30s
+            ts = time.time()
+            while master.state != STATE_RUNNING:
+                self.assertTrue(time.time() - ts <= 1, master.state)
+                sleep()
+            self.assertEqual(STATE_RUNNING, master.state)
+            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w4 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w5 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            self.assertDictEqual(w1, workers[0].user_classes_count)
+            self.assertDictEqual(w2, workers[1].user_classes_count)
+            self.assertDictEqual(w3, workers[2].user_classes_count)
+            self.assertDictEqual(w4, workers[3].user_classes_count)
+            self.assertDictEqual(w5, workers[4].user_classes_count)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_classes_count)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_classes_count)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
+            sleep(10 - (time.time() - ts))  # runtime = 40s
+
+            # Fourth stage
+            ts = time.time()
+            while master.state != STATE_SPAWNING:
+                self.assertTrue(time.time() - ts <= 1, master.state)
+                sleep()
+            sleep(5 - (time.time() - ts))  # runtime = 45s
+
+            # Fourth stage - Excess TestUser1 have been stopped but
+            #                TestUser2/TestUser3 have not reached stop timeout yet, so
+            #                their number are unchanged
+            ts = time.time()
+            while master.state != STATE_RUNNING:
+                self.assertTrue(time.time() - ts <= 1, master.state)
+                sleep()
+            delta = time.time() - ts
+            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
+            w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
+            w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
+            w4 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
+            w5 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
+            self.assertDictEqual(w1, workers[0].user_classes_count)
+            self.assertDictEqual(w2, workers[1].user_classes_count)
+            self.assertDictEqual(w3, workers[2].user_classes_count)
+            self.assertDictEqual(w4, workers[3].user_classes_count)
+            self.assertDictEqual(w5, workers[4].user_classes_count)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_classes_count)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_classes_count)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
+            sleep(1 - delta)  # runtime = 46s
+
+            # Fourth stage - All users are now at the desired number
+            ts = time.time()
+            while master.state != STATE_RUNNING:
+                self.assertTrue(time.time() - ts <= 1, master.state)
+                sleep()
+            delta = time.time() - ts
+            w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
+            w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
+            w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
+            w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
+            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
+            self.assertDictEqual(w1, workers[0].user_classes_count)
+            self.assertDictEqual(w2, workers[1].user_classes_count)
+            self.assertDictEqual(w3, workers[2].user_classes_count)
+            self.assertDictEqual(w4, workers[3].user_classes_count)
+            self.assertDictEqual(w5, workers[4].user_classes_count)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_classes_count)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_classes_count)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
+            sleep(10 - delta)  # runtime = 56s
+
+            # Sleep stop_timeout and make sure the test has stopped
+            sleep(5)  # runtime = 61s
+            self.assertEqual(STATE_STOPPING, master.state)
+            sleep(stop_timeout)  # runtime = 66s
+
+            # We wait for "stop_timeout" seconds to let the workers reconnect as "ready" with the master.
+            # The reason for waiting an additional "stop_timeout" when we already waited for "stop_timeout"
+            # above is that when a worker receives the stop message, it can take up to "stop_timeout"
+            # for the worker to send the "client_stopped" message then an additional "stop_timeout" seconds
+            # to send the "client_ready" message.
+            ts = time.time()
+            while len(master.clients.ready) != len(workers):
+                self.assertTrue(
+                    time.time() - ts <= stop_timeout + locust_worker_additional_wait_before_ready_after_stop,
+                    f"expected {len(workers)} workers to be ready but only {len(master.clients.ready)} workers are",
+                )
+                sleep()
+            sleep(1)
+
+            # Check that no users are running
+            w1 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            w2 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            w3 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 0}
+            self.assertDictEqual(w1, workers[0].user_classes_count)
+            self.assertDictEqual(w2, workers[1].user_classes_count)
+            self.assertDictEqual(w3, workers[2].user_classes_count)
+            self.assertDictEqual(w4, workers[3].user_classes_count)
+            self.assertDictEqual(w5, workers[4].user_classes_count)
+            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_classes_count)
+            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_classes_count)
+            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
+            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
+            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
+
+            ts = time.time()
+            while master.state != STATE_STOPPED:
+                self.assertTrue(time.time() - ts <= 5, master.state)
+                sleep()
+
+            master.stop()
+
+    @unittest.skip
+    def test_distributed_shape_fuzzy_test(self):
+        """
+        Incredibility useful test to find issues with dispatch logic. This test allowed to find
+        multiple small corner cases with the new dispatch logic of locust v2.
+
+        The test is disabled by default because it takes a lot of time to run and has randomness to it.
+        However, it is advised to run it a few times (you can run it in parallel) when modifying the dispatch logic.
+        """
+
+        class BaseUser(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        class TestUser01(BaseUser):
+            pass
+
+        class TestUser02(BaseUser):
+            pass
+
+        class TestUser03(BaseUser):
+            pass
+
+        class TestUser04(BaseUser):
+            pass
+
+        class TestUser05(BaseUser):
+            pass
+
+        class TestUser06(BaseUser):
+            pass
+
+        class TestUser07(BaseUser):
+            pass
+
+        class TestUser08(BaseUser):
+            pass
+
+        class TestUser09(BaseUser):
+            pass
+
+        class TestUser10(BaseUser):
+            pass
+
+        class TestUser11(BaseUser):
+            pass
+
+        class TestUser12(BaseUser):
+            pass
+
+        class TestUser13(BaseUser):
+            pass
+
+        class TestUser14(BaseUser):
+            pass
+
+        class TestUser15(BaseUser):
+            pass
+
+        class TestShape(LoadTestShape):
+            def __init__(self):
+                super().__init__()
+
+                self.stages = []
+                runtime = 0
+                for _ in range(100):
+                    runtime += random.uniform(3, 15)
+                    self.stages.append((runtime, random.randint(1, 100), random.uniform(0.1, 10)))
+
+            def tick(self):
+                run_time = self.get_run_time()
+                for stage in self.stages:
+                    if run_time < stage[0]:
+                        return stage[1], stage[2]
+
+        user_classes = [
+            TestUser01,
+            TestUser02,
+            TestUser03,
+            TestUser04,
+            TestUser05,
+            TestUser06,
+            TestUser07,
+            TestUser08,
+            TestUser09,
+            TestUser10,
+            TestUser11,
+            TestUser12,
+            TestUser13,
+            TestUser14,
+            TestUser15,
+        ]
+
+        chosen_user_classes = random.sample(user_classes, k=random.randint(1, len(user_classes)))
+
+        for user_class in chosen_user_classes:
+            user_class.weight = random.uniform(1, 20)
+
+        locust_worker_additional_wait_before_ready_after_stop = 5
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3), _patch_env(
+            "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
+            str(locust_worker_additional_wait_before_ready_after_stop),
+        ):
+            stop_timeout = 5
+            master_env = Environment(
+                user_classes=chosen_user_classes, shape_class=TestShape(), stop_timeout=stop_timeout
+            )
+            master_env.shape_class.reset_time()
+            master = master_env.create_master_runner("*", 0)
+
+            workers = []
+            for i in range(random.randint(1, 30)):
+                worker_env = Environment(user_classes=chosen_user_classes)
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+
+            # Give workers time to connect
+            sleep(0.1)
+
+            self.assertEqual(STATE_INIT, master.state)
+            self.assertEqual(len(workers), len(master.clients.ready))
+
+            # Start a shape test
+            master.start_shape()
+
+            ts = time.time()
+            while master.state != STATE_STOPPED:
+                self.assertTrue(time.time() - ts <= master_env.shape_class.stages[-1][0] + 60, master.state)
+                print(
+                    "{:.2f}/{:.2f} | {} | {:.0f} | ".format(
+                        time.time() - ts,
+                        master_env.shape_class.stages[-1][0],
+                        master.state,
+                        sum(master.reported_user_classes_count.values()),
+                    )
+                    + json.dumps(dict(sorted(master.reported_user_classes_count.items(), key=itemgetter(0))))
+                )
+                sleep(1)
+
+            master.stop()
 
     def test_distributed_shape_stop_and_restart(self):
         """
@@ -635,7 +1207,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             def tick(self):
                 run_time = self.get_run_time()
                 if run_time < 10:
-                    return (4, 4)
+                    return 4, 4
                 else:
                     return None
 
@@ -653,7 +1225,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             # Give workers time to connect
             sleep(0.1)
 
-            # Start a shape test and ensure workers have connected and started the correct amounf of users
+            # Start a shape test and ensure workers have connected and started the correct amount of users
             master.start_shape()
             sleep(1)
             for worker in workers:
@@ -665,12 +1237,204 @@ class TestMasterWorkerRunners(LocustTestCase):
             for worker in workers:
                 self.assertEqual(0, worker.user_count, "Shape test has not stopped")
 
-            # Then restart the test again and ensure workers have connected and started the correct amounf of users
+            # Then restart the test again and ensure workers have connected and started the correct amount of users
             master.start_shape()
             sleep(1)
             for worker in workers:
                 self.assertEqual(2, worker.user_count, "Shape test has not started again correctly")
             master.stop()
+
+    def test_distributed_shape_statuses_transition(self):
+        """
+        Full integration test that starts both a MasterRunner and five WorkerRunner instances
+        The goal of this test is to validate the status on the master is correctly transitioned for each of the
+        test phases.
+        """
+
+        class TestUser1(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        class TestShape(LoadTestShape):
+            def tick(self):
+                run_time = self.get_run_time()
+                if run_time < 10:
+                    return 5, 1
+                elif run_time < 20:
+                    return 10, 1
+                elif run_time < 30:
+                    return 15, 1
+                else:
+                    return None
+
+        locust_worker_additional_wait_before_ready_after_stop = 2
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3), _patch_env(
+            "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
+            str(locust_worker_additional_wait_before_ready_after_stop),
+        ):
+            stop_timeout = 0
+            master_env = Environment(user_classes=[TestUser1], shape_class=TestShape(), stop_timeout=stop_timeout)
+            master_env.shape_class.reset_time()
+            master = master_env.create_master_runner("*", 0)
+
+            workers = []
+            for i in range(5):
+                worker_env = Environment(user_classes=[TestUser1])
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+
+            # Give workers time to connect
+            sleep(0.1)
+
+            self.assertEqual(STATE_INIT, master.state)
+            self.assertEqual(5, len(master.clients.ready))
+
+            statuses = []
+
+            ts = time.perf_counter()
+
+            master.start_shape()
+
+            while master.state != STATE_STOPPED:
+                # +5s buffer to let master stop
+                self.assertTrue(
+                    time.perf_counter() - ts <= 30 + locust_worker_additional_wait_before_ready_after_stop + 5,
+                    master.state,
+                )
+                statuses.append((time.perf_counter() - ts, master.state, master.user_count))
+                sleep(0.1)
+
+            self.assertEqual(statuses[0][1], STATE_INIT)
+
+            stage = 1
+            tolerance = 1  # in s
+            for (t1, state1, user_count1), (t2, state2, user_count2) in zip(statuses[:-1], statuses[1:]):
+                if state1 == STATE_SPAWNING and state2 == STATE_RUNNING and stage == 1:
+                    self.assertTrue(5 - tolerance <= t2 <= 5 + tolerance)
+                elif state1 == STATE_RUNNING and state2 == STATE_SPAWNING and stage == 1:
+                    self.assertTrue(10 - tolerance <= t2 <= 10 + tolerance)
+                    stage += 1
+                elif state1 == STATE_SPAWNING and state2 == STATE_RUNNING and stage == 2:
+                    self.assertTrue(15 - tolerance <= t2 <= 15 + tolerance)
+                elif state1 == STATE_RUNNING and state2 == STATE_SPAWNING and stage == 2:
+                    self.assertTrue(20 - tolerance <= t2 <= 20 + tolerance)
+                    stage += 1
+                elif state1 == STATE_SPAWNING and state2 == STATE_RUNNING and stage == 3:
+                    self.assertTrue(25 - tolerance <= t2 <= 25 + tolerance)
+                elif state1 == STATE_RUNNING and state2 == STATE_SPAWNING and stage == 3:
+                    self.assertTrue(30 - tolerance <= t2 <= 30 + tolerance)
+                    stage += 1
+                elif state1 == STATE_RUNNING and state2 == STATE_STOPPED and stage == 3:
+                    self.assertTrue(30 - tolerance <= t2 <= 30 + tolerance)
+
+    def test_swarm_endpoint_is_non_blocking(self):
+        class TestUser1(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        class TestUser2(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            stop_timeout = 0
+            master_env = Environment(user_classes=[TestUser1, TestUser2], stop_timeout=stop_timeout)
+            master = master_env.create_master_runner("*", 0)
+            web_ui = master_env.create_web_ui("127.0.0.1", 0)
+
+            workers = []
+            for i in range(2):
+                worker_env = Environment(user_classes=[TestUser1, TestUser2])
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+
+            # Give workers time to connect
+            sleep(0.1)
+
+            self.assertEqual(STATE_INIT, master.state)
+            self.assertEqual(len(master.clients.ready), len(workers))
+
+            ts = time.perf_counter()
+            response = requests.post(
+                "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
+                data={"user_count": 20, "spawn_rate": 1, "host": "https://localhost"},
+            )
+            self.assertEqual(200, response.status_code)
+            self.assertTrue(0 <= time.perf_counter() - ts <= 1, "swarm endpoint is blocking")
+
+            ts = time.perf_counter()
+            while master.state != STATE_RUNNING:
+                self.assertTrue(time.perf_counter() - ts <= 20, master.state)
+                gevent.sleep(0.1)
+
+            self.assertTrue(19 <= time.perf_counter() - ts <= 21)
+
+            self.assertEqual(master.user_count, 20)
+
+            master.stop()
+            web_ui.stop()
+
+    def test_can_call_stop_endpoint_if_currently_swarming(self):
+        class TestUser1(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        class TestUser2(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            stop_timeout = 5
+            master_env = Environment(user_classes=[TestUser1, TestUser2], stop_timeout=stop_timeout)
+            master = master_env.create_master_runner("*", 0)
+            web_ui = master_env.create_web_ui("127.0.0.1", 0)
+
+            workers = []
+            for i in range(2):
+                worker_env = Environment(user_classes=[TestUser1, TestUser2])
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+
+            # Give workers time to connect
+            sleep(0.1)
+
+            self.assertEqual(STATE_INIT, master.state)
+            self.assertEqual(len(master.clients.ready), len(workers))
+
+            ts = time.perf_counter()
+            response = requests.post(
+                "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
+                data={"user_count": 20, "spawn_rate": 1, "host": "https://localhost"},
+            )
+            self.assertEqual(200, response.status_code)
+            self.assertTrue(0 <= time.perf_counter() - ts <= 1, "swarm endpoint is blocking")
+
+            gevent.sleep(5)
+
+            self.assertEqual(master.state, STATE_SPAWNING)
+            self.assertLessEqual(master.user_count, 10)
+
+            ts = time.perf_counter()
+            response = requests.get(
+                "http://127.0.0.1:{}/stop".format(web_ui.server.server_port),
+            )
+            self.assertEqual(200, response.status_code)
+            self.assertTrue(stop_timeout <= time.perf_counter() - ts <= stop_timeout + 5, "stop endpoint took too long")
+
+            ts = time.perf_counter()
+            while master.state != STATE_STOPPED:
+                self.assertTrue(time.perf_counter() - ts <= 2)
+                gevent.sleep(0.1)
+
+            self.assertLessEqual(master.user_count, 0)
+
+            master.stop()
+            web_ui.stop()
 
 
 class TestMasterRunner(LocustTestCase):
@@ -681,20 +1445,22 @@ class TestMasterRunner(LocustTestCase):
     def tearDown(self):
         super().tearDown()
 
-    def get_runner(self):
+    def get_runner(self, user_classes=None):
+        if user_classes is not None:
+            self.environment.user_classes = user_classes
         return self.environment.create_master_runner("*", 5557)
 
     def test_worker_connect(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner()
-            server.mocked_send(Message("client_ready", None, "zeh_fake_client1"))
+            server.mocked_send(Message("client_ready", __version__, "zeh_fake_client1"))
             self.assertEqual(1, len(master.clients))
             self.assertTrue(
                 "zeh_fake_client1" in master.clients, "Could not find fake client in master instance's clients dict"
             )
-            server.mocked_send(Message("client_ready", None, "zeh_fake_client2"))
-            server.mocked_send(Message("client_ready", None, "zeh_fake_client3"))
-            server.mocked_send(Message("client_ready", None, "zeh_fake_client4"))
+            server.mocked_send(Message("client_ready", __version__, "zeh_fake_client2"))
+            server.mocked_send(Message("client_ready", __version__, "zeh_fake_client3"))
+            server.mocked_send(Message("client_ready", __version__, "zeh_fake_client4"))
             self.assertEqual(4, len(master.clients))
 
             server.mocked_send(Message("quit", None, "zeh_fake_client3"))
@@ -703,7 +1469,7 @@ class TestMasterRunner(LocustTestCase):
     def test_worker_stats_report_median(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner()
-            server.mocked_send(Message("client_ready", None, "fake_client"))
+            server.mocked_send(Message("client_ready", __version__, "fake_client"))
 
             master.stats.get("/", "GET").log(100, 23455)
             master.stats.get("/", "GET").log(800, 23455)
@@ -720,7 +1486,7 @@ class TestMasterRunner(LocustTestCase):
     def test_worker_stats_report_with_none_response_times(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner()
-            server.mocked_send(Message("client_ready", None, "fake_client"))
+            server.mocked_send(Message("client_ready", __version__, "fake_client"))
 
             master.stats.get("/mixed", "GET").log(0, 23455)
             master.stats.get("/mixed", "GET").log(800, 23455)
@@ -746,7 +1512,7 @@ class TestMasterRunner(LocustTestCase):
     def test_master_marks_downed_workers_as_missing(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner()
-            server.mocked_send(Message("client_ready", None, "fake_client"))
+            server.mocked_send(Message("client_ready", __version__, "fake_client"))
             sleep(6)
             # print(master.clients['fake_client'].__dict__)
             assert master.clients["fake_client"].state == STATE_MISSING
@@ -754,8 +1520,8 @@ class TestMasterRunner(LocustTestCase):
     def test_last_worker_quitting_stops_test(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner()
-            server.mocked_send(Message("client_ready", None, "fake_client1"))
-            server.mocked_send(Message("client_ready", None, "fake_client2"))
+            server.mocked_send(Message("client_ready", __version__, "fake_client1"))
+            server.mocked_send(Message("client_ready", __version__, "fake_client2"))
 
             master.start(1, 2)
             server.mocked_send(Message("spawning", None, "fake_client1"))
@@ -775,9 +1541,9 @@ class TestMasterRunner(LocustTestCase):
     def test_last_worker_missing_stops_test(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner()
-            server.mocked_send(Message("client_ready", None, "fake_client1"))
-            server.mocked_send(Message("client_ready", None, "fake_client2"))
-            server.mocked_send(Message("client_ready", None, "fake_client3"))
+            server.mocked_send(Message("client_ready", __version__, "fake_client1"))
+            server.mocked_send(Message("client_ready", __version__, "fake_client2"))
+            server.mocked_send(Message("client_ready", __version__, "fake_client3"))
 
             master.start(3, 3)
             server.mocked_send(Message("spawning", None, "fake_client1"))
@@ -821,7 +1587,7 @@ class TestMasterRunner(LocustTestCase):
     def test_master_total_stats(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner()
-            server.mocked_send(Message("client_ready", None, "fake_client"))
+            server.mocked_send(Message("client_ready", __version__, "fake_client"))
             stats = RequestStats()
             stats.log_request("GET", "/1", 100, 3546)
             stats.log_request("GET", "/1", 800, 56743)
@@ -856,7 +1622,7 @@ class TestMasterRunner(LocustTestCase):
     def test_master_total_stats_with_none_response_times(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner()
-            server.mocked_send(Message("client_ready", None, "fake_client"))
+            server.mocked_send(Message("client_ready", __version__, "fake_client"))
             stats = RequestStats()
             stats.log_request("GET", "/1", 100, 3546)
             stats.log_request("GET", "/1", 800, 56743)
@@ -912,7 +1678,7 @@ class TestMasterRunner(LocustTestCase):
                 master = self.get_runner()
                 self.environment.stats.reset_all()
                 mocked_time.return_value += 1.0234
-                server.mocked_send(Message("client_ready", None, "fake_client"))
+                server.mocked_send(Message("client_ready", __version__, "fake_client"))
                 stats = RequestStats()
                 stats.log_request("GET", "/1", 100, 3546)
                 stats.log_request("GET", "/1", 800, 56743)
@@ -968,39 +1734,54 @@ class TestMasterRunner(LocustTestCase):
                 self.assertEqual(30, master.stats.total.get_current_response_time_percentile(0.5))
                 self.assertEqual(3000, master.stats.total.get_current_response_time_percentile(0.95))
 
+    @mock.patch("locust.runners.HEARTBEAT_INTERVAL", new=600)
     def test_rebalance_locust_users_on_worker_connect(self):
+        class TestUser(User):
+            @task
+            def my_task(self):
+                pass
+
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = self.get_runner()
-            server.mocked_send(Message("client_ready", None, "zeh_fake_client1"))
+            master = self.get_runner(user_classes=[TestUser])
+            server.mocked_send(Message("client_ready", __version__, "zeh_fake_client1"))
             self.assertEqual(1, len(master.clients))
             self.assertTrue(
                 "zeh_fake_client1" in master.clients, "Could not find fake client in master instance's clients dict"
             )
 
             master.start(100, 20)
-            self.assertEqual(1, len(server.outbox))
-            client_id, msg = server.outbox.pop()
-            self.assertEqual(100, msg.data["num_users"])
-            self.assertEqual(20, msg.data["spawn_rate"])
+            self.assertEqual(5, len(server.outbox))
+            for i, (_, msg) in enumerate(server.outbox.copy()):
+                self.assertDictEqual({"TestUser": int((i + 1) * 20)}, msg.data["user_classes_count"])
+                server.outbox.pop()
+
+            # Normally, this attribute would be updated when the
+            # master receives the report from the worker.
+            master.clients["zeh_fake_client1"].user_classes_count = {"TestUser": 100}
 
             # let another worker connect
-            server.mocked_send(Message("client_ready", None, "zeh_fake_client2"))
+            server.mocked_send(Message("client_ready", __version__, "zeh_fake_client2"))
             self.assertEqual(2, len(master.clients))
+            sleep(0.1)  # give time for messages to be sent to clients
             self.assertEqual(2, len(server.outbox))
             client_id, msg = server.outbox.pop()
-            self.assertEqual(50, msg.data["num_users"])
-            self.assertEqual(10, msg.data["spawn_rate"])
+            self.assertEqual({"TestUser": 50}, msg.data["user_classes_count"])
             client_id, msg = server.outbox.pop()
-            self.assertEqual(50, msg.data["num_users"])
-            self.assertEqual(10, msg.data["spawn_rate"])
+            self.assertEqual({"TestUser": 50}, msg.data["user_classes_count"])
 
     def test_sends_spawn_data_to_ready_running_spawning_workers(self):
         """Sends spawn job to running, ready, or spawning workers"""
+
+        class TestUser(User):
+            @task
+            def my_task(self):
+                pass
+
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = self.get_runner()
-            master.clients[1] = WorkerNode(1)
-            master.clients[2] = WorkerNode(2)
-            master.clients[3] = WorkerNode(3)
+            master = self.get_runner(user_classes=[TestUser])
+            master.clients[1] = WorkerNode("1")
+            master.clients[2] = WorkerNode("2")
+            master.clients[3] = WorkerNode("3")
             master.clients[1].state = STATE_INIT
             master.clients[2].state = STATE_SPAWNING
             master.clients[3].state = STATE_RUNNING
@@ -1012,8 +1793,14 @@ class TestMasterRunner(LocustTestCase):
         """
         Tests that test_start event is fired
         """
+
+        class TestUser(User):
+            @task
+            def my_task(self):
+                pass
+
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = self.get_runner()
+            master = self.get_runner(user_classes=[TestUser])
 
             run_count = [0]
 
@@ -1022,7 +1809,7 @@ class TestMasterRunner(LocustTestCase):
                 run_count[0] += 1
 
             for i in range(5):
-                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+                server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             master.start(7, 7)
             self.assertEqual(5, len(server.outbox))
@@ -1043,8 +1830,14 @@ class TestMasterRunner(LocustTestCase):
         """
         Tests that test_stop event is fired
         """
+
+        class TestUser(User):
+            @task
+            def my_task(self):
+                pass
+
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = self.get_runner()
+            master = self.get_runner(user_classes=[TestUser])
 
             run_count = [0]
 
@@ -1053,7 +1846,7 @@ class TestMasterRunner(LocustTestCase):
                 run_count[0] += 1
 
             for i in range(5):
-                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+                server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             master.start(7, 7)
             self.assertEqual(5, len(server.outbox))
@@ -1062,7 +1855,7 @@ class TestMasterRunner(LocustTestCase):
 
             run_count[0] = 0
             for i in range(5):
-                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+                server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
             master.start(7, 7)
             master.stop()
             master.quit()
@@ -1072,8 +1865,14 @@ class TestMasterRunner(LocustTestCase):
         """
         Tests that test_stop event is fired when quit() is called directly
         """
+
+        class TestUser(User):
+            @task
+            def my_task(self):
+                pass
+
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = self.get_runner()
+            master = self.get_runner(user_classes=[TestUser])
 
             run_count = [0]
 
@@ -1082,7 +1881,7 @@ class TestMasterRunner(LocustTestCase):
                 run_count[0] += 1
 
             for i in range(5):
-                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+                server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             master.start(7, 7)
             self.assertEqual(5, len(server.outbox))
@@ -1118,32 +1917,41 @@ class TestMasterRunner(LocustTestCase):
         Tests that we can accurately spawn a certain number of locusts, even if it's not an
         even number of the connected workers
         """
+
+        class TestUser(User):
+            @task
+            def my_task(self):
+                pass
+
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = self.get_runner()
+            master = self.get_runner(user_classes=[TestUser])
+
             for i in range(5):
-                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+                server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             master.start(7, 7)
             self.assertEqual(5, len(server.outbox))
 
-            num_users = 0
-            for _, msg in server.outbox:
-                num_users += msg.data["num_users"]
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
 
             self.assertEqual(7, num_users, "Total number of locusts that would have been spawned is not 7")
 
     def test_spawn_fewer_locusts_than_workers(self):
+        class TestUser(User):
+            @task
+            def my_task(self):
+                pass
+
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = self.get_runner()
+            master = self.get_runner(user_classes=[TestUser])
+
             for i in range(5):
-                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+                server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             master.start(2, 2)
             self.assertEqual(5, len(server.outbox))
 
-            num_users = 0
-            for _, msg in server.outbox:
-                num_users += msg.data["num_users"]
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
 
             self.assertEqual(2, num_users, "Total number of locusts that would have been spawned is not 2")
 
@@ -1157,19 +1965,18 @@ class TestMasterRunner(LocustTestCase):
             def tick(self):
                 run_time = self.get_run_time()
                 if run_time < 2:
-                    return (1, 1)
+                    return 1, 1
                 elif run_time < 4:
-                    return (2, 2)
+                    return 2, 2
                 else:
                     return None
 
-        self.environment.user_classes = [MyUser]
         self.environment.shape_class = TestShape()
 
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = self.get_runner()
+            master = self.get_runner(user_classes=[MyUser])
             for i in range(5):
-                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+                server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             # Start the shape_worker
             self.environment.shape_class.reset_time()
@@ -1177,20 +1984,14 @@ class TestMasterRunner(LocustTestCase):
             sleep(0.5)
 
             # Wait for shape_worker to update user_count
-            num_users = 0
-            for _, msg in server.outbox:
-                if msg.data:
-                    num_users += msg.data["num_users"]
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
             self.assertEqual(
                 1, num_users, "Total number of users in first stage of shape test is not 1: %i" % num_users
             )
 
             # Wait for shape_worker to update user_count again
             sleep(2)
-            num_users = 0
-            for _, msg in server.outbox:
-                if msg.data:
-                    num_users += msg.data["num_users"]
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
             self.assertEqual(
                 3, num_users, "Total number of users in second stage of shape test is not 3: %i" % num_users
             )
@@ -1209,19 +2010,18 @@ class TestMasterRunner(LocustTestCase):
             def tick(self):
                 run_time = self.get_run_time()
                 if run_time < 2:
-                    return (5, 5)
+                    return 5, 5
                 elif run_time < 4:
-                    return (-4, 4)
+                    return 1, 5
                 else:
                     return None
 
-        self.environment.user_classes = [MyUser]
         self.environment.shape_class = TestShape()
 
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = self.get_runner()
+            master = self.get_runner(user_classes=[MyUser])
             for i in range(5):
-                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
+                server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             # Start the shape_worker
             self.environment.shape_class.reset_time()
@@ -1229,20 +2029,20 @@ class TestMasterRunner(LocustTestCase):
             sleep(0.5)
 
             # Wait for shape_worker to update user_count
-            num_users = 0
-            for _, msg in server.outbox:
-                if msg.data:
-                    num_users += msg.data["num_users"]
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
             self.assertEqual(
                 5, num_users, "Total number of users in first stage of shape test is not 5: %i" % num_users
             )
 
             # Wait for shape_worker to update user_count again
             sleep(2)
-            num_users = 0
+            msgs = defaultdict(dict)
             for _, msg in server.outbox:
-                if msg.data:
-                    num_users += msg.data["num_users"]
+                if not msg.data:
+                    continue
+                msgs[msg.node_id][msg.data["timestamp"]] = sum(msg.data["user_classes_count"].values())
+            # Count users for the last received messages
+            num_users = sum(v[max(v.keys())] for v in msgs.values())
             self.assertEqual(
                 1, num_users, "Total number of users in second stage of shape test is not 1: %i" % num_users
             )
@@ -1318,11 +2118,148 @@ class TestMasterRunner(LocustTestCase):
                 self.assertEqual(0, len(master.clients))
                 server.mocked_send(Message("client_ready", NETWORK_BROKEN, "fake_client"))
                 self.assertTrue(master.connection_broken)
-                server.mocked_send(Message("client_ready", None, "fake_client"))
+                server.mocked_send(Message("client_ready", __version__, "fake_client"))
                 sleep(0.2)
                 self.assertFalse(master.connection_broken)
                 self.assertEqual(1, len(master.clients))
                 master.quit()
+
+    def test_attributes_populated_when_calling_start(self):
+        class MyUser1(User):
+            @task
+            def my_task(self):
+                pass
+
+        class MyUser2(User):
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner(user_classes=[MyUser1, MyUser2])
+
+            server.mocked_send(Message("client_ready", __version__, "fake_client1"))
+
+            master.start(7, 7)
+            self.assertEqual({"MyUser1": 3, "MyUser2": 4}, master.target_user_classes_count)
+            self.assertEqual(7, master.target_user_count)
+            self.assertEqual(7, master.spawn_rate)
+
+            master.start(10, 10)
+            self.assertEqual({"MyUser1": 5, "MyUser2": 5}, master.target_user_classes_count)
+            self.assertEqual(10, master.target_user_count)
+            self.assertEqual(10, master.spawn_rate)
+
+            master.start(1, 3)
+            self.assertEqual({"MyUser1": 1, "MyUser2": 0}, master.target_user_classes_count)
+            self.assertEqual(1, master.target_user_count)
+            self.assertEqual(3, master.spawn_rate)
+
+    def test_custom_message_send(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner()
+            for i in range(5):
+                master.clients[i] = WorkerNode(str(i))
+            master.send_message("test_custom_msg", {"test_data": 123})
+
+            self.assertEqual(5, len(server.outbox))
+            for _, msg in server.outbox:
+                self.assertEqual("test_custom_msg", msg.type)
+                self.assertEqual(123, msg.data["test_data"])
+
+    def test_custom_message_receive(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            test_custom_msg = [False]
+            test_custom_msg_data = [{}]
+
+            def on_custom_msg(msg, **kw):
+                test_custom_msg[0] = True
+                test_custom_msg_data[0] = msg.data
+
+            master = self.get_runner()
+            master.register_message("test_custom_msg", on_custom_msg)
+
+            server.mocked_send(Message("test_custom_msg", {"test_data": 123}, "dummy_id"))
+
+            self.assertTrue(test_custom_msg[0])
+            self.assertEqual(123, test_custom_msg_data[0]["test_data"])
+
+    def test_undefined_custom_message_receive(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            test_custom_msg = [False]
+
+            def on_custom_msg(msg, **kw):
+                test_custom_msg[0] = True
+
+            master = self.get_runner()
+            master.register_message("test_custom_msg", on_custom_msg)
+
+            server.mocked_send(Message("unregistered_custom_msg", {}, "dummy_id"))
+
+            self.assertFalse(test_custom_msg[0])
+            self.assertEqual(1, len(self.mocked_log.warning))
+            msg = self.mocked_log.warning[0]
+            self.assertIn("Unknown message type recieved from worker", msg)
+
+    def test_wait_for_workers_report_after_ramp_up(self):
+        def assert_cache_hits():
+            self.assertEqual(master._wait_for_workers_report_after_ramp_up.cache_info().hits, 0)
+            master._wait_for_workers_report_after_ramp_up()
+            self.assertEqual(master._wait_for_workers_report_after_ramp_up.cache_info().hits, 1)
+
+        master = self.get_runner()
+
+        master._wait_for_workers_report_after_ramp_up.cache_clear()
+        self.assertEqual(master._wait_for_workers_report_after_ramp_up(), 0.1)
+        assert_cache_hits()
+
+        master._wait_for_workers_report_after_ramp_up.cache_clear()
+        with _patch_env("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "5.7"):
+            self.assertEqual(master._wait_for_workers_report_after_ramp_up(), 5.7)
+            assert_cache_hits()
+
+        master._wait_for_workers_report_after_ramp_up.cache_clear()
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=1.5), _patch_env(
+            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "5.7 * WORKER_REPORT_INTERVAL"
+        ):
+            self.assertEqual(master._wait_for_workers_report_after_ramp_up(), 5.7 * 1.5)
+            assert_cache_hits()
+
+        master._wait_for_workers_report_after_ramp_up.cache_clear()
+
+
+@contextmanager
+def _patch_env(name: str, value: str):
+    prev_value = os.getenv(name)
+    os.environ[name] = value
+    try:
+        yield
+    finally:
+        if prev_value is None:
+            del os.environ[name]
+        else:
+            os.environ[name] = prev_value
 
 
 class TestWorkerRunner(LocustTestCase):
@@ -1334,9 +2271,10 @@ class TestWorkerRunner(LocustTestCase):
         # events.report_to_master._handlers = self._report_to_master_event_handlers
         super().tearDown()
 
-    def get_runner(self, environment=None, user_classes=[]):
+    def get_runner(self, environment=None, user_classes=None):
         if environment is None:
             environment = self.environment
+        user_classes = user_classes or []
         environment.user_classes = user_classes
         return WorkerRunner(environment, master_host="localhost", master_port=5557)
 
@@ -1365,15 +2303,14 @@ class TestWorkerRunner(LocustTestCase):
                 Message(
                     "spawn",
                     {
-                        "spawn_rate": 1,
-                        "num_users": 1,
+                        "timestamp": 1605538584,
+                        "user_classes_count": {"MyTestUser": 1},
                         "host": "",
                         "stop_timeout": 1,
                     },
                     "dummy_client_id",
                 )
             )
-            # print("outbox:", client.outbox)
             # wait for worker to spawn locusts
             self.assertIn("spawning", [m.type for m in client.outbox])
             worker.spawning_greenlet.join()
@@ -1408,8 +2345,8 @@ class TestWorkerRunner(LocustTestCase):
                 Message(
                     "spawn",
                     {
-                        "spawn_rate": 1,
-                        "num_users": 1,
+                        "timestamp": 1605538584,
+                        "user_classes_count": {"MyTestUser": 1},
                         "host": "",
                         "stop_timeout": None,
                     },
@@ -1430,9 +2367,15 @@ class TestWorkerRunner(LocustTestCase):
             # check that locust user did not get to finish
             self.assertEqual(1, MyTestUser._test_state)
 
-    def test_change_user_count_during_spawning(self):
+    def test_spawn_message_with_older_timestamp_is_rejected(self):
         class MyUser(User):
             wait_time = constant(1)
+
+            def start(self, group: Group):
+                # We do this so that the spawning does not finish
+                # too quickly
+                gevent.sleep(0.1)
+                return super().start(group)
 
             @task
             def my_task(self):
@@ -1446,8 +2389,153 @@ class TestWorkerRunner(LocustTestCase):
                 Message(
                     "spawn",
                     {
-                        "spawn_rate": 5,
-                        "num_users": 10,
+                        "timestamp": 1605538584,
+                        "user_classes_count": {"MyUser": 10},
+                        "host": "",
+                        "stop_timeout": None,
+                    },
+                    "dummy_client_id",
+                )
+            )
+            sleep(0.6)
+            self.assertEqual(STATE_SPAWNING, worker.state)
+            worker.spawning_greenlet.join()
+            self.assertEqual(10, worker.user_count)
+
+            # Send same timestamp as the first message
+            client.mocked_send(
+                Message(
+                    "spawn",
+                    {
+                        "timestamp": 1605538584,
+                        "user_classes_count": {"MyUser": 9},
+                        "host": "",
+                        "stop_timeout": None,
+                    },
+                    "dummy_client_id",
+                )
+            )
+            worker.spawning_greenlet.join()
+            # Still 10 users
+            self.assertEqual(10, worker.user_count)
+
+            # Send older timestamp than the first message
+            client.mocked_send(
+                Message(
+                    "spawn",
+                    {
+                        "timestamp": 1605538583,
+                        "user_classes_count": {"MyUser": 2},
+                        "host": "",
+                        "stop_timeout": None,
+                    },
+                    "dummy_client_id",
+                )
+            )
+            worker.spawning_greenlet.join()
+            # Still 10 users
+            self.assertEqual(10, worker.user_count)
+
+            # Send newer timestamp than the first message
+            client.mocked_send(
+                Message(
+                    "spawn",
+                    {
+                        "timestamp": 1605538585,
+                        "user_classes_count": {"MyUser": 2},
+                        "host": "",
+                        "stop_timeout": None,
+                    },
+                    "dummy_client_id",
+                )
+            )
+            worker.spawning_greenlet.join()
+            self.assertEqual(2, worker.user_count)
+
+            worker.quit()
+
+    def test_worker_messages_sent_to_master(self):
+        """
+        Ensure that worker includes both "user_count" and "user_classes_count"
+        when reporting to the master.
+        """
+
+        class MyUser(User):
+            wait_time = constant(1)
+
+            def start(self, group: Group):
+                # We do this so that the spawning does not finish
+                # too quickly
+                gevent.sleep(0.1)
+                return super().start(group)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            environment = Environment()
+            worker = self.get_runner(environment=environment, user_classes=[MyUser])
+
+            client.mocked_send(
+                Message(
+                    "spawn",
+                    {
+                        "timestamp": 1605538584,
+                        "user_classes_count": {"MyUser": 10},
+                        "host": "",
+                        "stop_timeout": None,
+                    },
+                    "dummy_client_id",
+                )
+            )
+            sleep(0.6)
+            self.assertEqual(STATE_SPAWNING, worker.state)
+            worker.spawning_greenlet.join()
+            self.assertEqual(10, worker.user_count)
+
+            sleep(2)
+
+            message = next((m for m in reversed(client.outbox) if m.type == "stats"), None)
+            self.assertIsNotNone(message)
+            self.assertIn("user_count", message.data)
+            self.assertIn("user_classes_count", message.data)
+            self.assertEqual(message.data["user_count"], 10)
+            self.assertEqual(message.data["user_classes_count"]["MyUser"], 10)
+
+            message = next((m for m in client.outbox if m.type == "spawning_complete"), None)
+            self.assertIsNotNone(message)
+            self.assertIn("user_count", message.data)
+            self.assertIn("user_classes_count", message.data)
+            self.assertEqual(message.data["user_count"], 10)
+            self.assertEqual(message.data["user_classes_count"]["MyUser"], 10)
+
+            worker.quit()
+
+    def test_change_user_count_during_spawning(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            def start(self, group: Group):
+                # We do this so that the spawning does not finish
+                # too quickly
+                gevent.sleep(0.1)
+                return super().start(group)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            environment = Environment()
+            worker = self.get_runner(environment=environment, user_classes=[MyUser])
+
+            client.mocked_send(
+                Message(
+                    "spawn",
+                    {
+                        "timestamp": 1605538584,
+                        "user_classes_count": {"MyUser": 10},
                         "host": "",
                         "stop_timeout": None,
                     },
@@ -1460,8 +2548,8 @@ class TestWorkerRunner(LocustTestCase):
                 Message(
                     "spawn",
                     {
-                        "spawn_rate": 5,
-                        "num_users": 9,
+                        "timestamp": 1605538585,
+                        "user_classes_count": {"MyUser": 9},
                         "host": "",
                         "stop_timeout": None,
                     },
@@ -1473,10 +2561,134 @@ class TestWorkerRunner(LocustTestCase):
             self.assertEqual(9, len(worker.user_greenlets))
             worker.quit()
 
+    def test_computed_properties(self):
+        class MyUser1(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        class MyUser2(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            environment = Environment()
+            worker = self.get_runner(environment=environment, user_classes=[MyUser1, MyUser2])
+
+            client.mocked_send(
+                Message(
+                    "spawn",
+                    {
+                        "timestamp": 1605538584,
+                        "user_classes_count": {"MyUser1": 10, "MyUser2": 10},
+                        "host": "",
+                        "stop_timeout": None,
+                    },
+                    "dummy_client_id",
+                )
+            )
+            worker.spawning_greenlet.join()
+            self.assertDictEqual(worker.user_classes_count, {"MyUser1": 10, "MyUser2": 10})
+            self.assertDictEqual(worker.target_user_classes_count, {"MyUser1": 10, "MyUser2": 10})
+            self.assertEqual(worker.target_user_count, 20)
+
+            client.mocked_send(
+                Message(
+                    "spawn",
+                    {
+                        "timestamp": 1605538585,
+                        "user_classes_count": {"MyUser1": 1, "MyUser2": 2},
+                        "host": "",
+                        "stop_timeout": None,
+                    },
+                    "dummy_client_id",
+                )
+            )
+            worker.spawning_greenlet.join()
+            self.assertDictEqual(worker.user_classes_count, {"MyUser1": 1, "MyUser2": 2})
+            self.assertDictEqual(worker.target_user_classes_count, {"MyUser1": 1, "MyUser2": 2})
+            self.assertEqual(worker.target_user_count, 3)
+
+            worker.quit()
+
+    def test_custom_message_send(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            environment = Environment()
+            worker = self.get_runner(environment=environment, user_classes=[MyUser])
+            client.outbox.clear()
+            worker.send_message("test_custom_msg", {"test_data": 123})
+            self.assertEqual("test_custom_msg", client.outbox[0].type)
+            self.assertEqual(123, client.outbox[0].data["test_data"])
+            worker.quit()
+
+    def test_custom_message_receive(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            environment = Environment()
+            test_custom_msg = [False]
+            test_custom_msg_data = [{}]
+
+            def on_custom_msg(msg, **kw):
+                test_custom_msg[0] = True
+                test_custom_msg_data[0] = msg.data
+
+            worker = self.get_runner(environment=environment, user_classes=[MyUser])
+            worker.register_message("test_custom_msg", on_custom_msg)
+
+            client.mocked_send(Message("test_custom_msg", {"test_data": 123}, "dummy_client_id"))
+
+            self.assertTrue(test_custom_msg[0])
+            self.assertEqual(123, test_custom_msg_data[0]["test_data"])
+            worker.quit()
+
+    def test_undefined_custom_message_receive(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            environment = Environment()
+
+            test_custom_msg = [False]
+
+            def on_custom_msg(msg, **kw):
+                test_custom_msg[0] = True
+
+            worker = self.get_runner(environment=environment, user_classes=[MyUser])
+            worker.register_message("test_custom_msg", on_custom_msg)
+
+            client.mocked_send(Message("unregistered_custom_msg", {}, "dummy_id"))
+
+            self.assertFalse(test_custom_msg[0])
+            self.assertEqual(1, len(self.mocked_log.warning))
+            msg = self.mocked_log.warning[0]
+            self.assertIn("Unknown message type recieved", msg)
+
 
 class TestMessageSerializing(unittest.TestCase):
     def test_message_serialize(self):
-        msg = Message("client_ready", None, "my_id")
+        msg = Message("client_ready", __version__, "my_id")
         rebuilt = Message.unserialize(msg.serialize())
         self.assertEqual(msg.type, rebuilt.type)
         self.assertEqual(msg.data, rebuilt.data)
@@ -1663,7 +2875,7 @@ class TestStopTimeout(LocustTestCase):
         runner = environment.create_local_runner()
         runner.start(1, 1)
         gevent.sleep(short_time / 2)
-        runner.stop_users(1)
+        runner.stop_users({MyTestUser.__name__: 1})
         self.assertEqual("first", MyTaskSet.state)
         runner.quit()
         environment.runner = None
@@ -1672,7 +2884,7 @@ class TestStopTimeout(LocustTestCase):
         runner = environment.create_local_runner()
         runner.start(1, 1)
         gevent.sleep(short_time)
-        runner.stop_users(1)
+        runner.stop_users({MyTestUser.__name__: 1})
         self.assertEqual("second", MyTaskSet.state)
         runner.quit()
         environment.runner = None
@@ -1684,7 +2896,7 @@ class TestStopTimeout(LocustTestCase):
         timeout = gevent.Timeout(short_time * 2)
         timeout.start()
         try:
-            runner.stop_users(1)
+            runner.stop_users({MyTestUser.__name__: 1})
             runner.user_greenlets.join()
         except gevent.Timeout:
             self.fail("Got Timeout exception. Some locusts must have kept running after iteration finish")
@@ -1702,7 +2914,7 @@ class TestStopTimeout(LocustTestCase):
 
         runner = Environment(user_classes=[BaseUser]).create_local_runner()
         runner.environment.stop_timeout = 1
-        runner.spawn_users(1, 1, wait=False)
+        runner.spawn_users({BaseUser.__name__: 1}, wait=False)
         timeout = gevent.Timeout(0.5)
         timeout.start()
         try:
@@ -1721,13 +2933,13 @@ class TestStopTimeout(LocustTestCase):
                 pass
 
         test_stop_run = [0]
-        environment = Environment(user_classes=[User])
+        environment = Environment(user_classes=[MyUser])
 
         def on_test_stop_ok(*args, **kwargs):
             test_stop_run[0] += 1
 
         def on_test_stop_fail(*args, **kwargs):
-            assert 0
+            assert False
 
         environment.events.test_stop.add_listener(on_test_stop_ok)
         environment.events.test_stop.add_listener(on_test_stop_fail)
@@ -1740,6 +2952,12 @@ class TestStopTimeout(LocustTestCase):
         self.assertEqual(2, test_stop_run[0])
 
     def test_stop_timeout_with_ramp_down(self):
+        """
+        The spawn rate does not have an effect on the rate at which the users are stopped.
+        It is expected that the excess users will be stopped as soon as possible in parallel
+        (while respecting the stop_timeout).
+        """
+
         class MyTaskSet(TaskSet):
             @task
             def my_task(self):
@@ -1752,18 +2970,22 @@ class TestStopTimeout(LocustTestCase):
         runner = environment.create_local_runner()
 
         # Start load test, wait for users to start, then trigger ramp down
+        ts = time.time()
         runner.start(10, 10, wait=False)
-        sleep(1)
+        runner.spawning_greenlet.join()
+        delta = time.time() - ts
+        self.assertTrue(
+            0 <= delta <= 0.05, "Expected user count to increase to 10 instantaneously, instead it took %f" % delta
+        )
+        self.assertTrue(
+            runner.user_count == 10, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
+        )
+
+        ts = time.time()
         runner.start(2, 4, wait=False)
-
-        # Wait a moment and then ensure the user count has started to drop but
-        # not immediately to user_count
-        sleep(1.1)
-        user_count = len(runner.user_greenlets)
-        self.assertTrue(user_count > 5, "User count has decreased too quickly: %i" % user_count)
-        self.assertTrue(user_count < 10, "User count has not decreased at all: %i" % user_count)
-
-        # Wait and ensure load test users eventually dropped to desired count
-        sleep(2)
-        user_count = len(runner.user_greenlets)
-        self.assertTrue(user_count == 2, "User count has not decreased correctly to 2, it is : %i" % user_count)
+        runner.spawning_greenlet.join()
+        delta = time.time() - ts
+        self.assertTrue(1 <= delta <= 1.05, "Expected user count to decrease to 2 in 1s, instead it took %f" % delta)
+        self.assertTrue(
+            runner.user_count == 2, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
+        )

@@ -1,5 +1,4 @@
 import mock
-import os
 import socket
 import subprocess
 import textwrap

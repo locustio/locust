@@ -698,7 +698,7 @@ def setup_distributed_stats_event_listeners(events, stats):
         for stats_data in data["stats"]:
             entry = StatsEntry.unserialize(stats_data)
             request_key = (entry.name, entry.method)
-            if not request_key in stats.entries:
+            if request_key not in stats.entries:
                 stats.entries[request_key] = StatsEntry(stats, entry.name, entry.method, use_response_times_cache=True)
             stats.entries[request_key].extend(entry)
 

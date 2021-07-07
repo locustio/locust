@@ -19,8 +19,8 @@ setup(
     version=version,
     install_requires=[
         "gevent>=20.9.0",
-        "flask==1.1.2",
-        "Werkzeug>=1.0.1",
+        "flask>=2.0.0",
+        "Werkzeug>=2.0.0",
         "requests>=2.9.1",
         "msgpack>=0.6.2",
         "pyzmq>=16.0.2",
@@ -28,6 +28,7 @@ setup(
         "ConfigArgParse>=1.0",
         "psutil>=5.6.7",
         "Flask-BasicAuth>=0.2.0",
+        "Flask-Cors>=3.0.10",
     ],
     test_suite="locust.test",
     tests_require=[
