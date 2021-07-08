@@ -5,10 +5,11 @@ import time
 from collections.abc import Iterator
 from copy import deepcopy
 from operator import attrgetter
-from typing import Dict, Generator, List, TYPE_CHECKING, Type
+from typing import Dict, Generator, List, TYPE_CHECKING, Tuple, Type
 
 import gevent
-import roundrobin
+import typing
+from roundrobin import smooth
 
 from locust import User
 
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
 
 
 # To profile line-by-line, uncomment the code below (i.e. `import line_profiler ...`) and
-# place `#@profile` on the functions/methods you wish to profile. Then, in the unit test you are
+# place `@profile` on the functions/methods you wish to profile. Then, in the unit test you are
 # running, use `from locust.dispatch import profile; profile.print_stats()` at the end of the unit test.
 # Placing it in a `finally` block is recommended.
 # import line_profiler
@@ -48,20 +49,10 @@ class UsersDispatcher(Iterator):
             from 10 to 100.
     """
 
-    def __init__(
-        self,
-        worker_nodes: "List[WorkerNode]",
-        user_classes: List[Type[User]],
-        previous_target_user_count: int,
-        target_user_count: int,
-        spawn_rate: float,
-    ):
+    def __init__(self, worker_nodes: "List[WorkerNode]", user_classes: List[Type[User]]):
         """
         :param worker_nodes: List of worker nodes
         :param user_classes: The user classes
-        :param previous_target_user_count: The desired user count at the end of the previous dispatch cycle
-        :param target_user_count: The desired user count at the end of the dispatch cycle
-        :param spawn_rate: The spawn rate
         """
         # NOTE: We use "sorted" to ensure repeatable behaviour.
         #       This is especially important when iterating over a dictionary which, prior to py3.7, was
@@ -71,51 +62,52 @@ class UsersDispatcher(Iterator):
 
         self._user_classes = sorted(user_classes, key=attrgetter("__name__"))
 
-        self._previous_target_user_count = previous_target_user_count
+        assert len(set(self._user_classes)) == len(self._user_classes)
 
-        self._target_user_count = target_user_count
+        self._target_user_count = None
 
-        self._spawn_rate = spawn_rate
+        self._spawn_rate = None
+
+        self._user_count_per_dispatch_iteration = None
+
+        self._wait_between_dispatch = None
 
         self._initial_users_on_workers = {
-            worker_node.id: {
-                user_class.__name__: worker_node.user_classes_count.get(user_class.__name__, 0)
-                for user_class in self._user_classes
-            }
+            worker_node.id: {user_class.__name__: 0 for user_class in self._user_classes}
             for worker_node in worker_nodes
         }
 
         self._users_on_workers = deepcopy(self._initial_users_on_workers)
 
-        self._user_count_per_dispatch_iteration = max(1, math.floor(self._spawn_rate))
-
-        self._wait_between_dispatch = self._user_count_per_dispatch_iteration / self._spawn_rate
-
-        self._dispatcher_generator = self._dispatcher()
-
-        self._user_gen_generator = self._user_gen()
-
-        self._worker_node_id_generator = itertools.cycle(map(attrgetter("id"), self._worker_nodes))
-
         self._current_user_count = sum(map(sum, map(dict.values, self._users_on_workers.values())))
+
+        self._dispatcher_generator = None
+
+        self._user_generator = self._user_gen()
+
+        self._worker_node_generator = itertools.cycle(self._worker_nodes)
 
         # To keep track of how long it takes for each dispatch iteration to compute
         self._dispatch_iteration_durations = []
+
+        self._active_users = []
+
+        # TODO: Test that attribute is set when dispatching and unset when done dispatching
+        self._dispatch_in_progress = False
 
     @property
     def dispatch_iteration_durations(self) -> List[float]:
         return self._dispatch_iteration_durations
 
     def __next__(self) -> Dict[str, Dict[str, int]]:
-        return next(self._dispatcher_generator)
+        return deepcopy(next(self._dispatcher_generator))
 
     def _dispatcher(self) -> Generator[Dict[str, Dict[str, int]], None, None]:
-        # TODO: Ensure initial users on workers are ok. If not, send a single dispatch
-        #       to set the workers with the adequate users. After having done that,
-        #       we need to update `self._users_on_workers` and `self._current_user_count`.
+        self._dispatch_in_progress = True
 
         if self._current_user_count == self._target_user_count:
             yield self._initial_users_on_workers
+            self._dispatch_in_progress = False
             return
 
         while self._current_user_count < self._target_user_count:
@@ -125,6 +117,52 @@ class UsersDispatcher(Iterator):
         while self._current_user_count > self._target_user_count:
             with self._wait_between_dispatch_iteration_context():
                 yield self._ramp_down()
+
+        self._dispatch_in_progress = False
+
+    def new_dispatch(self, target_user_count: int, spawn_rate: float) -> None:
+        """
+        :param target_user_count: The desired user count at the end of the dispatch cycle
+        :param spawn_rate: The spawn rate
+        """
+        self._target_user_count = target_user_count
+
+        self._spawn_rate = spawn_rate
+
+        self._user_count_per_dispatch_iteration = max(1, math.floor(self._spawn_rate))
+
+        self._wait_between_dispatch = self._user_count_per_dispatch_iteration / self._spawn_rate
+
+        self._initial_users_on_workers = deepcopy(self._users_on_workers)
+
+        self._users_on_workers = deepcopy(self._initial_users_on_workers)
+
+        self._current_user_count = sum(map(sum, map(dict.values, self._users_on_workers.values())))
+
+        self._dispatcher_generator = self._dispatcher()
+
+        self._dispatch_iteration_durations.clear()
+
+    def add_worker(self, worker_node: "WorkerNode") -> None:
+        # TODO: Add worker while ramping-up/down?
+        # TODO: Ensure that next dispatch iteration, we send a dispatch to re-balance the users on the workers
+
+        self._worker_nodes = sorted(self._worker_nodes + [worker_node], key=lambda w: w.id)
+
+        # Set to zero because we'll re-balance in the next dispatch iteration
+        self._initial_users_on_workers[worker_node.id] = {user_class.__name__: 0 for user_class in self._user_classes}
+
+        self._users_on_workers[worker_node.id] = deepcopy(self._initial_users_on_workers[worker_node.id])
+
+        # TODO: Ensure the generator yield the worker we were at
+        self._worker_node_generator = itertools.cycle(self._worker_nodes)
+
+        raise NotImplementedError
+
+    def remove_worker(self, worker_node_id: str) -> None:
+        # TODO: Remove worker while ramping-up/down?
+        # TODO: Ensure that next dispatch iteration, we send a dispatch to re-balance the users on the workers
+        raise NotImplementedError
 
     @contextlib.contextmanager
     def _wait_between_dispatch_iteration_context(self) -> None:
@@ -148,33 +186,84 @@ class UsersDispatcher(Iterator):
         gevent.sleep(sleep_duration)
 
     def _ramp_up(self) -> Dict[str, Dict[str, int]]:
+        # TODO: Handle missing workers
         initial_user_count = self._current_user_count
-        for user in self._user_gen_generator:
-            worker_name = next(self._worker_node_id_generator)
-            self._users_on_workers[worker_name][user] += 1
+        for user in self._user_generator:
+            worker_node = next(self._worker_node_generator)
+            self._users_on_workers[worker_node.id][user] += 1
             self._current_user_count += 1
+            self._active_users.append((worker_node, user))
             if self._current_user_count >= min(
                 initial_user_count + self._user_count_per_dispatch_iteration, self._target_user_count
             ):
-                return deepcopy(self._users_on_workers)
+                return self._users_on_workers
 
     def _ramp_down(self) -> Dict[str, Dict[str, int]]:
+        # TODO: Handle missing workers
         initial_user_count = self._current_user_count
-        for user in self._user_gen_generator:
-            while True:
-                worker_name = next(self._worker_node_id_generator)
-                if self._users_on_workers[worker_name][user] == 0:
-                    continue
-                self._users_on_workers[worker_name][user] -= 1
-                self._current_user_count -= 1
-                if (
-                    self._current_user_count == 0
-                    or self._current_user_count <= initial_user_count - self._user_count_per_dispatch_iteration
-                ):
-                    return deepcopy(self._users_on_workers)
-                break
+        while True:
+            try:
+                worker_node, user = self._active_users.pop()
+            except IndexError:
+                return self._users_on_workers
+            self._users_on_workers[worker_node.id][user] -= 1
+            self._current_user_count -= 1
+            if (
+                self._current_user_count == 0
+                or self._current_user_count <= initial_user_count - self._user_count_per_dispatch_iteration
+            ):
+                return self._users_on_workers
+
+    # def _ramp_down(self) -> Dict[str, Dict[str, int]]:
+    #     initial_user_count = self._current_user_count
+    #     for user in self._user_generator:
+    #         i = 0
+    #         while True:
+    #             worker_node = next(
+    #                 filter(
+    #                     lambda w: w.state in [STATE_INIT, STATE_SPAWNING, STATE_RUNNING], self._worker_node_generator
+    #                 )
+    #             )
+    #             assert i < 2 * len(self._worker_nodes)
+    #             if self._users_on_workers[worker_node.id][user] == 0:
+    #                 i += 1
+    #                 continue
+    #             self._users_on_workers[worker_node.id][user] -= 1
+    #             self._current_user_count -= 1
+    #             if (
+    #                 self._current_user_count == 0
+    #                 or self._current_user_count <= initial_user_count - self._user_count_per_dispatch_iteration
+    #             ):
+    #                 return self._users_on_workers
+    #             break
+
+    # TODO: Test this
+    # TODO: Add cache
+    def _distribute_users(
+        self, target_user_count: int
+    ) -> Tuple[dict, Generator[str, None, None], typing.Iterator["WorkerNode"], List[Tuple["WorkerNode", str]]]:
+        user_gen = self._user_gen()
+
+        worker_gen = itertools.cycle(self._worker_nodes)
+
+        users_on_workers = {
+            worker_node.id: {user_class.__name__: 0 for user_class in self._user_classes}
+            for worker_node in self._worker_nodes
+        }
+
+        active_users = []
+
+        user_count = 0
+        while user_count < target_user_count:
+            user = next(user_gen)
+            worker_node = next(worker_gen)
+            users_on_workers[worker_node.id][user] += 1
+            user_count += 1
+            active_users.append((worker_node, user))
+
+        return users_on_workers, user_gen, worker_gen, active_users
 
     def _user_gen(self) -> Generator[str, None, None]:
-        gen = roundrobin.smooth([(user_class.__name__, user_class.weight) for user_class in self._user_classes])
+        gen = smooth([(user_class.__name__, user_class.weight) for user_class in self._user_classes])
         while True:
             yield gen()

@@ -90,6 +90,12 @@ class Runner:
         self.target_user_classes_count: Dict[str, int] = {}
         self.custom_messages = {}
 
+        # Only when running in standalone mode (non-distributed)
+        self._local_worker_node = WorkerNode(id="local")
+        self._local_worker_node.user_classes_count = self.user_classes_count
+
+        self._users_dispatcher = UsersDispatcher(worker_nodes=[self._local_worker_node], user_classes=self.user_classes)
+
         # set up event listeners for recording requests
         def on_request_success(request_type, name, response_time, response_length, **_kwargs):
             self.stats.log_request(request_type, name, response_time, response_length)
@@ -298,25 +304,18 @@ class Runner:
             if self.environment.host is not None:
                 user_class.host = self.environment.host
 
-        self.target_user_classes_count = distribute_users(self.user_classes, user_count)
-
-        local_worker_node = WorkerNode(id="local")
-        local_worker_node.user_classes_count = self.user_classes_count
-
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
             self.update_state(STATE_SPAWNING)
 
         logger.info("Ramping to %d users using a %.2f spawn rate" % (user_count, spawn_rate))
 
+        self._users_dispatcher.new_dispatch(user_count, spawn_rate)
+
         try:
-            for dispatched_users in UsersDispatcher(
-                worker_nodes=[local_worker_node],
-                user_classes_count=self.target_user_classes_count,
-                spawn_rate=spawn_rate,
-            ):
+            for dispatched_users in self._users_dispatcher:
                 user_classes_spawn_count = {}
                 user_classes_stop_count = {}
-                user_classes_count = dispatched_users[local_worker_node.id]
+                user_classes_count = dispatched_users[self._local_worker_node.id]
                 logger.debug("Ramping to %s" % _format_user_classes_count_for_log(user_classes_count))
                 for user_class, user_class_count in user_classes_count.items():
                     if self.user_classes_count[user_class] > user_class_count:
@@ -333,6 +332,8 @@ class Runner:
                     # can be blocking because of the stop_timeout
                     self.spawn_users(user_classes_spawn_count, wait)
                     self.stop_users(user_classes_stop_count)
+
+                self._local_worker_node.user_classes_count = next(iter(dispatched_users.values()))
 
         except KeyboardInterrupt:
             # We need to catch keyboard interrupt. Otherwise, if KeyboardInterrupt is received while in
@@ -502,6 +503,7 @@ class LocalRunner(Runner):
 class DistributedRunner(Runner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._local_worker_node = None
         setup_distributed_stats_event_listeners(self.environment.events, self.stats)
 
 
@@ -512,6 +514,8 @@ class WorkerNode:
         self.heartbeat = heartbeat_liveness
         self.cpu_usage = 0
         self.cpu_warning_emitted = False
+
+        # The reported users running on the worker
         self.user_classes_count: Dict[str, int] = {}
 
     @property
@@ -599,6 +603,8 @@ class MasterRunner(DistributedRunner):
             else:
                 raise
 
+        self._users_dispatcher = None
+
         self.greenlet.spawn(self.heartbeat_worker).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.client_listener).link_exception(greenlet_exception_handler)
 
@@ -641,9 +647,12 @@ class MasterRunner(DistributedRunner):
             if self.environment.host is not None:
                 user_class.host = self.environment.host
 
-        self.target_user_classes_count = distribute_users(self.user_classes, user_count)
-
         self.spawn_rate = spawn_rate
+
+        if self._users_dispatcher is None:
+            self._users_dispatcher = UsersDispatcher(
+                worker_nodes=list(self.clients.values()), user_classes=self.user_classes
+            )
 
         logger.info(
             "Sending spawn jobs of %d users at %.2f spawn rate to %d ready clients"
@@ -677,15 +686,18 @@ class MasterRunner(DistributedRunner):
 
         self.update_state(STATE_SPAWNING)
 
+        # TODO: Test this
+        # UsersDispatcher needs all workers to run the correct amount of users (i.e. given by `self._target_user_classes_count_on_workers`)
+
+        self._users_dispatcher.new_dispatch(target_user_count=user_count, spawn_rate=spawn_rate)
+
         try:
-            for dispatched_users in UsersDispatcher(
-                worker_nodes=self.clients.ready + self.clients.running + self.clients.spawning,
-                user_classes_count=self.target_user_classes_count,
-                spawn_rate=spawn_rate,
-            ):
-                dispatch_greenlets = Group()
-                for worker_node_id, worker_user_classes_count in dispatched_users.items():
-                    data = {
+            dispatched_users = None
+
+            for dispatched_users in self._users_dispatcher:
+        dispatch_greenlets = Group()
+        for worker_node_id, worker_user_classes_count in dispatched_users.items():
+            data = {
                         "timestamp": time.time(),
                         "user_classes_count": worker_user_classes_count,
                         "host": self.environment.host,
@@ -709,6 +721,9 @@ class MasterRunner(DistributedRunner):
                 logger.debug(
                     "Currently spawned users: %s" % _format_user_classes_count_for_log(self.reported_user_classes_count)
                 )
+
+            assert dispatched_users is not None
+            self.target_user_classes_count = _aggregate_dispatched_users(dispatched_users)
 
         except KeyboardInterrupt:
             # We need to catch keyboard interrupt. Otherwise, if KeyboardInterrupt is received while in

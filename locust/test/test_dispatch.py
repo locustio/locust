@@ -1,7 +1,7 @@
 import time
 import unittest
 from operator import attrgetter
-from typing import Dict, List, Type
+from typing import Dict
 
 from locust import User
 from locust.dispatch import UsersDispatcher
@@ -29,12 +29,9 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         worker_node3 = WorkerNode("3")
 
         users_dispatcher = UsersDispatcher(
-            worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_classes=[User1, User2, User3],
-            previous_target_user_count=0,
-            target_user_count=9,
-            spawn_rate=0.5,
+            worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=0.5)
 
         sleep_time = 1 / 0.5
 
@@ -168,12 +165,9 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         worker_node3 = WorkerNode("3")
 
         users_dispatcher = UsersDispatcher(
-            worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_classes=[User1, User2, User3],
-            previous_target_user_count=0,
-            target_user_count=9,
-            spawn_rate=1,
+            worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=1)
 
         sleep_time = 1
 
@@ -308,12 +302,9 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         worker_node4 = WorkerNode("4")
 
         users_dispatcher = UsersDispatcher(
-            worker_nodes=[worker_node1, worker_node2, worker_node3, worker_node4],
-            user_classes=[User1, User2, User3],
-            previous_target_user_count=0,
-            target_user_count=9,
-            spawn_rate=1,
+            worker_nodes=[worker_node1, worker_node2, worker_node3, worker_node4], user_classes=[User1, User2, User3]
         )
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=1)
 
         sleep_time = 1
 
@@ -456,12 +447,9 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         worker_node3 = WorkerNode("3")
 
         users_dispatcher = UsersDispatcher(
-            worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_classes=[User1, User2, User3],
-            previous_target_user_count=0,
-            target_user_count=9,
-            spawn_rate=2,
+            worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=2)
 
         sleep_time = 1
 
@@ -547,12 +535,9 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         worker_node3 = WorkerNode("3")
 
         users_dispatcher = UsersDispatcher(
-            worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_classes=[User1, User2, User3],
-            previous_target_user_count=0,
-            target_user_count=9,
-            spawn_rate=2.4,
+            worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=2.4)
 
         sleep_time = 2 / 2.4
 
@@ -638,12 +623,9 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         worker_node3 = WorkerNode("3")
 
         users_dispatcher = UsersDispatcher(
-            worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_classes=[User1, User2, User3],
-            previous_target_user_count=0,
-            target_user_count=9,
-            spawn_rate=3,
+            worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
 
         sleep_time = 1
 
@@ -705,12 +687,9 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         worker_node3 = WorkerNode("3")
 
         users_dispatcher = UsersDispatcher(
-            worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_classes=[User1, User2, User3],
-            previous_target_user_count=0,
-            target_user_count=9,
-            spawn_rate=4,
+            worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=4)
 
         sleep_time = 1
 
@@ -772,12 +751,9 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         worker_node3 = WorkerNode("3")
 
         users_dispatcher = UsersDispatcher(
-            worker_nodes=[worker_node1, worker_node2, worker_node3],
-            user_classes=[User1, User2, User3],
-            previous_target_user_count=0,
-            target_user_count=9,
-            spawn_rate=9,
+            worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=9)
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -810,17 +786,16 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
         user_classes = [User1, User2, User3]
 
-        previous_target_user_count = 9
+        workers = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        workers = _create_workers(worker_count=3, user_classes=user_classes, user_count=previous_target_user_count)
+        initial_user_count = 9
 
-        users_dispatcher = UsersDispatcher(
-            worker_nodes=workers,
-            user_classes=user_classes,
-            previous_target_user_count=previous_target_user_count,
-            target_user_count=0,
-            spawn_rate=0.5,
-        )
+        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
+        users_dispatcher._wait_between_dispatch = 0
+        list(users_dispatcher)
+
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=0.5)
 
         sleep_time = 1 / 0.5
 
@@ -828,9 +803,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 2, "User2": 0, "User3": 0},
+                "1": {"User1": 3, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 3, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 3},
+                "3": {"User1": 0, "User2": 0, "User3": 2},
             },
         )
         delta = time.perf_counter() - ts
@@ -840,9 +815,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 2, "User2": 0, "User3": 0},
+                "1": {"User1": 3, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 2, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 3},
+                "3": {"User1": 0, "User2": 0, "User3": 2},
             },
         )
         delta = time.perf_counter() - ts
@@ -864,9 +839,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "1": {"User1": 2, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 2, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 2},
+                "3": {"User1": 0, "User2": 0, "User3": 1},
             },
         )
         delta = time.perf_counter() - ts
@@ -876,9 +851,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "1": {"User1": 2, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 1, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 2},
+                "3": {"User1": 0, "User2": 0, "User3": 1},
             },
         )
         delta = time.perf_counter() - ts
@@ -900,9 +875,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 0, "User2": 0, "User3": 0},
+                "1": {"User1": 1, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 1, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 1},
+                "3": {"User1": 0, "User2": 0, "User3": 0},
             },
         )
         delta = time.perf_counter() - ts
@@ -912,9 +887,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 0, "User2": 0, "User3": 0},
+                "1": {"User1": 1, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 0, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 1},
+                "3": {"User1": 0, "User2": 0, "User3": 0},
             },
         )
         delta = time.perf_counter() - ts
@@ -949,17 +924,16 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
         user_classes = [User1, User2, User3]
 
-        previous_target_user_count = 9
+        workers = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        workers = _create_workers(worker_count=3, user_classes=user_classes, user_count=previous_target_user_count)
+        initial_user_count = 9
 
-        users_dispatcher = UsersDispatcher(
-            worker_nodes=workers,
-            user_classes=user_classes,
-            previous_target_user_count=previous_target_user_count,
-            target_user_count=0,
-            spawn_rate=1,
-        )
+        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
+        users_dispatcher._wait_between_dispatch = 0
+        list(users_dispatcher)
+
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=1)
 
         sleep_time = 1
 
@@ -967,9 +941,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 2, "User2": 0, "User3": 0},
+                "1": {"User1": 3, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 3, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 3},
+                "3": {"User1": 0, "User2": 0, "User3": 2},
             },
         )
         delta = time.perf_counter() - ts
@@ -979,9 +953,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 2, "User2": 0, "User3": 0},
+                "1": {"User1": 3, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 2, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 3},
+                "3": {"User1": 0, "User2": 0, "User3": 2},
             },
         )
         delta = time.perf_counter() - ts
@@ -1003,9 +977,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "1": {"User1": 2, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 2, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 2},
+                "3": {"User1": 0, "User2": 0, "User3": 1},
             },
         )
         delta = time.perf_counter() - ts
@@ -1015,9 +989,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "1": {"User1": 2, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 1, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 2},
+                "3": {"User1": 0, "User2": 0, "User3": 1},
             },
         )
         delta = time.perf_counter() - ts
@@ -1039,9 +1013,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 0, "User2": 0, "User3": 0},
+                "1": {"User1": 1, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 1, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 1},
+                "3": {"User1": 0, "User2": 0, "User3": 0},
             },
         )
         delta = time.perf_counter() - ts
@@ -1051,9 +1025,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 0, "User2": 0, "User3": 0},
+                "1": {"User1": 1, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 0, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 1},
+                "3": {"User1": 0, "User2": 0, "User3": 0},
             },
         )
         delta = time.perf_counter() - ts
@@ -1088,17 +1062,16 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
         user_classes = [User1, User2, User3]
 
-        previous_target_user_count = 9
+        workers = [WorkerNode(str(i + 1)) for i in range(4)]
 
-        workers = _create_workers(worker_count=4, user_classes=user_classes, user_count=previous_target_user_count)
+        initial_user_count = 9
 
-        users_dispatcher = UsersDispatcher(
-            worker_nodes=workers,
-            user_classes=user_classes,
-            previous_target_user_count=previous_target_user_count,
-            target_user_count=0,
-            spawn_rate=1,
-        )
+        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
+        users_dispatcher._wait_between_dispatch = 0
+        list(users_dispatcher)
+
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=1)
 
         sleep_time = 1
 
@@ -1106,7 +1079,7 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 0, "User2": 1, "User3": 1},
+                "1": {"User1": 1, "User2": 1, "User3": 0},
                 "2": {"User1": 0, "User2": 1, "User3": 1},
                 "3": {"User1": 1, "User2": 0, "User3": 1},
                 "4": {"User1": 1, "User2": 1, "User3": 0},
@@ -1119,10 +1092,10 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 0, "User2": 1, "User3": 1},
-                "2": {"User1": 0, "User2": 0, "User3": 1},
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 0, "User2": 1, "User3": 1},
                 "3": {"User1": 1, "User2": 0, "User3": 1},
-                "4": {"User1": 1, "User2": 1, "User3": 0},
+                "4": {"User1": 1, "User2": 0, "User3": 0},
             },
         )
         delta = time.perf_counter() - ts
@@ -1132,10 +1105,10 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 0, "User2": 1, "User3": 1},
-                "2": {"User1": 0, "User2": 0, "User3": 1},
-                "3": {"User1": 1, "User2": 0, "User3": 0},
-                "4": {"User1": 1, "User2": 1, "User3": 0},
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 0, "User2": 1, "User3": 1},
+                "3": {"User1": 0, "User2": 0, "User3": 1},
+                "4": {"User1": 1, "User2": 0, "User3": 0},
             },
         )
         delta = time.perf_counter() - ts
@@ -1145,10 +1118,10 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 0, "User2": 1, "User3": 1},
-                "2": {"User1": 0, "User2": 0, "User3": 1},
-                "3": {"User1": 1, "User2": 0, "User3": 0},
-                "4": {"User1": 0, "User2": 1, "User3": 0},
+                "1": {"User1": 1, "User2": 1, "User3": 0},
+                "2": {"User1": 0, "User2": 1, "User3": 0},
+                "3": {"User1": 0, "User2": 0, "User3": 1},
+                "4": {"User1": 1, "User2": 0, "User3": 0},
             },
         )
         delta = time.perf_counter() - ts
@@ -1158,10 +1131,10 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 0, "User2": 0, "User3": 1},
-                "2": {"User1": 0, "User2": 0, "User3": 1},
-                "3": {"User1": 1, "User2": 0, "User3": 0},
-                "4": {"User1": 0, "User2": 1, "User3": 0},
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 0, "User2": 1, "User3": 0},
+                "3": {"User1": 0, "User2": 0, "User3": 1},
+                "4": {"User1": 1, "User2": 0, "User3": 0},
             },
         )
         delta = time.perf_counter() - ts
@@ -1171,10 +1144,10 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 0, "User2": 0, "User3": 1},
-                "2": {"User1": 0, "User2": 0, "User3": 0},
-                "3": {"User1": 1, "User2": 0, "User3": 0},
-                "4": {"User1": 0, "User2": 1, "User3": 0},
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 0, "User2": 1, "User3": 0},
+                "3": {"User1": 0, "User2": 0, "User3": 1},
+                "4": {"User1": 0, "User2": 0, "User3": 0},
             },
         )
         delta = time.perf_counter() - ts
@@ -1184,10 +1157,10 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 0, "User2": 0, "User3": 1},
-                "2": {"User1": 0, "User2": 0, "User3": 0},
+                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "2": {"User1": 0, "User2": 1, "User3": 0},
                 "3": {"User1": 0, "User2": 0, "User3": 0},
-                "4": {"User1": 0, "User2": 1, "User3": 0},
+                "4": {"User1": 0, "User2": 0, "User3": 0},
             },
         )
         delta = time.perf_counter() - ts
@@ -1197,7 +1170,7 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 0, "User2": 0, "User3": 1},
+                "1": {"User1": 1, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 0, "User3": 0},
                 "3": {"User1": 0, "User2": 0, "User3": 0},
                 "4": {"User1": 0, "User2": 0, "User3": 0},
@@ -1236,17 +1209,16 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
         user_classes = [User1, User2, User3]
 
-        previous_target_user_count = 9
+        workers = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        workers = _create_workers(worker_count=3, user_classes=user_classes, user_count=previous_target_user_count)
+        initial_user_count = 9
 
-        users_dispatcher = UsersDispatcher(
-            worker_nodes=workers,
-            user_classes=user_classes,
-            previous_target_user_count=previous_target_user_count,
-            target_user_count=0,
-            spawn_rate=2,
-        )
+        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
+        users_dispatcher._wait_between_dispatch = 0
+        list(users_dispatcher)
+
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=2)
 
         sleep_time = 1
 
@@ -1254,9 +1226,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 2, "User2": 0, "User3": 0},
+                "1": {"User1": 3, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 2, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 3},
+                "3": {"User1": 0, "User2": 0, "User3": 2},
             },
         )
         delta = time.perf_counter() - ts
@@ -1266,9 +1238,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "1": {"User1": 2, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 2, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 2},
+                "3": {"User1": 0, "User2": 0, "User3": 1},
             },
         )
         delta = time.perf_counter() - ts
@@ -1290,9 +1262,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 0, "User2": 0, "User3": 0},
+                "1": {"User1": 1, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 0, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 1},
+                "3": {"User1": 0, "User2": 0, "User3": 0},
             },
         )
         delta = time.perf_counter() - ts
@@ -1327,17 +1299,16 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
         user_classes = [User1, User2, User3]
 
-        previous_target_user_count = 9
+        workers = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        workers = _create_workers(worker_count=3, user_classes=user_classes, user_count=previous_target_user_count)
+        initial_user_count = 9
 
-        users_dispatcher = UsersDispatcher(
-            worker_nodes=workers,
-            user_classes=user_classes,
-            previous_target_user_count=previous_target_user_count,
-            target_user_count=0,
-            spawn_rate=2.4,
-        )
+        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
+        users_dispatcher._wait_between_dispatch = 0
+        list(users_dispatcher)
+
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=2.4)
 
         sleep_time = 2 / 2.4
 
@@ -1345,9 +1316,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 2, "User2": 0, "User3": 0},
+                "1": {"User1": 3, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 2, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 3},
+                "3": {"User1": 0, "User2": 0, "User3": 2},
             },
         )
         delta = time.perf_counter() - ts
@@ -1357,9 +1328,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "1": {"User1": 2, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 2, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 2},
+                "3": {"User1": 0, "User2": 0, "User3": 1},
             },
         )
         delta = time.perf_counter() - ts
@@ -1381,9 +1352,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 0, "User2": 0, "User3": 0},
+                "1": {"User1": 1, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 0, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 1},
+                "3": {"User1": 0, "User2": 0, "User3": 0},
             },
         )
         delta = time.perf_counter() - ts
@@ -1418,17 +1389,16 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
         user_classes = [User1, User2, User3]
 
-        previous_target_user_count = 9
+        workers = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        workers = _create_workers(worker_count=3, user_classes=user_classes, user_count=previous_target_user_count)
+        initial_user_count = 9
 
-        users_dispatcher = UsersDispatcher(
-            worker_nodes=workers,
-            user_classes=user_classes,
-            previous_target_user_count=previous_target_user_count,
-            target_user_count=0,
-            spawn_rate=3,
-        )
+        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
+        users_dispatcher._wait_between_dispatch = 0
+        list(users_dispatcher)
+
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=3)
 
         sleep_time = 1
 
@@ -1485,17 +1455,16 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
         user_classes = [User1, User2, User3]
 
-        previous_target_user_count = 9
+        workers = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        workers = _create_workers(worker_count=3, user_classes=user_classes, user_count=previous_target_user_count)
+        initial_user_count = 9
 
-        users_dispatcher = UsersDispatcher(
-            worker_nodes=workers,
-            user_classes=user_classes,
-            previous_target_user_count=previous_target_user_count,
-            target_user_count=0,
-            spawn_rate=4,
-        )
+        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
+        users_dispatcher._wait_between_dispatch = 0
+        list(users_dispatcher)
+
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=4)
 
         sleep_time = 1
 
@@ -1503,9 +1472,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 1, "User2": 0, "User3": 0},
+                "1": {"User1": 2, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 2, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 2},
+                "3": {"User1": 0, "User2": 0, "User3": 1},
             },
         )
         delta = time.perf_counter() - ts
@@ -1515,9 +1484,9 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertDictEqual(
             next(users_dispatcher),
             {
-                "1": {"User1": 0, "User2": 0, "User3": 0},
+                "1": {"User1": 1, "User2": 0, "User3": 0},
                 "2": {"User1": 0, "User2": 0, "User3": 0},
-                "3": {"User1": 0, "User2": 0, "User3": 1},
+                "3": {"User1": 0, "User2": 0, "User3": 0},
             },
         )
         delta = time.perf_counter() - ts
@@ -1552,17 +1521,16 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
         user_classes = [User1, User2, User3]
 
-        previous_target_user_count = 9
+        workers = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        workers = _create_workers(worker_count=3, user_classes=user_classes, user_count=previous_target_user_count)
+        initial_user_count = 9
 
-        users_dispatcher = UsersDispatcher(
-            worker_nodes=workers,
-            user_classes=user_classes,
-            previous_target_user_count=previous_target_user_count,
-            target_user_count=0,
-            spawn_rate=9,
-        )
+        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
+        users_dispatcher._wait_between_dispatch = 0
+        list(users_dispatcher)
+
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=9)
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -1582,32 +1550,70 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertTrue(0 <= delta <= _TOLERANCE, delta)
 
 
-class TestRampUpWithWorkersHavingIncorrectUsers(unittest.TestCase):
-    # TODO
-    def test_more_total_users_and_incorrect_distribution(self):
-        self.assertTrue(False)
+class TestRampUpThenDownThenUp(unittest.TestCase):
+    def test_ramp_up_then_down_then_up(self):
+        for user1_weight, user2_weight, user3_weight, user4_weight, user5_weight, user6_weight in [
+            (1, 1, 1, 1, 1, 1),
+            (1, 2, 3, 4, 5, 6),
+            (1, 3, 5, 7, 9, 12),
+        ]:
 
-    # TODO
-    def test_less_total_users_and_incorrect_distribution(self):
-        self.assertTrue(False)
+            class User1(User):
+                weight = user1_weight
 
-    # TODO
-    def test_good_user_count_but_incorrect_distribution(self):
-        self.assertTrue(False)
+            class User2(User):
+                weight = user2_weight
 
+            class User3(User):
+                weight = user3_weight
 
-class TestRampDownWithWorkersHavingIncorrectUsers(unittest.TestCase):
-    # TODO
-    def test_more_total_users_and_incorrect_distribution(self):
-        self.assertTrue(False)
+            class User4(User):
+                weight = user4_weight
 
-    # TODO
-    def test_less_total_users_and_incorrect_distribution(self):
-        self.assertTrue(False)
+            class User5(User):
+                weight = user5_weight
 
-    # TODO
-    def test_good_user_count_but_incorrect_distribution(self):
-        self.assertTrue(False)
+            class User6(User):
+                weight = user6_weight
+
+            all_user_classes = [User1, User2, User3, User4, User5, User6]
+
+            for number_of_user_classes in range(1, len(all_user_classes) + 1):
+                user_classes = all_user_classes[:number_of_user_classes]
+
+                for max_user_count, min_user_count in [(30, 15), (45, 15), (54, 21), (14165, 1476)]:
+                    for worker_count in [1, 3, 4, 5, 9]:
+                        workers = [WorkerNode(str(i + 1)) for i in range(worker_count)]
+
+                        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+
+                        # Ramp-up to go to `min_user_count` #########
+
+                        users_dispatcher.new_dispatch(target_user_count=min_user_count, spawn_rate=1)
+                        users_dispatcher._wait_between_dispatch = 0
+
+                        all_dispatched_users_ramp_up_to_min_user_count = list(users_dispatcher)
+
+                        # Ramp-up to go to `max_user_count` #########
+
+                        users_dispatcher.new_dispatch(target_user_count=max_user_count, spawn_rate=1)
+                        users_dispatcher._wait_between_dispatch = 0
+
+                        list(users_dispatcher)
+
+                        # Ramp-down go back to `min_user_count` #########
+
+                        users_dispatcher.new_dispatch(target_user_count=min_user_count, spawn_rate=1)
+                        users_dispatcher._wait_between_dispatch = 0
+
+                        all_dispatched_users_ramp_down_to_min_user_count = list(users_dispatcher)
+
+                        # Assertions #########
+
+                        self.assertDictEqual(
+                            all_dispatched_users_ramp_up_to_min_user_count[-1],
+                            all_dispatched_users_ramp_down_to_min_user_count[-1],
+                        )
 
 
 class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(unittest.TestCase):
@@ -1627,16 +1633,15 @@ class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(unittest.TestCase)
 
         user_count = 9
 
-        workers = _create_workers(worker_count=3, user_classes=user_classes, user_count=user_count)
-
         for spawn_rate in [0.15, 0.5, 1, 2, 2.4, 3, 4, 9]:
-            users_dispatcher = UsersDispatcher(
-                worker_nodes=workers,
-                user_classes=user_classes,
-                previous_target_user_count=user_count,
-                target_user_count=user_count,
-                spawn_rate=spawn_rate,
-            )
+            workers = [WorkerNode(str(i + 1)) for i in range(3)]
+
+            users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+            users_dispatcher.new_dispatch(target_user_count=user_count, spawn_rate=user_count)
+            users_dispatcher._wait_between_dispatch = 0
+            list(users_dispatcher)
+
+            users_dispatcher.new_dispatch(target_user_count=user_count, spawn_rate=spawn_rate)
 
             ts = time.perf_counter()
             self.assertDictEqual(
@@ -1681,17 +1686,12 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
         worker_node4 = WorkerNode("4")
 
         users_dispatcher = UsersDispatcher(
-            worker_nodes=[worker_node1, worker_node2, worker_node3, worker_node4],
-            user_classes=[User1, User2],
-            previous_target_user_count=0,
-            target_user_count=75,
-            spawn_rate=5,
+            worker_nodes=[worker_node1, worker_node2, worker_node3, worker_node4], user_classes=[User1, User2]
         )
-
-        sleep_time = 1
+        users_dispatcher.new_dispatch(target_user_count=75, spawn_rate=5)
+        users_dispatcher._wait_between_dispatch = 0
 
         # total user count = 5
-        ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 3})
         self.assertDictEqual(
@@ -1703,11 +1703,8 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
                 "4": {"User1": 0, "User2": 1},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
 
         # total user count = 10
-        ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 3, "User2": 7})
         self.assertDictEqual(
@@ -1719,11 +1716,8 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
                 "4": {"User1": 1, "User2": 1},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
 
         # total user count = 15
-        ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 5, "User2": 10})
         self.assertDictEqual(
@@ -1735,11 +1729,8 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
                 "4": {"User1": 1, "User2": 2},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
 
         # total user count = 20
-        ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 7, "User2": 13})
         self.assertDictEqual(
@@ -1751,11 +1742,8 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
                 "4": {"User1": 2, "User2": 3},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
 
         # total user count = 25
-        ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 8, "User2": 17})
         self.assertDictEqual(
@@ -1767,11 +1755,8 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
                 "4": {"User1": 2, "User2": 4},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
 
         # total user count = 30
-        ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 10, "User2": 20})
         self.assertDictEqual(
@@ -1783,11 +1768,8 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
                 "4": {"User1": 2, "User2": 5},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
 
         # total user count = 35
-        ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 12, "User2": 23})
         self.assertDictEqual(
@@ -1799,11 +1781,8 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
                 "4": {"User1": 3, "User2": 5},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
 
         # total user count = 40
-        ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 13, "User2": 27})
         self.assertDictEqual(
@@ -1815,11 +1794,8 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
                 "4": {"User1": 3, "User2": 7},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
 
         # total user count = 45
-        ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 15, "User2": 30})
         self.assertDictEqual(
@@ -1831,11 +1807,8 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
                 "4": {"User1": 4, "User2": 7},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
 
         # total user count = 50
-        ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 17, "User2": 33})
         self.assertDictEqual(
@@ -1847,11 +1820,8 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
                 "4": {"User1": 4, "User2": 8},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
 
         # total user count = 55
-        ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 18, "User2": 37})
         self.assertDictEqual(
@@ -1863,11 +1833,8 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
                 "4": {"User1": 4, "User2": 9},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
 
         # total user count = 60
-        ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 20, "User2": 40})
         self.assertDictEqual(
@@ -1879,11 +1846,8 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
                 "4": {"User1": 5, "User2": 10},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
 
         # total user count = 65
-        ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 22, "User2": 43})
         self.assertDictEqual(
@@ -1895,11 +1859,8 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
                 "4": {"User1": 5, "User2": 11},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
 
         # total user count = 70
-        ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 23, "User2": 47})
         self.assertDictEqual(
@@ -1911,11 +1872,8 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
                 "4": {"User1": 6, "User2": 11},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
 
         # total user count = 75, User1 = 25, User2 = 50
-        ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 25, "User2": 50})
         self.assertDictEqual(
@@ -1927,13 +1885,8 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
                 "4": {"User1": 6, "User2": 12},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
 
-        ts = time.perf_counter()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
-        delta = time.perf_counter() - ts
-        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
 
 
 class TestLargeScale(unittest.TestCase):
@@ -2145,13 +2098,9 @@ class TestLargeScale(unittest.TestCase):
 
         target_user_count = 100_000
 
-        users_dispatcher = UsersDispatcher(
-            worker_nodes=workers,
-            user_classes=self.user_classes,
-            previous_target_user_count=0,
-            target_user_count=target_user_count,
-            spawn_rate=5000,
-        )
+        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=self.user_classes)
+        users_dispatcher.new_dispatch(target_user_count=target_user_count, spawn_rate=5_000)
+        users_dispatcher._wait_between_dispatch = 0
 
         all_dispatched_users = list(users_dispatcher)
 
@@ -2160,7 +2109,9 @@ class TestLargeScale(unittest.TestCase):
                 dispatch_iteration_duration <= 0.3
                 for dispatch_iteration_duration in users_dispatcher.dispatch_iteration_durations
             ),
-            "One or more dispatch took more than 300ms to compute",
+            "One or more dispatch took more than 300ms to compute (max = {}ms)".format(
+                1000 * max(users_dispatcher.dispatch_iteration_durations)
+            ),
         )
 
         self.assertEqual(_user_count(all_dispatched_users[-1]), target_user_count)
@@ -2195,19 +2146,19 @@ class TestLargeScale(unittest.TestCase):
                 )
 
     def test_ramp_down_from_100_000_to_0_users_with_50_user_classes_and_1000_workers_and_5000_spawn_rate(self):
-        previous_target_user_count = 100_000
+        initial_user_count = 100_000
 
-        workers = _create_workers(
-            worker_count=1000, user_classes=self.user_classes, user_count=previous_target_user_count
-        )
+        workers = [WorkerNode(str(i)) for i in range(1000)]
 
-        users_dispatcher = UsersDispatcher(
-            worker_nodes=workers,
-            user_classes=self.user_classes,
-            previous_target_user_count=previous_target_user_count,
-            target_user_count=0,
-            spawn_rate=5000,
-        )
+        # Ramp-up
+        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=self.user_classes)
+        users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
+        users_dispatcher._wait_between_dispatch = 0
+        list(users_dispatcher)
+
+        # Ramp-down
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=5000)
+        users_dispatcher._wait_between_dispatch = 0
 
         all_dispatched_users = list(users_dispatcher)
 
@@ -2216,7 +2167,9 @@ class TestLargeScale(unittest.TestCase):
                 dispatch_iteration_duration <= 0.3
                 for dispatch_iteration_duration in users_dispatcher.dispatch_iteration_durations
             ),
-            "One or more dispatch took more than 300ms to compute",
+            "One or more dispatch took more than 300ms to compute (max = {}ms)".format(
+                1000 * max(users_dispatcher.dispatch_iteration_durations)
+            ),
         )
 
         self.assertEqual(_user_count(all_dispatched_users[-1]), 0)
@@ -2247,40 +2200,94 @@ class TestLargeScale(unittest.TestCase):
                 )
 
 
-def _create_workers(worker_count: int, user_classes: List[Type[User]], user_count: int = 0) -> List[WorkerNode]:
-    workers = [WorkerNode(str(i)) for i in range(1, worker_count + 1)]
+class TestSmallConsecutiveRamping(unittest.TestCase):
+    def test_consecutive_ramp_up_and_ramp_down(self):
+        class User1(User):
+            weight = 1
 
-    if user_count == 0:
-        return workers
+        class User2(User):
+            weight = 1
 
-    dispatched_users = next(
-        UsersDispatcher(
-            worker_nodes=workers,
-            user_classes=user_classes,
-            previous_target_user_count=0,
-            target_user_count=user_count,
-            spawn_rate=user_count,
-        )
-    )
+        user_classes = [User1, User2]
 
-    assert _user_count(dispatched_users) == user_count
+        worker_node1 = WorkerNode("1")
+        worker_node2 = WorkerNode("2")
 
-    user_count_on_workers = [sum(user_classes_count.values()) for user_classes_count in dispatched_users.values()]
-    assert (
-        max(user_count_on_workers) - min(user_count_on_workers) <= 1
-    ), "One or more workers have too much users compared to the other workers"
+        worker_nodes = [worker_node1, worker_node2]
 
-    aggregated_dispatched_users = _aggregate_dispatched_users(dispatched_users)
-    for user_class in user_classes:
-        target_relative_weight = user_class.weight / sum(map(attrgetter("weight"), user_classes))
-        relative_weight = aggregated_dispatched_users[user_class.__name__] / user_count
-        error_percent = 100 * (relative_weight - target_relative_weight) / target_relative_weight
-        assert error_percent <= 0.5, "Distribution for user class {} is off by more than 0.5%".format(user_class)
+        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
 
-    for worker in workers:
-        worker.user_classes_count = dispatched_users[worker.id]
+        # user count = 1
+        users_dispatcher.new_dispatch(target_user_count=1, spawn_rate=1)
+        users_dispatcher._wait_between_dispatch = 0
 
-    return workers
+        dispatched_users = next(users_dispatcher)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 1, "User2": 0})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_node1.id), 1)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_node2.id), 0)
+
+        # user count = 2
+        users_dispatcher.new_dispatch(target_user_count=2, spawn_rate=1)
+        users_dispatcher._wait_between_dispatch = 0
+
+        dispatched_users = next(users_dispatcher)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 1, "User2": 1})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_node1.id), 1)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_node2.id), 1)
+
+        # user count = 3
+        users_dispatcher.new_dispatch(target_user_count=3, spawn_rate=1)
+        users_dispatcher._wait_between_dispatch = 0
+
+        dispatched_users = next(users_dispatcher)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 1})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_node1.id), 2)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_node2.id), 1)
+
+        # user count = 4
+        users_dispatcher.new_dispatch(target_user_count=4, spawn_rate=1)
+        users_dispatcher._wait_between_dispatch = 0
+
+        dispatched_users = next(users_dispatcher)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 2})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_node1.id), 2)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_node2.id), 2)
+
+        # user count = 3
+        users_dispatcher.new_dispatch(target_user_count=3, spawn_rate=1)
+        users_dispatcher._wait_between_dispatch = 0
+
+        dispatched_users = next(users_dispatcher)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 1})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_node1.id), 2)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_node2.id), 1)
+
+        # user count = 2
+        users_dispatcher.new_dispatch(target_user_count=2, spawn_rate=1)
+        users_dispatcher._wait_between_dispatch = 0
+
+        dispatched_users = next(users_dispatcher)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 1, "User2": 1})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_node1.id), 1)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_node2.id), 1)
+
+        # user count = 1
+        users_dispatcher.new_dispatch(target_user_count=1, spawn_rate=1)
+        users_dispatcher._wait_between_dispatch = 0
+
+        dispatched_users = next(users_dispatcher)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 1, "User2": 0})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_node1.id), 1)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_node2.id), 0)
+
+        # user count = 0
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=1)
+        users_dispatcher._wait_between_dispatch = 0
+
+        dispatched_users = next(users_dispatcher)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 0, "User2": 0})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_node1.id), 0)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_node2.id), 0)
 
 
 def _aggregate_dispatched_users(d: Dict[str, Dict[str, int]]) -> Dict[str, int]:
@@ -2290,3 +2297,7 @@ def _aggregate_dispatched_users(d: Dict[str, Dict[str, int]]) -> Dict[str, int]:
 
 def _user_count(d: Dict[str, Dict[str, int]]) -> int:
     return sum(map(sum, map(dict.values, d.values())))
+
+
+def _user_count_on_worker(d: Dict[str, Dict[str, int]], worker_node_id: str) -> int:
+    return sum(d[worker_node_id].values())
