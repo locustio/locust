@@ -214,29 +214,6 @@ class UsersDispatcher(Iterator):
             ):
                 return self._users_on_workers
 
-    # def _ramp_down(self) -> Dict[str, Dict[str, int]]:
-    #     initial_user_count = self._current_user_count
-    #     for user in self._user_generator:
-    #         i = 0
-    #         while True:
-    #             worker_node = next(
-    #                 filter(
-    #                     lambda w: w.state in [STATE_INIT, STATE_SPAWNING, STATE_RUNNING], self._worker_node_generator
-    #                 )
-    #             )
-    #             assert i < 2 * len(self._worker_nodes)
-    #             if self._users_on_workers[worker_node.id][user] == 0:
-    #                 i += 1
-    #                 continue
-    #             self._users_on_workers[worker_node.id][user] -= 1
-    #             self._current_user_count -= 1
-    #             if (
-    #                 self._current_user_count == 0
-    #                 or self._current_user_count <= initial_user_count - self._user_count_per_dispatch_iteration
-    #             ):
-    #                 return self._users_on_workers
-    #             break
-
     # TODO: Test this
     # TODO: Add cache
     def _distribute_users(
