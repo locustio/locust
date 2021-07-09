@@ -2290,6 +2290,400 @@ class TestSmallConsecutiveRamping(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_node2.id), 0)
 
 
+class TestRemoveWorker(unittest.TestCase):
+    def test_remove_worker_during_ramp_up(self):
+        class User1(User):
+            weight = 1
+
+        class User2(User):
+            weight = 1
+
+        class User3(User):
+            weight = 1
+
+        user_classes = [User1, User2, User3]
+
+        worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
+
+        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
+
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+
+        sleep_time = 1
+
+        # Dispatch iteration 1
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 1, "User2": 1, "User3": 1})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 1)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 1)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 1)
+
+        # Dispatch iteration 2
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 2, "User3": 2})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 2)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 2)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 2)
+
+        users_dispatcher.remove_worker(worker_nodes[1].id)
+
+        # Re-balance
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(
+            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
+        )
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 2, "User3": 2})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 3)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 3)
+
+        # Dispatch iteration 3
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 3, "User2": 3, "User3": 3})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 5)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
+
+    def test_remove_worker_between_two_ramp_ups(self):
+        class User1(User):
+            weight = 1
+
+        class User2(User):
+            weight = 1
+
+        class User3(User):
+            weight = 1
+
+        user_classes = [User1, User2, User3]
+
+        worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
+
+        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
+
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = 0
+
+        list(users_dispatcher)
+
+        users_dispatcher.remove_worker(worker_nodes[1].id)
+
+        users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
+
+        sleep_time = 1
+
+        # Re-balance
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(
+            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
+        )
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 3, "User2": 3, "User3": 3})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 5)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
+
+        # Dispatch iteration 1
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 4, "User2": 4, "User3": 4})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 6)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 6)
+
+        # Dispatch iteration 2
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 5, "User2": 5, "User3": 5})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 8)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 7)
+
+        # Dispatch iteration 3
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 6, "User2": 6, "User3": 6})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 9)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 9)
+
+    def test_remove_worker_during_ramp_down(self):
+        class User1(User):
+            weight = 1
+
+        class User2(User):
+            weight = 1
+
+        class User3(User):
+            weight = 1
+
+        user_classes = [User1, User2, User3]
+
+        worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
+
+        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
+
+        users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = 0
+        list(users_dispatcher)
+
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+
+        sleep_time = 1
+
+        # Dispatch iteration 1
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 5, "User2": 5, "User3": 5})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 5)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 5)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 5)
+
+        # Dispatch iteration 2
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 4, "User2": 4, "User3": 4})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 4)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 4)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
+
+        users_dispatcher.remove_worker(worker_nodes[1].id)
+
+        # Re-balance
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(
+            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
+        )
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 4, "User2": 4, "User3": 4})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 6)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 6)
+
+        # Dispatch iteration 3
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 3, "User2": 3, "User3": 3})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 5)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
+
+
+class TestAddWorker(unittest.TestCase):
+    def test_add_worker_during_ramp_up(self):
+        class User1(User):
+            weight = 1
+
+        class User2(User):
+            weight = 1
+
+        class User3(User):
+            weight = 1
+
+        user_classes = [User1, User2, User3]
+
+        worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
+
+        users_dispatcher = UsersDispatcher(worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes)
+
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+
+        sleep_time = 1
+
+        # Dispatch iteration 1
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 1, "User2": 1, "User3": 1})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 2)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 1)
+
+        # Dispatch iteration 2
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 2, "User3": 2})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 3)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 3)
+
+        users_dispatcher.add_worker(worker_nodes[1])
+
+        # Re-balance
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(
+            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
+        )
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 2, "User3": 2})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 2)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 2)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 2)
+
+        # Dispatch iteration 3
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 3, "User2": 3, "User3": 3})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 3)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 3)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 3)
+
+    def test_add_worker_between_two_ramp_ups(self):
+        class User1(User):
+            weight = 1
+
+        class User2(User):
+            weight = 1
+
+        class User3(User):
+            weight = 1
+
+        user_classes = [User1, User2, User3]
+
+        worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
+
+        users_dispatcher = UsersDispatcher(worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes)
+
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = 0
+
+        list(users_dispatcher)
+
+        users_dispatcher.add_worker(worker_nodes[1])
+
+        users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
+
+        sleep_time = 1
+
+        # Re-balance
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(
+            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
+        )
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 3, "User2": 3, "User3": 3})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 3)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 3)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 3)
+
+        # Dispatch iteration 1
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 4, "User2": 4, "User3": 4})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 4)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 4)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
+
+        # Dispatch iteration 2
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 5, "User2": 5, "User3": 5})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 5)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 5)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 5)
+
+        # Dispatch iteration 3
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 6, "User2": 6, "User3": 6})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 6)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 6)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 6)
+
+    def test_add_worker_during_ramp_down(self):
+        class User1(User):
+            weight = 1
+
+        class User2(User):
+            weight = 1
+
+        class User3(User):
+            weight = 1
+
+        user_classes = [User1, User2, User3]
+
+        worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
+
+        users_dispatcher = UsersDispatcher(worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes)
+
+        users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = 0
+        list(users_dispatcher)
+
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+
+        sleep_time = 1
+
+        # Dispatch iteration 1
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 5, "User2": 5, "User3": 5})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 8)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 7)
+
+        # Dispatch iteration 2
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 4, "User2": 4, "User3": 4})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 6)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 6)
+
+        users_dispatcher.add_worker(worker_nodes[1])
+
+        # Re-balance
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(
+            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
+        )
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 4, "User2": 4, "User3": 4})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 4)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 4)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
+
+        # Dispatch iteration 3
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 3, "User2": 3, "User3": 3})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 3)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 3)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 3)
+
+
 def _aggregate_dispatched_users(d: Dict[str, Dict[str, int]]) -> Dict[str, int]:
     user_classes = list(next(iter(d.values())).keys())
     return {u: sum(d[u] for d in d.values()) for u in user_classes}

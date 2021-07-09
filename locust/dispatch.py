@@ -95,6 +95,12 @@ class UsersDispatcher(Iterator):
         # TODO: Test that attribute is set when dispatching and unset when done dispatching
         self._dispatch_in_progress = False
 
+        self._rebalance = False
+
+    @property
+    def dispatch_in_progress(self):
+        return self._dispatch_in_progress
+
     @property
     def dispatch_iteration_durations(self) -> List[float]:
         return self._dispatch_iteration_durations
@@ -105,6 +111,10 @@ class UsersDispatcher(Iterator):
     def _dispatcher(self) -> Generator[Dict[str, Dict[str, int]], None, None]:
         self._dispatch_in_progress = True
 
+        if self._rebalance:
+            self._rebalance = False
+            yield self._users_on_workers
+
         if self._current_user_count == self._target_user_count:
             yield self._initial_users_on_workers
             self._dispatch_in_progress = False
@@ -113,10 +123,16 @@ class UsersDispatcher(Iterator):
         while self._current_user_count < self._target_user_count:
             with self._wait_between_dispatch_iteration_context():
                 yield self._ramp_up()
+                if self._rebalance:
+                    self._rebalance = False
+                    yield self._users_on_workers
 
         while self._current_user_count > self._target_user_count:
             with self._wait_between_dispatch_iteration_context():
                 yield self._ramp_down()
+                if self._rebalance:
+                    self._rebalance = False
+                    yield self._users_on_workers
 
         self._dispatch_in_progress = False
 
@@ -144,25 +160,28 @@ class UsersDispatcher(Iterator):
         self._dispatch_iteration_durations.clear()
 
     def add_worker(self, worker_node: "WorkerNode") -> None:
-        # TODO: Add worker while ramping-up/down?
-        # TODO: Ensure that next dispatch iteration, we send a dispatch to re-balance the users on the workers
-
-        self._worker_nodes = sorted(self._worker_nodes + [worker_node], key=lambda w: w.id)
-
-        # Set to zero because we'll re-balance in the next dispatch iteration
-        self._initial_users_on_workers[worker_node.id] = {user_class.__name__: 0 for user_class in self._user_classes}
-
-        self._users_on_workers[worker_node.id] = deepcopy(self._initial_users_on_workers[worker_node.id])
-
-        # TODO: Ensure the generator yield the worker we were at
-        self._worker_node_generator = itertools.cycle(self._worker_nodes)
-
-        raise NotImplementedError
+        self._worker_nodes.append(worker_node)
+        self._worker_nodes = sorted(self._worker_nodes, key=lambda w: w.id)
+        self._prepare_rebalance()
 
     def remove_worker(self, worker_node_id: str) -> None:
-        # TODO: Remove worker while ramping-up/down?
-        # TODO: Ensure that next dispatch iteration, we send a dispatch to re-balance the users on the workers
-        raise NotImplementedError
+        self._worker_nodes = [w for w in self._worker_nodes if w.id != worker_node_id]
+        if len(self._worker_nodes) == 0:
+            # TODO: Test this
+            return
+        self._prepare_rebalance()
+
+    def _prepare_rebalance(self) -> None:
+        users_on_workers, user_gen, worker_gen, active_users = self._distribute_users(self._current_user_count)
+
+        self._users_on_workers = users_on_workers
+        self._user_generator = user_gen
+        self._worker_node_generator = worker_gen
+        self._active_users = active_users
+
+        # TODO: What to do with self._initial_users_on_workers?
+
+        self._rebalance = True
 
     @contextlib.contextmanager
     def _wait_between_dispatch_iteration_context(self) -> None:
@@ -219,6 +238,11 @@ class UsersDispatcher(Iterator):
     def _distribute_users(
         self, target_user_count: int
     ) -> Tuple[dict, Generator[str, None, None], typing.Iterator["WorkerNode"], List[Tuple["WorkerNode", str]]]:
+        """
+        This function might take some time to complete if the `target_user_count` is a big number. A big number
+        is typically > 50 000. However, this function is only called if a worker is added or removed while a test
+        is running. Such a situation should be quite rare.
+        """
         user_gen = self._user_gen()
 
         worker_gen = itertools.cycle(self._worker_nodes)
@@ -241,6 +265,10 @@ class UsersDispatcher(Iterator):
         return users_on_workers, user_gen, worker_gen, active_users
 
     def _user_gen(self) -> Generator[str, None, None]:
-        gen = smooth([(user_class.__name__, user_class.weight) for user_class in self._user_classes])
+        # TODO: Explain why we do round(10 * user_class.weight / min_weight)
+        min_weight = min(u.weight for u in self._user_classes)
+        gen = smooth(
+            [(user_class.__name__, round(10 * user_class.weight / min_weight)) for user_class in self._user_classes]
+        )
         while True:
             yield gen()
