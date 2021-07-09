@@ -205,7 +205,6 @@ class UsersDispatcher(Iterator):
         gevent.sleep(sleep_duration)
 
     def _ramp_up(self) -> Dict[str, Dict[str, int]]:
-        # TODO: Handle missing workers
         initial_user_count = self._current_user_count
         for user in self._user_generator:
             worker_node = next(self._worker_node_generator)
@@ -218,7 +217,6 @@ class UsersDispatcher(Iterator):
                 return self._users_on_workers
 
     def _ramp_down(self) -> Dict[str, Dict[str, int]]:
-        # TODO: Handle missing workers
         initial_user_count = self._current_user_count
         while True:
             try:
@@ -233,7 +231,6 @@ class UsersDispatcher(Iterator):
                 return self._users_on_workers
 
     # TODO: Test this
-    # TODO: Add cache
     def _distribute_users(
         self, target_user_count: int
     ) -> Tuple[dict, Generator[str, None, None], typing.Iterator["WorkerNode"], List[Tuple["WorkerNode", str]]]:
