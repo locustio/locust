@@ -832,7 +832,8 @@ class MasterRunner(DistributedRunner):
                     logger.info("Worker %s failed to send heartbeat, setting state to missing." % str(client.id))
                     client.state = STATE_MISSING
                     client.user_classes_count = {}
-                    self._users_dispatcher.remove_worker(client.id)
+                    if self._users_dispatcher is not None:
+                        self._users_dispatcher.remove_worker(client.id)
                     if self.worker_count <= 0:
                         logger.info("The last worker went missing, stopping test.")
                         self.stop()
