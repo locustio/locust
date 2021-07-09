@@ -3,7 +3,6 @@ import itertools
 import math
 import time
 from collections.abc import Iterator
-from copy import deepcopy
 from operator import attrgetter
 from typing import Dict, Generator, List, TYPE_CHECKING, Tuple, Type
 
@@ -77,7 +76,7 @@ class UsersDispatcher(Iterator):
             for worker_node in worker_nodes
         }
 
-        self._users_on_workers = deepcopy(self._initial_users_on_workers)
+        self._users_on_workers = self._fast_users_on_workers_copy(self._initial_users_on_workers)
 
         self._current_user_count = sum(map(sum, map(dict.values, self._users_on_workers.values())))
 
@@ -106,7 +105,8 @@ class UsersDispatcher(Iterator):
         return self._dispatch_iteration_durations
 
     def __next__(self) -> Dict[str, Dict[str, int]]:
-        return deepcopy(next(self._dispatcher_generator))
+        users_on_workers = next(self._dispatcher_generator)
+        return self._fast_users_on_workers_copy(users_on_workers)
 
     def _dispatcher(self) -> Generator[Dict[str, Dict[str, int]], None, None]:
         self._dispatch_in_progress = True
@@ -149,9 +149,9 @@ class UsersDispatcher(Iterator):
 
         self._wait_between_dispatch = self._user_count_per_dispatch_iteration / self._spawn_rate
 
-        self._initial_users_on_workers = deepcopy(self._users_on_workers)
+        self._initial_users_on_workers = self._fast_users_on_workers_copy(self._users_on_workers)
 
-        self._users_on_workers = deepcopy(self._initial_users_on_workers)
+        self._users_on_workers = self._fast_users_on_workers_copy(self._initial_users_on_workers)
 
         self._current_user_count = sum(map(sum, map(dict.values, self._users_on_workers.values())))
 
@@ -205,19 +205,21 @@ class UsersDispatcher(Iterator):
         gevent.sleep(sleep_duration)
 
     def _ramp_up(self) -> Dict[str, Dict[str, int]]:
-        initial_user_count = self._current_user_count
+        current_user_count_target = min(
+            self._current_user_count + self._user_count_per_dispatch_iteration, self._target_user_count
+        )
         for user in self._user_generator:
             worker_node = next(self._worker_node_generator)
             self._users_on_workers[worker_node.id][user] += 1
             self._current_user_count += 1
             self._active_users.append((worker_node, user))
-            if self._current_user_count >= min(
-                initial_user_count + self._user_count_per_dispatch_iteration, self._target_user_count
-            ):
+            if self._current_user_count >= current_user_count_target:
                 return self._users_on_workers
 
     def _ramp_down(self) -> Dict[str, Dict[str, int]]:
-        initial_user_count = self._current_user_count
+        current_user_count_target = max(
+            self._current_user_count - self._user_count_per_dispatch_iteration, self._target_user_count
+        )
         while True:
             try:
                 worker_node, user = self._active_users.pop()
@@ -225,9 +227,7 @@ class UsersDispatcher(Iterator):
                 return self._users_on_workers
             self._users_on_workers[worker_node.id][user] -= 1
             self._current_user_count -= 1
-            if self._current_user_count == 0 or self._current_user_count <= max(
-                initial_user_count - self._user_count_per_dispatch_iteration, self._target_user_count
-            ):
+            if self._current_user_count == 0 or self._current_user_count <= current_user_count_target:
                 return self._users_on_workers
 
     # TODO: Test this
@@ -272,3 +272,10 @@ class UsersDispatcher(Iterator):
             normalized_weight[1] for normalized_weight in normalized_weights
         )
         yield from itertools.cycle(gen() for _ in range(generation_length_to_get_proper_distribution))
+
+    @staticmethod
+    def _fast_users_on_workers_copy(users_on_workers: Dict[str, Dict[str, int]]) -> Dict[str, Dict[str, int]]:
+        """deepcopy is too slow, so we use this custom copy function"""
+        return {
+            worker: {u: c for u, c in users_on_worker.items()} for worker, users_on_worker in users_on_workers.items()
+        }
