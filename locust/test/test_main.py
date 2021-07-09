@@ -355,7 +355,7 @@ class LocustProcessIntegrationTest(TestCase):
                         "-u",
                         "0",
                         "--loglevel",
-                        "DEBUG",
+                        "INFO",
                     ]
                 ),
                 stderr=STDOUT,
@@ -380,15 +380,14 @@ class LocustProcessIntegrationTest(TestCase):
 
             output = proc.communicate()[0].decode("utf-8")
             stdin.close()
-            self.assertIn('Spawning additional {"UserSubclass": 1} ({"UserSubclass": 0} already running)...', output)
-            self.assertIn("0 users have been stopped, 1 still running", output)
-            self.assertIn('Spawning additional {"UserSubclass": 10} ({"UserSubclass": 1} already running)...', output)
-            self.assertIn('Spawning additional {} ({"UserSubclass": 11} already running)...', output)
-            self.assertIn("1 users have been stopped, 10 still running", output)
-            self.assertIn('Spawning additional {} ({"UserSubclass": 10} already running)...', output)
-            self.assertIn("10 users have been stopped, 0 still running", output)
-            self.assertIn('Spawning additional {} ({"UserSubclass": 0} already running)...', output)
-            self.assertIn("10 users have been stopped, 0 still running", output)
+            self.assertIn("Ramping to 1 users using a 100.00 spawn rate", output)
+            self.assertIn('All users spawned: {"UserSubclass": 1} (1 total users)', output)
+            self.assertIn("Ramping to 11 users using a 100.00 spawn rate", output)
+            self.assertIn('All users spawned: {"UserSubclass": 11} (11 total users)', output)
+            self.assertIn("Ramping to 10 users using a 100.00 spawn rate", output)
+            self.assertIn('All users spawned: {"UserSubclass": 10} (10 total users)', output)
+            self.assertIn("Ramping to 0 users using a 100.00 spawn rate", output)
+            self.assertIn('All users spawned: {"UserSubclass": 0} (0 total users)', output)
             self.assertIn("Test task is running", output)
             self.assertIn("Shutting down (exit code 0), bye.", output)
             self.assertEqual(0, proc.returncode)
