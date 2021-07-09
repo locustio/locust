@@ -266,8 +266,12 @@ class UsersDispatcher(Iterator):
     def _user_gen(self) -> Generator[str, None, None]:
         # TODO: Explain why we do round(10 * user_class.weight / min_weight)
         min_weight = min(u.weight for u in self._user_classes)
-        gen = smooth(
-            [(user_class.__name__, round(10 * user_class.weight / min_weight)) for user_class in self._user_classes]
+        normalized_weights = [
+            (user_class.__name__, round(10 * user_class.weight / min_weight)) for user_class in self._user_classes
+        ]
+        gen = smooth(normalized_weights)
+        # TODO: Explain `generation_length_to_get_proper_distribution`
+        generation_length_to_get_proper_distribution = sum(
+            normalized_weight[1] for normalized_weight in normalized_weights
         )
-        while True:
-            yield gen()
+        yield from itertools.cycle(gen() for _ in range(generation_length_to_get_proper_distribution))
