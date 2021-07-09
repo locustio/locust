@@ -227,9 +227,8 @@ class UsersDispatcher(Iterator):
                 return self._users_on_workers
             self._users_on_workers[worker_node.id][user] -= 1
             self._current_user_count -= 1
-            if (
-                self._current_user_count == 0
-                or self._current_user_count <= initial_user_count - self._user_count_per_dispatch_iteration
+            if self._current_user_count == 0 or self._current_user_count <= max(
+                initial_user_count - self._user_count_per_dispatch_iteration, self._target_user_count
             ):
                 return self._users_on_workers
 
