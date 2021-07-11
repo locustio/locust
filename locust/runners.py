@@ -95,7 +95,7 @@ class Runner:
         self._local_worker_node = WorkerNode(id="local")
         self._local_worker_node.user_classes_count = self.user_classes_count
 
-        self._users_dispatcher = UsersDispatcher(worker_nodes=[self._local_worker_node], user_classes=self.user_classes)
+        self._users_dispatcher = None
 
         # set up event listeners for recording requests
         def on_request_success(request_type, name, response_time, response_length, **_kwargs):
@@ -307,6 +307,11 @@ class Runner:
 
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
             self.update_state(STATE_SPAWNING)
+
+        if self._users_dispatcher is None:
+            self._users_dispatcher = UsersDispatcher(
+                worker_nodes=[self._local_worker_node], user_classes=self.user_classes
+            )
 
         logger.info("Ramping to %d users using a %.2f spawn rate" % (user_count, spawn_rate))
 
