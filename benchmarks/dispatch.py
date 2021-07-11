@@ -517,15 +517,19 @@ if __name__ == "__main__":
     now = time.time()
 
     worker_count_cases = [10, 100, 500, 1000, 5000, 10_000, 15_000, 20_000]
-    user_count_cases = [10, 100, 1000, 10_000, 50_000, 100_000, 500_000, 1_000_000, 2_000_000]
-    number_of_user_classes_cases = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    spawn_rate_cases = [1, 10, 100, 500, 1000, 2000, 3000, 4000, 5000, 10_000, 20_000, 25_000]
+    user_count_cases = [10, 100, 1000, 10_000, 50_000, 100_000, 500_000]
+    number_of_user_classes_cases = [1, 10, 40, 60, 80, 100]
+    spawn_rate_cases = [1, 10, 100, 500, 1000, 2500, 5000, 10_000, 20_000, 25_000]
+
+    case_count = (
+        len(worker_count_cases) * len(user_count_cases) * len(number_of_user_classes_cases) * len(spawn_rate_cases)
+    )
 
     results = {}
 
     try:
-        for worker_count, user_count, number_of_user_classes, spawn_rate in itertools.product(
-            worker_count_cases, user_count_cases, number_of_user_classes_cases, spawn_rate_cases
+        for case_index, (worker_count, user_count, number_of_user_classes, spawn_rate) in enumerate(
+            itertools.product(worker_count_cases, user_count_cases, number_of_user_classes_cases, spawn_rate_cases)
         ):
             if user_count / spawn_rate > 1000:
                 print("Skipping user_count = {:,} - spawn_rate = {:,}".format(user_count, spawn_rate))
@@ -567,7 +571,9 @@ if __name__ == "__main__":
             )
 
             print(
-                "{:,} workers - {:,} users - {} user classes - {:,} users/s - instantiate: {:.3f}ms - new_dispatch (ramp-up/ramp-down): {:.3f}ms/{:.3f}ms - cpu_ramp_up: {}ms - cpu_ramp_down: {}ms".format(
+                "{:04.0f}/{:04.0f} - {:,} workers - {:,} users - {} user classes - {:,} users/s - instantiate: {:.3f}ms - new_dispatch (ramp-up/ramp-down): {:.3f}ms/{:.3f}ms - cpu_ramp_up: {}ms - cpu_ramp_down: {}ms".format(
+                    case_index + 1,
+                    case_count,
                     worker_count,
                     user_count,
                     number_of_user_classes,
@@ -621,3 +627,6 @@ if __name__ == "__main__":
 
         with open("results-dispatch-benchmarks-{}.txt".format(int(now)), "wt") as file:
             file.write(table.get_string())
+
+        with open("results-dispatch-benchmarks-{}.json".format(int(now)), "wt") as file:
+            file.write(table.get_json_string())
