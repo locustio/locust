@@ -2107,9 +2107,9 @@ class TestLargeScale(unittest.TestCase):
         delta = time.perf_counter() - ts
 
         # Because tests are run with coverage, the code will be slower.
-        # We set the pass criterion to 4000ms, but in real life, the
+        # We set the pass criterion to 5000ms, but in real life, the
         # `_distribute_users` method runs faster than this.
-        self.assertLessEqual(1000 * delta, 4000)
+        self.assertLessEqual(1000 * delta, 5000)
 
         self.assertEqual(_user_count(users_on_workers), target_user_count)
 
