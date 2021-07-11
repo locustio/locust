@@ -8,6 +8,7 @@ from typing import Dict, Generator, List, TYPE_CHECKING, Tuple, Type
 
 import gevent
 import typing
+
 from roundrobin import smooth
 
 from locust import User
@@ -106,6 +107,8 @@ class UsersDispatcher(Iterator):
 
     def __next__(self) -> Dict[str, Dict[str, int]]:
         users_on_workers = next(self._dispatcher_generator)
+        # TODO: Is this necessary to copy the users_on_workers if we know
+        #       it won't be mutated by external code?
         return self._fast_users_on_workers_copy(users_on_workers)
 
     def _dispatcher(self) -> Generator[Dict[str, Dict[str, int]], None, None]:
@@ -114,6 +117,8 @@ class UsersDispatcher(Iterator):
         if self._rebalance:
             self._rebalance = False
             yield self._users_on_workers
+            if self._current_user_count == self._target_user_count:
+                return
 
         if self._current_user_count == self._target_user_count:
             yield self._initial_users_on_workers
@@ -149,7 +154,7 @@ class UsersDispatcher(Iterator):
 
         self._wait_between_dispatch = self._user_count_per_dispatch_iteration / self._spawn_rate
 
-        self._initial_users_on_workers = self._fast_users_on_workers_copy(self._users_on_workers)
+        self._initial_users_on_workers = self._users_on_workers
 
         self._users_on_workers = self._fast_users_on_workers_copy(self._initial_users_on_workers)
 
@@ -264,7 +269,7 @@ class UsersDispatcher(Iterator):
         # TODO: Explain why we do round(10 * user_class.weight / min_weight)
         min_weight = min(u.weight for u in self._user_classes)
         normalized_weights = [
-            (user_class.__name__, round(10 * user_class.weight / min_weight)) for user_class in self._user_classes
+            (user_class.__name__, round(2 * user_class.weight / min_weight)) for user_class in self._user_classes
         ]
         gen = smooth(normalized_weights)
         # TODO: Explain `generation_length_to_get_proper_distribution`
@@ -275,7 +280,9 @@ class UsersDispatcher(Iterator):
 
     @staticmethod
     def _fast_users_on_workers_copy(users_on_workers: Dict[str, Dict[str, int]]) -> Dict[str, Dict[str, int]]:
-        """deepcopy is too slow, so we use this custom copy function"""
-        return {
-            worker: {u: c for u, c in users_on_worker.items()} for worker, users_on_worker in users_on_workers.items()
-        }
+        """deepcopy is too slow, so we use this custom copy function.
+
+        The implementation was profiled and compared to other implementations such as dict-comprehensions
+        and the one below is the most efficient.
+        """
+        return dict(zip(users_on_workers.keys(), map(dict.copy, users_on_workers.values())))
