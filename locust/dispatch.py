@@ -62,6 +62,7 @@ class UsersDispatcher(Iterator):
 
         self._user_classes = sorted(user_classes, key=attrgetter("__name__"))
 
+        assert len(user_classes) > 0
         assert len(set(self._user_classes)) == len(self._user_classes)
 
         self._target_user_count = None
