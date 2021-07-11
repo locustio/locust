@@ -834,6 +834,7 @@ class MasterRunner(DistributedRunner):
                     client.user_classes_count = {}
                     if self._users_dispatcher is not None:
                         self._users_dispatcher.remove_worker(client.id)
+                        # TODO: If status is `STATE_RUNNING`, call self.start()
                     if self.worker_count <= 0:
                         logger.info("The last worker went missing, stopping test.")
                         self.stop()
