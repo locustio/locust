@@ -836,7 +836,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                 elif run_time < 40:
                     return 15, 3
                 elif run_time < 60:
-                    return 5, 3
+                    return 5, 10
                 else:
                     return None
 
@@ -881,9 +881,9 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertEqual(STATE_RUNNING, master.state)
             w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
             w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
-            w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
-            w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
-            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
+            w3 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
+            w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
+            w5 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
             self.assertDictEqual(w1, workers[0].user_classes_count)
             self.assertDictEqual(w2, workers[1].user_classes_count)
             self.assertDictEqual(w3, workers[2].user_classes_count)
@@ -903,11 +903,11 @@ class TestMasterWorkerRunners(LocustTestCase):
                 sleep()
             sleep(5 - (time.time() - ts))  # runtime = 15s
             self.assertEqual(STATE_RUNNING, master.state)
-            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 1}
             w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
-            w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
             w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 1}
-            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 2}
+            w5 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
             self.assertDictEqual(w1, workers[0].user_classes_count)
             self.assertDictEqual(w2, workers[1].user_classes_count)
             self.assertDictEqual(w3, workers[2].user_classes_count)
@@ -966,7 +966,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
             w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
-            w4 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
+            w4 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             w5 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
             self.assertDictEqual(w1, workers[0].user_classes_count)
             self.assertDictEqual(w2, workers[1].user_classes_count)
@@ -988,9 +988,9 @@ class TestMasterWorkerRunners(LocustTestCase):
             delta = time.time() - ts
             w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
             w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
-            w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
-            w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
-            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
+            w3 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
+            w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
+            w5 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
             self.assertDictEqual(w1, workers[0].user_classes_count)
             self.assertDictEqual(w2, workers[1].user_classes_count)
             self.assertDictEqual(w3, workers[2].user_classes_count)

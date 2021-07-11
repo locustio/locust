@@ -2106,7 +2106,10 @@ class TestLargeScale(unittest.TestCase):
         )
         delta = time.perf_counter() - ts
 
-        self.assertLessEqual(1000 * delta, 2000)
+        # Because tests are run with coverage, the code will be slower.
+        # We set the pass criterion to 4000ms, but in real life, the
+        # `_distribute_users` method runs faster than this.
+        self.assertLessEqual(1000 * delta, 4000)
 
         self.assertEqual(_user_count(users_on_workers), target_user_count)
 
@@ -2121,13 +2124,14 @@ class TestLargeScale(unittest.TestCase):
 
         all_dispatched_users = list(users_dispatcher)
 
+        tol = 0.2
         self.assertTrue(
             all(
-                dispatch_iteration_duration <= 0.3
+                dispatch_iteration_duration <= tol
                 for dispatch_iteration_duration in users_dispatcher.dispatch_iteration_durations
             ),
-            "One or more dispatch took more than 300ms to compute (max = {}ms)".format(
-                1000 * max(users_dispatcher.dispatch_iteration_durations)
+            "One or more dispatch took more than {:.0f}s to compute (max = {}ms)".format(
+                tol * 1000, 1000 * max(users_dispatcher.dispatch_iteration_durations)
             ),
         )
 
@@ -2179,13 +2183,14 @@ class TestLargeScale(unittest.TestCase):
 
         all_dispatched_users = list(users_dispatcher)
 
+        tol = 0.2
         self.assertTrue(
             all(
-                dispatch_iteration_duration <= 0.3
+                dispatch_iteration_duration <= tol
                 for dispatch_iteration_duration in users_dispatcher.dispatch_iteration_durations
             ),
-            "One or more dispatch took more than 300ms to compute (max = {}ms)".format(
-                1000 * max(users_dispatcher.dispatch_iteration_durations)
+            "One or more dispatch took more than {:.0f}ms to compute (max = {}ms)".format(
+                tol * 1000, 1000 * max(users_dispatcher.dispatch_iteration_durations)
             ),
         )
 
