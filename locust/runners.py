@@ -489,7 +489,6 @@ class LocalRunner(Runner):
         if self.state == STATE_STOPPED:
             return
         super().stop()
-        self.environment.events.test_stop.fire(environment=self.environment)
 
     def send_message(self, msg_type, data=None):
         """
@@ -805,7 +804,6 @@ class MasterRunner(DistributedRunner):
                     logger.error("Timeout waiting for all workers to stop")
                 finally:
                     timeout.cancel()
-
             self.environment.events.test_stop.fire(environment=self.environment)
 
     def quit(self):
@@ -1060,12 +1058,14 @@ class WorkerRunner(DistributedRunner):
         :param user_classes_count: Users to run
         """
         self.target_user_classes_count = user_classes_count
-
         if self.worker_state != STATE_RUNNING and self.worker_state != STATE_SPAWNING:
             self.stats.clear_all()
             self.exceptions = {}
             self.cpu_warning_emitted = False
             self.worker_cpu_warning_emitted = False
+            self.environment.events.test_start.fire(environment=self.environment)
+
+        self.worker_state = STATE_SPAWNING
 
         for user_class in self.user_classes:
             if self.environment.host is not None:
@@ -1123,7 +1123,6 @@ class WorkerRunner(DistributedRunner):
                 logger.error("RPCError found when receiving from master: %s" % (e))
                 continue
             if msg.type == "spawn":
-                self.worker_state = STATE_SPAWNING
                 self.client.send(Message("spawning", None, self.client_id))
                 job = msg.data
                 if job["timestamp"] <= last_received_spawn_timestamp:

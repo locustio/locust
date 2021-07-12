@@ -2707,6 +2707,8 @@ class TestWorkerRunner(LocustTestCase):
                 Message(
                     "spawn",
                     {
+                        "timestamp": 1605538585,
+                        "user_classes_count": {"MyTestUser": 1},
                         "spawn_rate": 1,
                         "num_users": 1,
                         "host": "",
@@ -2730,6 +2732,8 @@ class TestWorkerRunner(LocustTestCase):
                 Message(
                     "spawn",
                     {
+                        "timestamp": 1605538586,
+                        "user_classes_count": {"MyTestUser": 1},
                         "spawn_rate": 1,
                         "num_users": 1,
                         "host": "",
@@ -2746,6 +2750,8 @@ class TestWorkerRunner(LocustTestCase):
                 Message(
                     "spawn",
                     {
+                        "timestamp": 1605538587,
+                        "user_classes_count": {"MyTestUser": 1},
                         "spawn_rate": 1,
                         "num_users": 1,
                         "host": "",
@@ -2784,6 +2790,8 @@ class TestWorkerRunner(LocustTestCase):
                 Message(
                     "spawn",
                     {
+                        "timestamp": 1605538585,
+                        "user_classes_count": {"MyTestUser": 1},
                         "spawn_rate": 1,
                         "num_users": 1,
                         "host": "",
@@ -2817,6 +2825,8 @@ class TestWorkerRunner(LocustTestCase):
                 Message(
                     "spawn",
                     {
+                        "timestamp": 1605538586,
+                        "user_classes_count": {"MyTestUser": 1},
                         "spawn_rate": 1,
                         "num_users": 1,
                         "host": "",
