@@ -23,6 +23,27 @@ Here's an example on how to set up an event listener::
             print(f"Successfully made a request to: {name})
             print(f"The response was {response.text}")
 
+When running locust in distributed mode, it may be useful to do some setup on worker nodes before running your tests. 
+You can check to ensure you aren't running on the master node by checking the type of the node's :py:attr:`runner <locust.env.Environment.runner>`::
+
+    from locust import events
+    from locust.runners import MasterRunner
+
+    @events.test_start.add_listener
+    def on_test_start(environment, **kwargs):
+        if not isinstance(environment.runner, MasterRunner):
+            print("Beginning test setup")
+        else
+            print("Started test from Master node")
+
+    @events.test_stop.add_listener
+    def on_test_stop(environment, **kwargs):
+        if not isinstance(environment.runner, MasterRunner):
+            print("Cleaning up test data")
+        else
+            print("Stopped test from Master node")
+
+
 .. note::
 
     To see all available events, please see :ref:`events`.

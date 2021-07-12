@@ -297,6 +297,7 @@ class Runner:
             self.exceptions = {}
             self.cpu_warning_emitted = False
             self.worker_cpu_warning_emitted = False
+            self.environment.events.test_start.fire(environment=self.environment)
 
         if wait and user_count - self.user_count > spawn_rate:
             raise ValueError("wait is True but the amount of users to add is greater than the spawn rate")
@@ -400,6 +401,8 @@ class Runner:
         """
         Stop a running load test by stopping all running users
         """
+        if self.state == STATE_STOPPED:
+            return
         logger.debug("Stopping all users")
         self.update_state(STATE_CLEANUP)
 
@@ -420,6 +423,7 @@ class Runner:
         self.update_state(STATE_STOPPED)
 
         self.cpu_log_warning()
+        self.environment.events.test_stop.fire(environment=self.environment)
 
     def quit(self):
         """
@@ -473,10 +477,6 @@ class LocalRunner(Runner):
                 "Your selected spawn rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?"
             )
 
-        if self.state != STATE_RUNNING and self.state != STATE_SPAWNING:
-            # if we're not already running we'll fire the test_start event
-            self.environment.events.test_start.fire(environment=self.environment)
-
         if self.spawning_greenlet:
             # kill existing spawning_greenlet before we start a new one
             self.spawning_greenlet.kill(block=True)
@@ -489,7 +489,6 @@ class LocalRunner(Runner):
         if self.state == STATE_STOPPED:
             return
         super().stop()
-        self.environment.events.test_stop.fire(environment=self.environment)
 
     def send_message(self, msg_type, data=None):
         """
@@ -805,7 +804,6 @@ class MasterRunner(DistributedRunner):
                     logger.error("Timeout waiting for all workers to stop")
                 finally:
                     timeout.cancel()
-
             self.environment.events.test_stop.fire(environment=self.environment)
 
     def quit(self):
@@ -1060,12 +1058,14 @@ class WorkerRunner(DistributedRunner):
         :param user_classes_count: Users to run
         """
         self.target_user_classes_count = user_classes_count
-
         if self.worker_state != STATE_RUNNING and self.worker_state != STATE_SPAWNING:
             self.stats.clear_all()
             self.exceptions = {}
             self.cpu_warning_emitted = False
             self.worker_cpu_warning_emitted = False
+            self.environment.events.test_start.fire(environment=self.environment)
+
+        self.worker_state = STATE_SPAWNING
 
         for user_class in self.user_classes:
             if self.environment.host is not None:
@@ -1123,7 +1123,6 @@ class WorkerRunner(DistributedRunner):
                 logger.error("RPCError found when receiving from master: %s" % (e))
                 continue
             if msg.type == "spawn":
-                self.worker_state = STATE_SPAWNING
                 self.client.send(Message("spawning", None, self.client_id))
                 job = msg.data
                 if job["timestamp"] <= last_received_spawn_timestamp:
