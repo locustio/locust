@@ -306,6 +306,7 @@ def main():
         web_ui.start()
         main_greenlet = web_ui.greenlet
 
+    headless_master_greenlet = None
     if options.headless:
         # headless mode
         if options.master:
@@ -316,6 +317,9 @@ def main():
                     len(runner.clients.ready),
                     options.expect_workers,
                 )
+                # TODO: Handle KeyboardInterrupt and send quit signal to workers that are started.
+                #       Right now, if the user sends a ctrl+c, the master will not gracefully
+                #       shutdown resulting in all the already started workers to stay active.
                 time.sleep(1)
         if not options.worker:
             # apply headless mode defaults
@@ -328,7 +332,8 @@ def main():
             if environment.shape_class:
                 environment.runner.start_shape()
             else:
-                runner.start(options.num_users, options.spawn_rate)
+                headless_master_greenlet = gevent.spawn(runner.start, options.num_users, options.spawn_rate)
+                headless_master_greenlet.link_exception(greenlet_exception_handler)
 
     def spawn_run_time_limit_greenlet():
         def timelimit_stop():
@@ -351,19 +356,19 @@ def main():
         input_listener_greenlet = gevent.spawn(
             input_listener(
                 {
-                    "w": lambda: runner.spawn_users(1, 100)
+                    "w": lambda: runner.start(runner.user_count + 1, 100)
                     if runner.state != "spawning"
                     else logging.warning("Already spawning users, can't spawn more right now"),
-                    "W": lambda: runner.spawn_users(10, 100)
+                    "W": lambda: runner.start(runner.user_count + 10, 100)
                     if runner.state != "spawning"
                     else logging.warning("Already spawning users, can't spawn more right now"),
-                    "s": lambda: runner.stop_users(1)
+                    "s": lambda: runner.start(max(0, runner.user_count - 1), 100)
                     if runner.state != "spawning"
                     else logging.warning("Spawning users, can't stop right now"),
-                    "S": lambda: runner.stop_users(10)
+                    "S": lambda: runner.start(max(0, runner.user_count - 10), 100)
                     if runner.state != "spawning"
                     else logging.warning("Spawning users, can't stop right now"),
-                }
+                },
             )
         )
         input_listener_greenlet.link_exception(greenlet_exception_handler)
@@ -403,6 +408,8 @@ def main():
         logger.info("Shutting down (exit code %s), bye." % code)
         if stats_printer_greenlet is not None:
             stats_printer_greenlet.kill(block=False)
+        if headless_master_greenlet is not None:
+            headless_master_greenlet.kill(block=False)
         logger.info("Cleaning up runner...")
         if runner is not None:
             runner.quit()

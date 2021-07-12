@@ -26,6 +26,7 @@ from .util.cache import memoize
 from .util.rounding import proper_round
 from .util.timespan import parse_timespan
 from .html import get_html_report
+from flask_cors import CORS
 
 
 logger = logging.getLogger(__name__)
@@ -98,13 +99,15 @@ class WebUI:
         self.tls_cert = tls_cert
         self.tls_key = tls_key
         app = Flask(__name__)
+        CORS(app)
         self.app = app
-        app.jinja_options["extensions"].append("jinja2.ext.do")
+        app.jinja_env.add_extension("jinja2.ext.do")
         app.debug = True
         app.root_path = os.path.dirname(os.path.abspath(__file__))
         self.app.config["BASIC_AUTH_ENABLED"] = False
         self.auth = None
         self.greenlet = None
+        self._swarm_greenlet = None
 
         if auth_credentials is not None:
             credentials = auth_credentials.split(":")
@@ -148,12 +151,19 @@ class WebUI:
             user_count = int(request.form["user_count"])
             spawn_rate = float(request.form["spawn_rate"])
 
-            environment.runner.start(user_count, spawn_rate)
+            if self._swarm_greenlet is not None:
+                self._swarm_greenlet.kill(block=True)
+                self._swarm_greenlet = None
+            self._swarm_greenlet = gevent.spawn(environment.runner.start, user_count, spawn_rate)
+            self._swarm_greenlet.link_exception(greenlet_exception_handler)
             return jsonify({"success": True, "message": "Swarming started", "host": environment.host})
 
         @app.route("/stop")
         @self.auth_required_if_enabled
         def stop():
+            if self._swarm_greenlet is not None:
+                self._swarm_greenlet.kill(block=True)
+                self._swarm_greenlet = None
             environment.runner.stop()
             return jsonify({"success": True, "message": "Test stopped"})
 
@@ -215,8 +225,8 @@ class WebUI:
                     os.path.abspath(self.stats_csv_writer.stats_history_file_name()),
                     mimetype="text/csv",
                     as_attachment=True,
-                    attachment_filename=_download_csv_suggest_file_name("requests_full_history"),
-                    add_etags=True,
+                    download_name=_download_csv_suggest_file_name("requests_full_history"),
+                    etag=True,
                     cache_timeout=None,
                     conditional=True,
                     last_modified=None,

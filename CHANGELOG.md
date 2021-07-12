@@ -1,5 +1,60 @@
 # Changelog
 
+## [2.0.0b2](https://github.com/locustio/locust/tree/2.0.0b2) (2021-07-12)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.0.0b1...2.0.0b2)
+
+**Merged pull requests:**
+
+- Auto shrink request stats table to fit terminal [\#1811](https://github.com/locustio/locust/pull/1811) ([cyberw](https://github.com/cyberw))
+- Refactoring of the dispatch logic to improve performance [\#1809](https://github.com/locustio/locust/pull/1809) ([mboutet](https://github.com/mboutet))
+
+## [2.0.0b1](https://github.com/locustio/locust/tree/2.0.0b1) (2021-07-05)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.0.0b0...2.0.0b1)
+
+**Merged pull requests:**
+
+- Check version of workers when they connect. Warn if there is a mismatch, refuse 1.x workers to connect [\#1805](https://github.com/locustio/locust/pull/1805) ([cyberw](https://github.com/cyberw))
+- Change the default User weight to 1 instead of 10. [\#1803](https://github.com/locustio/locust/pull/1803) ([cyberw](https://github.com/cyberw))
+- Upgrade to flask 2 [\#1764](https://github.com/locustio/locust/pull/1764) ([corenting](https://github.com/corenting))
+
+## [2.0.0b0](https://github.com/locustio/locust/tree/2.0.0b0) (2021-07-05)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.6.0...2.0.0b0)
+
+**Fixed bugs:**
+
+- Distribution of user classes is not respected and some user classes are just never spawned [\#1618](https://github.com/locustio/locust/issues/1618)
+
+**Closed issues:**
+
+- Hatch rate in distributed mode spawns users in batches equal to number of slaves [\#896](https://github.com/locustio/locust/issues/896)
+
+**Merged pull requests:**
+
+- Move User selection responsibility from worker to master in order to fix unbalanced distribution of users and uneven ramp-up [\#1621](https://github.com/locustio/locust/pull/1621) ([mboutet](https://github.com/mboutet))
+
+## [1.6.0](https://github.com/locustio/locust/tree/1.6.0) (2021-06-26)
+
+[Full Changelog](https://github.com/locustio/locust/compare/1.5.3...1.6.0)
+
+**Fixed bugs:**
+
+- status "stopped" instead of "spawning", tick\(\) method of LoadShape called only once [\#1762](https://github.com/locustio/locust/issues/1762)
+
+**Closed issues:**
+
+- Allow master node to supply data to worker nodes directly [\#1780](https://github.com/locustio/locust/issues/1780)
+
+**Merged pull requests:**
+
+- Add CORS functionality to Locust [\#1793](https://github.com/locustio/locust/pull/1793) ([KasimAhmic](https://github.com/KasimAhmic))
+- Make FastHttpUser use the same name for request\_meta as HttpUser \(no leading underscore\) [\#1788](https://github.com/locustio/locust/pull/1788) ([cyberw](https://github.com/cyberw))
+- Ensure that the exception dictionaries are not mutated when generating a html report [\#1784](https://github.com/locustio/locust/pull/1784) ([mboutet](https://github.com/mboutet))
+- Allow cross process communication using custom messages [\#1782](https://github.com/locustio/locust/pull/1782) ([nathan-beam](https://github.com/nathan-beam))
+- modified check\_stopped condition [\#1769](https://github.com/locustio/locust/pull/1769) ([stanislawskwark](https://github.com/stanislawskwark))
+
 ## [1.5.3](https://github.com/locustio/locust/tree/1.5.3) (2021-05-17)
 
 [Full Changelog](https://github.com/locustio/locust/compare/1.5.2...1.5.3)
@@ -1573,7 +1628,7 @@
 
 **Merged pull requests:**
 
-- Update writing-a-locustfile.rst [\#268](https://github.com/locustio/locust/pull/268) ([cristopherchacon](https://github.com/cristopherchacon))
+- Update writing-a-locustfile.rst [\#268](https://github.com/locustio/locust/pull/268) ([ghost](https://github.com/ghost))
 - changed how request\_meta\["method"\] is set [\#267](https://github.com/locustio/locust/pull/267) ([dantagg](https://github.com/dantagg))
 - list supported Python versions [\#261](https://github.com/locustio/locust/pull/261) ([cgoldberg](https://github.com/cgoldberg))
 - add host cli arg to quickstart [\#250](https://github.com/locustio/locust/pull/250) ([groovecoder](https://github.com/groovecoder))
@@ -1707,8 +1762,8 @@
 - bump requests dependency to most recent pre 1.0 version \(i.e. most recen... [\#76](https://github.com/locustio/locust/pull/76) ([sanga](https://github.com/sanga))
 - Stats refactoring [\#74](https://github.com/locustio/locust/pull/74) ([heyman](https://github.com/heyman))
 - Enhancement/url error [\#72](https://github.com/locustio/locust/pull/72) ([krallin](https://github.com/krallin))
-- Include method name in command line logging [\#66](https://github.com/locustio/locust/pull/66) ([rory](https://github.com/rory))
-- use correct python special method name [\#64](https://github.com/locustio/locust/pull/64) ([rory](https://github.com/rory))
+- Include method name in command line logging [\#66](https://github.com/locustio/locust/pull/66) ([amandasaurus](https://github.com/amandasaurus))
+- use correct python special method name [\#64](https://github.com/locustio/locust/pull/64) ([amandasaurus](https://github.com/amandasaurus))
 - Small fixes [\#63](https://github.com/locustio/locust/pull/63) ([sanga](https://github.com/sanga))
 - Use shutdown function when num\_requests are done [\#60](https://github.com/locustio/locust/pull/60) ([afajl](https://github.com/afajl))
 - Update docs/api.rst [\#55](https://github.com/locustio/locust/pull/55) ([cbrinley](https://github.com/cbrinley))
@@ -1790,7 +1845,7 @@
 
 ## [v0.4](https://github.com/locustio/locust/tree/v0.4) (2011-12-05)
 
-[Full Changelog](https://github.com/locustio/locust/compare/117a61cfd1bba9ad10c8b680a574fcf32f6f46be...v0.4)
+[Full Changelog](https://github.com/locustio/locust/compare/7cfe62cee36dee34fe4d23aed5bdd00c4f42b3d0...v0.4)
 
 **Fixed bugs:**
 

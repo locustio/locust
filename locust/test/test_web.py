@@ -2,9 +2,7 @@
 import csv
 import json
 import os
-import sys
 import traceback
-from datetime import datetime, timedelta
 from io import StringIO
 from tempfile import NamedTemporaryFile
 
@@ -355,6 +353,14 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
         # self.assertEqual(200, r.status_code)
         self.assertIn("<h2>Exceptions Statistics</h2>", r.text)
+
+        # Prior to 088a98bf8ff4035a0de3becc8cd4e887d618af53, the "nodes" field for each exception in
+        # "self.runner.exceptions" was accidentally mutated in "get_html_report" to a string.
+        # This assertion reproduces the issue and it is left there to make sure there's no
+        # regression in the future.
+        self.assertTrue(
+            isinstance(next(iter(self.runner.exceptions.values()))["nodes"], set), "exception object has been mutated"
+        )
 
 
 class TestWebUIAuth(LocustTestCase):

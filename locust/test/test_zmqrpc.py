@@ -1,4 +1,3 @@
-import unittest
 from time import sleep
 import zmq
 from locust.rpc import zmqrpc, Message
@@ -47,9 +46,9 @@ class ZMQRPC_tests(LocustTestCase):
             server.recv_from_client()
 
     def test_rpc_error(self):
-        server = zmqrpc.Server("127.0.0.1", 5557)
+        server = zmqrpc.Server("127.0.0.1", 0)
         with self.assertRaises(RPCError):
-            server = zmqrpc.Server("127.0.0.1", 5557)
+            server = zmqrpc.Server("127.0.0.1", server.port)
         server.close()
         with self.assertRaises(RPCError):
             server.send_to_client(Message("test", "message", "identity"))

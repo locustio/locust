@@ -93,7 +93,7 @@ class User(object, metaclass=UserMeta):
             tasks = {ThreadPage:15, write_post:1}
     """
 
-    weight = 10
+    weight = 1
     """Probability of user class being chosen. The higher the weight, the greater the chance of it being chosen."""
 
     abstract = True
@@ -153,7 +153,7 @@ class User(object, metaclass=UserMeta):
         Start a greenlet that runs this User instance.
 
         :param group: Group instance where the greenlet will be spawned.
-        :type gevent_group: gevent.pool.Group
+        :type group: gevent.pool.Group
         :returns: The spawned greenlet.
         """
 
@@ -185,11 +185,24 @@ class User(object, metaclass=UserMeta):
             self._state = LOCUST_STATE_STOPPING
             return False
 
+    @property
+    def group(self):
+        return self._group
+
+    @property
+    def greenlet(self):
+        return self._greenlet
+
     def context(self) -> Dict:
         """
         Adds the returned value (a dict) to the context for :ref:`request event <request_context>`
         """
         return {}
+
+    @classmethod
+    def fullname(cls) -> str:
+        """Fully qualified name of the user class, e.g. my_package.my_module.MyUserClass"""
+        return ".".join(filter(lambda x: x != "<locals>", (cls.__module__ + "." + cls.__qualname__).split(".")))
 
 
 class HttpUser(User):

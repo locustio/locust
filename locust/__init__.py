@@ -1,3 +1,5 @@
+__version__ = "2.0.0b2"
+
 from gevent import monkey
 
 monkey.patch_all()
@@ -13,7 +15,6 @@ from .event import Events
 
 events = Events()
 
-__version__ = "1.5.3"
 __all__ = (
     "SequentialTaskSet",
     "wait_time",
