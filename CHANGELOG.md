@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.0.0b2](https://github.com/locustio/locust/tree/2.0.0b2) (2021-07-12)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.0.0b1...2.0.0b2)
+
+**Merged pull requests:**
+
+- Auto shrink request stats table to fit terminal [\#1811](https://github.com/locustio/locust/pull/1811) ([cyberw](https://github.com/cyberw))
+- Refactoring of the dispatch logic to improve performance [\#1809](https://github.com/locustio/locust/pull/1809) ([mboutet](https://github.com/mboutet))
+
 ## [2.0.0b1](https://github.com/locustio/locust/tree/2.0.0b1) (2021-07-05)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.0.0b0...2.0.0b1)
@@ -1619,7 +1628,7 @@
 
 **Merged pull requests:**
 
-- Update writing-a-locustfile.rst [\#268](https://github.com/locustio/locust/pull/268) ([cristopherchacon](https://github.com/cristopherchacon))
+- Update writing-a-locustfile.rst [\#268](https://github.com/locustio/locust/pull/268) ([ghost](https://github.com/ghost))
 - changed how request\_meta\["method"\] is set [\#267](https://github.com/locustio/locust/pull/267) ([dantagg](https://github.com/dantagg))
 - list supported Python versions [\#261](https://github.com/locustio/locust/pull/261) ([cgoldberg](https://github.com/cgoldberg))
 - add host cli arg to quickstart [\#250](https://github.com/locustio/locust/pull/250) ([groovecoder](https://github.com/groovecoder))
@@ -1836,7 +1845,7 @@
 
 ## [v0.4](https://github.com/locustio/locust/tree/v0.4) (2011-12-05)
 
-[Full Changelog](https://github.com/locustio/locust/compare/117a61cfd1bba9ad10c8b680a574fcf32f6f46be...v0.4)
+[Full Changelog](https://github.com/locustio/locust/compare/7cfe62cee36dee34fe4d23aed5bdd00c4f42b3d0...v0.4)
 
 **Fixed bugs:**
 
