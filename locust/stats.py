@@ -4,6 +4,7 @@ import time
 from collections import namedtuple, OrderedDict
 from copy import copy
 from itertools import chain
+import os
 import csv
 
 import gevent
@@ -14,7 +15,11 @@ import logging
 
 console_logger = logging.getLogger("locust.stats_logger")
 
-STATS_NAME_WIDTH = 60
+"""Space in table for request name. Auto shrink it if terminal is small (<160 characters)"""
+try:
+    STATS_NAME_WIDTH = max(min(os.get_terminal_size()[0] - 80, 80), 0)
+except OSError:  # not a real terminal
+    STATS_NAME_WIDTH = 80
 STATS_TYPE_WIDTH = 8
 
 """Default interval for how frequently results are written to console."""
