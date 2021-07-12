@@ -29,6 +29,7 @@ setup(
         "psutil>=5.6.7",
         "Flask-BasicAuth>=0.2.0",
         "Flask-Cors>=3.0.10",
+        "roundrobin>=0.0.2",
     ],
     test_suite="locust.test",
     tests_require=[

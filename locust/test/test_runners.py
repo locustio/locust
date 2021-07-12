@@ -408,9 +408,7 @@ class TestLocustRunner(LocustTestCase):
         runner.start(2, 4, wait=False)
         runner.spawning_greenlet.join()
         delta = time.time() - ts
-        self.assertTrue(
-            0 <= delta <= 0.05, "Expected user count to decrease to 2 instantaneously, instead it took %f" % delta
-        )
+        self.assertTrue(0 <= delta <= 1.05, "Expected user count to decrease to 2 in 1s, instead it took %f" % delta)
         self.assertTrue(
             runner.user_count == 2, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
         )
@@ -838,7 +836,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                 elif run_time < 40:
                     return 15, 3
                 elif run_time < 60:
-                    return 5, 3
+                    return 5, 10
                 else:
                     return None
 
@@ -883,9 +881,9 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertEqual(STATE_RUNNING, master.state)
             w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
             w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
-            w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
-            w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
-            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
+            w3 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
+            w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
+            w5 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
             self.assertDictEqual(w1, workers[0].user_classes_count)
             self.assertDictEqual(w2, workers[1].user_classes_count)
             self.assertDictEqual(w3, workers[2].user_classes_count)
@@ -905,11 +903,11 @@ class TestMasterWorkerRunners(LocustTestCase):
                 sleep()
             sleep(5 - (time.time() - ts))  # runtime = 15s
             self.assertEqual(STATE_RUNNING, master.state)
-            w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 1}
             w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
-            w3 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
+            w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
             w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 1}
-            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 2}
+            w5 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
             self.assertDictEqual(w1, workers[0].user_classes_count)
             self.assertDictEqual(w2, workers[1].user_classes_count)
             self.assertDictEqual(w3, workers[2].user_classes_count)
@@ -968,7 +966,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             w1 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
             w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
-            w4 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
+            w4 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 1}
             w5 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
             self.assertDictEqual(w1, workers[0].user_classes_count)
             self.assertDictEqual(w2, workers[1].user_classes_count)
@@ -990,9 +988,9 @@ class TestMasterWorkerRunners(LocustTestCase):
             delta = time.time() - ts
             w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
             w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
-            w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
-            w4 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
-            w5 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
+            w3 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
+            w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
+            w5 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
             self.assertDictEqual(w1, workers[0].user_classes_count)
             self.assertDictEqual(w2, workers[1].user_classes_count)
             self.assertDictEqual(w3, workers[2].user_classes_count)
@@ -1515,8 +1513,13 @@ class TestMasterRunner(LocustTestCase):
             assert master.clients["fake_client"].state == STATE_MISSING
 
     def test_last_worker_quitting_stops_test(self):
+        class TestUser(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = self.get_runner()
+            master = self.get_runner(user_classes=[TestUser])
             server.mocked_send(Message("client_ready", __version__, "fake_client1"))
             server.mocked_send(Message("client_ready", __version__, "fake_client2"))
 
@@ -1525,19 +1528,24 @@ class TestMasterRunner(LocustTestCase):
             server.mocked_send(Message("spawning", None, "fake_client2"))
 
             server.mocked_send(Message("quit", None, "fake_client1"))
-            sleep(0)
+            sleep(0.1)
             self.assertEqual(1, len(master.clients.all))
             self.assertNotEqual(STATE_STOPPED, master.state, "Not all workers quit but test stopped anyway.")
 
             server.mocked_send(Message("quit", None, "fake_client2"))
-            sleep(0)
+            sleep(0.1)
             self.assertEqual(0, len(master.clients.all))
             self.assertEqual(STATE_STOPPED, master.state, "All workers quit but test didn't stop.")
 
     @mock.patch("locust.runners.HEARTBEAT_INTERVAL", new=0.1)
     def test_last_worker_missing_stops_test(self):
+        class TestUser(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = self.get_runner()
+            master = self.get_runner(user_classes=[TestUser])
             server.mocked_send(Message("client_ready", __version__, "fake_client1"))
             server.mocked_send(Message("client_ready", __version__, "fake_client2"))
             server.mocked_send(Message("client_ready", __version__, "fake_client3"))
@@ -2138,7 +2146,7 @@ class TestMasterRunner(LocustTestCase):
             server.mocked_send(Message("client_ready", __version__, "fake_client1"))
 
             master.start(7, 7)
-            self.assertEqual({"MyUser1": 3, "MyUser2": 4}, master.target_user_classes_count)
+            self.assertEqual({"MyUser1": 4, "MyUser2": 3}, master.target_user_classes_count)
             self.assertEqual(7, master.target_user_count)
             self.assertEqual(7, master.spawn_rate)
 
@@ -2967,10 +2975,10 @@ class TestStopTimeout(LocustTestCase):
         runner = environment.create_local_runner()
 
         # Start load test, wait for users to start, then trigger ramp down
-        ts = time.time()
+        ts = time.perf_counter()
         runner.start(10, 10, wait=False)
         runner.spawning_greenlet.join()
-        delta = time.time() - ts
+        delta = time.perf_counter() - ts
         self.assertTrue(
             0 <= delta <= 0.05, "Expected user count to increase to 10 instantaneously, instead it took %f" % delta
         )
@@ -2978,11 +2986,11 @@ class TestStopTimeout(LocustTestCase):
             runner.user_count == 10, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
         )
 
-        ts = time.time()
+        ts = time.perf_counter()
         runner.start(2, 4, wait=False)
         runner.spawning_greenlet.join()
-        delta = time.time() - ts
-        self.assertTrue(1 <= delta <= 1.05, "Expected user count to decrease to 2 in 1s, instead it took %f" % delta)
+        delta = time.perf_counter() - ts
+        self.assertTrue(2 <= delta <= 2.05, "Expected user count to decrease to 2 in 2s, instead it took %f" % delta)
         self.assertTrue(
             runner.user_count == 2, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
         )
