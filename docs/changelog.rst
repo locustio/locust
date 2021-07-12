@@ -7,6 +7,8 @@ For full details of the Locust changelog, please see https://github.com/locustio
 2.0.0
 =====
 
+* Auto shrink request stats table to fit terminal https://github.com/locustio/locust/pull/1811 (2.0.0b2)
+* Refactoring of the dispatch logic to improve performance https://github.com/locustio/locust/pull/1809 (2.0.0b2)
 * Check version of workers when they connect. Warn if there is a mismatch, refuse 1.x workers to connect https://github.com/locustio/locust/pull/1805 (2.0.0b1)
 * Change the default User weight to 1 instead of 10 https://github.com/locustio/locust/pull/1803 (2.0.0b1)
 * Upgrade to flask 2 https://github.com/locustio/locust/pull/1764 (2.0.0b1)
