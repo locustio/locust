@@ -296,7 +296,7 @@ class FastHttpUser(User):
     """Parameter passed to FastHttpSession. Default True, meaning no SSL verification."""
 
     concurrency: int = 1
-    """Parameter passed to FastHttpSession. Describes number of concurrent request allowed by the FastHttpSession. Default 1."""
+    """Parameter passed to FastHttpSession. Describes number of concurrent requests allowed by the FastHttpSession. Default 1."""
 
     abstract = True
     """Dont register this as a User class that can be run by itself"""
