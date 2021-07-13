@@ -35,10 +35,9 @@ def get_html_report(environment, show_download_link=True):
 
     requests_statistics = list(chain(sort_stats(stats.entries), [stats.total]))
     failures_statistics = sort_stats(stats.errors)
-    exceptions_statistics = []
-    for exc in environment.runner.exceptions.values():
-        exc["nodes"] = ", ".join(exc["nodes"])
-        exceptions_statistics.append(exc)
+    exceptions_statistics = [
+        {**exc, "nodes": ", ".join(exc["nodes"])} for exc in environment.runner.exceptions.values()
+    ]
 
     history = stats.history
 

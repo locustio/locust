@@ -87,6 +87,50 @@ listen to. Defaults to 5557.
 Used when starting the master node with ``--headless``. The master node will then wait until X worker
 nodes has connected before the test is started.
 
+Communicating across nodes
+=============================================
+
+When running Locust in distributed mode, you may want to communicate between master and worker nodes in 
+order to coordinate data. This can be easily accomplished with custom messages using the built in messaging hooks:
+
+.. code-block:: python
+
+    from locust import events
+    from locust.runners import MasterRunner, WorkerRunner
+
+    # Fired when the worker recieves a message of type 'test_users'
+    def setup_test_users(environment, msg, **kwargs):
+        for user in msg.data:
+            print(f"User {user['name']} recieved")
+        environment.runner.send_message('acknowledge_users', f"Thanks for the {len(msg.data)} users!")
+
+    # Fired when the master recieves a message of type 'acknowledge_users'
+    def on_acknowledge(msg, **kwargs):
+        print(msg.data)
+
+    @events.init.add_listener
+    def on_locust_init(environment, **_kwargs):
+        if not isinstance(environment.runner, MasterRunner):
+            environment.runner.register_message('test_users', setup_test_users)
+        if not isinstance(environment.runner, WorkerRunner):
+            environment.runner.register_message('acknowledge_users', on_acknowledge)
+
+    @events.test_start.add_listener
+    def on_test_start(environment, **_kwargs):
+        if not isinstance(environment.runner, MasterRunner):
+            users = [
+                {"name": "User1"},
+                {"name": "User2"},
+                {"name": "User3"},
+            ]
+            environment.runner.send_message('test_users', users)  
+
+Note that when running locally (i.e. non-distributed), this functionality will be preserved; 
+the messages will simply be handled by the same runner that sends them.  
+
+A more complete example can be found in the `examples directory <https://github.com/locustio/locust/tree/master/examples>`_ of the Locust 
+source code.
+
 
 Running distributed with Docker
 =============================================
