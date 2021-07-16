@@ -7,13 +7,18 @@ For full details of the Locust changelog, please see https://github.com/locustio
 2.0.0
 =====
 
-This version contains some potentially breaking changes for existing test plans/setups:
+Potentially breaking changes for existing testplans:
+----------------------------------------------------
+
 * User ramp up/down and User type selection is now controlled by the master instead of autonomously by the workers. This fixes some issues with unbalanced user distribution (#1618) and also uneven ramp up steps (#896), especially when there were many workers. This is a big change internally in Locust so there might still be some issues, please file a ticket if you encounter something that worked previously and you think might be related https://github.com/locustio/locust/pull/1621, https://github.com/locustio/locust/pull/1809
 * Change the default User weight to 1 instead of 10 (because the old default made no sense) https://github.com/locustio/locust/pull/1803
 * Fire test_start and test_stop events on workers too (previously they were only fired on master/standalone instances) https://github.com/locustio/locust/pull/1777/
 * Update Flask dependency to 2.0 https://github.com/locustio/locust/pull/1764
 
-Merged PR:s (and prerelease version they were introduced in)
+Full list of merged PR:s (and prerelease version they were introduced in)
+-------------------------------------------------------------------------
+
+* Add option to set concurrency of FastHttpUser/Session https://github.com/locustio/locust/pull/1812/ (2.0.0b3)
 * Fire test_start and test_stop events on worker nodes https://github.com/locustio/locust/pull/1777/ (2.0.0b3)
 * Auto shrink request stats table to fit terminal https://github.com/locustio/locust/pull/1811 (2.0.0b2)
 * Refactoring of the dispatch logic to improve performance https://github.com/locustio/locust/pull/1809 (2.0.0b2)
@@ -27,7 +32,6 @@ Merged PR:s (and prerelease version they were introduced in)
 
 * Allow cross process communication using custom messages https://github.com/locustio/locust/pull/1782
 * Fix: status "stopped" instead of "spawning", tick\(\) method of LoadShape called only once https://github.com/locustio/locust/pull/1769
-* Other small fixes (see https://github.com/locustio/locust/blob/master/CHANGELOG.md)
 
 1.5.3
 =====
