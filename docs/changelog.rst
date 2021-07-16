@@ -7,25 +7,26 @@ For full details of the Locust changelog, please see https://github.com/locustio
 2.0.0
 =====
 
-Potentially breaking changes for existing testplans:
-----------------------------------------------------
+User ramp up/down and User type selection is now controlled by the master instead of autonomously by the workers 
+----------------------------------------------------------------------------------------------------------------
+This has allowed us to fix some issues with unbalanced User type selection and undesired stepping of ramp up. The issues were especially visible when running many workers and/or using LoadShape:s. This change also allows redistribution of Users if a worker disconnects during a test. This is a major change internally in Locust so please let us know if you encounter any problems (particularly regarding ramp up pace, User distribution, CPU usage on master, etc)
 
-* User ramp up/down and User type selection is now controlled by the master instead of autonomously by the workers. This fixes some issues with unbalanced user distribution (#1618) and also uneven ramp up steps (#896), especially when there were many workers. This is a big change internally in Locust so there might still be some issues, please file a ticket if you encounter something that worked previously and you think might be related https://github.com/locustio/locust/pull/1621, https://github.com/locustio/locust/pull/1809
-* Change the default User weight to 1 instead of 10 (because the old default made no sense) https://github.com/locustio/locust/pull/1803
-* Fire test_start and test_stop events on workers too (previously they were only fired on master/standalone instances) https://github.com/locustio/locust/pull/1777/
-* Update Flask dependency to 2.0 https://github.com/locustio/locust/pull/1764
+Other potentially breaking API changes
+--------------------------------------
+* Change the default User weight to 1 instead of 10 (the old default made no sense)
+* Fire test_start and test_stop events on workers too (previously they were only fired on master/standalone instances)
+* Update Flask dependency to 2.0
 
 Full list of merged PR:s (and prerelease version they were introduced in)
 -------------------------------------------------------------------------
-
-* Add option to set concurrency of FastHttpUser/Session https://github.com/locustio/locust/pull/1812/ (2.0.0b3)
-* Fire test_start and test_stop events on worker nodes https://github.com/locustio/locust/pull/1777/ (2.0.0b3)
-* Auto shrink request stats table to fit terminal https://github.com/locustio/locust/pull/1811 (2.0.0b2)
-* Refactoring of the dispatch logic to improve performance https://github.com/locustio/locust/pull/1809 (2.0.0b2)
-* Check version of workers when they connect. Warn if there is a mismatch, refuse 1.x workers to connect https://github.com/locustio/locust/pull/1805 (2.0.0b1)
-* Change the default User weight to 1 instead of 10 https://github.com/locustio/locust/pull/1803 (2.0.0b1)
-* Upgrade to flask 2 https://github.com/locustio/locust/pull/1764 (2.0.0b1)
-* Move User selection responsibility from worker to master in order to fix unbalanced distribution of users and uneven ramp-up https://github.com/locustio/locust/pull/1621 (2.0.0b0)
+* Add option to set concurrency of FastHttpUser/Session (2.0.0b3) https://github.com/locustio/locust/pull/1812/
+* Fire test_start and test_stop events on worker nodes (2.0.0b3) https://github.com/locustio/locust/pull/1777/
+* Auto shrink request stats table to fit terminal (2.0.0b2) https://github.com/locustio/locust/pull/1811
+* Refactoring of the dispatch logic to improve performance (2.0.0b2) https://github.com/locustio/locust/pull/1809 
+* Check version of workers when they connect. Warn if there is a mismatch, refuse 1.x workers to connect (2.0.0b1) https://github.com/locustio/locust/pull/1805 
+* Change the default User weight to 1 instead of 10 (2.0.0b1) https://github.com/locustio/locust/pull/1803
+* Upgrade to Flask 2 (2.0.0b1) https://github.com/locustio/locust/pull/1764
+* Move User selection responsibility from worker to master in order to fix unbalanced distribution of users and uneven ramp-up (2.0.0b0) https://github.com/locustio/locust/pull/1621
 
 1.6.0
 =====
