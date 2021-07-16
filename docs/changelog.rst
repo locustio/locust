@@ -9,7 +9,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 
 User ramp up/down and User type selection is now controlled by the master instead of autonomously by the workers 
 ----------------------------------------------------------------------------------------------------------------
-This has allowed us to fix some issues with unbalanced User type selection and undesired stepping of ramp up. The issues were especially visible when running many workers and/or using LoadShape:s. This change also allows redistribution of Users if a worker disconnects during a test. This is a major change internally in Locust so please let us know if you encounter any problems (particularly regarding ramp up pace, User distribution, CPU usage on master, etc)
+This has allowed us to fix some issues with incorrect/skewed User type selection and undesired stepping of ramp up. The issues were especially visible when running many workers and/or using LoadShape:s. This change also allows redistribution of Users if a worker disconnects during a test. This is a major change internally in Locust so please let us know if you encounter any problems (particularly regarding ramp up pace, User distribution, CPU usage on master, etc)
 
 Other potentially breaking API changes
 --------------------------------------
