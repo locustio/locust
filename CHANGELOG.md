@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.0.0b3](https://github.com/locustio/locust/tree/2.0.0b3) (2021-07-16)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.0.0b2...2.0.0b3)
+
+**Closed issues:**
+
+- Restore locust\_start\_hatching functionality [\#1776](https://github.com/locustio/locust/issues/1776)
+- FastHttpUser requests are blocking [\#1810](https://github.com/locustio/locust/issues/1810)
+
+**Merged pull requests:**
+
+- Fire test_start and test_stop events on worker nodes [\#1777](https://github.com/locustio/locust/pull/1777/) ([nathan-beam](https://github.com/nathan-beam))
+- Add option to set concurrency of FastHttpUser/Session [\#1812](https://github.com/locustio/locust/pull/1812/) ([soitinj](https://github.com/soitinj))
+
 ## [2.0.0b2](https://github.com/locustio/locust/tree/2.0.0b2) (2021-07-12)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.0.0b1...2.0.0b2)
