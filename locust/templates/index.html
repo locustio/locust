@@ -78,6 +78,7 @@
                         {% endif %}
                     </label>
                     <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or "" }}"/><br>
+                    {% block extended_start %}{% endblock extended_start %}
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -102,6 +103,7 @@
                         <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users to start per second (or stop))</span></label>
                         <input type="text" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "" }}"/><br>
                     {% endif %}
+                    {% block extended_edit %}{% endblock extended_edit %}
                     {% if is_shape %}
                         <button type="submit" disabled>Start swarming</button>
                     {% else %}
