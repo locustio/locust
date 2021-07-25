@@ -1096,7 +1096,6 @@ class WorkerRunner(DistributedRunner):
                         {
                             "state": self.worker_state,
                             "current_cpu_usage": self.current_cpu_usage,
-                            "user_classes_count": self.user_classes_count,
                         },
                         self.client_id,
                     )
