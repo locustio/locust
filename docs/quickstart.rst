@@ -1,14 +1,82 @@
 .. _quickstart:
 
 =============
-Quick start
+Hello World
 =============
 
-In Locust you define your user behaviour in Python code. You then use the ``locust`` command and (optionally) 
-its web interface to spawn and simulate a number of those users while gathering request statistics.
+A Locust test is essentially a Python program. This makes it very flexible, but it can do simple tests as well, so lets start with that:
 
-Example locustfile.py
-=====================
+.. code-block:: python
+
+    from locust import HttpUser, task
+
+    class HelloWorldUser(HttpUser):
+        @task
+        def hello_world(self):
+            self.client.get("/hello")
+            self.client.get("/world")
+
+This user will make HTTP requests to ``/hello``, and then ``/world``, again and again. For a full explanation and a more realistic example, keep reading.
+
+Put the code in a file named *locustfile.py* in your current directory and run ``locust``:
+
+.. code-block:: console
+    :substitutions:
+
+    $ locust
+    [2021-07-24 09:58:46,215] .../INFO/locust.main: Starting web interface at http://*:8089
+    [2021-07-24 09:58:46,285] .../INFO/locust.main: Starting Locust |version|
+
+Locust's web interface
+==============================
+
+Once you've started Locust, open up a browser and point it to http://localhost:8089. You will be greeted with something like this:
+
+.. image:: images/webui-splash-screenshot.png
+| 
+Point the test to your web server and try it out!
+
+These screenshots show what it might look like when running the more complete example further down this page:
+
+.. image:: images/webui-running-statistics.png
+
+You can also view the results as a chart:
+
+.. image:: images/webui-running-charts.png
+
+|
+
+Direct command line usage / headless
+====================================
+
+Using the Locust web UI is entirely optional. You can supply the load parameters on command line and get reports on the results in text form:
+
+.. code-block:: console
+    :substitutions:
+
+    $ locust --headless --users 10 --spawn-rate 1 -H http://your-server.com
+    [2021-07-24 10:41:10,947] .../INFO/locust.main: No run time limit set, use CTRL+C to interrupt.
+    [2021-07-24 10:41:10,947] .../INFO/locust.main: Starting Locust |version|
+    [2021-07-24 10:41:10,949] .../INFO/locust.runners: Ramping to 10 users using a 1.00 spawn rate
+    Name              # reqs      # fails  |     Avg     Min     Max  Median  |   req/s failures/s
+    ----------------------------------------------------------------------------------------------
+    GET /hello             1     0(0.00%)  |     115     115     115     115  |    0.00    0.00
+    GET /item              2     0(0.00%)  |     114     107     121     110  |    0.00    0.00
+    POST /login            2     0(0.00%)  |     307     299     315     300  |    0.00    0.00
+    GET /world             1     0(0.00%)  |     119     119     119     119  |    0.00    0.00
+    ----------------------------------------------------------------------------------------------
+    Aggregated             6     6(0.00%)  |     179     107     315     120  |    0.00    0.00
+    ...
+    [2021-07-24 10:44:42,484] .../INFO/locust.runners: All users spawned: {"HelloWorldUser": 10} (10 total users)
+    ...
+
+.. note::
+
+    To see all available options type: ``locust --help`` or check :ref:`configuration`.
+
+
+A more complete example
+=======================
 
 .. code-block:: python
 
@@ -16,7 +84,7 @@ Example locustfile.py
     from locust import HttpUser, task, between
 
     class QuickstartUser(HttpUser):
-        wait_time = between(1, 2.5)
+        wait_time = between(1, 5)
 
         @task
         def hello_world(self):
@@ -55,9 +123,9 @@ users will start running within their own green gevent thread.
 
 .. code-block:: python
 
-    wait_time = between(1, 2.5)
+    wait_time = between(1, 5)
 
-Our class defines a ``wait_time`` that will make the simulated users wait between 1 and 2.5 seconds after each task (see below)
+Our class defines a ``wait_time`` that will make the simulated users wait between 1 and 5 seconds after each task (see below)
 is executed. For more info see :ref:`wait-time`.
 
 .. code-block:: python
@@ -84,7 +152,7 @@ We've declared two tasks by decorating two methods with ``@task``, one of which 
 When our ``QuickstartUser`` runs it'll pick one of the declared tasks - in this case either ``hello_world`` or 
 ``view_items`` - and execute it. Tasks are picked at random, but you can give them different weighting. The above 
 configuration will make Locust three times more likely to pick ``view_items`` than ``hello_world``. When a task has 
-finished executing, the User will then sleep during it's wait time (in this case between 1 and 2.5 seconds). 
+finished executing, the User will then sleep during it's wait time (in this case between 1 and 5 seconds). 
 After it's wait time it'll pick a new task and keep repeating that.
 
 Note that only methods decorated with ``@task`` will be picked, so you can define your own internal helper methods any way you like.
@@ -98,7 +166,6 @@ to make other kinds of requests, validate the response, etc, see
 `Using the HTTP Client <writing-a-locustfile.html#using-the-http-client>`_.
 
 .. code-block:: python
-    :emphasize-lines: 4,4
 
     @task(3)
     def view_items(self):
@@ -117,42 +184,6 @@ the :ref:`name parameter <name-parameter>` to group all those requests under an 
 
 Additionally we've declared an `on_start` method. A method with this name will be called for each simulated 
 user when they start. For more info see :ref:`on-start-on-stop`.
-
-
-Start Locust
-============
-
-Put the above code in a file named *locustfile.py* in your current directory and run:
-
-.. code-block:: console
-
-    $ locust
-
-
-If your Locust file is located somewhere else, you can specify it using ``-f``
-
-.. code-block:: console
-
-    $ locust -f locust_files/my_locust_file.py
-
-.. note::
-
-    To see all available options type: ``locust --help`` or check :ref:`configuration`
-
-Locust's web interface
-==============================
-
-Once you've started Locust using one of the above command lines, you should open up a browser
-and point it to http://127.0.0.1:8089. Then you should be greeted with something like this:
-
-.. image:: images/webui-splash-screenshot.png
-
-Fill out the form and try it out! (but note that if you don't change your locust file to match your actual target system you'll mostly get error responses)
-
-.. image:: images/webui-running-statistics.png
-
-.. image:: images/webui-running-charts.png
-
 
 More options
 ============

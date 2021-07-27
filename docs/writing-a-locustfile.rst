@@ -20,15 +20,13 @@ wait_time attribute
 
 A User's :py:attr:`wait_time <locust.User.wait_time>` method is an optional attribute used to determine
 how long a simulated user should wait between executing tasks. If no :py:attr:`wait_time <locust.User.wait_time>` 
-is specified, a new task will be executed as soon as one finishes.
+is specified, the next task will be executed as soon as one finishes.
 
 There are three built in wait time functions: 
 
 * :py:attr:`constant <locust.wait_time.constant>` for a fixed amount of time
 
 * :py:attr:`between <locust.wait_time.between>` for a random time between a min and max value
-
-* :py:attr:`constant_pacing <locust.wait_time.constant_pacing>` for an adaptive time that ensures the task runs (at most) once every X seconds
 
 For example, to make each user wait between 0.5 and 10 seconds between every task execution:
 
@@ -42,6 +40,10 @@ For example, to make each user wait between 0.5 and 10 seconds between every tas
             print("executing my_task")
 
         wait_time = between(0.5, 10)
+
+* :py:attr:`constant_pacing <locust.wait_time.constant_pacing>` for an adaptive time that ensures the task runs (at most) once every X seconds
+
+This is very useful if you want to target a specific throughput. For example, if you want Locust to run 500 task iterations per second at peak load, you could use `wait_time = constant_pacing(10)` and a user count of 5000. If the time for each iteration exceeds 10 seconds then you'll get lower throughput. Note that as wait time is applied *after* task execution, if you have a high spawn rate/ramp up you may slightly exceed your target during rampup.
 
 It's also possible to declare your own wait_time method directly on your class. 
 For example, the following User class would sleep for one second, then two, then three, etc.
@@ -57,7 +59,6 @@ For example, the following User class would sleep for one second, then two, then
 
         ...
     
-
 
 weight attribute
 ----------------

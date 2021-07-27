@@ -79,7 +79,13 @@ from locust import __version__
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.intersphinx", "sphinx_search.extension"]
+extensions = [
+    "sphinx-prompt",
+    "sphinx_substitution_extensions",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.intersphinx",
+    "sphinx_search.extension",
+]
 
 # autoclass options
 # autoclass_content = "both"
@@ -169,3 +175,7 @@ html_context = {
 
 # The name of the Pygments (syntax highlighting) style to use.
 # pygments_style = 'trac'
+
+rst_prolog = f"""
+.. |version| replace:: {__version__}
+"""
