@@ -98,9 +98,9 @@
                         <input type="text" name="spawn_rate" id="new_spawn_rate" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
                     {% else %}
                         <label for="new_user_count">Number of users (peak concurrency)</label>
-                        <input type="text" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "" }}" onfocus="this.select()"/><br>
+                        <input type="text" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "1" }}" onfocus="this.select()"/><br>
                         <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users added/stopped per second)</span></label>
-                        <input type="text" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "" }}" onfocus="this.select()"/><br>
+                        <input type="text" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "1" }}" onfocus="this.select()"/><br>
                     {% endif %}
                     {% if is_shape %}
                         <button type="submit" disabled>Start swarming</button>
