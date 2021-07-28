@@ -185,8 +185,6 @@ class UsersDispatcher(Iterator):
         self._worker_node_generator = worker_gen
         self._active_users = active_users
 
-        # TODO: What to do with self._initial_users_on_workers?
-
         self._rebalance = True
 
     @contextlib.contextmanager
