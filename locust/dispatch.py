@@ -128,14 +128,14 @@ class UsersDispatcher(Iterator):
 
         while self._current_user_count < self._target_user_count:
             with self._wait_between_dispatch_iteration_context():
-                yield self._ramp_up()
+                yield self._add_users_on_workers()
                 if self._rebalance:
                     self._rebalance = False
                     yield self._users_on_workers
 
         while self._current_user_count > self._target_user_count:
             with self._wait_between_dispatch_iteration_context():
-                yield self._ramp_down()
+                yield self._remove_users_from_workers()
                 if self._rebalance:
                     self._rebalance = False
                     yield self._users_on_workers
@@ -208,7 +208,11 @@ class UsersDispatcher(Iterator):
         sleep_duration = max(0.0, self._wait_between_dispatch - delta)
         gevent.sleep(sleep_duration)
 
-    def _ramp_up(self) -> Dict[str, Dict[str, int]]:
+    def _add_users_on_workers(self) -> Dict[str, Dict[str, int]]:
+        """Add users on the workers until the target number of users is reached for the current dispatch iteration
+
+        :return: The users that we want to run on the workers
+        """
         current_user_count_target = min(
             self._current_user_count + self._user_count_per_dispatch_iteration, self._target_user_count
         )
@@ -220,7 +224,11 @@ class UsersDispatcher(Iterator):
             if self._current_user_count >= current_user_count_target:
                 return self._users_on_workers
 
-    def _ramp_down(self) -> Dict[str, Dict[str, int]]:
+    def _remove_users_from_workers(self) -> Dict[str, Dict[str, int]]:
+        """Remove users from the workers until the target number of users is reached for the current dispatch iteration
+
+        :return: The users that we want to run on the workers
+        """
         current_user_count_target = max(
             self._current_user_count - self._user_count_per_dispatch_iteration, self._target_user_count
         )
