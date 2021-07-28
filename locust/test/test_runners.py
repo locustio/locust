@@ -2509,6 +2509,34 @@ class TestWorkerRunner(LocustTestCase):
 
             worker.quit()
 
+    def test_worker_heartbeat_messages_sent_to_master(self):
+        """
+        Validate content of the heartbeat payload sent to the master.
+        """
+
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            environment = Environment()
+            worker = self.get_runner(environment=environment, user_classes=[MyUser])
+
+            t0 = time.perf_counter()
+            while len([m for m in client.outbox if m.type == "heartbeat"]) == 0:
+                self.assertLessEqual(time.perf_counter() - t0, 3)
+                sleep(0.1)
+
+            message = next((m for m in reversed(client.outbox) if m.type == "heartbeat"))
+            self.assertEqual(len(message.data), 2)
+            self.assertIn("state", message.data)
+            self.assertIn("current_cpu_usage", message.data)
+
+            worker.quit()
+
     def test_change_user_count_during_spawning(self):
         class MyUser(User):
             wait_time = constant(1)
