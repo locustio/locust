@@ -1,4 +1,4 @@
-__version__ = "2.0.0b3"
+__version__ = "2.0.0b4"
 
 from gevent import monkey
 
