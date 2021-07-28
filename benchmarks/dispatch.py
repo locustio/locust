@@ -1,3 +1,10 @@
+"""
+This file contains a benchmark to validate the performance of Locust itself.
+More precisely, the performance of the `UsersDispatcher` class which is responsible
+for calculating the distribution of users on each workers. This benchmark is to be used
+by people working on Locust's development.
+"""
+
 import itertools
 import statistics
 import time
