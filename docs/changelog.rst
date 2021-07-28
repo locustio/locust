@@ -19,6 +19,8 @@ Other potentially breaking API changes
 
 Full list of merged PR:s (and prerelease version they were introduced in)
 -------------------------------------------------------------------------
+* Improve logging messages and clean up code after dispatch refactoring (2.0.0b4) https://github.com/locustio/locust/pull/1826
+* Remove `user_classes_count` from heartbeat payload (2.0.0b4) https://github.com/locustio/locust/pull/1825
 * Add option to set concurrency of FastHttpUser/Session (2.0.0b3) https://github.com/locustio/locust/pull/1812/
 * Fire test_start and test_stop events on worker nodes (2.0.0b3) https://github.com/locustio/locust/pull/1777/
 * Auto shrink request stats table to fit terminal (2.0.0b2) https://github.com/locustio/locust/pull/1811

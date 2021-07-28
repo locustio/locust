@@ -1,18 +1,30 @@
 # Changelog
 
+## [2.0.0b4](https://github.com/locustio/locust/tree/2.0.0b4) (2021-07-28)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.0.0b3...2.0.0b4)
+
+**Merged pull requests:**
+
+- Improve logging messages and clean up code after dispatch refactoring \(\#1809\) [\#1826](https://github.com/locustio/locust/pull/1826) ([mboutet](https://github.com/mboutet))
+- Remove `user_classes_count` from heartbeat payload [\#1825](https://github.com/locustio/locust/pull/1825) ([mboutet](https://github.com/mboutet))
+
 ## [2.0.0b3](https://github.com/locustio/locust/tree/2.0.0b3) (2021-07-16)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.0.0b2...2.0.0b3)
 
+**Fixed bugs:**
+
+- FastHttpUser requests are blocking [\#1810](https://github.com/locustio/locust/issues/1810)
+
 **Closed issues:**
 
 - Restore locust\_start\_hatching functionality [\#1776](https://github.com/locustio/locust/issues/1776)
-- FastHttpUser requests are blocking [\#1810](https://github.com/locustio/locust/issues/1810)
 
 **Merged pull requests:**
 
-- Fire test_start and test_stop events on worker nodes [\#1777](https://github.com/locustio/locust/pull/1777/) ([nathan-beam](https://github.com/nathan-beam))
-- Add option to set concurrency of FastHttpUser/Session [\#1812](https://github.com/locustio/locust/pull/1812/) ([soitinj](https://github.com/soitinj))
+- Add option to set concurrency of FastHttpUser/Session [\#1812](https://github.com/locustio/locust/pull/1812) ([soitinj](https://github.com/soitinj))
+- Fire test\_start and test\_stop events on worker nodes [\#1777](https://github.com/locustio/locust/pull/1777) ([nathan-beam](https://github.com/nathan-beam))
 
 ## [2.0.0b2](https://github.com/locustio/locust/tree/2.0.0b2) (2021-07-12)
 
@@ -1859,7 +1871,7 @@
 
 ## [v0.4](https://github.com/locustio/locust/tree/v0.4) (2011-12-05)
 
-[Full Changelog](https://github.com/locustio/locust/compare/7cfe62cee36dee34fe4d23aed5bdd00c4f42b3d0...v0.4)
+[Full Changelog](https://github.com/locustio/locust/compare/117a61cfd1bba9ad10c8b680a574fcf32f6f46be...v0.4)
 
 **Fixed bugs:**
 
