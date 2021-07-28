@@ -128,14 +128,14 @@ class UsersDispatcher(Iterator):
 
         while self._current_user_count < self._target_user_count:
             with self._wait_between_dispatch_iteration_context():
-                yield self._ramp_up()
+                yield self._add_users_on_workers()
                 if self._rebalance:
                     self._rebalance = False
                     yield self._users_on_workers
 
         while self._current_user_count > self._target_user_count:
             with self._wait_between_dispatch_iteration_context():
-                yield self._ramp_down()
+                yield self._remove_users_from_workers()
                 if self._rebalance:
                     self._rebalance = False
                     yield self._users_on_workers
@@ -144,6 +144,8 @@ class UsersDispatcher(Iterator):
 
     def new_dispatch(self, target_user_count: int, spawn_rate: float) -> None:
         """
+        Initialize a new dispatch cycle.
+
         :param target_user_count: The desired user count at the end of the dispatch cycle
         :param spawn_rate: The spawn rate
         """
@@ -166,26 +168,47 @@ class UsersDispatcher(Iterator):
         self._dispatch_iteration_durations.clear()
 
     def add_worker(self, worker_node: "WorkerNode") -> None:
+        """
+        This method is to be called when a new worker connects to the master. When
+        a new worker is added, the users dispatcher will flag that a rebalance is required
+        and ensure that the next dispatch iteration will be made to redistribute the users
+        on the new pool of workers.
+
+        :param worker_node: The worker node to add.
+        """
         self._worker_nodes.append(worker_node)
         self._worker_nodes = sorted(self._worker_nodes, key=lambda w: w.id)
         self._prepare_rebalance()
 
-    def remove_worker(self, worker_node_id: str) -> None:
-        self._worker_nodes = [w for w in self._worker_nodes if w.id != worker_node_id]
+    def remove_worker(self, worker_node: "WorkerNode") -> None:
+        """
+        This method is similar to the above `add_worker`. When a worker disconnects
+        (because of e.g. network failure, worker failure, etc.), this method will ensure that the next
+        dispatch iteration redistributes the users on the remaining workers.
+
+        :param worker_node: The worker node to remove.
+        """
+        self._worker_nodes = [w for w in self._worker_nodes if w.id != worker_node.id]
         if len(self._worker_nodes) == 0:
             # TODO: Test this
             return
         self._prepare_rebalance()
 
     def _prepare_rebalance(self) -> None:
+        """
+        When a rebalance is required because of added and/or removed workers, we compute the desired state as if
+        we started from 0 user. So, if we were currently running 500 users, then the `_distribute_users` will
+        perform a fake ramp-up without any waiting and return the final distribution.
+        """
         users_on_workers, user_gen, worker_gen, active_users = self._distribute_users(self._current_user_count)
 
         self._users_on_workers = users_on_workers
-        self._user_generator = user_gen
-        self._worker_node_generator = worker_gen
         self._active_users = active_users
 
-        # TODO: What to do with self._initial_users_on_workers?
+        # It's important to reset the generators by using the ones from `_distribute_users`
+        # so that the next iterations are smooth and continuous.
+        self._user_generator = user_gen
+        self._worker_node_generator = worker_gen
 
         self._rebalance = True
 
@@ -210,7 +233,11 @@ class UsersDispatcher(Iterator):
         sleep_duration = max(0.0, self._wait_between_dispatch - delta)
         gevent.sleep(sleep_duration)
 
-    def _ramp_up(self) -> Dict[str, Dict[str, int]]:
+    def _add_users_on_workers(self) -> Dict[str, Dict[str, int]]:
+        """Add users on the workers until the target number of users is reached for the current dispatch iteration
+
+        :return: The users that we want to run on the workers
+        """
         current_user_count_target = min(
             self._current_user_count + self._user_count_per_dispatch_iteration, self._target_user_count
         )
@@ -222,7 +249,11 @@ class UsersDispatcher(Iterator):
             if self._current_user_count >= current_user_count_target:
                 return self._users_on_workers
 
-    def _ramp_down(self) -> Dict[str, Dict[str, int]]:
+    def _remove_users_from_workers(self) -> Dict[str, Dict[str, int]]:
+        """Remove users from the workers until the target number of users is reached for the current dispatch iteration
+
+        :return: The users that we want to run on the workers
+        """
         current_user_count_target = max(
             self._current_user_count - self._user_count_per_dispatch_iteration, self._target_user_count
         )
@@ -236,7 +267,6 @@ class UsersDispatcher(Iterator):
             if self._current_user_count == 0 or self._current_user_count <= current_user_count_target:
                 return self._users_on_workers
 
-    # TODO: Test this
     def _distribute_users(
         self, target_user_count: int
     ) -> Tuple[dict, Generator[str, None, None], typing.Iterator["WorkerNode"], List[Tuple["WorkerNode", str]]]:
@@ -267,13 +297,32 @@ class UsersDispatcher(Iterator):
         return users_on_workers, user_gen, worker_gen, active_users
 
     def _user_gen(self) -> Generator[str, None, None]:
-        # TODO: Explain why we do round(10 * user_class.weight / min_weight)
+        """
+        This method generates users according to their weights using
+        a smooth weighted round-robin algorithm implemented by https://github.com/linnik/roundrobin.
+
+        For example, given users A, B with weights 5 and 1 respectively, this algorithm
+        will yield AAABAAAAABAA. The smooth aspect of this algorithm is what makes it possible
+        to keep the distribution during ramp-up and ramp-down. If we were to use a normal
+        weighted round-robin algorithm, we'd get AAAAABAAAAAB which would make the distribution
+        less accurate during ramp-up/down.
+        """
+        # Normalize the weights so that the smallest weight will be equal to "target_min_weight".
+        # The value "2" was experimentally determined because it gave a better distribution especially
+        # when dealing with weights which are close to each others, e.g. 1.5, 2, 2.4, etc.
+        target_min_weight = 2
         min_weight = min(u.weight for u in self._user_classes)
         normalized_weights = [
-            (user_class.__name__, round(2 * user_class.weight / min_weight)) for user_class in self._user_classes
+            (user_class.__name__, round(target_min_weight * user_class.weight / min_weight))
+            for user_class in self._user_classes
         ]
         gen = smooth(normalized_weights)
-        # TODO: Explain `generation_length_to_get_proper_distribution`
+        # Instead of calling `gen()` for each user, we cycle through a generator of fixed-length
+        # `generation_length_to_get_proper_distribution`. Doing so greatly improves performance because
+        # we only ever need to call `gen()` a relatively small number of times. The length of this generator
+        # is chosen as the sum of the normalized weights. So, for users A, B, C of weights 2, 5, 6, the length is
+        # 2 + 5 + 6 = 13 which would yield the distribution `CBACBCBCBCABC` that gets repeated over and over
+        # until the target user count is reached.
         generation_length_to_get_proper_distribution = sum(
             normalized_weight[1] for normalized_weight in normalized_weights
         )

@@ -314,7 +314,7 @@ class Runner:
                 worker_nodes=[self._local_worker_node], user_classes=self.user_classes
             )
 
-        logger.info("Ramping to %d users using a %.2f spawn rate" % (user_count, spawn_rate))
+        logger.info("Ramping to %d users at a rate of %.2f per second" % (user_count, spawn_rate))
 
         self._users_dispatcher.new_dispatch(user_count, spawn_rate)
 
@@ -670,18 +670,6 @@ class MasterRunner(DistributedRunner):
                 "Your selected spawn rate is very high (>100/worker), and this is known to sometimes cause issues. Do you really need to ramp up that fast?"
             )
 
-        # Since https://github.com/locustio/locust/pull/1621, the master is responsible for dispatching and controlling
-        # the total spawn rate which is more CPU intensive for the master. The number 200 is a little arbitrary as the computational
-        # load on the master greatly depends on the number of workers and the number of user classes. For instance,
-        # 5 user classes and 5 workers can easily do 200/s. However, 200/s with 50 workers and 20 user classes will likely make the
-        # dispatch very slow because of the required computations. I (@mboutet) doubt that many Locust's users are
-        # spawning that rapidly. If so, then they'll likely open issues on GitHub in which case I'll (@mboutet) take a look.
-        if spawn_rate > 200:
-            logger.warning(
-                "Your selected total spawn rate is quite high (>200), and this is known to sometimes cause performance issues on the master. "
-                "Do you really need to ramp up that fast? If so and if encountering performance issues on the master, free to open an issue."
-            )
-
         if self.state != STATE_RUNNING and self.state != STATE_SPAWNING:
             self.stats.clear_all()
             self.exceptions = {}
@@ -694,8 +682,6 @@ class MasterRunner(DistributedRunner):
         self._users_dispatcher.new_dispatch(target_user_count=user_count, spawn_rate=spawn_rate)
 
         try:
-            dispatched_users = None
-
             for dispatched_users in self._users_dispatcher:
                 dispatch_greenlets = Group()
                 for worker_node_id, worker_user_classes_count in dispatched_users.items():
@@ -724,7 +710,6 @@ class MasterRunner(DistributedRunner):
                     "Currently spawned users: %s" % _format_user_classes_count_for_log(self.reported_user_classes_count)
                 )
 
-            assert dispatched_users is not None
             self.target_user_classes_count = _aggregate_dispatched_users(dispatched_users)
 
         except KeyboardInterrupt:
@@ -771,11 +756,8 @@ class MasterRunner(DistributedRunner):
         if match is None:
             assert float(locust_wait_for_workers_report_after_ramp_up) >= 0
             return float(locust_wait_for_workers_report_after_ramp_up)
-
-        if match is not None:
+        else:
             return float(match.group("coeff")) * WORKER_REPORT_INTERVAL
-
-        assert False, "not supposed to reach that"
 
     def stop(self, send_stop_to_client: bool = True):
         if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
@@ -836,7 +818,7 @@ class MasterRunner(DistributedRunner):
                     client.state = STATE_MISSING
                     client.user_classes_count = {}
                     if self._users_dispatcher is not None:
-                        self._users_dispatcher.remove_worker(client.id)
+                        self._users_dispatcher.remove_worker(client)
                         # TODO: If status is `STATE_RUNNING`, call self.start()
                     if self.worker_count <= 0:
                         logger.info("The last worker went missing, stopping test.")
@@ -891,9 +873,10 @@ class MasterRunner(DistributedRunner):
                 # if abs(time() - msg.data["time"]) > 5.0:
                 #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
             elif msg.type == "client_stopped":
+                client = self.clients[msg.node_id]
                 del self.clients[msg.node_id]
                 if self._users_dispatcher is not None:
-                    self._users_dispatcher.remove_worker(msg.node_id)
+                    self._users_dispatcher.remove_worker(client)
                     if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
                         # TODO: Test this situation
                         self.start(self.target_user_count, self.spawn_rate)
@@ -932,9 +915,10 @@ class MasterRunner(DistributedRunner):
                 self.clients[msg.node_id].user_classes_count = msg.data["user_classes_count"]
             elif msg.type == "quit":
                 if msg.node_id in self.clients:
+                    client = self.clients[msg.node_id]
                     del self.clients[msg.node_id]
                     if self._users_dispatcher is not None:
-                        self._users_dispatcher.remove_worker(msg.node_id)
+                        self._users_dispatcher.remove_worker(client)
                         if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
                             # TODO: Test this situation
                             self.start(self.target_user_count, self.spawn_rate)

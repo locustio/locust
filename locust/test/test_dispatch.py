@@ -2385,7 +2385,11 @@ class TestRemoveWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 2)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 2)
 
-        users_dispatcher.remove_worker(worker_nodes[1].id)
+        self.assertFalse(users_dispatcher._rebalance)
+
+        users_dispatcher.remove_worker(worker_nodes[1])
+
+        self.assertTrue(users_dispatcher._rebalance)
 
         # Re-balance
         ts = time.perf_counter()
@@ -2397,6 +2401,8 @@ class TestRemoveWorker(unittest.TestCase):
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 2, "User3": 2})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 3)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 3)
+
+        self.assertFalse(users_dispatcher._rebalance)
 
         # Dispatch iteration 3
         ts = time.perf_counter()
@@ -2447,8 +2453,12 @@ class TestRemoveWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 2)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 2)
 
-        users_dispatcher.remove_worker(worker_nodes[1].id)
-        users_dispatcher.remove_worker(worker_nodes[2].id)
+        self.assertFalse(users_dispatcher._rebalance)
+
+        users_dispatcher.remove_worker(worker_nodes[1])
+        users_dispatcher.remove_worker(worker_nodes[2])
+
+        self.assertTrue(users_dispatcher._rebalance)
 
         # Re-balance
         ts = time.perf_counter()
@@ -2459,6 +2469,8 @@ class TestRemoveWorker(unittest.TestCase):
         )
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 2, "User3": 2})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 6)
+
+        self.assertFalse(users_dispatcher._rebalance)
 
         # Dispatch iteration 3
         ts = time.perf_counter()
@@ -2489,9 +2501,15 @@ class TestRemoveWorker(unittest.TestCase):
 
         list(users_dispatcher)
 
-        users_dispatcher.remove_worker(worker_nodes[1].id)
+        self.assertFalse(users_dispatcher._rebalance)
+
+        users_dispatcher.remove_worker(worker_nodes[1])
+
+        self.assertTrue(users_dispatcher._rebalance)
 
         users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
+
+        self.assertTrue(users_dispatcher._rebalance)
 
         sleep_time = 1
 
@@ -2505,6 +2523,8 @@ class TestRemoveWorker(unittest.TestCase):
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 3, "User2": 3, "User3": 3})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 5)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
+
+        self.assertFalse(users_dispatcher._rebalance)
 
         # Dispatch iteration 1
         ts = time.perf_counter()
@@ -2554,10 +2574,16 @@ class TestRemoveWorker(unittest.TestCase):
 
         list(users_dispatcher)
 
-        users_dispatcher.remove_worker(worker_nodes[1].id)
-        users_dispatcher.remove_worker(worker_nodes[2].id)
+        self.assertFalse(users_dispatcher._rebalance)
+
+        users_dispatcher.remove_worker(worker_nodes[1])
+        users_dispatcher.remove_worker(worker_nodes[2])
+
+        self.assertTrue(users_dispatcher._rebalance)
 
         users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
+
+        self.assertTrue(users_dispatcher._rebalance)
 
         sleep_time = 1
 
@@ -2570,6 +2596,8 @@ class TestRemoveWorker(unittest.TestCase):
         )
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 3, "User2": 3, "User3": 3})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 9)
+
+        self.assertFalse(users_dispatcher._rebalance)
 
         # Dispatch iteration 1
         ts = time.perf_counter()
@@ -2639,7 +2667,11 @@ class TestRemoveWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 4)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
 
-        users_dispatcher.remove_worker(worker_nodes[1].id)
+        self.assertFalse(users_dispatcher._rebalance)
+
+        users_dispatcher.remove_worker(worker_nodes[1])
+
+        self.assertTrue(users_dispatcher._rebalance)
 
         # Re-balance
         ts = time.perf_counter()
@@ -2651,6 +2683,8 @@ class TestRemoveWorker(unittest.TestCase):
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 4, "User2": 4, "User3": 4})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 6)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 6)
+
+        self.assertFalse(users_dispatcher._rebalance)
 
         # Dispatch iteration 3
         ts = time.perf_counter()
@@ -2705,8 +2739,12 @@ class TestRemoveWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 4)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
 
-        users_dispatcher.remove_worker(worker_nodes[1].id)
-        users_dispatcher.remove_worker(worker_nodes[2].id)
+        self.assertFalse(users_dispatcher._rebalance)
+
+        users_dispatcher.remove_worker(worker_nodes[1])
+        users_dispatcher.remove_worker(worker_nodes[2])
+
+        self.assertTrue(users_dispatcher._rebalance)
 
         # Re-balance
         ts = time.perf_counter()
@@ -2718,6 +2756,8 @@ class TestRemoveWorker(unittest.TestCase):
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 4, "User2": 4, "User3": 4})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 12)
 
+        self.assertFalse(users_dispatcher._rebalance)
+
         # Dispatch iteration 3
         ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
@@ -2725,6 +2765,41 @@ class TestRemoveWorker(unittest.TestCase):
         self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 3, "User2": 3, "User3": 3})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 9)
+
+    def test_remove_last_worker(self):
+        class User1(User):
+            weight = 1
+
+        class User2(User):
+            weight = 1
+
+        class User3(User):
+            weight = 1
+
+        user_classes = [User1, User2, User3]
+
+        worker_nodes = [WorkerNode(str(i + 1)) for i in range(1)]
+
+        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
+
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = 0
+
+        # Dispatch iteration 1
+        dispatched_users = next(users_dispatcher)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 1, "User2": 1, "User3": 1})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 3)
+
+        # Dispatch iteration 2
+        dispatched_users = next(users_dispatcher)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 2, "User3": 2})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 6)
+
+        self.assertFalse(users_dispatcher._rebalance)
+
+        users_dispatcher.remove_worker(worker_nodes[0])
+
+        self.assertFalse(users_dispatcher._rebalance)
 
 
 class TestAddWorker(unittest.TestCase):
@@ -2766,7 +2841,11 @@ class TestAddWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 3)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 3)
 
+        self.assertFalse(users_dispatcher._rebalance)
+
         users_dispatcher.add_worker(worker_nodes[1])
+
+        self.assertTrue(users_dispatcher._rebalance)
 
         # Re-balance
         ts = time.perf_counter()
@@ -2779,6 +2858,8 @@ class TestAddWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 2)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 2)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 2)
+
+        self.assertFalse(users_dispatcher._rebalance)
 
         # Dispatch iteration 3
         ts = time.perf_counter()
@@ -2826,8 +2907,12 @@ class TestAddWorker(unittest.TestCase):
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 2, "User3": 2})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 6)
 
+        self.assertFalse(users_dispatcher._rebalance)
+
         users_dispatcher.add_worker(worker_nodes[1])
         users_dispatcher.add_worker(worker_nodes[2])
+
+        self.assertTrue(users_dispatcher._rebalance)
 
         # Re-balance
         ts = time.perf_counter()
@@ -2840,6 +2925,8 @@ class TestAddWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 2)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 2)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 2)
+
+        self.assertFalse(users_dispatcher._rebalance)
 
         # Dispatch iteration 3
         ts = time.perf_counter()
@@ -2872,9 +2959,15 @@ class TestAddWorker(unittest.TestCase):
 
         list(users_dispatcher)
 
+        self.assertFalse(users_dispatcher._rebalance)
+
         users_dispatcher.add_worker(worker_nodes[1])
 
+        self.assertTrue(users_dispatcher._rebalance)
+
         users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
+
+        self.assertTrue(users_dispatcher._rebalance)
 
         sleep_time = 1
 
@@ -2889,6 +2982,8 @@ class TestAddWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 3)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 3)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 3)
+
+        self.assertFalse(users_dispatcher._rebalance)
 
         # Dispatch iteration 1
         ts = time.perf_counter()
@@ -2941,10 +3036,16 @@ class TestAddWorker(unittest.TestCase):
 
         list(users_dispatcher)
 
+        self.assertFalse(users_dispatcher._rebalance)
+
         users_dispatcher.add_worker(worker_nodes[1])
         users_dispatcher.add_worker(worker_nodes[2])
 
+        self.assertTrue(users_dispatcher._rebalance)
+
         users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
+
+        self.assertTrue(users_dispatcher._rebalance)
 
         sleep_time = 1
 
@@ -2959,6 +3060,8 @@ class TestAddWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 3)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 3)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 3)
+
+        self.assertFalse(users_dispatcher._rebalance)
 
         # Dispatch iteration 1
         ts = time.perf_counter()
@@ -3032,7 +3135,11 @@ class TestAddWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 6)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 6)
 
+        self.assertFalse(users_dispatcher._rebalance)
+
         users_dispatcher.add_worker(worker_nodes[1])
+
+        self.assertTrue(users_dispatcher._rebalance)
 
         # Re-balance
         ts = time.perf_counter()
@@ -3045,6 +3152,8 @@ class TestAddWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 4)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 4)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
+
+        self.assertFalse(users_dispatcher._rebalance)
 
         # Dispatch iteration 3
         ts = time.perf_counter()
@@ -3096,8 +3205,12 @@ class TestAddWorker(unittest.TestCase):
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 4, "User2": 4, "User3": 4})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 12)
 
+        self.assertFalse(users_dispatcher._rebalance)
+
         users_dispatcher.add_worker(worker_nodes[1])
         users_dispatcher.add_worker(worker_nodes[2])
+
+        self.assertTrue(users_dispatcher._rebalance)
 
         # Re-balance
         ts = time.perf_counter()
@@ -3110,6 +3223,8 @@ class TestAddWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 4)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 4)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
+
+        self.assertFalse(users_dispatcher._rebalance)
 
         # Dispatch iteration 3
         ts = time.perf_counter()
