@@ -907,9 +907,6 @@ class MasterRunner(DistributedRunner):
                         logger.info(
                             "Worker %s self-healed with heartbeat, setting state to %s." % (str(c.id), client_state)
                         )
-                        user_classes_count = msg.data.get("user_classes_count")
-                        if user_classes_count:
-                            c.user_classes_count = user_classes_count
                         if self._users_dispatcher is not None:
                             self._users_dispatcher.add_worker(worker_node=c)
                             if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
