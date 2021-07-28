@@ -264,13 +264,32 @@ class UsersDispatcher(Iterator):
         return users_on_workers, user_gen, worker_gen, active_users
 
     def _user_gen(self) -> Generator[str, None, None]:
-        # TODO: Explain why we do round(10 * user_class.weight / min_weight)
+        """
+        This method generates users according to their weights using
+        a smooth weighted round-robin algorithm implemented by https://github.com/linnik/roundrobin.
+
+        For example, given users A, B with weights 5 and 1 respectively, this algorithm
+        will yield AAABAAAAABAA. The smooth aspect of this algorithm is what makes it possible
+        to keep the distribution during ramp-up and ramp-down. If we were to use a normal
+        weighted round-robin algorithm, we'd get AAAAABAAAAAB which would make the distribution
+        less accurate during ramp-up/down.
+        """
+        # Normalize the weights so that the smallest weight will be equal to "target_min_weight".
+        # The value "2" was experimentally determined because it gave a better distribution especially
+        # when dealing with weights which are close to each others, e.g. 1.5, 2, 2.4, etc.
+        target_min_weight = 2
         min_weight = min(u.weight for u in self._user_classes)
         normalized_weights = [
-            (user_class.__name__, round(2 * user_class.weight / min_weight)) for user_class in self._user_classes
+            (user_class.__name__, round(target_min_weight * user_class.weight / min_weight))
+            for user_class in self._user_classes
         ]
         gen = smooth(normalized_weights)
-        # TODO: Explain `generation_length_to_get_proper_distribution`
+        # Instead of calling `gen()` for each user, we cycle through a generator of fixed-length
+        # `generation_length_to_get_proper_distribution`. Doing so greatly improves performance because
+        # we only ever need to call `gen()` a relatively small number of times. The length of this generator
+        # is chosen as the sum of the normalized weights. So, for users A, B, C of weights 2, 5, 6, the length is
+        # 2 + 5 + 6 = 13 which would yield the distribution `CBACBCBCBCABC` that gets repeated over and over
+        # until the target user count is reached.
         generation_length_to_get_proper_distribution = sum(
             normalized_weight[1] for normalized_weight in normalized_weights
         )
