@@ -670,18 +670,6 @@ class MasterRunner(DistributedRunner):
                 "Your selected spawn rate is very high (>100/worker), and this is known to sometimes cause issues. Do you really need to ramp up that fast?"
             )
 
-        # Since https://github.com/locustio/locust/pull/1621, the master is responsible for dispatching and controlling
-        # the total spawn rate which is more CPU intensive for the master. The number 200 is a little arbitrary as the computational
-        # load on the master greatly depends on the number of workers and the number of user classes. For instance,
-        # 5 user classes and 5 workers can easily do 200/s. However, 200/s with 50 workers and 20 user classes will likely make the
-        # dispatch very slow because of the required computations. I (@mboutet) doubt that many Locust's users are
-        # spawning that rapidly. If so, then they'll likely open issues on GitHub in which case I'll (@mboutet) take a look.
-        if spawn_rate > 200:
-            logger.warning(
-                "Your selected total spawn rate is quite high (>200), and this is known to sometimes cause performance issues on the master. "
-                "Do you really need to ramp up that fast? If so and if encountering performance issues on the master, free to open an issue."
-            )
-
         if self.state != STATE_RUNNING and self.state != STATE_SPAWNING:
             self.stats.clear_all()
             self.exceptions = {}
