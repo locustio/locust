@@ -818,7 +818,7 @@ class MasterRunner(DistributedRunner):
                     client.state = STATE_MISSING
                     client.user_classes_count = {}
                     if self._users_dispatcher is not None:
-                        self._users_dispatcher.remove_worker(client.id)
+                        self._users_dispatcher.remove_worker(client)
                         # TODO: If status is `STATE_RUNNING`, call self.start()
                     if self.worker_count <= 0:
                         logger.info("The last worker went missing, stopping test.")
@@ -873,9 +873,10 @@ class MasterRunner(DistributedRunner):
                 # if abs(time() - msg.data["time"]) > 5.0:
                 #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
             elif msg.type == "client_stopped":
+                client = self.clients[msg.node_id]
                 del self.clients[msg.node_id]
                 if self._users_dispatcher is not None:
-                    self._users_dispatcher.remove_worker(msg.node_id)
+                    self._users_dispatcher.remove_worker(client)
                     if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
                         # TODO: Test this situation
                         self.start(self.target_user_count, self.spawn_rate)
@@ -914,9 +915,10 @@ class MasterRunner(DistributedRunner):
                 self.clients[msg.node_id].user_classes_count = msg.data["user_classes_count"]
             elif msg.type == "quit":
                 if msg.node_id in self.clients:
+                    client = self.clients[msg.node_id]
                     del self.clients[msg.node_id]
                     if self._users_dispatcher is not None:
-                        self._users_dispatcher.remove_worker(msg.node_id)
+                        self._users_dispatcher.remove_worker(client)
                         if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
                             # TODO: Test this situation
                             self.start(self.target_user_count, self.spawn_rate)

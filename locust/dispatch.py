@@ -144,6 +144,8 @@ class UsersDispatcher(Iterator):
 
     def new_dispatch(self, target_user_count: int, spawn_rate: float) -> None:
         """
+        Initialize a new dispatch cycle.
+
         :param target_user_count: The desired user count at the end of the dispatch cycle
         :param spawn_rate: The spawn rate
         """
@@ -166,24 +168,47 @@ class UsersDispatcher(Iterator):
         self._dispatch_iteration_durations.clear()
 
     def add_worker(self, worker_node: "WorkerNode") -> None:
+        """
+        This method is to be called when a new worker connects to the master. When
+        a new worker is added, the users dispatcher will flag that a rebalance is required
+        and ensure that the next dispatch iteration will be made to redistribute the users
+        on the new pool of workers.
+
+        :param worker_node: The worker node to add.
+        """
         self._worker_nodes.append(worker_node)
         self._worker_nodes = sorted(self._worker_nodes, key=lambda w: w.id)
         self._prepare_rebalance()
 
-    def remove_worker(self, worker_node_id: str) -> None:
-        self._worker_nodes = [w for w in self._worker_nodes if w.id != worker_node_id]
+    def remove_worker(self, worker_node: "WorkerNode") -> None:
+        """
+        This method is similar to the above `add_worker`. When a worker disconnects
+        (because of e.g. network failure, worker failure, etc.), this method will ensure that the next
+        dispatch iteration redistributes the users on the remaining workers.
+
+        :param worker_node: The worker node to remove.
+        """
+        self._worker_nodes = [w for w in self._worker_nodes if w.id != worker_node.id]
         if len(self._worker_nodes) == 0:
             # TODO: Test this
             return
         self._prepare_rebalance()
 
     def _prepare_rebalance(self) -> None:
+        """
+        When a rebalance is required because of added and/or removed workers, we compute the desired state as if
+        we started from 0 user. So, if we were currently running 500 users, then the `_distribute_users` will
+        perform a fake ramp-up without any waiting and return the final distribution.
+        """
         users_on_workers, user_gen, worker_gen, active_users = self._distribute_users(self._current_user_count)
 
         self._users_on_workers = users_on_workers
+        self._active_users = active_users
+
+        # It's important to reset the generators by using the ones from `_distribute_users`
+        # so that the next iterations are smooth and continuous.
         self._user_generator = user_gen
         self._worker_node_generator = worker_gen
-        self._active_users = active_users
 
         self._rebalance = True
 

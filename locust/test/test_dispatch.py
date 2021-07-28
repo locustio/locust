@@ -2385,7 +2385,7 @@ class TestRemoveWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 2)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 2)
 
-        users_dispatcher.remove_worker(worker_nodes[1].id)
+        users_dispatcher.remove_worker(worker_nodes[1])
 
         # Re-balance
         ts = time.perf_counter()
@@ -2447,8 +2447,8 @@ class TestRemoveWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 2)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 2)
 
-        users_dispatcher.remove_worker(worker_nodes[1].id)
-        users_dispatcher.remove_worker(worker_nodes[2].id)
+        users_dispatcher.remove_worker(worker_nodes[1])
+        users_dispatcher.remove_worker(worker_nodes[2])
 
         # Re-balance
         ts = time.perf_counter()
@@ -2489,7 +2489,7 @@ class TestRemoveWorker(unittest.TestCase):
 
         list(users_dispatcher)
 
-        users_dispatcher.remove_worker(worker_nodes[1].id)
+        users_dispatcher.remove_worker(worker_nodes[1])
 
         users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
 
@@ -2554,8 +2554,8 @@ class TestRemoveWorker(unittest.TestCase):
 
         list(users_dispatcher)
 
-        users_dispatcher.remove_worker(worker_nodes[1].id)
-        users_dispatcher.remove_worker(worker_nodes[2].id)
+        users_dispatcher.remove_worker(worker_nodes[1])
+        users_dispatcher.remove_worker(worker_nodes[2])
 
         users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
 
@@ -2639,7 +2639,7 @@ class TestRemoveWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 4)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
 
-        users_dispatcher.remove_worker(worker_nodes[1].id)
+        users_dispatcher.remove_worker(worker_nodes[1])
 
         # Re-balance
         ts = time.perf_counter()
@@ -2705,8 +2705,8 @@ class TestRemoveWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 4)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
 
-        users_dispatcher.remove_worker(worker_nodes[1].id)
-        users_dispatcher.remove_worker(worker_nodes[2].id)
+        users_dispatcher.remove_worker(worker_nodes[1])
+        users_dispatcher.remove_worker(worker_nodes[2])
 
         # Re-balance
         ts = time.perf_counter()
