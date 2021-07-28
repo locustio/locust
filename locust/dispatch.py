@@ -236,7 +236,6 @@ class UsersDispatcher(Iterator):
             if self._current_user_count == 0 or self._current_user_count <= current_user_count_target:
                 return self._users_on_workers
 
-    # TODO: Test this
     def _distribute_users(
         self, target_user_count: int
     ) -> Tuple[dict, Generator[str, None, None], typing.Iterator["WorkerNode"], List[Tuple["WorkerNode", str]]]:

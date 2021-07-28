@@ -314,7 +314,7 @@ class Runner:
                 worker_nodes=[self._local_worker_node], user_classes=self.user_classes
             )
 
-        logger.info("Ramping to %d users using a %.2f spawn rate" % (user_count, spawn_rate))
+        logger.info("Ramping to %d users at a rate of %g per second" % (user_count, spawn_rate))
 
         self._users_dispatcher.new_dispatch(user_count, spawn_rate)
 
@@ -694,8 +694,6 @@ class MasterRunner(DistributedRunner):
         self._users_dispatcher.new_dispatch(target_user_count=user_count, spawn_rate=spawn_rate)
 
         try:
-            dispatched_users = None
-
             for dispatched_users in self._users_dispatcher:
                 dispatch_greenlets = Group()
                 for worker_node_id, worker_user_classes_count in dispatched_users.items():
@@ -724,7 +722,6 @@ class MasterRunner(DistributedRunner):
                     "Currently spawned users: %s" % _format_user_classes_count_for_log(self.reported_user_classes_count)
                 )
 
-            assert dispatched_users is not None
             self.target_user_classes_count = _aggregate_dispatched_users(dispatched_users)
 
         except KeyboardInterrupt:
@@ -771,11 +768,8 @@ class MasterRunner(DistributedRunner):
         if match is None:
             assert float(locust_wait_for_workers_report_after_ramp_up) >= 0
             return float(locust_wait_for_workers_report_after_ramp_up)
-
-        if match is not None:
+        else:
             return float(match.group("coeff")) * WORKER_REPORT_INTERVAL
-
-        assert False, "not supposed to reach that"
 
     def stop(self, send_stop_to_client: bool = True):
         if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
