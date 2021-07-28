@@ -314,7 +314,7 @@ class Runner:
                 worker_nodes=[self._local_worker_node], user_classes=self.user_classes
             )
 
-        logger.info("Ramping to %d users at a rate of %g per second" % (user_count, spawn_rate))
+        logger.info("Ramping to %d users at a rate of %.2f per second" % (user_count, spawn_rate))
 
         self._users_dispatcher.new_dispatch(user_count, spawn_rate)
 
