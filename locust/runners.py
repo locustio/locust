@@ -850,7 +850,7 @@ class MasterRunner(DistributedRunner):
                 if not msg.data:
                     logger.error(f"An old (pre 2.0) worker tried to connect ({client_id}). That's not going to work.")
                     continue
-                elif msg.data != __version__:
+                elif msg.data != __version__ and msg.data != -1:
                     logger.warning(
                         f"A worker ({client_id}) running a different version ({msg.data}) connected, master version is {__version__}"
                     )
