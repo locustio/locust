@@ -405,7 +405,7 @@ class LocustProcessIntegrationTest(TestCase):
                                 "--host",
                                 "https://test.com/",
                                 "--run-time",
-                                "5s",
+                                "2s",
                                 "--headless",
                                 "--html",
                                 html_report_file_path,
