@@ -1,0 +1,29 @@
+{% extends "index.html" %}
+
+{% block extended_start %}
+<h2>Customize your load test</h2>
+<form id="customize_start_form">
+    <label for="username">Username</label>
+    <input type="text" name="username" id="username" class="val" value=""/><br>
+    <label for="password">Password</label>
+    <input type="password" name="password" id="password" class="val" value=""/><br>
+    <button type="submit">Customize Load Test</button>
+</form>
+<div style="clear:right;"></div>
+{% endblock extended_start %}
+
+{% block extended_edit %}
+<h2>Customize your load test</h2>
+<form id="customize_edit_form">
+    <label for="username">Username</label>
+    <input type="text" name="username" id="username" class="val" value=""/><br>
+    <label for="password">Password</label>
+    <input type="password" name="password" id="password" class="val" value=""/><br>
+    <button type="submit">Customize Load Test</button>
+</form>
+<div style="clear:right;"></div>
+{% endblock extended_edit %}
+
+{% block extended_script %}
+<script type="text/javascript" src="./extend/static/extend_test_start.js"></script>
+{% endblock extended_script %}
