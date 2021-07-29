@@ -28,12 +28,13 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         worker_node2 = WorkerNode("2")
         worker_node3 = WorkerNode("3")
 
+        sleep_time = 0.2  # Speed-up test
+
         users_dispatcher = UsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=0.5)
-
-        sleep_time = 1 / 0.5
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -164,12 +165,13 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         worker_node2 = WorkerNode("2")
         worker_node3 = WorkerNode("3")
 
+        sleep_time = 0.2  # Speed-up test
+
         users_dispatcher = UsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=1)
-
-        sleep_time = 1
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -301,12 +303,13 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         worker_node3 = WorkerNode("3")
         worker_node4 = WorkerNode("4")
 
+        sleep_time = 0.2  # Speed-up test
+
         users_dispatcher = UsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3, worker_node4], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=1)
-
-        sleep_time = 1
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -446,12 +449,13 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         worker_node2 = WorkerNode("2")
         worker_node3 = WorkerNode("3")
 
+        sleep_time = 0.2  # Speed-up test
+
         users_dispatcher = UsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=2)
-
-        sleep_time = 1
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -534,12 +538,13 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         worker_node2 = WorkerNode("2")
         worker_node3 = WorkerNode("3")
 
+        sleep_time = 0.2  # Speed-up test
+
         users_dispatcher = UsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=2.4)
-
-        sleep_time = 2 / 2.4
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -622,12 +627,13 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         worker_node2 = WorkerNode("2")
         worker_node3 = WorkerNode("3")
 
+        sleep_time = 0.2  # Speed-up test
+
         users_dispatcher = UsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
-
-        sleep_time = 1
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -686,12 +692,13 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         worker_node2 = WorkerNode("2")
         worker_node3 = WorkerNode("3")
 
+        sleep_time = 0.2  # Speed-up test
+
         users_dispatcher = UsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=4)
-
-        sleep_time = 1
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -750,10 +757,13 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         worker_node2 = WorkerNode("2")
         worker_node3 = WorkerNode("3")
 
+        sleep_time = 0.2  # Speed-up test
+
         users_dispatcher = UsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=9)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -771,6 +781,28 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
         delta = time.perf_counter() - ts
         self.assertTrue(0 <= delta <= _TOLERANCE, delta)
+
+
+class TestWaitBetweenDispatch(unittest.TestCase):
+    def test_wait_between_dispatch(self):
+        class User1(User):
+            weight = 1
+
+        user_classes = [User1]
+
+        workers = [WorkerNode("1")]
+
+        for spawn_rate, expected_wait_between_dispatch in [
+            (0.5, 1 / 0.5),
+            (1, 1),
+            (2, 1),
+            (2.4, 2 / 2.4),
+            (4, 1),
+            (9, 1),
+        ]:
+            users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+            users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=spawn_rate)
+            self.assertEqual(users_dispatcher._wait_between_dispatch, expected_wait_between_dispatch)
 
 
 class TestRampDownUsersToZero(unittest.TestCase):
@@ -795,9 +827,10 @@ class TestRampDownUsersToZero(unittest.TestCase):
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
 
-        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=0.5)
+        sleep_time = 0.2  # Speed-up test
 
-        sleep_time = 1 / 0.5
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=0.5)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -933,9 +966,10 @@ class TestRampDownUsersToZero(unittest.TestCase):
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
 
-        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=1)
+        sleep_time = 0.2  # Speed-up test
 
-        sleep_time = 1
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=1)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -1071,9 +1105,10 @@ class TestRampDownUsersToZero(unittest.TestCase):
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
 
-        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=1)
+        sleep_time = 0.2  # Speed-up test
 
-        sleep_time = 1
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=1)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -1218,9 +1253,10 @@ class TestRampDownUsersToZero(unittest.TestCase):
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
 
-        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=2)
+        sleep_time = 0.2  # Speed-up test
 
-        sleep_time = 1
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=2)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -1308,9 +1344,10 @@ class TestRampDownUsersToZero(unittest.TestCase):
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
 
-        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=2.4)
+        sleep_time = 0.2  # Speed-up test
 
-        sleep_time = 2 / 2.4
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=2.4)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -1398,9 +1435,10 @@ class TestRampDownUsersToZero(unittest.TestCase):
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
 
-        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=3)
+        sleep_time = 0.2  # Speed-up test
 
-        sleep_time = 1
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -1464,9 +1502,10 @@ class TestRampDownUsersToZero(unittest.TestCase):
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
 
-        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=4)
+        sleep_time = 0.2  # Speed-up test
 
-        sleep_time = 1
+        users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=4)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -1530,7 +1569,10 @@ class TestRampDownUsersToZero(unittest.TestCase):
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
 
+        sleep_time = 0.2  # Speed-up test
+
         users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=9)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         ts = time.perf_counter()
         self.assertDictEqual(
@@ -1552,10 +1594,10 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
 class TestRampUpThenDownThenUp(unittest.TestCase):
     def test_ramp_up_then_down_then_up(self):
-        for user1_weight, user2_weight, user3_weight, user4_weight, user5_weight, user6_weight in [
-            (1, 1, 1, 1, 1, 1),
-            (1, 2, 3, 4, 5, 6),
-            (1, 3, 5, 7, 9, 12),
+        for user1_weight, user2_weight, user3_weight, user4_weight, user5_weight in [
+            (1, 1, 1, 1, 1),
+            (1, 2, 3, 4, 5),
+            (1, 3, 5, 7, 9),
         ]:
 
             class User1(User):
@@ -1573,16 +1615,13 @@ class TestRampUpThenDownThenUp(unittest.TestCase):
             class User5(User):
                 weight = user5_weight
 
-            class User6(User):
-                weight = user6_weight
-
-            all_user_classes = [User1, User2, User3, User4, User5, User6]
+            all_user_classes = [User1, User2, User3, User4, User5]
 
             for number_of_user_classes in range(1, len(all_user_classes) + 1):
                 user_classes = all_user_classes[:number_of_user_classes]
 
-                for max_user_count, min_user_count in [(30, 15), (45, 15), (54, 21), (14165, 1476)]:
-                    for worker_count in [1, 3, 4, 5, 9]:
+                for max_user_count, min_user_count in [(30, 15), (54, 21), (14165, 1476)]:
+                    for worker_count in [1, 3, 5, 9]:
                         workers = [WorkerNode(str(i + 1)) for i in range(worker_count)]
 
                         users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
@@ -1641,7 +1680,10 @@ class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(unittest.TestCase)
             users_dispatcher._wait_between_dispatch = 0
             list(users_dispatcher)
 
+            sleep_time = 0.2  # Speed-up test
+
             users_dispatcher.new_dispatch(target_user_count=user_count, spawn_rate=spawn_rate)
+            users_dispatcher._wait_between_dispatch = sleep_time
 
             ts = time.perf_counter()
             self.assertDictEqual(
@@ -2361,9 +2403,10 @@ class TestRemoveWorker(unittest.TestCase):
 
         users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
 
-        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        sleep_time = 0.2  # Speed-up test
 
-        sleep_time = 1
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         # Dispatch iteration 1
         ts = time.perf_counter()
@@ -2429,9 +2472,10 @@ class TestRemoveWorker(unittest.TestCase):
 
         users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
 
-        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        sleep_time = 0.2  # Speed-up test
 
-        sleep_time = 1
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         # Dispatch iteration 1
         ts = time.perf_counter()
@@ -2507,11 +2551,12 @@ class TestRemoveWorker(unittest.TestCase):
 
         self.assertTrue(users_dispatcher._rebalance)
 
+        sleep_time = 0.2  # Speed-up test
+
         users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         self.assertTrue(users_dispatcher._rebalance)
-
-        sleep_time = 1
 
         # Re-balance
         ts = time.perf_counter()
@@ -2581,11 +2626,12 @@ class TestRemoveWorker(unittest.TestCase):
 
         self.assertTrue(users_dispatcher._rebalance)
 
+        sleep_time = 0.2  # Speed-up test
+
         users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         self.assertTrue(users_dispatcher._rebalance)
-
-        sleep_time = 1
 
         # Re-balance
         ts = time.perf_counter()
@@ -2643,9 +2689,10 @@ class TestRemoveWorker(unittest.TestCase):
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
 
-        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        sleep_time = 0.2  # Speed-up test
 
-        sleep_time = 1
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         # Dispatch iteration 1
         ts = time.perf_counter()
@@ -2715,9 +2762,10 @@ class TestRemoveWorker(unittest.TestCase):
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
 
-        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        sleep_time = 0.2  # Speed-up test
 
-        sleep_time = 1
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         # Dispatch iteration 1
         ts = time.perf_counter()
@@ -2819,9 +2867,10 @@ class TestAddWorker(unittest.TestCase):
 
         users_dispatcher = UsersDispatcher(worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes)
 
-        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        sleep_time = 0.2  # Speed-up test
 
-        sleep_time = 1
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         # Dispatch iteration 1
         ts = time.perf_counter()
@@ -2887,9 +2936,10 @@ class TestAddWorker(unittest.TestCase):
 
         users_dispatcher = UsersDispatcher(worker_nodes=[worker_nodes[0]], user_classes=user_classes)
 
-        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        sleep_time = 0.2  # Speed-up test
 
-        sleep_time = 1
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         # Dispatch iteration 1
         ts = time.perf_counter()
@@ -2965,11 +3015,12 @@ class TestAddWorker(unittest.TestCase):
 
         self.assertTrue(users_dispatcher._rebalance)
 
+        sleep_time = 0.2  # Speed-up test
+
         users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         self.assertTrue(users_dispatcher._rebalance)
-
-        sleep_time = 1
 
         # Re-balance
         ts = time.perf_counter()
@@ -3043,11 +3094,12 @@ class TestAddWorker(unittest.TestCase):
 
         self.assertTrue(users_dispatcher._rebalance)
 
+        sleep_time = 0.2  # Speed-up test
+
         users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         self.assertTrue(users_dispatcher._rebalance)
-
-        sleep_time = 1
 
         # Re-balance
         ts = time.perf_counter()
@@ -3113,9 +3165,10 @@ class TestAddWorker(unittest.TestCase):
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
 
-        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        sleep_time = 0.2  # Speed-up test
 
-        sleep_time = 1
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         # Dispatch iteration 1
         ts = time.perf_counter()
@@ -3185,9 +3238,10 @@ class TestAddWorker(unittest.TestCase):
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
 
-        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        sleep_time = 0.2  # Speed-up test
 
-        sleep_time = 1
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = sleep_time
 
         # Dispatch iteration 1
         ts = time.perf_counter()

@@ -538,17 +538,17 @@ class TestLocustRunner(LocustTestCase):
         ts = time.perf_counter()
         response = requests.post(
             "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
-            data={"user_count": 20, "spawn_rate": 1, "host": "https://localhost"},
+            data={"user_count": 20, "spawn_rate": 5, "host": "https://localhost"},
         )
         self.assertEqual(200, response.status_code)
         self.assertTrue(0 <= time.perf_counter() - ts <= 1, "swarm endpoint is blocking")
 
         ts = time.perf_counter()
         while local_runner.state != STATE_RUNNING:
-            self.assertTrue(time.perf_counter() - ts <= 20, local_runner.state)
+            self.assertTrue(time.perf_counter() - ts <= 4, local_runner.state)
             gevent.sleep(0.1)
 
-        self.assertTrue(19 <= time.perf_counter() - ts <= 21)
+        self.assertTrue(3 <= time.perf_counter() - ts <= 5)
 
         self.assertEqual(local_runner.user_count, 20)
 
@@ -830,12 +830,8 @@ class TestMasterWorkerRunners(LocustTestCase):
             def tick(self):
                 run_time = self.get_run_time()
                 if run_time < 10:
-                    return 5, 3
-                elif run_time < 20:
-                    return 10, 3
-                elif run_time < 40:
                     return 15, 3
-                elif run_time < 60:
+                elif run_time < 30:
                     return 5, 10
                 else:
                     return None
@@ -878,54 +874,6 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.assertTrue(time.time() - ts <= 1, master.state)
                 sleep()
             sleep(5 - (time.time() - ts))  # runtime = 5s
-            self.assertEqual(STATE_RUNNING, master.state)
-            w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
-            w2 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
-            w3 = {"TestUser1": 0, "TestUser2": 0, "TestUser3": 1}
-            w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 0}
-            w5 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 0}
-            self.assertDictEqual(w1, workers[0].user_classes_count)
-            self.assertDictEqual(w2, workers[1].user_classes_count)
-            self.assertDictEqual(w3, workers[2].user_classes_count)
-            self.assertDictEqual(w4, workers[3].user_classes_count)
-            self.assertDictEqual(w5, workers[4].user_classes_count)
-            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_classes_count)
-            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_classes_count)
-            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
-            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
-            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
-            sleep(5)  # runtime = 10s
-
-            # Second stage
-            ts = time.time()
-            while master.state != STATE_SPAWNING:
-                self.assertTrue(time.time() - ts <= 1, master.state)
-                sleep()
-            sleep(5 - (time.time() - ts))  # runtime = 15s
-            self.assertEqual(STATE_RUNNING, master.state)
-            w1 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 1}
-            w2 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
-            w3 = {"TestUser1": 0, "TestUser2": 1, "TestUser3": 1}
-            w4 = {"TestUser1": 1, "TestUser2": 0, "TestUser3": 1}
-            w5 = {"TestUser1": 1, "TestUser2": 1, "TestUser3": 0}
-            self.assertDictEqual(w1, workers[0].user_classes_count)
-            self.assertDictEqual(w2, workers[1].user_classes_count)
-            self.assertDictEqual(w3, workers[2].user_classes_count)
-            self.assertDictEqual(w4, workers[3].user_classes_count)
-            self.assertDictEqual(w5, workers[4].user_classes_count)
-            self.assertDictEqual(w1, master.clients[workers[0].client_id].user_classes_count)
-            self.assertDictEqual(w2, master.clients[workers[1].client_id].user_classes_count)
-            self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
-            self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
-            self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
-            sleep(5)  # runtime = 20s
-
-            # Third stage
-            ts = time.time()
-            while master.state != STATE_SPAWNING:
-                self.assertTrue(time.time() - ts <= 1, master.state)
-                sleep()
-            sleep(10 - (time.time() - ts))  # runtime = 30s
             ts = time.time()
             while master.state != STATE_RUNNING:
                 self.assertTrue(time.time() - ts <= 1, master.state)
@@ -946,14 +894,14 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
             self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
             self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
-            sleep(10 - (time.time() - ts))  # runtime = 40s
+            sleep(5 - (time.time() - ts))  # runtime = 10s
 
             # Fourth stage
             ts = time.time()
             while master.state != STATE_SPAWNING:
                 self.assertTrue(time.time() - ts <= 1, master.state)
                 sleep()
-            sleep(5 - (time.time() - ts))  # runtime = 45s
+            sleep(5 - (time.time() - ts))  # runtime = 15s
 
             # Fourth stage - Excess TestUser1 have been stopped but
             #                TestUser2/TestUser3 have not reached stop timeout yet, so
@@ -978,7 +926,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
             self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
             self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
-            sleep(1 - delta)  # runtime = 46s
+            sleep(1 - delta)  # runtime = 16s
 
             # Fourth stage - All users are now at the desired number
             ts = time.time()
@@ -1001,12 +949,12 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertDictEqual(w3, master.clients[workers[2].client_id].user_classes_count)
             self.assertDictEqual(w4, master.clients[workers[3].client_id].user_classes_count)
             self.assertDictEqual(w5, master.clients[workers[4].client_id].user_classes_count)
-            sleep(10 - delta)  # runtime = 56s
+            sleep(10 - delta)  # runtime = 26s
 
             # Sleep stop_timeout and make sure the test has stopped
-            sleep(5)  # runtime = 61s
+            sleep(5)  # runtime = 31s
             self.assertEqual(STATE_STOPPING, master.state)
-            sleep(stop_timeout)  # runtime = 66s
+            sleep(stop_timeout)  # runtime = 36s
 
             # We wait for "stop_timeout" seconds to let the workers reconnect as "ready" with the master.
             # The reason for waiting an additional "stop_timeout" when we already waited for "stop_timeout"
@@ -1254,12 +1202,12 @@ class TestMasterWorkerRunners(LocustTestCase):
         class TestShape(LoadTestShape):
             def tick(self):
                 run_time = self.get_run_time()
-                if run_time < 10:
-                    return 5, 1
-                elif run_time < 20:
-                    return 10, 1
-                elif run_time < 30:
-                    return 15, 1
+                if run_time < 5:
+                    return 5, 2.5
+                elif run_time < 10:
+                    return 10, 2.5
+                elif run_time < 15:
+                    return 15, 2.5
                 else:
                     return None
 
@@ -1306,22 +1254,22 @@ class TestMasterWorkerRunners(LocustTestCase):
             tolerance = 1  # in s
             for (t1, state1, user_count1), (t2, state2, user_count2) in zip(statuses[:-1], statuses[1:]):
                 if state1 == STATE_SPAWNING and state2 == STATE_RUNNING and stage == 1:
-                    self.assertTrue(5 - tolerance <= t2 <= 5 + tolerance)
+                    self.assertTrue(2.5 - tolerance <= t2 <= 2.5 + tolerance)
                 elif state1 == STATE_RUNNING and state2 == STATE_SPAWNING and stage == 1:
-                    self.assertTrue(10 - tolerance <= t2 <= 10 + tolerance)
+                    self.assertTrue(5 - tolerance <= t2 <= 5 + tolerance)
                     stage += 1
                 elif state1 == STATE_SPAWNING and state2 == STATE_RUNNING and stage == 2:
-                    self.assertTrue(15 - tolerance <= t2 <= 15 + tolerance)
+                    self.assertTrue(7.5 - tolerance <= t2 <= 7.5 + tolerance)
                 elif state1 == STATE_RUNNING and state2 == STATE_SPAWNING and stage == 2:
-                    self.assertTrue(20 - tolerance <= t2 <= 20 + tolerance)
+                    self.assertTrue(10 - tolerance <= t2 <= 10 + tolerance)
                     stage += 1
                 elif state1 == STATE_SPAWNING and state2 == STATE_RUNNING and stage == 3:
-                    self.assertTrue(25 - tolerance <= t2 <= 25 + tolerance)
+                    self.assertTrue(12.5 - tolerance <= t2 <= 12.5 + tolerance)
                 elif state1 == STATE_RUNNING and state2 == STATE_SPAWNING and stage == 3:
-                    self.assertTrue(30 - tolerance <= t2 <= 30 + tolerance)
+                    self.assertTrue(15 - tolerance <= t2 <= 15 + tolerance)
                     stage += 1
                 elif state1 == STATE_RUNNING and state2 == STATE_STOPPED and stage == 3:
-                    self.assertTrue(30 - tolerance <= t2 <= 30 + tolerance)
+                    self.assertTrue(15 - tolerance <= t2 <= 15 + tolerance)
 
     def test_swarm_endpoint_is_non_blocking(self):
         class TestUser1(User):
@@ -1355,17 +1303,17 @@ class TestMasterWorkerRunners(LocustTestCase):
             ts = time.perf_counter()
             response = requests.post(
                 "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
-                data={"user_count": 20, "spawn_rate": 1, "host": "https://localhost"},
+                data={"user_count": 20, "spawn_rate": 5, "host": "https://localhost"},
             )
             self.assertEqual(200, response.status_code)
             self.assertTrue(0 <= time.perf_counter() - ts <= 1, "swarm endpoint is blocking")
 
             ts = time.perf_counter()
             while master.state != STATE_RUNNING:
-                self.assertTrue(time.perf_counter() - ts <= 20, master.state)
+                self.assertTrue(time.perf_counter() - ts <= 4, master.state)
                 gevent.sleep(0.1)
 
-            self.assertTrue(19 <= time.perf_counter() - ts <= 21)
+            self.assertTrue(3 <= time.perf_counter() - ts <= 5)
 
             self.assertEqual(master.user_count, 20)
 
