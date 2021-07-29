@@ -1409,6 +1409,19 @@ class TestMasterRunner(LocustTestCase):
             server.mocked_send(Message("quit", None, "zeh_fake_client3"))
             self.assertEqual(3, len(master.clients))
 
+    def test_worker_connect_with_special_versions(self):
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner()
+            server.mocked_send(Message("client_ready", None, "1.x_style_client_should_not_be_allowed"))
+            self.assertEqual(1, len(self.mocked_log.error))
+            self.assertEqual(0, len(master.clients))
+            server.mocked_send(Message("client_ready", "abcd", "other_version_mismatch_should_just_give_a_warning"))
+            self.assertEqual(1, len(self.mocked_log.warning))
+            self.assertEqual(1, len(master.clients))
+            server.mocked_send(Message("client_ready", -1, "version_check_bypass_should_not_warn"))
+            self.assertEqual(1, len(self.mocked_log.warning))
+            self.assertEqual(2, len(master.clients))
+
     def test_worker_stats_report_median(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner()
