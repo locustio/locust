@@ -121,6 +121,10 @@ A working example of extending the web UI, complete with HTML and Javascript exa
 in the `examples directory <https://github.com/locustio/locust/tree/master/examples>`_ of the Locust 
 source code.
 
+Another working example of how to change the web UI to customize the start of your load tests can be found in the
+`custom_test_start directory <https://github.com/locustio/locust/tree/master/examples/custom_test_start>`_ of the
+Locust source code.
+
 
 
 Run a background greenlet
