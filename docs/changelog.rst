@@ -15,10 +15,12 @@ Other potentially breaking API changes
 --------------------------------------
 * Change the default User weight to 1 instead of 10 (the old default made no sense)
 * Fire test_start and test_stop events on workers too (previously they were only fired on master/standalone instances)
+* Workers now send their version number to master. Master will warn about version differences, and pre 2.0-versions will not be allowed to connect at all (because they would not work anyway)
 * Update Flask dependency to 2.0
 
-Full list of merged PR:s (and prerelease version they were introduced in)
--------------------------------------------------------------------------
+Significant merged PR:s (and prerelease version they were introduced in)
+------------------------------------------------------------------------
+* Allow workers to bypass version check by sending -1 as version (2.0.0) https://github.com/locustio/locust/pull/1830
 * Improve logging messages and clean up code after dispatch refactoring (2.0.0b4) https://github.com/locustio/locust/pull/1826
 * Remove `user_classes_count` from heartbeat payload (2.0.0b4) https://github.com/locustio/locust/pull/1825
 * Add option to set concurrency of FastHttpUser/Session (2.0.0b3) https://github.com/locustio/locust/pull/1812/
@@ -29,6 +31,8 @@ Full list of merged PR:s (and prerelease version they were introduced in)
 * Change the default User weight to 1 instead of 10 (2.0.0b1) https://github.com/locustio/locust/pull/1803
 * Upgrade to Flask 2 (2.0.0b1) https://github.com/locustio/locust/pull/1764
 * Move User selection responsibility from worker to master in order to fix unbalanced distribution of users and uneven ramp-up (2.0.0b0) https://github.com/locustio/locust/pull/1621
+
+Some of these are not really that significant and may be removed from this list at a later time, once 2.0 has stabilised.
 
 1.6.0
 =====

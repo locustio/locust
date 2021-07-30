@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.0.0](https://github.com/locustio/locust/tree/2.0.0) (2021-07-29)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.0.0b4...2.0.0)
+
+**Merged pull requests:**
+
+- Speed up tests [\#1831](https://github.com/locustio/locust/pull/1831) ([mboutet](https://github.com/mboutet))
+- Allow workers to bypass version check by sending -1 as version [\#1830](https://github.com/locustio/locust/pull/1830) ([cyberw](https://github.com/cyberw))
+
 ## [2.0.0b4](https://github.com/locustio/locust/tree/2.0.0b4) (2021-07-28)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.0.0b3...2.0.0b4)
