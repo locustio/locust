@@ -1,3 +1,5 @@
+# make sure you use grpc version 1.39.0 or later,
+# because of https://github.com/grpc/grpc/issues/15880 that affected earlier versions
 import grpc
 import hello_pb2_grpc
 import hello_pb2
@@ -63,12 +65,6 @@ class GrpcUser(User):
         self._channel_closed = False
         stub = self.stub_class(self._channel)
         self.client = GrpcClient(stub)
-
-    def stop(self, force=False):
-        self._channel_closed = True
-        time.sleep(1)
-        self._channel.close()
-        super().stop(force=True)
 
 
 class HelloGrpcUser(GrpcUser):
