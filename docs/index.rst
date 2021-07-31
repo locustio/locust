@@ -64,7 +64,7 @@ Further reading / knowledgebase
 .. toctree ::
     :maxdepth: 1
     
-    developing-locust-itself
+    developing-locust
     further-reading
 
 

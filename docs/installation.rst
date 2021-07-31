@@ -31,11 +31,5 @@ If you need some feature or fix not yet part of a release:
 
 Install for development
 -----------------------
-If you want to contribute to the Locust project, fork it on `Github <https://github.com/locustio/locust/>`_, clone the repo and then install it in editable mode:
 
-.. code-block:: console
-
-    $ git clone git://github.com/<your name>/locust.git
-    $ pip3 install -e locust/
-
-Now the ``locust`` command will run *your* code with no need for reinstalling after making changes.
+If you want to modify Locust or contribute to the project, see :ref:`developing-locust`.

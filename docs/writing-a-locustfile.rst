@@ -4,8 +4,6 @@
 Writing a locustfile
 ======================
 
-A locustfile is a normal python file. The only requirement is that it declares at least one class that inherits from the class :py:class:`User <locust.User>`. 
-
 User class
 ==========
 
