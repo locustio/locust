@@ -94,7 +94,6 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
                     self.assertEqual(html_to_option[html_name][1], start_value)
                     self.assertEqual(html_to_option[html_name][1], edit_value)
                 else:
-                    print(f"start value was {start_value} for {html_name}")
                     self.assertEqual("1", start_value, msg=f"start value was {start_value} for {html_name}")
                     self.assertEqual("1", edit_value, msg=f"edit value was {edit_value} for {html_name}")
 
