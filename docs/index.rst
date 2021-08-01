@@ -40,8 +40,7 @@ Running your Locust tests
     configuration
     running-locust-distributed
     running-locust-docker
-    running-locust-without-web-ui
-    increase-performance
+    running-without-web-ui
 
 
 Other functionalities
@@ -50,9 +49,10 @@ Other functionalities
 .. toctree ::
     :maxdepth: 2
 
-    generating-custom-load-shape
+    custom-load-shape
     retrieving-stats
     testing-other-systems
+    increase-performance
     extending-locust
     logging
     use-as-lib

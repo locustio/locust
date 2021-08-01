@@ -1,7 +1,7 @@
-.. _running-locust-without-web-ui:
+.. _running-without-web-ui:
 
 =================================
-Running Locust without the web UI
+Running without the web UI
 =================================
 
 You can run locust without the web UI - for example if you want to run it in some automated flow, 

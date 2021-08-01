@@ -1,7 +1,7 @@
 .. _running-locust-distributed:
 
 ===========================
-Running Locust distributed
+Distributed load generation
 ===========================
 
 Once a single machine isn't enough to simulate the number of users that you need, Locust supports
@@ -142,12 +142,6 @@ Running Locust distributed without the web UI
 =============================================
 
 See :ref:`running-locust-distributed-without-web-ui`
-
-
-Generating a custom load shape using a `LoadTestShape` class
-============================================================
-
-See :ref:`generating-custom-load-shape`
 
 
 Increase Locust's performance

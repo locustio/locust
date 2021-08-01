@@ -49,7 +49,7 @@ You can also view the results as charts:
 
 .. note::
 
-    Intepreting perfomance test results is quite complex (and mostly out of scope for this manual), but if your graphs start looking like this, your target service/system cannot handle the load you are hitting it with (it is overloaded or "saturated")
+    Intepreting perfomance test results is quite complex (and mostly out of scope for this manual), but if your graphs start looking like this, the most likely reason is that your target service/system cannot handle the load you are hitting it with (it is overloaded or "saturated")
 
     The clearest sign of this is that when we get to around 9 users, response times start increasing so fast that the requests per second-curve flattens out, even though new users are still being added.
 
@@ -79,6 +79,8 @@ Using the Locust web UI is entirely optional. You can supply the load parameters
     ...
     [2021-07-24 10:44:42,484] .../INFO/locust.runners: All users spawned: {"HelloWorldUser": 10} (10 total users)
     ...
+
+See :ref:`running-without-web-ui` for more details.
 
 .. note::
 
