@@ -1,11 +1,16 @@
 # Changelog
 
-## [2.0.0](https://github.com/locustio/locust/tree/2.0.0) (2021-07-29)
+## [2.0.0](https://github.com/locustio/locust/tree/2.0.0) (2021-08-01)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.0.0b4...2.0.0)
 
+**Fixed bugs:**
+
+- User Count Drops when Worker Abruptly Leaves The Test In Distributed Mode [\#1766](https://github.com/locustio/locust/issues/1766)
+
 **Merged pull requests:**
 
+- update grpc example, because grpc gevent issue has been fixed [\#1834](https://github.com/locustio/locust/pull/1834) ([cyberw](https://github.com/cyberw))
 - Speed up tests [\#1831](https://github.com/locustio/locust/pull/1831) ([mboutet](https://github.com/mboutet))
 - Allow workers to bypass version check by sending -1 as version [\#1830](https://github.com/locustio/locust/pull/1830) ([cyberw](https://github.com/cyberw))
 
