@@ -94,8 +94,8 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
                     self.assertEqual(html_to_option[html_name][1], start_value)
                     self.assertEqual(html_to_option[html_name][1], edit_value)
                 else:
-                    self.assertEqual("", start_value)
-                    self.assertEqual("", edit_value)
+                    self.assertEqual("1", start_value, msg=f"start value was {start_value} for {html_name}")
+                    self.assertEqual("1", edit_value, msg=f"edit value was {edit_value} for {html_name}")
 
     def test_stats_no_data(self):
         self.assertEqual(200, requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).status_code)

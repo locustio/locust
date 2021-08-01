@@ -4,9 +4,9 @@
 Using Locust as a library
 ==========================
 
-It's possible to use Locust as a library, instead of running Locust using the ``locust`` command.
+It is possible to start a load test from your own Python code, instead of running Locust using the ``locust`` command.
 
-To run Locust as a library you need to create an :py:class:`Environment <locust.env.Environment>` instance:
+Start by creating an :py:class:`Environment <locust.env.Environment>` instance:
 
 .. code-block:: python
 
@@ -26,6 +26,10 @@ The :py:class:`Environment <locust.env.Environment>` instance's
     env.runner.start(5000, spawn_rate=20)
     env.runner.greenlet.join()
 
+.. note::
+
+    Do not attempt to create a master runner and worker(s) in the same Python process. It does not work, and even if it did, it would not give you better performance than running a single LocalRunner. Every worker *must* run in its own process, there is no way around that.
+
 We could also use the :py:class:`Environment <locust.env.Environment>` instance's 
 :py:meth:`create_web_ui <locust.env.Environment.create_web_ui>` method to start a Web UI that can be used 
 to view the stats, and to control the runner (e.g. start and stop load tests):
@@ -35,7 +39,6 @@ to view the stats, and to control the runner (e.g. start and stop load tests):
     env.create_local_runner()
     env.create_web_ui()
     env.web_ui.greenlet.join()
-
 
 Full example
 ============

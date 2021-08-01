@@ -136,7 +136,7 @@ def main():
 
     if options.step_time or options.step_load or options.step_users or options.step_clients:
         sys.stderr.write(
-            "The step load feature was removed in Locust 1.3. You can achieve similar results using a LoadTestShape class. See https://docs.locust.io/en/stable/generating-custom-load-shape.html\n"
+            "The step load feature was removed in Locust 1.3. You can achieve similar results using a LoadTestShape class. See https://docs.locust.io/en/stable/custom-load-shape.html\n"
         )
         sys.exit(1)
 

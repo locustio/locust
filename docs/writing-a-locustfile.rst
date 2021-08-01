@@ -4,7 +4,116 @@
 Writing a locustfile
 ======================
 
-A locustfile is a normal python file. The only requirement is that it declares at least one class that inherits from the class :py:class:`User <locust.User>`. 
+Now, lets look at a more complete/realistic example of what your tests might look like:
+
+.. code-block:: python
+
+    import time
+    from locust import HttpUser, task, between
+
+    class QuickstartUser(HttpUser):
+        wait_time = between(1, 5)
+
+        @task
+        def hello_world(self):
+            self.client.get("/hello")
+            self.client.get("/world")
+        
+        @task(3)
+        def view_items(self):
+            for item_id in range(10):
+                self.client.get(f"/item?id={item_id}", name="/item")
+                time.sleep(1)
+        
+        def on_start(self):
+            self.client.post("/login", json={"username":"foo", "password":"bar"})
+
+
+.. rubric:: Let's break it down
+
+.. code-block:: python
+
+    import time
+    from locust import HttpUser, task, between
+
+A locust file is just a normal Python module, it can import code from other files or packages.
+
+.. code-block:: python
+
+    class QuickstartUser(HttpUser):
+
+Here we define a class for the users that we will be simulating. It inherits from 
+:py:class:`HttpUser <locust.HttpUser>` which gives each user a ``client`` attribute,
+which is an instance of :py:class:`HttpSession <locust.clients.HttpSession>`, that 
+can be used to make HTTP requests to the target system that we want to load test. When a test starts, 
+locust will create an instance of this class for every user that it simulates, and each of these 
+users will start running within their own green gevent thread.
+
+For a file to be a valid locustfile it must contain at least one class inheriting from :py:class:`User <locust.User>`. 
+
+.. code-block:: python
+
+    wait_time = between(1, 5)
+
+Our class defines a ``wait_time`` that will make the simulated users wait between 1 and 5 seconds after each task (see below)
+is executed. For more info see :ref:`wait-time`.
+
+.. code-block:: python
+
+    @task
+    def hello_world(self):
+        ...
+
+Methods decorated with ``@task`` are the core of your locust file. For every running user, 
+Locust creates a greenlet (micro-thread), that will call those methods.
+
+.. code-block:: python
+
+    @task
+    def hello_world(self):
+        self.client.get("/hello")
+        self.client.get("/world")
+    
+    @task(3)
+    def view_items(self):
+    ...
+
+We've declared two tasks by decorating two methods with ``@task``, one of which has been given a higher weight (3). 
+When our ``QuickstartUser`` runs it'll pick one of the declared tasks - in this case either ``hello_world`` or 
+``view_items`` - and execute it. Tasks are picked at random, but you can give them different weighting. The above 
+configuration will make Locust three times more likely to pick ``view_items`` than ``hello_world``. When a task has 
+finished executing, the User will then sleep during it's wait time (in this case between 1 and 5 seconds). 
+After it's wait time it'll pick a new task and keep repeating that.
+
+Note that only methods decorated with ``@task`` will be picked, so you can define your own internal helper methods any way you like.
+
+.. code-block:: python
+
+    self.client.get("/hello")
+
+The ``self.client`` attribute makes it possible to make HTTP calls that will be logged by Locust. For information on how 
+to make other kinds of requests, validate the response, etc, see 
+`Using the HTTP Client <writing-a-locustfile.html#using-the-http-client>`_.
+
+.. code-block:: python
+
+    @task(3)
+    def view_items(self):
+        for item_id in range(10)
+            self.client.get(f"/item?id={item_id}", name="/item")
+            time.sleep(1)
+
+In the ``view_items`` task we load 10 different URLs by using a variable query parameter. 
+In order to not get 10 separate entries in Locust's statistics - since the stats is grouped on the URL - we use 
+the :ref:`name parameter <name-parameter>` to group all those requests under an entry named ``"/item"`` instead.
+
+.. code-block:: python
+
+    def on_start(self):
+        self.client.post("/login", json={"username":"foo", "password":"bar"})
+
+Additionally we've declared an `on_start` method. A method with this name will be called for each simulated 
+user when they start. For more info see :ref:`on-start-on-stop`.
 
 User class
 ==========
@@ -20,15 +129,13 @@ wait_time attribute
 
 A User's :py:attr:`wait_time <locust.User.wait_time>` method is an optional attribute used to determine
 how long a simulated user should wait between executing tasks. If no :py:attr:`wait_time <locust.User.wait_time>` 
-is specified, a new task will be executed as soon as one finishes.
+is specified, the next task will be executed as soon as one finishes.
 
 There are three built in wait time functions: 
 
 * :py:attr:`constant <locust.wait_time.constant>` for a fixed amount of time
 
 * :py:attr:`between <locust.wait_time.between>` for a random time between a min and max value
-
-* :py:attr:`constant_pacing <locust.wait_time.constant_pacing>` for an adaptive time that ensures the task runs (at most) once every X seconds
 
 For example, to make each user wait between 0.5 and 10 seconds between every task execution:
 
@@ -42,6 +149,10 @@ For example, to make each user wait between 0.5 and 10 seconds between every tas
             print("executing my_task")
 
         wait_time = between(0.5, 10)
+
+* :py:attr:`constant_pacing <locust.wait_time.constant_pacing>` for an adaptive time that ensures the task runs (at most) once every X seconds
+
+This is very useful if you want to target a specific throughput. For example, if you want Locust to run 500 task iterations per second at peak load, you could use `wait_time = constant_pacing(10)` and a user count of 5000. If the time for each iteration exceeds 10 seconds then you'll get lower throughput. Note that as wait time is applied *after* task execution, if you have a high spawn rate/ramp up you may slightly exceed your target during rampup.
 
 It's also possible to declare your own wait_time method directly on your class. 
 For example, the following User class would sleep for one second, then two, then three, etc.
@@ -57,7 +168,6 @@ For example, the following User class would sleep for one second, then two, then
 
         ...
     
-
 
 weight attribute
 ----------------

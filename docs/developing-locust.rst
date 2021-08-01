@@ -1,19 +1,34 @@
-=======================================
-Developing Locust itself
-=======================================
+.. _developing-locust:
 
-Here's useful information on making changes to Locust.
+=================
+Developing Locust
+=================
 
+You want to contribute to Locust? Great! Here is a list of `open bugs/feature requests <https://github.com/locustio/locust/>`_.
+
+Install Locust for development
+==============================
+
+Fork Locust on `Github <https://github.com/locustio/locust/>`_ and then run
+
+.. code-block:: console
+
+    $ git clone git://github.com/<YourName>/locust.git # clone the repo
+    $ pip3 install -e locust/                          # install in editable mode
+
+Now the ``locust`` command will run *your* code with no need for reinstalling after making changes.
+
+Before you open a pull request, make sure the tests work. And if you are adding a feature, make sure it is documented.
 
 Running tests
 =============
 
-To be able to run Locust's test on different Python versions we use `tox <https://tox.readthedocs.io/en/latest/>`_. 
+To be able to run Locust's test on different Python versions we use `tox <https://tox.readthedocs.io/en/stable/>`_. 
 You can install tox by running:
 
 .. code-block:: console
 
-    pip install tox
+    pip3 install tox
 
 Then you can run the tests by just invoking tox in the Locust project root directory:
 
@@ -30,7 +45,7 @@ the following command in the Locust project's root directory:
 
 .. code-block:: console
 
-    pip install -r docs/requirements.txt
+    pip3 install -r docs/requirements.txt
 
 Then you can build the documentation locally using:
 

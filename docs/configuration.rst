@@ -66,7 +66,7 @@ Example:
 
     Configuration values are read (overridden) in the following order:
     
-    .. code-block::
+    .. code-block:: console
         
         ~/locust.conf -> ./locust.conf -> (file specified using --conf) -> env vars -> cmd args
 

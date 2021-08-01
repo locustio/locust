@@ -59,17 +59,17 @@
                 <h2>Start new load test</h2>
                 <form action="./swarm" method="POST" id="swarm_form">
                     {% if is_shape %}
-                        <label for="user_count">Number of total users to simulate</label>
+                        <label for="user_count">Number of users <span style="color:#8a8a8a;">(peak concurrency)</span></label>
                         <input type="text" name="user_count" id="user_count" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
                         <input type="hidden" name="user_count" id="user_count" value="0"/><br>
-                        <label for="spawn_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
+                        <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users started/second)</span></label>
                         <input type="text" name="spawn_rate" id="spawn_rate" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
                         <input type="hidden" name="spawn_rate" id="spawn_rate" value="0"/><br>
                     {% else %}
-                        <label for="user_count">Number of total users to simulate</label>
-                        <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
-                        <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                        <input type="text" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "" }}"/><br>
+                        <label for="user_count">Number of users <span style="color:#8a8a8a;">(peak concurrency)</span></label>
+                        <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "1" }}" onfocus="this.select()"/><br>
+                        <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users started/second)</span></label>
+                        <input type="text" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "1" }}" onfocus="this.select()"/><br>
                     {% endif %}
                     <label for="host">
                         Host <span style="color:#8a8a8a;">(e.g. http://www.example.com)</span>
@@ -77,7 +77,7 @@
                             <span style="color:#8a8a8a; font-size:12px;">(setting this will override the host on all User classes)</span></label>
                         {% endif %}
                     </label>
-                    <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or "" }}"/><br>
+                    <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or "" }}" onfocus="this.select()"/><br>
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>
@@ -92,15 +92,15 @@
                 <h2>Edit running load test</h2>
                 <form action="./swarm" method="POST" id="edit_form">
                     {% if is_shape %}
-                        <label for="new_user_count">Number of users to simulate</label>
+                        <label for="new_user_count">Number of users (peak concurrency)</label>
                         <input type="text" name="user_count" id="new_user_count" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
-                        <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users spawned or stopped per second)</span></label>
+                        <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users added/stopped per second)</span></label>
                         <input type="text" name="spawn_rate" id="new_spawn_rate" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
                     {% else %}
-                        <label for="new_user_count">Number of users to simulate</label>
-                        <input type="text" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "" }}"/><br>
-                        <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users to start per second (or stop))</span></label>
-                        <input type="text" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "" }}"/><br>
+                        <label for="new_user_count">Number of users (peak concurrency)</label>
+                        <input type="text" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "1" }}" onfocus="this.select()"/><br>
+                        <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users added/stopped per second)</span></label>
+                        <input type="text" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "1" }}" onfocus="this.select()"/><br>
                     {% endif %}
                     {% if is_shape %}
                         <button type="submit" disabled>Start swarming</button>
