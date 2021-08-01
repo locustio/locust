@@ -42,6 +42,3 @@ Note: In order to make the `grpcio` Python library gevent-compatible the followi
 import grpc.experimental.gevent as grpc_gevent
 grpc_gevent.init_gevent()
 ```
-
-Note: It is important to close the gRPC channel before stopping the User greenlet; otherwise Locust may not be able to stop executing. 
-This is due to an issue in `grpcio` (see `grpc#15880 <https://github.com/grpc/grpc/issues/15880>`_).
