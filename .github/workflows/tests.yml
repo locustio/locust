@@ -44,7 +44,7 @@ jobs:
       - run: tox -e ${{ matrix.tox }}
   
   verify_docker_build:
-    name: Verify Docker image build
+    name: Verify docker, push if on master
     needs: tests
     runs-on: ubuntu-latest
     steps:
@@ -53,8 +53,22 @@ jobs:
         with:
           context: ./
           file: ./Dockerfile
-          push: false
-          tags: locustio/locust:latest
+          push: ${{ github.ref == 'refs/heads/master' }}
+          tags: locustio/locust:master
+
+  docker_tagged:
+    name: Push to version-specific tag, also push latest if on master
+    needs: tests
+    runs-on: ubuntu-latest
+    if: startsWith(github.event.ref, 'refs/tags')
+    steps:
+      - uses: actions/checkout@v2
+      - uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./Dockerfile
+          push: true
+          tags: locustio/locust:${{ github.event.release.tag_name }}${{ (github.ref == 'refs/heads/master' && ',locustio/locust:latest') || '' }}
   
   release:
     name: Release to PyPI
@@ -80,3 +94,10 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Push to docker
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./Dockerfile
+          push: true
+          tags: locustio/locust:${{ github.event.release.tag_name }} # tags the image based on git tag name instead of package version, but that should be good enough.
