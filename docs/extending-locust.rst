@@ -98,8 +98,8 @@ to the Flask app instance and use that to set up a new route::
     from locust import events
     
     @events.init.add_listener
-    def on_locust_init(web_ui, **kw):
-        @web_ui.app.route("/added_page")
+    def on_locust_init(environment, **kw):
+        @environment.web_ui.app.route("/added_page")
         def my_added_page():
             return "Another page"
 
