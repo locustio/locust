@@ -68,8 +68,8 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          tags: locustio/locust:${{ github.event.release.tag_name }}${{ (github.ref == 'refs/heads/master' && ',locustio/locust:latest') || '' }}
-  
+          tags: locustio/locust:${GITHUB_REF#refs/*/}${{ (github.ref == 'refs/heads/master' && ',locustio/locust:latest') || '' }}
+
   release:
     name: Release to PyPI
     needs: verify_docker_build
