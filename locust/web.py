@@ -15,7 +15,7 @@ from flask import Flask, make_response, jsonify, render_template, request, send_
 from flask_basicauth import BasicAuth
 from gevent import pywsgi
 
-from locust import __version__ as version
+from locust import __version__ as version, argument_parser
 from .exception import AuthCredentialsError
 from .runners import MasterRunner
 from .log import greenlet_exception_logger
@@ -139,17 +139,24 @@ class WebUI:
         def swarm():
             assert request.method == "POST"
 
-            if request.form.get("host"):
-                # Replace < > to guard against XSS
-                environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
+            parsed_options_dict = vars(environment.parsed_options)
+            for key, value in request.form.items():
+                if key == "user_count":  # if we just renamed this field to "users" we wouldnt need this
+                    user_count = int(value)
+                elif key == "spawn_rate":
+                    spawn_rate = float(value)
+                elif key == "host":
+                    # Replace < > to guard against XSS
+                    environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
+                elif key in parsed_options_dict:
+                    # cast to use same type that it already has in options. Wont work for None defaults
+                    parsed_options_dict[key] = type(parsed_options_dict[key])(value)
 
             if environment.shape_class:
                 environment.runner.start_shape()
                 return jsonify(
                     {"success": True, "message": "Swarming started using shape class", "host": environment.host}
                 )
-            user_count = int(request.form["user_count"])
-            spawn_rate = float(request.form["spawn_rate"])
 
             if self._swarm_greenlet is not None:
                 self._swarm_greenlet.kill(block=True)
@@ -403,6 +410,13 @@ class WebUI:
 
         stats = self.environment.runner.stats
 
+        # this is a somewhat cumbersome way to get the built-in arguments
+        default_parser = argument_parser.get_empty_argument_parser()
+        argument_parser.setup_parser_arguments(default_parser)
+        default_args_dict = vars(default_parser.parse(args=[]))
+
+        extra_options = {k: v for k, v in vars(self.environment.parsed_options).items() if k not in default_args_dict}
+
         self.template_args = {
             "state": self.environment.runner.state,
             "is_distributed": is_distributed,
@@ -416,4 +430,5 @@ class WebUI:
             "worker_count": worker_count,
             "is_shape": self.environment.shape_class,
             "stats_history_enabled": options and options.stats_history_enabled,
+            "extra_options": extra_options,
         }

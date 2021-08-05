@@ -152,6 +152,26 @@ For example, you can monitor the fail ratio of your test and stop the run if it 
             gevent.spawn(checker, environment)
 
 
+Parametrizing locustfiles
+=========================
+
+For many cases the easiest way to parametrize your locustfile is by using plain, env variables (accessible via the `os.environ`-dict in your locusfile)
+
+On linux/mac:
+
+.. code-block:: bash
+
+    MY_FUNKY_VAR=42 locust ...
+
+On windows:
+
+.. code-block:: bash
+
+    SET MY_FUNKY_VAR=42
+    locust ...
+
+But if you want to be more explicit, you can use `custom command line arguments <https://github.com/locustio/locust/tree/master/examples/add_command_line_argument.py>`_. These will also be accessible in the start dialogue in the web UI.
+
 More examples
 =============
 
