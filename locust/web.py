@@ -415,7 +415,12 @@ class WebUI:
         argument_parser.setup_parser_arguments(default_parser)
         default_args_dict = vars(default_parser.parse(args=[]))
 
-        extra_options = {k: v for k, v in vars(self.environment.parsed_options).items() if k not in default_args_dict}
+        if self.environment.parsed_options:
+            extra_options = {
+                k: v for k, v in vars(self.environment.parsed_options).items() if k not in default_args_dict
+            }
+        else:
+            extra_options = {}
 
         self.template_args = {
             "state": self.environment.runner.state,
