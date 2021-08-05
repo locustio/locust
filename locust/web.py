@@ -139,7 +139,7 @@ class WebUI:
         def swarm():
             assert request.method == "POST"
 
-            parsed_options_dict = vars(environment.parsed_options)
+            parsed_options_dict = vars(environment.parsed_options) if environment.parsed_options else {}
             for key, value in request.form.items():
                 if key == "user_count":  # if we just renamed this field to "users" we wouldnt need this
                     user_count = int(value)
@@ -415,12 +415,11 @@ class WebUI:
         argument_parser.setup_parser_arguments(default_parser)
         default_args_dict = vars(default_parser.parse(args=[]))
 
-        if self.environment.parsed_options:
-            extra_options = {
-                k: v for k, v in vars(self.environment.parsed_options).items() if k not in default_args_dict
-            }
-        else:
-            extra_options = {}
+        extra_options = (
+            {k: v for k, v in vars(self.environment.parsed_options).items() if k not in default_args_dict}
+            if self.environment.parsed_options
+            else {}
+        )
 
         self.template_args = {
             "state": self.environment.runner.state,
