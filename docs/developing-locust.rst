@@ -18,7 +18,7 @@ Fork Locust on `Github <https://github.com/locustio/locust/>`_ and then run
 
 Now the ``locust`` command will run *your* code with no need for reinstalling after making changes.
 
-If you want to contribute back to us, make a branch in your repo, push your changes there and then `open a PR on github <https://github.com/locustio/locust/compare>`_. Before you open a pull request, make sure the tests work. And if you are adding a feature, make sure it is documented.
+If you want to contribute back to us, make a branch *in your repo*, push your changes there and then `open a PR on github <https://github.com/locustio/locust/compare>`_. Before you open a pull request, make sure the tests work. And if you are adding a feature, make sure it is documented.
 
 Running tests
 =============
