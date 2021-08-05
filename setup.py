@@ -23,7 +23,7 @@ setup(
         "Werkzeug>=2.0.0",
         "requests>=2.9.1",
         "msgpack>=0.6.2",
-        "pyzmq>=16.0.2",
+        "pyzmq>=22.2.1",
         "geventhttpclient>=1.4.4",
         "ConfigArgParse>=1.0",
         "psutil>=5.6.7",
