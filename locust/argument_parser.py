@@ -418,10 +418,10 @@ def setup_parser_arguments(parser):
         env_var="LOCUST_STOP_TIMEOUT",
     )
     other_group.add_argument(
-        "--same-task-weights",
+        "--same-weights",
         action="store_true",
         default=False,
-        dest="same_task_weights",
+        dest="same_weights",
         help="Use uniformly distributed task weights, overriding the weights specified in the locustfile.",
     )
 

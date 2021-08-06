@@ -298,11 +298,11 @@ def main():
     else:
         web_ui = None
 
-    def assign_same_task_weights(environment, **kwargs):
-        environment.assign_same_task_weights()
+    def assign_uniform_weights(environment, **kwargs):
+        environment.assign_uniform_weights()
 
-    if options.same_task_weights:
-        environment.events.init.add_listener(assign_same_task_weights)
+    if options.same_weights:
+        environment.events.init.add_listener(assign_uniform_weights)
 
     # Fire locust init event which can be used by end-users' code to run setup code that
     # need access to the Environment, Runner or WebUI.

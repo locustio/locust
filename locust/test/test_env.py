@@ -41,7 +41,7 @@ class TestEnvironment(LocustTestCase):
             "The following user classes have the same class name: locust.test.fake_module1_for_env_test.MyUserWithSameName, locust.test.fake_module2_for_env_test.MyUserWithSameName",
         )
 
-    def test_assign_same_task_weights(self):
+    def test_assign_uniform_weights(self):
         def verify_tasks(u, target_tasks):
             self.assertEqual(len(u.tasks), len(target_tasks))
             tasks = [t.__name__ for t in u.tasks]
@@ -61,7 +61,7 @@ class TestEnvironment(LocustTestCase):
                 pass
 
         environment = Environment(user_classes=[MyUser1])
-        environment.assign_same_task_weights()
+        environment.assign_uniform_weights()
         u = environment.user_classes[0]
         verify_tasks(u, ["my_task", "my_task_2"])
 
@@ -84,7 +84,7 @@ class TestEnvironment(LocustTestCase):
                     self.client.get("/stats/requests")
 
         environment = Environment(user_classes=[MyUser2])
-        environment.assign_same_task_weights()
+        environment.assign_uniform_weights()
         u = environment.user_classes[0]
         verify_tasks(u, ["index", "stop", "stats"])
 
@@ -102,7 +102,7 @@ class TestEnvironment(LocustTestCase):
             tasks = [SingleTaskSet, outside_task]
 
         environment = Environment(user_classes=[MyUser3])
-        environment.assign_same_task_weights()
+        environment.assign_uniform_weights()
         u = environment.user_classes[0]
         verify_tasks(u, ["outside_task", "outside_task_2"])
 
@@ -126,7 +126,20 @@ class TestEnvironment(LocustTestCase):
         class MyUser4(User):
             tasks = [DictTaskSet, SingleTaskSet, SingleTaskSet]
 
+        # Assign user tasks in dict
         environment = Environment(user_classes=[MyUser4])
-        environment.assign_same_task_weights()
+        environment.assign_uniform_weights()
+        u = environment.user_classes[0]
+        verify_tasks(u, ["outside_task", "outside_task_2", "dict_task_1", "dict_task_2", "dict_task_3"])
+
+        class MyUser5(User):
+            tasks = {
+                DictTaskSet: 5,
+                SingleTaskSet: 3,
+                outside_task: 6,
+            }
+
+        environment = Environment(user_classes=[MyUser5])
+        environment.assign_uniform_weights()
         u = environment.user_classes[0]
         verify_tasks(u, ["outside_task", "outside_task_2", "dict_task_1", "dict_task_2", "dict_task_3"])
