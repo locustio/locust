@@ -6,6 +6,7 @@ import signal
 import socket
 import sys
 import time
+from typing import Callable
 
 import gevent
 
@@ -299,7 +300,7 @@ def main():
     else:
         web_ui = None
 
-    def assign_uniform_task_weights(environment, **kwargs):
+    def assign_same_task_weights(environment, **kwargs):
         for u in environment.user_classes:
             u.weight = 1
             user_tasks = []
@@ -324,8 +325,8 @@ def main():
             # print(len(user_asks))
             u.tasks = user_tasks
 
-    if options.use_uniform_task_weights:
-        environment.events.init.add_listener(assign_uniform_task_weights)t
+    if options.same_task_weights:
+        environment.events.init.add_listener(assign_same_task_weights)
 
     # Fire locust init event which can be used by end-users' code to run setup code that
     # need access to the Environment, Runner or WebUI.
