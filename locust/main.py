@@ -6,7 +6,6 @@ import signal
 import socket
 import sys
 import time
-from typing import Callable
 
 import gevent
 
@@ -20,7 +19,6 @@ from . import stats
 from .stats import print_error_report, print_percentile_stats, print_stats, stats_printer, stats_history
 from .stats import StatsCSV, StatsCSVFileWriter
 from .user import User
-from .user.task import TaskSet
 from .user.inspectuser import get_task_ratio_dict, print_task_ratio
 from .util.timespan import parse_timespan
 from .exception import AuthCredentialsError
@@ -301,29 +299,7 @@ def main():
         web_ui = None
 
     def assign_same_task_weights(environment, **kwargs):
-        for u in environment.user_classes:
-            u.weight = 1
-            user_tasks = []
-            tasks_frontier = u.tasks
-            # print("starting length for user tasks " + str(len(u.tasks)))
-            while len(tasks_frontier) != 0:
-                t = tasks_frontier.pop()
-                if hasattr(t, "tasks") and t.tasks:
-                    # print("adding " + str(len(t.tasks)))
-                    # print(t.tasks)
-                    # print('---')
-                    tasks_frontier.extend(t.tasks)
-                elif isinstance(t, Callable):
-                    # print("examiming task")
-                    # print(t)
-                    # print('---')
-                    if t not in user_tasks:
-                        user_tasks.append(t)
-                else:
-                    logger.error("Unrecognized type in user tasks")
-            # print("final num tasks")
-            # print(len(user_asks))
-            u.tasks = user_tasks
+        environment.assign_same_task_weights()
 
     if options.same_task_weights:
         environment.events.init.add_listener(assign_same_task_weights)
