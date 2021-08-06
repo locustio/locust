@@ -992,7 +992,7 @@ class StatsCSVFileWriter(StatsCSV):
         Note that this method differs from the other methods as it appends time-stamped data to the file, whereas the other methods overwrites the data.
         """
 
-        """ Do not try to write rows with all 0s in stats_history.csv when a test is not running """
+        # Do not try to write rows with all 0s in stats_history.csv when a test is not running
         if (self.environment.runner.state == "stopped" or self.environment.runner.state == "ready"):
             return
 
