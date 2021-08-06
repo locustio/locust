@@ -77,24 +77,27 @@ class TestEnvironment(LocustTestCase):
 
                     @task
                     def stop(self):
-                        self.client.get("/hi")  
+                        self.client.get("/hi")
 
                 @task(2)
                 def stats(self):
                     self.client.get("/stats/requests")
-            
+
         environment = Environment(user_classes=[MyUser2])
         environment.assign_same_task_weights()
         u = environment.user_classes[0]
         verify_tasks(u, ["index", "stop", "stats"])
-        
+
         # Testing task assignment via instance variable
         def outside_task():
             pass
+
         def outside_task_2():
             pass
+
         class SingleTaskSet(TaskSet):
             tasks = [outside_task, outside_task, outside_task_2]
+
         class MyUser3(User):
             tasks = [SingleTaskSet, outside_task]
 
@@ -107,20 +110,23 @@ class TestEnvironment(LocustTestCase):
         class DictTaskSet(TaskSet):
             def dict_task_1():
                 pass
+
             def dict_task_2():
                 pass
+
             def dict_task_3():
                 pass
+
             tasks = {
                 dict_task_1: 5,
                 dict_task_2: 3,
                 dict_task_3: 1,
             }
+
         class MyUser4(User):
             tasks = [DictTaskSet, SingleTaskSet, SingleTaskSet]
 
         environment = Environment(user_classes=[MyUser4])
         environment.assign_same_task_weights()
         u = environment.user_classes[0]
-        verify_tasks(u, ["outside_task", "outside_task_2", "dict_task_1", "dict_task_2",
-        "dict_task_3"])
+        verify_tasks(u, ["outside_task", "outside_task_2", "dict_task_1", "dict_task_2", "dict_task_3"])
