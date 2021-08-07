@@ -410,13 +410,12 @@ class WebUI:
 
         stats = self.environment.runner.stats
 
-        # this is a somewhat cumbersome way to get the built-in arguments
-        default_parser = argument_parser.get_empty_argument_parser()
-        argument_parser.setup_parser_arguments(default_parser)
-        default_args_dict = vars(default_parser.parse(args=[]))
-
         extra_options = (
-            {k: v for k, v in vars(self.environment.parsed_options).items() if k not in default_args_dict}
+            {
+                k: v
+                for k, v in vars(self.environment.parsed_options).items()
+                if k not in argument_parser.default_args_dict()
+            }
             if self.environment.parsed_options
             else {}
         )

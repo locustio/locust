@@ -443,3 +443,10 @@ def parse_options(args=None):
     if parsed_opts.stats_history_enabled and (parsed_opts.csv_prefix is None):
         parser.error("'--csv-full-history' requires '--csv'.")
     return parsed_opts
+
+
+def default_args_dict():
+    # returns a dict containing the default arguments (before any custom arguments are added)
+    default_parser = get_empty_argument_parser()
+    setup_parser_arguments(default_parser)
+    return vars(default_parser.parse([]))
