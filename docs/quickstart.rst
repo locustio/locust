@@ -41,16 +41,17 @@ The following screenshots show what it might look like when running this test ta
 
 .. image:: images/webui-running-statistics.png
 
-You can also view the results as charts:
+Locust can also visualize the results as charts, showing things like requests per second (RPS):
 
 .. image:: images/total_requests_per_second.png
-    :alt: Number of requests per second / RPS graph
+
+Response times (in milliseconds):
     
 .. image:: images/response_times.png
-    :alt: Response times in milliseconds
+
+Number of users:
 
 .. image:: images/number_of_users.png
-    :alt: Current number of users spawned
 
 .. note::
 
