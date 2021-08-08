@@ -93,7 +93,11 @@ Note that only methods decorated with ``@task`` will be picked, so you can defin
 
 The ``self.client`` attribute makes it possible to make HTTP calls that will be logged by Locust. For information on how 
 to make other kinds of requests, validate the response, etc, see 
-`Using the HTTP Client <writing-a-locustfile.html#using-the-http-client>`_.
+`Using the HTTP Client <writing-a-locustfile.html#client-attribute-httpsession>`_. 
+
+.. note::
+    
+    HttpUser is not a real browser, and thus will not parse an HTML response to load resources or render the page. It will keep track of cookies though.
 
 .. code-block:: python
 

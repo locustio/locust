@@ -98,6 +98,6 @@ Parameters can also be set through :ref:`environment variables <environment-vari
 
 To see all available options type: ``locust --help`` or check :ref:`configuration`.
 
-| 
+|
 
 Now, lets have a more in-depth look at locustfiles and what they can do: :ref:`writing-a-locustfile`
