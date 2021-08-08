@@ -49,6 +49,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: locustbuild
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - uses: docker/build-push-action@v2
         with:
           context: ./
@@ -66,6 +71,11 @@ jobs:
       - name: Get git tag
         id: tag
         uses: dawidd6/action-get-tag@v1
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: locustbuild
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - uses: docker/build-push-action@v2
         with:
           context: ./
