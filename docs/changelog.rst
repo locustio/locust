@@ -4,6 +4,14 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.1.0
+=====
+
+* Fix docker builds (2.0 never got pushed to Docker Hub)
+* Bump dependency on pyzmq to fix out of memory issue on Windows
+* Use 1 as default for user count and spawn rate in web UI start form
+* Various documentation updates
+
 2.0.0
 =====
 
