@@ -68,6 +68,8 @@ jobs:
     if: startsWith(github.event.ref, 'refs/tags')
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: set TAG
         run: echo "TAG=${GITHUB_REF#refs/*/}" | tee -a $GITHUB_ENV
       - name: set BRANCH
