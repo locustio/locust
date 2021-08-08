@@ -71,10 +71,10 @@ jobs:
       - name: Get branch name and tag
         id: branch
         uses: tj-actions/branch-names@v4.8
-      - name: debug
+      - name: set BRANCH_NAME from tag (because everything else gives tag..)
         run: |
-          echo "Running on: ${{ steps.branch.outputs.current_branch }}"
-          git branch --show-current
+          git branch -a --contains ${{ steps.branch.outputs.tag }} | grep \* | cut -d ' ' -f2
+          echo "BRANCH_NAME=$(git branch -a --contains ${{ steps.branch.outputs.tag }} | grep \* | cut -d ' ' -f2) >> $GITHUB_ENV
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
@@ -85,7 +85,7 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          tags: locustio/locust:${{ steps.branch.outputs.tag }}${{ ( steps.branch.outputs.current_branch == 'master' && ',locustio/locust:latest') || '' }}
+          tags: locustio/locust:${{ steps.branch.outputs.tag }}${{ ( env.BRANCH_NAME == 'master' && ',locustio/locust:latest') || '' }}
 
   release:
     name: Release to PyPI
