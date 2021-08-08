@@ -1,14 +1,14 @@
 .. _testing-other-systems:
 
-===========================================
-Testing other systems using custom clients
-===========================================
+========================
+Testing non-HTTP systems 
+========================
 
-Locust was built with HTTP as its main use case but it can be extended to load test almost any system. You do this by writing a custom client that triggers :py:attr:`request <locust.event.Events.request>`
+Locust only comes with built-in support for HTTP/HTTPS but it can be extended to load test almost any system. You do this by writing a custom client that triggers :py:attr:`request <locust.event.Events.request>`
 
 .. note::
 
-    Any protocol libraries that you use must be gevent-friendly (use the Python ``socket`` module or some other standard library function like ``subprocess``), or your calls are likely to block the whole Locust/Python process.
+    It is important that any protocol libraries you use can be `monkey-patched <http://www.gevent.org/intro.html#monkey-patching>`_ by gevent (if they use the Python ``socket`` module or some other standard library function like ``subprocess`` you will be fine). Otherwise your calls will block the whole Locust/Python process (in practice limiting you to running a single User per worker process)
     
     Some C libraries cannot be monkey patched by gevent, but allow for other workarounds. For example, if you want to use psycopg2 to performance test PostgreSQL, you can use `psycogreen <https://github.com/psycopg/psycogreen/>`_. 
 

@@ -1,16 +1,12 @@
 .. _extending_locust:
 
-==================================
-Extending Locust using event hooks
-==================================
+===========
+Event hooks
+===========
 
 Locust comes with a number of event hooks that can be used to extend Locust in different ways.
 
-Event hooks are registered on the Environment under its :py:attr:`events <locust.env.Environment.events>` 
-attribute, but they are more conveniently accessed via the :py:obj:`locust.events` variable (because the Environment 
-is instantiated *after* importing the locustfile)
-
-Here's an example on how to set up an event listener::
+For example, here's how to set up an event listener that will trigger after a request is completed::
 
     from locust import events
     
@@ -22,6 +18,13 @@ Here's an example on how to set up an event listener::
         else:
             print(f"Successfully made a request to: {name})
             print(f"The response was {response.text}")
+
+.. note::
+
+    In the above example the wildcard keyword argument (\**kwargs) will be empty, because we're handling all arguments, but it is prevents the code from breaking if new arguments are added in some future version of Locust.
+
+    It is entirely possible to implement a client that does not support all parameters 
+    (some non-HTTP protocols might not have a concept of `response_length` or `response` object).
 
 When running locust in distributed mode, it may be useful to do some setup on worker nodes before running your tests. 
 You can check to ensure you aren't running on the master node by checking the type of the node's :py:attr:`runner <locust.env.Environment.runner>`::
@@ -43,21 +46,14 @@ You can check to ensure you aren't running on the master node by checking the ty
         else
             print("Stopped test from Master node")
 
+You can also use events `to add custom command line arguments <https://github.com/locustio/locust/tree/master/examples/add_command_line_argument.py>`_. 
 
-.. note::
-
-    To see all available events, please see :ref:`events`.
-
-    In the above example the wildcard keyword argument (\**kwargs) will be empty but it 
-    is prevents the code from breaking if new arguments are added in some future version of Locust.
-
-    It is entirely possible to implement a client that does not support all parameters 
-    (some non-HTTP protocols might not have a concept of `response_length` or `response` object).
+To see a full list of available events see :ref:`events`.
 
 .. _request_context:
 
 Request context
-==================
+===============
 
 The :py:attr:`request event <locust.event.Events.request>` has a context parameter that enable you to pass data `about` the request (things like username, tags etc). It can be set directly in the call to the request method or at the User level, by overriding the User.context() method. 
 
