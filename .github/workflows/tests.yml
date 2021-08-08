@@ -43,7 +43,7 @@ jobs:
       - run: pip install tox codecov
       - run: tox -e ${{ matrix.tox }}
 
-  docker_always:
+  verify_docker_build:
     name: Verify docker, push to tag 'master' if on master
     needs: tests
     runs-on: ubuntu-latest
