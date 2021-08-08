@@ -68,15 +68,15 @@ jobs:
     if: startsWith(github.event.ref, 'refs/tags')
     steps:
       - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
       - name: Get git tag
         id: tag
         uses: dawidd6/action-get-tag@v1
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v4.8
       - name: debug
-        run: echo "Branch name ${GIT_BRANCH_NAME}"
-      - name: debug2
-        run: echo running on branch ${GITHUB_REF##*/}
+        run: |
+          echo "Running on: ${{ steps.branch-name.outputs.current_branch }}"
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
@@ -92,7 +92,7 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          tags: locustio/locust:${{ steps.tag.outputs.tag }}${{ ( env.GIT_BRANCH_NAME == 'master' && ',locustio/locust:latest') || '' }}
+          tags: locustio/locust:${{ steps.tag.outputs.tag }}${{ ( steps.branch-name.outputs.current_branch == 'master' && ',locustio/locust:latest') || '' }}
 
   release:
     name: Release to PyPI
