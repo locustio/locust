@@ -71,6 +71,8 @@ jobs:
       - name: Get git tag
         id: tag
         uses: dawidd6/action-get-tag@v1
+      - name: Get branch
+        uses: nelonoel/branch-name@v1.0.1
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
@@ -81,7 +83,7 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          tags: locustio/locust:${{ steps.tag.outputs.tag }}${{ (github.ref == 'refs/heads/master' && ',locustio/locust:latest') || '' }}
+          tags: locustio/locust:${{ steps.tag.outputs.tag }}${{ ('${BRANCH_NAME}' == 'master' && ',locustio/locust:latest') || '' }}
 
   release:
     name: Release to PyPI
@@ -106,10 +108,3 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-      - name: Push to docker
-        uses: docker/build-push-action@v2
-        with:
-          context: ./
-          file: ./Dockerfile
-          push: true
-          tags: locustio/locust:${{ github.event.release.tag_name }} # tags the image based on git tag name instead of package version, but that should be good enough.
