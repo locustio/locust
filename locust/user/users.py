@@ -100,7 +100,7 @@ class User(object, metaclass=UserMeta):
     """If abstract is True, the class is meant to be subclassed, and locust will not spawn users of this class during a test."""
 
     environment = None
-    """A reference to the :py:attr:`environment <locust.Environment>` in which this locust is running"""
+    """A reference to the :py:class:`Environment <locust.env.Environment>` in which this user is running"""
 
     client = None
     _state = None

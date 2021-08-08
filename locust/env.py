@@ -71,7 +71,7 @@ class Environment:
     """
 
     parsed_options = None
-    """Optional reference to the parsed command line options (used to pre-populate fields in Web UI)"""
+    """Reference to the parsed command line options (used to pre-populate fields in Web UI). May be None when using Locust as a library"""
 
     def __init__(
         self,

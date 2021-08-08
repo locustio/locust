@@ -33,9 +33,9 @@ Locust's web interface
 Once you've started Locust, open up a browser and point it to http://localhost:8089. You will be greeted with something like this:
 
 .. image:: images/webui-splash-screenshot.png
-| 
 
-Point the test to your own web server and try it out!
+| 
+| Point the test to your own web server and try it out!
 
 The following screenshots show what it might look like when running this test targeting 40 concurrent users with a ramp up speed of 0.5 users/s, pointed it to a server that responds to ``/hello`` and ``/world``.
 
