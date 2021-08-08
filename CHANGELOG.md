@@ -1,5 +1,31 @@
 # Changelog
 
+## [latest](https://github.com/locustio/locust/tree/latest) (2021-08-08)
+
+[Full Changelog](https://github.com/locustio/locust/compare/0.0.100...latest)
+
+**Fixed bugs:**
+
+- OOM error with master/slaves setup \(zeromq, windows\) [\#1372](https://github.com/locustio/locust/issues/1372)
+
+**Merged pull requests:**
+
+- Fix docker builds [\#1845](https://github.com/locustio/locust/pull/1845) ([cyberw](https://github.com/cyberw))
+- Bump dependency on pyzmq to fix \#1372 \(OOM on windows\) [\#1839](https://github.com/locustio/locust/pull/1839) ([cyberw](https://github.com/cyberw))
+- Use 1 as default in web UI start form + lots of documentation updates [\#1836](https://github.com/locustio/locust/pull/1836) ([cyberw](https://github.com/cyberw))
+
+## [0.0.100](https://github.com/locustio/locust/tree/0.0.100) (2021-08-04)
+
+[Full Changelog](https://github.com/locustio/locust/compare/0.0.99...0.0.100)
+
+## [0.0.99](https://github.com/locustio/locust/tree/0.0.99) (2021-08-04)
+
+[Full Changelog](https://github.com/locustio/locust/compare/0.0.1...0.0.99)
+
+## [0.0.1](https://github.com/locustio/locust/tree/0.0.1) (2021-08-04)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.0.0...0.0.1)
+
 ## [2.0.0](https://github.com/locustio/locust/tree/2.0.0) (2021-08-01)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.0.0b4...2.0.0)
