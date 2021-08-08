@@ -74,7 +74,7 @@ jobs:
       - name: set BRANCH_NAME from tag (because everything else gives tag..)
         run: |
           git branch -a --contains ${{ steps.branch.outputs.tag }} | grep \* | cut -d ' ' -f2
-          echo "BRANCH_NAME=$(git branch -a --contains ${{ steps.branch.outputs.tag }} | grep \* | cut -d ' ' -f2) >> $GITHUB_ENV
+          echo "BRANCH_NAME=$(git branch -a --contains ${{ steps.branch.outputs.tag }} | grep \* | cut -d ' ' -f2)" >> $GITHUB_ENV
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
