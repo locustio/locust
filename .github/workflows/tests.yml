@@ -81,6 +81,8 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: debug
         run: echo "Branch name ${GIT_BRANCH_NAME}"
+      - name: debug2
+        run: echo running on branch ${GITHUB_REF##*/}
       - uses: docker/build-push-action@v2
         with:
           context: ./
