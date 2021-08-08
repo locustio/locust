@@ -44,7 +44,7 @@ jobs:
       - run: tox -e ${{ matrix.tox }}
 
   verify_docker_build:
-    name: Verify docker, push to tag 'master' if on master
+    name: Always - Docker verify, push to tag 'master' if on master
     needs: tests
     runs-on: ubuntu-latest
     steps:
@@ -62,7 +62,7 @@ jobs:
           tags: locustio/locust:master
 
   docker_tagged:
-    name: Push docker image to tag based on git tag. Also push 'latest' if on master
+    name: Tagged - Docker push to tag based on git tag. Also push 'latest' if on master
     needs: tests
     runs-on: ubuntu-latest
     if: startsWith(github.event.ref, 'refs/tags')
@@ -82,11 +82,6 @@ jobs:
         with:
           username: locustbuild
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Get Branch
-        run: |
-          raw=$(git branch -r --contains ${{ github.ref }})
-          branch=${raw/origin\/}
-          echo ::set-env name=BRANCH::$branch
       - uses: docker/build-push-action@v2
         with:
           context: ./
