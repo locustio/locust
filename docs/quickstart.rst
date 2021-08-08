@@ -44,8 +44,13 @@ The following screenshots show what it might look like when running this test ta
 You can also view the results as charts:
 
 .. image:: images/total_requests_per_second.png
+    :alt: Number of requests per second / RPS graph
+    
 .. image:: images/response_times.png
+    :alt: Response times in milliseconds
+
 .. image:: images/number_of_users.png
+    :alt: Current number of users spawned
 
 .. note::
 
