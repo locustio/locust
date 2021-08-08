@@ -14,10 +14,10 @@ jobs:
           #- {name: Linux, python: '3.9', os: ubuntu-latest, tox: py39}
           #- {name: Windows, python: '3.9', os: windows-latest, tox: py39}
           #- {name: Mac, python: '3.9', os: macos-latest, tox: py39}
-          - {name: '3.9', python: '3.9', os: ubuntu-latest, tox: py39}
-          - {name: '3.8', python: '3.8', os: ubuntu-latest, tox: py38}
-          - {name: '3.7', python: '3.7', os: ubuntu-latest, tox: py37}
-          - {name: '3.6', python: '3.6', os: ubuntu-latest, tox: py36}
+          - { name: "3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
+          - { name: "3.8", python: "3.8", os: ubuntu-latest, tox: py38 }
+          - { name: "3.7", python: "3.7", os: ubuntu-latest, tox: py37 }
+          - { name: "3.6", python: "3.6", os: ubuntu-latest, tox: py36 }
 
     steps:
       - uses: actions/checkout@v2
@@ -42,7 +42,7 @@ jobs:
         run: echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
       - run: pip install tox codecov
       - run: tox -e ${{ matrix.tox }}
-  
+
   verify_docker_build:
     name: Verify docker, push if on master
     needs: tests
@@ -93,7 +93,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: "3.x"
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -102,7 +102,6 @@ jobs:
         run: |
           python setup.py sdist bdist_wheel
       - name: Publish to PyPI (Test)
-        
         uses: pypa/gh-action-pypi-publish@master
         with:
           user: __token__
