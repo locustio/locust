@@ -79,6 +79,8 @@ jobs:
         with:
           username: locustbuild
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: debug
+        run: echo "Branch name ${GIT_BRANCH_NAME}"
       - uses: docker/build-push-action@v2
         with:
           context: ./
