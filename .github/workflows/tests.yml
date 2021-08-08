@@ -68,13 +68,10 @@ jobs:
     if: startsWith(github.event.ref, 'refs/tags')
     steps:
       - uses: actions/checkout@v2
-      - name: Get branch name and tag
-        id: branch
-        uses: tj-actions/branch-names@v4.8
-      - name: set BRANCH_NAME from tag (because everything else gives tag..)
-        run: |
-          git branch -a --contains ${{ steps.branch.outputs.tag }} | grep -v HEAD | cut -d '/' -f3
-          echo "BRANCH_NAME=$(git branch -a --contains ${{ steps.branch.outputs.tag }} | grep -v HEAD | cut -d '/' -f3)" >> $GITHUB_ENV
+      - name: set TAG
+        run: echo "TAG=${GITHUB_REF#refs/*/}" | tee -a $GITHUB_ENV
+      - name: set BRANCH
+        run: echo "BRANCH=$(git branch -a --contains ${{ env.TAG }} | grep -v HEAD | cut -d '/' -f3)" | tee -a $GITHUB_ENV
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
@@ -85,7 +82,7 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          tags: locustio/locust:${{ steps.branch.outputs.tag }}${{ ( env.BRANCH_NAME == 'master' && ',locustio/locust:latest') || '' }}
+          tags: locustio/locust:${{ env.TAG }}${{ ( env.BRANCH == 'master' && ',locustio/locust:latest') || '' }}
 
   release:
     name: Release to PyPI
