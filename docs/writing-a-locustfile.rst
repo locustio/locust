@@ -526,7 +526,7 @@ Here's an example of how to call a REST API and validate the response:
         except KeyError:
             response.failure("Response did not contain expected key 'greeting'")
 
-
+locust-plugins has a ready-made class for testing REST API:s called `RestUser <https://github.com/SvenskaSpel/locust-plugins/blob/master/examples/rest_ex.py>`_
 
 .. _name-parameter:
 
