@@ -147,6 +147,34 @@ For example, you can monitor the fail ratio of your test and stop the run if it 
         if not isinstance(environment.runner, WorkerRunner):
             gevent.spawn(checker, environment)
 
+.. _parametrizing-locustfiles:
+
+Parametrizing locustfiles
+=========================
+
+There are two main ways to parametrize your locustfile. You can use environment variables:
+
+On linux/mac:
+
+.. code-block:: bash
+
+    MY_FUNKY_VAR=42 locust ...
+
+On windows:
+
+.. code-block:: bash
+
+    SET MY_FUNKY_VAR=42
+    locust ...
+
+And then access them in your locustfile:
+
+.. code-block:: python
+
+    import os
+    print(os.environ['MY_FUNKY_VAR'])
+
+Or you can add your own custom command line arguments, using the :py:attr:`init_command_line_parser <locust.event.Events.init_command_line_parser>` event, as shown in `this example <https://github.com/locustio/locust/tree/master/examples/add_command_line_argument.py>`_. Custom arguments can also be set in the start dialogue in the web UI. When running Locust :ref:`distributed <running-locust-distributed>`, custom arguments are automatically forwarded to workers when the run is started (but not before then, so you cannot rely on forwarded arguments *before* the test has actually started).
 
 More examples
 =============

@@ -21,6 +21,7 @@ from locust import (
     runners,
     __version__,
 )
+from locust.argument_parser import parse_options
 from locust.env import Environment
 from locust.exception import (
     RPCError,
@@ -615,8 +616,8 @@ class TestMasterWorkerRunners(LocustTestCase):
             wait_time = constant(0.1)
 
             @task
-            def incr_stats(l):
-                l.environment.events.request.fire(
+            def incr_stats(self):
+                self.environment.events.request.fire(
                     request_type="GET",
                     name="/",
                     response_time=1337,
@@ -658,6 +659,69 @@ class TestMasterWorkerRunners(LocustTestCase):
             20,
             "For some reason the master node's stats has not come in",
         )
+
+    def test_distributed_run_with_custom_args(self):
+        """
+        Full integration test that starts both a MasterRunner and three WorkerRunner instances
+        and makes sure that their stats is sent to the Master.
+        """
+
+        class TestUser(User):
+            wait_time = constant(0.1)
+
+            @task
+            def incr_stats(self):
+                self.environment.events.request.fire(
+                    request_type="GET",
+                    name=self.environment.parsed_options.my_str_argument,
+                    response_time=self.environment.parsed_options.my_int_argument,
+                    response_length=666,
+                    exception=None,
+                    context={},
+                )
+
+        @locust.events.init_command_line_parser.add_listener
+        def _(parser, **kw):
+            parser.add_argument("--my-int-argument", type=int)
+            parser.add_argument("--my-str-argument", type=str, default="NOOOO")
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            # start a Master runner
+            master_env = Environment(user_classes=[TestUser])
+            master = master_env.create_master_runner("*", 0)
+            master_env.parsed_options = parse_options(
+                [
+                    "--my-int-argument",
+                    "42",
+                    "--my-str-argument",
+                    "cool-string",
+                ]
+            )
+            sleep(0)
+            # start 3 Worker runners
+            workers = []
+            for i in range(3):
+                worker_env = Environment(user_classes=[TestUser])
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+
+            # give workers time to connect
+            sleep(0.1)
+            # issue start command that should trigger TestUsers to be spawned in the Workers
+            master.start(6, spawn_rate=1000)
+            sleep(0.1)
+            # check that worker nodes have started locusts
+            for worker in workers:
+                self.assertEqual(2, worker.user_count)
+            # give time for users to generate stats, and stats to be sent to master
+            sleep(1)
+            master.quit()
+            # make sure users are killed
+            for worker in workers:
+                self.assertEqual(0, worker.user_count)
+
+        self.assertEqual(master_env.runner.stats.total.max_response_time, 42)
+        self.assertEqual(master_env.runner.stats.get("cool-string", "GET").avg_response_time, 42)
 
     def test_test_stop_event(self):
         class TestUser(User):
@@ -2267,6 +2331,7 @@ class TestWorkerRunner(LocustTestCase):
                         "user_classes_count": {"MyTestUser": 1},
                         "host": "",
                         "stop_timeout": 1,
+                        "parsed_options": {},
                     },
                     "dummy_client_id",
                 )
@@ -2307,6 +2372,7 @@ class TestWorkerRunner(LocustTestCase):
                         "user_classes_count": {"MyTestUser": 1},
                         "host": "",
                         "stop_timeout": None,
+                        "parsed_options": {},
                     },
                     "dummy_client_id",
                 )
@@ -2351,6 +2417,7 @@ class TestWorkerRunner(LocustTestCase):
                         "user_classes_count": {"MyUser": 10},
                         "host": "",
                         "stop_timeout": None,
+                        "parsed_options": {},
                     },
                     "dummy_client_id",
                 )
@@ -2369,6 +2436,7 @@ class TestWorkerRunner(LocustTestCase):
                         "user_classes_count": {"MyUser": 9},
                         "host": "",
                         "stop_timeout": None,
+                        "parsed_options": {},
                     },
                     "dummy_client_id",
                 )
@@ -2386,6 +2454,7 @@ class TestWorkerRunner(LocustTestCase):
                         "user_classes_count": {"MyUser": 2},
                         "host": "",
                         "stop_timeout": None,
+                        "parsed_options": {},
                     },
                     "dummy_client_id",
                 )
@@ -2403,6 +2472,7 @@ class TestWorkerRunner(LocustTestCase):
                         "user_classes_count": {"MyUser": 2},
                         "host": "",
                         "stop_timeout": None,
+                        "parsed_options": {},
                     },
                     "dummy_client_id",
                 )
@@ -2443,6 +2513,7 @@ class TestWorkerRunner(LocustTestCase):
                         "user_classes_count": {"MyUser": 10},
                         "host": "",
                         "stop_timeout": None,
+                        "parsed_options": {},
                     },
                     "dummy_client_id",
                 )
@@ -2524,6 +2595,7 @@ class TestWorkerRunner(LocustTestCase):
                         "user_classes_count": {"MyUser": 10},
                         "host": "",
                         "stop_timeout": None,
+                        "parsed_options": {},
                     },
                     "dummy_client_id",
                 )
@@ -2538,6 +2610,7 @@ class TestWorkerRunner(LocustTestCase):
                         "user_classes_count": {"MyUser": 9},
                         "host": "",
                         "stop_timeout": None,
+                        "parsed_options": {},
                     },
                     "dummy_client_id",
                 )
@@ -2574,6 +2647,7 @@ class TestWorkerRunner(LocustTestCase):
                         "user_classes_count": {"MyUser1": 10, "MyUser2": 10},
                         "host": "",
                         "stop_timeout": None,
+                        "parsed_options": {},
                     },
                     "dummy_client_id",
                 )
@@ -2591,6 +2665,7 @@ class TestWorkerRunner(LocustTestCase):
                         "user_classes_count": {"MyUser1": 1, "MyUser2": 2},
                         "host": "",
                         "stop_timeout": None,
+                        "parsed_options": {},
                     },
                     "dummy_client_id",
                 )
@@ -2702,6 +2777,7 @@ class TestWorkerRunner(LocustTestCase):
                         "num_users": 1,
                         "host": "",
                         "stop_timeout": None,
+                        "parsed_options": {},
                     },
                     "dummy_client_id",
                 )
@@ -2727,6 +2803,7 @@ class TestWorkerRunner(LocustTestCase):
                         "num_users": 1,
                         "host": "",
                         "stop_timeout": None,
+                        "parsed_options": {},
                     },
                     "dummy_client_id",
                 )
@@ -2745,6 +2822,7 @@ class TestWorkerRunner(LocustTestCase):
                         "num_users": 1,
                         "host": "",
                         "stop_timeout": None,
+                        "parsed_options": {},
                     },
                     "dummy_client_id",
                 )
@@ -2785,6 +2863,7 @@ class TestWorkerRunner(LocustTestCase):
                         "num_users": 1,
                         "host": "",
                         "stop_timeout": None,
+                        "parsed_options": {},
                     },
                     "dummy_client_id",
                 )
@@ -2820,6 +2899,7 @@ class TestWorkerRunner(LocustTestCase):
                         "num_users": 1,
                         "host": "",
                         "stop_timeout": None,
+                        "parsed_options": {},
                     },
                     "dummy_client_id",
                 )
