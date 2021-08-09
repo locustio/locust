@@ -1,5 +1,6 @@
 from operator import methodcaller
 from typing import (
+    Callable,
     Dict,
     List,
     Type,
@@ -12,7 +13,7 @@ from .stats import RequestStats
 from .runners import Runner, LocalRunner, MasterRunner, WorkerRunner
 from .web import WebUI
 from .user import User
-from .user.task import filter_tasks_by_tags
+from .user.task import TaskSet, filter_tasks_by_tags
 from .shape import LoadTestShape
 
 
@@ -214,6 +215,26 @@ class Environment:
 
         for user_class in self.user_classes:
             filter_tasks_by_tags(user_class, self.tags, self.exclude_tags)
+
+    def assign_equal_weights(self):
+        """
+        Update the user classes such that each user runs their specified tasks with equal
+        probability.
+        """
+        for u in self.user_classes:
+            u.weight = 1
+            user_tasks = []
+            tasks_frontier = u.tasks
+            while len(tasks_frontier) != 0:
+                t = tasks_frontier.pop()
+                if hasattr(t, "tasks") and t.tasks:
+                    tasks_frontier.extend(t.tasks)
+                elif isinstance(t, Callable):
+                    if t not in user_tasks:
+                        user_tasks.append(t)
+                else:
+                    raise ValueError("Unrecognized task type in user")
+            u.tasks = user_tasks
 
     @property
     def user_classes_by_name(self) -> Dict[str, Type[User]]:
