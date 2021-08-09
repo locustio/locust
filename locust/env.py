@@ -216,7 +216,7 @@ class Environment:
         for user_class in self.user_classes:
             filter_tasks_by_tags(user_class, self.tags, self.exclude_tags)
 
-    def assign_uniform_weights(self):
+    def assign_equal_weights(self):
         """
         Update the user classes such that each user runs their specified tasks with equal
         probability.
