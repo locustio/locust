@@ -457,7 +457,7 @@ It contains methods for all HTTP methods: :py:meth:`get <locust.clients.HttpSess
 Just like :py:class:`requests.Session`, it preserves cookies between requests so it can easily be used to log in to websites.
 
 .. code-block:: python
-    :caption: Make a POST request, look at the response and implicitly reuse any session cookies we got for a second request
+    :caption: Make a POST request, look at the response and implicitly reuse any session cookie we got for a second request
 
     response = self.client.post("/login", {"username":"testuser", "password":"secret"})
     print("Response status code:", response.status_code)
