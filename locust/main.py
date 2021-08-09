@@ -301,7 +301,7 @@ def main():
     def assign_uniform_weights(environment, **kwargs):
         environment.assign_uniform_weights()
 
-    if options.same_weights:
+    if options.equal_weights:
         environment.events.init.add_listener(assign_uniform_weights)
 
     # Fire locust init event which can be used by end-users' code to run setup code that
