@@ -33,6 +33,9 @@ setup(
     extras_require={
         ":sys_platform == 'win32'": ["pywin32"],
     },
-    use_scm_version={"write_to": "locust/_version.py"},
+    use_scm_version={
+        "write_to": "locust/_version.py",
+        "local_scheme": "no-local-version",
+    },
     setup_requires=["setuptools_scm"],
 )
