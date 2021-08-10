@@ -44,7 +44,7 @@ jobs:
 
   verify_docker_build:
     name: Always - Docker verify, push to tag 'master' if on master
-    needs: tests
+    # needs: tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
