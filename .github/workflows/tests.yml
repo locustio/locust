@@ -56,6 +56,8 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - uses: docker/build-push-action@v2
         with:
+          build-args: |
+            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
           push: ${{ github.ref == 'refs/heads/master' }}
           tags: locustio/locust:master
 
@@ -76,6 +78,8 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - uses: docker/build-push-action@v2
         with:
+          build-args: |
+            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
           push: true
           tags: locustio/locust:${{ env.TAG }}${{ ( env.BRANCH == 'master' && ',locustio/locust:latest') || '' }}
 
