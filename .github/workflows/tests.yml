@@ -109,8 +109,9 @@ jobs:
           password: ${{ secrets.PYPI_API_TOKEN }}
 
   publish_prerelease:
-    name: PyPI - Publish prerelease on merge commit
+    name: PyPI - Publish prerelease on merge commit on master
     needs: tests
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
