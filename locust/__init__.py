@@ -1,9 +1,8 @@
-__version__ = "2.1.0"
-
 from gevent import monkey
 
 monkey.patch_all()
 
+from ._version import version as __version__
 from .user.sequential_taskset import SequentialTaskSet
 from .user import wait_time
 from .user.task import task, tag, TaskSet
