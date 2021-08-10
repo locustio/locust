@@ -77,13 +77,41 @@ jobs:
           push: true
           tags: locustio/locust:${{ env.TAG }}${{ ( env.BRANCH == 'master' && ',locustio/locust:latest') || '' }}
 
-  release:
-    name: Release to PyPI
+  publish:
+    name: PyPI - Publish if this is a tagged commit
     needs: verify_docker_build
     if: startsWith(github.event.ref, 'refs/tags')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel
+      - name: Build
+        run: |
+          python setup.py sdist bdist_wheel
+      - name: Publish to PyPI (Test)
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+
+  publish_prerelease:
+    name: PyPI - Publish prerelease on merge
+    needs: tests
+    if: ${{ github.event.pull_request.merged }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
