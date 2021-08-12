@@ -50,6 +50,7 @@ jobs:
         with:
           fetch-depth: 0
       - uses: docker/login-action@v1
+        if: github.repository_owner == 'locustio'
         with:
           username: locustbuild
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
@@ -57,14 +58,14 @@ jobs:
         with:
           build-args: |
             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
-          push: ${{ github.ref == 'refs/heads/master' }}
+          push: ${{ github.ref == 'refs/heads/master' && github.repository_owner == 'locustio' }}
           tags: locustio/locust:master
 
   docker_tagged:
     name: Tagged - Docker push to tag based on git tag. Also push 'latest' if on master
     needs: tests
     runs-on: ubuntu-latest
-    if: startsWith(github.event.ref, 'refs/tags')
+    if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
     steps:
       - uses: actions/checkout@v2
         with:
@@ -85,7 +86,7 @@ jobs:
   publish:
     name: PyPI - Publish if this is a tagged commit
     needs: verify_docker_build
-    if: startsWith(github.event.ref, 'refs/tags')
+    if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -111,7 +112,7 @@ jobs:
   publish_prerelease:
     name: PyPI - Publish prerelease on merge commit on master
     needs: tests
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' && github.repository_owner == 'locustio'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
