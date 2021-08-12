@@ -26,20 +26,22 @@ We can build a generic XML-RPC client, by wrapping :py:class:`xmlrpc.client.Serv
 Example: writing a gRPC User/client
 =======================================
 
-Similarly to the XML-RPC example, we can also load test a gRPC server.
+If you have understood the XML-RPC example, you can easily build a `gRPC <https://github.com/grpc/grpc>`_ User.
 
-.. literalinclude:: ../examples/grpc/hello_server.py
-
-In this case, the gRPC stub methods can also be wrapped so that we can record the request stats.
-
-.. literalinclude:: ../examples/grpc/locustfile.py
-
-Note: In order to make the `grpcio` Python library gevent-compatible the following code needs to be executed before creating the gRPC channel.
+The only significant difference is that you need to make gRPC gevent-compatible, by executing this code before opening the channel:
 
 .. code-block:: python
 
     import grpc.experimental.gevent as grpc_gevent
+    
     grpc_gevent.init_gevent()
 
+Dummy server to test:
+
+.. literalinclude:: ../examples/grpc/hello_server.py
+
+gRPC client, base User and example usage:
+
+.. literalinclude:: ../examples/grpc/locustfile.py
 
 For more examples of user types, see `locust-plugins <https://github.com/SvenskaSpel/locust-plugins#users>`_ (it has users for WebSocket/SocketIO, Kafka, Selenium/WebDriver and more) 
