@@ -45,6 +45,7 @@ jobs:
   verify_docker_build:
     name: Always - Docker verify, push to tag 'master' if on master
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' # PR build doesnt get proper version, so dont try to build it
     steps:
       - uses: actions/checkout@v2
         with:
