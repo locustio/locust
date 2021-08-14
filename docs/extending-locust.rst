@@ -62,13 +62,15 @@ Context from request method::
     class MyUser(HttpUser):
         @task
         def t(self):
-            self.client.post("/login", json={"username": "foo"}, context={"username": "foo"})
+            self.client.post("/login", json={"username": "foo"})
+            self.client.get("/other_request", context={"username": "foo"})
 
         @events.request.add_listener
         def on_request(context, **kwargs):
-            print(context["username"])
+            if context:
+                print(context["username"])
     
-Context from User class::
+Context from User instance::
 
     class MyUser(HttpUser):
         def context(self):
@@ -175,6 +177,11 @@ And then access them in your locustfile:
     print(os.environ['MY_FUNKY_VAR'])
 
 Or you can add your own custom command line arguments, using the :py:attr:`init_command_line_parser <locust.event.Events.init_command_line_parser>` event, as shown in `this example <https://github.com/locustio/locust/tree/master/examples/add_command_line_argument.py>`_. Custom arguments can also be set in the start dialogue in the web UI. When running Locust :ref:`distributed <running-locust-distributed>`, custom arguments are automatically forwarded to workers when the run is started (but not before then, so you cannot rely on forwarded arguments *before* the test has actually started).
+
+Test data management
+====================
+
+There are a number of ways to get test data into your tests (after all, your test is just a Python program and it can do whatever Python can). Locust's events give you fine-grained control over *when* to fetch/release test data. You can find a `detailed example here <https://github.com/locustio/locust/tree/master/examples/test_data_management.py>`_. 
 
 More examples
 =============
