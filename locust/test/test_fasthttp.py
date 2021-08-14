@@ -3,7 +3,8 @@ import gevent
 from tempfile import NamedTemporaryFile
 
 from locust.user import task, TaskSet
-from locust.contrib.fasthttp import FastHttpSession, FastHttpUser
+from locust.contrib.fasthttp import FastHttpSession
+from locust import FastHttpUser
 from locust.exception import CatchResponseError, InterruptTaskSet, ResponseError
 from locust.main import is_user_class
 from .testcases import WebserverTestCase, LocustTestCase

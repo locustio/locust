@@ -577,7 +577,7 @@ class TestLocustClass(LocustTestCase):
                 pass
 
         def test_fast_http_locust():
-            from locust.contrib.fasthttp import FastHttpLocust
+            from locust import FastHttpLocust
 
             class FastLocust(FastHttpLocust):
                 pass
