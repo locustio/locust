@@ -49,7 +49,7 @@ def _(environment, **_kwargs):
     global test_run_specific_data
     print("3. Starting test run")
     test_run_specific_data = requests.post(
-        f"https://postman-echo.com/post",
+        "https://postman-echo.com/post",
         data="test-run-specific_" + timestring(),
     ).json()["data"]
 
