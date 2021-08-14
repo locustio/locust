@@ -1,5 +1,6 @@
-# This example shows the various ways to run things outside of the normal task execution flow,
-# and shows various times to get test data:
+# This example shows the various ways to run things before/outside of the normal task execution flow,
+# which is very useful for fetching test data.
+#
 # 1. Locustfile parse time
 # 2. Locust start
 # 3. Test start
@@ -11,7 +12,7 @@
 from locust.user.wait_time import constant
 from locust import HttpUser, task
 from locust import events
-from locust.runners import LocalRunner, MasterRunner, WorkerRunner
+from locust.runners import MasterRunner
 import requests
 import datetime
 
@@ -23,8 +24,7 @@ def timestring():
 
 print("1. Parsing locustfile, happens before anything else")
 
-# This is a good place to fetch global test data. If you want to get something over HTTP,
-# you can use `requests` to do it. It will not be logged in Locust as a request.
+# If you want to get something over HTTP at this time you can use `requests` directly:
 global_test_data = requests.post(
     "https://postman-echo.com/post",
     data="global_test_data_" + timestring(),
@@ -48,10 +48,12 @@ def _(environment, **_kwargs):
     # happens only once in headless runs, but can happen multiple times in web ui-runs
     global test_run_specific_data
     print("3. Starting test run")
-    test_run_specific_data = requests.post(
-        "https://postman-echo.com/post",
-        data="test-run-specific_" + timestring(),
-    ).json()["data"]
+    # in a distributed run, the master does not typically need any test data
+    if not isinstance(environment.runner, MasterRunner):
+        test_run_specific_data = requests.post(
+            "https://postman-echo.com/post",
+            data="test-run-specific_" + timestring(),
+        ).json()["data"]
 
 
 @events.test_stop.add_listener
@@ -66,6 +68,7 @@ class MyUser(HttpUser):
     def on_start(self):
         print("4. A user was started")
         # This is a good place to fetch user-specific test data. It is executed once per User
+        # If you do not want the request logged, you can replace self.client.<method> with requests.<method>
         self.user_specific_testdata = self.client.post(
             "https://postman-echo.com/post",
             data="user-specific_" + timestring(),
@@ -78,8 +81,7 @@ class MyUser(HttpUser):
         self.client.get(f"/get?{self.user_specific_testdata}")
 
         print("5. Getting task-run-specific testdata")
-        # If every iteration is meant to use new test data (like username/password)
-        # this is the most common way to do it
+        # If every iteration is meant to use new test data this is the most common way to do it
         task_run_specific_testdata = self.client.post(
             "https://postman-echo.com/post",
             data="task_run_specific_testdata_" + timestring(),
