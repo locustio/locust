@@ -44,7 +44,7 @@
             {% if show_download_link %}
                 <p class="download"><a href="?download=1">Download the Report</a></p>
             {% endif %}
-            <p>During: <span>{{ start_time }} - {{ end_time }}</span></p>
+            <p>During: <span class="l10n datetime">{{ start_time }}</span> - <span class="l10n datetime">{{ end_time }}</span></p>
             <p>Target Host: <span>{{ host }}</span></p>
         </div>
 
@@ -219,6 +219,20 @@
                 ]
             });
         }
+
+        $(".l10n.datetime").html((index, currentContent) => {
+            if (!currentContent || !currentContent.includes(" ") || !currentContent.includes(":")) {
+                return currentContent;
+            }
+
+            let [date, time] = currentContent.split(" ");
+            let utcDateTime = new Date();
+            let [year, month, day] = date.split("-")
+            utcDateTime.setUTCFullYear(year, parseInt(month) - 1, day);
+            utcDateTime.setUTCHours(...(time.split(":")));
+            
+            return utcDateTime.toLocaleString();
+        });
     </script>
 </body>
 </html>
