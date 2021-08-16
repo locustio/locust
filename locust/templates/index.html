@@ -78,6 +78,11 @@
                         {% endif %}
                     </label>
                     <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or "" }}" onfocus="this.select()"/><br>
+                    {% if extra_options %}<label>Custom parameters:</label>{% endif %}
+                    {% for key, value in extra_options.items() %}
+                        <label for="{{key}}">{{key}}</label>
+                        <input type="text" name="{{key}}" id="{{key}}" class="val" value="{{value}}" /><br>
+                    {% endfor %}
                     <button type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;"></div>

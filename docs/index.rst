@@ -15,7 +15,7 @@ Getting started
 ---------------
 
 .. toctree ::
-    :maxdepth: 4
+    :maxdepth: 2
 
     what-is-locust
     installation

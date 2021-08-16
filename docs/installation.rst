@@ -21,13 +21,15 @@ Validate your installation. If this doesnt work, `check the wiki <https://github
 
 Great! Now we're ready to create our first test: :ref:`quickstart`
 
-Bleeding edge version
----------------------
-If you need some feature or fix not yet part of a release:
+Dev builds
+----------
+If you need the latest and greatest version of Locust and cannot wait for the next proper release, you can install a dev build like this:
 
 .. code-block:: console
 
-    $ pip3 install -e git://github.com/locustio/locust.git@master#egg=locust
+    $ pip3 install -U --pre locust
+
+Dev builds are published every time a branch is merged into master.
 
 Install for development
 -----------------------

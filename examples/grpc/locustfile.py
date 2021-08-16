@@ -18,6 +18,7 @@ grpc_gevent.init_gevent()
 
 @events.init.add_listener
 def run_grpc_server(environment, **_kwargs):
+    # Start the dummy server. This is not something you would do in a real test.
     gevent.spawn(start_server)
 
 

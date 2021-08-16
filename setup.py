@@ -8,15 +8,8 @@ from setuptools import find_packages, setup
 
 ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
 
-# parse version from locust/__init__.py
-_version_re = re.compile(r"__version__\s+=\s+(.*)")
-_init_file = os.path.join(ROOT_PATH, "locust", "__init__.py")
-with open(_init_file, "rb") as f:
-    version = str(ast.literal_eval(_version_re.search(f.read().decode("utf-8")).group(1)))
-
 setup(
     name="locust",
-    version=version,
     install_requires=[
         "gevent>=20.9.0",
         "flask>=2.0.0",
@@ -40,4 +33,9 @@ setup(
     extras_require={
         ":sys_platform == 'win32'": ["pywin32"],
     },
+    use_scm_version={
+        "write_to": "locust/_version.py",
+        "local_scheme": "no-local-version",
+    },
+    setup_requires=["setuptools_scm"],
 )

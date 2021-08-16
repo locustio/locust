@@ -417,6 +417,13 @@ def setup_parser_arguments(parser):
         help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. This parameter only needs to be specified for the master process when running Locust distributed.",
         env_var="LOCUST_STOP_TIMEOUT",
     )
+    other_group.add_argument(
+        "--equal-weights",
+        action="store_true",
+        default=False,
+        dest="equal_weights",
+        help="Use equally distributed task weights, overriding the weights specified in the locustfile.",
+    )
 
     user_classes_group = parser.add_argument_group("User classes")
     user_classes_group.add_argument(
@@ -443,3 +450,10 @@ def parse_options(args=None):
     if parsed_opts.stats_history_enabled and (parsed_opts.csv_prefix is None):
         parser.error("'--csv-full-history' requires '--csv'.")
     return parsed_opts
+
+
+def default_args_dict():
+    # returns a dict containing the default arguments (before any custom arguments are added)
+    default_parser = get_empty_argument_parser()
+    setup_parser_arguments(default_parser)
+    return vars(default_parser.parse([]))

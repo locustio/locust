@@ -2,6 +2,7 @@
 locust.wpr
 locust.egg-info/**
 locustio.egg-info/**
+locust/_version.py
 docs/_build/**
 docs/cli-help-output.txt
 docs/config-options.rst

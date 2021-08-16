@@ -41,6 +41,7 @@ from .stats import (
     RequestStats,
     setup_distributed_stats_event_listeners,
 )
+from . import argument_parser
 
 logger = logging.getLogger(__name__)
 
@@ -690,6 +691,9 @@ class MasterRunner(DistributedRunner):
                         "user_classes_count": worker_user_classes_count,
                         "host": self.environment.host,
                         "stop_timeout": self.environment.stop_timeout,
+                        "parsed_options": vars(self.environment.parsed_options)
+                        if self.environment.parsed_options
+                        else {},
                     }
                     dispatch_greenlets.add(
                         gevent.spawn_later(
@@ -1112,6 +1116,17 @@ class WorkerRunner(DistributedRunner):
                     continue
                 self.environment.host = job["host"]
                 self.environment.stop_timeout = job["stop_timeout"]
+
+                # receive custom arguments
+                if self.environment.parsed_options is None:
+                    default_parser = argument_parser.get_empty_argument_parser()
+                    argument_parser.setup_parser_arguments(default_parser)
+                    self.environment.parsed_options = default_parser.parse(args=[])
+                custom_args_from_master = {
+                    k: v for k, v in job["parsed_options"].items() if k not in argument_parser.default_args_dict()
+                }
+                vars(self.environment.parsed_options).update(custom_args_from_master)
+
                 if self.spawning_greenlet:
                     # kill existing spawning greenlet before we launch new one
                     self.spawning_greenlet.kill(block=True)

@@ -93,7 +93,11 @@ Note that only methods decorated with ``@task`` will be picked, so you can defin
 
 The ``self.client`` attribute makes it possible to make HTTP calls that will be logged by Locust. For information on how 
 to make other kinds of requests, validate the response, etc, see 
-`Using the HTTP Client <writing-a-locustfile.html#using-the-http-client>`_.
+`Using the HTTP Client <writing-a-locustfile.html#client-attribute-httpsession>`_. 
+
+.. note::
+    
+    HttpUser is not a real browser, and thus will not parse an HTML response to load resources or render the page. It will keep track of cookies though.
 
 .. code-block:: python
 
@@ -453,7 +457,7 @@ It contains methods for all HTTP methods: :py:meth:`get <locust.clients.HttpSess
 Just like :py:class:`requests.Session`, it preserves cookies between requests so it can easily be used to log in to websites.
 
 .. code-block:: python
-    :caption: Make a POST request, look at the response and implicitly reuse any session cookies we got for a second request
+    :caption: Make a POST request, look at the response and implicitly reuse any session cookie we got for a second request
 
     response = self.client.post("/login", {"username":"testuser", "password":"secret"})
     print("Response status code:", response.status_code)
@@ -522,7 +526,7 @@ Here's an example of how to call a REST API and validate the response:
         except KeyError:
             response.failure("Response did not contain expected key 'greeting'")
 
-
+locust-plugins has a ready-made class for testing REST API:s called `RestUser <https://github.com/SvenskaSpel/locust-plugins/blob/master/examples/rest_ex.py>`_
 
 .. _name-parameter:
 

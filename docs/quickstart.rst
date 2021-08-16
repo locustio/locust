@@ -33,18 +33,24 @@ Locust's web interface
 Once you've started Locust, open up a browser and point it to http://localhost:8089. You will be greeted with something like this:
 
 .. image:: images/webui-splash-screenshot.png
-| 
 
-Point the test to your own web server and try it out!
+| 
+| Point the test to your own web server and try it out!
 
 The following screenshots show what it might look like when running this test targeting 40 concurrent users with a ramp up speed of 0.5 users/s, pointed it to a server that responds to ``/hello`` and ``/world``.
 
 .. image:: images/webui-running-statistics.png
 
-You can also view the results as charts:
+Locust can also visualize the results as charts, showing things like requests per second (RPS):
 
 .. image:: images/total_requests_per_second.png
+
+Response times (in milliseconds):
+    
 .. image:: images/response_times.png
+
+Number of users:
+
 .. image:: images/number_of_users.png
 
 .. note::
@@ -92,6 +98,6 @@ Parameters can also be set through :ref:`environment variables <environment-vari
 
 To see all available options type: ``locust --help`` or check :ref:`configuration`.
 
-| 
+|
 
 Now, lets have a more in-depth look at locustfiles and what they can do: :ref:`writing-a-locustfile`
