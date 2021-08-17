@@ -217,20 +217,28 @@ function updateStats() {
             renderTable(report);
             renderWorkerTable(report);
 
-            if (report.state !== "stopped"){
-                // get total stats row
-                var total = report.stats[report.stats.length-1];
-                // update charts
-                stats_history["time"].push(new Date().toLocaleTimeString());
-                stats_history["user_count"].push({"value": report.user_count});
-                stats_history["current_rps"].push({"value": total.current_rps, "users": report.user_count});
-                stats_history["current_fail_per_sec"].push({"value": total.current_fail_per_sec, "users": report.user_count});
-                stats_history["response_time_percentile_50"].push({"value": report.current_response_time_percentile_50, "users": report.user_count});
-                stats_history["response_time_percentile_95"].push({"value": report.current_response_time_percentile_95, "users": report.user_count});
-                update_stats_charts()
-            } else {
+            if (report.state === "stopped") {
                 appearStopped();
+                return;
             }
+
+            // get total stats row
+            var total = report.stats[report.stats.length-1];
+
+            // ignore stats without requests
+            if (total.num_requests < 1) {
+                return;
+            }
+
+            // update charts
+            stats_history["time"].push(new Date().toLocaleTimeString());
+            stats_history["user_count"].push({"value": report.user_count});
+            stats_history["current_rps"].push({"value": total.current_rps, "users": report.user_count});
+            stats_history["current_fail_per_sec"].push({"value": total.current_fail_per_sec, "users": report.user_count});
+            stats_history["response_time_percentile_50"].push({"value": report.current_response_time_percentile_50, "users": report.user_count});
+            stats_history["response_time_percentile_95"].push({"value": report.current_response_time_percentile_95, "users": report.user_count});
+            update_stats_charts();
+
         } catch(i){
             console.debug(i);
         }
