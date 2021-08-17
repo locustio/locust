@@ -225,13 +225,7 @@
                 return currentContent;
             }
 
-            let [date, time] = currentContent.split(" ");
-            let utcDateTime = new Date();
-            let [year, month, day] = date.split("-")
-            utcDateTime.setUTCFullYear(year, parseInt(month) - 1, day);
-            utcDateTime.setUTCHours(...(time.split(":")));
-            
-            return utcDateTime.toLocaleString();
+            return new Date(Date.parse(currentContent.replace(" ", "T") + ".000Z")).toLocaleString();
         });
     </script>
 </body>
