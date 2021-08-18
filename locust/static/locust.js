@@ -79,6 +79,20 @@ $('#swarm_form').submit(function(event) {
         function(response) {
             if (response.success) {
                 setHostName(response.host);
+
+                // add run marker to close off the previous run if any
+                if(stats_history["time"].length < 1) {
+                    return;
+                }
+
+                let time = new Date().toLocaleTimeString();
+                stats_history["markers"].push({xAxis: time});
+                stats_history["time"].push(time);
+                stats_history["user_count"].push({"value": null});
+                stats_history["current_rps"].push({"value": null});
+                stats_history["current_fail_per_sec"].push({"value": null});
+                stats_history["response_time_percentile_50"].push({"value": null});
+                stats_history["response_time_percentile_95"].push({"value": null});
             }
         }
     );
@@ -174,12 +188,23 @@ $("#workers .stats_label").click(function(event) {
     renderWorkerTable(window.report);
 });
 
+function createMarkLine() {
+    return {
+        symbol: "none",
+        label: {
+            formatter: params => `Run #${params.dataIndex + 1}`
+        },
+        lineStyle: {color: "#5b6f66"},
+        data: stats_history["markers"],
+    }
+}
+
 function update_stats_charts(){
     if(stats_history["time"].length > 0){
         rpsChart.chart.setOption({
             xAxis: {data: stats_history["time"]},
             series: [
-                {data: stats_history["current_rps"]},
+                {data: stats_history["current_rps"], markLine: createMarkLine()},
                 {data: stats_history["current_fail_per_sec"]},
             ]
         });
@@ -187,17 +212,15 @@ function update_stats_charts(){
         responseTimeChart.chart.setOption({
             xAxis: {data: stats_history["time"]},
             series: [
-                {data: stats_history["response_time_percentile_50"]},
+                {data: stats_history["response_time_percentile_50"], markLine: createMarkLine()},
                 {data: stats_history["response_time_percentile_95"]},
             ]
         });
 
         usersChart.chart.setOption({
-            xAxis: {
-                data: stats_history["time"]
-            },
+            xAxis: {data: stats_history["time"]},
             series: [
-                {data: stats_history["user_count"]},
+                {data: stats_history["user_count"], markLine: createMarkLine()},
             ]
         });
     }
