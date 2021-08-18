@@ -589,7 +589,7 @@ class StatsEntry:
                 percent,
             )
         # if time was not in response times cache window
-        return 0
+        return None
 
     def percentile(self):
         if not self.num_requests:
