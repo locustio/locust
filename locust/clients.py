@@ -146,6 +146,7 @@ class HttpSession(requests.Session):
                         e,
                         (
                             requests.exceptions.ConnectionError,
+                            requests.exceptions.ProtocolError,
                             requests.packages.urllib3.exceptions.MaxRetryError,
                             requests.packages.urllib3.exceptions.NewConnectionError,
                         ),
