@@ -106,6 +106,8 @@ class Environment:
 
         self._filter_tasks_by_tags()
 
+        self._remove_user_classes_with_weight_zero()
+
         # Validate there's no class with the same name but in different modules
         if len(set(user_class.__name__ for user_class in self.user_classes)) != len(self.user_classes):
             raise ValueError(
@@ -215,6 +217,19 @@ class Environment:
 
         for user_class in self.user_classes:
             filter_tasks_by_tags(user_class, self.tags, self.exclude_tags)
+
+    def _remove_user_classes_with_weight_zero(self):
+        """
+        Remove user classes having a weight of zero.
+        """
+        if len(self.user_classes) == 0:
+            # Preserve previous behaviour that allowed no user classes to be specified.
+            return
+        filtered_user_classes = [user_class for user_class in self.user_classes if user_class.weight > 0]
+        if len(filtered_user_classes) == 0:
+            # TODO: Better exception than `ValueError`?
+            raise ValueError("There are no users with weight > 0.")
+        self.user_classes[:] = filtered_user_classes
 
     def assign_equal_weights(self):
         """
