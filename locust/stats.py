@@ -579,7 +579,7 @@ class StatsEntry:
                 break
 
         if cached:
-            # If we fond an acceptable cached response times, we'll calculate a new response
+            # If we found an acceptable cached response times, we'll calculate a new response
             # times dict of the last 10 seconds (approximately) by diffing it with the current
             # total response times. Then we'll use that to calculate a response time percentile
             # for that timeframe
@@ -588,6 +588,8 @@ class StatsEntry:
                 self.num_requests - cached.num_requests,
                 percent,
             )
+        # if time was not in response times cache window
+        return None
 
     def percentile(self):
         if not self.num_requests:
