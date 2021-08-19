@@ -1,7 +1,7 @@
 .. _testing-other-systems:
 
 ========================
-Testing non-HTTP systems 
+Testing other systems 
 ========================
 
 Locust only comes with built-in support for HTTP/HTTPS but it can be extended to load test almost any system. You do this by writing a custom client that triggers :py:attr:`request <locust.event.Events.request>`
@@ -43,5 +43,14 @@ Dummy server to test:
 gRPC client, base User and example usage:
 
 .. literalinclude:: ../examples/grpc/locustfile.py
+
+
+Example: Patching over SDK's that wrap around Session objects
+=============================================================
+
+If you have a prebuilt SDK for a target system that is a essentially a wrapper for Session object. You can use the a pattern of patching over the internal session object with the locust provided one:
+
+.. literalinclude:: ../examples/sdk_session_patching/session_patch_locustfile.py
+
 
 For more examples of user types, see `locust-plugins <https://github.com/SvenskaSpel/locust-plugins#users>`_ (it has users for WebSocket/SocketIO, Kafka, Selenium/WebDriver and more) 
