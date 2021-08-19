@@ -16,9 +16,11 @@ function appearStopped() {
 
 $("#box_stop a.stop-button").click(function(event) {
     event.preventDefault();
-    $.get($(this).attr("href"));
+    $.get($(this).attr("href")).done(() => {
+        markerFlags.stop = true;
+    });
     $("body").attr("class", "stopped");
-    appearStopped()
+    appearStopped();
 });
 
 $("#box_stop a.reset-button").click(function(event) {
@@ -80,19 +82,10 @@ $('#swarm_form').submit(function(event) {
             if (response.success) {
                 setHostName(response.host);
 
-                // add run marker to close off the previous run if any
-                if(stats_history["time"].length < 1) {
-                    return;
+                // only mark run starts if at least 1 run has been reported
+                if (stats_history["time"].length > 0) {
+                    markerFlags.start = true;
                 }
-
-                let time = new Date().toLocaleTimeString();
-                stats_history["markers"].push({xAxis: time});
-                stats_history["time"].push(time);
-                stats_history["user_count"].push({"value": null});
-                stats_history["current_rps"].push({"value": null});
-                stats_history["current_fail_per_sec"].push({"value": null});
-                stats_history["response_time_percentile_50"].push({"value": null});
-                stats_history["response_time_percentile_95"].push({"value": null});
             }
         }
     );
@@ -233,6 +226,11 @@ var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", 
 charts.push(rpsChart, responseTimeChart, usersChart);
 update_stats_charts()
 
+const markerFlags = {
+    start: false,
+    stop: false,
+}
+
 function updateStats() {
     $.get('./stats/requests', function (report) {
         window.report = report;
@@ -240,9 +238,39 @@ function updateStats() {
             renderTable(report);
             renderWorkerTable(report);
 
+            const time = new Date().toLocaleTimeString();
+
             if (report.state === "stopped") {
+                if (markerFlags.stop) {
+                    markerFlags.stop = false;
+    
+                    // placeholders to show a skip in the lines between test runs
+                    stats_history["time"].push(time);
+                    stats_history["user_count"].push({"value": null});
+                    stats_history["current_rps"].push({"value": null});
+                    stats_history["current_fail_per_sec"].push({"value": null});
+                    stats_history["response_time_percentile_50"].push({"value": null});
+                    stats_history["response_time_percentile_95"].push({"value": null});
+                }
+
+                // update stats chart to ensure the stop spacing appears as part 
+                // of the update loop, otherwise we will "jump" 2 plots on the next run 
+                update_stats_charts();
+
                 appearStopped();
                 return;
+            }
+
+            // add markers between test runs, based on a new run being started
+            if (stats_history["time"].length > 0 && markerFlags.start) {
+                markerFlags.start = false;
+
+                // mark the first run when we start the second run
+                if (stats_history["markers"].length === 0) {
+                    stats_history["markers"].push({xAxis: stats_history["time"][0]});
+                }
+
+                stats_history["markers"].push({xAxis: time});
             }
 
             // get total stats row
@@ -254,7 +282,7 @@ function updateStats() {
             }
 
             // update charts
-            stats_history["time"].push(new Date().toLocaleTimeString());
+            stats_history["time"].push(time);
             stats_history["user_count"].push({"value": report.user_count});
             stats_history["current_rps"].push({"value": total.current_rps, "users": report.user_count});
             stats_history["current_fail_per_sec"].push({"value": total.current_fail_per_sec, "users": report.user_count});
