@@ -580,6 +580,12 @@ class TestStatsEntryResponseTimesCache(unittest.TestCase):
 
         self.assertEqual(95, s.get_current_response_time_percentile(0.95))
 
+    def test_get_current_response_time_percentile_outside_cache_window(self):
+        s = StatsEntry(self.stats, "/", "GET", use_response_times_cache=True)
+        # an empty response times cache, current time will not be in this cache
+        s.response_times_cache = {}
+        self.assertEqual(None, s.get_current_response_time_percentile(0.95))
+
     def test_diff_response_times_dicts(self):
         self.assertEqual(
             {1: 5, 6: 8},

@@ -9,7 +9,9 @@ class MultipleHostsUser(HttpUser):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_client = HttpSession(base_url=os.environ["API_HOST"])
+        self.api_client = HttpSession(
+            base_url=os.environ["API_HOST"], request_event=self.client.request_event, user=self
+        )
 
 
 class UserTasks(TaskSet):

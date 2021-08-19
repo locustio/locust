@@ -141,6 +141,19 @@ class HttpSession(requests.Session):
             try:
                 response.raise_for_status()
             except RequestException as e:
+                while (
+                    isinstance(
+                        e,
+                        (
+                            requests.exceptions.ConnectionError,
+                            requests.packages.urllib3.exceptions.ProtocolError,
+                            requests.packages.urllib3.exceptions.MaxRetryError,
+                            requests.packages.urllib3.exceptions.NewConnectionError,
+                        ),
+                    )
+                    and e.__context__  # Not sure if the above exceptions can ever be the lowest level, but it is good to be sure
+                ):
+                    e = e.__context__
                 request_meta["exception"] = e
 
             self.request_event.fire(**request_meta)

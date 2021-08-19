@@ -16,9 +16,11 @@ function appearStopped() {
 
 $("#box_stop a.stop-button").click(function(event) {
     event.preventDefault();
-    $.get($(this).attr("href"));
+    $.get($(this).attr("href")).done(() => {
+        markerFlags.stop = true;
+    });
     $("body").attr("class", "stopped");
-    appearStopped()
+    appearStopped();
 });
 
 $("#box_stop a.reset-button").click(function(event) {
@@ -79,6 +81,11 @@ $('#swarm_form').submit(function(event) {
         function(response) {
             if (response.success) {
                 setHostName(response.host);
+
+                // only mark run starts if at least 1 run has been reported
+                if (stats_history["time"].length > 0) {
+                    markerFlags.start = true;
+                }
             }
         }
     );
@@ -174,12 +181,23 @@ $("#workers .stats_label").click(function(event) {
     renderWorkerTable(window.report);
 });
 
+function createMarkLine() {
+    return {
+        symbol: "none",
+        label: {
+            formatter: params => `Run #${params.dataIndex + 1}`
+        },
+        lineStyle: {color: "#5b6f66"},
+        data: stats_history["markers"],
+    }
+}
+
 function update_stats_charts(){
     if(stats_history["time"].length > 0){
         rpsChart.chart.setOption({
             xAxis: {data: stats_history["time"]},
             series: [
-                {data: stats_history["current_rps"]},
+                {data: stats_history["current_rps"], markLine: createMarkLine()},
                 {data: stats_history["current_fail_per_sec"]},
             ]
         });
@@ -187,17 +205,15 @@ function update_stats_charts(){
         responseTimeChart.chart.setOption({
             xAxis: {data: stats_history["time"]},
             series: [
-                {data: stats_history["response_time_percentile_50"]},
+                {data: stats_history["response_time_percentile_50"], markLine: createMarkLine()},
                 {data: stats_history["response_time_percentile_95"]},
             ]
         });
 
         usersChart.chart.setOption({
-            xAxis: {
-                data: stats_history["time"]
-            },
+            xAxis: {data: stats_history["time"]},
             series: [
-                {data: stats_history["user_count"]},
+                {data: stats_history["user_count"], markLine: createMarkLine()},
             ]
         });
     }
@@ -210,6 +226,11 @@ var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", 
 charts.push(rpsChart, responseTimeChart, usersChart);
 update_stats_charts()
 
+const markerFlags = {
+    start: false,
+    stop: false,
+}
+
 function updateStats() {
     $.get('./stats/requests', function (report) {
         window.report = report;
@@ -217,20 +238,58 @@ function updateStats() {
             renderTable(report);
             renderWorkerTable(report);
 
-            if (report.state !== "stopped"){
-                // get total stats row
-                var total = report.stats[report.stats.length-1];
-                // update charts
-                stats_history["time"].push(new Date().toLocaleTimeString());
-                stats_history["user_count"].push({"value": report.user_count});
-                stats_history["current_rps"].push({"value": total.current_rps, "users": report.user_count});
-                stats_history["current_fail_per_sec"].push({"value": total.current_fail_per_sec, "users": report.user_count});
-                stats_history["response_time_percentile_50"].push({"value": report.current_response_time_percentile_50, "users": report.user_count});
-                stats_history["response_time_percentile_95"].push({"value": report.current_response_time_percentile_95, "users": report.user_count});
-                update_stats_charts()
-            } else {
+            const time = new Date().toLocaleTimeString();
+
+            if (report.state === "stopped") {
+                if (markerFlags.stop) {
+                    markerFlags.stop = false;
+    
+                    // placeholders to show a skip in the lines between test runs
+                    stats_history["time"].push(time);
+                    stats_history["user_count"].push({"value": null});
+                    stats_history["current_rps"].push({"value": null});
+                    stats_history["current_fail_per_sec"].push({"value": null});
+                    stats_history["response_time_percentile_50"].push({"value": null});
+                    stats_history["response_time_percentile_95"].push({"value": null});
+                }
+
+                // update stats chart to ensure the stop spacing appears as part 
+                // of the update loop, otherwise we will "jump" 2 plots on the next run 
+                update_stats_charts();
+
                 appearStopped();
+                return;
             }
+
+            // add markers between test runs, based on a new run being started
+            if (stats_history["time"].length > 0 && markerFlags.start) {
+                markerFlags.start = false;
+
+                // mark the first run when we start the second run
+                if (stats_history["markers"].length === 0) {
+                    stats_history["markers"].push({xAxis: stats_history["time"][0]});
+                }
+
+                stats_history["markers"].push({xAxis: time});
+            }
+
+            // get total stats row
+            var total = report.stats[report.stats.length-1];
+
+            // ignore stats without requests
+            if (total.num_requests < 1) {
+                return;
+            }
+
+            // update charts
+            stats_history["time"].push(time);
+            stats_history["user_count"].push({"value": report.user_count});
+            stats_history["current_rps"].push({"value": total.current_rps, "users": report.user_count});
+            stats_history["current_fail_per_sec"].push({"value": total.current_fail_per_sec, "users": report.user_count});
+            stats_history["response_time_percentile_50"].push({"value": report.current_response_time_percentile_50, "users": report.user_count});
+            stats_history["response_time_percentile_95"].push({"value": report.current_response_time_percentile_95, "users": report.user_count});
+            update_stats_charts();
+
         } catch(i){
             console.debug(i);
         }
