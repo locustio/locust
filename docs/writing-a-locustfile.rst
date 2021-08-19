@@ -546,6 +546,35 @@ Example:
     for i in range(10):
         self.client.get("/blog?id=%i" % i, name="/blog?id=[id]")
 
+There may be situations where passing in a parameter into request function is not possible, such as when interacting with libraries/SDK's that
+wrap a Requests session. An alternative say of grouping requests is provided By setting the ``client.group_name`` attribute
+
+.. code-block:: python
+
+    # Statistics for these requests will be grouped under: /blog/?id=[id]
+    self.client.group_name="/blog?id=[id]"
+    for i in range(10):
+        self.client.get("/blog?id=%i" % i)
+    self.client.group_name=None
+
+If You want to chain multiple groupings with minimal boilerplate, you can use the ``client.group()`` context manager. 
+
+.. code-block:: python
+
+    @task
+    def multiple_groupings_example(self): 
+
+        # Statistics for these requests will be grouped under: /blog/?id=[id]
+        with self.client.group(name="/blog?id=[id]"):
+            for i in range(10):
+                self.client.get("/blog?id=%i" % i)
+
+        # Statistics for these requests will be grouped under: /article/?id=[id]
+        with self.client.group(name="/article?id=[id]"):
+            for i in range(10):
+                self.client.get("/article?id=%i" % i)
+        
+
 
 HTTP Proxy settings
 -------------------
