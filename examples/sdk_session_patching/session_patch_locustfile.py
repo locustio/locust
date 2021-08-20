@@ -1,10 +1,9 @@
 import locust
 from locust.user import task
-from archivist.archivist import Archivist   # Example SDK under test
+from archivist.archivist import Archivist  # Example SDK under test
 
 
 class ArchivistUser(locust.HttpUser):
-
     def on_start(self):
         AUTH_TOKEN = None
 
@@ -18,7 +17,7 @@ class ArchivistUser(locust.HttpUser):
 
     @task
     def Create_assets(self):
-        """ User creates assets as fast as possible"""
+        """User creates assets as fast as possible"""
 
         while True:
             self.arch.assets.create(behaviours=[], attrs={})
