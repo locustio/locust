@@ -54,7 +54,7 @@ class HttpSession(requests.Session):
 
         # User can group name, or use the group context manager to gather performance statistics under a specific name
         # This is an alternative to passing in the "name" parameter to the requests function
-        self.group_name = None
+        self.request_name = None
 
         # Check for basic authentication
         parsed_url = urlparse(self.base_url)
@@ -78,14 +78,14 @@ class HttpSession(requests.Session):
             return "%s%s" % (self.base_url, path)
 
     @contextmanager
-    def group(self, *, name: str):
+    def name_request(self, name: str):
         """Group requests using the "with" keyword"""
 
-        self.group_name = name
+        self.request_name = name
         try:
             yield
         finally:
-            self.group_name = None
+            self.request_name = None
 
     def request(self, method, url, name=None, catch_response=False, context={}, **kwargs):
         """
@@ -118,8 +118,8 @@ class HttpSession(requests.Session):
         """
 
         # if group name has been set and no name parameter has been passed in; set the name parameter to group_name
-        if self.group_name and not name:
-            name = self.group_name
+        if self.request_name and not name:
+            name = self.request_name
 
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(url)
