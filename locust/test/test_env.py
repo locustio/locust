@@ -143,3 +143,50 @@ class TestEnvironment(LocustTestCase):
         environment.assign_equal_weights()
         u = environment.user_classes[0]
         verify_tasks(u, ["outside_task", "outside_task_2", "dict_task_1", "dict_task_2", "dict_task_3"])
+
+    def test_user_classes_with_zero_weight_are_removed(self):
+        class MyUser1(User):
+            wait_time = constant(0)
+            weight = 0
+
+            @task
+            def my_task(self):
+                pass
+
+        class MyUser2(User):
+            wait_time = constant(0)
+            weight = 1
+
+            @task
+            def my_task(self):
+                pass
+
+        environment = Environment(user_classes=[MyUser1, MyUser2])
+
+        self.assertEqual(len(environment.user_classes), 1)
+        self.assertIs(environment.user_classes[0], MyUser2)
+
+    def test_all_user_classes_with_zero_weight_raises_exception(self):
+        class MyUser1(User):
+            wait_time = constant(0)
+            weight = 0
+
+            @task
+            def my_task(self):
+                pass
+
+        class MyUser2(User):
+            wait_time = constant(0)
+            weight = 0
+
+            @task
+            def my_task(self):
+                pass
+
+        with self.assertRaises(ValueError) as e:
+            environment = Environment(user_classes=[MyUser1, MyUser2])
+
+        self.assertEqual(
+            e.exception.args[0],
+            "There are no users with weight > 0.",
+        )
