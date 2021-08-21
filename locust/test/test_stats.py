@@ -722,6 +722,17 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         self.locust.client.get("/ultra_fast", name="my_custom_name")
         self.assertEqual(1, self.runner.stats.get("my_custom_name", "GET").num_requests)
 
+    def test_request_stats_named_endpoint_request_name(self):
+        self.locust.client.request_name = "my_custom_name_1"
+        self.locust.client.get("/ultra_fast")
+        self.assertEqual(1, self.runner.stats.get("my_custom_name_1", "GET").num_requests)
+        self.locust.client.request_name = None
+
+    def test_request_stats_named_endpoint_rename_request(self):
+        with self.locust.client.rename_request("my_custom_name_3"):
+            self.locust.client.get("/ultra_fast")
+        self.assertEqual(1, self.runner.stats.get("my_custom_name_3", "GET").num_requests)
+
     def test_request_stats_query_variables(self):
         self.locust.client.get("/ultra_fast?query=1")
         self.assertEqual(1, self.runner.stats.get("/ultra_fast?query=1", "GET").num_requests)
