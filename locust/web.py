@@ -15,12 +15,11 @@ from flask import Flask, make_response, jsonify, render_template, request, send_
 from flask_basicauth import BasicAuth
 from gevent import pywsgi
 
-from locust import __version__ as version, argument_parser
 from .exception import AuthCredentialsError
 from .runners import MasterRunner
 from .log import greenlet_exception_logger
 from .stats import sort_stats
-from . import stats as stats_module
+from . import stats as stats_module, __version__ as version, argument_parser
 from .stats import StatsCSV
 from .util.cache import memoize
 from .util.rounding import proper_round
