@@ -557,7 +557,7 @@ wrap a Requests session. An alternative say of grouping requests is provided By 
         self.client.get("/blog?id=%i" % i)
     self.client.request_name=None
 
-If You want to chain multiple groupings with minimal boilerplate, you can use the ``client.name_request()`` context manager.
+If You want to chain multiple groupings with minimal boilerplate, you can use the ``client.rename_request()`` context manager.
 
 .. code-block:: python
 
@@ -565,12 +565,12 @@ If You want to chain multiple groupings with minimal boilerplate, you can use th
     def multiple_groupings_example(self):
 
         # Statistics for these requests will be grouped under: /blog/?id=[id]
-        with self.client.name_request("/blog?id=[id]"):
+        with self.client.rename_request("/blog?id=[id]"):
             for i in range(10):
                 self.client.get("/blog?id=%i" % i)
 
         # Statistics for these requests will be grouped under: /article/?id=[id]
-        with self.client.name_request("/article?id=[id]"):
+        with self.client.rename_request("/article?id=[id]"):
             for i in range(10):
                 self.client.get("/article?id=%i" % i)
 

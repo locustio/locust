@@ -722,8 +722,8 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         self.assertEqual(1, self.runner.stats.get("my_custom_name_1", "GET").num_requests)
         self.locust.client.request_name = None
 
-    def test_request_stats_named_endpoint_name_request(self):
-        with self.locust.client.name_request("my_custom_name_3"):
+    def test_request_stats_named_endpoint_rename_request(self):
+        with self.locust.client.rename_request("my_custom_name_3"):
             self.locust.client.get("/ultra_fast")
         self.assertEqual(1, self.runner.stats.get("my_custom_name_3", "GET").num_requests)
 

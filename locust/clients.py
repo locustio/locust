@@ -78,7 +78,7 @@ class HttpSession(requests.Session):
             return "%s%s" % (self.base_url, path)
 
     @contextmanager
-    def name_request(self, name: str):
+    def rename_request(self, name: str):
         """Group requests using the "with" keyword"""
 
         self.request_name = name
