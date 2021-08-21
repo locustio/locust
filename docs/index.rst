@@ -52,6 +52,7 @@ Other functionalities
     custom-load-shape
     retrieving-stats
     testing-other-systems
+    testing-requests-based SDK's
     increase-performance
     extending-locust
     logging
@@ -63,7 +64,7 @@ Further reading / knowledgebase
 
 .. toctree ::
     :maxdepth: 1
-    
+
     developing-locust
     further-reading
 
@@ -74,7 +75,7 @@ API
     :maxdepth: 4
 
     api
-    
+
 
 
 Changelog

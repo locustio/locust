@@ -20,4 +20,4 @@ class ArchivistUser(locust.HttpUser):
         """User creates assets as fast as possible"""
 
         while True:
-            self.arch.assets.create(behaviours=[], attrs={})
+            self.arch.assets.create(behaviours=["Builtin", "RecordEvidence", "Attachments"], attrs={"foo": "bar"})

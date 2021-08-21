@@ -1,7 +1,7 @@
 .. _testing-other-systems:
 
 ========================
-Testing other systems 
+Testing non-HTTP systems
 ========================
 
 Locust only comes with built-in support for HTTP/HTTPS but it can be extended to load test almost any system. You do this by writing a custom client that triggers :py:attr:`request <locust.event.Events.request>`
@@ -9,8 +9,8 @@ Locust only comes with built-in support for HTTP/HTTPS but it can be extended to
 .. note::
 
     It is important that any protocol libraries you use can be `monkey-patched <http://www.gevent.org/intro.html#monkey-patching>`_ by gevent (if they use the Python ``socket`` module or some other standard library function like ``subprocess`` you will be fine). Otherwise your calls will block the whole Locust/Python process (in practice limiting you to running a single User per worker process)
-    
-    Some C libraries cannot be monkey patched by gevent, but allow for other workarounds. For example, if you want to use psycopg2 to performance test PostgreSQL, you can use `psycogreen <https://github.com/psycopg/psycogreen/>`_. 
+
+    Some C libraries cannot be monkey patched by gevent, but allow for other workarounds. For example, if you want to use psycopg2 to performance test PostgreSQL, you can use `psycogreen <https://github.com/psycopg/psycogreen/>`_.
 
 Example: writing an XML-RPC User/client
 =======================================
@@ -33,7 +33,7 @@ The only significant difference is that you need to make gRPC gevent-compatible,
 .. code-block:: python
 
     import grpc.experimental.gevent as grpc_gevent
-    
+
     grpc_gevent.init_gevent()
 
 Dummy server to test:
@@ -53,4 +53,4 @@ If you have a prebuilt SDK for a target system that is a essentially a wrapper f
 .. literalinclude:: ../examples/sdk_session_patching/session_patch_locustfile.py
 
 
-For more examples of user types, see `locust-plugins <https://github.com/SvenskaSpel/locust-plugins#users>`_ (it has users for WebSocket/SocketIO, Kafka, Selenium/WebDriver and more) 
+For more examples of user types, see `locust-plugins <https://github.com/SvenskaSpel/locust-plugins#users>`_ (it has users for WebSocket/SocketIO, Kafka, Selenium/WebDriver and more)
