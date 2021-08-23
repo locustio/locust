@@ -33,11 +33,11 @@ def constant_pacing(wait_time):
     called it will return a wait time that will try to make the total time between task
     execution equal to the time specified by the wait_time argument.
 
-    In the following example the task will always be executed once every second, no matter
+    In the following example the task will always be executed once every 10 seconds, no matter
     the task execution time::
 
         class MyUser(User):
-            wait_time = constant_pacing(1)
+            wait_time = constant_pacing(10)
             @task
             def my_task(self):
                 time.sleep(random.random())
@@ -58,3 +58,29 @@ def constant_pacing(wait_time):
             return self._cp_last_wait_time
 
     return wait_time_func
+
+
+def constant_throughput(task_runs_per_second):
+    """
+    Returns a function that will track the run time of the tasks, and for each time it's
+    called it will return a wait time that will try to make the number of task runs per second
+    execution equal to the time specified by the task_runs_per_secondd argument.
+
+    If you have multiple requests in a task your RPS will of course be higher than the
+    specified throughput.
+
+    This is the mathematical inverse of constant_pacing.
+
+    In the following example the task will always be executed once every 10 seconds, no matter
+    the task execution time::
+
+        class MyUser(User):
+            wait_time = constant_throughput(0.1)
+            @task
+            def my_task(self):
+                time.sleep(random.random())
+
+    If a task execution exceeds the specified wait_time, the wait will be 0 before starting
+    the next task.
+    """
+    return constant_pacing(1 / task_runs_per_second)

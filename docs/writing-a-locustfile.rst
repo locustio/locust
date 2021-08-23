@@ -131,11 +131,8 @@ a User class may define.
 wait_time attribute
 -------------------
 
-A User's :py:attr:`wait_time <locust.User.wait_time>` method is an optional attribute used to determine
-how long a simulated user should wait between executing tasks. If no :py:attr:`wait_time <locust.User.wait_time>`
-is specified, the next task will be executed as soon as one finishes.
-
-There are three built in wait time functions:
+A User's :py:attr:`wait_time <locust.User.wait_time>` method makes it easy to introduce delays after
+each task executition. If no `wait_time` is specified, the next task will be executed as soon as one finishes.
 
 * :py:attr:`constant <locust.wait_time.constant>` for a fixed amount of time
 
@@ -154,9 +151,19 @@ For example, to make each user wait between 0.5 and 10 seconds between every tas
 
         wait_time = between(0.5, 10)
 
-* :py:attr:`constant_pacing <locust.wait_time.constant_pacing>` for an adaptive time that ensures the task runs (at most) once every X seconds
+* :py:attr:`constant_throughput <locust.wait_time.constant_throughput>` for an adaptive time that ensures the task runs (at most) X times per second.
 
-This is very useful if you want to target a specific throughput. For example, if you want Locust to run 500 task iterations per second at peak load, you could use `wait_time = constant_pacing(10)` and a user count of 5000. If the time for each iteration exceeds 10 seconds then you'll get lower throughput. Note that as wait time is applied *after* task execution, if you have a high spawn rate/ramp up you may slightly exceed your target during rampup.
+* :py:attr:`constant_pacing <locust.wait_time.constant_pacing>` for an adaptive time that ensures the task runs (at most) once every X seconds  (it is the mathematical inverse of `constant_throughput`)
+
+.. note::
+
+    For example, if you want Locust to run 500 task iterations per second at peak load, you could use `wait_time = constant_throughput(0.1)` and a user count of 5000.
+
+    Wait time can only constrain the throughput, not launch new Users to reach the target. So, in our example, the throughput will be less than 500 if the time for the task iteration exceeds 10 seconds.
+
+    Wait time is applied *after* task execution, so if you have a high spawn rate/ramp up you may end up exceeding your target during rampup.
+
+    Wait times apply to *tasks*, not requests.  If you, for example, specify `wait_time = constant_throughput(2)` and do two requests in your tasks your request rate/RPS will be 4 per User.
 
 It's also possible to declare your own wait_time method directly on your class.
 For example, the following User class would sleep for one second, then two, then three, etc.
