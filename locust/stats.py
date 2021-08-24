@@ -791,7 +791,7 @@ def stats_history(runner):
         stats = runner.stats
         if not stats.total.use_response_times_cache:
             break
-<<<<<<< HEAD
+
         # Do not try to write rows with all 0s in stats_history.csv when a test is not running
         if (runner.state != "stopped" and runner.state != "ready"):
             r = {
@@ -803,18 +803,6 @@ def stats_history(runner):
                 "user_count": runner.user_count or 0,
             }
             stats.history.append(r)
-=======
-
-        r = {
-            "time": datetime.datetime.now().strftime("%H:%M:%S"),
-            "current_rps": stats.total.current_rps or 0,
-            "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
-            "response_time_percentile_95": stats.total.get_current_response_time_percentile(0.95) or 0,
-            "response_time_percentile_50": stats.total.get_current_response_time_percentile(0.5) or 0,
-            "user_count": runner.user_count or 0,
-        }
-        stats.history.append(r)
->>>>>>> eb89f6caf2be299d0b6ea283deb7fccc41c91eb8
         gevent.sleep(HISTORY_STATS_INTERVAL_SEC)
 
 
