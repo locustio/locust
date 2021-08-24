@@ -515,7 +515,7 @@ class TestCsvStats(LocustTestCase):
         hs2 = runner2.stats.history
         gevent.kill(greenlet1)
         gevent.kill(greenlet2)
-        self.assertEqual(1, len(hs1))
+        self.assertEqual(0, len(hs1))
         self.assertEqual(0, len(hs2))
 
 

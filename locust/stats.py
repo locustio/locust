@@ -789,15 +789,17 @@ def stats_history(runner):
         stats = runner.stats
         if not stats.total.use_response_times_cache:
             break
-        r = {
-            "time": datetime.datetime.now().strftime("%H:%M:%S"),
-            "current_rps": stats.total.current_rps or 0,
-            "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
-            "response_time_percentile_95": stats.total.get_current_response_time_percentile(0.95) or 0,
-            "response_time_percentile_50": stats.total.get_current_response_time_percentile(0.5) or 0,
-            "user_count": runner.user_count or 0,
-        }
-        stats.history.append(r)
+        # Do not try to write rows with all 0s in stats_history.csv when a test is not running
+        if (runner.state != "stopped" and runner.state != "ready"):
+            r = {
+                "time": datetime.datetime.now().strftime("%H:%M:%S"),
+                "current_rps": stats.total.current_rps or 0,
+                "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
+                "response_time_percentile_95": stats.total.get_current_response_time_percentile(0.95) or 0,
+                "response_time_percentile_50": stats.total.get_current_response_time_percentile(0.5) or 0,
+                "user_count": runner.user_count or 0,
+            }
+            stats.history.append(r)
         gevent.sleep(HISTORY_STATS_INTERVAL_SEC)
 
 
@@ -991,11 +993,6 @@ class StatsCSVFileWriter(StatsCSV):
 
         Note that this method differs from the other methods as it appends time-stamped data to the file, whereas the other methods overwrites the data.
         """
-
-        # Do not try to write rows with all 0s in stats_history.csv when a test is not running
-        if (self.environment.runner.state == "stopped" or self.environment.runner.state == "ready"):
-            return
-
         stats = self.environment.stats
         timestamp = int(now)
         stats_entries = []

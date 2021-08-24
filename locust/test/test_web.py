@@ -516,7 +516,6 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
 
         reader = csv.reader(StringIO(response.text))
         rows = [r for r in reader]
-
         self.assertEqual(4, len(rows))
         self.assertEqual("Timestamp", rows[0][0])
         self.assertEqual("GET", rows[1][2])
