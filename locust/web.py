@@ -15,12 +15,11 @@ from flask import Flask, make_response, jsonify, render_template, request, send_
 from flask_basicauth import BasicAuth
 from gevent import pywsgi
 
-from locust import __version__ as version, argument_parser
 from .exception import AuthCredentialsError
 from .runners import MasterRunner
 from .log import greenlet_exception_logger
 from .stats import sort_stats
-from . import stats as stats_module
+from . import stats as stats_module, __version__ as version, argument_parser
 from .stats import StatsCSV
 from .util.cache import memoize
 from .util.rounding import proper_round
@@ -426,7 +425,7 @@ class WebUI:
             "user_count": self.environment.runner.user_count,
             "version": version,
             "host": host,
-            "history": stats.history,
+            "history": stats.history if stats.num_requests > 0 else {},
             "override_host_warning": override_host_warning,
             "num_users": options and options.num_users,
             "spawn_rate": options and options.spawn_rate,

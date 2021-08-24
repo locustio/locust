@@ -579,7 +579,7 @@ class StatsEntry:
                 break
 
         if cached:
-            # If we fond an acceptable cached response times, we'll calculate a new response
+            # If we found an acceptable cached response times, we'll calculate a new response
             # times dict of the last 10 seconds (approximately) by diffing it with the current
             # total response times. Then we'll use that to calculate a response time percentile
             # for that timeframe
@@ -588,6 +588,8 @@ class StatsEntry:
                 self.num_requests - cached.num_requests,
                 percent,
             )
+        # if time was not in response times cache window
+        return None
 
     def percentile(self):
         if not self.num_requests:
@@ -792,7 +794,7 @@ def stats_history(runner):
         # Do not try to write rows with all 0s in stats_history.csv when a test is not running
         if (runner.state != "stopped" and runner.state != "ready"):
             r = {
-                "time": datetime.datetime.now().strftime("%H:%M:%S"),
+                "time": datetime.datetime.utcnow().strftime("%H:%M:%S"),
                 "current_rps": stats.total.current_rps or 0,
                 "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
                 "response_time_percentile_95": stats.total.get_current_response_time_percentile(0.95) or 0,

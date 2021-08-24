@@ -8,7 +8,7 @@ from .user import wait_time
 from .user.task import task, tag, TaskSet
 from .user.users import HttpUser, User
 from .contrib.fasthttp import FastHttpUser
-from .user.wait_time import between, constant, constant_pacing
+from .user.wait_time import between, constant, constant_pacing, constant_throughput
 from .shape import LoadTestShape
 
 from .event import Events
@@ -27,6 +27,7 @@ __all__ = (
     "between",
     "constant",
     "constant_pacing",
+    "constant_throughput",
     "events",
     "LoadTestShape",
 )
