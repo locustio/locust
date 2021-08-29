@@ -211,11 +211,11 @@ class LocustProcessIntegrationTest(TestCase):
             gevent.sleep(1)
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
-            self.assertEqual(42, proc.returncode)
             stderr = stderr.decode("utf-8")
             self.assertIn("Starting web interface at", stderr)
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shutting down (exit code 42), bye", stderr)
+            self.assertEqual(42, proc.returncode)
 
     def test_webserver(self):
         with temporary_file(
