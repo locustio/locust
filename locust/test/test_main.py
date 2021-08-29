@@ -366,6 +366,64 @@ class LocustProcessIntegrationTest(TestCase):
             self.assertIn("Shutting down (exit code 0), bye", stderr)
             self.assertNotIn("Traceback", stderr)
 
+    def test_autostart_w_load_shape(self):
+        port = get_free_tcp_port()
+        print(
+            SIMPLE_LOCUST_FILE
+            + textwrap.dedent(
+                """
+            class LoadTestShape(LoadTestShape):
+                def tick(self):
+                    run_time = self.get_run_time()
+                    if run_time < 2:
+                        return (10, 1)
+
+                    return None
+            """
+            )
+        )
+        with mock_locustfile(
+            content=SIMPLE_LOCUST_FILE
+            + textwrap.dedent(
+                """
+            from locust import LoadTestShape
+            class LoadTestShape(LoadTestShape):
+                def tick(self):
+                    run_time = self.get_run_time()
+                    if run_time < 2:
+                        return (10, 1)
+
+                    return None
+            """
+            )
+        ) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--web-port",
+                    str(port),
+                    "--autostart",
+                    "--autoquit",
+                    "1",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+            )
+            gevent.sleep(1.5)
+            response = requests.get(f"http://0.0.0.0:{port}/stats/requests")
+            self.assertEqual(200, response.status_code)
+            data = response.json()
+            self.assertEqual(2, len(data["stats"]), data)
+            self.assertEqual("/", data["stats"][0]["name"])
+            _, stderr = proc.communicate(timeout=8)
+            stderr = stderr.decode("utf-8")
+            self.assertIn("Starting Locust", stderr)
+            self.assertIn("Shape test starting", stderr)
+            self.assertIn("Shutting down (exit code 0), bye", stderr)
+            self.assertNotIn("Traceback", stderr)
+
     def test_web_options(self):
         port = get_free_tcp_port()
         if platform.system() == "Darwin":

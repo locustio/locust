@@ -344,6 +344,9 @@ def main():
 
             # start the test
             if environment.shape_class:
+                if options.run_time:
+                    sys.stderr.write("It makes no sense to combine --run-time and LoadShapes. Bailing out.\n")
+                    sys.exit(1)
                 environment.runner.start_shape()
             else:
                 headless_master_greenlet = gevent.spawn(runner.start, options.num_users, options.spawn_rate)
@@ -437,7 +440,18 @@ def main():
         logger.info("Starting Locust %s" % version)
         if options.autostart:
             if environment.shape_class:
+                if options.run_time:
+                    sys.stderr.write("It makes no sense to combine --run-time and LoadShapes. Bailing out.\n")
+                    sys.exit(1)
                 environment.runner.start_shape()
+                if options.autoquit != -1:
+                    logger.debug("Autoquit time limit set to %s seconds" % options.autoquit)
+                    time.sleep(options.autoquit)
+                    logger.info("--autoquit time reached, shutting down")
+                    runner.quit()
+                    web_ui.stop()
+                else:
+                    logger.info("--autoquit not specified, leaving web ui running indefinitely")
             else:
                 if not options.worker:
                     if options.num_users is None:
