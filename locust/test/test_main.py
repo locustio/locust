@@ -348,12 +348,12 @@ class LocustProcessIntegrationTest(TestCase):
                     "1",
                     "--autostart",
                     "--autoquit",
-                    "1",
+                    "2",
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
             )
-            gevent.sleep(1.8)
+            gevent.sleep(2.5)
             response = requests.get(f"http://0.0.0.0:{port}/stats/requests")
             self.assertEqual(200, response.status_code)
             data = response.json()
