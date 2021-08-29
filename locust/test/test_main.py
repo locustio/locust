@@ -323,9 +323,6 @@ class LocustProcessIntegrationTest(TestCase):
             gevent.sleep(1.8)
             response = requests.get(f"http://0.0.0.0:{port}/stats/requests")
             self.assertEqual(200, response.status_code)
-            data = response.json()
-            self.assertEqual(2, len(data["stats"]), data)
-            self.assertEqual("/", data["stats"][0]["name"])
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
             stderr = stderr.decode("utf-8")
@@ -333,6 +330,10 @@ class LocustProcessIntegrationTest(TestCase):
             self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
             self.assertIn("Shutting down (exit code 0), bye", stderr)
             self.assertNotIn("Traceback", stderr)
+            # check stats afterwards, because it really isnt as informative as the output itself
+            data = response.json()
+            self.assertEqual(2, len(data["stats"]), data)
+            self.assertEqual("/", data["stats"][0]["name"])
 
     def test_autostart_w_run_time(self):
         port = get_free_tcp_port()
@@ -356,15 +357,16 @@ class LocustProcessIntegrationTest(TestCase):
             gevent.sleep(2.9)
             response = requests.get(f"http://0.0.0.0:{port}/stats/requests")
             self.assertEqual(200, response.status_code)
-            data = response.json()
-            self.assertEqual(2, len(data["stats"]), data)
-            self.assertEqual("/", data["stats"][0]["name"])
             _, stderr = proc.communicate(timeout=2)
             stderr = stderr.decode("utf-8")
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Run time limit set to 1 seconds", stderr)
             self.assertIn("Shutting down (exit code 0), bye", stderr)
             self.assertNotIn("Traceback", stderr)
+            data = response.json()
+            # check stats afterwards, because it really isnt as informative as the output itself
+            self.assertEqual(2, len(data["stats"]), data)
+            self.assertEqual("/", data["stats"][0]["name"])
 
     def test_autostart_w_load_shape(self):
         port = get_free_tcp_port()
@@ -400,15 +402,16 @@ class LocustProcessIntegrationTest(TestCase):
             gevent.sleep(1.8)
             response = requests.get(f"http://0.0.0.0:{port}/stats/requests")
             self.assertEqual(200, response.status_code)
-            data = response.json()
-            self.assertEqual(2, len(data["stats"]), data)
-            self.assertEqual("/", data["stats"][0]["name"])
             _, stderr = proc.communicate(timeout=4)
             stderr = stderr.decode("utf-8")
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shape test starting", stderr)
             self.assertIn("Shutting down (exit code 0), bye", stderr)
             self.assertNotIn("Traceback", stderr)
+            # check stats afterwards, because it really isnt as informative as the output itself
+            data = response.json()
+            self.assertEqual(2, len(data["stats"]), data)
+            self.assertEqual("/", data["stats"][0]["name"])
 
     def test_web_options(self):
         port = get_free_tcp_port()
