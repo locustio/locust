@@ -295,7 +295,7 @@ class LocustProcessIntegrationTest(TestCase):
         with mock_locustfile(content=content) as mocked:
             output = (
                 subprocess.check_output(
-                    ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--run-time", "1s", "--headless"],
+                    ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--headless"],
                     stderr=subprocess.STDOUT,
                     timeout=3,
                 )
