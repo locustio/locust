@@ -33,6 +33,17 @@ greenlet_exception_handler = greenlet_exception_logger(logger)
 
 DEFAULT_CACHE_TIME = 2.0
 
+from socket import SOL_SOCKET, SO_REUSEADDR
+
+
+class LocustWSGIServer(pywsgi.WSGIServer):
+    def init_socket(self):
+        super().init_socket()
+        # allow binding to the port, even it if it is in TIME_WAIT.
+        # this allows fast restarts of Locust without causing issues,
+        # and has the added benefit of making our unit tests more stable
+        self.socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+
 
 class WebUI:
     """
@@ -347,11 +358,11 @@ class WebUI:
 
     def start_server(self):
         if self.tls_cert and self.tls_key:
-            self.server = pywsgi.WSGIServer(
+            self.server = LocustWSGIServer(
                 (self.host, self.port), self.app, log=None, keyfile=self.tls_key, certfile=self.tls_cert
             )
         else:
-            self.server = pywsgi.WSGIServer((self.host, self.port), self.app, log=None)
+            self.server = LocustWSGIServer((self.host, self.port), self.app, log=None)
         self.server.serve_forever()
 
     def stop(self):
