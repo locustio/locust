@@ -368,20 +368,6 @@ class LocustProcessIntegrationTest(TestCase):
 
     def test_autostart_w_load_shape(self):
         port = get_free_tcp_port()
-        print(
-            SIMPLE_LOCUST_FILE
-            + textwrap.dedent(
-                """
-            class LoadTestShape(LoadTestShape):
-                def tick(self):
-                    run_time = self.get_run_time()
-                    if run_time < 2:
-                        return (10, 1)
-
-                    return None
-            """
-            )
-        )
         with mock_locustfile(
             content=SIMPLE_LOCUST_FILE
             + textwrap.dedent(
@@ -406,7 +392,7 @@ class LocustProcessIntegrationTest(TestCase):
                     str(port),
                     "--autostart",
                     "--autoquit",
-                    "1",
+                    "2",
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
@@ -417,7 +403,7 @@ class LocustProcessIntegrationTest(TestCase):
             data = response.json()
             self.assertEqual(2, len(data["stats"]), data)
             self.assertEqual("/", data["stats"][0]["name"])
-            _, stderr = proc.communicate(timeout=8)
+            _, stderr = proc.communicate(timeout=4)
             stderr = stderr.decode("utf-8")
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shape test starting", stderr)
