@@ -320,7 +320,7 @@ class LocustProcessIntegrationTest(TestCase):
                 stdout=PIPE,
                 stderr=PIPE,
             )
-            gevent.sleep(1.5)
+            gevent.sleep(1.8)
             response = requests.get(f"http://0.0.0.0:{port}/stats/requests")
             self.assertEqual(200, response.status_code)
             data = response.json()
@@ -353,7 +353,7 @@ class LocustProcessIntegrationTest(TestCase):
                 stdout=PIPE,
                 stderr=PIPE,
             )
-            gevent.sleep(1.5)
+            gevent.sleep(1.8)
             response = requests.get(f"http://0.0.0.0:{port}/stats/requests")
             self.assertEqual(200, response.status_code)
             data = response.json()
@@ -411,7 +411,7 @@ class LocustProcessIntegrationTest(TestCase):
                 stdout=PIPE,
                 stderr=PIPE,
             )
-            gevent.sleep(1.5)
+            gevent.sleep(1.8)
             response = requests.get(f"http://0.0.0.0:{port}/stats/requests")
             self.assertEqual(200, response.status_code)
             data = response.json()
