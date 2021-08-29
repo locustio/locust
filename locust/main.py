@@ -436,6 +436,16 @@ def main():
 
     gevent.signal_handler(signal.SIGTERM, sig_term_handler)
 
+    def autoquit():
+        if options.autoquit != -1:
+            logger.debug("Autoquit time limit set to %s seconds" % options.autoquit)
+            time.sleep(options.autoquit)
+            logger.info("--autoquit time reached, shutting down")
+            runner.quit()
+            web_ui.stop()
+        else:
+            logger.info("--autoquit not specified, leaving web ui running indefinitely")
+
     try:
         logger.info("Starting Locust %s" % version)
         if options.autostart:
@@ -444,14 +454,7 @@ def main():
                     sys.stderr.write("It makes no sense to combine --run-time and LoadShapes. Bailing out.\n")
                     sys.exit(1)
                 environment.runner.start_shape()
-                if options.autoquit != -1:
-                    logger.debug("Autoquit time limit set to %s seconds" % options.autoquit)
-                    time.sleep(options.autoquit)
-                    logger.info("--autoquit time reached, shutting down")
-                    runner.quit()
-                    web_ui.stop()
-                else:
-                    logger.info("--autoquit not specified, leaving web ui running indefinitely")
+                autoquit()
             else:
                 if not options.worker:
                     if options.num_users is None:
@@ -465,14 +468,7 @@ def main():
                 def timelimit_stop():
                     logger.info("--run-time limit reached, stopping test")
                     runner.stop()
-                    if options.autoquit != -1:
-                        logger.debug("Autoquit time limit set to %s seconds" % options.autoquit)
-                        time.sleep(options.autoquit)
-                        logger.info("--autoquit time reached, shutting down")
-                        runner.quit()
-                        web_ui.stop()
-                    else:
-                        logger.info("--autoquit not specified, leaving web ui running indefinitely")
+                    autoquit()
 
                 if options.run_time:
                     logger.info("Run time limit set to %s seconds" % options.run_time)
