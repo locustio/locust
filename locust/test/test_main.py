@@ -18,6 +18,19 @@ from .mock_locustfile import mock_locustfile, MOCK_LOCUSTFILE_CONTENT
 from .testcases import LocustTestCase
 from .util import temporary_file, get_free_tcp_port
 
+SIMPLE_LOCUST_FILE = textwrap.dedent(
+    """
+    from locust import HttpUser, task
+    import time
+    class UserSubclass(HttpUser):
+        host = "https://www.test.com"
+        @task
+        def t(self):
+            self.client.get("/")
+            time.sleep(1)
+    """
+)
+
 
 class TestLoadLocustfile(LocustTestCase):
     def test_is_user_class(self):
@@ -198,11 +211,11 @@ class LocustProcessIntegrationTest(TestCase):
             gevent.sleep(1)
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
-            self.assertEqual(42, proc.returncode)
             stderr = stderr.decode("utf-8")
             self.assertIn("Starting web interface at", stderr)
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shutting down (exit code 42), bye", stderr)
+            self.assertEqual(42, proc.returncode)
 
     def test_webserver(self):
         with temporary_file(
@@ -282,7 +295,7 @@ class LocustProcessIntegrationTest(TestCase):
         with mock_locustfile(content=content) as mocked:
             output = (
                 subprocess.check_output(
-                    ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--run-time", "1s", "--headless"],
+                    ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--headless"],
                     stderr=subprocess.STDOUT,
                     timeout=3,
                 )
@@ -291,6 +304,114 @@ class LocustProcessIntegrationTest(TestCase):
             )
             self.assertIn("Shape test updating to 10 users at 1.00 spawn rate", output)
             self.assertIn("Cleaning up runner...", output)
+
+    def test_autostart_wo_run_time(self):
+        port = get_free_tcp_port()
+        with mock_locustfile(content=SIMPLE_LOCUST_FILE) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--web-port",
+                    str(port),
+                    "--autostart",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+            )
+            gevent.sleep(1.8)
+            response = requests.get(f"http://0.0.0.0:{port}/stats/requests")
+            self.assertEqual(200, response.status_code)
+            proc.send_signal(signal.SIGTERM)
+            stdout, stderr = proc.communicate()
+            stderr = stderr.decode("utf-8")
+            self.assertIn("Starting Locust", stderr)
+            self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
+            self.assertIn("Shutting down (exit code 0), bye", stderr)
+            self.assertNotIn("Traceback", stderr)
+            # check stats afterwards, because it really isnt as informative as the output itself
+            data = response.json()
+            self.assertEqual(2, len(data["stats"]), data)
+            self.assertEqual("/", data["stats"][0]["name"])
+
+    def test_autostart_w_run_time(self):
+        port = get_free_tcp_port()
+        with mock_locustfile(content=SIMPLE_LOCUST_FILE) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--web-port",
+                    str(port),
+                    "-t",
+                    "1",
+                    "--autostart",
+                    "--autoquit",
+                    "2",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+            )
+            gevent.sleep(2.9)
+            response = requests.get(f"http://0.0.0.0:{port}/stats/requests")
+            self.assertEqual(200, response.status_code)
+            _, stderr = proc.communicate(timeout=2)
+            stderr = stderr.decode("utf-8")
+            self.assertIn("Starting Locust", stderr)
+            self.assertIn("Run time limit set to 1 seconds", stderr)
+            self.assertIn("Shutting down (exit code 0), bye", stderr)
+            self.assertNotIn("Traceback", stderr)
+            data = response.json()
+            # check stats afterwards, because it really isnt as informative as the output itself
+            self.assertEqual(2, len(data["stats"]), data)
+            self.assertEqual("/", data["stats"][0]["name"])
+
+    def test_autostart_w_load_shape(self):
+        port = get_free_tcp_port()
+        with mock_locustfile(
+            content=SIMPLE_LOCUST_FILE
+            + textwrap.dedent(
+                """
+            from locust import LoadTestShape
+            class LoadTestShape(LoadTestShape):
+                def tick(self):
+                    run_time = self.get_run_time()
+                    if run_time < 2:
+                        return (10, 1)
+
+                    return None
+            """
+            )
+        ) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--web-port",
+                    str(port),
+                    "--autostart",
+                    "--autoquit",
+                    "2",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+            )
+            gevent.sleep(1.8)
+            response = requests.get(f"http://0.0.0.0:{port}/stats/requests")
+            self.assertEqual(200, response.status_code)
+            _, stderr = proc.communicate(timeout=4)
+            stderr = stderr.decode("utf-8")
+            self.assertIn("Starting Locust", stderr)
+            self.assertIn("Shape test starting", stderr)
+            self.assertIn("Shutting down (exit code 0), bye", stderr)
+            self.assertNotIn("Traceback", stderr)
+            # check stats afterwards, because it really isnt as informative as the output itself
+            data = response.json()
+            self.assertEqual(2, len(data["stats"]), data)
+            self.assertEqual("/", data["stats"][0]["name"])
 
     def test_web_options(self):
         port = get_free_tcp_port()

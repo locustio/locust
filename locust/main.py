@@ -134,6 +134,10 @@ def main():
         sys.stderr.write("The --slave/--expect-slaves parameters have been renamed --worker/--expect-workers\n")
         sys.exit(1)
 
+    if options.autoquit != -1 and not options.autostart:
+        sys.stderr.write("--autoquit is only meaningful in combination with --autostart\n")
+        sys.exit(1)
+
     if options.step_time or options.step_load or options.step_users or options.step_clients:
         sys.stderr.write(
             "The step load feature was removed in Locust 1.3. You can achieve similar results using a LoadTestShape class. See https://docs.locust.io/en/stable/custom-load-shape.html\n"
@@ -247,9 +251,6 @@ def main():
     main_greenlet = runner.greenlet
 
     if options.run_time:
-        if not options.headless:
-            logger.error("The --run-time argument can only be used together with --headless")
-            sys.exit(1)
         if options.worker:
             logger.error("--run-time should be specified on the master node, and not on worker nodes")
             sys.exit(1)
@@ -312,6 +313,13 @@ def main():
         web_ui.start()
         main_greenlet = web_ui.greenlet
 
+    def spawn_run_time_quit_greenlet():
+        def timelimit_quit():
+            logger.info("--run-time limit reached. Stopping Locust")
+            runner.quit()
+
+        gevent.spawn_later(options.run_time, timelimit_quit).link_exception(greenlet_exception_handler)
+
     headless_master_greenlet = None
     if options.headless:
         # headless mode
@@ -336,25 +344,19 @@ def main():
 
             # start the test
             if environment.shape_class:
+                if options.run_time:
+                    sys.stderr.write("It makes no sense to combine --run-time and LoadShapes. Bailing out.\n")
+                    sys.exit(1)
                 environment.runner.start_shape()
             else:
                 headless_master_greenlet = gevent.spawn(runner.start, options.num_users, options.spawn_rate)
                 headless_master_greenlet.link_exception(greenlet_exception_handler)
 
-    def spawn_run_time_limit_greenlet():
-        def timelimit_stop():
-            logger.info("Time limit reached. Stopping Locust.")
-            runner.quit()
-
-        gevent.spawn_later(options.run_time, timelimit_stop).link_exception(greenlet_exception_handler)
-
-    if options.run_time:
-        logger.info("Run time limit set to %s seconds" % options.run_time)
-        spawn_run_time_limit_greenlet()
-    elif options.headless and not options.worker and not environment.shape_class:
-        logger.info("No run time limit set, use CTRL+C to interrupt.")
-    else:
-        pass  # dont log anything - not having a time limit is normal when not running headless
+        if options.run_time:
+            logger.info("Run time limit set to %s seconds" % options.run_time)
+            spawn_run_time_quit_greenlet()
+        elif not options.worker and not environment.shape_class:
+            logger.info("No run time limit set, use CTRL+C to interrupt")
 
     input_listener_greenlet = None
     if not options.worker:
@@ -434,13 +436,56 @@ def main():
 
     gevent.signal_handler(signal.SIGTERM, sig_term_handler)
 
+    def autoquit():
+        if options.autoquit != -1:
+            logger.debug("Autoquit time limit set to %s seconds" % options.autoquit)
+            time.sleep(options.autoquit)
+            logger.info("--autoquit time reached, shutting down")
+            runner.quit()
+            web_ui.stop()
+        else:
+            logger.info("--autoquit not specified, leaving web ui running indefinitely")
+
     try:
         logger.info("Starting Locust %s" % version)
+        if options.autostart:
+            if environment.shape_class:
+                if options.run_time:
+                    sys.stderr.write("It makes no sense to combine --run-time and LoadShapes. Bailing out.\n")
+                    sys.exit(1)
+                environment.runner.start_shape()
+                autoquit()
+            else:
+                if not options.worker:
+                    if options.num_users is None:
+                        options.num_users = 1
+                    if options.spawn_rate is None:
+                        options.spawn_rate = 1
+
+                autostart_master_greenlet = gevent.spawn(runner.start, options.num_users, options.spawn_rate)
+                autostart_master_greenlet.link_exception(greenlet_exception_handler)
+
+                def timelimit_stop():
+                    logger.info("--run-time limit reached, stopping test")
+                    runner.stop()
+                    autoquit()
+
+                if options.run_time:
+                    logger.info("Run time limit set to %s seconds" % options.run_time)
+                    gevent.spawn_later(options.run_time, timelimit_stop).link_exception(greenlet_exception_handler)
+                else:
+                    logger.info("No run time limit set, use CTRL+C to interrupt")
+
         main_greenlet.join()
         if options.html_file:
             html_report = get_html_report(environment, show_download_link=False)
             with open(options.html_file, "w", encoding="utf-8") as file:
                 file.write(html_report)
-        shutdown()
     except KeyboardInterrupt:
-        shutdown()
+        pass
+    except Exception:
+        if input_listener_greenlet is not None:
+            input_listener_greenlet.kill(block=False)
+            time.sleep(0)
+        raise
+    shutdown()
