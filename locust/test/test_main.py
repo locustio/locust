@@ -199,7 +199,6 @@ class LocustProcessIntegrationTest(TestCase):
             @events.quitting.add_listener
             def _(environment, **kw):
                 environment.process_exit_code = 42
-            
             class TestUser(User):
                 @task
                 def my_task(self):
