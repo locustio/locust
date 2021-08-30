@@ -349,24 +349,25 @@ class LocustProcessIntegrationTest(TestCase):
                     "1",
                     "--autostart",
                     "--autoquit",
-                    "2",
+                    "1",
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
             )
-            gevent.sleep(2.9)
-            response = requests.get(f"http://0.0.0.0:{port}/stats/requests")
-            self.assertEqual(200, response.status_code)
+            gevent.sleep(0.9)
+            try:
+                response = requests.get(f"http://0.0.0.0:{port}/")
+            except Exception:
+                pass
             _, stderr = proc.communicate(timeout=2)
             stderr = stderr.decode("utf-8")
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Run time limit set to 1 seconds", stderr)
             self.assertIn("Shutting down (exit code 0), bye", stderr)
             self.assertNotIn("Traceback", stderr)
-            data = response.json()
-            # check stats afterwards, because it really isnt as informative as the output itself
-            self.assertEqual(2, len(data["stats"]), data)
-            self.assertEqual("/", data["stats"][0]["name"])
+            # check response afterwards, because it really isnt as informative as stderr
+            self.assertEqual(200, response.status_code)
+            self.assertIn('<body class="running">', response.text)
 
     def test_autostart_w_load_shape(self):
         port = get_free_tcp_port()
