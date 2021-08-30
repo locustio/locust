@@ -195,12 +195,12 @@ class LocustProcessIntegrationTest(TestCase):
         with temporary_file(
             content=textwrap.dedent(
                 """
-            from locust import User, task, constant, events
+            from locust import User, task, events
             @events.quitting.add_listener
             def _(environment, **kw):
                 environment.process_exit_code = 42
+            
             class TestUser(User):
-                wait_time = constant(3)
                 @task
                 def my_task(self):
                     print("running my_task()")
@@ -208,7 +208,7 @@ class LocustProcessIntegrationTest(TestCase):
             )
         ) as file_path:
             proc = subprocess.Popen(["locust", "-f", file_path], stdout=PIPE, stderr=PIPE)
-            gevent.sleep(1)
+            gevent.sleep(2)
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
             stderr = stderr.decode("utf-8")
