@@ -1,7 +1,7 @@
 import random
 import time
 
-from locust import User, TaskSet, between, constant, constant_pacing
+from locust import User, TaskSet, between, constant, constant_throughput
 from locust.exception import MissingWaitTimeError
 
 from .testcases import LocustTestCase
@@ -57,9 +57,9 @@ class TestWaitTime(LocustTestCase):
         taskset.wait()
         self.assertLess(time.perf_counter() - start_time, 0.002)
 
-    def test_constant_pacing(self):
+    def test_constant_throughput(self):
         class MyUser(User):
-            wait_time = constant_pacing(0.1)
+            wait_time = constant_throughput(10)
 
         class TS(TaskSet):
             pass

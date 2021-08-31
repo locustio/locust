@@ -4,7 +4,7 @@ What is Locust?
 
 Locust is an easy to use, scriptable and scalable performance testing tool.
 
-You define the behaviour of your users in regular Python code, instead of using a clunky UI or domain specific language.
+You define the behaviour of your users in regular Python code, instead of being stuck in a UI or restrictive domain specific language.
 
 This makes Locust infinitely expandable and very developer friendly.
 
@@ -42,7 +42,7 @@ Features
 
 * **Hackable**
 
- Locust is small and very flexible and we intend to keep it that way. If you want to `send reporting data to that database & graphing system you like <https://github.com/SvenskaSpel/locust-plugins/blob/master/locust_plugins/listeners.py>`_, wrap calls to a REST API to handle the particulars of your system or run a :ref:`totally custom load pattern <generating-custom-load-shape>`, there is nothing stopping you!
+ Locust is small and very flexible and we intend to keep it that way. If you want to `send reporting data to that database & graphing system you like <https://github.com/SvenskaSpel/locust-plugins/blob/master/locust_plugins/listeners.py>`_, wrap calls to a REST API to handle the particulars of your system or run a :ref:`totally custom load pattern <custom-load-shape>`, there is nothing stopping you!
 
 Name & background
 =================

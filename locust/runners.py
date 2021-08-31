@@ -18,6 +18,7 @@ from typing import (
     Dict,
     Iterator,
     List,
+    Union,
     ValuesView,
 )
 from uuid import uuid4
@@ -30,7 +31,6 @@ from gevent.pool import Group
 from . import User
 from locust import __version__
 from .dispatch import UsersDispatcher
-from .distribution import weight_users
 from .exception import RPCError
 from .log import greenlet_exception_logger
 from .rpc import (
@@ -41,6 +41,7 @@ from .stats import (
     RequestStats,
     setup_distributed_stats_event_listeners,
 )
+from . import argument_parser
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,12 @@ class Runner:
         self.exceptions = {}
         self.target_user_classes_count: Dict[str, int] = {}
         self.custom_messages = {}
+
+        # Only when running in standalone mode (non-distributed)
+        self._local_worker_node = WorkerNode(id="local")
+        self._local_worker_node.user_classes_count = self.user_classes_count
+
+        self._users_dispatcher = None
 
         # set up event listeners for recording requests
         def on_request_success(request_type, name, response_time, response_length, **_kwargs):
@@ -296,6 +303,7 @@ class Runner:
             self.exceptions = {}
             self.cpu_warning_emitted = False
             self.worker_cpu_warning_emitted = False
+            self.environment.events.test_start.fire(environment=self.environment)
 
         if wait and user_count - self.user_count > spawn_rate:
             raise ValueError("wait is True but the amount of users to add is greater than the spawn rate")
@@ -304,25 +312,23 @@ class Runner:
             if self.environment.host is not None:
                 user_class.host = self.environment.host
 
-        self.target_user_classes_count = weight_users(self.user_classes, user_count)
-
-        local_worker_node = WorkerNode(id="local")
-        local_worker_node.user_classes_count = self.user_classes_count
-
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
             self.update_state(STATE_SPAWNING)
 
-        logger.info("Ramping to %d users using a %.2f spawn rate" % (user_count, spawn_rate))
+        if self._users_dispatcher is None:
+            self._users_dispatcher = UsersDispatcher(
+                worker_nodes=[self._local_worker_node], user_classes=self.user_classes
+            )
+
+        logger.info("Ramping to %d users at a rate of %.2f per second" % (user_count, spawn_rate))
+
+        self._users_dispatcher.new_dispatch(user_count, spawn_rate)
 
         try:
-            for dispatched_users in UsersDispatcher(
-                worker_nodes=[local_worker_node],
-                user_classes_count=self.target_user_classes_count,
-                spawn_rate=spawn_rate,
-            ):
+            for dispatched_users in self._users_dispatcher:
                 user_classes_spawn_count = {}
                 user_classes_stop_count = {}
-                user_classes_count = dispatched_users[local_worker_node.id]
+                user_classes_count = dispatched_users[self._local_worker_node.id]
                 logger.debug("Ramping to %s" % _format_user_classes_count_for_log(user_classes_count))
                 for user_class, user_class_count in user_classes_count.items():
                     if self.user_classes_count[user_class] > user_class_count:
@@ -340,7 +346,10 @@ class Runner:
                     self.spawn_users(user_classes_spawn_count, wait)
                     self.stop_users(user_classes_stop_count)
 
+                self._local_worker_node.user_classes_count = next(iter(dispatched_users.values()))
+
         except KeyboardInterrupt:
+            # TODO: Find a cleaner way to handle that
             # We need to catch keyboard interrupt. Otherwise, if KeyboardInterrupt is received while in
             # a gevent.sleep inside the dispatch_users function, locust won't gracefully shutdown.
             self.quit()
@@ -398,6 +407,8 @@ class Runner:
         """
         Stop a running load test by stopping all running users
         """
+        if self.state == STATE_STOPPED:
+            return
         logger.debug("Stopping all users")
         self.update_state(STATE_CLEANUP)
 
@@ -418,6 +429,7 @@ class Runner:
         self.update_state(STATE_STOPPED)
 
         self.cpu_log_warning()
+        self.environment.events.test_stop.fire(environment=self.environment)
 
     def quit(self):
         """
@@ -471,10 +483,6 @@ class LocalRunner(Runner):
                 "Your selected spawn rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?"
             )
 
-        if self.state != STATE_RUNNING and self.state != STATE_SPAWNING:
-            # if we're not already running we'll fire the test_start event
-            self.environment.events.test_start.fire(environment=self.environment)
-
         if self.spawning_greenlet:
             # kill existing spawning_greenlet before we start a new one
             self.spawning_greenlet.kill(block=True)
@@ -487,7 +495,6 @@ class LocalRunner(Runner):
         if self.state == STATE_STOPPED:
             return
         super().stop()
-        self.environment.events.test_stop.fire(environment=self.environment)
 
     def send_message(self, msg_type, data=None):
         """
@@ -508,6 +515,7 @@ class LocalRunner(Runner):
 class DistributedRunner(Runner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._local_worker_node = None
         setup_distributed_stats_event_listeners(self.environment.events, self.stats)
 
 
@@ -518,6 +526,7 @@ class WorkerNode:
         self.heartbeat = heartbeat_liveness
         self.cpu_usage = 0
         self.cpu_warning_emitted = False
+        # The reported users running on the worker
         self.user_classes_count: Dict[str, int] = {}
 
     @property
@@ -605,6 +614,8 @@ class MasterRunner(DistributedRunner):
             else:
                 raise
 
+        self._users_dispatcher: Union[UsersDispatcher, None] = None
+
         self.greenlet.spawn(self.heartbeat_worker).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.client_listener).link_exception(greenlet_exception_handler)
 
@@ -647,9 +658,12 @@ class MasterRunner(DistributedRunner):
             if self.environment.host is not None:
                 user_class.host = self.environment.host
 
-        self.target_user_classes_count = weight_users(self.user_classes, user_count)
-
         self.spawn_rate = spawn_rate
+
+        if self._users_dispatcher is None:
+            self._users_dispatcher = UsersDispatcher(
+                worker_nodes=list(self.clients.values()), user_classes=self.user_classes
+            )
 
         logger.info(
             "Sending spawn jobs of %d users at %.2f spawn rate to %d ready clients"
@@ -662,18 +676,6 @@ class MasterRunner(DistributedRunner):
                 "Your selected spawn rate is very high (>100/worker), and this is known to sometimes cause issues. Do you really need to ramp up that fast?"
             )
 
-        # Since https://github.com/locustio/locust/pull/1621, the master is responsible for dispatching and controlling
-        # the total spawn rate which is more CPU intensive for the master. The number 200 is a little arbitrary as the computational
-        # load on the master greatly depends on the number of workers and the number of user classes. For instance,
-        # 5 user classes and 5 workers can easily do 200/s. However, 200/s with 50 workers and 20 user classes will likely make the
-        # dispatch very slow because of the required computations. I (@mboutet) doubt that many Locust's users are
-        # spawning that rapidly. If so, then they'll likely open issues on GitHub in which case I'll (@mboutet) take a look.
-        if spawn_rate > 200:
-            logger.warning(
-                "Your selected total spawn rate is quite high (>200), and this is known to sometimes cause performance issues on the master. "
-                "Do you really need to ramp up that fast? If so and if encountering performance issues on the master, free to open an issue."
-            )
-
         if self.state != STATE_RUNNING and self.state != STATE_SPAWNING:
             self.stats.clear_all()
             self.exceptions = {}
@@ -683,12 +685,10 @@ class MasterRunner(DistributedRunner):
 
         self.update_state(STATE_SPAWNING)
 
+        self._users_dispatcher.new_dispatch(target_user_count=user_count, spawn_rate=spawn_rate)
+
         try:
-            for dispatched_users in UsersDispatcher(
-                worker_nodes=self.clients.ready + self.clients.running + self.clients.spawning,
-                user_classes_count=self.target_user_classes_count,
-                spawn_rate=spawn_rate,
-            ):
+            for dispatched_users in self._users_dispatcher:
                 dispatch_greenlets = Group()
                 for worker_node_id, worker_user_classes_count in dispatched_users.items():
                     data = {
@@ -696,6 +696,9 @@ class MasterRunner(DistributedRunner):
                         "user_classes_count": worker_user_classes_count,
                         "host": self.environment.host,
                         "stop_timeout": self.environment.stop_timeout,
+                        "parsed_options": vars(self.environment.parsed_options)
+                        if self.environment.parsed_options
+                        else {},
                     }
                     dispatch_greenlets.add(
                         gevent.spawn_later(
@@ -716,7 +719,10 @@ class MasterRunner(DistributedRunner):
                     "Currently spawned users: %s" % _format_user_classes_count_for_log(self.reported_user_classes_count)
                 )
 
+            self.target_user_classes_count = _aggregate_dispatched_users(dispatched_users)
+
         except KeyboardInterrupt:
+            # TODO: Find a cleaner way to handle that
             # We need to catch keyboard interrupt. Otherwise, if KeyboardInterrupt is received while in
             # a gevent.sleep inside the dispatch_users function, locust won't gracefully shutdown.
             self.quit()
@@ -759,13 +765,10 @@ class MasterRunner(DistributedRunner):
         if match is None:
             assert float(locust_wait_for_workers_report_after_ramp_up) >= 0
             return float(locust_wait_for_workers_report_after_ramp_up)
-
-        if match is not None:
+        else:
             return float(match.group("coeff")) * WORKER_REPORT_INTERVAL
 
-        assert False, "not supposed to reach that"
-
-    def stop(self):
+    def stop(self, send_stop_to_client: bool = True):
         if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
             logger.debug("Stopping...")
             self.update_state(STATE_STOPPING)
@@ -775,25 +778,27 @@ class MasterRunner(DistributedRunner):
                 self.shape_greenlet = None
                 self.shape_last_state = None
 
-            for client in self.clients.all:
-                logger.debug("Sending stop message to client %s" % client.id)
-                self.server.send_to_client(Message("stop", None, client.id))
+            self._users_dispatcher = None
 
-            # Give an additional 60s for all workers to stop
-            timeout = gevent.Timeout(self.environment.stop_timeout or 0 + 60)
-            timeout.start()
-            try:
-                while self.user_count != 0:
-                    gevent.sleep(1)
-            except gevent.Timeout:
-                logger.error("Timeout waiting for all workers to stop")
-            finally:
-                timeout.cancel()
+            if send_stop_to_client:
+                for client in self.clients.all:
+                    logger.debug("Sending stop message to client %s" % client.id)
+                    self.server.send_to_client(Message("stop", None, client.id))
 
+                # Give an additional 60s for all workers to stop
+                timeout = gevent.Timeout(self.environment.stop_timeout or 0 + 60)
+                timeout.start()
+                try:
+                    while self.user_count != 0:
+                        gevent.sleep(1)
+                except gevent.Timeout:
+                    logger.error("Timeout waiting for all workers to stop")
+                finally:
+                    timeout.cancel()
             self.environment.events.test_stop.fire(environment=self.environment)
 
     def quit(self):
-        self.stop()
+        self.stop(send_stop_to_client=False)
         logger.debug("Quitting...")
         for client in self.clients.all:
             logger.debug("Sending quit message to client %s" % (client.id))
@@ -821,6 +826,9 @@ class MasterRunner(DistributedRunner):
                     logger.info("Worker %s failed to send heartbeat, setting state to missing." % str(client.id))
                     client.state = STATE_MISSING
                     client.user_classes_count = {}
+                    if self._users_dispatcher is not None:
+                        self._users_dispatcher.remove_worker(client)
+                        # TODO: If status is `STATE_RUNNING`, call self.start()
                     if self.worker_count <= 0:
                         logger.info("The last worker went missing, stopping test.")
                         self.stop()
@@ -851,24 +859,36 @@ class MasterRunner(DistributedRunner):
                 if not msg.data:
                     logger.error(f"An old (pre 2.0) worker tried to connect ({client_id}). That's not going to work.")
                     continue
-                elif msg.data != __version__:
+                elif msg.data != __version__ and msg.data != -1:
                     logger.warning(
                         f"A worker ({client_id}) running a different version ({msg.data}) connected, master version is {__version__}"
                     )
                 worker_node_id = msg.node_id
                 self.clients[worker_node_id] = WorkerNode(worker_node_id, heartbeat_liveness=HEARTBEAT_LIVENESS)
+                if self._users_dispatcher is not None:
+                    self._users_dispatcher.add_worker(worker_node=self.clients[worker_node_id])
+                    if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
+                        # TODO: Test this situation
+                        self.start(self.target_user_count, self.spawn_rate)
                 logger.info(
                     "Client %r reported as ready. Currently %i clients ready to swarm."
                     % (worker_node_id, len(self.clients.ready + self.clients.running + self.clients.spawning))
                 )
-                if self.state == STATE_RUNNING or self.state == STATE_SPAWNING:
-                    # balance the load distribution when new client joins
-                    self.start(self.target_user_count, self.spawn_rate)
+                # if self.state == STATE_RUNNING or self.state == STATE_SPAWNING:
+                #     # TODO: Necessary now that UsersDispatcher handles that?
+                #     # balance the load distribution when new client joins
+                #     self.start(self.target_user_count, self.spawn_rate)
                 # emit a warning if the worker's clock seem to be out of sync with our clock
                 # if abs(time() - msg.data["time"]) > 5.0:
                 #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
             elif msg.type == "client_stopped":
+                client = self.clients[msg.node_id]
                 del self.clients[msg.node_id]
+                if self._users_dispatcher is not None:
+                    self._users_dispatcher.remove_worker(client)
+                    if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
+                        # TODO: Test this situation
+                        self.start(self.target_user_count, self.spawn_rate)
                 logger.info("Removing %s client from running clients" % (msg.node_id))
             elif msg.type == "heartbeat":
                 if msg.node_id in self.clients:
@@ -879,9 +899,11 @@ class MasterRunner(DistributedRunner):
                         logger.info(
                             "Worker %s self-healed with heartbeat, setting state to %s." % (str(c.id), client_state)
                         )
-                        user_classes_count = msg.data.get("user_classes_count")
-                        if user_classes_count:
-                            c.user_classes_count = user_classes_count
+                        if self._users_dispatcher is not None:
+                            self._users_dispatcher.add_worker(worker_node=c)
+                            if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
+                                # TODO: Test this situation
+                                self.start(self.target_user_count, self.spawn_rate)
                     c.state = client_state
                     c.cpu_usage = msg.data["current_cpu_usage"]
                     if not c.cpu_warning_emitted and c.cpu_usage > 90:
@@ -899,7 +921,13 @@ class MasterRunner(DistributedRunner):
                 self.clients[msg.node_id].user_classes_count = msg.data["user_classes_count"]
             elif msg.type == "quit":
                 if msg.node_id in self.clients:
+                    client = self.clients[msg.node_id]
                     del self.clients[msg.node_id]
+                    if self._users_dispatcher is not None:
+                        self._users_dispatcher.remove_worker(client)
+                        if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
+                            # TODO: Test this situation
+                            self.start(self.target_user_count, self.spawn_rate)
                     logger.info(
                         "Client %r quit. Currently %i clients connected." % (msg.node_id, len(self.clients.ready))
                     )
@@ -969,6 +997,7 @@ class WorkerRunner(DistributedRunner):
         self.master_host = master_host
         self.master_port = master_port
         self.worker_cpu_warning_emitted = False
+        self._users_dispatcher = None
         self.client = rpc.Client(master_host, master_port, self.client_id)
         self.greenlet.spawn(self.heartbeat).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.worker).link_exception(greenlet_exception_handler)
@@ -1019,12 +1048,14 @@ class WorkerRunner(DistributedRunner):
         :param user_classes_count: Users to run
         """
         self.target_user_classes_count = user_classes_count
-
         if self.worker_state != STATE_RUNNING and self.worker_state != STATE_SPAWNING:
             self.stats.clear_all()
             self.exceptions = {}
             self.cpu_warning_emitted = False
             self.worker_cpu_warning_emitted = False
+            self.environment.events.test_start.fire(environment=self.environment)
+
+        self.worker_state = STATE_SPAWNING
 
         for user_class in self.user_classes:
             if self.environment.host is not None:
@@ -1055,7 +1086,6 @@ class WorkerRunner(DistributedRunner):
                         {
                             "state": self.worker_state,
                             "current_cpu_usage": self.current_cpu_usage,
-                            "user_classes_count": self.user_classes_count,
                         },
                         self.client_id,
                     )
@@ -1082,7 +1112,6 @@ class WorkerRunner(DistributedRunner):
                 logger.error("RPCError found when receiving from master: %s" % (e))
                 continue
             if msg.type == "spawn":
-                self.worker_state = STATE_SPAWNING
                 self.client.send(Message("spawning", None, self.client_id))
                 job = msg.data
                 if job["timestamp"] <= last_received_spawn_timestamp:
@@ -1092,6 +1121,17 @@ class WorkerRunner(DistributedRunner):
                     continue
                 self.environment.host = job["host"]
                 self.environment.stop_timeout = job["stop_timeout"]
+
+                # receive custom arguments
+                if self.environment.parsed_options is None:
+                    default_parser = argument_parser.get_empty_argument_parser()
+                    argument_parser.setup_parser_arguments(default_parser)
+                    self.environment.parsed_options = default_parser.parse(args=[])
+                custom_args_from_master = {
+                    k: v for k, v in job["parsed_options"].items() if k not in argument_parser.default_args_dict()
+                }
+                vars(self.environment.parsed_options).update(custom_args_from_master)
+
                 if self.spawning_greenlet:
                     # kill existing spawning greenlet before we launch new one
                     self.spawning_greenlet.kill(block=True)
@@ -1147,3 +1187,9 @@ def _format_user_classes_count_for_log(user_classes_count: Dict[str, int]) -> st
         json.dumps(dict(sorted(user_classes_count.items(), key=itemgetter(0)))),
         sum(user_classes_count.values()),
     )
+
+
+def _aggregate_dispatched_users(d: Dict[str, Dict[str, int]]) -> Dict[str, int]:
+    # TODO: Test it
+    user_classes = list(next(iter(d.values())).keys())
+    return {u: sum(d[u] for d in d.values()) for u in user_classes}

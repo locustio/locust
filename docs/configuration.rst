@@ -7,7 +7,7 @@ Configuration
 Command Line Options
 -----------------------------
 
-The most straight forward way to Configure how Locust is run is through command line arguments. 
+Locust is configured mainly through command line arguments.
 
 .. code-block:: console
 
@@ -66,7 +66,7 @@ Example:
 
     Configuration values are read (overridden) in the following order:
     
-    .. code-block::
+    .. code-block:: console
         
         ~/locust.conf -> ./locust.conf -> (file specified using --conf) -> env vars -> cmd args
 
@@ -76,6 +76,11 @@ All available configuration options
 Here's a table of all the available configuration options, and their corresponding Environment and config file keys:
 
 .. include:: config-options.rst
+
+Custom arguments
+----------------
+
+See :ref:`parametrizing-locustfiles`
 
 Customization of statistics settings
 ------------------------------------

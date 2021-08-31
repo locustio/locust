@@ -7,7 +7,7 @@ User class
 ============
 
 .. autoclass:: locust.User
-    :members: wait_time, tasks, weight, abstract, on_start, on_stop, wait, context
+    :members: wait_time, tasks, weight, abstract, on_start, on_stop, wait, context, environment
 
 HttpUser class
 ================
@@ -45,7 +45,7 @@ Built in wait_time functions
 ============================
 
 .. automodule:: locust.wait_time
-    :members: between, constant, constant_pacing
+    :members: between, constant, constant_pacing, constant_throughput
 
 HttpSession class
 =================

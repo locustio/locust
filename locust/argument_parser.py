@@ -141,14 +141,14 @@ def setup_parser_arguments(parser):
         "--users",
         type=int,
         dest="num_users",
-        help="Number of concurrent Locust users. Primarily used together with --headless. Can be changed during a test by inputs w, W(spawn 1, 10 users) and s, S(stop 1, 10 users)",
+        help="Peak number of concurrent Locust users. Primarily used together with --headless or --autostart. Can be changed during a test by keyboard inputs w, W (spawn 1, 10 users) and s, S (stop 1, 10 users)",
         env_var="LOCUST_USERS",
     )
     parser.add_argument(
         "-r",
         "--spawn-rate",
         type=float,
-        help="The rate per second in which users are spawned. Primarily used together with --headless",
+        help="Rate to spawn users at (users per second). Primarily used together with --headless or --autostart",
         env_var="LOCUST_SPAWN_RATE",
     )
     parser.add_argument(
@@ -161,7 +161,7 @@ def setup_parser_arguments(parser):
     parser.add_argument(
         "-t",
         "--run-time",
-        help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --headless. Defaults to run forever.",
+        help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --headless or --autostart. Defaults to run forever.",
         env_var="LOCUST_RUN_TIME",
     )
     parser.add_argument(
@@ -190,8 +190,21 @@ def setup_parser_arguments(parser):
     web_ui_group.add_argument(
         "--headless",
         action="store_true",
-        help="Disable the web interface, and instead start the load test immediately. Requires -u and -t to be specified.",
+        help="Disable the web interface, and start the test immediately. Use -u and -t to control user count and run time",
         env_var="LOCUST_HEADLESS",
+    )
+    web_ui_group.add_argument(
+        "--autostart",
+        action="store_true",
+        help="Starts the test immediately (without disabling the web UI). Use -u and -t to control user count and run time",
+        env_var="LOCUST_AUTOSTART",
+    )
+    web_ui_group.add_argument(
+        "--autoquit",
+        type=int,
+        default=-1,
+        help="Quits Locust entirely, X seconds after the run is finished. Only used together with --autostart. The default is to keep Locust running until you shut it down using CTRL+C",
+        env_var="LOCUST_AUTOQUIT",
     )
     # Override --headless parameter (useful because you cant disable a store_true-parameter like headless once it has been set in a config file)
     web_ui_group.add_argument(
@@ -417,6 +430,13 @@ def setup_parser_arguments(parser):
         help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. This parameter only needs to be specified for the master process when running Locust distributed.",
         env_var="LOCUST_STOP_TIMEOUT",
     )
+    other_group.add_argument(
+        "--equal-weights",
+        action="store_true",
+        default=False,
+        dest="equal_weights",
+        help="Use equally distributed task weights, overriding the weights specified in the locustfile.",
+    )
 
     user_classes_group = parser.add_argument_group("User classes")
     user_classes_group.add_argument(
@@ -443,3 +463,10 @@ def parse_options(args=None):
     if parsed_opts.stats_history_enabled and (parsed_opts.csv_prefix is None):
         parser.error("'--csv-full-history' requires '--csv'.")
     return parsed_opts
+
+
+def default_args_dict():
+    # returns a dict containing the default arguments (before any custom arguments are added)
+    default_parser = get_empty_argument_parser()
+    setup_parser_arguments(default_parser)
+    return vars(default_parser.parse([]))

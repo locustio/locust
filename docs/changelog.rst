@@ -4,20 +4,49 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.1.0
+=====
+
+* Fix docker builds (2.0 never got pushed to Docker Hub)
+* Bump dependency on pyzmq to fix out of memory issue on Windows
+* Use 1 as default for user count and spawn rate in web UI start form
+* Various documentation updates
+
 2.0.0
 =====
 
-* Check version of workers when they connect. Warn if there is a mismatch, refuse 1.x workers to connect https://github.com/locustio/locust/pull/1805 (2.0.0b1)
-* Change the default User weight to 1 instead of 10 https://github.com/locustio/locust/pull/1803 (2.0.0b1)
-* Upgrade to flask 2 https://github.com/locustio/locust/pull/1764 (2.0.0b1)
-* Move User selection responsibility from worker to master in order to fix unbalanced distribution of users and uneven ramp-up https://github.com/locustio/locust/pull/1621 (2.0.0b0)
+User ramp up/down and User type selection is now controlled by the master instead of autonomously by the workers 
+----------------------------------------------------------------------------------------------------------------
+This has allowed us to fix some issues with incorrect/skewed User type selection and undesired stepping of ramp up. The issues were especially visible when running many workers and/or using LoadShape:s. This change also allows redistribution of Users if a worker disconnects during a test. This is a major change internally in Locust so please let us know if you encounter any problems (particularly regarding ramp up pace, User distribution, CPU usage on master, etc)
+
+Other potentially breaking API changes
+--------------------------------------
+* Change the default User weight to 1 instead of 10 (the old default made no sense)
+* Fire test_start and test_stop events on workers too (previously they were only fired on master/standalone instances)
+* Workers now send their version number to master. Master will warn about version differences, and pre 2.0-versions will not be allowed to connect at all (because they would not work anyway)
+* Update Flask dependency to 2.0
+
+Significant merged PR:s (and prerelease version they were introduced in)
+------------------------------------------------------------------------
+* Allow workers to bypass version check by sending -1 as version (2.0.0) https://github.com/locustio/locust/pull/1830
+* Improve logging messages and clean up code after dispatch refactoring (2.0.0b4) https://github.com/locustio/locust/pull/1826
+* Remove `user_classes_count` from heartbeat payload (2.0.0b4) https://github.com/locustio/locust/pull/1825
+* Add option to set concurrency of FastHttpUser/Session (2.0.0b3) https://github.com/locustio/locust/pull/1812/
+* Fire test_start and test_stop events on worker nodes (2.0.0b3) https://github.com/locustio/locust/pull/1777/
+* Auto shrink request stats table to fit terminal (2.0.0b2) https://github.com/locustio/locust/pull/1811
+* Refactoring of the dispatch logic to improve performance (2.0.0b2) https://github.com/locustio/locust/pull/1809 
+* Check version of workers when they connect. Warn if there is a mismatch, refuse 1.x workers to connect (2.0.0b1) https://github.com/locustio/locust/pull/1805 
+* Change the default User weight to 1 instead of 10 (2.0.0b1) https://github.com/locustio/locust/pull/1803
+* Upgrade to Flask 2 (2.0.0b1) https://github.com/locustio/locust/pull/1764
+* Move User selection responsibility from worker to master in order to fix unbalanced distribution of users and uneven ramp-up (2.0.0b0) https://github.com/locustio/locust/pull/1621
+
+Some of these are not really that significant and may be removed from this list at a later time, once 2.0 has stabilised.
 
 1.6.0
 =====
 
 * Allow cross process communication using custom messages https://github.com/locustio/locust/pull/1782
 * Fix: status "stopped" instead of "spawning", tick\(\) method of LoadShape called only once https://github.com/locustio/locust/pull/1769
-* Other small fixes (see https://github.com/locustio/locust/blob/master/CHANGELOG.md)
 
 1.5.3
 =====

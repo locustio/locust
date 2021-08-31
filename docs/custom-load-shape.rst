@@ -1,8 +1,8 @@
-.. _generating-custom-load-shape:
+.. _custom-load-shape:
 
-==============================
-Generating a custom load shape
-==============================
+==================
+Custom load shapes
+==================
 
 Sometimes a completely custom shaped load test is required that cannot be achieved by simply setting or changing the user count and spawn rate. For example, you might want to generate a load spike or ramp up and down at custom times. By using a `LoadTestShape` class you have full control over the user count and spawn rate at all times.
 

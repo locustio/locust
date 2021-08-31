@@ -198,11 +198,11 @@ class LocustProcessIntegrationTest(TestCase):
             gevent.sleep(1)
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
-            self.assertEqual(42, proc.returncode)
             stderr = stderr.decode("utf-8")
             self.assertIn("Starting web interface at", stderr)
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shutting down (exit code 42), bye", stderr)
+            self.assertEqual(42, proc.returncode)
 
     def test_webserver(self):
         with temporary_file(
@@ -282,7 +282,7 @@ class LocustProcessIntegrationTest(TestCase):
         with mock_locustfile(content=content) as mocked:
             output = (
                 subprocess.check_output(
-                    ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--run-time", "1s", "--headless"],
+                    ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--headless"],
                     stderr=subprocess.STDOUT,
                     timeout=3,
                 )
@@ -291,6 +291,114 @@ class LocustProcessIntegrationTest(TestCase):
             )
             self.assertIn("Shape test updating to 10 users at 1.00 spawn rate", output)
             self.assertIn("Cleaning up runner...", output)
+
+    def test_autostart_wo_run_time(self):
+        port = get_free_tcp_port()
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--web-port",
+                    str(port),
+                    "--autostart",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+            )
+            gevent.sleep(1.9)
+            try:
+                response = requests.get(f"http://0.0.0.0:{port}/")
+            except Exception:
+                pass
+            self.assertEqual(200, response.status_code)
+            proc.send_signal(signal.SIGTERM)
+            stdout, stderr = proc.communicate()
+            stderr = stderr.decode("utf-8")
+            self.assertIn("Starting Locust", stderr)
+            self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
+            self.assertIn("Shutting down ", stderr)
+            self.assertNotIn("Traceback", stderr)
+            # check response afterwards, because it really isnt as informative as stderr
+            self.assertEqual(200, response.status_code)
+            self.assertIn('<body class="running">', response.text)
+
+    def test_autostart_w_run_time(self):
+        port = get_free_tcp_port()
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--web-port",
+                    str(port),
+                    "-t",
+                    "2",
+                    "--autostart",
+                    "--autoquit",
+                    "1",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+            )
+            gevent.sleep(1.9)
+            try:
+                response = requests.get(f"http://0.0.0.0:{port}/")
+            except Exception:
+                pass
+            _, stderr = proc.communicate(timeout=2)
+            stderr = stderr.decode("utf-8")
+            self.assertIn("Starting Locust", stderr)
+            self.assertIn("Run time limit set to 2 seconds", stderr)
+            self.assertIn("Shutting down ", stderr)
+            self.assertNotIn("Traceback", stderr)
+            # check response afterwards, because it really isnt as informative as stderr
+            self.assertEqual(200, response.status_code)
+            self.assertIn('<body class="running">', response.text)
+
+    def test_autostart_w_load_shape(self):
+        port = get_free_tcp_port()
+        with mock_locustfile(
+            content=MOCK_LOCUSTFILE_CONTENT
+            + textwrap.dedent(
+                """
+            from locust import LoadTestShape
+            class LoadTestShape(LoadTestShape):
+                def tick(self):
+                    run_time = self.get_run_time()
+                    if run_time < 2:
+                        return (10, 1)
+
+                    return None
+            """
+            )
+        ) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--web-port",
+                    str(port),
+                    "--autostart",
+                    "--autoquit",
+                    "2",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+            )
+            gevent.sleep(1.9)
+            response = requests.get(f"http://0.0.0.0:{port}/")
+            _, stderr = proc.communicate(timeout=3)
+            stderr = stderr.decode("utf-8")
+            self.assertIn("Starting Locust", stderr)
+            self.assertIn("Shape test starting", stderr)
+            self.assertIn("Shutting down ", stderr)
+            # check response afterwards, because it really isnt as informative as stderr
+            self.assertEqual(200, response.status_code)
+            self.assertIn('<body class="spawning">', response.text)
 
     def test_web_options(self):
         port = get_free_tcp_port()
@@ -355,7 +463,7 @@ class LocustProcessIntegrationTest(TestCase):
                         "-u",
                         "0",
                         "--loglevel",
-                        "DEBUG",
+                        "INFO",
                     ]
                 ),
                 stderr=STDOUT,
@@ -380,15 +488,14 @@ class LocustProcessIntegrationTest(TestCase):
 
             output = proc.communicate()[0].decode("utf-8")
             stdin.close()
-            self.assertIn('Spawning additional {"UserSubclass": 1} ({"UserSubclass": 0} already running)...', output)
-            self.assertIn("0 users have been stopped, 1 still running", output)
-            self.assertIn('Spawning additional {"UserSubclass": 10} ({"UserSubclass": 1} already running)...', output)
-            self.assertIn('Spawning additional {} ({"UserSubclass": 11} already running)...', output)
-            self.assertIn("1 users have been stopped, 10 still running", output)
-            self.assertIn('Spawning additional {} ({"UserSubclass": 10} already running)...', output)
-            self.assertIn("10 users have been stopped, 0 still running", output)
-            self.assertIn('Spawning additional {} ({"UserSubclass": 0} already running)...', output)
-            self.assertIn("10 users have been stopped, 0 still running", output)
+            self.assertIn("Ramping to 1 users at a rate of 100.00 per second", output)
+            self.assertIn('All users spawned: {"UserSubclass": 1} (1 total users)', output)
+            self.assertIn("Ramping to 11 users at a rate of 100.00 per second", output)
+            self.assertIn('All users spawned: {"UserSubclass": 11} (11 total users)', output)
+            self.assertIn("Ramping to 10 users at a rate of 100.00 per second", output)
+            self.assertIn('All users spawned: {"UserSubclass": 10} (10 total users)', output)
+            self.assertIn("Ramping to 0 users at a rate of 100.00 per second", output)
+            self.assertIn('All users spawned: {"UserSubclass": 0} (0 total users)', output)
             self.assertIn("Test task is running", output)
             self.assertIn("Shutting down (exit code 0), bye.", output)
             self.assertEqual(0, proc.returncode)
@@ -406,7 +513,7 @@ class LocustProcessIntegrationTest(TestCase):
                                 "--host",
                                 "https://test.com/",
                                 "--run-time",
-                                "5s",
+                                "2s",
                                 "--headless",
                                 "--html",
                                 html_report_file_path,

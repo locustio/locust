@@ -580,6 +580,12 @@ class TestStatsEntryResponseTimesCache(unittest.TestCase):
 
         self.assertEqual(95, s.get_current_response_time_percentile(0.95))
 
+    def test_get_current_response_time_percentile_outside_cache_window(self):
+        s = StatsEntry(self.stats, "/", "GET", use_response_times_cache=True)
+        # an empty response times cache, current time will not be in this cache
+        s.response_times_cache = {}
+        self.assertEqual(None, s.get_current_response_time_percentile(0.95))
+
     def test_diff_response_times_dicts(self):
         self.assertEqual(
             {1: 5, 6: 8},
@@ -715,6 +721,17 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
     def test_request_stats_named_endpoint(self):
         self.locust.client.get("/ultra_fast", name="my_custom_name")
         self.assertEqual(1, self.runner.stats.get("my_custom_name", "GET").num_requests)
+
+    def test_request_stats_named_endpoint_request_name(self):
+        self.locust.client.request_name = "my_custom_name_1"
+        self.locust.client.get("/ultra_fast")
+        self.assertEqual(1, self.runner.stats.get("my_custom_name_1", "GET").num_requests)
+        self.locust.client.request_name = None
+
+    def test_request_stats_named_endpoint_rename_request(self):
+        with self.locust.client.rename_request("my_custom_name_3"):
+            self.locust.client.get("/ultra_fast")
+        self.assertEqual(1, self.runner.stats.get("my_custom_name_3", "GET").num_requests)
 
     def test_request_stats_query_variables(self):
         self.locust.client.get("/ultra_fast?query=1")

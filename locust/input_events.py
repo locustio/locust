@@ -93,7 +93,7 @@ def input_listener(key_to_func_map: Dict[str, callable]):
         try:
             poller = get_poller()
         except InitError as e:
-            logging.info(e)
+            logging.debug(e)
             return
 
         try:

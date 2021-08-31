@@ -1,3 +1,5 @@
+# make sure you use grpc version 1.39.0 or later,
+# because of https://github.com/grpc/grpc/issues/15880 that affected earlier versions
 import grpc
 import hello_pb2_grpc
 import hello_pb2
@@ -16,6 +18,7 @@ grpc_gevent.init_gevent()
 
 @events.init.add_listener
 def run_grpc_server(environment, **_kwargs):
+    # Start the dummy server. This is not something you would do in a real test.
     gevent.spawn(start_server)
 
 
@@ -63,12 +66,6 @@ class GrpcUser(User):
         self._channel_closed = False
         stub = self.stub_class(self._channel)
         self.client = GrpcClient(stub)
-
-    def stop(self, force=False):
-        self._channel_closed = True
-        time.sleep(1)
-        self._channel.close()
-        super().stop(force=True)
 
 
 class HelloGrpcUser(GrpcUser):

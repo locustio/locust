@@ -4,6 +4,7 @@ import time
 from collections import namedtuple, OrderedDict
 from copy import copy
 from itertools import chain
+import os
 import csv
 
 import gevent
@@ -14,7 +15,11 @@ import logging
 
 console_logger = logging.getLogger("locust.stats_logger")
 
-STATS_NAME_WIDTH = 60
+"""Space in table for request name. Auto shrink it if terminal is small (<160 characters)"""
+try:
+    STATS_NAME_WIDTH = max(min(os.get_terminal_size()[0] - 80, 80), 0)
+except OSError:  # not a real terminal
+    STATS_NAME_WIDTH = 80
 STATS_TYPE_WIDTH = 8
 
 """Default interval for how frequently results are written to console."""
@@ -574,7 +579,7 @@ class StatsEntry:
                 break
 
         if cached:
-            # If we fond an acceptable cached response times, we'll calculate a new response
+            # If we found an acceptable cached response times, we'll calculate a new response
             # times dict of the last 10 seconds (approximately) by diffing it with the current
             # total response times. Then we'll use that to calculate a response time percentile
             # for that timeframe
@@ -583,6 +588,8 @@ class StatsEntry:
                 self.num_requests - cached.num_requests,
                 percent,
             )
+        # if time was not in response times cache window
+        return None
 
     def percentile(self):
         if not self.num_requests:
@@ -786,7 +793,7 @@ def stats_history(runner):
             break
         if runner.state != "stopped":
             r = {
-                "time": datetime.datetime.now().strftime("%H:%M:%S"),
+                "time": datetime.datetime.utcnow().strftime("%H:%M:%S"),
                 "current_rps": stats.total.current_rps or 0,
                 "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
                 "response_time_percentile_95": stats.total.get_current_response_time_percentile(0.95) or 0,

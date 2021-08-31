@@ -1,5 +1,80 @@
 # Changelog
 
+## [latest](https://github.com/locustio/locust/tree/latest) (2021-08-08)
+
+[Full Changelog](https://github.com/locustio/locust/compare/0.0.100...latest)
+
+**Fixed bugs:**
+
+- OOM error with master/slaves setup \(zeromq, windows\) [\#1372](https://github.com/locustio/locust/issues/1372)
+
+**Merged pull requests:**
+
+- Fix docker builds [\#1845](https://github.com/locustio/locust/pull/1845) ([cyberw](https://github.com/cyberw))
+- Bump dependency on pyzmq to fix \#1372 \(OOM on windows\) [\#1839](https://github.com/locustio/locust/pull/1839) ([cyberw](https://github.com/cyberw))
+- Use 1 as default in web UI start form + lots of documentation updates [\#1836](https://github.com/locustio/locust/pull/1836) ([cyberw](https://github.com/cyberw))
+
+## [0.0.100](https://github.com/locustio/locust/tree/0.0.100) (2021-08-04)
+
+[Full Changelog](https://github.com/locustio/locust/compare/0.0.99...0.0.100)
+
+## [0.0.99](https://github.com/locustio/locust/tree/0.0.99) (2021-08-04)
+
+[Full Changelog](https://github.com/locustio/locust/compare/0.0.1...0.0.99)
+
+## [0.0.1](https://github.com/locustio/locust/tree/0.0.1) (2021-08-04)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.0.0...0.0.1)
+
+## [2.0.0](https://github.com/locustio/locust/tree/2.0.0) (2021-08-01)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.0.0b4...2.0.0)
+
+**Fixed bugs:**
+
+- User Count Drops when Worker Abruptly Leaves The Test In Distributed Mode [\#1766](https://github.com/locustio/locust/issues/1766)
+
+**Merged pull requests:**
+
+- update grpc example, because grpc gevent issue has been fixed [\#1834](https://github.com/locustio/locust/pull/1834) ([cyberw](https://github.com/cyberw))
+- Speed up tests [\#1831](https://github.com/locustio/locust/pull/1831) ([mboutet](https://github.com/mboutet))
+- Allow workers to bypass version check by sending -1 as version [\#1830](https://github.com/locustio/locust/pull/1830) ([cyberw](https://github.com/cyberw))
+
+## [2.0.0b4](https://github.com/locustio/locust/tree/2.0.0b4) (2021-07-28)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.0.0b3...2.0.0b4)
+
+**Merged pull requests:**
+
+- Improve logging messages and clean up code after dispatch refactoring \(\#1809\) [\#1826](https://github.com/locustio/locust/pull/1826) ([mboutet](https://github.com/mboutet))
+- Remove `user_classes_count` from heartbeat payload [\#1825](https://github.com/locustio/locust/pull/1825) ([mboutet](https://github.com/mboutet))
+
+## [2.0.0b3](https://github.com/locustio/locust/tree/2.0.0b3) (2021-07-16)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.0.0b2...2.0.0b3)
+
+**Fixed bugs:**
+
+- FastHttpUser requests are blocking [\#1810](https://github.com/locustio/locust/issues/1810)
+
+**Closed issues:**
+
+- Restore locust\_start\_hatching functionality [\#1776](https://github.com/locustio/locust/issues/1776)
+
+**Merged pull requests:**
+
+- Add option to set concurrency of FastHttpUser/Session [\#1812](https://github.com/locustio/locust/pull/1812) ([soitinj](https://github.com/soitinj))
+- Fire test\_start and test\_stop events on worker nodes [\#1777](https://github.com/locustio/locust/pull/1777) ([nathan-beam](https://github.com/nathan-beam))
+
+## [2.0.0b2](https://github.com/locustio/locust/tree/2.0.0b2) (2021-07-12)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.0.0b1...2.0.0b2)
+
+**Merged pull requests:**
+
+- Auto shrink request stats table to fit terminal [\#1811](https://github.com/locustio/locust/pull/1811) ([cyberw](https://github.com/cyberw))
+- Refactoring of the dispatch logic to improve performance [\#1809](https://github.com/locustio/locust/pull/1809) ([mboutet](https://github.com/mboutet))
+
 ## [2.0.0b1](https://github.com/locustio/locust/tree/2.0.0b1) (2021-07-05)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.0.0b0...2.0.0b1)
@@ -1619,7 +1694,7 @@
 
 **Merged pull requests:**
 
-- Update writing-a-locustfile.rst [\#268](https://github.com/locustio/locust/pull/268) ([cristopherchacon](https://github.com/cristopherchacon))
+- Update writing-a-locustfile.rst [\#268](https://github.com/locustio/locust/pull/268) ([ghost](https://github.com/ghost))
 - changed how request\_meta\["method"\] is set [\#267](https://github.com/locustio/locust/pull/267) ([dantagg](https://github.com/dantagg))
 - list supported Python versions [\#261](https://github.com/locustio/locust/pull/261) ([cgoldberg](https://github.com/cgoldberg))
 - add host cli arg to quickstart [\#250](https://github.com/locustio/locust/pull/250) ([groovecoder](https://github.com/groovecoder))

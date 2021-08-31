@@ -94,8 +94,8 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
                     self.assertEqual(html_to_option[html_name][1], start_value)
                     self.assertEqual(html_to_option[html_name][1], edit_value)
                 else:
-                    self.assertEqual("", start_value)
-                    self.assertEqual("", edit_value)
+                    self.assertEqual("1", start_value, msg=f"start value was {start_value} for {html_name}")
+                    self.assertEqual("1", edit_value, msg=f"edit value was {edit_value} for {html_name}")
 
     def test_stats_no_data(self):
         self.assertEqual(200, requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).status_code)
@@ -241,6 +241,30 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual("https://localhost", response.json()["host"])
         self.assertEqual(self.environment.host, "https://localhost")
+
+    def test_swarm_custom_argument(self):
+        my_dict = {}
+
+        class MyUser(User):
+            host = "http://example.com"
+            wait_time = constant(1)
+
+            @task(1)
+            def my_task(self):
+                my_dict["val"] = self.environment.parsed_options.my_argument
+
+        @locust.events.init_command_line_parser.add_listener
+        def _(parser, **kw):
+            parser.add_argument("--my-argument", type=int, help="Give me a number")
+
+        self.environment.user_classes = [MyUser]
+        self.environment.parsed_options = parse_options(args=["--my-argument", "42"])
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 1, "spawn_rate": 1, "host": "", "my_argument": "42"},
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(my_dict["val"], 42)
 
     def test_swarm_host_value_not_specified(self):
         class MyUser(User):

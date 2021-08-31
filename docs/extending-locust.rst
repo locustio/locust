@@ -1,16 +1,12 @@
 .. _extending_locust:
 
-==================================
-Extending Locust using event hooks
-==================================
+===========
+Event hooks
+===========
 
 Locust comes with a number of event hooks that can be used to extend Locust in different ways.
 
-Event hooks are registered on the Environment under its :py:attr:`events <locust.env.Environment.events>` 
-attribute, but they are more conveniently accessed via the :py:obj:`locust.events` variable (because the Environment 
-is instantiated *after* importing the locustfile)
-
-Here's an example on how to set up an event listener::
+For example, here's how to set up an event listener that will trigger after a request is completed::
 
     from locust import events
     
@@ -25,18 +21,39 @@ Here's an example on how to set up an event listener::
 
 .. note::
 
-    To see all available events, please see :ref:`events`.
-
-    In the above example the wildcard keyword argument (\**kwargs) will be empty but it 
-    is prevents the code from breaking if new arguments are added in some future version of Locust.
+    In the above example the wildcard keyword argument (\**kwargs) will be empty, because we're handling all arguments, but it is prevents the code from breaking if new arguments are added in some future version of Locust.
 
     It is entirely possible to implement a client that does not support all parameters 
     (some non-HTTP protocols might not have a concept of `response_length` or `response` object).
 
+When running locust in distributed mode, it may be useful to do some setup on worker nodes before running your tests. 
+You can check to ensure you aren't running on the master node by checking the type of the node's :py:attr:`runner <locust.env.Environment.runner>`::
+
+    from locust import events
+    from locust.runners import MasterRunner
+
+    @events.test_start.add_listener
+    def on_test_start(environment, **kwargs):
+        if not isinstance(environment.runner, MasterRunner):
+            print("Beginning test setup")
+        else
+            print("Started test from Master node")
+
+    @events.test_stop.add_listener
+    def on_test_stop(environment, **kwargs):
+        if not isinstance(environment.runner, MasterRunner):
+            print("Cleaning up test data")
+        else
+            print("Stopped test from Master node")
+
+You can also use events `to add custom command line arguments <https://github.com/locustio/locust/tree/master/examples/add_command_line_argument.py>`_. 
+
+To see a full list of available events see :ref:`events`.
+
 .. _request_context:
 
 Request context
-==================
+===============
 
 The :py:attr:`request event <locust.event.Events.request>` has a context parameter that enable you to pass data `about` the request (things like username, tags etc). It can be set directly in the call to the request method or at the User level, by overriding the User.context() method. 
 
@@ -45,13 +62,15 @@ Context from request method::
     class MyUser(HttpUser):
         @task
         def t(self):
-            self.client.post("/login", json={"username": "foo"}, context={"username": "foo"})
+            self.client.post("/login", json={"username": "foo"})
+            self.client.get("/other_request", context={"username": "foo"})
 
         @events.request.add_listener
         def on_request(context, **kwargs):
-            print(context["username"])
+            if context:
+                print(context["username"])
     
-Context from User class::
+Context from User instance::
 
     class MyUser(HttpUser):
         def context(self):
@@ -77,8 +96,8 @@ to the Flask app instance and use that to set up a new route::
     from locust import events
     
     @events.init.add_listener
-    def on_locust_init(web_ui, **kw):
-        @web_ui.app.route("/added_page")
+    def on_locust_init(environment, **kw):
+        @environment.web_ui.app.route("/added_page")
         def my_added_page():
             return "Another page"
 
@@ -130,6 +149,39 @@ For example, you can monitor the fail ratio of your test and stop the run if it 
         if not isinstance(environment.runner, WorkerRunner):
             gevent.spawn(checker, environment)
 
+.. _parametrizing-locustfiles:
+
+Parametrizing locustfiles
+=========================
+
+There are two main ways to parametrize your locustfile. You can use environment variables:
+
+On linux/mac:
+
+.. code-block:: bash
+
+    MY_FUNKY_VAR=42 locust ...
+
+On windows:
+
+.. code-block:: bash
+
+    SET MY_FUNKY_VAR=42
+    locust ...
+
+And then access them in your locustfile:
+
+.. code-block:: python
+
+    import os
+    print(os.environ['MY_FUNKY_VAR'])
+
+Or you can add your own custom command line arguments, using the :py:attr:`init_command_line_parser <locust.event.Events.init_command_line_parser>` event, as shown in `this example <https://github.com/locustio/locust/tree/master/examples/add_command_line_argument.py>`_. Custom arguments can also be set in the start dialogue in the web UI. When running Locust :ref:`distributed <running-locust-distributed>`, custom arguments are automatically forwarded to workers when the run is started (but not before then, so you cannot rely on forwarded arguments *before* the test has actually started).
+
+Test data management
+====================
+
+There are a number of ways to get test data into your tests (after all, your test is just a Python program and it can do whatever Python can). Locust's events give you fine-grained control over *when* to fetch/release test data. You can find a `detailed example here <https://github.com/locustio/locust/tree/master/examples/test_data_management.py>`_. 
 
 More examples
 =============

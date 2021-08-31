@@ -179,15 +179,13 @@ class Events:
 
     test_start: EventHook
     """
-    Fired when a new load test is started. It's not fired again if the number of
-    users change during a test. When running locust distributed the event is only fired
-    on the master node and not on each worker node.
+    Fired on each node when a new load test is started. It's not fired again if the number of
+    users change during a test.
     """
 
     test_stop: EventHook
     """
-    Fired when a load test is stopped. When running locust distributed the event
-    is only fired on the master node and not on each worker node.
+    Fired on each node when a load test is stopped.
     """
 
     reset_stats: EventHook

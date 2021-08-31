@@ -1,7 +1,7 @@
 FROM python:3.8
 
 COPY . /build
-RUN cd /build && pip install . && rm -rf /build
+RUN cd /build && ls .git/ && pip install . && rm -rf /build
 
 EXPOSE 8089 5557
 

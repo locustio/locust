@@ -1,7 +1,7 @@
-.. _running-locust-without-web-ui:
+.. _running-without-web-ui:
 
 =================================
-Running Locust without the web UI
+Running without the web UI
 =================================
 
 You can run locust without the web UI - for example if you want to run it in some automated flow, 
@@ -14,6 +14,7 @@ like a CI server - by using the ``--headless`` flag together with ``-u`` and ``-
 ``-u`` specifies the number of Users to spawn, and ``-r`` specifies the spawn rate
 (number of users to start per second).
 
+While the test is running you can change the user count manually, even after ramp up has finished. Pressing w to add 1 user or W to add 10. Press s to remove 1 or S to remove 10.
 
 Setting a time limit for the test
 ---------------------------------

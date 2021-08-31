@@ -1,5 +1,6 @@
 from operator import methodcaller
 from typing import (
+    Callable,
     Dict,
     List,
     Type,
@@ -12,7 +13,7 @@ from .stats import RequestStats
 from .runners import Runner, LocalRunner, MasterRunner, WorkerRunner
 from .web import WebUI
 from .user import User
-from .user.task import filter_tasks_by_tags
+from .user.task import TaskSet, filter_tasks_by_tags
 from .shape import LoadTestShape
 
 
@@ -71,7 +72,7 @@ class Environment:
     """
 
     parsed_options = None
-    """Optional reference to the parsed command line options (used to pre-populate fields in Web UI)"""
+    """Reference to the parsed command line options (used to pre-populate fields in Web UI). May be None when using Locust as a library"""
 
     def __init__(
         self,
@@ -104,6 +105,8 @@ class Environment:
         self.parsed_options = parsed_options
 
         self._filter_tasks_by_tags()
+
+        self._remove_user_classes_with_weight_zero()
 
         # Validate there's no class with the same name but in different modules
         if len(set(user_class.__name__ for user_class in self.user_classes)) != len(self.user_classes):
@@ -214,6 +217,39 @@ class Environment:
 
         for user_class in self.user_classes:
             filter_tasks_by_tags(user_class, self.tags, self.exclude_tags)
+
+    def _remove_user_classes_with_weight_zero(self):
+        """
+        Remove user classes having a weight of zero.
+        """
+        if len(self.user_classes) == 0:
+            # Preserve previous behaviour that allowed no user classes to be specified.
+            return
+        filtered_user_classes = [user_class for user_class in self.user_classes if user_class.weight > 0]
+        if len(filtered_user_classes) == 0:
+            # TODO: Better exception than `ValueError`?
+            raise ValueError("There are no users with weight > 0.")
+        self.user_classes[:] = filtered_user_classes
+
+    def assign_equal_weights(self):
+        """
+        Update the user classes such that each user runs their specified tasks with equal
+        probability.
+        """
+        for u in self.user_classes:
+            u.weight = 1
+            user_tasks = []
+            tasks_frontier = u.tasks
+            while len(tasks_frontier) != 0:
+                t = tasks_frontier.pop()
+                if hasattr(t, "tasks") and t.tasks:
+                    tasks_frontier.extend(t.tasks)
+                elif isinstance(t, Callable):
+                    if t not in user_tasks:
+                        user_tasks.append(t)
+                else:
+                    raise ValueError("Unrecognized task type in user")
+            u.tasks = user_tasks
 
     @property
     def user_classes_by_name(self) -> Dict[str, Type[User]]:
