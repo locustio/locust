@@ -26,6 +26,17 @@ The :py:class:`Environment <locust.env.Environment>` instance's
     env.runner.start(5000, spawn_rate=20)
     env.runner.greenlet.join()
 
+It is also possible to bypass the dispatch and distribution logic, and manually control the spawned users:
+
+.. code-block:: python
+
+    new_users = env.runner.spawn_users({MyUserClass.__name__: 2})
+    new_users[1].my_custom_token = "custom-token-2"
+    new_users[0].my_custom_token = "custom-token-1"
+
+The above example only works on standalone mode and is an experimental feature, meaning that it could be
+removed in future versions. But it's useful if you want to have fine-grained control on the spawned users. 
+
 .. note::
 
     Do not attempt to create a master runner and worker(s) in the same Python process. It does not work, and even if it did, it would not give you better performance than running a single LocalRunner. Every worker *must* run in its own process, there is no way around that.

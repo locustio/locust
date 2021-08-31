@@ -205,20 +205,25 @@ class Runner:
 
         def spawn(user_class: str, spawn_count: int):
             n = 0
+            new_users = []
             while n < spawn_count:
                 new_user = self.user_classes_by_name[user_class](self.environment)
                 new_user.start(self.user_greenlets)
+                new_users.append(new_user)
                 n += 1
                 if n % 10 == 0 or n == spawn_count:
                     logger.debug("%i users spawned" % self.user_count)
             logger.debug("All users of class %s spawned" % user_class)
+            return new_users
 
+        new_users = []
         for user_class, spawn_count in user_classes_spawn_count.items():
-            spawn(user_class, spawn_count)
+            new_users += spawn(user_class, spawn_count)
 
         if wait:
             self.user_greenlets.join()
             logger.info("All users stopped\n")
+        return new_users
 
     def stop_users(self, user_classes_stop_count: Dict[str, int]):
         async_calls_to_stop = Group()

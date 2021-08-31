@@ -151,7 +151,8 @@ class TestLocustRunner(LocustTestCase):
                     triggered[0] = True
 
         runner = Environment(user_classes=[BaseUser]).create_local_runner()
-        runner.spawn_users({BaseUser.__name__: 2}, wait=False)
+        users = runner.spawn_users({BaseUser.__name__: 2}, wait=False)
+        self.assertEqual(2, len(users))
         self.assertEqual(2, len(runner.user_greenlets))
         g1 = list(runner.user_greenlets)[0]
         g2 = list(runner.user_greenlets)[1]
@@ -339,7 +340,8 @@ class TestLocustRunner(LocustTestCase):
                 BaseUser.stop_triggered = True
 
         runner = Environment(user_classes=[BaseUser]).create_local_runner()
-        runner.spawn_users({BaseUser.__name__: 1}, wait=False)
+        users = runner.spawn_users({BaseUser.__name__: 1}, wait=False)
+        self.assertEqual(1, len(users))
         timeout = gevent.Timeout(0.5)
         timeout.start()
         try:
@@ -364,7 +366,8 @@ class TestLocustRunner(LocustTestCase):
                 BaseUser.stop_count += 1
 
         runner = Environment(user_classes=[BaseUser]).create_local_runner()
-        runner.spawn_users({BaseUser.__name__: 10}, wait=False)
+        users = runner.spawn_users({BaseUser.__name__: 10}, wait=False)
+        self.assertEqual(10, len(users))
         timeout = gevent.Timeout(0.3)
         timeout.start()
         try:
