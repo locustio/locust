@@ -123,9 +123,9 @@
             <ul class="tabs container">
                 <li><a href="#">Statistics</a></li>
                 <li><a href="#" class="chart-tab-link">Charts</a></li>
-                <li><a href="#">Tasks</a></li>
                 <li><a href="#">Failures</a></li>
                 <li><a href="#">Exceptions</a></li>
+                <li><a href="#">Tasks</a></li>
                 <li><a href="#">Download Data</a></li>
                 {% if is_distributed %}
                     <li><a href="#">Workers</a></li>
@@ -159,10 +159,6 @@
             <div id="charts" style="display:none;">
                 <div class="charts-container"></div>
             </div>
-            <div id="tasks" style="display:none;">
-                <p>Script: <span>{{ locustfile }}</span></p>
-                <div class="tasks" data-tasks="{{tasks}}"></div>
-            </div>
             <div style="display:none;">
                 <table id="errors" class="stats">
                     <thead>
@@ -184,6 +180,10 @@
                     <tbody>
                     </tbody>
                 </table>
+            </div>
+            <div id="tasks" style="display:none;">
+                <p>Script: <span>{{ locustfile }}</span></p>
+                <div class="tasks" data-tasks="{{tasks}}"></div>
             </div>
             <div style="display:none;">
                 <div style="margin-top:20px;">
