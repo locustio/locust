@@ -6,7 +6,6 @@
 
 **Fixed bugs:**
 
-- locust in subprocess don't start [\#1846](https://github.com/locustio/locust/issues/1846)
 - time display in live charts switches to the local time upon refresh [\#1835](https://github.com/locustio/locust/issues/1835)
 - Part of response times chart lines are missing [\#1702](https://github.com/locustio/locust/issues/1702)
 
