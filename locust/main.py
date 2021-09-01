@@ -25,7 +25,7 @@ from .exception import AuthCredentialsError
 from .shape import LoadTestShape
 from .input_events import input_listener
 from .html import get_html_report
-
+from json import dumps
 
 version = locust.__version__
 
@@ -99,11 +99,12 @@ def load_locustfile(path):
     return imported.__doc__, user_classes, shape_class
 
 
-def create_environment(user_classes, options, events=None, shape_class=None):
+def create_environment(user_classes, options, events=None, shape_class=None, locustfile=None):
     """
     Create an Environment instance from options
     """
     return Environment(
+        locustfile=locustfile,
         user_classes=user_classes,
         shape_class=shape_class,
         tags=options.tags,
@@ -204,7 +205,9 @@ def main():
             )
 
     # create locust Environment
-    environment = create_environment(user_classes, options, events=locust.events, shape_class=shape_class)
+    environment = create_environment(
+        user_classes, options, events=locust.events, shape_class=shape_class, locustfile=os.path.basename(locustfile)
+    )
 
     if shape_class and (options.num_users or options.spawn_rate):
         logger.warning(
@@ -220,7 +223,6 @@ def main():
         print_task_ratio(user_classes, total=True)
         sys.exit(0)
     if options.show_task_ratio_json:
-        from json import dumps
 
         task_data = {
             "per_class": get_task_ratio_dict(user_classes),

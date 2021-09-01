@@ -323,7 +323,8 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.stats.log_request("GET", "/test", 120, 5612)
         r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
         self.assertEqual(200, r.status_code)
-        self.assertIn("<title>Test Report</title>", r.text)
+        self.assertIn("<title>Test Report for None</title>", r.text)
+        self.assertIn("<p>Script: <span>None</span></p>", r.text)
         self.assertIn("charts-container", r.text)
         self.assertIn(
             '<a href="?download=1">Download the Report</a>',
@@ -334,7 +335,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
     def test_report_page_empty_stats(self):
         r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
         self.assertEqual(200, r.status_code)
-        self.assertIn("<title>Test Report</title>", r.text)
+        self.assertIn("<title>Test Report for None</title>", r.text)
         self.assertIn("charts-container", r.text)
 
     def test_report_download(self):

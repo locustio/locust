@@ -21,11 +21,13 @@ from .log import greenlet_exception_logger
 from .stats import sort_stats
 from . import stats as stats_module, __version__ as version, argument_parser
 from .stats import StatsCSV
+from .user.inspectuser import get_task_ratio_dict
 from .util.cache import memoize
 from .util.rounding import proper_round
 from .util.timespan import parse_timespan
 from .html import get_html_report
 from flask_cors import CORS
+from json import dumps
 
 
 logger = logging.getLogger(__name__)
@@ -409,6 +411,11 @@ class WebUI:
 
         stats = self.environment.runner.stats
 
+        task_data = {
+            "per_class": get_task_ratio_dict(self.environment.user_classes),
+            "total": get_task_ratio_dict(self.environment.user_classes, total=True),
+        }
+
         extra_options = (
             {
                 k: v
@@ -420,6 +427,7 @@ class WebUI:
         )
 
         self.template_args = {
+            "locustfile": self.environment.locustfile,
             "state": self.environment.runner.state,
             "is_distributed": is_distributed,
             "user_count": self.environment.runner.user_count,
@@ -432,5 +440,6 @@ class WebUI:
             "worker_count": worker_count,
             "is_shape": self.environment.shape_class,
             "stats_history_enabled": options and options.stats_history_enabled,
+            "tasks": dumps(task_data),
             "extra_options": extra_options,
         }

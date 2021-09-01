@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Test Report</title>
+    <title>Test Report for {{ locustfile }}</title>
     <style>
         body {
             background: #173529;
@@ -46,6 +46,7 @@
             {% endif %}
             <p>During: <span class="l10n datetime">{{ start_time }}</span> - <span class="l10n datetime">{{ end_time }}</span></p>
             <p>Target Host: <span>{{ host }}</span></p>
+            <p>Script: <span>{{ locustfile }}</span></p>
         </div>
 
         <div class="requests">
@@ -177,6 +178,12 @@
                 <h2>Charts</h2>
             </div>
         {% endif %}
+
+        <div id="tasks">
+            <h2>Tasks</h2>
+            <div class="tasks" data-tasks="{{tasks}}"></div>
+        </div>
+    
     </div>
 
     {# <script type="text/javascript" src="/static/jquery-1.11.3.min.js"></script> #}

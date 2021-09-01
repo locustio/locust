@@ -7,6 +7,8 @@ docs/_build/**
 docs/cli-help-output.txt
 docs/config-options.rst
 mock.*.egg
+web_test_*.csv
+.eggs/
 dist/**
 .idea/**
 *.iml

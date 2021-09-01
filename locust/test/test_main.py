@@ -533,7 +533,9 @@ class LocustProcessIntegrationTest(TestCase):
                     html_report_content = f.read()
 
         # make sure title appears in the report
-        self.assertIn("<title>Test Report</title>", html_report_content)
+        _, locustfile = os.path.split(mocked.file_path)
+        self.assertIn(f"<title>Test Report for {locustfile}</title>", html_report_content)
+        self.assertIn(f"<p>Script: <span>{locustfile}</span></p>", html_report_content)
 
         # make sure host appears in the report
         self.assertIn("https://test.com/", html_report_content)
