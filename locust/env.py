@@ -80,6 +80,7 @@ class Environment:
         user_classes=None,
         shape_class=None,
         tags=None,
+        locustfile=None,
         exclude_tags=None,
         events=None,
         host=None,
@@ -93,6 +94,7 @@ class Environment:
         else:
             self.events = Events()
 
+        self.locustfile = locustfile
         self.user_classes = user_classes or []
         self.shape_class = shape_class
         self.tags = tags

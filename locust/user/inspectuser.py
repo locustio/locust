@@ -22,7 +22,7 @@ def get_task_ratio_dict(tasks, total=False, parent_ratio=1.0):
     """
     Return a dict containing task execution ratio info
     """
-    if hasattr(tasks[0], "weight"):
+    if len(tasks) > 0 and hasattr(tasks[0], "weight"):
         divisor = sum(t.weight for t in tasks)
     else:
         divisor = len(tasks) / parent_ratio

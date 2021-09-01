@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Locust</title>
+    <title>Locust for {{ locustfile }}</title>
     <link rel="stylesheet" type="text/css" href="./static/css/application.css?v={{ version }}" media="screen">
     <link rel="shortcut icon" href="./static/img/favicon.ico" type="image/x-icon"/>
 </head>
@@ -123,6 +123,7 @@
             <ul class="tabs container">
                 <li><a href="#">Statistics</a></li>
                 <li><a href="#" class="chart-tab-link">Charts</a></li>
+                <li><a href="#">Tasks</a></li>
                 <li><a href="#">Failures</a></li>
                 <li><a href="#">Exceptions</a></li>
                 <li><a href="#">Download Data</a></li>
@@ -157,6 +158,10 @@
             </div>
             <div id="charts" style="display:none;">
                 <div class="charts-container"></div>
+            </div>
+            <div id="tasks" style="display:none;">
+                <p>Script: <span>{{ locustfile }}</span></p>
+                <div class="tasks" data-tasks="{{tasks}}"></div>
             </div>
             <div style="display:none;">
                 <table id="errors" class="stats">
@@ -248,8 +253,6 @@
             <a href="#" onclick="$('.about').fadeIn();">About</a>
         </div>
     </nav>
-
-
     <script type="text/javascript" src="./static/jquery-1.11.3.min.js"></script>
     <script type="text/javascript" src="./static/jquery.jqote2.min.js"></script>
     <script type="text/javascript" src="./static/jquery.tools.min.js"></script>
@@ -313,6 +316,7 @@
     </script>
     <script type="text/javascript" src="./static/chart.js?v={{ version }}"></script>
     <script type="text/javascript" src="./static/locust.js?v={{ version }}"></script>
+    <script type="text/javascript" src="./static/tasks.js?v={{ version }}"></script>
     {% block extended_script %}
     {% endblock extended_script %}
 </body>

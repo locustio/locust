@@ -4,6 +4,9 @@ import pathlib
 import datetime
 from itertools import chain
 from .stats import sort_stats
+from .user.inspectuser import get_task_ratio_dict
+from html import escape
+from json import dumps
 
 
 def render_template(file, **kwargs):
@@ -42,7 +45,7 @@ def get_html_report(environment, show_download_link=True):
     history = stats.history
 
     static_js = []
-    js_files = ["jquery-1.11.3.min.js", "echarts.common.min.js", "vintage.js", "chart.js"]
+    js_files = ["jquery-1.11.3.min.js", "echarts.common.min.js", "vintage.js", "chart.js", "tasks.js"]
     for js_file in js_files:
         path = os.path.join(os.path.dirname(__file__), "static", js_file)
         static_js.append("// " + js_file)
@@ -59,6 +62,11 @@ def get_html_report(environment, show_download_link=True):
             static_css.append(f.read())
         static_css.extend(["", ""])
 
+    task_data = {
+        "per_class": get_task_ratio_dict(environment.user_classes),
+        "total": get_task_ratio_dict(environment.user_classes, total=True),
+    }
+
     res = render_template(
         "report.html",
         int=int,
@@ -73,6 +81,8 @@ def get_html_report(environment, show_download_link=True):
         static_js="\n".join(static_js),
         static_css="\n".join(static_css),
         show_download_link=show_download_link,
+        locustfile=environment.locustfile,
+        tasks=escape(dumps(task_data)),
     )
 
     return res
