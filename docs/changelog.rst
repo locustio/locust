@@ -4,6 +4,20 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.2.0
+=====
+
+* Display locustfile and tasks ratio information on index.html
+* Add --autostart and --autoquit parameters (https://github.com/locustio/locust/pull/1864)
+* Add constant\_throughput wait time \(the inverse of constant\_pacing\)
+* Alternative way to rename requests (particularly useful when using an SDK that wraps `requests`) (https://github.com/locustio/locust/pull/1858)
+* Add --equal-weights flag (https://github.com/locustio/locust/pull/1842)
+* HttpUser: Unpack known exceptions
+* Various charting fixes
+* Add FastHttpUser directly under locust package
+* Auto-generate Locust's version number using setuptools\_scm and git tags 
+* Show custom arguments in web ui and forward them to worker (https://github.com/locustio/locust/pull/1841)
+
 2.1.0
 =====
 

@@ -1,30 +1,57 @@
 # Changelog
 
-## [latest](https://github.com/locustio/locust/tree/latest) (2021-08-08)
+## [2.2.0](https://github.com/locustio/locust/tree/0.workaround_for_github_changelog_generator) (2021-09-01)
 
-[Full Changelog](https://github.com/locustio/locust/compare/0.0.100...latest)
+[Full Changelog](https://github.com/locustio/locust/compare/2.1.0...2.2.0)
+
+**Fixed bugs:**
+
+- locust in subprocess don't start [\#1846](https://github.com/locustio/locust/issues/1846)
+- time display in live charts switches to the local time upon refresh [\#1835](https://github.com/locustio/locust/issues/1835)
+- Part of response times chart lines are missing [\#1702](https://github.com/locustio/locust/issues/1702)
+
+**Closed issues:**
+
+- Response times get graphed as zero before first request is made [\#1852](https://github.com/locustio/locust/issues/1852)
+- Add flag to run with uniform weights [\#1838](https://github.com/locustio/locust/issues/1838)
+- Starting load test from the cli but monitoring from the web UI [\#831](https://github.com/locustio/locust/issues/831)
+
+**Merged pull requests:**
+
+- \#1832 Displaying locustfile and tasks ratio information on index.html [\#1868](https://github.com/locustio/locust/pull/1868) ([tyge68](https://github.com/tyge68))
+- Add --autostart and --autoquit parameters, fixes \#831 [\#1864](https://github.com/locustio/locust/pull/1864) ([cyberw](https://github.com/cyberw))
+- Add constant\_throughput wait time \(the inverse of constant\_pacing\) [\#1863](https://github.com/locustio/locust/pull/1863) ([cyberw](https://github.com/cyberw))
+- Improve some of the doc issues that were missed from the previous PR [\#1861](https://github.com/locustio/locust/pull/1861) ([Serhiy1](https://github.com/Serhiy1))
+- Handle user classes with weight = 0 [\#1860](https://github.com/locustio/locust/pull/1860) ([mboutet](https://github.com/mboutet))
+- fix\(examples\): fix multiple\_hosts.py example [\#1859](https://github.com/locustio/locust/pull/1859) ([obradovichv](https://github.com/obradovichv))
+- Alternative grouping [\#1858](https://github.com/locustio/locust/pull/1858) ([Serhiy1](https://github.com/Serhiy1))
+- HttpUser: Unpack known exceptions [\#1855](https://github.com/locustio/locust/pull/1855) ([cyberw](https://github.com/cyberw))
+- fix\(charts\): prevent displaying stats before requests are made [\#1853](https://github.com/locustio/locust/pull/1853) ([obradovichv](https://github.com/obradovichv))
+- Use UTC time for server stats history, localize times on the client [\#1851](https://github.com/locustio/locust/pull/1851) ([obradovichv](https://github.com/obradovichv))
+- FastHttpUser: Add it directly under locust package, make the documentation less scary. [\#1849](https://github.com/locustio/locust/pull/1849) ([cyberw](https://github.com/cyberw))
+- Adjust github actions [\#1848](https://github.com/locustio/locust/pull/1848) ([cyberw](https://github.com/cyberw))
+- Auto-generate version number using setuptools\_scm and git tags [\#1847](https://github.com/locustio/locust/pull/1847) ([cyberw](https://github.com/cyberw))
+- Add equal weights flag [\#1842](https://github.com/locustio/locust/pull/1842) ([shekar-stripe](https://github.com/shekar-stripe))
+- Show custom arguments in web ui and forward them to worker [\#1841](https://github.com/locustio/locust/pull/1841) ([cyberw](https://github.com/cyberw))
+- Return the new users on Runner.spawn\_users [\#1791](https://github.com/locustio/locust/pull/1791) ([pappacena](https://github.com/pappacena))
+
+## [2.1.0](https://github.com/locustio/locust/tree/2.1.0) (2021-08-08)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.0.0...2.1.0)
 
 **Fixed bugs:**
 
 - OOM error with master/slaves setup \(zeromq, windows\) [\#1372](https://github.com/locustio/locust/issues/1372)
+
+**Closed issues:**
+
+- locust should add extending blocks to index.html to change the start test and edit test options [\#1822](https://github.com/locustio/locust/issues/1822)
 
 **Merged pull requests:**
 
 - Fix docker builds [\#1845](https://github.com/locustio/locust/pull/1845) ([cyberw](https://github.com/cyberw))
 - Bump dependency on pyzmq to fix \#1372 \(OOM on windows\) [\#1839](https://github.com/locustio/locust/pull/1839) ([cyberw](https://github.com/cyberw))
 - Use 1 as default in web UI start form + lots of documentation updates [\#1836](https://github.com/locustio/locust/pull/1836) ([cyberw](https://github.com/cyberw))
-
-## [0.0.100](https://github.com/locustio/locust/tree/0.0.100) (2021-08-04)
-
-[Full Changelog](https://github.com/locustio/locust/compare/0.0.99...0.0.100)
-
-## [0.0.99](https://github.com/locustio/locust/tree/0.0.99) (2021-08-04)
-
-[Full Changelog](https://github.com/locustio/locust/compare/0.0.1...0.0.99)
-
-## [0.0.1](https://github.com/locustio/locust/tree/0.0.1) (2021-08-04)
-
-[Full Changelog](https://github.com/locustio/locust/compare/2.0.0...0.0.1)
 
 ## [2.0.0](https://github.com/locustio/locust/tree/2.0.0) (2021-08-01)
 
@@ -1911,7 +1938,7 @@
 
 ## [v0.4](https://github.com/locustio/locust/tree/v0.4) (2011-12-05)
 
-[Full Changelog](https://github.com/locustio/locust/compare/117a61cfd1bba9ad10c8b680a574fcf32f6f46be...v0.4)
+[Full Changelog](https://github.com/locustio/locust/compare/7cfe62cee36dee34fe4d23aed5bdd00c4f42b3d0...v0.4)
 
 **Fixed bugs:**
 
