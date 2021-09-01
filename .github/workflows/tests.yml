@@ -86,7 +86,7 @@ jobs:
 
   publish:
     name: PyPI - Publish if this is a tagged commit
-    needs: verify_docker_build
+    needs: [verify_docker_build, tests]
     if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
     runs-on: ubuntu-latest
     steps:
