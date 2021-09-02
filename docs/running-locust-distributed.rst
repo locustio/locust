@@ -12,7 +12,7 @@ To do this, you start one instance of Locust in master mode using the ``--master
 
 The master instance runs Locust's web interface, and tells the workers when to spawn/stop Users. The workers run your Users and send back statistics to the master. The master instance doesn't run any Users itself.
 
-Both the master and worker machines must have a copy of the locust test scripts when running Locust distributed.
+Both the master and worker machines must have a copy of the locustfile when running Locust distributed.
 
 .. note::
     Because Python cannot fully utilize more than one core per process (see `GIL <https://realpython.com/python-gil/>`_), you should typically run **one worker instance per processor core** on the worker machines in order to utilize all their computing power.
