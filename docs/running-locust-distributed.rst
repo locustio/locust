@@ -4,32 +4,24 @@
 Distributed load generation
 ===========================
 
-Once a single machine isn't enough to simulate the number of users that you need, Locust supports
-running load tests distributed across multiple machines.
+A single process running Locust can simulate a reasonably high throughput. For a simple test plan it should be able to make many hundreds of requests per second, thousands if you use :ref:`FastHttpUser <increase-performance>`.
 
-To do this, you start one instance of Locust in master mode using the ``--master`` flag. This is
-the instance that will be running Locust's web interface where you start the test and see live
-statistics. The master node doesn't simulate any users itself. Instead you have to start one or
--most likely-multiple worker Locust nodes using the ``--worker`` flag, together with the
-``--master-host`` (to specify the IP/hostname of the master node).
+But if your test plan is complex or you want to run even more load, you'll need to scale out to multiple processes, maybe even multiple machines.
 
-A common set up is to run a single master on one machine, and then run **one worker instance per
-processor core** on the worker machines.
+To do this, you start one instance of Locust in master mode using the ``--master`` flag and multiple worker instances using the ``--worker`` flag. If the workers are not on the same machine as the master you use ``--master-host`` to point them to the IP/hostname of the machine running the master.
+
+The master instance runs Locust's web interface, and tells the workers when to spawn/stop Users. The workers run your Users and send back statistics to the master. The master instance doesn't run any Users itself.
+
+Both the master and worker machines must have a copy of the locust test scripts when running Locust distributed.
 
 .. note::
-    Both the master and each worker machine, must have a copy of the locust test scripts
-    when running Locust distributed.
+    Because Python cannot fully utilize more than one core per process (see `GIL <https://realpython.com/python-gil/>`_), you should typically run **one worker instance per processor core** on the worker machines in order to utilize all their computing power.
 
 .. note::
-    It's recommended that you start a number of simulated users that are greater  than
-    ``number of user classes * number of workers`` when running Locust distributed.
+    There is almost no limit to how many *Users* you can run per worker. Locust/gevent can run thousands or even tens of thousands of Users per process just fine, as long as their total request rate/RPS is not too high.
 
-    Otherwise - due to the current implementation -
-    you might end up with a distribution of the  User classes that doesn't correspond to the
-    User classes' ``weight`` attribute. And if the spawn rate is lower than the number of worker
-    nodes, the spawning would occur in "bursts" where all worker nodes would spawn a single user and
-    then sleep for multiple seconds, spawn another user, sleep and repeat.
-
+.. note::
+    If Locust is getting close to running out of CPU resources, it will log a warning.
 
 Example
 =======
