@@ -1,6 +1,18 @@
 # Changelog
 
-## [2.2.0](https://github.com/locustio/locust/tree/0.workaround_for_github_changelog_generator) (2021-09-01)
+## [2.2.1](https://github.com/locustio/locust/tree/2.2.1) (2021-09-02)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.2.0...2.2.1)
+
+**Fixed bugs:**
+
+- Importing any locust plugin breaks the UI and distributed load generation. [\#1870](https://github.com/locustio/locust/issues/1870)
+
+**Merged pull requests:**
+
+- Disable setting custom parameters of None or boolean type in web UI. Fixes \#1870 [\#1871](https://github.com/locustio/locust/pull/1871) ([cyberw](https://github.com/cyberw))
+
+## [2.2.0](https://github.com/locustio/locust/tree/2.2.0) (2021-09-01)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.1.0...2.2.0)
 
