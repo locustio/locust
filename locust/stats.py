@@ -843,15 +843,11 @@ class StatsCSV:
         ]
 
     def _percentile_fields(self, stats_entry, use_current = False):
-        print('In _percentile_fields')
         if not stats_entry.num_requests:
-            print('N/A')
             return self.percentiles_na
         elif use_current:
-            print('Giving current response times.')
             return [int(stats_entry.get_current_response_time_percentile(x) or 0) for x in self.percentiles_to_report]
         else:
-            print('Giving total response times.')
             return [int(stats_entry.get_response_time_percentile(x) or 0) for x in self.percentiles_to_report]
 
     def requests_csv(self, csv_writer):
@@ -910,7 +906,6 @@ class StatsCSVFileWriter(StatsCSV):
     """Write statistics to to CSV files"""
 
     def __init__(self, environment, percentiles_to_report, base_filepath, full_history=False):
-        print('Writer initialized with full_history set to... {}'.format(full_history))
         super().__init__(environment, percentiles_to_report)
         self.base_filepath = base_filepath
         self.full_history = full_history
@@ -1007,7 +1002,6 @@ class StatsCSVFileWriter(StatsCSV):
         if self.full_history:
             stats_entries = sort_stats(stats.entries)
 
-        print('Running _stats_history_data_rows... self.full_history is... {}'.format(self.full_history))
         for stats_entry in chain(stats_entries, [stats.total]):
             csv_writer.writerow(
                 chain(
