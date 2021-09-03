@@ -4,6 +4,8 @@
     <title>Locust for {{ locustfile }}</title>
     <link rel="stylesheet" type="text/css" href="./static/css/application.css?v={{ version }}" media="screen">
     <link rel="shortcut icon" href="./static/img/favicon.ico" type="image/x-icon"/>
+    {% block extended_head %}
+    {% endblock extended_head %}
 </head>
 <body class="{{state}}">
     <div class="top">
