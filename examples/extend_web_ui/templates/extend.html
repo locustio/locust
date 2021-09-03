@@ -1,5 +1,9 @@
 {% extends "index.html" %}
 
+{% block extended_head %}
+<link rel="stylesheet" type="text/css" href="./extend/static/extend.css?v={{ version }}" media="screen">
+{% endblock extended_head %}
+
 {% block extended_tabs %}
 <li><a href="#" class="content-length-tab-link">Content Length</a></li>
 {% endblock extended_tabs %}
