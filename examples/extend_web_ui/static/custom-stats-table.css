@@ -1,3 +1,7 @@
+/*
+ Customises stats tables color, alignment. Adds row highlighting.
+ Just a simple extension example. The sky's the limit here :-)
+**/
 
 table.stats {
 	border-collapse: collapse;
