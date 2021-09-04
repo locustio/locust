@@ -359,6 +359,9 @@ class Runner:
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
 
     def start_shape(self):
+        """
+        Start running a load test with a custom LoadTestShape specified in the :meth:`Environment.shape_class <locust.env.Environment.shape_class>` parameter.
+        """
         if self.shape_greenlet:
             logger.info("There is an ongoing shape test running. Editing is disabled")
             return
