@@ -842,12 +842,13 @@ class StatsCSV:
             "Nodes",
         ]
 
-    def _percentile_fields(self, stats_entry):
-        return (
-            [int(stats_entry.get_response_time_percentile(x) or 0) for x in self.percentiles_to_report]
-            if stats_entry.num_requests
-            else self.percentiles_na
-        )
+    def _percentile_fields(self, stats_entry, use_current=False):
+        if not stats_entry.num_requests:
+            return self.percentiles_na
+        elif use_current:
+            return [int(stats_entry.get_current_response_time_percentile(x) or 0) for x in self.percentiles_to_report]
+        else:
+            return [int(stats_entry.get_response_time_percentile(x) or 0) for x in self.percentiles_to_report]
 
     def requests_csv(self, csv_writer):
         """Write requests csv with header and data rows."""
@@ -1012,7 +1013,7 @@ class StatsCSVFileWriter(StatsCSV):
                         f"{stats_entry.current_rps:2f}",
                         f"{stats_entry.current_fail_per_sec:2f}",
                     ),
-                    self._percentile_fields(stats_entry),
+                    self._percentile_fields(stats_entry, use_current=self.full_history),
                     (
                         stats_entry.num_requests,
                         stats_entry.num_failures,

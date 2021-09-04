@@ -377,8 +377,18 @@ class TestCsvStats(LocustTestCase):
         stats_writer = StatsCSVFileWriter(
             self.environment, PERCENTILES_TO_REPORT, self.STATS_BASE_NAME, full_history=True
         )
-        self.runner.stats.log_request("GET", "/", 10, content_length=666)
+
+        for i in range(10):
+            self.runner.stats.log_request("GET", "/", 100, content_length=666)
+
         greenlet = gevent.spawn(stats_writer)
+        gevent.sleep(10)
+
+        for i in range(10):
+            self.runner.stats.log_request("GET", "/", 10, content_length=666)
+
+        gevent.sleep(5)
+
         gevent.sleep(_TEST_CSV_STATS_INTERVAL_WAIT_SEC)
         gevent.kill(greenlet)
         stats_writer.close_files()
@@ -392,11 +402,26 @@ class TestCsvStats(LocustTestCase):
             reader = csv.DictReader(f)
             rows = [r for r in reader]
 
-        self.assertEqual(4, len(rows))
+        self.assertGreaterEqual(len(rows), 130)
+
         self.assertEqual("/", rows[0]["Name"])
         self.assertEqual("Aggregated", rows[1]["Name"])
         self.assertEqual("/", rows[2]["Name"])
         self.assertEqual("Aggregated", rows[3]["Name"])
+        self.assertEqual("20", rows[-1]["Total Request Count"])
+
+        saw100 = False
+        saw10 = False
+
+        for row in rows:
+            if not saw100 and row["95%"] == "100":
+                saw100 = True
+            elif saw100 and row["95%"] == "10":
+                saw10 = True
+                break
+
+        self.assertTrue(saw100, "Never saw 95th percentile increase to 100")
+        self.assertTrue(saw10, "Never saw 95th percentile decrease to 10")
 
     def test_csv_stats_on_master_from_aggregated_stats(self):
         # Failing test for: https://github.com/locustio/locust/issues/1315
