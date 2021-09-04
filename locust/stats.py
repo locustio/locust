@@ -842,7 +842,7 @@ class StatsCSV:
             "Nodes",
         ]
 
-    def _percentile_fields(self, stats_entry, use_current = False):
+    def _percentile_fields(self, stats_entry, use_current=False):
         if not stats_entry.num_requests:
             return self.percentiles_na
         elif use_current:
@@ -1013,7 +1013,7 @@ class StatsCSVFileWriter(StatsCSV):
                         f"{stats_entry.current_rps:2f}",
                         f"{stats_entry.current_fail_per_sec:2f}",
                     ),
-                    self._percentile_fields(stats_entry, use_current = self.full_history),
+                    self._percentile_fields(stats_entry, use_current=self.full_history),
                     (
                         stats_entry.num_requests,
                         stats_entry.num_failures,
