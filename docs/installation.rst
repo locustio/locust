@@ -11,6 +11,12 @@ Install Locust:
 
     $ pip3 install locust
 
+If you're [Homebrew](https://brew.sh/) user, you can install via brew command:
+
+```sh
+$ brew install locust
+```
+
 Validate your installation. If this doesnt work, `check the wiki <https://github.com/locustio/locust/wiki/Installation>`_ for some possible solutions.
 
 .. code-block:: console
