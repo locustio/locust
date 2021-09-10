@@ -451,6 +451,18 @@ def main():
     try:
         logger.info("Starting Locust %s" % version)
         if options.autostart:
+            if options.master:
+                while len(runner.clients.ready) < options.expect_workers:
+                    logging.info(
+                        "Waiting for workers to be ready, %s of %s connected",
+                        len(runner.clients.ready),
+                        options.expect_workers,
+                    )
+                    # TODO: Handle KeyboardInterrupt and send quit signal to workers that are started.
+                    #       Right now, if the user sends a ctrl+c, the master will not gracefully
+                    #       shutdown resulting in all the already started workers to stay active.
+                    time.sleep(1)
+
             if environment.shape_class:
                 if options.run_time:
                     sys.stderr.write("It makes no sense to combine --run-time and LoadShapes. Bailing out.\n")
