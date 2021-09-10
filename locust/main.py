@@ -463,9 +463,8 @@ def main():
                         options.num_users = 1
                     if options.spawn_rate is None:
                         options.spawn_rate = 1
-
-                autostart_master_greenlet = gevent.spawn(runner.start, options.num_users, options.spawn_rate)
-                autostart_master_greenlet.link_exception(greenlet_exception_handler)
+                    autostart_master_greenlet = gevent.spawn(runner.start, options.num_users, options.spawn_rate)
+                    autostart_master_greenlet.link_exception(greenlet_exception_handler)
 
                 def timelimit_stop():
                     logger.info("--run-time limit reached, stopping test")
