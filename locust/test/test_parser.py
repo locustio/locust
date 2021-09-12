@@ -5,7 +5,7 @@ import mock
 from io import StringIO
 
 import locust
-from locust.argument_parser import parse_options, get_parser, parse_locustfile_option, extra_args_dict
+from locust.argument_parser import parse_options, get_parser, parse_locustfile_option, ui_extra_args_dict
 from .mock_locustfile import mock_locustfile
 from .testcases import LocustTestCase
 
@@ -194,7 +194,7 @@ class TestArgumentParser(LocustTestCase):
         self.assertEqual("v1", options.a1)
         self.assertEqual("v2", options.a2)
 
-        extra_args = extra_args_dict(args)
+        extra_args = ui_extra_args_dict(args)
         self.assertIn("a1", extra_args)
         self.assertNotIn("a2", extra_args)
         self.assertEqual("v1", extra_args["a1"])

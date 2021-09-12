@@ -416,7 +416,7 @@ class WebUI:
             "total": get_task_ratio_dict(self.environment.user_classes, total=True),
         }
 
-        extra_options = argument_parser.extra_args_dict()
+        extra_options = argument_parser.ui_extra_args_dict()
 
         self.template_args = {
             "locustfile": self.environment.locustfile,

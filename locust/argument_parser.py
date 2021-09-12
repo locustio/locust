@@ -498,7 +498,7 @@ def default_args_dict():
     return vars(default_parser.parse([]))
 
 
-def extra_args_dict(args=None):
+def ui_extra_args_dict(args=None):
 
     locust_args = default_args_dict()
 
