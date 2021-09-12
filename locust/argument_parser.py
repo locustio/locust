@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import textwrap
+from typing import Dict
 
 import configargparse
 
@@ -35,8 +36,8 @@ class LocustArgumentParser(configargparse.ArgumentParser):
         return action
 
     @property
-    def args_included_in_web_ui(self):
-        return {a.dest for a in self._actions if hasattr(a, "include_in_web_ui") and a.include_in_web_ui}
+    def args_included_in_web_ui(self) -> Dict[str, configargparse.Action]:
+        return {a.dest: a for a in self._actions if hasattr(a, "include_in_web_ui") and a.include_in_web_ui}
 
 
 def _is_package(path):
@@ -498,8 +499,8 @@ def default_args_dict():
     return vars(default_parser.parse([]))
 
 
-def ui_extra_args_dict(args=None):
-
+def ui_extra_args_dict(args=None) -> Dict[str, str]:
+    """Get all the UI visible arguments"""
     locust_args = default_args_dict()
 
     parser = get_parser()
