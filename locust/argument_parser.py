@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 import textwrap
-from typing import List
+from typing import Dict
 
 import configargparse
 
@@ -19,8 +19,6 @@ class LocustArgumentParser(configargparse.ArgumentParser):
     optionally exclude arguments from the UI.
     """
 
-    args_excluded_from_ui: List[configargparse.Action] = []
-
     def add_argument(self, *args, **kwargs) -> configargparse.Action:
         """
         This method supports the same args as ArgumentParser.add_argument(..)
@@ -34,9 +32,12 @@ class LocustArgumentParser(configargparse.ArgumentParser):
         """
         exclude_from_ui = kwargs.pop("exclude_from_ui", None)
         action = super().add_argument(*args, **kwargs)
-        if exclude_from_ui:
-            self.args_excluded_from_ui.append(action)
+        action.exclude_from_ui = exclude_from_ui
         return action
+
+    @property
+    def args_excluded_from_ui(self):
+        return {a.dest for a in self._actions if hasattr(a, "exclude_from_ui") and a.exclude_from_ui}
 
 
 def _is_package(path):
@@ -496,3 +497,20 @@ def default_args_dict():
     default_parser = get_empty_argument_parser()
     setup_parser_arguments(default_parser)
     return vars(default_parser.parse([]))
+
+
+def extra_args_dict(args=None):
+
+    locust_args = default_args_dict()
+
+    parser = get_parser()
+    all_args = vars(parser.parse_args(args))
+
+    extra_args = (
+        {
+            k: v
+            for k, v in all_args.items()
+            if k not in locust_args and k not in parser.args_excluded_from_ui
+        }
+    )
+    return extra_args
