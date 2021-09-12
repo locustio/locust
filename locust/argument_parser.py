@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import textwrap
+from typing import List
 
 import configargparse
 
@@ -11,6 +12,31 @@ version = locust.__version__
 
 
 DEFAULT_CONFIG_FILES = ["~/.locust.conf", "locust.conf"]
+
+
+class LocustArgumentParser(configargparse.ArgumentParser):
+    """Drop-in replacement for `configargparse.ArgumentParser` that adds support for
+    optionally exclude arguments from the UI.
+    """
+
+    args_excluded_from_ui: List[configargparse.Action] = []
+
+    def add_argument(self, *args, **kwargs) -> configargparse.Action:
+        """
+        This method supports the same args as ArgumentParser.add_argument(..)
+        as well as the additional args below.
+
+        Arguments:
+            exclude_from_ui: If set, the argument won't show in the UI.
+
+        Returns:
+            argparse.Action: the new argparse action
+        """
+        ui_visible = kwargs.pop('exclude_from_ui', None)
+        action = super().add_argument(*args, **kwargs)
+        if ui_visible:
+            self.args_excluded_from_ui.append(action)
+        return action
 
 
 def _is_package(path):
@@ -55,7 +81,7 @@ def find_locustfile(locustfile):
 
 
 def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG_FILES):
-    parser = configargparse.ArgumentParser(
+    parser = LocustArgumentParser(
         default_config_files=default_config_files,
         add_env_var_help=False,
         add_config_file_help=False,
