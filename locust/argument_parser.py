@@ -506,11 +506,5 @@ def extra_args_dict(args=None):
     parser = get_parser()
     all_args = vars(parser.parse_args(args))
 
-    extra_args = (
-        {
-            k: v
-            for k, v in all_args.items()
-            if k not in locust_args and k not in parser.args_excluded_from_ui
-        }
-    )
+    extra_args = {k: v for k, v in all_args.items() if k not in locust_args and k not in parser.args_excluded_from_ui}
     return extra_args

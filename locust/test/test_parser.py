@@ -182,9 +182,12 @@ class TestArgumentParser(LocustTestCase):
             parser.add_argument("--a2", help="a2 help", exclude_from_ui=True)
 
         args = [
-            "-u", "666",
-            "--a1", "v1",
-            "--a2", "v2",
+            "-u",
+            "666",
+            "--a1",
+            "v1",
+            "--a2",
+            "v2",
         ]
         options = parse_options(args=args)
         self.assertEqual(666, options.num_users)
@@ -192,6 +195,6 @@ class TestArgumentParser(LocustTestCase):
         self.assertEqual("v2", options.a2)
 
         extra_args = extra_args_dict(args)
-        self.assertIn('a1', extra_args)
-        self.assertNotIn('a2', extra_args)
-        self.assertEqual("v1", extra_args['a1'])
+        self.assertIn("a1", extra_args)
+        self.assertNotIn("a2", extra_args)
+        self.assertEqual("v1", extra_args["a1"])
