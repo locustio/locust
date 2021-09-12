@@ -175,11 +175,11 @@ class TestArgumentParser(LocustTestCase):
                     ]
                 )
 
-    def test_custom_argument_excluded_from_ui(self):
+    def test_custom_argument_included_in_web_ui(self):
         @locust.events.init_command_line_parser.add_listener
         def _(parser, **kw):
             parser.add_argument("--a1", help="a1 help")
-            parser.add_argument("--a2", help="a2 help", exclude_from_ui=True)
+            parser.add_argument("--a2", help="a2 help", include_in_web_ui=False)
 
         args = [
             "-u",

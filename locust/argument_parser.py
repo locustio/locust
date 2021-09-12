@@ -24,19 +24,19 @@ class LocustArgumentParser(configargparse.ArgumentParser):
         as well as the additional args below.
 
         Arguments:
-            exclude_from_ui: If set, the argument won't show in the UI.
+            include_in_web_ui: If set, the argument will show in the UI.
 
         Returns:
             argparse.Action: the new argparse action
         """
-        exclude_from_ui = kwargs.pop("exclude_from_ui", None)
+        include_in_web_ui = kwargs.pop("include_in_web_ui", True)
         action = super().add_argument(*args, **kwargs)
-        action.exclude_from_ui = exclude_from_ui
+        action.include_in_web_ui = include_in_web_ui
         return action
 
     @property
-    def args_excluded_from_ui(self):
-        return {a.dest for a in self._actions if hasattr(a, "exclude_from_ui") and a.exclude_from_ui}
+    def args_included_in_web_ui(self):
+        return {a.dest for a in self._actions if hasattr(a, "include_in_web_ui") and a.include_in_web_ui}
 
 
 def _is_package(path):
@@ -505,5 +505,5 @@ def ui_extra_args_dict(args=None):
     parser = get_parser()
     all_args = vars(parser.parse_args(args))
 
-    extra_args = {k: v for k, v in all_args.items() if k not in locust_args and k not in parser.args_excluded_from_ui}
+    extra_args = {k: v for k, v in all_args.items() if k not in locust_args and k in parser.args_included_in_web_ui}
     return extra_args
