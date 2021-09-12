@@ -5,6 +5,8 @@ from locust import events
 @events.init_command_line_parser.add_listener
 def _(parser):
     parser.add_argument("--my-argument", type=str, env_var="LOCUST_MY_ARGUMENT", default="", help="It's working")
+    # Set `exclude_from_ui` to True if you want to exclude from the web UI
+    parser.add_argument("--my-ui-invisible-argument", exclude_from_ui=True, default="I am invisible")
 
 
 @events.init.add_listener
@@ -18,4 +20,5 @@ class WebsiteUser(HttpUser):
 
     @task
     def my_task(self):
-        print(self.environment.parsed_options.my_argument)
+        print(f"my_argument={self.environment.parsed_options.my_argument}")
+        print(f"my_ui_invisible_argument={self.environment.parsed_options.my_ui_invisible_argument}")
