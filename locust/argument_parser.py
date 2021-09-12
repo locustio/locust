@@ -24,7 +24,7 @@ class LocustArgumentParser(configargparse.ArgumentParser):
         as well as the additional args below.
 
         Arguments:
-            include_in_web_ui: If set, the argument will show in the UI.
+            include_in_web_ui: If True (default), the argument will show in the UI.
 
         Returns:
             argparse.Action: the new argparse action
