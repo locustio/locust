@@ -5,7 +5,7 @@ import mock
 from io import StringIO
 
 import locust
-from locust.argument_parser import parse_options, get_parser, parse_locustfile_option
+from locust.argument_parser import parse_options, get_parser, parse_locustfile_option, ui_extra_args_dict
 from .mock_locustfile import mock_locustfile
 from .testcases import LocustTestCase
 
@@ -174,3 +174,27 @@ class TestArgumentParser(LocustTestCase):
                         "--csv-full-history",
                     ]
                 )
+
+    def test_custom_argument_included_in_web_ui(self):
+        @locust.events.init_command_line_parser.add_listener
+        def _(parser, **kw):
+            parser.add_argument("--a1", help="a1 help")
+            parser.add_argument("--a2", help="a2 help", include_in_web_ui=False)
+
+        args = [
+            "-u",
+            "666",
+            "--a1",
+            "v1",
+            "--a2",
+            "v2",
+        ]
+        options = parse_options(args=args)
+        self.assertEqual(666, options.num_users)
+        self.assertEqual("v1", options.a1)
+        self.assertEqual("v2", options.a2)
+
+        extra_args = ui_extra_args_dict(args)
+        self.assertIn("a1", extra_args)
+        self.assertNotIn("a2", extra_args)
+        self.assertEqual("v1", extra_args["a1"])

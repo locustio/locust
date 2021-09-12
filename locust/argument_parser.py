@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import textwrap
+from typing import Dict
 
 import configargparse
 
@@ -11,6 +12,32 @@ version = locust.__version__
 
 
 DEFAULT_CONFIG_FILES = ["~/.locust.conf", "locust.conf"]
+
+
+class LocustArgumentParser(configargparse.ArgumentParser):
+    """Drop-in replacement for `configargparse.ArgumentParser` that adds support for
+    optionally exclude arguments from the UI.
+    """
+
+    def add_argument(self, *args, **kwargs) -> configargparse.Action:
+        """
+        This method supports the same args as ArgumentParser.add_argument(..)
+        as well as the additional args below.
+
+        Arguments:
+            include_in_web_ui: If True (default), the argument will show in the UI.
+
+        Returns:
+            argparse.Action: the new argparse action
+        """
+        include_in_web_ui = kwargs.pop("include_in_web_ui", True)
+        action = super().add_argument(*args, **kwargs)
+        action.include_in_web_ui = include_in_web_ui
+        return action
+
+    @property
+    def args_included_in_web_ui(self) -> Dict[str, configargparse.Action]:
+        return {a.dest: a for a in self._actions if hasattr(a, "include_in_web_ui") and a.include_in_web_ui}
 
 
 def _is_package(path):
@@ -55,7 +82,7 @@ def find_locustfile(locustfile):
 
 
 def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG_FILES):
-    parser = configargparse.ArgumentParser(
+    parser = LocustArgumentParser(
         default_config_files=default_config_files,
         add_env_var_help=False,
         add_config_file_help=False,
@@ -470,3 +497,14 @@ def default_args_dict():
     default_parser = get_empty_argument_parser()
     setup_parser_arguments(default_parser)
     return vars(default_parser.parse([]))
+
+
+def ui_extra_args_dict(args=None) -> Dict[str, str]:
+    """Get all the UI visible arguments"""
+    locust_args = default_args_dict()
+
+    parser = get_parser()
+    all_args = vars(parser.parse_args(args))
+
+    extra_args = {k: v for k, v in all_args.items() if k not in locust_args and k in parser.args_included_in_web_ui}
+    return extra_args
