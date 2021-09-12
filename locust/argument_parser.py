@@ -32,7 +32,7 @@ class LocustArgumentParser(configargparse.ArgumentParser):
         Returns:
             argparse.Action: the new argparse action
         """
-        exclude_from_ui = kwargs.pop('exclude_from_ui', None)
+        exclude_from_ui = kwargs.pop("exclude_from_ui", None)
         action = super().add_argument(*args, **kwargs)
         if exclude_from_ui:
             self.args_excluded_from_ui.append(action)
