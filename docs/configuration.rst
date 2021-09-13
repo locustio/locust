@@ -80,7 +80,7 @@ Here's a table of all the available configuration options, and their correspondi
 Custom arguments
 ----------------
 
-See :ref:`parametrizing-locustfiles`
+See :ref:`custom-arguments`
 
 Customization of statistics settings
 ------------------------------------

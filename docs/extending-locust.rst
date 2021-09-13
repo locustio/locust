@@ -156,7 +156,7 @@ Parametrizing locustfiles
 
 There are two main ways to parametrize your locustfile. 
 
-1. Basic environment variables
+Basic environment variables
 ---------------------------
 
 Like with any program, you can use environment variables:
@@ -181,7 +181,9 @@ On windows:
     import os
     print(os.environ['MY_FUNKY_VAR'])
 
-2. Custom arguments
+.. _custom-arguments:
+
+Custom arguments
 ----------------
 
 You can add your own command line arguments to Locust, using the :py:attr:`init_command_line_parser <locust.event.Events.init_command_line_parser>` Event. Custom arguments are also presented and editable in the web UI.
