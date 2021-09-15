@@ -48,8 +48,6 @@ jobs:
     if: github.event_name != 'pull_request' # PR build doesnt get proper version, so dont try to build it
     steps:
       - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
       - name: Get history and tags for SCM versioning to work
         run: |
           git fetch --prune --unshallow
