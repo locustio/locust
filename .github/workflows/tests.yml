@@ -48,10 +48,8 @@ jobs:
     if: github.event_name != 'pull_request' # PR build doesnt get proper version, so dont try to build it
     steps:
       - uses: actions/checkout@v2
-      - name: Get history and tags for SCM versioning to work
-        run: |
-          git fetch --prune --unshallow
-          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+        with:
+          fetch-depth: 0
       - uses: docker/login-action@v1
         if: github.repository_owner == 'locustio'
         with:
@@ -84,6 +82,7 @@ jobs:
         with:
           build-args: |
             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
+          context: .
           push: true
           tags: locustio/locust:${{ env.TAG }}${{ ( env.BRANCH == 'master' && ',locustio/locust:latest') || '' }}
 
