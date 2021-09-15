@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.2](https://github.com/locustio/locust/tree/2.2.2) (2021-09-15)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.2.1...2.2.2)
+
+**Closed issues:**
+
+- Ability to explicitly set which arguments will be exposed/visible in the web ui [\#1876](https://github.com/locustio/locust/issues/1876)
+
 ## [2.2.1](https://github.com/locustio/locust/tree/2.2.1) (2021-09-02)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.2.0...2.2.1)

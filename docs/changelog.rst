@@ -4,6 +4,17 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.2.2
+=====
+
+* Fix version in Docker builds
+* Automated change log generation is broken. Will fix this later, but until then you can look here: https://github.com/locustio/locust/compare/2.2.1...2.2.2
+
+2.2.1
+=====
+
+* Automated change log generation is broken. Will fix this later, but until then you can look here: https://github.com/locustio/locust/compare/2.2.0...2.2.1
+
 2.2.0
 =====
 
