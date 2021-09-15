@@ -1,7 +1,7 @@
 FROM python:3.8
 
 COPY . /build
-RUN cd /build && git describe --dirty --tags --long --match *[0-9]* && pip install . && rm -rf /build
+RUN cd /build && git status && git describe --dirty --tags --long --match *[0-9]* && pip install . && rm -rf /build
 
 EXPOSE 8089 5557
 
