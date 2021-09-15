@@ -61,6 +61,7 @@ jobs:
         with:
           build-args: |
             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
+          context: .
           push: ${{ github.ref == 'refs/heads/master' && github.repository_owner == 'locustio' }}
           tags: locustio/locust:master
 
