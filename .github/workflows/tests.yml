@@ -82,6 +82,7 @@ jobs:
         with:
           build-args: |
             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
+            SETUPTOOLS_SCM_PRETEND_VERSION=${{ env.TAG }}
           context: .
           push: true
           tags: locustio/locust:${{ env.TAG }}${{ ( env.BRANCH == 'master' && ',locustio/locust:latest') || '' }}
