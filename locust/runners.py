@@ -601,6 +601,7 @@ class MasterRunner(DistributedRunner):
         self.master_bind_host = master_bind_host
         self.master_bind_port = master_bind_port
         self.spawn_rate: float = 0
+        self.spawning_completed = False
 
         self.clients = WorkerNodes()
         try:
@@ -637,6 +638,9 @@ class MasterRunner(DistributedRunner):
 
         self.environment.events.quitting.add_listener(on_quitting)
 
+    def rebalancing_enabled(self) -> bool:
+        return self.environment.parsed_options and self.environment.parsed_options.enable_rebalancing
+
     @property
     def user_count(self) -> int:
         return sum(c.user_count for c in self.clients.values())
@@ -649,6 +653,7 @@ class MasterRunner(DistributedRunner):
         return warning_emitted
 
     def start(self, user_count: int, spawn_rate: float, **kwargs) -> None:
+        self.spawning_completed = False
         num_workers = len(self.clients.ready) + len(self.clients.running) + len(self.clients.spawning)
         if not num_workers:
             logger.warning(
@@ -744,6 +749,7 @@ class MasterRunner(DistributedRunner):
             timeout.cancel()
 
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
+        self.spawning_completed = True
 
         logger.info("All users spawned: %s" % _format_user_classes_count_for_log(self.reported_user_classes_count))
 
@@ -831,7 +837,8 @@ class MasterRunner(DistributedRunner):
                     client.user_classes_count = {}
                     if self._users_dispatcher is not None:
                         self._users_dispatcher.remove_worker(client)
-                        # TODO: If status is `STATE_RUNNING`, call self.start()
+                        if self.rebalancing_enabled() and self.state == STATE_RUNNING and self.spawning_completed:
+                            self.start(self.target_user_count, self.spawn_rate)
                     if self.worker_count <= 0:
                         logger.info("The last worker went missing, stopping test.")
                         self.stop()
@@ -877,10 +884,8 @@ class MasterRunner(DistributedRunner):
                     "Client %r reported as ready. Currently %i clients ready to swarm."
                     % (worker_node_id, len(self.clients.ready + self.clients.running + self.clients.spawning))
                 )
-                # if self.state == STATE_RUNNING or self.state == STATE_SPAWNING:
-                #     # TODO: Necessary now that UsersDispatcher handles that?
-                #     # balance the load distribution when new client joins
-                #     self.start(self.target_user_count, self.spawn_rate)
+                if self.rebalancing_enabled() and self.state == STATE_RUNNING and self.spawning_completed:
+                    self.start(self.target_user_count, self.spawn_rate)
                 # emit a warning if the worker's clock seem to be out of sync with our clock
                 # if abs(time() - msg.data["time"]) > 5.0:
                 #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
