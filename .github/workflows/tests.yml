@@ -55,12 +55,10 @@ jobs:
         with:
           username: locustbuild
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - run: git describe --dirty --tags --long --match *[0-9]*
       - uses: docker/build-push-action@v2
         with:
           build-args: |
             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
-            SETUPTOOLS_SCM_DEBUG=1
           context: .
           push: ${{ github.ref == 'refs/heads/master' && github.repository_owner == 'locustio' }}
           tags: locustio/locust:master
@@ -80,13 +78,10 @@ jobs:
         with:
           username: locustbuild
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - run: git describe --dirty --tags --long --match *[0-9]*
       - uses: docker/build-push-action@v2
         with:
           build-args: |
             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
-            SETUPTOOLS_SCM_DEBUG=1
-            SETUPTOOLS_SCM_PRETEND_VERSION=${{ env.TAG }}
           context: .
           push: true
           tags: locustio/locust:${{ env.TAG }}${{ ( env.BRANCH == 'master' && ',locustio/locust:latest') || '' }}
