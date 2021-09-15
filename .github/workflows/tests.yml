@@ -80,7 +80,7 @@ jobs:
         with:
           username: locustbuild
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - run: git status
+      - run: git describe --dirty --tags --long --match *[0-9]*
       - uses: docker/build-push-action@v2
         with:
           build-args: |
