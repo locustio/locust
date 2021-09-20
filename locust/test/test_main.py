@@ -217,6 +217,43 @@ class LocustProcessIntegrationTest(TestCase):
         self.assertIn("Starting Locust", stderr)
         self.assertNotIn("command_line_value", stdout)
         self.assertIn("web_form_value", stdout)
+
+    def test_custom_arguments_in_file(self):
+        with temporary_file(
+            content=textwrap.dedent(
+                """
+            from locust import User, task, constant, events
+            @events.init_command_line_parser.add_listener
+            def _(parser, **kw):
+                parser.add_argument("--custom-string-arg")
+
+            class TestUser(User):
+                wait_time = constant(10)
+                @task
+                def my_task(self):
+                    print(self.environment.parsed_options.custom_string_arg)
+        """
+            )
+        ) as file_path:
+            try:
+                with open("locust.conf", "w") as conf_file:
+                    conf_file.write("custom-string-arg config_file_value")
+                proc = subprocess.Popen(
+                    ["locust", "-f", file_path, "--autostart"],
+                    stdout=PIPE,
+                    stderr=PIPE,
+                )
+                gevent.sleep(1)
+            finally:
+                os.remove("locust.conf")
+
+        proc.send_signal(signal.SIGTERM)
+        stdout, stderr = proc.communicate(timeout=2)
+        stderr = stderr.decode("utf-8")
+        stdout = stdout.decode("utf-8")
+        self.assertIn("Starting Locust", stderr)
+        self.assertIn("config_file_value", stdout)
+
     def test_custom_exit_code(self):
         with temporary_file(
             content=textwrap.dedent(
