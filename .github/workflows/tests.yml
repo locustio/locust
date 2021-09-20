@@ -106,11 +106,12 @@ jobs:
       - name: Build
         run: |
           python setup.py sdist bdist_wheel
-      - name: Publish to PyPI (Test)
+      - name: Publish tagged version to PyPI
         uses: pypa/gh-action-pypi-publish@master
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
+          skip_existing: true
 
   publish_prerelease:
     name: PyPI - Publish prerelease on merge commit on master
@@ -135,9 +136,10 @@ jobs:
         if: ${{ env.NOT_MERGE_COMMIT == '' }}
         run: |
           python setup.py sdist bdist_wheel
-      - name: Publish to PyPI (Test)
+      - name: Publish prerelease version to PyPI
         if: ${{ env.NOT_MERGE_COMMIT == '' }}
         uses: pypa/gh-action-pypi-publish@master
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
+          skip_existing: true
