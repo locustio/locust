@@ -178,6 +178,45 @@ class LocustProcessIntegrationTest(TestCase):
         self.assertIn("Logging options:", output)
         self.assertIn("--skip-log-setup      Disable Locust's logging setup.", output)
 
+    def test_custom_arguments(self):
+        port = get_free_tcp_port()
+        with temporary_file(
+            content=textwrap.dedent(
+                """
+            from locust import User, task, constant, events
+            @events.init_command_line_parser.add_listener
+            def _(parser, **kw):
+                parser.add_argument("--custom-string-arg")
+
+            class TestUser(User):
+                wait_time = constant(10)
+                @task
+                def my_task(self):
+                    print(self.environment.parsed_options.custom_string_arg)
+        """
+            )
+        ) as file_path:
+            # print(subprocess.check_output(["cat", file_path]))
+            proc = subprocess.Popen(
+                ["locust", "-f", file_path, "--custom-string-arg", "command_line_value", "--web-port", str(port)],
+                stdout=PIPE,
+                stderr=PIPE,
+            )
+            gevent.sleep(1)
+
+        requests.post(
+            "http://127.0.0.1:%i/swarm" % port,
+            data={"user_count": 1, "spawn_rate": 1, "host": "https://localhost", "custom_string_arg": "web_form_value"},
+        )
+        gevent.sleep(1)
+
+        proc.send_signal(signal.SIGTERM)
+        stdout, stderr = proc.communicate(timeout=2)
+        stderr = stderr.decode("utf-8")
+        stdout = stdout.decode("utf-8")
+        self.assertIn("Starting Locust", stderr)
+        self.assertNotIn("command_line_value", stdout)
+        self.assertIn("web_form_value", stdout)
     def test_custom_exit_code(self):
         with temporary_file(
             content=textwrap.dedent(
