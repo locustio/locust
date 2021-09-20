@@ -714,12 +714,12 @@ class TestMasterWorkerRunners(LocustTestCase):
             add_worker()
 
             @retry(AssertionError, tries=10, delay=0.5)
-            def checkRebalancedTrue():
+            def check_rebalanced_true():
                 for worker in workers:
                     self.assertTrue(worker.user_count > 0)
 
             # Check that all workers have a user count > 0 at least
-            checkRebalancedTrue()
+            check_rebalanced_true()
             # Add 2 more workers (should be 6 now)
             add_worker()
             add_worker()
