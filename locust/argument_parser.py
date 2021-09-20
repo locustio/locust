@@ -496,6 +496,8 @@ def default_args_dict():
     # returns a dict containing the default arguments (before any custom arguments are added)
     default_parser = get_empty_argument_parser()
     setup_parser_arguments(default_parser)
+    # Dont read config files because they may contain custom arguments, which would fail parsing in the next step
+    default_parser._default_config_files = {}
     return vars(default_parser.parse([]))
 
 
