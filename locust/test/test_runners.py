@@ -47,6 +47,7 @@ from locust.user import (
     User,
     task,
 )
+from retry import retry
 
 NETWORK_BROKEN = "network broken"
 
@@ -655,6 +656,107 @@ class TestMasterWorkerRunners(LocustTestCase):
             # make sure users are killed
             for worker in workers:
                 self.assertEqual(0, worker.user_count)
+
+        # check that stats are present in master
+        self.assertGreater(
+            master_env.runner.stats.total.num_requests,
+            20,
+            "For some reason the master node's stats has not come in",
+        )
+
+    def test_distributed_rebalanced_integration_run(self):
+        """
+        Full integration test that starts both a MasterRunner and three WorkerRunner instances
+        and makes sure that their stats is sent to the Master.
+        """
+
+        class TestUser(User):
+            wait_time = constant(0.1)
+
+            @task
+            def incr_stats(self):
+                self.environment.events.request.fire(
+                    request_type="GET",
+                    name="/",
+                    response_time=1337,
+                    response_length=666,
+                    exception=None,
+                    context={},
+                )
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            # start a Master runner
+            options = parse_options(["--enable-rebalancing"])
+            master_env = Environment(user_classes=[TestUser], parsed_options=options)
+            master = master_env.create_master_runner("*", 0)
+            sleep(0)
+            # start 3 Worker runners
+            workers = []
+
+            def add_worker():
+                worker_env = Environment(user_classes=[TestUser])
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+
+            for i in range(3):
+                add_worker()
+
+            # give workers time to connect
+            sleep(0.1)
+            # issue start command that should trigger TestUsers to be spawned in the Workers
+            master.start(6, spawn_rate=1000)
+            sleep(0.1)
+            # check that worker nodes have started locusts
+            for worker in workers:
+                self.assertEqual(2, worker.user_count)
+            # give time for users to generate stats, and stats to be sent to master
+            # Add 1 more workers (should be 4 now)
+            add_worker()
+
+            @retry(AssertionError, tries=10, delay=0.5)
+            def check_rebalanced_true():
+                for worker in workers:
+                    self.assertTrue(worker.user_count > 0)
+
+            # Check that all workers have a user count > 0 at least
+            check_rebalanced_true()
+            # Add 2 more workers (should be 6 now)
+            add_worker()
+            add_worker()
+
+            @retry(AssertionError, tries=10, delay=0.5)
+            def check_rebalanced_equals():
+                for worker in workers:
+                    self.assertEqual(1, worker.user_count)
+
+            # Check that all workers have a user count = 1 now
+            check_rebalanced_equals()
+
+            # Simulate that some workers are missing by "killing" them abrutly
+            for i in range(3):
+                workers[i].greenlet.kill(block=True)
+
+            @retry(AssertionError, tries=10, delay=1)
+            def check_master_worker_missing_count():
+                self.assertEqual(3, len(master.clients.missing))
+
+            # Check that master detected the missing workers
+            check_master_worker_missing_count()
+
+            @retry(AssertionError, tries=10, delay=1)
+            def check_remaing_worker_new_user_count():
+                for i in range(3, 6):
+                    self.assertEqual(2, workers[i].user_count)
+
+            # Check that remaining workers have a new count of user due to rebalancing.
+            check_remaing_worker_new_user_count()
+            sleep(1)
+
+            # Finally quit and check states of remaining workers.
+            master.quit()
+            # make sure users are killed on remaining workers
+            for i in range(3, 6):
+                self.assertEqual(0, workers[i].user_count)
 
         # check that stats are present in master
         self.assertGreater(
