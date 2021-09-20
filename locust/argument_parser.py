@@ -81,7 +81,7 @@ def find_locustfile(locustfile):
     # Implicit 'return None' if nothing was found
 
 
-def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG_FILES):
+def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG_FILES) -> LocustArgumentParser:
     parser = LocustArgumentParser(
         default_config_files=default_config_files,
         add_env_var_help=False,
@@ -496,6 +496,8 @@ def default_args_dict():
     # returns a dict containing the default arguments (before any custom arguments are added)
     default_parser = get_empty_argument_parser()
     setup_parser_arguments(default_parser)
+    # Dont read config files because they may contain custom arguments, which would fail parsing in the next step
+    default_parser._default_config_files = {}
     return vars(default_parser.parse([]))
 
 
