@@ -81,7 +81,7 @@ def find_locustfile(locustfile):
     # Implicit 'return None' if nothing was found
 
 
-def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG_FILES):
+def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG_FILES) -> LocustArgumentParser:
     parser = LocustArgumentParser(
         default_config_files=default_config_files,
         add_env_var_help=False,
