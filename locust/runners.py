@@ -1061,6 +1061,7 @@ class WorkerRunner(DistributedRunner):
         :param user_classes_count: Users to run
         """
         self.target_user_classes_count = user_classes_count
+        self.target_user_count = sum(user_classes_count.values())
         if self.worker_state != STATE_RUNNING and self.worker_state != STATE_SPAWNING:
             self.stats.clear_all()
             self.exceptions = {}
