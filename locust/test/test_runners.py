@@ -1600,7 +1600,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             worker_env = Environment(user_classes=[MyUser1])
             worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
 
-            # give workers time to connect
+            # give worker time to connect
             sleep(0.1)
 
             gevent.spawn(master.start, 3, spawn_rate=1)
