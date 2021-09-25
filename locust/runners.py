@@ -363,6 +363,8 @@ class Runner:
 
         logger.info("All users spawned: %s" % _format_user_classes_count_for_log(self.user_classes_count))
 
+        self.target_user_classes_count = self.user_classes_count
+
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
 
     def start_shape(self):
