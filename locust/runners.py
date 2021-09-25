@@ -89,7 +89,12 @@ class Runner:
         self.worker_cpu_warning_emitted = False
         self.greenlet.spawn(self.monitor_cpu).link_exception(greenlet_exception_handler)
         self.exceptions = {}
+        # Because of the way the ramp-up/ramp-down is implemented, target_user_classes_count
+        # is only updated at the end of the ramp-up/ramp-down.
+        # See https://github.com/locustio/locust/issues/1883#issuecomment-919239824 for context.
         self.target_user_classes_count: Dict[str, int] = {}
+        # target_user_count is set before the ramp-up/ramp-down occurs.
+        self.target_user_count: int = 0
         self.custom_messages = {}
 
         # Only when running in standalone mode (non-distributed)
@@ -324,6 +329,8 @@ class Runner:
 
         self._users_dispatcher.new_dispatch(user_count, spawn_rate)
 
+        self.target_user_count = user_count
+
         try:
             for dispatched_users in self._users_dispatcher:
                 user_classes_spawn_count = {}
@@ -447,10 +454,6 @@ class Runner:
         row["count"] += 1
         row["nodes"].add(node_id)
         self.exceptions[key] = row
-
-    @property
-    def target_user_count(self) -> int:
-        return sum(self.target_user_classes_count.values())
 
     def register_message(self, msg_type, listener):
         """
@@ -694,6 +697,8 @@ class MasterRunner(DistributedRunner):
         self.update_state(STATE_SPAWNING)
 
         self._users_dispatcher.new_dispatch(target_user_count=user_count, spawn_rate=spawn_rate)
+
+        self.target_user_count = user_count
 
         try:
             for dispatched_users in self._users_dispatcher:
