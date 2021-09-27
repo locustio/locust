@@ -608,6 +608,37 @@ class TestLocustRunner(LocustTestCase):
         local_runner.stop()
         web_ui.stop()
 
+    def test_target_user_count_is_set_before_ramp_up(self):
+        """Test for https://github.com/locustio/locust/issues/1883"""
+
+        class MyUser1(User):
+            wait_time = constant(0)
+
+            @task
+            def my_task(self):
+                pass
+
+        environment = Environment(user_classes=[MyUser1])
+        runner = LocalRunner(environment)
+
+        runner.start(user_count=3, spawn_rate=1, wait=False)
+
+        gevent.sleep(1)
+
+        self.assertEqual(runner.target_user_count, 3)
+        self.assertEqual(runner.user_count, 1)
+        # However, target_user_classes_count is only updated at the end of the ramp-up/ramp-down
+        # due to the way it is implemented.
+        self.assertDictEqual({}, runner.target_user_classes_count)
+
+        runner.spawning_greenlet.join()
+
+        self.assertEqual(runner.target_user_count, 3)
+        self.assertEqual(runner.user_count, 3)
+        self.assertDictEqual({"MyUser1": 3}, runner.target_user_classes_count)
+
+        runner.quit()
+
 
 class TestMasterWorkerRunners(LocustTestCase):
     def test_distributed_integration_run(self):
@@ -1547,6 +1578,51 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             master.stop()
             web_ui.stop()
+
+    def test_target_user_count_is_set_before_ramp_up(self):
+        """Test for https://github.com/locustio/locust/issues/1883"""
+
+        class MyUser1(User):
+            wait_time = constant(0)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            # start a Master runner
+            master_env = Environment(user_classes=[MyUser1])
+            master = master_env.create_master_runner("*", 0)
+
+            sleep(0)
+
+            # start 1 worker runner
+            worker_env = Environment(user_classes=[MyUser1])
+            worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+
+            # give worker time to connect
+            sleep(0.1)
+
+            gevent.spawn(master.start, 3, spawn_rate=1)
+
+            sleep(1)
+
+            self.assertEqual(master.target_user_count, 3)
+            self.assertEqual(master.user_count, 1)
+            # However, target_user_classes_count is only updated at the end of the ramp-up/ramp-down
+            # due to the way it is implemented.
+            self.assertDictEqual({}, master.target_user_classes_count)
+
+            sleep(2)
+
+            self.assertEqual(master.target_user_count, 3)
+            self.assertEqual(master.user_count, 3)
+            self.assertDictEqual({"MyUser1": 3}, master.target_user_classes_count)
+
+            master.quit()
+
+            # make sure users are killed
+            self.assertEqual(0, worker.user_count)
 
 
 class TestMasterRunner(LocustTestCase):
