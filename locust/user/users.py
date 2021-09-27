@@ -1,5 +1,6 @@
 from locust.user.wait_time import constant
 from typing import Any, Callable, Dict, List, TypeVar, Union
+from typing_extensions import final
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
 from locust.clients import HttpSession
@@ -124,6 +125,7 @@ class User(object, metaclass=UserMeta):
         """
         pass
 
+    @final
     def run(self):
         self._state = LOCUST_STATE_RUNNING
         self._taskset_instance = DefaultTaskSet(self)
