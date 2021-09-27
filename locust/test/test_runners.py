@@ -621,6 +621,13 @@ class TestLocustRunner(LocustTestCase):
         environment = Environment(user_classes=[MyUser1])
         runner = LocalRunner(environment)
 
+        test_start_event_fired = [False]
+
+        @environment.events.test_start.add_listener
+        def on_test_start(*args, **kwargs):
+            test_start_event_fired[0] = True
+            self.assertEqual(runner.target_user_count, 3)
+
         runner.start(user_count=3, spawn_rate=1, wait=False)
 
         gevent.sleep(1)
@@ -638,6 +645,8 @@ class TestLocustRunner(LocustTestCase):
         self.assertDictEqual({"MyUser1": 3}, runner.target_user_classes_count)
 
         runner.quit()
+
+        self.assertTrue(test_start_event_fired[0])
 
 
 class TestMasterWorkerRunners(LocustTestCase):
@@ -1594,6 +1603,13 @@ class TestMasterWorkerRunners(LocustTestCase):
             master_env = Environment(user_classes=[MyUser1])
             master = master_env.create_master_runner("*", 0)
 
+            test_start_event_fired = [False]
+
+            @master_env.events.test_start.add_listener
+            def on_test_start(*args, **kwargs):
+                test_start_event_fired[0] = True
+                self.assertEqual(master.target_user_count, 3)
+
             sleep(0)
 
             # start 1 worker runner
@@ -1623,6 +1639,8 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             # make sure users are killed
             self.assertEqual(0, worker.user_count)
+
+            self.assertTrue(test_start_event_fired[0])
 
 
 class TestMasterRunner(LocustTestCase):
