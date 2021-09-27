@@ -36,6 +36,10 @@ def task(weight=1):
             logging.warning(
                 "You have tagged your on_stop/start function with @task. This will make the method get called both as a task AND on stop/start."
             )  # this is usually not what the user intended
+        if func.__name__ == "run":
+            raise Exception(
+                "User.run() is a method used internally by Locust, and you must not override it or register it as a task"
+            )
         func.locust_task_weight = weight
         return func
 
