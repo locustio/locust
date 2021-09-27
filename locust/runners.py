@@ -303,6 +303,8 @@ class Runner:
                      If False (the default), a greenlet that spawns the users will be
                      started and the call to this method will return immediately.
         """
+        self.target_user_count = user_count
+
         if self.state != STATE_RUNNING and self.state != STATE_SPAWNING:
             self.stats.clear_all()
             self.exceptions = {}
@@ -328,8 +330,6 @@ class Runner:
         logger.info("Ramping to %d users at a rate of %.2f per second" % (user_count, spawn_rate))
 
         self._users_dispatcher.new_dispatch(user_count, spawn_rate)
-
-        self.target_user_count = user_count
 
         try:
             for dispatched_users in self._users_dispatcher:
@@ -659,6 +659,9 @@ class MasterRunner(DistributedRunner):
 
     def start(self, user_count: int, spawn_rate: float, **kwargs) -> None:
         self.spawning_completed = False
+
+        self.target_user_count = user_count
+
         num_workers = len(self.clients.ready) + len(self.clients.running) + len(self.clients.spawning)
         if not num_workers:
             logger.warning(
@@ -699,8 +702,6 @@ class MasterRunner(DistributedRunner):
         self.update_state(STATE_SPAWNING)
 
         self._users_dispatcher.new_dispatch(target_user_count=user_count, spawn_rate=spawn_rate)
-
-        self.target_user_count = user_count
 
         try:
             for dispatched_users in self._users_dispatcher:
