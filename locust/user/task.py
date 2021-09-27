@@ -4,6 +4,7 @@ import sys
 import traceback
 from time import time
 from typing import Any, Callable, List, Union
+from typing_extensions import final
 
 import gevent
 from gevent import GreenletExit
@@ -274,6 +275,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
         """
         pass
 
+    @final
     def run(self):
         try:
             self.on_start()
