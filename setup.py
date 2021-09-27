@@ -23,7 +23,7 @@ setup(
         "Flask-BasicAuth>=0.2.0",
         "Flask-Cors>=3.0.10",
         "roundrobin>=0.0.2",
-        "typing-extensions>=3.7.2",
+        "typing-extensions>=3.7.4.3",
     ],
     test_suite="locust.test",
     tests_require=[
