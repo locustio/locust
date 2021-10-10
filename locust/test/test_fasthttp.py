@@ -186,8 +186,10 @@ class TestFastHttpSession(WebserverTestCase):
         self.environment.events.request.add_listener(on_request)
         before_request = time.time()
         s.request("get", "/wrong_url/01", name="replaced_url_name", context={"foo": "bar"})
+        after_request = time.time()
         # self.assertIn("for url: replaced_url_name", str(kwargs["exception"])) # this is actually broken for FastHttpUser right now...
-        self.assertAlmostEqual(before_request, kwargs["start_time"], delta=0.1)
+        self.assertAlmostEqual(before_request, kwargs["start_time"], delta=0.01)
+        self.assertAlmostEqual(after_request, kwargs["start_time"] + kwargs["response_time"] / 1000, delta=0.01)
         self.assertEqual("/wrong_url/01", kwargs["url"])  # url is unaffected by name
         self.assertDictEqual({"foo": "bar"}, kwargs["context"])
 
