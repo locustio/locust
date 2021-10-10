@@ -349,6 +349,7 @@ class LocustProcessIntegrationTest(TestCase):
             class LoadTestShape(LoadTestShape):
                 def tick(self):
                     run_time = self.get_run_time()
+                    print(run_time)
                     if run_time < 2:
                         return (10, 1)
 
@@ -360,7 +361,7 @@ class LocustProcessIntegrationTest(TestCase):
                 subprocess.check_output(
                     ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--headless"],
                     stderr=subprocess.STDOUT,
-                    timeout=3,
+                    timeout=8,
                 )
                 .decode("utf-8")
                 .strip()
