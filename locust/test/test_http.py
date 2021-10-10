@@ -1,6 +1,7 @@
+import time
+
 from locust.user.users import HttpUser
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
-
 
 from locust.clients import HttpSession
 from locust.exception import ResponseError
@@ -170,8 +171,11 @@ class TestHttpSession(WebserverTestCase):
             kwargs.update(kw)
 
         self.environment.events.request.add_listener(on_request)
+        before_request = time.time()
         s.request("get", "/wrong_url/01", name="replaced_url_name", context={"foo": "bar"})
         self.assertIn("for url: replaced_url_name", str(kwargs["exception"]))
+        self.assertAlmostEqual(before_request, kwargs["start_time"], delta=0.1)
+        self.assertEqual("/wrong_url/01", kwargs["url"])  # url is unaffected by name
         self.assertDictEqual({"foo": "bar"}, kwargs["context"])
 
     def test_get_with_params(self):

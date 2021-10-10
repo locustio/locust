@@ -1,5 +1,6 @@
 import socket
 import gevent
+import time
 from tempfile import NamedTemporaryFile
 
 from locust.user import task, TaskSet
@@ -173,6 +174,22 @@ class TestFastHttpSession(WebserverTestCase):
             pass
         self.assertEqual(1, self.environment.stats.total.num_requests)
         self.assertEqual(1, self.environment.stats.total.num_failures)
+
+    def test_error_message_with_name_replacement(self):
+        s = self.get_client()
+        kwargs = {}
+
+        def on_request(**kw):
+            self.assertIsNotNone(kw["exception"])
+            kwargs.update(kw)
+
+        self.environment.events.request.add_listener(on_request)
+        before_request = time.time()
+        s.request("get", "/wrong_url/01", name="replaced_url_name", context={"foo": "bar"})
+        # self.assertIn("for url: replaced_url_name", str(kwargs["exception"])) # this is actually broken for FastHttpUser right now...
+        self.assertAlmostEqual(before_request, kwargs["start_time"], delta=0.1)
+        self.assertEqual("/wrong_url/01", kwargs["url"])  # url is unaffected by name
+        self.assertDictEqual({"foo": "bar"}, kwargs["context"])
 
 
 class TestRequestStatsWithWebserver(WebserverTestCase):
