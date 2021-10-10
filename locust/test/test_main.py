@@ -297,11 +297,11 @@ class LocustProcessIntegrationTest(TestCase):
             gevent.sleep(1)
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
-            self.assertEqual(0, proc.returncode)
             stderr = stderr.decode("utf-8")
             self.assertIn("Starting web interface at", stderr)
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shutting down (exit code 0), bye", stderr)
+            self.assertEqual(0, proc.returncode)
 
     def test_default_headless_spawn_options(self):
         with mock_locustfile() as mocked:
