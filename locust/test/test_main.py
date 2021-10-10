@@ -468,14 +468,24 @@ class LocustProcessIntegrationTest(TestCase):
             )
             gevent.sleep(1.9)
             response = requests.get(f"http://0.0.0.0:{port}/")
-            _, stderr = proc.communicate(timeout=3)
+            try:
+                success = True
+                _, stderr = proc.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                print("timed out!")
+                success = False
+                proc.send_signal(signal.SIGTERM)
+                _, stderr = proc.communicate()
+
             stderr = stderr.decode("utf-8")
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shape test starting", stderr)
             self.assertIn("Shutting down ", stderr)
+            self.assertIn("autoquit time reached", stderr)
             # check response afterwards, because it really isnt as informative as stderr
             self.assertEqual(200, response.status_code)
             self.assertIn('<body class="spawning">', response.text)
+            self.assertTrue(success, "got timeout and had to kill the process")
 
     def test_web_options(self):
         port = get_free_tcp_port()
