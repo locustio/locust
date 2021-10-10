@@ -357,17 +357,27 @@ class LocustProcessIntegrationTest(TestCase):
             """
         )
         with mock_locustfile(content=content) as mocked:
-            output = (
-                subprocess.check_output(
-                    ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--headless"],
-                    stderr=subprocess.STDOUT,
-                    timeout=8,
-                )
-                .decode("utf-8")
-                .strip()
+            proc = subprocess.Popen(
+                ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--headless"],
+                stdout=PIPE,
+                stderr=PIPE,
             )
-            self.assertIn("Shape test updating to 10 users at 1.00 spawn rate", output)
-            self.assertIn("Cleaning up runner...", output)
+
+            try:
+                success = True
+                _, stderr = proc.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                success = False
+                proc.send_signal(signal.SIGTERM)
+                _, stderr = proc.communicate()
+
+            proc.send_signal(signal.SIGTERM)
+            _, stderr = proc.communicate()
+            stderr = stderr.decode("utf-8")
+            self.assertIn("Shape test updating to 10 users at 1.00 spawn rate", stderr)
+            self.assertIn("Cleaning up runner...", stderr)
+            self.assertEqual(0, proc.returncode)
+            self.assertTrue(success, "got timeout and had to kill the process")
 
     def test_autostart_wo_run_time(self):
         port = get_free_tcp_port()
@@ -472,7 +482,6 @@ class LocustProcessIntegrationTest(TestCase):
                 success = True
                 _, stderr = proc.communicate(timeout=5)
             except subprocess.TimeoutExpired:
-                print("timed out!")
                 success = False
                 proc.send_signal(signal.SIGTERM)
                 _, stderr = proc.communicate()
@@ -522,6 +531,27 @@ class LocustProcessIntegrationTest(TestCase):
             self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % port, timeout=1).status_code)
             proc.terminate()
 
+    # def test_distributed_integration_run(self):
+    #     """
+    #     Full shell-level integration test that starts both a master and 10 workers
+    #     """
+
+    #     # Gevent outputs all unhandled exceptions to stderr, so we'll suppress that in this test
+    #     with mock_locustfile() as mocked:
+    #         master_proc = subprocess.Popen(
+    #             ["locust", "-f", mocked.file_path, "--headless", "-t", "1", "-u", 10],
+    #             stdout=PIPE,
+    #             stderr=PIPE,
+    #         )
+    #         workers = []
+    #         for _ in range(8):
+    #             workers.append(
+    #                 subprocess.Popen(
+    #                     ["locust", "-f", mocked.file_path, "--headless"],
+    #                     stdout=PIPE,
+    #                     stderr=PIPE,
+    #                 )
+    #             )
     def test_input(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
