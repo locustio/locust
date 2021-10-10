@@ -318,6 +318,8 @@ class LocustProcessIntegrationTest(TestCase):
                         "--headless",
                         "--loglevel",
                         "DEBUG",
+                        "--exit-code-on-error",
+                        "0",
                     ],
                     stderr=subprocess.STDOUT,
                     timeout=2,
@@ -330,7 +332,16 @@ class LocustProcessIntegrationTest(TestCase):
     def test_headless_spawn_options_wo_run_time(self):
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
-                ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--headless"],
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--host",
+                    "https://test.com/",
+                    "--headless",
+                    "--exit-code-on-error",
+                    "0",
+                ],
                 stdout=PIPE,
                 stderr=PIPE,
             )
@@ -358,7 +369,16 @@ class LocustProcessIntegrationTest(TestCase):
         )
         with mock_locustfile(content=content) as mocked:
             proc = subprocess.Popen(
-                ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--headless"],
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--host",
+                    "https://test.com/",
+                    "--headless",
+                    "--exit-code-on-error",
+                    "0",
+                ],
                 stdout=PIPE,
                 stderr=PIPE,
             )
@@ -632,6 +652,8 @@ class LocustProcessIntegrationTest(TestCase):
                                 "--run-time",
                                 "2s",
                                 "--headless",
+                                "--exit-code-on-error",
+                                "0",
                                 "--html",
                                 html_report_file_path,
                             ],
