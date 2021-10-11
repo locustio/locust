@@ -551,27 +551,6 @@ class LocustProcessIntegrationTest(TestCase):
             self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % port, timeout=1).status_code)
             proc.terminate()
 
-    # def test_distributed_integration_run(self):
-    #     """
-    #     Full shell-level integration test that starts both a master and 10 workers
-    #     """
-
-    #     # Gevent outputs all unhandled exceptions to stderr, so we'll suppress that in this test
-    #     with mock_locustfile() as mocked:
-    #         master_proc = subprocess.Popen(
-    #             ["locust", "-f", mocked.file_path, "--headless", "-t", "1", "-u", 10],
-    #             stdout=PIPE,
-    #             stderr=PIPE,
-    #         )
-    #         workers = []
-    #         for _ in range(8):
-    #             workers.append(
-    #                 subprocess.Popen(
-    #                     ["locust", "-f", mocked.file_path, "--headless"],
-    #                     stdout=PIPE,
-    #                     stderr=PIPE,
-    #                 )
-    #             )
     def test_input(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
