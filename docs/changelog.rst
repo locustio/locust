@@ -4,6 +4,26 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.4.0
+=====
+
+* Add start_time and url parameters to request event. (https://github.com/locustio/locust/pull/1900)
+* Support (and test) Python 3.10 (https://github.com/locustio/locust/pull/1901)
+* Make User.run/TaskSet.run final and raise an exception if someone marks it as a task (https://github.com/locustio/locust/pull/1895)
+* Release docker image for arm64. (https://github.com/locustio/locust/pull/1889)
+* Automated change log generation is broken. Will fix this later, but until then you can look here: https://github.com/locustio/locust/compare/2.2.3...2.4.0
+
+2.3.0
+=====
+
+* Accidentally increased version to 2.4 directly so there is no 2.3...
+
+2.2.3
+=====
+
+* Fix issue with custom arguments in config file (when not running headless) (https://github.com/locustio/locust/pull/1888)
+* Automated change log generation is broken. Will fix this later, but until then you can look here: https://github.com/locustio/locust/compare/2.2.2...2.2.3
+
 2.2.2
 =====
 
