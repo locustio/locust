@@ -123,10 +123,12 @@ class HttpSession(requests.Session):
 
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(url)
-        start_timestamp = time.perf_counter()  # high precision timestamp
-        start_time = time.time()  # seconds since epoch
-
+        
+        start_time = time.time()
+        start_perf_counter = time.perf_counter()
         response = self._send_request_safe_mode(method, url, **kwargs)
+        response_time = (time.perf_counter() - start_perf_counter) * 1000
+
         url_after_redirect = (response.history and response.history[0] or response).request.path_url
 
         if self.user:
@@ -135,7 +137,7 @@ class HttpSession(requests.Session):
         # store meta data that is used when reporting the request to locust's statistics
         request_meta = {
             "request_type": method,
-            "response_time": (time.perf_counter() - start_timestamp) * 1000,
+            "response_time": response_time,
             "name": name or url_after_redirect,
             "context": context,
             "response": response,
