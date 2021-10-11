@@ -360,7 +360,6 @@ class LocustProcessIntegrationTest(TestCase):
             class LoadTestShape(LoadTestShape):
                 def tick(self):
                     run_time = self.get_run_time()
-                    print(run_time)
                     if run_time < 2:
                         return (10, 1)
 
