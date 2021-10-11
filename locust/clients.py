@@ -123,7 +123,7 @@ class HttpSession(requests.Session):
 
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(url)
-        
+
         start_time = time.time()
         start_perf_counter = time.perf_counter()
         response = self._send_request_safe_mode(method, url, **kwargs)
