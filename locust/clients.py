@@ -123,9 +123,13 @@ class HttpSession(requests.Session):
 
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(url)
-        start_time = time.perf_counter()
 
+        start_time = time.time()
+        start_perf_counter = time.perf_counter()
         response = self._send_request_safe_mode(method, url, **kwargs)
+        response_time = (time.perf_counter() - start_perf_counter) * 1000
+
+        url_after_redirect = (response.history and response.history[0] or response).request.path_url
 
         if self.user:
             context = {**self.user.context(), **context}
@@ -133,11 +137,13 @@ class HttpSession(requests.Session):
         # store meta data that is used when reporting the request to locust's statistics
         request_meta = {
             "request_type": method,
-            "response_time": (time.perf_counter() - start_time) * 1000,
-            "name": name or (response.history and response.history[0] or response).request.path_url,
+            "response_time": response_time,
+            "name": name or url_after_redirect,
             "context": context,
             "response": response,
             "exception": None,
+            "start_time": start_time,
+            "url": url_after_redirect,
         }
 
         # get the length of the content, but if the argument stream is set to True, we take

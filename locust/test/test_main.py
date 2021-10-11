@@ -297,11 +297,11 @@ class LocustProcessIntegrationTest(TestCase):
             gevent.sleep(1)
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
-            self.assertEqual(0, proc.returncode)
             stderr = stderr.decode("utf-8")
             self.assertIn("Starting web interface at", stderr)
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shutting down (exit code 0), bye", stderr)
+            self.assertEqual(0, proc.returncode)
 
     def test_default_headless_spawn_options(self):
         with mock_locustfile() as mocked:
@@ -318,6 +318,8 @@ class LocustProcessIntegrationTest(TestCase):
                         "--headless",
                         "--loglevel",
                         "DEBUG",
+                        "--exit-code-on-error",
+                        "0",
                     ],
                     stderr=subprocess.STDOUT,
                     timeout=2,
@@ -330,18 +332,27 @@ class LocustProcessIntegrationTest(TestCase):
     def test_headless_spawn_options_wo_run_time(self):
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
-                ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--headless"],
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--host",
+                    "https://test.com/",
+                    "--headless",
+                    "--exit-code-on-error",
+                    "0",
+                ],
                 stdout=PIPE,
                 stderr=PIPE,
             )
             gevent.sleep(1)
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
-            self.assertEqual(0, proc.returncode)
             stderr = stderr.decode("utf-8")
             self.assertIn("Starting Locust", stderr)
             self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
             self.assertIn("Shutting down (exit code 0), bye", stderr)
+            self.assertEqual(0, proc.returncode)
 
     def test_default_headless_spawn_options_with_shape(self):
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
@@ -356,17 +367,36 @@ class LocustProcessIntegrationTest(TestCase):
             """
         )
         with mock_locustfile(content=content) as mocked:
-            output = (
-                subprocess.check_output(
-                    ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--headless"],
-                    stderr=subprocess.STDOUT,
-                    timeout=3,
-                )
-                .decode("utf-8")
-                .strip()
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--host",
+                    "https://test.com/",
+                    "--headless",
+                    "--exit-code-on-error",
+                    "0",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
             )
-            self.assertIn("Shape test updating to 10 users at 1.00 spawn rate", output)
-            self.assertIn("Cleaning up runner...", output)
+
+            try:
+                success = True
+                _, stderr = proc.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                success = False
+                proc.send_signal(signal.SIGTERM)
+                _, stderr = proc.communicate()
+
+            proc.send_signal(signal.SIGTERM)
+            _, stderr = proc.communicate()
+            stderr = stderr.decode("utf-8")
+            self.assertIn("Shape test updating to 10 users at 1.00 spawn rate", stderr)
+            self.assertIn("Cleaning up runner...", stderr)
+            self.assertEqual(0, proc.returncode)
+            self.assertTrue(success, "got timeout and had to kill the process")
 
     def test_autostart_wo_run_time(self):
         port = get_free_tcp_port()
@@ -467,14 +497,23 @@ class LocustProcessIntegrationTest(TestCase):
             )
             gevent.sleep(1.9)
             response = requests.get(f"http://0.0.0.0:{port}/")
-            _, stderr = proc.communicate(timeout=3)
+            try:
+                success = True
+                _, stderr = proc.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                success = False
+                proc.send_signal(signal.SIGTERM)
+                _, stderr = proc.communicate()
+
             stderr = stderr.decode("utf-8")
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shape test starting", stderr)
             self.assertIn("Shutting down ", stderr)
+            self.assertIn("autoquit time reached", stderr)
             # check response afterwards, because it really isnt as informative as stderr
             self.assertEqual(200, response.status_code)
             self.assertIn('<body class="spawning">', response.text)
+            self.assertTrue(success, "got timeout and had to kill the process")
 
     def test_web_options(self):
         port = get_free_tcp_port()
@@ -591,6 +630,8 @@ class LocustProcessIntegrationTest(TestCase):
                                 "--run-time",
                                 "2s",
                                 "--headless",
+                                "--exit-code-on-error",
+                                "0",
                                 "--html",
                                 html_report_file_path,
                             ],

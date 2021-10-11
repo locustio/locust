@@ -12,7 +12,7 @@ For example, here's how to set up an event listener that will trigger after a re
     
     @events.request.add_listener
     def my_request_handler(request_type, name, response_time, response_length, response,
-                           context, exception, **kwargs):
+                           context, exception, start_time, url, **kwargs):
         if exception:
             print(f"Request to {name} failed with exception {exception}")
         else:
