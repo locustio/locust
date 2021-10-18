@@ -393,9 +393,10 @@ class LocustProcessIntegrationTest(TestCase):
             proc.send_signal(signal.SIGTERM)
             _, stderr = proc.communicate()
             stderr = stderr.decode("utf-8")
-            self.assertIn("Aggregated", stderr)  # make sure stats printer is working
             self.assertIn("Shape test updating to 10 users at 1.00 spawn rate", stderr)
             self.assertTrue(success, "Got timeout and had to kill the process")
+            # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
+            self.assertRegex(stderr, re.compile(".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*"))
             self.assertIn("Shutting down (exit code 0)", stderr)
             self.assertEqual(0, proc.returncode)
 
