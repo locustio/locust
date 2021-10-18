@@ -335,6 +335,11 @@ def main():
         gevent.spawn_later(options.run_time, stop_and_optionally_quit).link_exception(greenlet_exception_handler)
 
     headless_master_greenlet = None
+    stats_printer_greenlet = None
+    if not options.only_summary and (options.print_stats or (options.headless and not options.worker)):
+        # spawn stats printing greenlet
+        stats_printer_greenlet = gevent.spawn(stats_printer(runner.stats))
+        stats_printer_greenlet.link_exception(greenlet_exception_handler)
 
     def start_automatic_run():
         if options.master:
@@ -399,12 +404,6 @@ def main():
             )
         )
         input_listener_greenlet.link_exception(greenlet_exception_handler)
-
-    stats_printer_greenlet = None
-    if not options.only_summary and (options.print_stats or (options.headless and not options.worker)):
-        # spawn stats printing greenlet
-        stats_printer_greenlet = gevent.spawn(stats_printer(runner.stats))
-        stats_printer_greenlet.link_exception(greenlet_exception_handler)
 
     if options.csv_prefix:
         gevent.spawn(stats_csv_writer.stats_writer).link_exception(greenlet_exception_handler)
