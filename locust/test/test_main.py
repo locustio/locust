@@ -394,9 +394,11 @@ class LocustProcessIntegrationTest(TestCase):
             _, stderr = proc.communicate()
             stderr = stderr.decode("utf-8")
             self.assertIn("Shape test updating to 10 users at 1.00 spawn rate", stderr)
-            self.assertIn("Cleaning up runner...", stderr)
+            self.assertTrue(success, "Got timeout and had to kill the process")
+            # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
+            self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
+            self.assertIn("Shutting down (exit code 0)", stderr)
             self.assertEqual(0, proc.returncode)
-            self.assertTrue(success, "got timeout and had to kill the process")
 
     def test_autostart_wo_run_time(self):
         port = get_free_tcp_port()
