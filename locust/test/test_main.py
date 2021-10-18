@@ -393,10 +393,11 @@ class LocustProcessIntegrationTest(TestCase):
             proc.send_signal(signal.SIGTERM)
             _, stderr = proc.communicate()
             stderr = stderr.decode("utf-8")
+            self.assertIn("Aggregated", stderr)  # make sure stats printer is working
             self.assertIn("Shape test updating to 10 users at 1.00 spawn rate", stderr)
+            self.assertTrue(success, "got timeout and had to kill the process")
             self.assertIn("Cleaning up runner...", stderr)
             self.assertEqual(0, proc.returncode)
-            self.assertTrue(success, "got timeout and had to kill the process")
 
     def test_autostart_wo_run_time(self):
         port = get_free_tcp_port()
