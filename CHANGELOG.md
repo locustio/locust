@@ -1,12 +1,62 @@
 # Changelog
 
+## [2.4.1](https://github.com/locustio/locust/tree/2.4.1) (2021-10-19)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.4.0...2.4.1)
+
+**Fixed bugs:**
+
+- No longer logging interval stats when using LoadTestShape after 2.1.x [\#1906](https://github.com/locustio/locust/issues/1906)
+
+## [2.4.0](https://github.com/locustio/locust/tree/2.4.0) (2021-10-11)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.2.3...2.4.0)
+
+**Fixed bugs:**
+
+- Locust will not work, if there is a custom 'run' @task / function  [\#1893](https://github.com/locustio/locust/issues/1893)
+- MasterRunner target\_user\_count no longer set for test\_start event listeners [\#1883](https://github.com/locustio/locust/issues/1883)
+
+**Merged pull requests:**
+
+- Missing colons after else keyword in Event Hooks doc [\#1902](https://github.com/locustio/locust/pull/1902) ([TatchNicolas](https://github.com/TatchNicolas))
+- Support \(and test\) Python 3.10 [\#1901](https://github.com/locustio/locust/pull/1901) ([cyberw](https://github.com/cyberw))
+- Add start\_time and url parameters to request event. [\#1900](https://github.com/locustio/locust/pull/1900) ([cyberw](https://github.com/cyberw))
+- Make User.run/TaskSet.run final and raise an exception if someone marks it with @task [\#1895](https://github.com/locustio/locust/pull/1895) ([cyberw](https://github.com/cyberw))
+- Ensure target\_user\_count is set before test\_start event is fired [\#1894](https://github.com/locustio/locust/pull/1894) ([mboutet](https://github.com/mboutet))
+- Ensure target\_user\_count is set before ramping-up or down [\#1891](https://github.com/locustio/locust/pull/1891) ([mboutet](https://github.com/mboutet))
+- Release docker image for arm64. [\#1889](https://github.com/locustio/locust/pull/1889) ([odidev](https://github.com/odidev))
+- \#1884 User distribution should happen when new workers comes in [\#1886](https://github.com/locustio/locust/pull/1886) ([tyge68](https://github.com/tyge68))
+
+## [2.2.3](https://github.com/locustio/locust/tree/2.2.3) (2021-09-20)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.2.2...2.2.3)
+
+**Merged pull requests:**
+
+- Fix issue with custom arguments in config file when not running headless [\#1888](https://github.com/locustio/locust/pull/1888) ([cyberw](https://github.com/cyberw))
+
 ## [2.2.2](https://github.com/locustio/locust/tree/2.2.2) (2021-09-15)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.2.1...2.2.2)
 
+**Fixed bugs:**
+
+- Version information in Docker image is incorrect [\#1885](https://github.com/locustio/locust/issues/1885)
+
 **Closed issues:**
 
 - Ability to explicitly set which arguments will be exposed/visible in the web ui [\#1876](https://github.com/locustio/locust/issues/1876)
+
+**Merged pull requests:**
+
+- Ability to hide extra args from web ui [\#1881](https://github.com/locustio/locust/pull/1881) ([fabito](https://github.com/fabito))
+- Refactor \(remove duplication\) headless/autostart mechanism. [\#1880](https://github.com/locustio/locust/pull/1880) ([cyberw](https://github.com/cyberw))
+- Wait for --expect-workers when running --autostart [\#1879](https://github.com/locustio/locust/pull/1879) ([cyberw](https://github.com/cyberw))
+- Dont launch autostart greenlet on workers, even if they happened to get the --autostart flag [\#1878](https://github.com/locustio/locust/pull/1878) ([cyberw](https://github.com/cyberw))
+- Added documentation for start\_shape [\#1874](https://github.com/locustio/locust/pull/1874) ([daniel135790](https://github.com/daniel135790))
+- Fix Regression in Full History CSV Percentiles [\#1873](https://github.com/locustio/locust/pull/1873) ([TaylorSMarks](https://github.com/TaylorSMarks))
+- Ability to inject custom html elements in the `head` element [\#1872](https://github.com/locustio/locust/pull/1872) ([fabito](https://github.com/fabito))
 
 ## [2.2.1](https://github.com/locustio/locust/tree/2.2.1) (2021-09-02)
 
@@ -22,7 +72,11 @@
 
 ## [2.2.0](https://github.com/locustio/locust/tree/2.2.0) (2021-09-01)
 
-[Full Changelog](https://github.com/locustio/locust/compare/2.1.0...2.2.0)
+[Full Changelog](https://github.com/locustio/locust/compare/2.2.0b0...2.2.0)
+
+## [2.2.0b0](https://github.com/locustio/locust/tree/2.2.0b0) (2021-09-01)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.1.0...2.2.0b0)
 
 **Fixed bugs:**
 

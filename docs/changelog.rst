@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.4.1
+=====
+
+* Fix stat printing when using shapes (https://github.com/locustio/locust/pull/1907)
+
 2.4.0
 =====
 
