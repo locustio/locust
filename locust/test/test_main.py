@@ -215,6 +215,8 @@ class LocustProcessIntegrationTest(TestCase):
         stderr = stderr.decode("utf-8")
         stdout = stdout.decode("utf-8")
         self.assertIn("Starting Locust", stderr)
+        self.assertRegex(stderr, r".*Shutting down[\S\s]*Aggregated.*", "no stats table printed after shutting down")
+        self.assertNotRegex(stderr, r".*Aggregated[\S\s]*Shutting down.*", "stats table printed BEFORE shutting down")
         self.assertNotIn("command_line_value", stdout)
         self.assertIn("web_form_value", stdout)
 
@@ -614,6 +616,8 @@ class LocustProcessIntegrationTest(TestCase):
             self.assertIn("Ramping to 0 users at a rate of 100.00 per second", output)
             self.assertIn('All users spawned: {"UserSubclass": 0} (0 total users)', output)
             self.assertIn("Test task is running", output)
+            # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
+            self.assertRegex(output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
             self.assertIn("Shutting down (exit code 0), bye.", output)
             self.assertEqual(0, proc.returncode)
 
