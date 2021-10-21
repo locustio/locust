@@ -341,6 +341,8 @@ def main():
         stats_printer_greenlet = gevent.spawn(stats_printer(runner.stats))
         stats_printer_greenlet.link_exception(greenlet_exception_handler)
 
+    gevent.spawn(stats_history, runner)
+
     def start_automatic_run():
         if options.master:
             # wait for worker nodes to connect
@@ -407,8 +409,6 @@ def main():
 
     if options.csv_prefix:
         gevent.spawn(stats_csv_writer.stats_writer).link_exception(greenlet_exception_handler)
-
-    gevent.spawn(stats_history, runner)
 
     def shutdown():
         """
