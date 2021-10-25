@@ -931,7 +931,8 @@ class MasterRunner(DistributedRunner):
                         logger.warning(
                             "Worker %s exceeded cpu threshold (will only log this once per worker)" % (msg.node_id)
                         )
-                    c.memory_usage = msg.data["current_memory_usage"]
+                    if "current_memory_usage" in msg.data:
+                        c.memory_usage = msg.data["current_memory_usage"]
             elif msg.type == "stats":
                 self.environment.events.worker_report.fire(client_id=msg.node_id, data=msg.data)
             elif msg.type == "spawning":
