@@ -299,6 +299,8 @@ def main():
             logger.error("Credentials supplied with --web-auth should have the format: username:password")
             sys.exit(1)
     else:
+        if options.autostart:
+            logger.warning("Option --autostart is ignored for headless mode and worker process.")
         web_ui = None
 
     def assign_equal_weights(environment, **kwargs):
@@ -324,7 +326,8 @@ def main():
                 time.sleep(options.autoquit)
                 logger.info("--autoquit time reached, shutting down")
                 runner.quit()
-                web_ui.stop()
+                if web_ui:
+                    web_ui.stop()
             else:
                 logger.info("--autoquit not specified, leaving web ui running indefinitely")
         else:  # --headless run
