@@ -6,7 +6,7 @@ from copy import copy
 from itertools import chain
 import os
 import csv
-
+import signal
 import gevent
 
 from .exception import StopUser, CatchResponseError
@@ -20,6 +20,18 @@ try:
     STATS_NAME_WIDTH = max(min(os.get_terminal_size()[0] - 80, 80), 0)
 except OSError:  # not a real terminal
     STATS_NAME_WIDTH = 80
+
+STATS_AUTORESIZE = True  # overwrite this if you dont want auto resize while running
+
+
+def resize_handler(signum, frame):
+    global STATS_NAME_WIDTH
+    if STATS_AUTORESIZE:
+        STATS_NAME_WIDTH = max(min(os.get_terminal_size()[0] - 80, 80), 0)
+
+
+signal.signal(signal.SIGWINCH, resize_handler)
+
 STATS_TYPE_WIDTH = 8
 
 """Default interval for how frequently results are written to console."""
