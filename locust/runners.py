@@ -87,7 +87,8 @@ class Runner:
         self.current_cpu_usage = 0
         self.cpu_warning_emitted = False
         self.worker_cpu_warning_emitted = False
-        self.greenlet.spawn(self.monitor_cpu).link_exception(greenlet_exception_handler)
+        self.current_memory_usage = 0
+        self.greenlet.spawn(self.monitor_cpu_and_memory).link_exception(greenlet_exception_handler)
         self.exceptions = {}
         # Because of the way the ramp-up/ramp-down is implemented, target_user_classes_count
         # is only updated at the end of the ramp-up/ramp-down.
@@ -282,10 +283,11 @@ class Runner:
             "%g users have been stopped, %g still running", sum(user_classes_stop_count.values()), self.user_count
         )
 
-    def monitor_cpu(self):
+    def monitor_cpu_and_memory(self):
         process = psutil.Process()
         while True:
             self.current_cpu_usage = process.cpu_percent()
+            self.current_memory_usage = process.memory_info().rss
             if self.current_cpu_usage > 90 and not self.cpu_warning_emitted:
                 logging.warning(
                     "CPU usage above 90%! This may constrain your throughput and may even give inconsistent response time measurements! See https://docs.locust.io/en/stable/running-locust-distributed.html for how to distribute the load over multiple CPU cores or machines"
@@ -534,6 +536,7 @@ class WorkerNode:
         self.heartbeat = heartbeat_liveness
         self.cpu_usage = 0
         self.cpu_warning_emitted = False
+        self.memory_usage = 0
         # The reported users running on the worker
         self.user_classes_count: Dict[str, int] = {}
 
@@ -928,6 +931,8 @@ class MasterRunner(DistributedRunner):
                         logger.warning(
                             "Worker %s exceeded cpu threshold (will only log this once per worker)" % (msg.node_id)
                         )
+                    if "current_memory_usage" in msg.data:
+                        c.memory_usage = msg.data["current_memory_usage"]
             elif msg.type == "stats":
                 self.environment.events.worker_report.fire(client_id=msg.node_id, data=msg.data)
             elif msg.type == "spawning":
@@ -1103,6 +1108,7 @@ class WorkerRunner(DistributedRunner):
                         {
                             "state": self.worker_state,
                             "current_cpu_usage": self.current_cpu_usage,
+                            "current_memory_usage": self.current_memory_usage,
                         },
                         self.client_id,
                     )

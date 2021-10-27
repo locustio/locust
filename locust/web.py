@@ -308,6 +308,7 @@ class WebUI:
                             "state": worker.state,
                             "user_count": worker.user_count,
                             "cpu_usage": worker.cpu_usage,
+                            "memory_usage": worker.memory_usage,
                         }
                     )
 

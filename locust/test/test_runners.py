@@ -1781,13 +1781,25 @@ class TestMasterRunner(LocustTestCase):
 
             sleep(0.2)
             server.mocked_send(
-                Message("heartbeat", {"state": STATE_RUNNING, "current_cpu_usage": 50, "count": 1}, "fake_client1")
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client1",
+                )
             )
             server.mocked_send(
-                Message("heartbeat", {"state": STATE_RUNNING, "current_cpu_usage": 50, "count": 1}, "fake_client2")
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client2",
+                )
             )
             server.mocked_send(
-                Message("heartbeat", {"state": STATE_RUNNING, "current_cpu_usage": 50, "count": 1}, "fake_client3")
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client3",
+                )
             )
 
             sleep(0.2)
@@ -1798,7 +1810,11 @@ class TestMasterRunner(LocustTestCase):
             )
 
             server.mocked_send(
-                Message("heartbeat", {"state": STATE_RUNNING, "current_cpu_usage": 50, "count": 1}, "fake_client1")
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client1",
+                )
             )
 
             sleep(0.4)
@@ -2762,9 +2778,10 @@ class TestWorkerRunner(LocustTestCase):
                 sleep(0.1)
 
             message = next((m for m in reversed(client.outbox) if m.type == "heartbeat"))
-            self.assertEqual(len(message.data), 2)
+            self.assertEqual(len(message.data), 3)
             self.assertIn("state", message.data)
             self.assertIn("current_cpu_usage", message.data)
+            self.assertIn("current_memory_usage", message.data)
 
             worker.quit()
 
