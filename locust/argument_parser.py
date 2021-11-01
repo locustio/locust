@@ -293,6 +293,14 @@ def setup_parser_arguments(parser):
         env_var="LOCUST_EXPECT_WORKERS",
     )
     master_group.add_argument(
+        "--expect-workers-max-wait",
+        type=int,
+        default=0,
+        help="How long should the master wait for workers to connect before giving up. Defaults to wait forever",
+        env_var="LOCUST_EXPECT_WORKERS_MAX_WAIT",
+    )
+
+    master_group.add_argument(
         "--expect-slaves",
         action="store_true",
         help=configargparse.SUPPRESS,
