@@ -667,3 +667,26 @@ class LocustProcessIntegrationTest(TestCase):
         self.assertIn("charts-container", html_report_content)
 
         self.assertNotIn("Download the Report", html_report_content, "Download report link found in HTML content")
+
+    def test_expect_workers(self):
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "--master",
+                    "--expect-workers",
+                    "2",
+                    "--expect-workers-max-wait",
+                    "1",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+            )
+            _, stderr = proc.communicate()
+            stderr = stderr.decode("utf-8")
+            self.assertIn("Waiting for workers to be ready, 0 of 2 connected", stderr)
+            self.assertIn("Gave up waiting for workers to connect", stderr)
+            self.assertEqual(1, proc.returncode)
