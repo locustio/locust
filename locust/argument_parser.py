@@ -289,7 +289,7 @@ def setup_parser_arguments(parser):
         "--expect-workers",
         type=int,
         default=1,
-        help="How many workers master should expect to connect before starting the test (only when --headless used).",
+        help="How many workers master should expect to connect before starting the test (only when --headless/autostart is used).",
         env_var="LOCUST_EXPECT_WORKERS",
     )
     master_group.add_argument(
@@ -300,12 +300,8 @@ def setup_parser_arguments(parser):
 
     worker_group = parser.add_argument_group(
         "Worker options",
-        textwrap.dedent(
-            """
-            Options for running a Locust Worker node when running Locust distributed.
-            Only the LOCUSTFILE (-f option) need to be specified when starting a Worker, since other options such as -u, -r, -t are specified on the Master node.
-        """
-        ),
+        """Options for running a Locust Worker node when running Locust distributed.
+Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, since other options such as -u, -r, -t are specified on the Master node.""",
     )
     # if locust should be run in distributed mode as worker
     worker_group.add_argument(
@@ -415,7 +411,7 @@ def setup_parser_arguments(parser):
     )
     log_group.add_argument(
         "--logfile",
-        help="Path to log file. If not set, log will go to stdout/stderr",
+        help="Path to log file. If not set, log will go to stderr",
         env_var="LOCUST_LOGFILE",
     )
 
