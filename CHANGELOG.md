@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.4.2](https://github.com/locustio/locust/tree/2.4.2) (2021-11-01)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.4.1...2.4.2)
+
+**Fixed bugs:**
+
+- the report cant show the right time [\#1909](https://github.com/locustio/locust/issues/1909)
+- cant show html chart version locust 2.4.0 [\#1908](https://github.com/locustio/locust/issues/1908)
+
+**Closed issues:**
+
+- Update locustio/locust Docker image to Python 3.9.6 [\#1821](https://github.com/locustio/locust/issues/1821)
+
 ## [2.4.1](https://github.com/locustio/locust/tree/2.4.1) (2021-10-19)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.4.0...2.4.1)
@@ -7,6 +20,11 @@
 **Fixed bugs:**
 
 - No longer logging interval stats when using LoadTestShape after 2.1.x [\#1906](https://github.com/locustio/locust/issues/1906)
+
+**Merged pull requests:**
+
+- Fix stat printing when using shapes [\#1907](https://github.com/locustio/locust/pull/1907) ([cyberw](https://github.com/cyberw))
+- Change docker image to use Python 3.9 [\#1904](https://github.com/locustio/locust/pull/1904) ([cyberw](https://github.com/cyberw))
 
 ## [2.4.0](https://github.com/locustio/locust/tree/2.4.0) (2021-10-11)
 

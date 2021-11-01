@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.4.2
+=====
+
+* Add --expect-workers-max-wait parameter (https://github.com/locustio/locust/pull/1922)
+* Track worker memory usage (https://github.com/locustio/locust/pull/1917)
+* Other small fixes
+
 2.4.1
 =====
 
