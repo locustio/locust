@@ -217,6 +217,13 @@ class TestHttpSession(WebserverTestCase):
         self.assertEqual(1, self.environment.stats.total.num_requests)
         self.assertEqual(0, self.environment.stats.total.num_failures)
 
+    def test_catch_response_timeout(self):
+        s = self.get_client()
+        with s.get("/slow", catch_response=True, timeout=0.1) as r:
+            self.assertAlmostEqual(r.request_meta["response_time"], 100, delta=50)
+        self.assertEqual(1, self.environment.stats.total.num_requests)
+        self.assertEqual(1, self.environment.stats.total.num_failures)
+
     def test_catch_response_pass_failed_request_with_other_exception_within_block(self):
         class OtherException(Exception):
             pass
