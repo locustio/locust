@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.4.3](https://github.com/locustio/locust/tree/2.4.3) (2021-11-02)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.4.2...2.4.3)
+
+**Fixed bugs:**
+
+- module 'signal' has no attribute 'SIGWINCH'  on 2.4.2     [\#1924](https://github.com/locustio/locust/issues/1924)
+
 ## [2.4.2](https://github.com/locustio/locust/tree/2.4.2) (2021-11-01)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.4.1...2.4.2)
@@ -12,6 +20,15 @@
 **Closed issues:**
 
 - Update locustio/locust Docker image to Python 3.9.6 [\#1821](https://github.com/locustio/locust/issues/1821)
+
+**Merged pull requests:**
+
+- Add --expect-workers-max-wait parameter [\#1922](https://github.com/locustio/locust/pull/1922) ([cyberw](https://github.com/cyberw))
+- Fixed \#1909 -- Return UTC datetime with the POSIX timestamp for API /stats/report [\#1918](https://github.com/locustio/locust/pull/1918) ([uddmorningsun](https://github.com/uddmorningsun))
+- Track worker memory [\#1917](https://github.com/locustio/locust/pull/1917) ([solowalker27](https://github.com/solowalker27))
+- Auto-resize stats table when terminal window is resized [\#1914](https://github.com/locustio/locust/pull/1914) ([cyberw](https://github.com/cyberw))
+- Fix typos in documentation [\#1912](https://github.com/locustio/locust/pull/1912) ([mnigh](https://github.com/mnigh))
+- Fix missing data in stats\_history/HTML chart when running LoadShape [\#1911](https://github.com/locustio/locust/pull/1911) ([AlexisC0de](https://github.com/AlexisC0de))
 
 ## [2.4.1](https://github.com/locustio/locust/tree/2.4.1) (2021-10-19)
 

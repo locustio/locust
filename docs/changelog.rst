@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.4.3
+=====
+
+* Fix crash on windows (https://github.com/locustio/locust/issues/1924)
+
 2.4.2
 =====
 
