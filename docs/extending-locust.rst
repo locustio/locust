@@ -23,8 +23,9 @@ For example, here's how to set up an event listener that will trigger after a re
 
     In the above example the wildcard keyword argument (\**kwargs) will be empty, because we're handling all arguments, but it is prevents the code from breaking if new arguments are added in some future version of Locust.
 
-    It is entirely possible to implement a client that does not support all parameters 
-    (some non-HTTP protocols might not have a concept of `response_length` or `response` object).
+    Also, it is entirely possible to implement a client that does not supply all parameters for this event.
+    For example, non-HTTP protocols might not even have the a concept of `url` or `response` object. 
+    Remove any such missing field from your listener function definition or use default arguments.
 
 When running locust in distributed mode, it may be useful to do some setup on worker nodes before running your tests. 
 You can check to ensure you aren't running on the master node by checking the type of the node's :py:attr:`runner <locust.env.Environment.runner>`::
