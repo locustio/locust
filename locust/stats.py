@@ -30,7 +30,10 @@ def resize_handler(signum, frame):
         STATS_NAME_WIDTH = max(min(os.get_terminal_size()[0] - 80, 80), 0)
 
 
-signal.signal(signal.SIGWINCH, resize_handler)
+try:
+    signal.signal(signal.SIGWINCH, resize_handler)
+except AttributeError:
+    pass  # Windows doesnt have SIGWINCH
 
 STATS_TYPE_WIDTH = 8
 
