@@ -881,9 +881,14 @@ class MasterRunner(DistributedRunner):
                     logger.error(f"An old (pre 2.0) worker tried to connect ({client_id}). That's not going to work.")
                     continue
                 elif msg.data != __version__ and msg.data != -1:
-                    logger.warning(
-                        f"A worker ({client_id}) running a different version ({msg.data}) connected, master version is {__version__}"
-                    )
+                    if msg.data[0:4] == __version__[0:4]:
+                        logger.debug(
+                            f"A worker ({client_id}) running a different patch version ({msg.data}) connected, master version is {__version__}"
+                        )
+                    else:
+                        logger.warning(
+                            f"A worker ({client_id}) running a different version ({msg.data}) connected, master version is {__version__}"
+                        )
                 worker_node_id = msg.node_id
                 self.clients[worker_node_id] = WorkerNode(worker_node_id, heartbeat_liveness=HEARTBEAT_LIVENESS)
                 if self._users_dispatcher is not None:

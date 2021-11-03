@@ -1684,6 +1684,11 @@ class TestMasterRunner(LocustTestCase):
             server.mocked_send(Message("client_ready", -1, "version_check_bypass_should_not_warn"))
             self.assertEqual(1, len(self.mocked_log.warning))
             self.assertEqual(2, len(master.clients))
+            server.mocked_send(
+                Message("client_ready", __version__ + "1", "difference_in_patch_version_should_not_warn")
+            )
+            self.assertEqual(3, len(master.clients))
+            self.assertEqual(1, len(self.mocked_log.warning))
 
     def test_worker_stats_report_median(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
