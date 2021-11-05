@@ -195,7 +195,7 @@ class FastHttpSession:
             "response": response,
             "exception": None,
             "start_time": start_time,
-            "url": path,  # this is a small deviation from HttpSession, which gets the final (possibly redirected) URL
+            "url": url,  # this is a small deviation from HttpSession, which gets the final (possibly redirected) URL
         }
 
         if not allow_redirects:

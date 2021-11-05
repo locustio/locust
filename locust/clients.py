@@ -129,7 +129,8 @@ class HttpSession(requests.Session):
         response = self._send_request_safe_mode(method, url, **kwargs)
         response_time = (time.perf_counter() - start_perf_counter) * 1000
 
-        url_after_redirect = (response.history and response.history[0] or response).request.path_url
+        request_after_redirect = (response.history and response.history[0] or response).request
+        url_after_redirect = request_after_redirect.path_url
 
         if self.user:
             context = {**self.user.context(), **context}
@@ -143,7 +144,7 @@ class HttpSession(requests.Session):
             "response": response,
             "exception": None,
             "start_time": start_time,
-            "url": url_after_redirect,
+            "url": request_after_redirect.url,
         }
 
         # get the length of the content, but if the argument stream is set to True, we take
