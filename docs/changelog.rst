@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.5.0
+=====
+
+* Change request event 'url' parameter to contain full URL (technically a breaking change, but very few users will have had time to start using this) (https://github.com/locustio/locust/issues/1927)
+* Suppress warnings for patch version mismatch between master and worker (https://github.com/locustio/locust/issues/1926)
+
 2.4.3
 =====
 

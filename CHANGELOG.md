@@ -2046,7 +2046,7 @@
 
 ## [v0.4](https://github.com/locustio/locust/tree/v0.4) (2011-12-05)
 
-[Full Changelog](https://github.com/locustio/locust/compare/7cfe62cee36dee34fe4d23aed5bdd00c4f42b3d0...v0.4)
+[Full Changelog](https://github.com/locustio/locust/compare/117a61cfd1bba9ad10c8b680a574fcf32f6f46be...v0.4)
 
 **Fixed bugs:**
 
