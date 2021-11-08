@@ -350,6 +350,7 @@ def main():
             while len(runner.clients.ready) < options.expect_workers:
                 if options.expect_workers_max_wait and options.expect_workers_max_wait < time.monotonic() - start_time:
                     logger.error("Gave up waiting for workers to connect.")
+                    runner.quit()
                     sys.exit(1)
                 logging.info(
                     "Waiting for workers to be ready, %s of %s connected",
