@@ -6,6 +6,7 @@ import signal
 import socket
 import sys
 import time
+import atexit
 
 import gevent
 
@@ -23,7 +24,7 @@ from .user.inspectuser import get_task_ratio_dict, print_task_ratio
 from .util.timespan import parse_timespan
 from .exception import AuthCredentialsError
 from .shape import LoadTestShape
-from .input_events import input_listener
+from .input_events import UnixKeyPoller, input_listener
 from .html import get_html_report
 from json import dumps
 
@@ -388,6 +389,11 @@ def main():
 
     if options.headless:
         start_automatic_run()
+
+    def restore_terminal():
+        UnixKeyPoller.cleanup()
+
+    atexit.register(restore_terminal)
 
     input_listener_greenlet = None
     if not options.worker:

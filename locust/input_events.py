@@ -25,16 +25,22 @@ class InitError(Exception):
 
 
 class UnixKeyPoller:
+    default_tattr = None
+
     def __init__(self):
         if sys.stdin.isatty():
-            self.stdin = sys.stdin.fileno()
-            self.tattr = termios.tcgetattr(self.stdin)
-            tty.setcbreak(self.stdin, termios.TCSANOW)
+            stdin = sys.stdin.fileno()
+            self.__class__.default_tattr = termios.tcgetattr(stdin)
+            tty.setcbreak(stdin, termios.TCSANOW)
         else:
             raise InitError("Terminal was not a tty. Keyboard input disabled")
 
-    def cleanup(self):
-        termios.tcsetattr(self.stdin, termios.TCSANOW, self.tattr)
+    @classmethod
+    def cleanup(cls):
+        print("restoring")
+        if cls.default_tattr:
+            sys.stdin.fileno()
+            termios.tcsetattr(sys.stdin.fileno(), termios.TCSANOW, cls.default_tattr)
 
     def poll(_self):
         dr, dw, de = select.select([sys.stdin], [], [], 0)
@@ -107,7 +113,5 @@ def input_listener(key_to_func_map: Dict[str, callable]):
                     gevent.sleep(0.2)
         except Exception as e:
             logging.warning(f"Exception in keyboard input poller: {e}")
-        finally:
-            poller.cleanup()
 
     return input_listener_func
