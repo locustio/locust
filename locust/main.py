@@ -390,10 +390,7 @@ def main():
     if options.headless:
         start_automatic_run()
 
-    def restore_terminal():
-        UnixKeyPoller.cleanup()
-
-    atexit.register(restore_terminal)
+    atexit.register(UnixKeyPoller.cleanup())
 
     input_listener_greenlet = None
     if not options.worker:

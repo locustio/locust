@@ -37,7 +37,6 @@ class UnixKeyPoller:
 
     @classmethod
     def cleanup(cls):
-        print("restoring")
         if cls.default_tattr:
             sys.stdin.fileno()
             termios.tcsetattr(sys.stdin.fileno(), termios.TCSANOW, cls.default_tattr)
