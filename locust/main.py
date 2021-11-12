@@ -6,6 +6,7 @@ import signal
 import socket
 import sys
 import time
+import atexit
 
 import gevent
 
@@ -411,6 +412,9 @@ def main():
             )
         )
         input_listener_greenlet.link_exception(greenlet_exception_handler)
+        # ensure terminal is reset, even if there is an unhandled exception in locust or someone
+        # does something wild, like calling sys.exit() in the locustfile
+        atexit.register(input_listener_greenlet.kill, block=True)
 
     if options.csv_prefix:
         gevent.spawn(stats_csv_writer.stats_writer).link_exception(greenlet_exception_handler)
@@ -472,8 +476,5 @@ def main():
     except KeyboardInterrupt:
         pass
     except Exception:
-        if input_listener_greenlet is not None:
-            input_listener_greenlet.kill(block=False)
-            time.sleep(0)
         raise
     shutdown()
