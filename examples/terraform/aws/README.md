@@ -42,7 +42,7 @@ variable "subnet_name" {
 ## 3. Execute Terraform
 
 ```bash
-cd examples/distribuited_execution_terraform/aws
+cd examples/terraform/aws
 terraform init
 terraform apply --auto-approve
 ```
