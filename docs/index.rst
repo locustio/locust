@@ -40,6 +40,7 @@ Running your Locust tests
     configuration
     running-locust-distributed
     running-locust-docker
+    running-cloud-integration
     running-without-web-ui
 
 
