@@ -457,8 +457,8 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         action="store",
         type=int,
         dest="stop_timeout",
-        default=None,
-        help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. This parameter only needs to be specified for the master process when running Locust distributed.",
+        default=10,
+        help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Use 0 to terminate immediately. This parameter only needs to be specified for the master process when running Locust distributed.",
         env_var="LOCUST_STOP_TIMEOUT",
     )
     other_group.add_argument(

@@ -104,7 +104,7 @@ class mocked_options:
         self.master_bind_port = 5557
         self.heartbeat_liveness = 3
         self.heartbeat_interval = 1
-        self.stop_timeout = None
+        self.stop_timeout = 10
         self.connection_broken = False
 
     def reset_stats(self):
@@ -129,7 +129,7 @@ class TestLocustRunner(LocustTestCase):
                     for i in range(1000000):
                         _ = 3 / 2
 
-            environment = Environment(user_classes=[CpuUser])
+            environment = Environment(user_classes=[CpuUser], stop_timeout=0)
             runner = LocalRunner(environment)
             self.assertFalse(runner.cpu_warning_emitted)
             runner.spawn_users({CpuUser.__name__: 1}, wait=False)
@@ -3316,6 +3316,7 @@ class TestStopTimeout(LocustTestCase):
             tasks = [MyTaskSet]
 
         environment = create_environment([MyTestUser], mocked_options())
+        environment.stop_timeout = 0
         runner = environment.create_local_runner()
         runner.start(1, 1)
         gevent.sleep(short_time / 2)

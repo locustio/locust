@@ -54,9 +54,9 @@ class Environment:
     reset_stats = False
     """Determines if stats should be reset once all simulated users have been spawned"""
 
-    stop_timeout = None
+    stop_timeout = 0
     """
-    If set, the runner will try to stop the running users gracefully and wait this many seconds
+    If non-zero, the runner will try to stop the running users gracefully and wait this many seconds
     before killing them hard.
     """
 
@@ -85,7 +85,7 @@ class Environment:
         events=None,
         host=None,
         reset_stats=False,
-        stop_timeout=None,
+        stop_timeout=0,
         catch_exceptions=True,
         parsed_options=None,
     ):
