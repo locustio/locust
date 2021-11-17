@@ -324,7 +324,7 @@ class LocustProcessIntegrationTest(TestCase):
                         "0",
                     ],
                     stderr=subprocess.STDOUT,
-                    timeout=2,
+                    timeout=3,
                 )
                 .decode("utf-8")
                 .strip()

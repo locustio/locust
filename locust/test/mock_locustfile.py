@@ -12,10 +12,10 @@ from locust import HttpUser, TaskSet, task, between, LoadTestShape
 
 
 def index(l):
-    l.client.get("/")
+    l.client.get("/", timeout=1)
 
 def stats(l):
-    l.client.get("/stats/requests")
+    l.client.get("/stats/requests", timeout=1)
 
 
 class UserTasks(TaskSet):
