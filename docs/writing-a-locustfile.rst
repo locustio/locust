@@ -132,7 +132,7 @@ wait_time attribute
 -------------------
 
 A User's :py:attr:`wait_time <locust.User.wait_time>` method makes it easy to introduce delays after
-each task executition. If no `wait_time` is specified, the next task will be executed as soon as one finishes.
+each task execution. If no `wait_time` is specified, the next task will be executed as soon as one finishes.
 
 * :py:attr:`constant <locust.wait_time.constant>` for a fixed amount of time
 
