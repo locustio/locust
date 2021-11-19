@@ -14,7 +14,7 @@ setup(
         "gevent>=20.9.0",
         "flask>=2.0.0",
         "Werkzeug>=2.0.0",
-        "requests>=2.9.1",
+        "requests>=2.23.0",
         "msgpack>=0.6.2",
         "pyzmq>=22.2.1",
         "geventhttpclient>=1.5.1",
