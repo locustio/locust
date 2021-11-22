@@ -86,7 +86,7 @@ def mocked_rpc():
             return msg.node_id, msg
 
         def close(self):
-            raise RPCError()
+            pass
 
     return MockedRpcServerClient
 
