@@ -5,7 +5,7 @@ Testing Requests based SDKs
 =============================
 
 If a prebuilt SDK is available for your target system. Locust has a supported pattern for integrating
-it's usage into your load testing efforts.
+its usage into your load testing efforts.
 
 The only perquisite to achieve this; is that the SDK needs to have an accessible ``request.Sessions``
 class.

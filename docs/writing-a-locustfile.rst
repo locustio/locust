@@ -82,8 +82,8 @@ We've declared two tasks by decorating two methods with ``@task``, one of which 
 When our ``QuickstartUser`` runs it'll pick one of the declared tasks - in this case either ``hello_world`` or
 ``view_items`` - and execute it. Tasks are picked at random, but you can give them different weighting. The above
 configuration will make Locust three times more likely to pick ``view_items`` than ``hello_world``. When a task has
-finished executing, the User will then sleep during it's wait time (in this case between 1 and 5 seconds).
-After it's wait time it'll pick a new task and keep repeating that.
+finished executing, the User will then sleep during its wait time (in this case between 1 and 5 seconds).
+After its wait time it'll pick a new task and keep repeating that.
 
 Note that only methods decorated with ``@task`` will be picked, so you can define your own internal helper methods any way you like.
 

@@ -555,7 +555,7 @@ Identical to previous version, but now built & deployed to Pypi using Travis.
 * Fixed bug where POST requests (and other methods as well) got incorrectly reported as
   GET requests, if the request resulted in a redirect.
 * Added ability to download exceptions in CSV format. Download links has also been moved
-  to it's own tab in the web UI.
+  to its own tab in the web UI.
 
 
 0.7.2
@@ -608,7 +608,7 @@ msgpack for serializing master/slave data
 -----------------------------------------
 
 Locust now uses `msgpack <http://msgpack.org/>`_ for serializing data that is sent between
-a master node and it's slaves. This adresses a possible attack that can be used to execute
+a master node and its slaves. This addresses a possible attack that can be used to execute
 code remote, if one has access to the internal locust ports that are used for master-slave
 communication. The reason for this exploit was due to the fact that pickle was used.
 
