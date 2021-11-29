@@ -5,7 +5,10 @@ from typing import (
     List,
     Type,
     TypeVar,
+    Union,
 )
+
+from configargparse import Namespace
 
 from .event import Events
 from .exception import RunnerAlreadyExistsError
@@ -21,90 +24,70 @@ RunnerType = TypeVar("RunnerType", bound=Runner)
 
 
 class Environment:
-    events: Events = None
-    """
-    Event hooks used by Locust internally, as well as to extend Locust's functionality
-    See :ref:`events` for available events.
-    """
-
-    user_classes: List[Type[User]] = []
-    """User classes that the runner will run"""
-
-    shape_class: LoadTestShape = None
-    """A shape class to control the shape of the load test"""
-
-    tags = None
-    """If set, only tasks that are tagged by tags in this list will be executed"""
-
-    exclude_tags = None
-    """If set, only tasks that aren't tagged by tags in this list will be executed"""
-
-    stats: RequestStats = None
-    """Reference to RequestStats instance"""
-
-    runner: Runner = None
-    """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
-
-    web_ui: WebUI = None
-    """Reference to the WebUI instance"""
-
-    host: str = None
-    """Base URL of the target system"""
-
-    reset_stats = False
-    """Determines if stats should be reset once all simulated users have been spawned"""
-
-    stop_timeout = None
-    """
-    If set, the runner will try to stop the running users gracefully and wait this many seconds
-    before killing them hard.
-    """
-
-    catch_exceptions = True
-    """
-    If True exceptions that happen within running users will be caught (and reported in UI/console).
-    If False, exceptions will be raised.
-    """
-
-    process_exit_code: int = None
-    """
-    If set it'll be the exit code of the Locust process
-    """
-
-    parsed_options = None
-    """Reference to the parsed command line options (used to pre-populate fields in Web UI). May be None when using Locust as a library"""
-
     def __init__(
         self,
         *,
-        user_classes=None,
-        shape_class=None,
-        tags=None,
-        locustfile=None,
+        user_classes: Union[List[Type[User]], None] = None,
+        shape_class: Union[LoadTestShape, None] = None,
+        tags: Union[List[str], None] = None,
+        locustfile: str = None,
         exclude_tags=None,
-        events=None,
-        host=None,
+        events: Events = None,
+        host: str = None,
         reset_stats=False,
-        stop_timeout=None,
+        stop_timeout: Union[float, None] = None,
         catch_exceptions=True,
-        parsed_options=None,
+        parsed_options: Namespace = None,
     ):
+
+        self.runner: Runner = None
+        """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
+
+        self.web_ui: WebUI = None
+        """Reference to the WebUI instance"""
+
+        self.process_exit_code: int = None
+        """
+        If set it'll be the exit code of the Locust process
+        """
+
         if events:
             self.events = events
+            """
+            Event hooks used by Locust internally, as well as to extend Locust's functionality
+            See :ref:`events` for available events.
+            """
         else:
             self.events = Events()
 
         self.locustfile = locustfile
-        self.user_classes = user_classes or []
+        """Filename (not path) of locustfile"""
+        self.user_classes: List[Type[User]] = user_classes or []
+        """User classes that the runner will run"""
         self.shape_class = shape_class
+        """A shape class to control the shape of the load test"""
         self.tags = tags
+        """If set, only tasks that are tagged by tags in this list will be executed"""
         self.exclude_tags = exclude_tags
+        """If set, only tasks that aren't tagged by tags in this list will be executed"""
         self.stats = RequestStats()
+        """Reference to RequestStats instance"""
         self.host = host
+        """Base URL of the target system"""
         self.reset_stats = reset_stats
+        """Determines if stats should be reset once all simulated users have been spawned"""
         self.stop_timeout = stop_timeout
+        """
+        If set, the runner will try to stop the running users gracefully and wait this many seconds
+        before killing them hard.
+        """
         self.catch_exceptions = catch_exceptions
+        """
+        If True exceptions that happen within running users will be caught (and reported in UI/console).
+        If False, exceptions will be raised.
+        """
         self.parsed_options = parsed_options
+        """Reference to the parsed command line options (used to pre-populate fields in Web UI). May be None when using Locust as a library"""
 
         self._filter_tasks_by_tags()
 

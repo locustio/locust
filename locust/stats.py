@@ -115,7 +115,7 @@ def diff_response_time_dicts(latest, old):
 
 class RequestStats:
     """
-    Class that holds the request statistics.
+    Class that holds the request statistics. Accessible in a User from self.environment.stats
     """
 
     def __init__(self, use_response_times_cache=True):
@@ -126,8 +126,8 @@ class RequestStats:
                                          is not needed.
         """
         self.use_response_times_cache = use_response_times_cache
-        self.entries = {}
-        self.errors = {}
+        self.entries: dict[str, StatsEntry] = {}
+        self.errors: dict[str, StatsError] = {}
         self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
         self.history = []
 
@@ -212,75 +212,56 @@ class StatsEntry:
     Represents a single stats entry (name and method)
     """
 
-    name = None
-    """ Name (URL) of this stats entry """
-
-    method = None
-    """ Method (GET, POST, PUT, etc.) """
-
-    num_requests = None
-    """ The number of requests made """
-
-    num_none_requests = None
-    """ The number of requests made with a None response time (typically async requests) """
-
-    num_failures = None
-    """ Number of failed request """
-
-    total_response_time = None
-    """ Total sum of the response times """
-
-    min_response_time = None
-    """ Minimum response time """
-
-    max_response_time = None
-    """ Maximum response time """
-
-    num_reqs_per_sec = None
-    """ A {second => request_count} dict that holds the number of requests made per second """
-
-    num_fail_per_sec = None
-    """ A (second => failure_count) dict that hold the number of failures per second """
-
-    response_times = None
-    """
-    A {response_time => count} dict that holds the response time distribution of all
-    the requests.
-
-    The keys (the response time in ms) are rounded to store 1, 2, ... 9, 10, 20. .. 90,
-    100, 200 .. 900, 1000, 2000 ... 9000, in order to save memory.
-
-    This dict is used to calculate the median and percentile response times.
-    """
-
-    use_response_times_cache = False
-    """
-    If set to True, the copy of the response_time dict will be stored in response_times_cache
-    every second, and kept for 20 seconds (by default, will be CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW + 10).
-    We can use this dict to calculate the *current*  median response time, as well as other response
-    time percentiles.
-    """
-
-    response_times_cache = None
-    """
-    If use_response_times_cache is set to True, this will be a {timestamp => CachedResponseTimes()}
-    OrderedDict that holds a copy of the response_times dict for each of the last 20 seconds.
-    """
-
-    total_content_length = None
-    """ The sum of the content length of all the requests for this entry """
-
-    start_time = None
-    """ Time of the first request for this entry """
-
-    last_request_timestamp = None
-    """ Time of the last request for this entry """
-
-    def __init__(self, stats, name, method, use_response_times_cache=False):
+    def __init__(self, stats: RequestStats, name: str, method: str, use_response_times_cache=False):
         self.stats = stats
         self.name = name
+        """ Name (URL) of this stats entry """
         self.method = method
+        """ Method (GET, POST, PUT, etc.) """
         self.use_response_times_cache = use_response_times_cache
+        """
+        If set to True, the copy of the response_time dict will be stored in response_times_cache
+        every second, and kept for 20 seconds (by default, will be CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW + 10).
+        We can use this dict to calculate the *current*  median response time, as well as other response
+        time percentiles.
+        """
+        self.num_requests = 0
+        """ The number of requests made """
+        self.num_none_requests = 0
+        """ The number of requests made with a None response time (typically async requests) """
+        self.num_failures = 0
+        """ Number of failed request """
+        self.total_response_time = 0
+        """ Total sum of the response times """
+        self.min_response_time = None
+        """ Minimum response time """
+        self.max_response_time = 0
+        """ Maximum response time """
+        self.num_reqs_per_sec = {}
+        """ A {second => request_count} dict that holds the number of requests made per second """
+        self.num_fail_per_sec = {}
+        """ A (second => failure_count) dict that hold the number of failures per second """
+        self.response_times = {}
+        """
+        A {response_time => count} dict that holds the response time distribution of all
+        the requests.
+
+        The keys (the response time in ms) are rounded to store 1, 2, ... 9, 10, 20. .. 90,
+        100, 200 .. 900, 1000, 2000 ... 9000, in order to save memory.
+
+        This dict is used to calculate the median and percentile response times.
+        """
+        self.response_times_cache = None
+        """
+        If use_response_times_cache is set to True, this will be a {timestamp => CachedResponseTimes()}
+        OrderedDict that holds a copy of the response_times dict for each of the last 20 seconds.
+        """
+        self.total_content_length = 0
+        """ The sum of the content length of all the requests for this entry """
+        self.start_time = 0.0
+        """ Time of the first request for this entry """
+        self.last_request_timestamp = None
+        """ Time of the last request for this entry """
         self.reset()
 
     def reset(self):
