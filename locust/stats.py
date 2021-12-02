@@ -27,7 +27,10 @@ STATS_AUTORESIZE = True  # overwrite this if you dont want auto resize while run
 def resize_handler(signum, frame):
     global STATS_NAME_WIDTH
     if STATS_AUTORESIZE:
-        STATS_NAME_WIDTH = max(min(os.get_terminal_size()[0] - 80, 80), 0)
+        try:
+            STATS_NAME_WIDTH = max(min(os.get_terminal_size()[0] - 80, 80), 0)
+        except OSError:  # not a real terminal
+            pass
 
 
 try:
