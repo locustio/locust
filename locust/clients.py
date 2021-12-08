@@ -9,7 +9,7 @@ from contextlib import contextmanager
 
 from urllib.parse import urlparse, urlunparse
 
-from .exception import CatchResponseError, ResponseError
+from .exception import CatchResponseError, LocustError, ResponseError
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
@@ -216,6 +216,7 @@ class ResponseContextManager(LocustResponse):
     """
 
     _manual_result = None
+    _entered = False
 
     def __init__(self, response, request_event, request_meta):
         # copy data from response to this object
@@ -224,6 +225,7 @@ class ResponseContextManager(LocustResponse):
         self.request_meta = request_meta
 
     def __enter__(self):
+        self._entered = True
         return self
 
     def __exit__(self, exc, value, traceback):
@@ -267,6 +269,10 @@ class ResponseContextManager(LocustResponse):
                 if response.status_code == 404:
                     response.success()
         """
+        if not self._entered:
+            raise LocustError(
+                "Tried to set status on a request that has not yet been made. Make sure you use a with-block, like this:\n\nwith self.client.request(..., catch_response=True) as response:\n    response.success()"
+            )
         self._manual_result = True
 
     def failure(self, exc):
@@ -282,6 +288,10 @@ class ResponseContextManager(LocustResponse):
                 if response.content == b"":
                     response.failure("No data")
         """
+        if not self._entered:
+            raise LocustError(
+                "Tried to set status on a request that has not yet been made. Make sure you use a with-block, like this:\n\nwith self.client.request(..., catch_response=True) as response:\n    response.failure(...)"
+            )
         if not isinstance(exc, Exception):
             exc = CatchResponseError(exc)
         self._manual_result = exc

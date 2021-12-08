@@ -4,7 +4,7 @@ from locust.user.users import HttpUser
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 
 from locust.clients import HttpSession
-from locust.exception import ResponseError
+from locust.exception import LocustError, ResponseError
 from .testcases import WebserverTestCase
 
 
@@ -265,6 +265,13 @@ class TestHttpSession(WebserverTestCase):
             pass
         self.assertEqual(1, self.environment.stats.total.num_requests)
         self.assertEqual(1, self.environment.stats.total.num_failures)
+
+    def test_catch_response_missing_with_block(self):
+        s = self.get_client()
+        # incorrect usage, missing with-block
+        r = s.get("/fail", catch_response=True)
+        self.assertRaises(LocustError, r.success)
+        self.assertRaises(LocustError, r.failure, "")
 
     def test_user_context(self):
         class TestUser(HttpUser):
