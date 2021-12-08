@@ -413,6 +413,7 @@ class ResponseContextManager(FastResponse):
     """
 
     _manual_result = None
+    _entered = False
 
     def __init__(self, response, environment, request_meta):
         # copy data from response to this object
@@ -423,6 +424,7 @@ class ResponseContextManager(FastResponse):
         self.request_meta = request_meta
 
     def __enter__(self):
+        self._entered = True
         return self
 
     def __exit__(self, exc, value, traceback):
@@ -465,6 +467,10 @@ class ResponseContextManager(FastResponse):
                 if response.status_code == 404:
                     response.success()
         """
+        if not self._entered:
+            raise LocustError(
+                "Tried to set status on a request that has not yet been made. Make sure you use a with-block, like this:\n\nwith self.client.request(..., catch_response=True) as response:\n    response.success()"
+            )
         self._manual_result = True
 
     def failure(self, exc):
@@ -480,6 +486,10 @@ class ResponseContextManager(FastResponse):
                 if response.content == "":
                     response.failure("No data")
         """
+        if not self._entered:
+            raise LocustError(
+                "Tried to set status on a request that has not yet been made. Make sure you use a with-block, like this:\n\nwith self.client.request(..., catch_response=True) as response:\n    response.failure(...)"
+            )
         if not isinstance(exc, Exception):
             exc = CatchResponseError(exc)
         self._manual_result = exc
