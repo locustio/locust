@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 from locust.user import task, TaskSet
 from locust.contrib.fasthttp import FastHttpSession
 from locust import FastHttpUser
-from locust.exception import CatchResponseError, InterruptTaskSet, ResponseError
+from locust.exception import CatchResponseError, InterruptTaskSet, LocustError, ResponseError
 from locust.main import is_user_class
 from .testcases import WebserverTestCase, LocustTestCase
 from .util import create_tls_cert
@@ -459,7 +459,7 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         class MyUser(FastHttpUser):
             host = "http://127.0.0.1:%i" % self.port
 
-        self.locust = MyUser(self.environment)
+        self.user = MyUser(self.environment)
 
         self.num_failures = 0
         self.num_success = 0
@@ -474,30 +474,30 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         self.environment.events.request.add_listener(on_request)
 
     def test_catch_response(self):
-        self.assertEqual(500, self.locust.client.get("/fail").status_code)
+        self.assertEqual(500, self.user.client.get("/fail").status_code)
         self.assertEqual(1, self.num_failures)
         self.assertEqual(0, self.num_success)
 
-        with self.locust.client.get("/ultra_fast", catch_response=True) as response:
+        with self.user.client.get("/ultra_fast", catch_response=True) as response:
             pass
         self.assertEqual(1, self.num_failures)
         self.assertEqual(1, self.num_success)
         self.assertIn("ultra fast", str(response.content))
 
-        with self.locust.client.get("/ultra_fast", catch_response=True) as response:
+        with self.user.client.get("/ultra_fast", catch_response=True) as response:
             raise ResponseError("Not working")
 
         self.assertEqual(2, self.num_failures)
         self.assertEqual(1, self.num_success)
 
     def test_catch_response_http_fail(self):
-        with self.locust.client.get("/fail", catch_response=True) as response:
+        with self.user.client.get("/fail", catch_response=True) as response:
             pass
         self.assertEqual(1, self.num_failures)
         self.assertEqual(0, self.num_success)
 
     def test_catch_response_http_manual_fail(self):
-        with self.locust.client.get("/ultra_fast", catch_response=True) as response:
+        with self.user.client.get("/ultra_fast", catch_response=True) as response:
             response.failure("Haha!")
         self.assertEqual(1, self.num_failures)
         self.assertEqual(0, self.num_success)
@@ -507,13 +507,13 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         )
 
     def test_catch_response_http_manual_success(self):
-        with self.locust.client.get("/fail", catch_response=True) as response:
+        with self.user.client.get("/fail", catch_response=True) as response:
             response.success()
         self.assertEqual(0, self.num_failures)
         self.assertEqual(1, self.num_success)
 
     def test_catch_response_allow_404(self):
-        with self.locust.client.get("/does/not/exist", catch_response=True) as response:
+        with self.user.client.get("/does/not/exist", catch_response=True) as response:
             self.assertEqual(404, response.status_code)
             if response.status_code == 404:
                 response.success()
@@ -561,6 +561,14 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         self.assertEqual(0, self.num_success)
         self.assertEqual(1, self.num_failures)
 
+    def test_catch_response_missing_with_block(self):
+        # incorrect usage, missing with-block
+        r = self.user.client.get("/fail", catch_response=True)
+        self.assertRaises(LocustError, r.success())
+        self.assertRaises(LocustError, r.failure("wont work"))
+        self.assertEqual(1, self.environment.stats.total.num_requests)
+        self.assertEqual(1, self.environment.stats.total.num_failures)
+
     def test_deprecated_request_events(self):
         status = {"success_amount": 0, "failure_amount": 0}
 
@@ -572,9 +580,9 @@ class TestFastHttpCatchResponse(WebserverTestCase):
 
         self.environment.events.request_success.add_listener(on_success)
         self.environment.events.request_failure.add_listener(on_failure)
-        with self.locust.client.get("/ultra_fast", catch_response=True) as response:
+        with self.user.client.get("/ultra_fast", catch_response=True) as response:
             pass
-        with self.locust.client.get("/wrong_url", catch_response=True) as response:
+        with self.user.client.get("/wrong_url", catch_response=True) as response:
             pass
 
         self.assertEqual(1, status["success_amount"])
