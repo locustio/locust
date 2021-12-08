@@ -566,8 +566,6 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         r = self.user.client.get("/fail", catch_response=True)
         self.assertRaises(LocustError, r.success)
         self.assertRaises(LocustError, r.failure, "")
-        self.assertEqual(1, self.environment.stats.total.num_requests)
-        self.assertEqual(1, self.environment.stats.total.num_failures)
 
     def test_deprecated_request_events(self):
         status = {"success_amount": 0, "failure_amount": 0}

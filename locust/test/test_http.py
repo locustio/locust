@@ -272,8 +272,6 @@ class TestHttpSession(WebserverTestCase):
         r = s.get("/fail", catch_response=True)
         self.assertRaises(LocustError, r.success)
         self.assertRaises(LocustError, r.failure, "")
-        self.assertEqual(1, self.environment.stats.total.num_requests)
-        self.assertEqual(1, self.environment.stats.total.num_failures)
 
     def test_user_context(self):
         class TestUser(HttpUser):
