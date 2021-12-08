@@ -564,8 +564,8 @@ class TestFastHttpCatchResponse(WebserverTestCase):
     def test_catch_response_missing_with_block(self):
         # incorrect usage, missing with-block
         r = self.user.client.get("/fail", catch_response=True)
-        self.assertRaises(LocustError, r.success())
-        self.assertRaises(LocustError, r.failure("wont work"))
+        self.assertRaises(LocustError, r.success)
+        self.assertRaises(LocustError, r.failure, "")
         self.assertEqual(1, self.environment.stats.total.num_requests)
         self.assertEqual(1, self.environment.stats.total.num_failures)
 
