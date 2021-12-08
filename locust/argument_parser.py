@@ -485,7 +485,7 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
     )
 
 
-def get_parser(default_config_files=DEFAULT_CONFIG_FILES):
+def get_parser(default_config_files=DEFAULT_CONFIG_FILES) -> LocustArgumentParser:
     # get a parser that is only able to parse the -f argument
     parser = get_empty_argument_parser(add_help=True, default_config_files=default_config_files)
     # add all the other supported arguments
@@ -495,7 +495,7 @@ def get_parser(default_config_files=DEFAULT_CONFIG_FILES):
     return parser
 
 
-def parse_options(args=None):
+def parse_options(args=None) -> configargparse.Namespace:
     parser = get_parser()
     parsed_opts = parser.parse_args(args=args)
     if parsed_opts.stats_history_enabled and (parsed_opts.csv_prefix is None):
@@ -503,7 +503,7 @@ def parse_options(args=None):
     return parsed_opts
 
 
-def default_args_dict():
+def default_args_dict() -> dict:
     # returns a dict containing the default arguments (before any custom arguments are added)
     default_parser = get_empty_argument_parser()
     setup_parser_arguments(default_parser)

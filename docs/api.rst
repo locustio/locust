@@ -140,3 +140,9 @@ Web UI class
 
 .. autoclass:: locust.web.WebUI
     :members:
+
+Other
+=====
+
+.. autoclass:: locust.stats.StatsEntry
+    :members:

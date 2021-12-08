@@ -100,18 +100,14 @@ class User(object, metaclass=UserMeta):
     abstract = True
     """If abstract is True, the class is meant to be subclassed, and locust will not spawn users of this class during a test."""
 
-    environment = None
-    """A reference to the :py:class:`Environment <locust.env.Environment>` in which this user is running"""
-
-    client = None
-    _state = None
-    _greenlet: greenlet.Greenlet = None
-    _group: Group
-    _taskset_instance = None
-
     def __init__(self, environment):
         super().__init__()
         self.environment = environment
+        """A reference to the :py:class:`Environment <locust.env.Environment>` in which this user is running"""
+        self._state = None
+        self._greenlet: greenlet.Greenlet = None
+        self._group: Group
+        self._taskset_instance: TaskSet = None
 
     def on_start(self):
         """
@@ -222,12 +218,6 @@ class HttpUser(User):
     abstract = True
     """If abstract is True, the class is meant to be subclassed, and users will not choose this locust during a test"""
 
-    client: HttpSession = None
-    """
-    Instance of HttpSession that is created upon instantiation of Locust.
-    The client supports cookies, and therefore keeps the session between HTTP requests.
-    """
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.host is None:
@@ -242,3 +232,7 @@ class HttpUser(User):
         )
         session.trust_env = False
         self.client = session
+        """
+        Instance of HttpSession that is created upon instantiation of Locust.
+        The client supports cookies, and therefore keeps the session between HTTP requests.
+        """
