@@ -318,7 +318,7 @@ class Runner:
             raise ValueError("wait is True but the amount of users to add is greater than the spawn rate")
 
         for user_class in self.user_classes:
-            if self.environment.host is not None:
+            if self.environment.host:
                 user_class.host = self.environment.host
 
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
@@ -674,7 +674,7 @@ class MasterRunner(DistributedRunner):
             return
 
         for user_class in self.user_classes:
-            if self.environment.host is not None:
+            if self.environment.host:
                 user_class.host = self.environment.host
 
         self.spawn_rate = spawn_rate
@@ -1085,7 +1085,7 @@ class WorkerRunner(DistributedRunner):
         self.worker_state = STATE_SPAWNING
 
         for user_class in self.user_classes:
-            if self.environment.host is not None:
+            if self.environment.host:
                 user_class.host = self.environment.host
 
         user_classes_spawn_count = {}

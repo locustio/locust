@@ -474,6 +474,38 @@ class TestLocustRunner(LocustTestCase):
 
         runner.quit()
 
+    def test_host_class_attribute_from_web(self):
+        """If host is left empty from the webUI, we should not use it"""
+
+        class MyUser1(User):
+            host = "https://host1.com"
+
+            @task
+            def my_task(self):
+                pass
+
+        class MyUser2(User):
+            host = "https://host2.com"
+
+            @task
+            def my_task(self):
+                pass
+
+        opts = mocked_options()
+        # If left empty on the web, we get an empty string as host
+        opts.host = ""
+        environment = create_environment([MyUser1, MyUser2], opts)
+        runner = LocalRunner(environment)
+        # Start the runner to trigger problematic code
+        runner.start(user_count=2, spawn_rate=1, wait=False)
+        runner.spawning_greenlet.join()
+
+        # Make sure we did not overwrite the host variable
+        self.assertEqual(MyUser1.host, "https://host1.com")
+        self.assertEqual(MyUser2.host, "https://host2.com")
+
+        runner.quit()
+
     def test_custom_message(self):
         class MyUser(User):
             wait_time = constant(1)
