@@ -4,7 +4,7 @@
 Testing non-HTTP systems
 ========================
 
-Locust only comes with built-in support for HTTP/HTTPS but it can be extended to test almost any system. This is done by wrapping the protocol library and triggering a :py:attr:`request <locust.event.Events.request>` event after each call has completed, to let Locust know what happened.
+Locust only comes with built-in support for HTTP/HTTPS but it can be extended to test almost any system. This is normally done by wrapping the protocol library and triggering a :py:attr:`request <locust.event.Events.request>` event after each call has completed, to let Locust know what happened.
 
 .. note::
 
