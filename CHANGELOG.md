@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.5.1](https://github.com/locustio/locust/tree/2.5.1) (2021-12-09)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.5.0...2.5.1)
+
+**Fixed bugs:**
+
+- User distribution should happen when new workers comes in [\#1884](https://github.com/locustio/locust/issues/1884)
+
+**Merged pull requests:**
+
+- Github changelog generator is broken, so the PR:s will only become visible on the next release
+
+## [2.5.0](https://github.com/locustio/locust/tree/2.5.0) (2021-11-05)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.4.3...2.5.0)
+
+**Merged pull requests:**
+
+- Change request event url field to contain absolute URL not just path. [\#1927](https://github.com/locustio/locust/pull/1927) ([cyberw](https://github.com/cyberw))
+- Suppress warnings for patch version mismatch between master and worker \(and make them debug level instead\) [\#1926](https://github.com/locustio/locust/pull/1926) ([cyberw](https://github.com/cyberw))
+
 ## [2.4.3](https://github.com/locustio/locust/tree/2.4.3) (2021-11-02)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.4.2...2.4.3)
@@ -539,7 +560,7 @@
 - Fix small typo in docker docs [\#1490](https://github.com/locustio/locust/pull/1490) ([max-rocket-internet](https://github.com/max-rocket-internet))
 - fade into the running screen before getting a response from the server [\#1479](https://github.com/locustio/locust/pull/1479) ([camilojimenez](https://github.com/camilojimenez))
 - Refactoring stats to handle custom percentiles [\#1477](https://github.com/locustio/locust/pull/1477) ([vstepanov-lohika-tix](https://github.com/vstepanov-lohika-tix))
-- Handle connection reset error in fast http client [\#1475](https://github.com/locustio/locust/pull/1475) ([mkarlovich](https://github.com/mkarlovich))
+- Handle connection reset error in fast http client [\#1475](https://github.com/locustio/locust/pull/1475) ([bendizen](https://github.com/bendizen))
 
 ## [1.1.1](https://github.com/locustio/locust/tree/1.1.1) (2020-07-07)
 
@@ -2046,7 +2067,7 @@
 
 ## [v0.4](https://github.com/locustio/locust/tree/v0.4) (2011-12-05)
 
-[Full Changelog](https://github.com/locustio/locust/compare/117a61cfd1bba9ad10c8b680a574fcf32f6f46be...v0.4)
+[Full Changelog](https://github.com/locustio/locust/compare/7cfe62cee36dee34fe4d23aed5bdd00c4f42b3d0...v0.4)
 
 **Fixed bugs:**
 

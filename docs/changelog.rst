@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.5.1
+=====
+
+* Ignore empty host field in web ui (Fix running the web UI with class defined hosts) (https://github.com/locustio/locust/pull/1956)
+* Throw exception when calling response.success()/.failure() if with-block has not been entered (https://github.com/locustio/locust/pull/1955)
+* Stop declaring "fake" class level variables in Environment, User and StatsEntry (https://github.com/locustio/locust/pull/1948)
+
 2.5.0
 =====
 
