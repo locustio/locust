@@ -193,7 +193,8 @@ class User(object, metaclass=UserMeta):
 
     def context(self) -> Dict:
         """
-        Adds the returned value (a dict) to the context for :ref:`request event <request_context>`
+        Adds the returned value (a dict) to the context for :ref:`request event <request_context>`.
+        Override this in your User class to customize the context.
         """
         return {}
 
