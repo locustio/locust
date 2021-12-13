@@ -629,7 +629,7 @@ A project with multiple different locustfiles could also keep them in a separate
     * ``__init__.py``
     * ``auth.py``
     * ``config.py``
-  * ``locustfiles/``
+  * ``my_locustfiles/``
 
     * ``api.py``
     * ``website.py``
