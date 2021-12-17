@@ -906,7 +906,6 @@ class TestMasterWorkerRunners(LocustTestCase):
             # give time for users to generate stats, and stats to be sent to master
             sleep(0.1)
             master_env.events.quitting.fire(environment=master_env, reverse=True)
-            master.quit()
             sleep(0.1)
             # make sure users are killed
             self.assertEqual(0, worker.user_count)
