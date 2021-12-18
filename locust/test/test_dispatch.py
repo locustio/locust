@@ -1,7 +1,7 @@
 import time
 import unittest
 from operator import attrgetter
-from typing import Dict
+from typing import Dict, List, Tuple
 
 from locust import User
 from locust.dispatch import UsersDispatcher
@@ -3289,6 +3289,241 @@ class TestAddWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 3)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 3)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 3)
+
+
+class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
+    class RampUpCase:
+        def __init__(self, fixed_counts: Tuple[int], weights: Tuple[int], target_user_count: int):
+            self.fixed_counts = fixed_counts
+            self.weights = weights
+            self.target_user_count = target_user_count
+
+    def case_handler(self, cases: List[RampUpCase], expected: Dict[str, int], user_classes: List[User]):
+        self.assertEqual(len(cases), len(expected))
+
+        for case_num in range(len(cases)):
+            # Reset to defaul values
+            for user_class in user_classes:
+                user_class.weight, user_class.fixed_count = 1, 0
+
+            case = cases[case_num]
+            self.assertEqual(
+                len(case.fixed_counts) + len(case.weights),
+                len(user_classes),
+                msg="Invalid test case or user list.",
+            )
+
+            fixed_users = user_classes[: len(case.fixed_counts)]
+            weighted_users_list = user_classes[len(case.fixed_counts) :]
+
+            for user, fixed_count in zip(fixed_users, case.fixed_counts):
+                user.fixed_count = fixed_count
+
+            for user, weight in zip(weighted_users_list, case.weights):
+                user.weight = weight
+
+            worker_node1 = WorkerNode("1")
+
+            users_dispatcher = UsersDispatcher(worker_nodes=[worker_node1], user_classes=user_classes)
+            users_dispatcher.new_dispatch(target_user_count=case.target_user_count, spawn_rate=0.5)
+            users_dispatcher._wait_between_dispatch = 0
+
+            iterations = list(users_dispatcher)
+            self.assertDictEqual(iterations[-1]["1"], expected[case_num])
+
+    def test_ramp_up_2_weigted_user_with_1_fixed_user(self):
+        class User1(User):
+            ...
+
+        class User2(User):
+            ...
+
+        class User3(User):
+            ...
+
+        self.case_handler(
+            cases=[
+                self.RampUpCase(fixed_counts=(1,), weights=(1, 1), target_user_count=3),
+                self.RampUpCase(fixed_counts=(1,), weights=(1, 1), target_user_count=9),
+                self.RampUpCase(fixed_counts=(8,), weights=(1, 1), target_user_count=10),
+                self.RampUpCase(fixed_counts=(2,), weights=(1, 1), target_user_count=1000),
+                self.RampUpCase(fixed_counts=(100,), weights=(1, 1), target_user_count=1000),
+                self.RampUpCase(fixed_counts=(960,), weights=(1, 1), target_user_count=1000),
+                self.RampUpCase(fixed_counts=(9990,), weights=(1, 1), target_user_count=10000),
+                self.RampUpCase(fixed_counts=(100,), weights=(1, 1), target_user_count=100),
+            ],
+            expected=[
+                {"User1": 1, "User2": 1, "User3": 1},
+                {"User1": 1, "User2": 4, "User3": 4},
+                {"User1": 8, "User2": 1, "User3": 1},
+                {"User1": 2, "User2": 499, "User3": 499},
+                {"User1": 100, "User2": 450, "User3": 450},
+                {"User1": 960, "User2": 20, "User3": 20},
+                {"User1": 9990, "User2": 5, "User3": 5},
+                {"User1": 100, "User2": 0, "User3": 0},
+            ],
+            user_classes=[User1, User2, User3],
+        )
+
+    def test_ramp_up_various_count_weigted_and_fixed_users(self):
+        class User1(User):
+            ...
+
+        class User2(User):
+            ...
+
+        class User3(User):
+            ...
+
+        class User4(User):
+            ...
+
+        class User5(User):
+            ...
+
+        self.case_handler(
+            cases=[
+                self.RampUpCase(fixed_counts=(), weights=(1, 1, 1, 1, 1), target_user_count=5),
+                self.RampUpCase(fixed_counts=(1, 1), weights=(1, 1, 1), target_user_count=5),
+                self.RampUpCase(fixed_counts=(5, 2), weights=(1, 1, 1), target_user_count=10),
+                self.RampUpCase(fixed_counts=(9, 1), weights=(5, 3, 2), target_user_count=20),
+                self.RampUpCase(fixed_counts=(996,), weights=(1, 1, 1, 1), target_user_count=1000),
+                self.RampUpCase(fixed_counts=(500,), weights=(2, 1, 1, 1), target_user_count=1000),
+                self.RampUpCase(fixed_counts=(250, 250), weights=(3, 1, 1), target_user_count=1000),
+                self.RampUpCase(fixed_counts=(1, 1, 1, 1), weights=(100,), target_user_count=1000),
+            ],
+            expected=[
+                {"User1": 1, "User2": 1, "User3": 1, "User4": 1, "User5": 1},
+                {"User1": 1, "User2": 1, "User3": 1, "User4": 1, "User5": 1},
+                {"User1": 5, "User2": 2, "User3": 1, "User4": 1, "User5": 1},
+                {"User1": 9, "User2": 1, "User3": 5, "User4": 3, "User5": 2},
+                {"User1": 996, "User2": 1, "User3": 1, "User4": 1, "User5": 1},
+                {"User1": 500, "User2": 200, "User3": 100, "User4": 100, "User5": 100},
+                {"User1": 250, "User2": 250, "User3": 300, "User4": 100, "User5": 100},
+                {"User1": 1, "User2": 1, "User3": 1, "User4": 1, "User5": 996},
+            ],
+            user_classes=[User1, User2, User3, User4, User5],
+        )
+
+    def test_ramp_up_only_fixed_users(self):
+        class User1(User):
+            ...
+
+        class User2(User):
+            ...
+
+        class User3(User):
+            ...
+
+        class User4(User):
+            ...
+
+        class User5(User):
+            ...
+
+        self.case_handler(
+            cases=[
+                self.RampUpCase(fixed_counts=(1, 1, 1, 1, 1), weights=(), target_user_count=5),
+                self.RampUpCase(fixed_counts=(13, 26, 39, 52, 1), weights=(), target_user_count=131),
+                self.RampUpCase(fixed_counts=(10, 10, 10, 10, 10), weights=(), target_user_count=100),
+                self.RampUpCase(fixed_counts=(10, 10, 10, 10, 10), weights=(), target_user_count=50),
+            ],
+            expected=[
+                {"User1": 1, "User2": 1, "User3": 1, "User4": 1, "User5": 1},
+                {"User1": 13, "User2": 26, "User3": 39, "User4": 52, "User5": 1},
+                {"User1": 10, "User2": 10, "User3": 10, "User4": 10, "User5": 10},
+                {"User1": 10, "User2": 10, "User3": 10, "User4": 10, "User5": 10},
+            ],
+            user_classes=[User1, User2, User3, User4, User5],
+        )
+
+    def test_ramp_up_ramp_down_and_rump_up_again_fixed(self):
+        for weights, fixed_counts in [
+            [(1, 1, 1, 1, 1), (100, 100, 50, 50, 200)],
+            [(1, 1, 1, 1, 1), (100, 150, 50, 50, 0)],
+            [(1, 1, 1, 1, 1), (200, 100, 50, 0, 0)],
+            [(1, 1, 1, 1, 1), (200, 100, 0, 0, 0)],
+            [(1, 1, 1, 1, 1), (200, 0, 0, 0, 0)],
+            [(1, 1, 1, 1, 1), (0, 0, 0, 0, 0)],
+        ]:
+
+            u1_weight, u2_weight, u3_weight, u4_weight, u5_weight = weights
+            u1_fixed_count, u2_fixed_count, u3_fixed_count, u4_fixed_count, u5_fixed_count = fixed_counts
+
+            class User1(User):
+                weight = u1_weight
+                fixed_count = u1_fixed_count
+
+            class User2(User):
+                weight = u2_weight
+                fixed_count = u2_fixed_count
+
+            class User3(User):
+                weight = u3_weight
+                fixed_count = u3_fixed_count
+
+            class User4(User):
+                weight = u4_weight
+                fixed_count = u4_fixed_count
+
+            class User5(User):
+                weight = u5_weight
+                fixed_count = u5_fixed_count
+
+            target_user_counts = [sum(fixed_counts), sum(fixed_counts) + 100]
+            down_counts = [0, max(min(fixed_counts) - 1, 0)]
+            user_classes = [User1, User2, User3, User4, User5]
+
+            for worker_count in [3, 5, 9]:
+                workers = [WorkerNode(str(i + 1)) for i in range(worker_count)]
+                users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+
+                for down_to_count in down_counts:
+                    for target_user_count in target_user_counts:
+
+                        # Ramp-up to go to `target_user_count` #########
+
+                        users_dispatcher.new_dispatch(target_user_count=target_user_count, spawn_rate=1)
+                        users_dispatcher._wait_between_dispatch = 0
+
+                        list(users_dispatcher)
+
+                        for user_class in user_classes:
+                            if user_class.fixed_count:
+                                self.assertEqual(
+                                    users_dispatcher._get_user_current_count(user_class.__name__),
+                                    user_class.fixed_count,
+                                )
+
+                        # Ramp-down to go to `down_to_count`
+                        # and ensure the fixed users was decreased too
+
+                        users_dispatcher.new_dispatch(target_user_count=down_to_count, spawn_rate=1)
+                        users_dispatcher._wait_between_dispatch = 0
+
+                        list(users_dispatcher)
+
+                        for user_class in user_classes:
+                            if user_class.fixed_count:
+                                self.assertNotEqual(
+                                    users_dispatcher._get_user_current_count(user_class.__name__),
+                                    user_class.fixed_count,
+                                )
+
+                        # Ramp-up go back to `target_user_count` and ensure
+                        # the fixed users return to their counts
+
+                        users_dispatcher.new_dispatch(target_user_count=target_user_count, spawn_rate=1)
+                        users_dispatcher._wait_between_dispatch = 0
+
+                        list(users_dispatcher)
+
+                        for user_class in user_classes:
+                            if user_class.fixed_count:
+                                self.assertEqual(
+                                    users_dispatcher._get_user_current_count(user_class.__name__),
+                                    user_class.fixed_count,
+                                )
 
 
 def _aggregate_dispatched_users(d: Dict[str, Dict[str, int]]) -> Dict[str, int]:
