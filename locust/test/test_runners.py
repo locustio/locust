@@ -86,7 +86,7 @@ def mocked_rpc():
             return msg.node_id, msg
 
         def close(self):
-            raise RPCError()
+            pass
 
     return MockedRpcServerClient
 
@@ -937,7 +937,6 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertEqual(2, worker.user_count)
             # give time for users to generate stats, and stats to be sent to master
             sleep(0.1)
-            master_env.events.quitting.fire(environment=master_env, reverse=True)
             master.quit()
             sleep(0.1)
             # make sure users are killed
