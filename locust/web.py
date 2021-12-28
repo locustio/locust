@@ -21,7 +21,7 @@ from .log import greenlet_exception_logger
 from .stats import sort_stats
 from . import stats as stats_module, __version__ as version, argument_parser
 from .stats import StatsCSV
-from .user.inspectuser import get_task_ratio_dict
+from .user.inspectuser import get_ratio
 from .util.cache import memoize
 from .util.rounding import proper_round
 from .util.timespan import parse_timespan
@@ -344,6 +344,19 @@ class WebUI:
             self.stats_csv_writer.exceptions_csv(writer)
             return _download_csv_response(data.getvalue(), "exceptions")
 
+        @app.route("/tasks")
+        @self.auth_required_if_enabled
+        def tasks():
+            is_distributed = isinstance(self.environment.runner, MasterRunner)
+            runner = self.environment.runner
+            user_spawned = runner.reported_user_classes_count if is_distributed else runner.user_classes_count
+
+            task_data = {
+                "per_class": get_ratio(self.environment.user_classes, user_spawned, False),
+                "total": get_ratio(self.environment.user_classes, user_spawned, True),
+            }
+            return task_data
+
     def start(self):
         self.greenlet = gevent.spawn(self.start_server)
         self.greenlet.link_exception(greenlet_exception_handler)
@@ -411,12 +424,6 @@ class WebUI:
             worker_count = 0
 
         stats = self.environment.runner.stats
-
-        task_data = {
-            "per_class": get_task_ratio_dict(self.environment.user_classes),
-            "total": get_task_ratio_dict(self.environment.user_classes, total=True),
-        }
-
         extra_options = argument_parser.ui_extra_args_dict()
 
         self.template_args = {
@@ -433,6 +440,6 @@ class WebUI:
             "worker_count": worker_count,
             "is_shape": self.environment.shape_class,
             "stats_history_enabled": options and options.stats_history_enabled,
-            "tasks": dumps(task_data),
+            "tasks": dumps({}),
             "extra_options": extra_options,
         }

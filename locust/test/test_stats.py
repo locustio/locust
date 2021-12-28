@@ -15,10 +15,10 @@ from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_res
 from locust.stats import StatsCSVFileWriter
 from locust.stats import stats_history
 from locust.test.testcases import LocustTestCase
-from locust.user.inspectuser import get_task_ratio_dict
+from locust.user.inspectuser import _get_task_ratio
 
-from .testcases import WebserverTestCase
-from .test_runners import mocked_rpc
+from locust.test.testcases import WebserverTestCase
+from locust.test.test_runners import mocked_rpc
 
 
 _TEST_CSV_STATS_INTERVAL_SEC = 0.2
@@ -794,16 +794,16 @@ class MyTaskSet(TaskSet):
 
 
 class TestInspectUser(unittest.TestCase):
-    def test_get_task_ratio_dict_relative(self):
-        ratio = get_task_ratio_dict([MyTaskSet])
+    def test_get_task_ratio_relative(self):
+        ratio = _get_task_ratio([MyTaskSet], False, 1.0)
         self.assertEqual(1.0, ratio["MyTaskSet"]["ratio"])
         self.assertEqual(0.75, ratio["MyTaskSet"]["tasks"]["root_task"]["ratio"])
         self.assertEqual(0.25, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["ratio"])
         self.assertEqual(0.5, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["tasks"]["task1"]["ratio"])
         self.assertEqual(0.5, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["tasks"]["task2"]["ratio"])
 
-    def test_get_task_ratio_dict_total(self):
-        ratio = get_task_ratio_dict([MyTaskSet], total=True)
+    def test_get_task_ratio_total(self):
+        ratio = _get_task_ratio([MyTaskSet], True, 1.0)
         self.assertEqual(1.0, ratio["MyTaskSet"]["ratio"])
         self.assertEqual(0.75, ratio["MyTaskSet"]["tasks"]["root_task"]["ratio"])
         self.assertEqual(0.25, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["ratio"])

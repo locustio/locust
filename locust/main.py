@@ -20,7 +20,7 @@ from . import stats
 from .stats import print_error_report, print_percentile_stats, print_stats, stats_printer, stats_history
 from .stats import StatsCSV, StatsCSVFileWriter
 from .user import User
-from .user.inspectuser import get_task_ratio_dict, print_task_ratio
+from .user.inspectuser import print_task_ratio, print_task_ratio_json
 from .util.timespan import parse_timespan
 from .exception import AuthCredentialsError
 from .shape import LoadTestShape
@@ -218,18 +218,13 @@ def main():
     if options.show_task_ratio:
         print("\n Task ratio per User class")
         print("-" * 80)
-        print_task_ratio(user_classes)
+        print_task_ratio(user_classes, options.num_users, False)
         print("\n Total task ratio")
         print("-" * 80)
-        print_task_ratio(user_classes, total=True)
+        print_task_ratio(user_classes, options.num_users, True)
         sys.exit(0)
     if options.show_task_ratio_json:
-
-        task_data = {
-            "per_class": get_task_ratio_dict(user_classes),
-            "total": get_task_ratio_dict(user_classes, total=True),
-        }
-        print(dumps(task_data))
+        print_task_ratio_json(user_classes, options.num_users)
         sys.exit(0)
 
     if options.master:

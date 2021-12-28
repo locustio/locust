@@ -4,9 +4,10 @@ import pathlib
 import datetime
 from itertools import chain
 from .stats import sort_stats
-from .user.inspectuser import get_task_ratio_dict
+from .user.inspectuser import get_ratio
 from html import escape
 from json import dumps
+from .runners import MasterRunner
 
 
 def render_template(file, **kwargs):
@@ -62,9 +63,14 @@ def get_html_report(environment, show_download_link=True):
             static_css.append(f.read())
         static_css.extend(["", ""])
 
+    is_distributed = isinstance(environment.runner, MasterRunner)
+    user_spawned = (
+        environment.runner.reported_user_classes_count if is_distributed else environment.runner.user_classes_count
+    )
+
     task_data = {
-        "per_class": get_task_ratio_dict(environment.user_classes),
-        "total": get_task_ratio_dict(environment.user_classes, total=True),
+        "per_class": get_ratio(environment.user_classes, user_spawned, False),
+        "total": get_ratio(environment.user_classes, user_spawned, True),
     }
 
     res = render_template(

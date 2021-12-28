@@ -29,11 +29,12 @@ function _getTasks_div(root, title) {
 }
 
 
-function initTasks() {
-    var tasks = $('#tasks .tasks')
-    var tasksData = tasks.data('tasks');
-    console.log(tasksData);
-    tasks.append(_getTasks_div(tasksData.per_class, 'Ratio per User class'));
-    tasks.append(_getTasks_div(tasksData.total, 'Total ratio'));
+function updateTasks() {
+    $.get('/tasks', function (data) {
+        var tasks = $('#tasks .tasks');
+        tasks.empty();
+        tasks.append(_getTasks_div(data.per_class, 'Ratio per User class'));
+        tasks.append(_getTasks_div(data.total, 'Total ratio'));
+    });
 }
-initTasks();
+updateTasks();
