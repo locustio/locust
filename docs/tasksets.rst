@@ -10,7 +10,7 @@ be executed much like the ones declared directly on a User class.
 
 .. note::
 
-    TaskSets are an advanced feature and only rarely useful. A lot of the time, you're better off
+    TaskSets are an advanced feature and only rarely useful. Most of the time, you're better off
     using regular Python loops and control statements to achieve the same thing. There are a few 
     gotchas as well, the most frequent one being forgetting to call self.interrupt()
 
