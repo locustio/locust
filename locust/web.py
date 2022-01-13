@@ -150,7 +150,7 @@ class WebUI:
                     # Replace < > to guard against XSS
                     environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
                 elif key in parsed_options_dict:
-                    # update the value in environment.parsed_options, but dont change the type. 
+                    # update the value in environment.parsed_options, but dont change the type.
                     # This wont work for parameters that are None
                     parsed_options_dict[key] = type(parsed_options_dict[key])(value)
 
