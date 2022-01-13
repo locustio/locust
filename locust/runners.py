@@ -191,14 +191,13 @@ class Runner:
         # logger.debug("Updating state to '%s', old state was '%s'" % (new_state, self.state))
         self.state = new_state
 
-    def cpu_log_warning(self):
-        """Called at the end of the test to repeat the warning & return the status"""
+    def cpu_log_warning(self) -> bool:
+        """Called at the end of the test"""
         if self.cpu_warning_emitted:
             logger.warning(
                 "CPU usage was too high at some point during the test! See https://docs.locust.io/en/stable/running-locust-distributed.html for how to distribute the load over multiple CPU cores or machines"
             )
-            return True
-        return False
+        return self.cpu_warning_emitted
 
     def spawn_users(self, user_classes_spawn_count: Dict[str, int], wait: bool = False):
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
@@ -660,17 +659,14 @@ class MasterRunner(DistributedRunner):
             warning_emitted = True
         return warning_emitted
 
-    def start(self, user_count: int, spawn_rate: float, **kwargs) -> None:
+    def start(self, user_count: int, spawn_rate: float, wait=False) -> None:
         self.spawning_completed = False
 
         self.target_user_count = user_count
 
         num_workers = len(self.clients.ready) + len(self.clients.running) + len(self.clients.spawning)
         if not num_workers:
-            logger.warning(
-                "You are running in distributed mode but have no worker servers connected. "
-                "Please connect workers prior to swarming."
-            )
+            logger.warning("You can't start a distributed test before at least one worker processes has connected")
             return
 
         for user_class in self.user_classes:
