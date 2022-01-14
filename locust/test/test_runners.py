@@ -1033,6 +1033,102 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             self.assertEqual("stopped", master.state)
 
+    def test_distributed_shape_with_fixed_users(self):
+        """
+        Full integration test that starts both a MasterRunner and three WorkerRunner instances
+        and tests a basic LoadTestShape with scaling up and down users with 'fixed count' users
+        """
+
+        class TestUser(User):
+            @task
+            def my_task(self):
+                pass
+
+        class FixedUser1(User):
+            fixed_count = 1
+
+            @task
+            def my_task(self):
+                pass
+
+        class FixedUser2(User):
+            fixed_count = 11
+
+            @task
+            def my_task(self):
+                pass
+
+        class TestShape(LoadTestShape):
+            def tick(self):
+                run_time = self.get_run_time()
+                if run_time < 1:
+                    return 12, 12
+                elif run_time < 2:
+                    return 36, 24
+                elif run_time < 3:
+                    return 12, 24
+                else:
+                    return None
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            test_shape = TestShape()
+            master_env = Environment(user_classes=[TestUser, FixedUser1, FixedUser2], shape_class=test_shape)
+            master_env.shape_class.reset_time()
+            master = master_env.create_master_runner("*", 0)
+
+            workers = []
+            for _ in range(3):
+                worker_env = Environment(user_classes=[TestUser, FixedUser1, FixedUser2])
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+
+            # Give workers time to connect
+            sleep(0.1)
+
+            # Start a shape test
+            master.start_shape()
+            sleep(1)
+
+            # Ensure workers have connected and started the correct amount of users (fixed is spawn first)
+            for worker in workers:
+                self.assertEqual(4, worker.user_count, "Shape test has not reached stage 1")
+                self.assertEqual(
+                    12, test_shape.get_current_user_count(), "Shape is not seeing stage 1 runner user count correctly"
+                )
+            self.assertDictEqual(master.reported_user_classes_count, {"FixedUser1": 1, "FixedUser2": 11, "TestUser": 0})
+
+            # Ensure new stage with more users has been reached
+            sleep(1)
+            for worker in workers:
+                self.assertEqual(12, worker.user_count, "Shape test has not reached stage 2")
+                self.assertEqual(
+                    36, test_shape.get_current_user_count(), "Shape is not seeing stage 2 runner user count correctly"
+                )
+            self.assertDictEqual(
+                master.reported_user_classes_count, {"FixedUser1": 1, "FixedUser2": 11, "TestUser": 24}
+            )
+
+            # Ensure new stage with less users has been reached
+            # and expected count of the fixed users is present
+            sleep(1)
+            for worker in workers:
+                self.assertEqual(4, worker.user_count, "Shape test has not reached stage 3")
+                self.assertEqual(
+                    12, test_shape.get_current_user_count(), "Shape is not seeing stage 3 runner user count correctly"
+                )
+            self.assertDictEqual(master.reported_user_classes_count, {"FixedUser1": 1, "FixedUser2": 11, "TestUser": 0})
+
+            # Ensure test stops at the end
+            sleep(0.5)
+            for worker in workers:
+                self.assertEqual(0, worker.user_count, "Shape test has not stopped")
+                self.assertEqual(
+                    0, test_shape.get_current_user_count(), "Shape is not seeing stopped runner user count correctly"
+                )
+            self.assertDictEqual(master.reported_user_classes_count, {"FixedUser1": 0, "FixedUser2": 0, "TestUser": 0})
+
+            self.assertEqual(STATE_STOPPED, master.state)
+
     def test_distributed_shape_with_stop_timeout(self):
         """
         Full integration test that starts both a MasterRunner and five WorkerRunner instances

@@ -248,6 +248,7 @@ class UsersDispatcher(Iterator):
         current_user_count_target = min(
             self._current_user_count + self._user_count_per_dispatch_iteration, self._target_user_count
         )
+
         for user in self._user_generator:
             if not user:
                 self._no_user_to_spawn = True
@@ -309,6 +310,8 @@ class UsersDispatcher(Iterator):
         user_count = 0
         while user_count < target_user_count:
             user = next(user_gen)
+            if not user:
+                break
             worker_node = next(worker_gen)
             users_on_workers[worker_node.id][user] += 1
             user_count += 1
@@ -366,18 +369,25 @@ class UsersDispatcher(Iterator):
         # Spawn users
         while True:
             if self._try_dispatch_fixed:
+                self._try_dispatch_fixed = False
+                current_fixed_users_count = {u: self._get_user_current_count(u) for u in fixed_users}
                 spawned_classes = set()
-                while True:
+                while len(spawned_classes) != len(fixed_users):
                     user_name = next(cycle_fixed_gen)
                     if not user_name:
                         break
-                    if self._get_user_current_count(user_name) >= fixed_users[user_name].fixed_count:
-                        spawned_classes.add(user_name)
-                    else:
+
+                    if current_fixed_users_count[user_name] < fixed_users[user_name].fixed_count:
+                        current_fixed_users_count[user_name] += 1
+                        if current_fixed_users_count[user_name] == fixed_users[user_name].fixed_count:
+                            spawned_classes.add(user_name)
                         yield user_name
-                    if len(spawned_classes) == len(fixed_users):
-                        break
-                self._try_dispatch_fixed = False
+
+                        # 'self._try_dispatch_fixed' was changed outhere,  we have to recalculate current count
+                        if self._try_dispatch_fixed:
+                            current_fixed_users_count = {u: self._get_user_current_count(u) for u in fixed_users}
+                            spawned_classes.clear()
+                            self._try_dispatch_fixed = False
 
             yield next(cycle_weighted_gen)
 
