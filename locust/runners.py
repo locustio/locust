@@ -869,7 +869,13 @@ class MasterRunner(DistributedRunner):
             try:
                 client_id, msg = self.server.recv_from_client()
             except RPCError as e:
-                logger.error("RPCError found when receiving from client: %s" % (e))
+                if self.clients.ready:
+                    logger.error("RPCError found when receiving from client: %s" % (e))
+                else:
+                    logger.debug(
+                        "RPCError found when receiving from client: %s (but no clients were expected to be connected anyway)"
+                        % (e)
+                    )
                 self.connection_broken = True
                 gevent.sleep(FALLBACK_INTERVAL)
                 continue
