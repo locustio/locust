@@ -821,6 +821,8 @@ class MasterRunner(DistributedRunner):
             self.server.send_to_client(Message("quit", None, client.id))
         gevent.sleep(0.5)  # wait for final stats report from all workers
         self.server.close()
+        # ensure heartbeat_worker doesnt try to re-establish connection to workers and throw lots of exceptions
+        self.clients._worker_nodes = {}
         self.greenlet.kill(block=True)
 
     def check_stopped(self):
@@ -867,7 +869,13 @@ class MasterRunner(DistributedRunner):
             try:
                 client_id, msg = self.server.recv_from_client()
             except RPCError as e:
-                logger.error("RPCError found when receiving from client: %s" % (e))
+                if self.clients.ready:
+                    logger.error("RPCError found when receiving from client: %s" % (e))
+                else:
+                    logger.debug(
+                        "RPCError found when receiving from client: %s (but no clients were expected to be connected anyway)"
+                        % (e)
+                    )
                 self.connection_broken = True
                 gevent.sleep(FALLBACK_INTERVAL)
                 continue
