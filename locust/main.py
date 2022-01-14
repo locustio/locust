@@ -426,7 +426,7 @@ def main():
         """
         Shut down locust by firing quitting event, printing/writing stats and exiting
         """
-        logger.info("Running teardowns...")
+        logger.debug("Running teardowns...")
 
         if input_listener_greenlet is not None:
             input_listener_greenlet.kill(block=False)
@@ -443,12 +443,12 @@ def main():
         else:
             code = 0
 
-        logger.info("Shutting down (exit code %s), bye." % code)
+        logger.info("Shutting down (exit code %s)" % code)
         if stats_printer_greenlet is not None:
             stats_printer_greenlet.kill(block=False)
         if headless_master_greenlet is not None:
             headless_master_greenlet.kill(block=False)
-        logger.info("Cleaning up runner...")
+        logger.debug("Cleaning up runner...")
         if runner is not None:
             runner.quit()
 

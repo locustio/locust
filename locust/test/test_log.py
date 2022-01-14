@@ -79,7 +79,7 @@ class TestLoggingOptions(LocustTestCase):
             output,
         )
         self.assertIn(
-            "%s/INFO/locust.main: Shutting down (exit code 0), bye." % socket.gethostname(),
+            "%s/INFO/locust.main: Shutting down (exit code 0)" % socket.gethostname(),
             output,
         )
         self.assertIn(
@@ -191,7 +191,7 @@ class TestLoggingOptions(LocustTestCase):
             log_content,
         )
         self.assertIn(
-            "%s/INFO/locust.main: Shutting down (exit code 0), bye." % socket.gethostname(),
+            "%s/INFO/locust.main: Shutting down (exit code 0)" % socket.gethostname(),
             log_content,
         )
         # check that message of custom logger also went into log file

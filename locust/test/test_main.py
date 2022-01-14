@@ -279,7 +279,7 @@ class LocustProcessIntegrationTest(TestCase):
             stderr = stderr.decode("utf-8")
             self.assertIn("Starting web interface at", stderr)
             self.assertIn("Starting Locust", stderr)
-            self.assertIn("Shutting down (exit code 42), bye", stderr)
+            self.assertIn("Shutting down (exit code 42)", stderr)
             self.assertEqual(42, proc.returncode)
 
     def test_webserver(self):
@@ -302,7 +302,7 @@ class LocustProcessIntegrationTest(TestCase):
             stderr = stderr.decode("utf-8")
             self.assertIn("Starting web interface at", stderr)
             self.assertIn("Starting Locust", stderr)
-            self.assertIn("Shutting down (exit code 0), bye", stderr)
+            self.assertIn("Shutting down (exit code 0)", stderr)
             self.assertEqual(0, proc.returncode)
 
     def test_default_headless_spawn_options(self):
@@ -353,7 +353,7 @@ class LocustProcessIntegrationTest(TestCase):
             stderr = stderr.decode("utf-8")
             self.assertIn("Starting Locust", stderr)
             self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
-            self.assertIn("Shutting down (exit code 0), bye", stderr)
+            self.assertIn("Shutting down (exit code 0)", stderr)
             self.assertEqual(0, proc.returncode)
 
     def test_default_headless_spawn_options_with_shape(self):
@@ -618,7 +618,7 @@ class LocustProcessIntegrationTest(TestCase):
             self.assertIn("Test task is running", output)
             # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
             self.assertRegex(output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
-            self.assertIn("Shutting down (exit code 0), bye.", output)
+            self.assertIn("Shutting down (exit code 0)", output)
             self.assertEqual(0, proc.returncode)
 
     def test_html_report_option(self):
