@@ -67,9 +67,9 @@ class Environment:
         self.shape_class = shape_class
         """A shape class to control the shape of the load test"""
         self.tags = tags
-        """If set, only tasks that are tagged by tags in this list will be executed"""
+        """If set, only tasks that are tagged by tags in this list will be executed. Leave this as None to use the one from parsed_options"""
         self.exclude_tags = exclude_tags
-        """If set, only tasks that aren't tagged by tags in this list will be executed"""
+        """If set, only tasks that aren't tagged by tags in this list will be executed. Leave this as None to use the one from parsed_options"""
         self.stats = RequestStats()
         """Reference to RequestStats instance"""
         self.host = host
@@ -88,8 +88,6 @@ class Environment:
         """
         self.parsed_options = parsed_options
         """Reference to the parsed command line options (used to pre-populate fields in Web UI). May be None when using Locust as a library"""
-
-        self._filter_tasks_by_tags()
 
         self._remove_user_classes_with_weight_zero()
 
@@ -195,13 +193,26 @@ class Environment:
         Filter the tasks on all the user_classes recursively, according to the tags and
         exclude_tags attributes
         """
+        if getattr(self, "_tasks_filtered", False):
+            return  # only filter once
+        self._tasks_filtered = True
+
         if self.tags is not None:
-            self.tags = set(self.tags)
+            tags = set(self.tags)
+        elif self.parsed_options is not None:
+            tags = set(self.parsed_options.tags)
+        else:
+            tags = None
+
         if self.exclude_tags is not None:
-            self.exclude_tags = set(self.exclude_tags)
+            exclude_tags = set(self.exclude_tags)
+        elif self.parsed_options:
+            exclude_tags = set(self.parsed_options.exclude_tags)
+        else:
+            exclude_tags = None
 
         for user_class in self.user_classes:
-            filter_tasks_by_tags(user_class, self.tags, self.exclude_tags)
+            filter_tasks_by_tags(user_class, tags, exclude_tags)
 
     def _remove_user_classes_with_weight_zero(self):
         """

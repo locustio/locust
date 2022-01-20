@@ -311,6 +311,7 @@ class Runner:
             self.exceptions = {}
             self.cpu_warning_emitted = False
             self.worker_cpu_warning_emitted = False
+            self.environment._filter_tasks_by_tags()
             self.environment.events.test_start.fire(environment=self.environment)
 
         if wait and user_count - self.user_count > spawn_rate:
@@ -694,6 +695,7 @@ class MasterRunner(DistributedRunner):
         if self.state != STATE_RUNNING and self.state != STATE_SPAWNING:
             self.stats.clear_all()
             self.exceptions = {}
+            self.environment._filter_tasks_by_tags()
             self.environment.events.test_start.fire(environment=self.environment)
             if self.environment.shape_class:
                 self.environment.shape_class.reset_time()
@@ -1085,6 +1087,7 @@ class WorkerRunner(DistributedRunner):
             self.exceptions = {}
             self.cpu_warning_emitted = False
             self.worker_cpu_warning_emitted = False
+            self.environment._filter_tasks_by_tags()
             self.environment.events.test_start.fire(environment=self.environment)
 
         self.worker_state = STATE_SPAWNING
@@ -1164,8 +1167,8 @@ class WorkerRunner(DistributedRunner):
                     k: v
                     for k, v in job["parsed_options"].items()
                     if k not in argument_parser.default_args_dict()
-                    # expect_workers is sometimes needed on workers, e.g. in locust-plugins global rps limiter
-                    or k == "expect_workers"
+                    # these settings are sometimes needed on workers
+                    or k in ["expect_workers", "tags", "exclude_tags"]
                 }
                 vars(self.environment.parsed_options).update(custom_args_from_master)
 
