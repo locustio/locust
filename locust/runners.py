@@ -1161,7 +1161,11 @@ class WorkerRunner(DistributedRunner):
                     argument_parser.setup_parser_arguments(default_parser)
                     self.environment.parsed_options = default_parser.parse(args=[])
                 custom_args_from_master = {
-                    k: v for k, v in job["parsed_options"].items() if k not in argument_parser.default_args_dict()
+                    k: v
+                    for k, v in job["parsed_options"].items()
+                    if k not in argument_parser.default_args_dict()
+                    # expect_workers is sometimes needed on workers, e.g. in locust-plugins global rps limiter
+                    or k == "expect_workers"
                 }
                 vars(self.environment.parsed_options).update(custom_args_from_master)
 
