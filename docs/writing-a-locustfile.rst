@@ -180,7 +180,7 @@ For example, the following User class would sleep for one second, then two, then
         ...
 
 
-weight attribute
+weight and fixed_count attributes
 ----------------
 
 If more than one user class exists in the file, and no user classes are specified on the command line,
@@ -202,6 +202,25 @@ classes. Say for example, web users are three times more likely than mobile user
 
     class MobileUser(User):
         weight = 1
+        ...
+
+Also you can set the :py:attr:`fixed_count <locust.User.fixed_count>` attribute.
+In this case the weight property will be ignored and the exact count users will be spawned.
+These users are spawned first. In the below example the only instance of AdminUser
+will be spawned to make some specific work with more accurate control
+of request count independently of total user count.
+
+.. code-block:: python
+
+    class AdminUser(User):
+        wait_time = constant(600)
+        fixed_count = 1
+        
+        @task
+        def restart_app(self):
+            ...
+
+    class WebUser(User):
         ...
 
 
