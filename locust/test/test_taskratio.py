@@ -1,7 +1,7 @@
 import unittest
 
 from locust.user import User, TaskSet, task
-from locust.user.inspectuser import get_task_ratio_dict
+from locust.user.inspectuser import get_ratio, _get_task_ratio
 
 
 class TestTaskRatio(unittest.TestCase):
@@ -24,7 +24,7 @@ class TestTaskRatio(unittest.TestCase):
         class MyUser(User):
             tasks = [Tasks]
 
-        ratio_dict = get_task_ratio_dict(Tasks.tasks, total=True)
+        ratio_dict = _get_task_ratio(Tasks.tasks, True, 1.0)
 
         self.assertEqual(
             {
@@ -52,7 +52,7 @@ class TestTaskRatio(unittest.TestCase):
             weight = 3
             tasks = [Tasks]
 
-        ratio_dict = get_task_ratio_dict([UnlikelyUser, MoreLikelyUser], total=True)
+        ratio_dict = get_ratio([UnlikelyUser, MoreLikelyUser], {"UnlikelyUser": 1, "MoreLikelyUser": 3}, True)
 
         self.assertDictEqual(
             {

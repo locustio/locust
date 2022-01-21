@@ -4,7 +4,7 @@ import math
 import time
 from collections.abc import Iterator
 from operator import attrgetter
-from typing import Dict, Generator, List, TYPE_CHECKING, Tuple, Type
+from typing import Dict, Generator, List, TYPE_CHECKING, Optional, Tuple, Type
 
 import gevent
 import typing
@@ -98,6 +98,10 @@ class UsersDispatcher(Iterator):
 
         self._rebalance = False
 
+        self._try_dispatch_fixed = True
+
+        self._no_user_to_spawn = False
+
     @property
     def dispatch_in_progress(self):
         return self._dispatch_in_progress
@@ -132,6 +136,9 @@ class UsersDispatcher(Iterator):
                 if self._rebalance:
                     self._rebalance = False
                     yield self._users_on_workers
+                if self._no_user_to_spawn:
+                    self._no_user_to_spawn = False
+                    break
 
         while self._current_user_count > self._target_user_count:
             with self._wait_between_dispatch_iteration_context():
@@ -241,13 +248,19 @@ class UsersDispatcher(Iterator):
         current_user_count_target = min(
             self._current_user_count + self._user_count_per_dispatch_iteration, self._target_user_count
         )
+
         for user in self._user_generator:
+            if not user:
+                self._no_user_to_spawn = True
+                break
             worker_node = next(self._worker_node_generator)
             self._users_on_workers[worker_node.id][user] += 1
             self._current_user_count += 1
             self._active_users.append((worker_node, user))
             if self._current_user_count >= current_user_count_target:
-                return self._users_on_workers
+                break
+
+        return self._users_on_workers
 
     def _remove_users_from_workers(self) -> Dict[str, Dict[str, int]]:
         """Remove users from the workers until the target number of users is reached for the current dispatch iteration
@@ -264,8 +277,16 @@ class UsersDispatcher(Iterator):
                 return self._users_on_workers
             self._users_on_workers[worker_node.id][user] -= 1
             self._current_user_count -= 1
+            self._try_dispatch_fixed = True
             if self._current_user_count == 0 or self._current_user_count <= current_user_count_target:
                 return self._users_on_workers
+
+    def _get_user_current_count(self, user: str) -> int:
+        count = 0
+        for users_on_node in self._users_on_workers.values():
+            count += users_on_node.get(user, 0)
+
+        return count
 
     def _distribute_users(
         self, target_user_count: int
@@ -289,6 +310,8 @@ class UsersDispatcher(Iterator):
         user_count = 0
         while user_count < target_user_count:
             user = next(user_gen)
+            if not user:
+                break
             worker_node = next(worker_gen)
             users_on_workers[worker_node.id][user] += 1
             user_count += 1
@@ -307,26 +330,66 @@ class UsersDispatcher(Iterator):
         weighted round-robin algorithm, we'd get AAAAABAAAAAB which would make the distribution
         less accurate during ramp-up/down.
         """
-        # Normalize the weights so that the smallest weight will be equal to "target_min_weight".
-        # The value "2" was experimentally determined because it gave a better distribution especially
-        # when dealing with weights which are close to each others, e.g. 1.5, 2, 2.4, etc.
-        target_min_weight = 2
-        min_weight = min(u.weight for u in self._user_classes)
-        normalized_weights = [
-            (user_class.__name__, round(target_min_weight * user_class.weight / min_weight))
-            for user_class in self._user_classes
-        ]
-        gen = smooth(normalized_weights)
-        # Instead of calling `gen()` for each user, we cycle through a generator of fixed-length
-        # `generation_length_to_get_proper_distribution`. Doing so greatly improves performance because
-        # we only ever need to call `gen()` a relatively small number of times. The length of this generator
-        # is chosen as the sum of the normalized weights. So, for users A, B, C of weights 2, 5, 6, the length is
-        # 2 + 5 + 6 = 13 which would yield the distribution `CBACBCBCBCABC` that gets repeated over and over
-        # until the target user count is reached.
-        generation_length_to_get_proper_distribution = sum(
-            normalized_weight[1] for normalized_weight in normalized_weights
-        )
-        yield from itertools.cycle(gen() for _ in range(generation_length_to_get_proper_distribution))
+
+        def infinite_cycle_gen(users: List[Tuple[User, int]]) -> Generator[Optional[str], None, None]:
+            if not users:
+                return itertools.cycle([None])
+
+            # Normalize the weights so that the smallest weight will be equal to "target_min_weight".
+            # The value "2" was experimentally determined because it gave a better distribution especially
+            # when dealing with weights which are close to each others, e.g. 1.5, 2, 2.4, etc.
+            target_min_weight = 2
+
+            # 'Value' here means weight or fixed count
+            normalized_values = [
+                (
+                    user.__name__,
+                    round(target_min_weight * value / min([u[1] for u in users])),
+                )
+                for user, value in users
+            ]
+            generation_length_to_get_proper_distribution = sum(
+                normalized_val[1] for normalized_val in normalized_values
+            )
+            gen = smooth(normalized_values)
+
+            # Instead of calling `gen()` for each user, we cycle through a generator of fixed-length
+            # `generation_length_to_get_proper_distribution`. Doing so greatly improves performance because
+            # we only ever need to call `gen()` a relatively small number of times. The length of this generator
+            # is chosen as the sum of the normalized weights. So, for users A, B, C of weights 2, 5, 6, the length is
+            # 2 + 5 + 6 = 13 which would yield the distribution `CBACBCBCBCABC` that gets repeated over and over
+            # until the target user count is reached.
+            return itertools.cycle(gen() for _ in range(generation_length_to_get_proper_distribution))
+
+        fixed_users = {u.__name__: u for u in self._user_classes if u.fixed_count}
+
+        cycle_fixed_gen = infinite_cycle_gen([(u, u.fixed_count) for u in fixed_users.values()])
+        cycle_weighted_gen = infinite_cycle_gen([(u, u.weight) for u in self._user_classes if not u.fixed_count])
+
+        # Spawn users
+        while True:
+            if self._try_dispatch_fixed:
+                self._try_dispatch_fixed = False
+                current_fixed_users_count = {u: self._get_user_current_count(u) for u in fixed_users}
+                spawned_classes = set()
+                while len(spawned_classes) != len(fixed_users):
+                    user_name = next(cycle_fixed_gen)
+                    if not user_name:
+                        break
+
+                    if current_fixed_users_count[user_name] < fixed_users[user_name].fixed_count:
+                        current_fixed_users_count[user_name] += 1
+                        if current_fixed_users_count[user_name] == fixed_users[user_name].fixed_count:
+                            spawned_classes.add(user_name)
+                        yield user_name
+
+                        # 'self._try_dispatch_fixed' was changed outhere,  we have to recalculate current count
+                        if self._try_dispatch_fixed:
+                            current_fixed_users_count = {u: self._get_user_current_count(u) for u in fixed_users}
+                            spawned_classes.clear()
+                            self._try_dispatch_fixed = False
+
+            yield next(cycle_weighted_gen)
 
     @staticmethod
     def _fast_users_on_workers_copy(users_on_workers: Dict[str, Dict[str, int]]) -> Dict[str, Dict[str, int]]:

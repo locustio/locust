@@ -97,6 +97,13 @@ class User(object, metaclass=UserMeta):
     weight = 1
     """Probability of user class being chosen. The higher the weight, the greater the chance of it being chosen."""
 
+    fixed_count = 0
+    """
+    If the value > 0, the weight property will be ignored and the 'fixed_count'-instances will be spawned.
+    These Users are spawned first. If the total target count (specified by the --users arg) is not enougth
+    to spawn all instances of each User class with the defined property, the final count of each User is undefined.
+    """
+
     abstract = True
     """If abstract is True, the class is meant to be subclassed, and locust will not spawn users of this class during a test."""
 

@@ -431,10 +431,14 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
 
     other_group = parser.add_argument_group("Other options")
     other_group.add_argument(
-        "--show-task-ratio", action="store_true", help="Print table of the User classes' task execution ratio"
+        "--show-task-ratio",
+        action="store_true",
+        help="Print table of the User classes' task execution ratio. Use this with non-zero --user option if some classes define non-zero fixed_count property.",
     )
     other_group.add_argument(
-        "--show-task-ratio-json", action="store_true", help="Print json data of the User classes' task execution ratio"
+        "--show-task-ratio-json",
+        action="store_true",
+        help="Print json data of the User classes' task execution ratio. Use this with non-zero --user option if some classes define non-zero fixed_count property.",
     )
     # optparse gives you --version but we have to do it ourselves to get -V too
     other_group.add_argument(

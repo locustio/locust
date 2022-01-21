@@ -7,7 +7,7 @@ User class
 ============
 
 .. autoclass:: locust.User
-    :members: wait_time, tasks, weight, abstract, on_start, on_stop, wait, context, environment
+    :members: wait_time, tasks, weight, fixed_count, abstract, on_start, on_stop, wait, context, environment
 
 HttpUser class
 ================

@@ -621,6 +621,64 @@ class LocustProcessIntegrationTest(TestCase):
             self.assertIn("Shutting down (exit code 0)", output)
             self.assertEqual(0, proc.returncode)
 
+    def test_spawning_with_fixed(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+        from locust import User, task, constant
+
+        class User1(User):
+            fixed_count = 2
+            wait_time = constant(1)
+
+            @task
+            def t(self):
+                print("Test task is running")
+
+        class User2(User):
+            wait_time = constant(1)
+            @task
+            def t(self):
+                print("Test task is running")
+
+        class User3(User):
+            wait_time = constant(1)
+            @task
+            def t(self):
+                print("Test task is running")
+        """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                " ".join(
+                    [
+                        "locust",
+                        "-f",
+                        mocked.file_path,
+                        "--headless",
+                        "--run-time",
+                        "5s",
+                        "-u",
+                        "10",
+                        "-r",
+                        "10",
+                        "--loglevel",
+                        "INFO",
+                    ]
+                ),
+                stderr=STDOUT,
+                stdout=PIPE,
+                shell=True,
+            )
+
+            output = proc.communicate()[0].decode("utf-8")
+            self.assertIn("Ramping to 10 users at a rate of 10.00 per second", output)
+            self.assertIn('All users spawned: {"User1": 2, "User2": 4, "User3": 4} (10 total users)', output)
+            self.assertIn("Test task is running", output)
+            # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
+            self.assertRegex(output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
+            self.assertIn("Shutting down (exit code 0)", output)
+            self.assertEqual(0, proc.returncode)
+
     def test_html_report_option(self):
         with mock_locustfile() as mocked:
             with temporary_file("", suffix=".html") as html_report_file_path:
