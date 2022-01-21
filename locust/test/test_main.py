@@ -777,7 +777,6 @@ class SecondUser(HttpUser):
         print("task2")
 """
         )
-        print(content)
         with mock_locustfile(content=content) as mocked:
             proc = subprocess.Popen(
                 [
