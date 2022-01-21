@@ -770,7 +770,7 @@ class SecondUser(HttpUser):
     @task
     def task1(self):
         print("task1")
-    
+
     @tag("tag2")
     @task
     def task2(self):
