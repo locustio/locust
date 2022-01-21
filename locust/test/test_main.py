@@ -712,7 +712,6 @@ def on_test_stop(environment, **kwargs):
         print("test_stop on worker")
 """
         )
-        print(content)
         with mock_locustfile(content=content) as mocked:
             proc = subprocess.Popen(
                 [
