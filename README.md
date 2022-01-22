@@ -9,6 +9,8 @@
 
 Locust is an easy to use, scriptable and scalable performance testing tool. You define the behaviour of your users in regular Python code, instead of being constrained by a UI or domain specific language that only pretends to be real code. This makes Locust infinitely expandable and very developer friendly.
 
+To get started, check out the [documentation](https://docs.locust.io)
+
 ## Features
 
 #### Write user test scenarios in plain old Python
