@@ -108,8 +108,6 @@ def create_environment(user_classes, options, events=None, shape_class=None, loc
         locustfile=locustfile,
         user_classes=user_classes,
         shape_class=shape_class,
-        tags=options.tags,
-        exclude_tags=options.exclude_tags,
         events=events,
         host=options.host,
         reset_stats=options.reset_stats,

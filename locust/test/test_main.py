@@ -770,7 +770,6 @@ def on_test_stop(environment, **kwargs):
         print("test_stop on worker")
 """
         )
-        print(content)
         with mock_locustfile(content=content) as mocked:
             proc = subprocess.Popen(
                 [
@@ -813,5 +812,70 @@ def on_test_stop(environment, **kwargs):
             self.assertIn("test_stop on master", stdout)
             self.assertIn("test_stop on worker", stdout_worker)
             self.assertIn("test_start on worker", stdout_worker)
+            self.assertEqual(0, proc.returncode)
+            self.assertEqual(0, proc_worker.returncode)
+
+    def test_distributed_tags(self):
+        content = (
+            MOCK_LOCUSTFILE_CONTENT
+            + """
+from locust import tag
+class SecondUser(HttpUser):
+    host = "http://127.0.0.1:8089"
+    wait_time = between(0, 0.1)
+    @tag("tag1")
+    @task
+    def task1(self):
+        print("task1")
+
+    @tag("tag2")
+    @task
+    def task2(self):
+        print("task2")
+"""
+        )
+        with mock_locustfile(content=content) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "--master",
+                    "--expect-workers",
+                    "1",
+                    "-t",
+                    "1",
+                    "-u",
+                    "2",
+                    "--exit-code-on-error",
+                    "0",
+                    "-L",
+                    "DEBUG",
+                    "--tags",
+                    "tag1",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+            )
+            proc_worker = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--worker",
+                    "-L",
+                    "DEBUG",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+            )
+            stdout, stderr = proc.communicate()
+            stderr = stderr.decode("utf-8")
+            stdout = stdout.decode("utf-8")
+            stdout_worker, stderr_worker = proc_worker.communicate()
+            stdout_worker = stdout_worker.decode("utf-8")
+            self.assertIn("task1", stdout_worker)
+            self.assertNotIn("task2", stdout_worker)
             self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
