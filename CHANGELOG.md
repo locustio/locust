@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.6.0](https://github.com/locustio/locust/tree/2.6.0) (2022-01-23)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.5.1...2.6.0)
+
+**Fixed bugs:**
+
+- Quitting master doesnt prevent its heartbeat\_worker greenlet from trying to re-establish connections [\#1971](https://github.com/locustio/locust/issues/1971)
+- Docs: Missing locustfile.py in code structure example [\#1959](https://github.com/locustio/locust/issues/1959)
+- Error when setting multiple host values [\#1957](https://github.com/locustio/locust/issues/1957)
+
+**Closed issues:**
+
+- Possibility to set the exact number of users to spawn \(instead weight\) [\#1939](https://github.com/locustio/locust/issues/1939)
+
+**Merged pull requests:**
+
+- Pass tags and exclude-tags to workers.  [\#1976](https://github.com/locustio/locust/pull/1976) ([cyberw](https://github.com/cyberw))
+- WorkerRunner: read --expect-workers from job parameters [\#1975](https://github.com/locustio/locust/pull/1975) ([cyberw](https://github.com/cyberw))
+- Update README.md [\#1974](https://github.com/locustio/locust/pull/1974) ([eltociear](https://github.com/eltociear))
+- Clean up some logging messages [\#1973](https://github.com/locustio/locust/pull/1973) ([cyberw](https://github.com/cyberw))
+- Ensure heartbeat\_worker doesnt try to re-establish connection to workers when quit has been called [\#1972](https://github.com/locustio/locust/pull/1972) ([cyberw](https://github.com/cyberw))
+- fixed\_count: ability to spawn a specific number of users \(as opposed to just using weights\) [\#1964](https://github.com/locustio/locust/pull/1964) ([EzR1d3r](https://github.com/EzR1d3r))
+- Update running-cloud-integration.rst [\#1958](https://github.com/locustio/locust/pull/1958) ([DieBauer](https://github.com/DieBauer))
+- fix master runner not close rpc server [\#1935](https://github.com/locustio/locust/pull/1935) ([lizhaode](https://github.com/lizhaode))
+
 ## [2.5.1](https://github.com/locustio/locust/tree/2.5.1) (2021-12-09)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.5.0...2.5.1)
@@ -10,7 +35,16 @@
 
 **Merged pull requests:**
 
-- Github changelog generator is broken, so the PR:s will only become visible on the next release
+- Fix running the web UI with class defined hosts [\#1956](https://github.com/locustio/locust/pull/1956) ([chaen](https://github.com/chaen))
+- Throw exception when calling response.success\(\)/.failure\(\) if with-block has not been entered [\#1955](https://github.com/locustio/locust/pull/1955) ([cyberw](https://github.com/cyberw))
+- Gracefully fail to resize stats command line output if terminal doesnt support it, instead of crashing [\#1951](https://github.com/locustio/locust/pull/1951) ([cyberw](https://github.com/cyberw))
+- Stop declaring "fake" class level variables in Environment, User and StatsEntry [\#1948](https://github.com/locustio/locust/pull/1948) ([cyberw](https://github.com/cyberw))
+- fix misspellings in doc \(mostly "it's"\) [\#1945](https://github.com/locustio/locust/pull/1945) ([deronnax](https://github.com/deronnax))
+- Fixed typo in writing-a-locustfile.rst [\#1943](https://github.com/locustio/locust/pull/1943) ([Maffey](https://github.com/Maffey))
+- Fix docs issues from distributed execution with IaC [\#1934](https://github.com/locustio/locust/pull/1934) ([marcosborges](https://github.com/marcosborges))
+- New Provisioning Example for Distributed Execution Using IaC - Terraform/AWS/EC2 [\#1933](https://github.com/locustio/locust/pull/1933) ([marcosborges](https://github.com/marcosborges))
+- Ensure terminal is restored at exit [\#1932](https://github.com/locustio/locust/pull/1932) ([cyberw](https://github.com/cyberw))
+- Fix issue \#1915 [\#1916](https://github.com/locustio/locust/pull/1916) ([EzR1d3r](https://github.com/EzR1d3r))
 
 ## [2.5.0](https://github.com/locustio/locust/tree/2.5.0) (2021-11-05)
 
