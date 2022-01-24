@@ -11,7 +11,7 @@ Install Locust:
 
     $ pip3 install locust
 
-Validate your installation. If this doesnt work, `check the wiki <https://github.com/locustio/locust/wiki/Installation>`_ for some possible solutions.
+Validate your installation:
 
 .. code-block:: console
     :substitutions:
@@ -19,19 +19,25 @@ Validate your installation. If this doesnt work, `check the wiki <https://github
     $ locust -V
     locust |version|
 
-Great! Now we're ready to create our first test: :ref:`quickstart`
+Now it is time to :ref:`create your first test! <quickstart>`
 
-Dev builds
-----------
+
+.. note::
+
+    If you have any issues installing, check `the wiki <https://github.com/locustio/locust/wiki/Installation>`_ for possible solutions.
+
+Pre-release builds
+------------------
+
 If you need the latest and greatest version of Locust and cannot wait for the next proper release, you can install a dev build like this:
 
 .. code-block:: console
 
     $ pip3 install -U --pre locust
 
-Dev builds are published every time a branch is merged into master.
+Pre-release builds are published every time a branch/PR is merged into master.
 
 Install for development
 -----------------------
 
-If you want to modify Locust or contribute to the project, see :ref:`developing-locust`.
+If you want to modify Locust, or contribute to the project, see :ref:`developing-locust`.
