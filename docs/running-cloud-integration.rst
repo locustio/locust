@@ -22,9 +22,9 @@ The prerequisites are:
 More information
 ===================
 
-- `Example <https://github.com/locustio/locust/blob/master/examples/terraform/aws/README.md>`
+- `Example <https://github.com/locustio/locust/blob/master/examples/terraform/aws/README.md>`_
 
-- `Terraform aws-get-started >> install-terraform-on-linux <https://learn.hashicorp.com/tutorials/terraform/install-cli?in=terraform/aws-get-started#install-terraform-on-linux>`
+- `Terraform aws-get-started >> install-terraform-on-linux <https://learn.hashicorp.com/tutorials/terraform/install-cli?in=terraform/aws-get-started#install-terraform-on-linux>`_
 
-- `Terraform module aws loadtest distributed <https://registry.terraform.io/modules/marcosborges/loadtest-distribuited/aws/latest>`
+- `Terraform module aws loadtest distributed <https://registry.terraform.io/modules/marcosborges/loadtest-distribuited/aws/latest>`_
 
