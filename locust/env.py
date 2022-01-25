@@ -221,7 +221,9 @@ class Environment:
         if len(self.user_classes) == 0:
             # Preserve previous behaviour that allowed no user classes to be specified.
             return
-        filtered_user_classes = [user_class for user_class in self.user_classes if user_class.weight > 0]
+        filtered_user_classes = [
+            user_class for user_class in self.user_classes if user_class.weight > 0 or user_class.fixed_count > 0
+        ]
         if len(filtered_user_classes) == 0:
             # TODO: Better exception than `ValueError`?
             raise ValueError("There are no users with weight > 0.")
