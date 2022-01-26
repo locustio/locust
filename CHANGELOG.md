@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.6.1](https://github.com/locustio/locust/tree/2.6.1) (2022-01-26)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.6.0...2.6.1)
+
+**Merged pull requests:**
+
+- Fire requests through Environment.events [\#1982](https://github.com/locustio/locust/pull/1982) ([BonelessPi](https://github.com/BonelessPi))
+- Fix docs with underscore postfix for hyperlink? [\#1979](https://github.com/locustio/locust/pull/1979) ([jeroenhendricksen](https://github.com/jeroenhendricksen))
+- Repair broken hyperlinks in documentation [\#1978](https://github.com/locustio/locust/pull/1978) ([jeroenhendricksen](https://github.com/jeroenhendricksen))
+
 ## [2.6.0](https://github.com/locustio/locust/tree/2.6.0) (2022-01-23)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.5.1...2.6.0)
@@ -415,7 +425,7 @@
 - Feature chart sync [\#1678](https://github.com/locustio/locust/pull/1678) ([aek](https://github.com/aek))
 - Feature stats exceptions csv [\#1674](https://github.com/locustio/locust/pull/1674) ([aek](https://github.com/aek))
 - /swarm adjusted for tests with shape class [\#1671](https://github.com/locustio/locust/pull/1671) ([stanislawskwark](https://github.com/stanislawskwark))
-- Fix a typo [\#1665](https://github.com/locustio/locust/pull/1665) ([atktng](https://github.com/atktng))
+- Fix a typo [\#1665](https://github.com/locustio/locust/pull/1665) ([atken](https://github.com/atken))
 - Feature chart tooltip custom values - show user count [\#1658](https://github.com/locustio/locust/pull/1658) ([aek](https://github.com/aek))
 - Check if running from a tty on windows [\#1657](https://github.com/locustio/locust/pull/1657) ([DennisKrone](https://github.com/DennisKrone))
 - Bump Echarts version to show charts legends [\#1655](https://github.com/locustio/locust/pull/1655) ([aek](https://github.com/aek))
@@ -2101,7 +2111,7 @@
 
 ## [v0.4](https://github.com/locustio/locust/tree/v0.4) (2011-12-05)
 
-[Full Changelog](https://github.com/locustio/locust/compare/7cfe62cee36dee34fe4d23aed5bdd00c4f42b3d0...v0.4)
+[Full Changelog](https://github.com/locustio/locust/compare/117a61cfd1bba9ad10c8b680a574fcf32f6f46be...v0.4)
 
 **Fixed bugs:**
 

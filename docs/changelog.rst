@@ -4,6 +4,18 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.6.1
+=====
+
+* Documentation fixes only.
+
+2.6.0
+=====
+* Pass --tags and --exclude-tags to workers. (https://github.com/locustio/locust/pull/1976)
+* Clean up some logging messages (https://github.com/locustio/locust/pull/1973)
+* Ensure heartbeat\_worker doesnt try to re-establish connection to workers when quit has been called (https://github.com/locustio/locust/pull/1972)
+* fixed\_count: ability to spawn a specific number of users \(as opposed to just using weights\) (https://github.com/locustio/locust/pull/1964)
+
 2.5.1
 =====
 
