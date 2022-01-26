@@ -98,6 +98,11 @@ class Environment:
                     ", ".join(map(methodcaller("fullname"), self.user_classes))
                 )
             )
+        if self.shape_class is not None and not isinstance(self.shape_class, LoadTestShape):
+            raise ValueError(
+                "shape_class should be instance of LoadTestShape or subclass LoadTestShape, but got: %s"
+                % self.shape_class
+            )
 
     def _create_runner(
         self,
