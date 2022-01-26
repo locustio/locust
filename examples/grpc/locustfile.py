@@ -23,7 +23,8 @@ def run_grpc_server(environment, **_kwargs):
 
 
 class GrpcClient:
-    def __init__(self, stub):
+    def __init__(self, environment, stub):
+        self.env = environment
         self._stub_class = stub.__class__
         self._stub = stub
 
@@ -47,7 +48,7 @@ class GrpcClient:
             except grpc.RpcError as e:
                 request_meta["exception"] = e
             request_meta["response_time"] = (time.perf_counter() - start_perf_counter) * 1000
-            events.request.fire(**request_meta)
+            self.env.events.request.fire(**request_meta)
             return request_meta["response"]
 
         return wrapper
@@ -66,7 +67,7 @@ class GrpcUser(User):
         self._channel = grpc.insecure_channel(self.host)
         self._channel_closed = False
         stub = self.stub_class(self._channel)
-        self.client = GrpcClient(stub)
+        self.client = GrpcClient(environment, stub)
 
 
 class HelloGrpcUser(GrpcUser):
