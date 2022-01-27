@@ -181,7 +181,7 @@ For example, the following User class would sleep for one second, then two, then
 
 
 weight and fixed_count attributes
-----------------
+---------------------------------
 
 If more than one user class exists in the file, and no user classes are specified on the command line,
 Locust will spawn an equal number of each of the user classes. You can also specify which of the

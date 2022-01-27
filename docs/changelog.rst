@@ -376,7 +376,7 @@ Other breaking changes
 * A ``User count`` column has been added to the history stats CSV file. The column order and column names has been changed.
 * The official docker image no longer uses a shell script with a bunch of special environment variables to configure how 
   how locust is started. Instead, the ``locust`` command is now set as ``ENTRYPOINT`` of the docker image. See
-  :ref:`running-locust-docker` for more info.
+  :ref:`running-in-docker` for more info.
 * Command line option ``--csv-base-name`` has been removed, since it was just an alias for ``--csv``.
 * The way Locust handles logging has been changed. We no longer wrap stdout (and stderr) to automatically make print 
   statements go into the log. ``print()`` statements now only goes to stdout. To add custom entries to the log, one 

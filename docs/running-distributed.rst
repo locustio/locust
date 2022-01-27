@@ -1,4 +1,4 @@
-.. _running-locust-distributed:
+.. _running-distributed:
 
 ===========================
 Distributed load generation
@@ -127,13 +127,13 @@ source code.
 Running distributed with Docker
 =============================================
 
-See :ref:`running-locust-docker`
+See :ref:`running-in-docker`
 
 
 Running Locust distributed without the web UI
 =============================================
 
-See :ref:`running-locust-distributed-without-web-ui`
+See :ref:`running-distributed-without-web-ui`
 
 
 Increase Locust's performance
