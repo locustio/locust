@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 import os
 import inspect
 import locust
-from locust import User, argument_parser, events
+from locust import User, argument_parser
 from typing import Type
 from locust.exception import CatchResponseError
 
@@ -94,7 +94,7 @@ def run_single_user(
         locust.log.setup_logging(loglevel)
 
     # create an environment
-    env = locust.env.Environment(events=events)
+    env = locust.env.Environment(events=locust.events)
 
     # in case your test goes looking for the file name of your locustfile
     env.parsed_options = argument_parser.parse_options()

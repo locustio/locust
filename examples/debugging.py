@@ -1,5 +1,4 @@
-from locust import HttpUser, task
-from locust.debug import run_single_user
+from locust import HttpUser, task, run_single_user
 
 
 class QuickstartUser(HttpUser):
