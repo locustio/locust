@@ -91,7 +91,7 @@ More options
 
 To run Locust distributed across multiple Python processes or machines, you can start a single Locust master process 
 with the ``--master`` command line parameter, and then any number of Locust worker processes using the ``--worker`` 
-command line parameter. See :ref:`running-locust-distributed` for more info.
+command line parameter. See :ref:`running-distributed` for more info.
 
 Parameters can also be set through :ref:`environment variables <environment-variables>`, or in a
 :ref:`config file <configuration-file>`.

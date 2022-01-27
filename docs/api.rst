@@ -146,3 +146,5 @@ Other
 
 .. autoclass:: locust.stats.StatsEntry
     :members:
+
+.. autofunction:: locust.debug.run_single_user

@@ -38,13 +38,13 @@ If you want to allow your tasks to finish their iteration, you can use ``--stop-
 
     $ locust -f --headless -u 1000 -r 100 --run-time 1h30m --stop-timeout 99
 
-.. _running-locust-distributed-without-web-ui:
+.. _running-distributed-without-web-ui:
 
 
 Running Locust distributed without the web UI
 ---------------------------------------------
 
-If you want to :ref:`run Locust distributed <running-locust-distributed>` without the web UI, 
+If you want to :ref:`run Locust distributed <running-distributed>` without the web UI, 
 you should specify the ``--expect-workers`` option when starting the master node, to specify
 the number of worker nodes that are expected to connect. It will then wait until that many worker
 nodes have connected before starting the test.

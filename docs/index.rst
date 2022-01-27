@@ -38,8 +38,9 @@ Running your Locust tests
     :maxdepth: 1
 
     configuration
-    running-locust-distributed
-    running-locust-docker
+    running-in-debugger
+    running-distributed
+    running-in-docker
     running-cloud-integration
     running-without-web-ui
 
