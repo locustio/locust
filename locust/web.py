@@ -272,6 +272,7 @@ class WebUI:
                         "current_fail_per_sec": s.current_fail_per_sec,
                         "median_response_time": s.median_response_time,
                         "ninetieth_response_time": s.get_response_time_percentile(0.9),
+                        "ninety_ninth_response_time": s.get_response_time_percentile(0.99),
                         "avg_content_length": s.avg_content_length,
                     }
                 )
