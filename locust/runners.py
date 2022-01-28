@@ -749,32 +749,35 @@ class MasterRunner(DistributedRunner):
         # when the user count is really at the desired value.
         timeout = gevent.Timeout(self._wait_for_workers_report_after_ramp_up())
         timeout.start()
+        msg_prefix = "All users spawned"
         try:
             while self.user_count != self.target_user_count:
-                gevent.sleep()
+                gevent.sleep(0.01)
         except gevent.Timeout:
-            pass
+            msg_prefix = (
+                "Spawning is complete and report waittime is expired, but not all reports recieved from workers"
+            )
         finally:
             timeout.cancel()
 
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
         self.spawning_completed = True
 
-        logger.info("All users spawned: %s" % _format_user_classes_count_for_log(self.reported_user_classes_count))
+        logger.info("%s: %s" % (msg_prefix, _format_user_classes_count_for_log(self.reported_user_classes_count)))
 
     @functools.lru_cache()
     def _wait_for_workers_report_after_ramp_up(self) -> float:
         """
         The amount of time to wait after a ramp-up in order for all the workers to report their state
-        to the master. If not supplied by the user, it is 100ms by default. If the supplied value is a number,
+        to the master. If not supplied by the user, it is 1000ms by default. If the supplied value is a number,
         it is taken as-is. If the supplied value is a pattern like "some_number * WORKER_REPORT_INTERVAL",
         the value will be "some_number * WORKER_REPORT_INTERVAL". The most sensible value would be something
         like "1.25 * WORKER_REPORT_INTERVAL". However, some users might find it too high, so it is left
-        to a really small value of 100ms by default.
+        to a relatively small value of 1000ms by default.
         """
         locust_wait_for_workers_report_after_ramp_up = os.getenv("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP")
         if locust_wait_for_workers_report_after_ramp_up is None:
-            return 0.1
+            return 1.0
 
         match = re.search(
             r"^(?P<coeff>(\d+)|(\d+\.\d+))[ ]*\*[ ]*WORKER_REPORT_INTERVAL$",

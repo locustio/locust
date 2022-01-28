@@ -28,6 +28,19 @@ def temporary_file(content, suffix="_locustfile.py"):
             os.remove(f.name)
 
 
+@contextmanager
+def patch_env(name: str, value: str):
+    prev_value = os.getenv(name)
+    os.environ[name] = value
+    try:
+        yield
+    finally:
+        if prev_value is None:
+            del os.environ[name]
+        else:
+            os.environ[name] = prev_value
+
+
 def get_free_tcp_port():
     """
     Find an unused TCP port

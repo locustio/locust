@@ -16,7 +16,7 @@ from locust.main import create_environment
 from locust.user import HttpUser, User, TaskSet
 from .mock_locustfile import mock_locustfile, MOCK_LOCUSTFILE_CONTENT
 from .testcases import LocustTestCase
-from .util import temporary_file, get_free_tcp_port
+from .util import temporary_file, get_free_tcp_port, patch_env
 
 
 class TestLoadLocustfile(LocustTestCase):
@@ -877,5 +877,110 @@ class SecondUser(HttpUser):
             stdout_worker = stdout_worker.decode("utf-8")
             self.assertIn("task1", stdout_worker)
             self.assertNotIn("task2", stdout_worker)
+            self.assertEqual(0, proc.returncode)
+            self.assertEqual(0, proc_worker.returncode)
+
+    def test_distributed(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import User, task, constant
+
+            class User1(User):
+                wait_time = constant(1)
+
+                @task
+                def t(self):
+                    pass
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "--master",
+                    "--expect-workers",
+                    "1",
+                    "-u",
+                    "3",
+                    "-t",
+                    "5s",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+            )
+            proc_worker = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--worker",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+            )
+            stdout = proc.communicate()[0].decode("utf-8")
+            proc_worker.communicate()
+
+            self.assertIn('All users spawned: {"User1": 3} (3 total users)', stdout)
+            self.assertIn("Shutting down (exit code 0)", stdout)
+
+            self.assertEqual(0, proc.returncode)
+            self.assertEqual(0, proc_worker.returncode)
+
+    def test_distributed_report_timeout_expired(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import User, task, constant
+
+            class User1(User):
+                wait_time = constant(1)
+
+                @task
+                def t(self):
+                    pass
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked, patch_env(
+            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.01"
+        ) as _:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "--master",
+                    "--expect-workers",
+                    "1",
+                    "-u",
+                    "3",
+                    "-t",
+                    "5s",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+            )
+            proc_worker = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--worker",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+            )
+            stdout = proc.communicate()[0].decode("utf-8")
+            proc_worker.communicate()
+
+            self.assertIn(
+                'Spawning is complete and report waittime is expired, but not all reports recieved from workers: {"User1": 2} (2 total users)',
+                stdout,
+            )
+            self.assertIn("Shutting down (exit code 0)", stdout)
+
             self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
