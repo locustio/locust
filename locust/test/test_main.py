@@ -152,7 +152,7 @@ class TestLoadLocustfile(LocustTestCase):
             self.assertEqual("my_locust_file.py", options.locustfile)
 
 
-class LocustProcessIntegrationTest(TestCase):
+class ProcessIntegrationTest(TestCase):
     def setUp(self):
         super().setUp()
         self.timeout = gevent.Timeout(10)
@@ -178,6 +178,8 @@ class LocustProcessIntegrationTest(TestCase):
         self.assertIn("Logging options:", output)
         self.assertIn("--skip-log-setup      Disable Locust's logging setup.", output)
 
+
+class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_custom_arguments(self):
         port = get_free_tcp_port()
         with temporary_file(
@@ -726,6 +728,8 @@ class LocustProcessIntegrationTest(TestCase):
 
         self.assertNotIn("Download the Report", html_report_content, "Download report link found in HTML content")
 
+
+class DistributedIntegrationTests(ProcessIntegrationTest):
     def test_expect_workers(self):
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
@@ -747,6 +751,7 @@ class LocustProcessIntegrationTest(TestCase):
             stderr = stderr.decode("utf-8")
             self.assertIn("Waiting for workers to be ready, 0 of 2 connected", stderr)
             self.assertIn("Gave up waiting for workers to connect", stderr)
+            self.assertNotIn("Traceback", stderr)
             self.assertEqual(1, proc.returncode)
 
     def test_distributed_events(self):
@@ -812,6 +817,8 @@ def on_test_stop(environment, **kwargs):
             self.assertIn("test_stop on master", stdout)
             self.assertIn("test_stop on worker", stdout_worker)
             self.assertIn("test_start on worker", stdout_worker)
+            self.assertNotIn("Traceback", stderr)
+            self.assertNotIn("Traceback", stderr_worker)
             self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
 
@@ -875,8 +882,11 @@ class SecondUser(HttpUser):
             stdout = stdout.decode("utf-8")
             stdout_worker, stderr_worker = proc_worker.communicate()
             stdout_worker = stdout_worker.decode("utf-8")
+            stderr_worker = stderr_worker.decode("utf-8")
             self.assertIn("task1", stdout_worker)
             self.assertNotIn("task2", stdout_worker)
+            self.assertNotIn("Traceback", stderr)
+            self.assertNotIn("Traceback", stderr_worker)
             self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
 
