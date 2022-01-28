@@ -57,7 +57,6 @@ STATE_INIT, STATE_SPAWNING, STATE_RUNNING, STATE_CLEANUP, STATE_STOPPING, STATE_
 ]
 WORKER_REPORT_INTERVAL = 3.0
 CPU_MONITOR_INTERVAL = 5.0
-HEARTBEAT_INTERVAL = 1
 HEARTBEAT_LIVENESS = 3
 FALLBACK_INTERVAL = 5
 
@@ -840,7 +839,7 @@ class MasterRunner(DistributedRunner):
 
     def heartbeat_worker(self):
         while True:
-            gevent.sleep(HEARTBEAT_INTERVAL)
+            gevent.sleep(self.environment.parsed_options.heartbeat_interval_seconds)
             if self.connection_broken:
                 self.reset_connection()
                 continue
@@ -1132,7 +1131,7 @@ class WorkerRunner(DistributedRunner):
             except RPCError as e:
                 logger.error("RPCError found when sending heartbeat: %s" % (e))
                 self.reset_connection()
-            gevent.sleep(HEARTBEAT_INTERVAL)
+            gevent.sleep(self.environment.parsed_options.heartbeat_interval_seconds)
 
     def reset_connection(self):
         logger.info("Reset connection to master")

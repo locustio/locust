@@ -79,6 +79,11 @@ listen to. Defaults to 5557.
 Used when starting the master node with ``--headless``. The master node will then wait until X worker
 nodes has connected before the test is started.
 
+``--heartbeat-interval-seconds=X``
+----------------------
+
+Allows specifying a heartbeat interval (in seconds) for checking workers' health. Defaults to 1.
+
 Communicating across nodes
 =============================================
 

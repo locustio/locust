@@ -306,6 +306,14 @@ def setup_parser_arguments(parser):
         help=configargparse.SUPPRESS,
     )
 
+    master_group.add_argument(
+        "--heartbeat-interval-seconds",
+        type=int,
+        default=1,
+        help="Allows specifying a heartbeat interval (in seconds) for checking workers' health. Defaults to 1.",
+        env_var="LOCUST_HEARTBEAT_INTERVAL_SECONDS",
+    )
+
     worker_group = parser.add_argument_group(
         "Worker options",
         """Options for running a Locust Worker node when running Locust distributed.
