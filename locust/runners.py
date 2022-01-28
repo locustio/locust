@@ -825,9 +825,6 @@ class MasterRunner(DistributedRunner):
             logger.debug("Sending quit message to client %s" % (client.id))
             self.server.send_to_client(Message("quit", None, client.id))
         gevent.sleep(0.5)  # wait for final stats report from all workers
-        self.server.close()
-        # ensure heartbeat_worker doesnt try to re-establish connection to workers and throw lots of exceptions
-        self.clients._worker_nodes = {}
         self.greenlet.kill(block=True)
 
     def check_stopped(self):
