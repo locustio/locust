@@ -1,7 +1,7 @@
 from locust import (
     constant,
 )
-from locust.env import Environment
+from locust.env import Environment, LoadTestShape
 from locust.user import (
     User,
     task,
@@ -190,3 +190,12 @@ class TestEnvironment(LocustTestCase):
             e.exception.args[0],
             "There are no users with weight > 0.",
         )
+
+    def test_shape_class_attribute(self):
+        class SubLoadTestShape(LoadTestShape):
+            """Inherited from locust.env.LoadTestShape"""
+
+        with self.assertRaisesRegex(
+            ValueError, r"instance of LoadTestShape or subclass LoadTestShape", msg="exception message is mismatching"
+        ):
+            Environment(user_classes=[MyUserWithSameName1], shape_class=SubLoadTestShape)
