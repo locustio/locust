@@ -457,6 +457,12 @@ def main():
         logger.info("Got SIGTERM signal")
         shutdown()
 
+    def save_html_report():
+        html_report = get_html_report(environment, show_download_link=False)
+        logger.info("writing html report to file: %s", options.html_file)
+        with open(options.html_file, "w", encoding="utf-8") as file:
+            file.write(html_report)
+
     gevent.signal_handler(signal.SIGTERM, sig_term_handler)
 
     try:
@@ -466,11 +472,10 @@ def main():
 
         main_greenlet.join()
         if options.html_file:
-            html_report = get_html_report(environment, show_download_link=False)
-            with open(options.html_file, "w", encoding="utf-8") as file:
-                file.write(html_report)
+            save_html_report()
     except KeyboardInterrupt:
-        pass
+        if options.html_file:
+            save_html_report()
     except Exception:
         raise
     shutdown()
