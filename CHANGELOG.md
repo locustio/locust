@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.7.0](https://github.com/locustio/locust/tree/2.7.0) (2022-01-29)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.6.1...2.7.0)
+
+**Closed issues:**
+
+- I hope to add a column of 99%ile on the Web UI [\#1966](https://github.com/locustio/locust/issues/1966)
+
+**Merged pull requests:**
+
+- Fix "socket operation on non-socket" at shutdown, by reverting \#1935 [\#1991](https://github.com/locustio/locust/pull/1991) ([cyberw](https://github.com/cyberw))
+- unit tests: add extra validations in integration tests [\#1990](https://github.com/locustio/locust/pull/1990) ([cyberw](https://github.com/cyberw))
+- Add 99%ile for Web UI [\#1989](https://github.com/locustio/locust/pull/1989) ([FooQoo](https://github.com/FooQoo))
+- Add run\_single\_user and documentation on how to debug Users/locustfiles [\#1985](https://github.com/locustio/locust/pull/1985) ([cyberw](https://github.com/cyberw))
+- hardening Environment.shape\_class for distinct usage [\#1983](https://github.com/locustio/locust/pull/1983) ([uddmorningsun](https://github.com/uddmorningsun))
+- Fixing issue \#1961 with incorrect "All users spawned" log messages wh… [\#1977](https://github.com/locustio/locust/pull/1977) ([EzR1d3r](https://github.com/EzR1d3r))
+
 ## [2.6.1](https://github.com/locustio/locust/tree/2.6.1) (2022-01-26)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.6.0...2.6.1)
@@ -16,7 +33,6 @@
 
 **Fixed bugs:**
 
-- Quitting master doesnt prevent its heartbeat\_worker greenlet from trying to re-establish connections [\#1971](https://github.com/locustio/locust/issues/1971)
 - Docs: Missing locustfile.py in code structure example [\#1959](https://github.com/locustio/locust/issues/1959)
 - Error when setting multiple host values [\#1957](https://github.com/locustio/locust/issues/1957)
 
@@ -2111,7 +2127,7 @@
 
 ## [v0.4](https://github.com/locustio/locust/tree/v0.4) (2011-12-05)
 
-[Full Changelog](https://github.com/locustio/locust/compare/117a61cfd1bba9ad10c8b680a574fcf32f6f46be...v0.4)
+[Full Changelog](https://github.com/locustio/locust/compare/7cfe62cee36dee34fe4d23aed5bdd00c4f42b3d0...v0.4)
 
 **Fixed bugs:**
 
