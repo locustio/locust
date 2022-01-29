@@ -7,9 +7,9 @@ For full details of the Locust changelog, please see https://github.com/locustio
 2.7.0
 =====
 
-Add run_single_user and documentation on how to debug Users/locustfiles by @cyberw in https://github.com/locustio/locust/pull/1985
-Fix "socket operation on non-socket" at shutdown, by reverting #1935 by @cyberw in https://github.com/locustio/locust/pull/1991
-Fixing issuewith incorrect "All users spawned" log messages wh… by @EzR1d3r in https://github.com/locustio/locust/pull/1977
+* Add run_single_user and documentation on how to debug Users/locustfiles https://github.com/locustio/locust/pull/1985
+* Fix "socket operation on non-socket" at shutdown, by reverting #1935 https://github.com/locustio/locust/pull/1991
+* Fixing issue with incorrect "All users spawned" log messages https://github.com/locustio/locust/pull/1977
 
 2.6.1
 =====
