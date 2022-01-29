@@ -10,6 +10,6 @@ class QuickstartUser(HttpUser):
             pass  # maybe set a breakpoint here to analyze the resp object?
 
 
+# if launched directly, e.g. "python3 debugging.py", not "locust -f debugging.py"
 if __name__ == "__main__":
-    # launched directly, e.g. "python3 debugging.py", not "locust -f debugging.py"
     run_single_user(QuickstartUser)
