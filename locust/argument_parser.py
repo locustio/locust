@@ -397,7 +397,7 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
     stats_group.add_argument(
         "--html",
         dest="html_file",
-        help="Store HTML report file",
+        help="Store HTML report to file path specified",
         env_var="LOCUST_HTML",
     )
 

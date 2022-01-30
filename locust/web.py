@@ -120,7 +120,7 @@ class WebUI:
                 self.auth.init_app(self.app)
             else:
                 raise AuthCredentialsError(
-                    "Invalid auth_credentials. It should be a string in the following format: 'user.pass'"
+                    "Invalid auth_credentials. It should be a string in the following format: 'user:pass'"
                 )
         if environment.runner:
             self.update_template_args()
@@ -174,6 +174,8 @@ class WebUI:
                 self._swarm_greenlet.kill(block=True)
                 self._swarm_greenlet = None
             environment.runner.stop()
+            if self.greenlet is not None:
+                self.greenlet.kill(block=True)
             return jsonify({"success": True, "message": "Test stopped"})
 
         @app.route("/stats/reset")
