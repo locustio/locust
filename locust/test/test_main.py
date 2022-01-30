@@ -213,7 +213,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         gevent.sleep(1)
 
         proc.send_signal(signal.SIGTERM)
-        stdout, stderr = proc.communicate(timeout=2)
+        stdout, stderr = proc.communicate(timeout=3)
         stderr = stderr.decode("utf-8")
         stdout = stdout.decode("utf-8")
         self.assertIn("Starting Locust", stderr)
@@ -252,7 +252,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 os.remove("locust.conf")
 
         proc.send_signal(signal.SIGTERM)
-        stdout, stderr = proc.communicate(timeout=2)
+        stdout, stderr = proc.communicate(timeout=3)
         stderr = stderr.decode("utf-8")
         stdout = stdout.decode("utf-8")
         self.assertIn("Starting Locust", stderr)
@@ -326,7 +326,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         "0",
                     ],
                     stderr=subprocess.STDOUT,
-                    timeout=2,
+                    timeout=3,
                 )
                 .decode("utf-8")
                 .strip()
