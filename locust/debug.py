@@ -4,6 +4,7 @@ import inspect
 import locust
 from locust import User, argument_parser
 from typing import Type
+from locust.env import Environment
 from locust.exception import CatchResponseError
 
 
@@ -71,6 +72,9 @@ class PrintListener:
         print()
 
 
+_env: Environment = None  # minimal Environment for debugging
+
+
 def run_single_user(
     user_class: Type[User],
     include_length=False,
@@ -90,23 +94,25 @@ def run_single_user(
     By default, it does not set up locusts logging system (because it could interfere with the printing of requests),
     but you can change that by passing a log level (e.g. *loglevel="INFO"*)
     """
+    global _env
+
     if loglevel:
         locust.log.setup_logging(loglevel)
 
-    # create an environment
-    env = locust.env.Environment(events=locust.events)
+    if not _env:
+        _env = locust.env.Environment(events=locust.events)
+        # in case your test goes looking for the file name of your locustfile
+        _env.parsed_options = argument_parser.parse_options()
+        frame = inspect.stack()[1]
+        _env.parsed_options.locustfile = os.path.basename(frame[0].f_code.co_filename)
+        # log requests to stdout
+        PrintListener(_env, include_length=include_length, include_time=include_time, include_context=include_context)
+        # fire various events (quit and test_stop will never get called, sorry about that)
+        _env.events.init.fire(environment=_env, runner=None, web_ui=None)
 
-    # in case your test goes looking for the file name of your locustfile
-    env.parsed_options = argument_parser.parse_options()
-    frame = inspect.stack()[1]
-    env.parsed_options.locustfile = os.path.basename(frame[0].f_code.co_filename)
-
-    # log requests to stdout
-    PrintListener(env, include_length=include_length, include_time=include_time, include_context=include_context)
-
-    # fire various events (quit and test_stop will never get called, sorry about that)
-    env.events.init.fire(environment=env, runner=None, web_ui=None)
-    env.events.test_start.fire(environment=env)
+    _env.events.test_start.fire(environment=_env)
 
     # game on!
-    user_class(env).run()
+    user = user_class(_env)
+    _env.single_user_instance = user  # if you happen to need access to this from the Environment instance
+    user.run()

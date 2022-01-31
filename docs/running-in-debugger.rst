@@ -33,3 +33,5 @@ There is a similar setting in `PyCharm <https://www.jetbrains.com/help/pycharm/d
     | VS Code/pydev may give you warnings about:
     | ``sys.settrace() should not be used when the debugger is being used``
     | It can safely be ignored (and if you know how to get rid of it, please let us know)
+
+You can execute run_single_user multiple times, as shown in `debugging_advanced.py <https://github.com/locustio/locust/tree/master/examples/debugging_advanced.py>`_
