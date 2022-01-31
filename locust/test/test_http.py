@@ -273,6 +273,12 @@ class TestHttpSession(WebserverTestCase):
         self.assertRaises(LocustError, r.success)
         self.assertRaises(LocustError, r.failure, "")
 
+    def test_missing_catch_response_true(self):
+        s = self.get_client()
+        # incorrect usage, missing catch_response=True
+        with s.get("/fail") as resp:
+            self.assertRaises(LocustError, resp.success)
+
     def test_user_context(self):
         class TestUser(HttpUser):
             host = f"http://127.0.0.1:{self.port}"

@@ -295,3 +295,20 @@ class ResponseContextManager(LocustResponse):
         if not isinstance(exc, Exception):
             exc = CatchResponseError(exc)
         self._manual_result = exc
+
+
+# Monkey patch Response class to give some guidance
+def _success(self):
+    raise LocustError(
+        "If you want to change the state of the request, you must pass catch_response=True. See http://docs.locust.io/en/stable/writing-a-locustfile.html#validating-responses"
+    )
+
+
+def _failure(self):
+    raise LocustError(
+        "If you want to change the state of the request, you must pass catch_response=True. See http://docs.locust.io/en/stable/writing-a-locustfile.html#validating-responses"
+    )
+
+
+Response.success = _success
+Response.failure = _failure
