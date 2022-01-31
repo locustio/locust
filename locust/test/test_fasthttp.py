@@ -586,6 +586,11 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         self.assertEqual(1, status["success_amount"])
         self.assertEqual(1, status["failure_amount"])
 
+    def test_missing_catch_response_true(self):
+        # incorrect usage, missing catch_response=True
+        with self.user.client.get("/fail") as resp:
+            self.assertRaises(Exception, resp.success)
+
 
 class TestFastHttpSsl(LocustTestCase):
     def setUp(self):

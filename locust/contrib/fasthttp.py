@@ -369,6 +369,16 @@ class FastResponse(CompatResponse):
             return None
         return super()._content()
 
+    def success(self):
+        raise Exception(
+            "If you want to change the state of the request, you must pass catch_response=True. See http://docs.locust.io/en/stable/writing-a-locustfile.html#validating-responses"
+        )
+
+    def failure(self):
+        raise Exception(
+            "If you want to change the state of the request, you must pass catch_response=True. See http://docs.locust.io/en/stable/writing-a-locustfile.html#validating-responses"
+        )
+
 
 class ErrorResponse:
     """
