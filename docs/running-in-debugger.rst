@@ -4,7 +4,7 @@
 Running tests in a debugger
 ===========================
 
-Running Locust in a debugger is extremely useful when developing your tests. Among other things, you can examine at a particular response or check some User instance variable.
+Running Locust in a debugger is extremely useful when developing your tests. Among other things, you can examine a particular response or check some User instance variable.
 
 But debuggers sometimes have issues with complex gevent-applications like Locust, and there is a lot going on in the framework itself that you probably arent interested in. To simplify this, Locust provides a method called :py:func:`run_single_user <locust.debug.run_single_user>`:
 
