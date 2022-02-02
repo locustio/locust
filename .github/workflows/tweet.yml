@@ -8,9 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: echo "TAG=${GITHUB_REF#refs/*/}" | tee -a $GITHUB_ENV
       - uses: infraway/tweet-action@v1.0.1
         with:
-          status: "New release: ${GITHUB_REF#refs/*/} https://github.com/locustio/locust/releases/tag/${GITHUB_REF#refs/*/}"
+          status: "New release: ${{ env.TAG }} https://github.com/locustio/locust/releases/tag/${{ env.TAG }}"
           api_key: ${{ secrets.TWITTER_API_CONSUMER_KEY }}
           api_key_secret: ${{ secrets.TWITTER_API_CONSUMER_SECRET }}
           access_token: ${{ secrets.TWITTER_API_ACCESS_TOKEN_KEY }}
