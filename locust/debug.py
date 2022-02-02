@@ -20,18 +20,36 @@ class PrintListener:
     Print every response (useful when debugging a single locust)
     """
 
-    def __init__(self, env: locust.env.Environment, include_length=False, include_time=False, include_context=False):
+    def __init__(
+        self,
+        env: locust.env.Environment,
+        include_length=False,
+        include_time=False,
+        include_context=False,
+        include_payload=False,
+    ):
         env.events.request.add_listener(self.on_request)
 
         self.include_length = "length\t" if include_length else ""
         self.include_time = "time                    \t" if include_time else ""
         self.include_context = "context\t" if include_context else ""
+        self.include_payload = "payload\t" if include_payload else ""
+
         print(
-            f"\n{self.include_time}type\t{'name'.ljust(50)}\tresp_ms\t{self.include_length}exception\t{self.include_context}"
+            f"\n{self.include_time}type\t{'name'.ljust(50)}\tresp_ms\t{self.include_length}exception\t{self.include_context}\t{self.include_payload}"
         )
 
     def on_request(
-        self, request_type, name, response_time, response_length, exception, context: dict, start_time=None, **_kwargs
+        self,
+        request_type,
+        name,
+        response_time,
+        response_length,
+        exception,
+        context: dict,
+        start_time=None,
+        response=None,
+        **_kwargs,
     ):
         if exception:
             if isinstance(exception, CatchResponseError):
@@ -69,6 +87,9 @@ class PrintListener:
         if self.include_context:
             _print_t(context)
 
+        if self.include_payload:
+            _print_t(response._request.payload)
+
         print()
 
 
@@ -80,6 +101,7 @@ def run_single_user(
     include_length=False,
     include_time=False,
     include_context=False,
+    include_payload=False,
     loglevel=None,
 ):
     """
@@ -106,7 +128,13 @@ def run_single_user(
         frame = inspect.stack()[1]
         _env.parsed_options.locustfile = os.path.basename(frame[0].f_code.co_filename)
         # log requests to stdout
-        PrintListener(_env, include_length=include_length, include_time=include_time, include_context=include_context)
+        PrintListener(
+            _env,
+            include_length=include_length,
+            include_time=include_time,
+            include_context=include_context,
+            include_payload=include_payload,
+        )
         # fire various events (quit and test_stop will never get called, sorry about that)
         _env.events.init.fire(environment=_env, runner=None, web_ui=None)
 
