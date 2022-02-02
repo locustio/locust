@@ -1,0 +1,17 @@
+name: "tweet-trigger-release"
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tweet-trigger-publish-release
+        uses: mugi111/tweet-trigger-release@v1.1
+        with:
+          consumer_key: ${{ secrets.TWITTER_API_CONSUMER_KEY }}
+          consumer_secret: ${{ secrets.TWITTER_API_CONSUMER_SECRET }}
+          access_token_key: ${{ secrets.TWITTER_API_ACCESS_TOKEN_KEY }}
+          access_token_secret: ${{ secrets.TWITTER_API_ACCESS_TOKEN_SECRET }}
+          tweet_body: "New release: ${{ env.TAG }} https://github.com/locustio/locust/releases/tag/${{ env.TAG }}"
