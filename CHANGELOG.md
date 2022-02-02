@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.7.1](https://github.com/locustio/locust/tree/2.7.1) (2022-02-02)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.7.0...2.7.1)
+
+**Fixed bugs:**
+
+- --html doesnt work in web mode [\#1944](https://github.com/locustio/locust/issues/1944)
+
+**Merged pull requests:**
+
+- Allow repeated runs of run\_single\_user  [\#1993](https://github.com/locustio/locust/pull/1993) ([cyberw](https://github.com/cyberw))
+- fix --html report in web mode [\#1992](https://github.com/locustio/locust/pull/1992) ([uddmorningsun](https://github.com/uddmorningsun))
+
 ## [2.7.0](https://github.com/locustio/locust/tree/2.7.0) (2022-01-29)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.6.1...2.7.0)

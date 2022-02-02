@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.7.1
+=====
+* fix --html report in web mode https://github.com/locustio/locust/pull/1992
+
 2.7.0
 =====
 
