@@ -4,13 +4,14 @@ on:
     types: [published]
 
 jobs:
-  tweet:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: ethomson/send-tweet-action@v1
+      - uses: actions/checkout@v2
+      - uses: infraway/tweet-action@v1.0.1
         with:
           status: "New release: ${{ env.TAG }} https://github.com/locustio/locust/releases/tag/${{ env.TAG }}"
-          consumer-key: ${{ secrets.TWITTER_API_CONSUMER_KEY }}
-          consumer-secret: ${{ secrets.TWITTER_API_CONSUMER_SECRET }}
-          access-token: ${{ secrets.TWITTER_API_ACCESS_TOKEN_KEY }}
-          access-token-secret: ${{ secrets.TWITTER_API_ACCESS_TOKEN_SECRET }}
+          api_key: ${{ secrets.TWITTER_API_CONSUMER_KEY }}
+          api_key_secret: ${{ secrets.TWITTER_API_CONSUMER_SECRET }}
+          access_token: ${{ secrets.TWITTER_API_ACCESS_TOKEN_KEY }}
+          access_token_secret: ${{ secrets.TWITTER_API_ACCESS_TOKEN_SECRET }}
