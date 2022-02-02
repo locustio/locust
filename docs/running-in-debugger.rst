@@ -8,6 +8,8 @@ Running Locust in a debugger is extremely useful when developing your tests. Amo
 
 But debuggers sometimes have issues with complex gevent-applications like Locust, and there is a lot going on in the framework itself that you probably arent interested in. To simplify this, Locust provides a method called :py:func:`run_single_user <locust.debug.run_single_user>`:
 
+Note that this is fairly new feature, and the api is subject to change.
+
 .. literalinclude:: ../examples/debugging.py
     :language: python
 
