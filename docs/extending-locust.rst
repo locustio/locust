@@ -133,7 +133,7 @@ For example, you can monitor the fail ratio of your test and stop the run if it 
 .. code-block:: python
 
     from locust import events
-    from locust.runners import STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP, WorkerRunner
+    from locust.runners import STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP, MasterRunner, LocalRunner
 
     def checker(environment):
         while not environment.runner.state in [STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP]:
@@ -146,8 +146,8 @@ For example, you can monitor the fail ratio of your test and stop the run if it 
 
     @events.init.add_listener
     def on_locust_init(environment, **_kwargs):
-        # only run this on master & standalone
-        if not isinstance(environment.runner, WorkerRunner):
+        # dont run this on workers, we only care about the aggregated numbers
+        if isinstance(environment.runner, MasterRunner) or isinstance(environment.runner, LocalRunner):
             gevent.spawn(checker, environment)
 
 .. _parametrizing-locustfiles:
