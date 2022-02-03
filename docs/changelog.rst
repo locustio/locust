@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.7.2
+=====
+
+* Fix an issue introduced in 2.7.1 that caused Locust to shut down when the UI stop was clicked https://github.com/locustio/locust/pull/1996
+
 2.7.1
 =====
 * fix --html report in web mode https://github.com/locustio/locust/pull/1992

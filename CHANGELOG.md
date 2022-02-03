@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.7.2](https://github.com/locustio/locust/tree/2.7.2) (2022-02-03)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.7.1...2.7.2)
+
+**Fixed bugs:**
+
+- locust:2.7.1 exits when clicking "Stop Tests" in the UI [\#1995](https://github.com/locustio/locust/issues/1995)
+
 ## [2.7.1](https://github.com/locustio/locust/tree/2.7.1) (2022-02-02)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.7.0...2.7.1)
