@@ -241,6 +241,20 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual("https://localhost", response.json()["host"])
         self.assertEqual(self.environment.host, "https://localhost")
+        # stop
+        gevent.sleep(1)
+        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        self.assertEqual(response.json()["message"], "Test stopped")
+        # and swarm again, with new host
+        gevent.sleep(1)
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost/other"},
+        )
+        gevent.sleep(1)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual("https://localhost/other", response.json()["host"])
+        self.assertEqual(self.environment.host, "https://localhost/other")
 
     def test_swarm_custom_argument(self):
         my_dict = {}
