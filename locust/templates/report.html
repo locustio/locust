@@ -190,6 +190,7 @@
     {# <script type="text/javascript" src="/static/echarts.common.min.js"></script> #}
     {# <script type="text/javascript" src="/static/vintage.js"></script> #}
     {# <script type="text/javascript" src="/static/chart.js"></script> #}
+    {# <script type="text/javascript" src="./static/tasks.js"></script> #}
     <script>
         {{ static_js|safe }}
     </script>
@@ -234,6 +235,8 @@
 
             return new Date(Date.parse(currentContent.replace(" ", "T") + ".000Z")).toLocaleString();
         });
+
+        fillTasksFromObj()
     </script>
 </body>
 </html>

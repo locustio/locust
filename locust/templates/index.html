@@ -339,7 +339,7 @@
     <script type="text/javascript" src="./static/tasks.js?v={{ version }}"></script>
     <script type="text/javascript">
         function updateTasksWithTimeout() {
-            updateTasks()
+            fillTasksFromRequest()
             setTimeout(updateTasksWithTimeout, 1000);
         }
         updateTasksWithTimeout()

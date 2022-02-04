@@ -28,19 +28,21 @@ function _getTasks_div(root, title) {
     return taskDiv
 }
 
-function renderTasks(data) {
+function _renderTasks(data) {
     var tasks = $('#tasks .tasks');
     tasks.empty();
     tasks.append(_getTasks_div(data.per_class, 'Ratio per User class'));
     tasks.append(_getTasks_div(data.total, 'Total ratio'));
 }
 
-function updateTasks() {
+function fillTasksFromObj() {
+    var tasks = $('#tasks .tasks')
+    var data = tasks.data('tasks');
+    _renderTasks(data)
+}
+
+function fillTasksFromRequest() {
     $.get('/tasks', function (data) {
-        renderTasks(data);
-    }).fail(function() {
-        // fallback issue #1994
-        renderTasks($('#tasks .tasks').data('tasks'));
+        _renderTasks(data)
     });
 }
-updateTasks();
