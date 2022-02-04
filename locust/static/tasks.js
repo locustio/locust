@@ -28,13 +28,19 @@ function _getTasks_div(root, title) {
     return taskDiv
 }
 
+function renderTasks(data) {
+    var tasks = $('#tasks .tasks');
+    tasks.empty();
+    tasks.append(_getTasks_div(data.per_class, 'Ratio per User class'));
+    tasks.append(_getTasks_div(data.total, 'Total ratio'));
+}
 
 function updateTasks() {
     $.get('/tasks', function (data) {
-        var tasks = $('#tasks .tasks');
-        tasks.empty();
-        tasks.append(_getTasks_div(data.per_class, 'Ratio per User class'));
-        tasks.append(_getTasks_div(data.total, 'Total ratio'));
+        renderTasks(data);
+    }).fail(function() {
+        // fallback issue #1994
+        renderTasks($('#tasks .tasks').data('tasks'));
     });
 }
 updateTasks();
