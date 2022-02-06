@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.7.3
+=====
+
+* Fix 'Tasks' section remains empty in web ui in https://github.com/locustio/locust/pull/1997
+
 2.7.2
 =====
 

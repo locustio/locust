@@ -8,6 +8,10 @@
 
 - locust:2.7.1 exits when clicking "Stop Tests" in the UI [\#1995](https://github.com/locustio/locust/issues/1995)
 
+**Merged pull requests:**
+
+- Reverse parts of PR \#1992 [\#1996](https://github.com/locustio/locust/pull/1996) ([cyberw](https://github.com/cyberw))
+
 ## [2.7.1](https://github.com/locustio/locust/tree/2.7.1) (2022-02-02)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.7.0...2.7.1)
