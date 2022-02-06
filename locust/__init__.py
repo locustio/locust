@@ -1,3 +1,11 @@
+import os
+
+if os.getenv("LOCUST_PLAYWRIGHT", False):
+    # This is a hack to make Playwright testing possible. If trio is not imported before gevent's monkey patching,
+    # it raises "NotImplementedError: unsupported platform"
+    # Playwright is used by PlaywrightUser, see https://github.com/SvenskaSpel/locust-plugins/blob/master/examples/playwright_ex.py
+    import trio
+
 from gevent import monkey
 
 monkey.patch_all()
