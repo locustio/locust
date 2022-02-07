@@ -120,6 +120,7 @@ class Runner:
         logging.getLogger().setLevel(loglevel)
 
         self.connection_broken = False
+        self.final_user_classes_count = {}  # just for the ratio report, fills before runner stops
 
         # register listener that resets stats when spawning is complete
         def on_spawning_complete(user_count):
@@ -424,6 +425,7 @@ class Runner:
         if self.state == STATE_STOPPED:
             return
         logger.debug("Stopping all users")
+        self.final_user_classes_count = {**self.user_classes_count}
         self.update_state(STATE_CLEANUP)
 
         # if we are currently spawning users we need to kill the spawning greenlet first
@@ -792,6 +794,7 @@ class MasterRunner(DistributedRunner):
     def stop(self, send_stop_to_client: bool = True):
         if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
             logger.debug("Stopping...")
+            self.final_user_classes_count = {**self.reported_user_classes_count}
             self.update_state(STATE_STOPPING)
 
             if self.environment.shape_class is not None and self.shape_greenlet is not greenlet.getcurrent():

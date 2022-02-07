@@ -139,7 +139,7 @@
                 <li><a href="#" class="chart-tab-link">Charts</a></li>
                 <li><a href="#">Failures</a></li>
                 <li><a href="#">Exceptions</a></li>
-                <li><a href="#">Tasks</a></li>
+                <li><a href="#">Current ratio</a></li>
                 <li><a href="#">Download Data</a></li>
                 {% if is_distributed %}
                     <li><a href="#">Workers</a></li>
@@ -339,7 +339,7 @@
     <script type="text/javascript" src="./static/tasks.js?v={{ version }}"></script>
     <script type="text/javascript">
         function updateTasksWithTimeout() {
-            updateTasks()
+            fillTasksFromRequest()
             setTimeout(updateTasksWithTimeout, 1000);
         }
         updateTasksWithTimeout()
