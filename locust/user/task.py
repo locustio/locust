@@ -128,6 +128,9 @@ def get_tasks_from_base_classes(bases, class_dict):
 
     return new_tasks
 
+def reset_task_list(task_holder):
+    task_holder.tasks = task_holder.full_tasks
+
 
 def filter_tasks_by_tags(task_holder, tags=None, exclude_tags=None, checked=None):
     """
@@ -159,7 +162,6 @@ def filter_tasks_by_tags(task_holder, tags=None, exclude_tags=None, checked=None
         checked[task] = passing
 
     task_holder.tasks = new_tasks
-
 
 class TaskSetMeta(type):
     """

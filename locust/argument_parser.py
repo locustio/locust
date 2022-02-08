@@ -3,7 +3,6 @@ import os
 import sys
 import textwrap
 from typing import Dict
-
 import configargparse
 
 import locust
@@ -12,6 +11,23 @@ version = locust.__version__
 
 
 DEFAULT_CONFIG_FILES = ["~/.locust.conf", "locust.conf"]
+
+class LocustArgumentGroup(argparse._ArgumentGroup):
+    def add_argument(self, *args, **kwargs) -> configargparse.Action:
+        """
+        This method supports the same args as ArgumentParser.add_argument(..)
+        as well as the additional args below.
+
+        Arguments:
+            include_in_web_ui: If True (default), the argument will show in the UI.
+
+        Returns:
+            argparse.Action: the new argparse action
+        """
+        include_in_web_ui = kwargs.pop("include_in_web_ui", False)
+        action = super().add_argument(*args, **kwargs)
+        action.include_in_web_ui = include_in_web_ui
+        return action
 
 
 class LocustArgumentParser(configargparse.ArgumentParser):
@@ -30,10 +46,25 @@ class LocustArgumentParser(configargparse.ArgumentParser):
         Returns:
             argparse.Action: the new argparse action
         """
-        include_in_web_ui = kwargs.pop("include_in_web_ui", True)
+        include_in_web_ui = kwargs.pop("include_in_web_ui", False)
         action = super().add_argument(*args, **kwargs)
         action.include_in_web_ui = include_in_web_ui
         return action
+
+    def add_argument_group(self, *args, **kwargs) -> LocustArgumentGroup:
+        """
+        This method supports the same args as ArgumentParser.add_argument(..)
+        as well as the additional args below.
+
+        Arguments:
+            include_in_web_ui: If True (default), the argument will show in the UI.
+
+        Returns:
+            argparse.Action: the new argparse action
+        """
+        group = LocustArgumentGroup(self, *args, **kwargs)
+        return group
+
 
     @property
     def args_included_in_web_ui(self) -> Dict[str, configargparse.Action]:
@@ -348,9 +379,11 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         "-T",
         "--tags",
         nargs="*",
+        type=str,
         metavar="TAG",
         env_var="LOCUST_TAGS",
         help="List of tags to include in the test, so only tasks with any matching tags will be executed",
+        include_in_web_ui=True,
     )
     tag_group.add_argument(
         "-E",
@@ -359,6 +392,7 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         metavar="TAG",
         env_var="LOCUST_EXCLUDE_TAGS",
         help="List of tags to exclude from the test, so only tasks with no matching tags will be executed",
+        include_in_web_ui=True,
     )
 
     stats_group = parser.add_argument_group("Request statistics options")
@@ -523,5 +557,5 @@ def ui_extra_args_dict(args=None) -> Dict[str, str]:
     parser = get_parser()
     all_args = vars(parser.parse_args(args))
 
-    extra_args = {k: v for k, v in all_args.items() if k not in locust_args and k in parser.args_included_in_web_ui}
+    extra_args = {k: v for k, v in all_args.items() if k in parser.args_included_in_web_ui}
     return extra_args

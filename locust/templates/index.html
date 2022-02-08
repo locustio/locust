@@ -82,10 +82,8 @@
                     <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or "" }}" onfocus="this.select()"/><br>
                     {% if extra_options %}<label>Custom parameters:</label>{% endif %}
                     {% for key, value in extra_options.items() %}
-                        {% if not ((value is none) or (value is boolean)) %}
                             <label for="{{key}}">{{key}}</label>
                             <input type="text" name="{{key}}" id="{{key}}" class="val" value="{{value}}" /><br>
-                        {% endif %}
                     {% endfor %}
                     {% set glob={'header_printed': False} %}
                     {% for key, value in extra_options.items() %}

@@ -25,7 +25,9 @@ class UserMeta(type):
     def __new__(mcs, classname, bases, class_dict):
         # gather any tasks that is declared on the class (or it's bases)
         tasks = get_tasks_from_base_classes(bases, class_dict)
+        full_tasks = get_tasks_from_base_classes(bases, class_dict)
         class_dict["tasks"] = tasks
+        class_dict["full_tasks"] = full_tasks
 
         if not class_dict.get("abstract"):
             # Not a base class
@@ -92,6 +94,11 @@ class User(object, metaclass=UserMeta):
 
         class ForumPage(TaskSet):
             tasks = {ThreadPage:15, write_post:1}
+    """
+
+    full_tasks: List[Union[TaskSet, Callable]] = []
+    """
+    the full set of tasks, used so we can filter from the original set of tasks each time tags change
     """
 
     weight = 1

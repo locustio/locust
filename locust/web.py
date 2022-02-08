@@ -152,7 +152,11 @@ class WebUI:
                 elif key in parsed_options_dict:
                     # update the value in environment.parsed_options, but dont change the type.
                     # This wont work for parameters that are None
-                    parsed_options_dict[key] = type(parsed_options_dict[key])(value)
+                    if parsed_options_dict[key] is not None:
+                      parsed_options_dict[key] = type(parsed_options_dict[key])(value)
+                    elif value != "None":
+                      parsed_options_dict[key] = value
+
 
             if environment.shape_class:
                 environment.runner.start_shape()

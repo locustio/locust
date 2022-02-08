@@ -16,7 +16,7 @@ from .stats import RequestStats
 from .runners import Runner, LocalRunner, MasterRunner, WorkerRunner
 from .web import WebUI
 from .user import User
-from .user.task import TaskSet, filter_tasks_by_tags
+from .user.task import TaskSet, filter_tasks_by_tags, reset_task_list
 from .shape import LoadTestShape
 
 
@@ -198,25 +198,24 @@ class Environment:
         Filter the tasks on all the user_classes recursively, according to the tags and
         exclude_tags attributes
         """
-        if getattr(self, "_tasks_filtered", False):
-            return  # only filter once
-        self._tasks_filtered = True
 
         if self.tags is not None:
             tags = set(self.tags)
-        elif self.parsed_options and self.parsed_options.tags:
-            tags = set(self.parsed_options.tags)
+        elif self.parsed_options and self.parsed_options.tags and self.parsed_options.tags.lower() != "none":
+
+            tags = set(self.parsed_options.tags.split(" "))
         else:
             tags = None
 
         if self.exclude_tags is not None:
             exclude_tags = set(self.exclude_tags)
-        elif self.parsed_options and self.parsed_options.exclude_tags:
-            exclude_tags = set(self.parsed_options.exclude_tags)
+        elif self.parsed_options and self.parsed_options.exclude_tags and self.parsed_options.exclude_tags.lower() != "none":
+            exclude_tags = set(self.parsed_options.exclude_tags.split(" "))
         else:
             exclude_tags = None
-
         for user_class in self.user_classes:
+
+            reset_task_list(user_class)
             filter_tasks_by_tags(user_class, tags, exclude_tags)
 
     def _remove_user_classes_with_weight_zero(self):
