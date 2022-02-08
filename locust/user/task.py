@@ -128,6 +128,10 @@ def get_tasks_from_base_classes(bases, class_dict):
 
     return new_tasks
 
+    """
+    this function just resets the task list to the unfiltered one, to allow us to filter 
+    multiple times without eventually ending with nothing
+    """
 def reset_task_list(task_holder):
     task_holder.tasks = task_holder.full_tasks
 

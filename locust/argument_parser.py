@@ -12,7 +12,13 @@ version = locust.__version__
 
 DEFAULT_CONFIG_FILES = ["~/.locust.conf", "locust.conf"]
 
+
 class LocustArgumentGroup(argparse._ArgumentGroup):
+    """Drop-in replacement for `gargparse.ArgumentGroup` that adds support for
+    group members to optionally include arguments from the UI.
+    """
+
+
     def add_argument(self, *args, **kwargs) -> configargparse.Action:
         """
         This method supports the same args as ArgumentParser.add_argument(..)
@@ -32,7 +38,7 @@ class LocustArgumentGroup(argparse._ArgumentGroup):
 
 class LocustArgumentParser(configargparse.ArgumentParser):
     """Drop-in replacement for `configargparse.ArgumentParser` that adds support for
-    optionally exclude arguments from the UI.
+    optionally include arguments from the UI.
     """
 
     def add_argument(self, *args, **kwargs) -> configargparse.Action:
@@ -41,7 +47,7 @@ class LocustArgumentParser(configargparse.ArgumentParser):
         as well as the additional args below.
 
         Arguments:
-            include_in_web_ui: If True (default), the argument will show in the UI.
+            include_in_web_ui: If True (default is False), the argument will show in the UI.
 
         Returns:
             argparse.Action: the new argparse action
