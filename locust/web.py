@@ -154,7 +154,8 @@ class WebUI:
                     # This wont work for parameters that are None
                     if parsed_options_dict[key] is not None:
                       parsed_options_dict[key] = type(parsed_options_dict[key])(value)
-                    elif value != "None":
+                    # this might be naive, but as long as you handle the vars, should be ok (at least for tags)
+                    else:
                       parsed_options_dict[key] = value
 
 
