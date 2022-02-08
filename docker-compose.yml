@@ -15,4 +15,4 @@ services:
       context: .
     volumes:
       - ./:/mnt/locust
-    command: -f /mnt/locust/locustfile.py --worker --master-host master
+    command: -f /mnt/locust/locustfile.py --worker 4 --master-host master
