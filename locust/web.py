@@ -155,7 +155,6 @@ class WebUI:
                        #if blank or 'none' input, set option to None
                        # this might be naive, but as long as you handle the vars, should be ok (at least for tags)
                        parsed_options_dict[key] = None
-
                     # update the value in environment.parsed_options
                     elif parsed_options_dict[key] is not None:
                       #if the original type was a list, try to format the string input as a list too

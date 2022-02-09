@@ -167,6 +167,7 @@ def filter_tasks_by_tags(task_holder, tags=None, exclude_tags=None, checked=None
 
     task_holder.tasks = new_tasks
 
+
 class TaskSetMeta(type):
     """
     Meta class for the main User class. It's used to allow User classes to specify task execution

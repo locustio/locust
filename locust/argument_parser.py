@@ -3,6 +3,7 @@ import os
 import sys
 import textwrap
 from typing import Dict
+
 import configargparse
 
 import locust
@@ -385,7 +386,6 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         "-T",
         "--tags",
         nargs="*",
-        type=str,
         metavar="TAG",
         env_var="LOCUST_TAGS",
         help="List of tags to include in the test, so only tasks with any matching tags will be executed",
