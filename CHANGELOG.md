@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.7.3](https://github.com/locustio/locust/tree/2.7.3) (2022-02-09)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.7.3...2.7.3)
+
+**Closed issues:**
+
+- 'Tasks' section remains empty for html on v 2.7.0 [\#1994](https://github.com/locustio/locust/issues/1994)
+
+## [2.7.3](https://github.com/locustio/locust/tree/2.7.3) (2022-02-06)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.7.2...2.7.3)
+
+**Merged pull requests:**
+
+- Support locust-plugin's Playwright User: Import trio before gevent patching if LOCUST\_PLAYWRIGHT is set [\#1999](https://github.com/locustio/locust/pull/1999) ([cyberw](https://github.com/cyberw))
+- \#1994 Fixing to fallback in case of local execution [\#1997](https://github.com/locustio/locust/pull/1997) ([tyge68](https://github.com/tyge68))
+
 ## [2.7.2](https://github.com/locustio/locust/tree/2.7.2) (2022-02-03)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.7.1...2.7.2)
@@ -2152,7 +2169,7 @@
 
 ## [v0.4](https://github.com/locustio/locust/tree/v0.4) (2011-12-05)
 
-[Full Changelog](https://github.com/locustio/locust/compare/7cfe62cee36dee34fe4d23aed5bdd00c4f42b3d0...v0.4)
+[Full Changelog](https://github.com/locustio/locust/compare/117a61cfd1bba9ad10c8b680a574fcf32f6f46be...v0.4)
 
 **Fixed bugs:**
 
