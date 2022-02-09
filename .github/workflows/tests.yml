@@ -110,7 +110,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        run: echo "TAG=${GITHUB_REF#refs/*/}" | tee -a $GITHUB_ENV
         with:
           fetch-depth: 0
       - name: Set up Python
@@ -121,9 +120,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install setuptools wheel
-      - name: Build
+      - name: Build + set TAG env var for later use
         run: |
           python setup.py sdist bdist_wheel
+          echo "TAG=${GITHUB_REF#refs/*/}" | tee -a $GITHUB_ENV
       - name: Publish tagged version to PyPI
         uses: pypa/gh-action-pypi-publish@master
         with:
