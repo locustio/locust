@@ -1,9 +1,8 @@
 import logging
 import random
-import sys
 import traceback
 from time import time
-from typing import Any, Callable, List, Union
+from typing import TYPE_CHECKING, Callable, Any, List, Union, TypeVar, overload
 from typing_extensions import final
 
 import gevent
@@ -11,13 +10,27 @@ from gevent import GreenletExit
 
 from locust.exception import InterruptTaskSet, RescheduleTask, RescheduleTaskImmediately, StopUser, MissingWaitTimeError
 
+if TYPE_CHECKING:
+    from locust import User
+
 
 logger = logging.getLogger(__name__)
+TaskT = TypeVar("TaskT", bound=Callable[[Any], None])
 
 LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING = ["running", "waiting", "stopping"]
 
 
-def task(weight=1):
+@overload
+def task(weight: TaskT) -> TaskT:
+    ...
+
+
+@overload
+def task(weight: int) -> Callable[[TaskT], TaskT]:
+    ...
+
+
+def task(weight: Union[TaskT, int] = 1) -> Union[TaskT, Callable[[TaskT], TaskT]]:
     """
     Used as a convenience decorator to be able to declare tasks for a User or a TaskSet
     inline in the class. Example::
@@ -59,7 +72,7 @@ def task(weight=1):
         return decorator_func
 
 
-def tag(*tags):
+def tag(*tags: str) -> Callable[[TaskT], TaskT]:
     """
     Decorator for tagging tasks and TaskSets with the given tag name. You can
     then limit the test to only execute tasks that are tagged with any of the
@@ -233,7 +246,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
     _user = None
     _parent = None
 
-    def __init__(self, parent):
+    def __init__(self, parent: "User") -> None:
         self._task_queue = []
         self._time_start = time()
 
@@ -253,7 +266,7 @@ class TaskSet(object, metaclass=TaskSetMeta):
             self.wait_function = self.user.wait_function
 
     @property
-    def user(self):
+    def user(self) -> "User":
         """:py:class:`User <locust.User>` instance that this TaskSet was created by"""
         return self._user
 
