@@ -149,13 +149,20 @@ class WebUI:
                 elif key == "host":
                     # Replace < > to guard against XSS
                     environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
-                elif key in parsed_options_dict:
-                    # update the value in environment.parsed_options, but dont change the type.
-                    # This wont work for parameters that are None
+
+                elif key in parsed_options_dict and value and value.lower() != "none":
+                    # update the value in environment.parsed_options
                     if parsed_options_dict[key] is not None:
-                      parsed_options_dict[key] = type(parsed_options_dict[key])(value)
-                    # this might be naive, but as long as you handle the vars, should be ok (at least for tags)
+                      #if the original type was a list, try to format the string input as a list too
+                      if type(parsed_options_dict[key]) is list:
+                        #if you specify tags in the command line, and then try to change in the UI,
+                        #you end up with some weird formatting, so you need to clean the string input first
+                        cleaned_value = value.replace(",","").replace("[","").replace("]","").replace("'","")
+                        parsed_options_dict[key] = cleaned_value.split(" ")
+                      else:
+                        parsed_options_dict[key] = type(parsed_options_dict[key])(value)
                     else:
+                    # this might be naive, but as long as you handle the vars, should be ok (at least for tags)
                       parsed_options_dict[key] = value
 
 

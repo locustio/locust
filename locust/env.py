@@ -204,14 +204,11 @@ class Environment:
 
         if self.tags is not None:
             tags = set(self.tags)
-        elif self.parsed_options and self.parsed_options.tags:
 
+        elif self.parsed_options and self.parsed_options.tags:
             #check if its a list, or a string from the webui
             if type(self.parsed_options.tags) is list:
               tags = set(self.parsed_options.tags)
-            #if its 'none', reset tag. otherwise, split
-            elif self.parsed_options.tags.lower() == "none":
-              tags = None
 
             else:
               tags = set(self.parsed_options.tags.split(" "))
@@ -224,17 +221,14 @@ class Environment:
             #check if its a list, or a string from the webui
             if type(self.parsed_options.exclude_tags) is list:
               exclude_tags = set(self.parsed_options.exclude_tags)
-            #if its 'none', reset tag. otherwise, split
-            elif self.parsed_options.exclude_tags.lower() == "none":
-              exclude_tags = None
 
             else:
               exclude_tags = set(self.parsed_options.exclude_tags.split(" "))
 
         else:
             exclude_tags = None
-        for user_class in self.user_classes:
 
+        for user_class in self.user_classes:
             #reset the task list to full, so we can add tasks there were filtered last time
             reset_task_list(user_class)
             filter_tasks_by_tags(user_class, tags, exclude_tags)

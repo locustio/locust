@@ -558,7 +558,6 @@ def default_args_dict() -> dict:
 
 def ui_extra_args_dict(args=None) -> Dict[str, str]:
     """Get all the UI visible arguments"""
-    locust_args = default_args_dict()
 
     parser = get_parser()
     all_args = vars(parser.parse_args(args))
