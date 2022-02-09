@@ -150,15 +150,27 @@ class WebUI:
                     # Replace < > to guard against XSS
                     environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
 
-                elif key in parsed_options_dict and value and value.lower() != "none":
+                elif key in parsed_options_dict:
+                    if not value or value.lower() == "none":
+                       #if blank or 'none' input, set option to None
+                       # this might be naive, but as long as you handle the vars, should be ok (at least for tags)
+                       parsed_options_dict[key] = None
+
                     # update the value in environment.parsed_options
-                    if parsed_options_dict[key] is not None:
+                    elif parsed_options_dict[key] is not None:
                       #if the original type was a list, try to format the string input as a list too
                       if type(parsed_options_dict[key]) is list:
                         #if you specify tags in the command line, and then try to change in the UI,
                         #you end up with some weird formatting, so you need to clean the string input first
                         cleaned_value = value.replace(",","").replace("[","").replace("]","").replace("'","")
                         parsed_options_dict[key] = cleaned_value.split(" ")
+                      elif type(parsed_options_dict[key]) is bool:
+                        #only worry about boolean input if its true or false
+                        if value.lower() == "true":
+                          parsed_options_dict[key] = True
+                        if value.lower() == "false":
+                          parsed_options_dict[key] = False
+
                       else:
                         parsed_options_dict[key] = type(parsed_options_dict[key])(value)
                     else:
