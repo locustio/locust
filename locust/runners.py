@@ -196,7 +196,7 @@ class Runner:
         """Called at the end of the test"""
         if self.cpu_warning_emitted:
             logger.warning(
-                "CPU usage was too high at some point during the test! See https://docs.locust.io/en/stable/running-locust-distributed.html for how to distribute the load over multiple CPU cores or machines"
+                "CPU usage was too high at some point during the test! See http://docs.locust.io/en/stable/running-distributed.html for how to distribute the load over multiple CPU cores or machines"
             )
         return self.cpu_warning_emitted
 
