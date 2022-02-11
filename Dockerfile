@@ -1,7 +1,7 @@
 FROM python:3.9
 
 COPY . /build
-RUN cd /build && pip install . && rm -rf /build
+RUN cd /build && pip install --no-cache . && rm -rf /build
 
 EXPOSE 8089 5557
 
