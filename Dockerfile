@@ -1,8 +1,9 @@
 FROM python:3.9-slim
 
-RUN apt-get update && apt-get install -y git gcc python3-dev && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 COPY . /build
-RUN cd /build && pip install --no-cache .
+RUN apt update && apt install -y --no-install-recommends git gcc python3-dev \
+    && cd /build && pip install --no-cache . \
+    && apt purge -y --auto-remove -y gcc && apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 EXPOSE 8089 5557
 
