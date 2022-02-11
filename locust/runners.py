@@ -59,6 +59,7 @@ WORKER_REPORT_INTERVAL = 3.0
 CPU_MONITOR_INTERVAL = 5.0
 HEARTBEAT_INTERVAL = 1
 HEARTBEAT_LIVENESS = 3
+HEARTBEAT_DEAD = -10
 FALLBACK_INTERVAL = 5
 
 
@@ -846,6 +847,10 @@ class MasterRunner(DistributedRunner):
                 continue
 
             for client in self.clients.all:
+                if client.heartbeat < HEARTBEAT_DEAD and client.state == STATE_MISSING:
+                    if self._users_dispatcher is not None:
+                        logger.info("Worker %s failed to send heartbeat after being marked missing for long time, removing the worker" % str(client.id))
+                        self._users_dispatcher.prepare_rebalance()
                 if client.heartbeat < 0 and client.state != STATE_MISSING:
                     logger.info("Worker %s failed to send heartbeat, setting state to missing." % str(client.id))
                     client.state = STATE_MISSING

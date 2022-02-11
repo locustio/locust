@@ -16,6 +16,8 @@ from locust import User
 if TYPE_CHECKING:
     from locust.runners import WorkerNode
 
+HEARTBEAT_DEAD = -10
+
 
 # To profile line-by-line, uncomment the code below (i.e. `import line_profiler ...`) and
 # place `@profile` on the functions/methods you wish to profile. Then, in the unit test you are
@@ -199,6 +201,13 @@ class UsersDispatcher(Iterator):
         if len(self._worker_nodes) == 0:
             # TODO: Test this
             return
+        self._prepare_rebalance()
+
+    def prepare_rebalance(self) -> None:
+        """
+        This method will remove missing workers after the HEARTBEAT_DEAD interval has passed from getting users during distribution
+        """
+        self._worker_nodes = [w for w in self._worker_nodes if w.heartbeat > HEARTBEAT_DEAD]
         self._prepare_rebalance()
 
     def _prepare_rebalance(self) -> None:
