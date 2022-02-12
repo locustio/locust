@@ -849,7 +849,10 @@ class MasterRunner(DistributedRunner):
             for client in self.clients.all:
                 if client.heartbeat < HEARTBEAT_DEAD and client.state == STATE_MISSING:
                     if self._users_dispatcher is not None:
-                        logger.info("Worker %s failed to send heartbeat after being marked missing for long time, removing the worker" % str(client.id))
+                        logger.debug(
+                            "Worker %s failed to send heartbeat after being marked missing for long time, removing the worker"
+                            % str(client.id)
+                        )
                         self._users_dispatcher.prepare_rebalance()
                 if client.heartbeat < 0 and client.state != STATE_MISSING:
                     logger.info("Worker %s failed to send heartbeat, setting state to missing." % str(client.id))
