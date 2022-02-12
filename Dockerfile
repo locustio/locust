@@ -2,7 +2,7 @@ FROM python:3.9-slim
 
 COPY . /build
 
-# there are no wheels for some packages (geventhttpclient?) for arm64/aarch, so we need some build dependencies there
+# there are no wheels for some packages (geventhttpclient?) for arm64/aarch64, so we need some build dependencies there
 RUN export NOWHEELS=$(arch | grep 'arm64\|aarch64') && apt update && apt install -y git && \
     if [ -n "$NOWHEELS" ]; then apt install -y --no-install-recommends gcc python3-dev; fi && \
     cd /build && pip install --no-cache . && \
