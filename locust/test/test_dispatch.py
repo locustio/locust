@@ -4,7 +4,7 @@ from operator import attrgetter
 from typing import Dict, List, Tuple
 
 from locust import User
-from locust.dispatch import UsersDispatcher
+from locust.dispatch import HEARTBEAT_DEAD, UsersDispatcher
 from locust.runners import WorkerNode
 from locust.test.util import clear_all_functools_lru_cache
 
@@ -3272,6 +3272,29 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
             ],
             user_classes=[User1, User2, User3, User4, User5],
         )
+
+    def test_remove_missing_workers_with_dead_heartbeat(self):
+        class User1(User):
+            weight = 1
+
+        class User2(User):
+            weight = 1
+
+        class User3(User):
+            weight = 1
+
+        user_classes = [User1, User2, User3]
+
+        worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
+        worker_nodes[1].heartbeat = HEARTBEAT_DEAD - 1
+
+        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
+
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        users_dispatcher._wait_between_dispatch = 0
+        users_dispatcher.prepare_rebalance()
+        list(users_dispatcher)
+        self.assertIs(len(users_dispatcher._worker_nodes), 2, "Expected worker 2 will be removed from worker nodes")
 
     def test_ramp_up_partially_ramp_down_and_rump_up_to_target(self):
         class User1(User):
