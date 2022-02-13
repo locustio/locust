@@ -1,6 +1,18 @@
 # Changelog
 Note that PRs for the latest version are sometimes missing here, check [github](https://github.com/locustio/locust/releases) for the latest info.
 
+## [2.8.1](https://github.com/locustio/locust/tree/2.8.1) (2022-02-13)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.8.0...2.8.1)
+
+**Fixed bugs:**
+
+- Load being distributed to missing workers too Version 2.7.4.dev14 [\#2008](https://github.com/locustio/locust/issues/2008)
+
+**Merged pull requests:**
+
+- Dockerfile: use a builder image to further optimize image size [\#2013](https://github.com/locustio/locust/pull/2013) ([cyberw](https://github.com/cyberw))
+
 ## [2.8.0](https://github.com/locustio/locust/tree/2.8.0) (2022-02-13)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.7.3...2.8.0)
