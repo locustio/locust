@@ -14,7 +14,7 @@ build_docs:
 	sphinx-build -b html docs/ docs/_build/
 
 changelog:
-	python3 generate_changelog.py
+	@echo "Not supported any more. Run ./generate_changelog.py <version_number> instead!"
 
 sass_watch:
 	sass --watch locust/static/sass:locust/static/css
