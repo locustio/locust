@@ -1,20 +1,25 @@
-FROM python:3.9-slim
+FROM python:3.9-slim as base
+FROM base as builder
 
-COPY . /build
+RUN apt update && apt install -y git 
 
 # there are no wheels for some packages (geventhttpclient?) for arm64/aarch64, so we need some build dependencies there
-RUN export NOWHEELS=$(arch | grep 'arm64\|aarch64') && apt update && apt install -y git && \
-    if [ -n "$NOWHEELS" ]; then apt install -y --no-install-recommends gcc python3-dev; fi && \
-    cd /build && pip install --no-cache . && \
-    if [ -n "$NOWHEELS" ]; then apt purge -y --auto-remove -y gcc python3-dev; fi && \
-    apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN if [ -n "$(arch | grep 'arm64\|aarch64')" ]; then apt install -y --no-install-recommends gcc python3-dev; fi
+
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+COPY . /build
+RUN pip install /build/
+
+FROM base
+ENV PATH="/opt/venv/bin:$PATH"
+COPY --from=builder /opt/venv /opt/venv
 
 EXPOSE 8089 5557
-
+# turn off python output buffering
+ENV PYTHONUNBUFFERED=1
 RUN useradd --create-home locust
 USER locust
 WORKDIR /home/locust
 ENTRYPOINT ["locust"]
-
-# turn off python output buffering
-ENV PYTHONUNBUFFERED=1
