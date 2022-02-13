@@ -1,10 +1,10 @@
 # Locust
 
+[![PyPI](https://img.shields.io/pypi/v/locust.svg)](https://pypi.org/project/locust/)
+[![PyPI](https://img.shields.io/pypi/pyversions/locust.svg)](https://pypi.org/project/locust/)
 [![Build Status](https://github.com/locustio/locust/workflows/Tests/badge.svg)](https://github.com/locustio/locust/actions?query=workflow%3ATests)
 [![codecov](https://codecov.io/gh/locustio/locust/branch/master/graph/badge.svg)](https://codecov.io/gh/locustio/locust)
 [![license](https://img.shields.io/github/license/locustio/locust.svg)](https://github.com/locustio/locust/blob/master/LICENSE)
-[![PyPI](https://img.shields.io/pypi/v/locust.svg)](https://pypi.org/project/locust/)
-[![PyPI](https://img.shields.io/pypi/pyversions/locust.svg)](https://pypi.org/project/locust/)
 [![GitHub contributors](https://img.shields.io/github/contributors/locustio/locust.svg)](https://github.com/locustio/locust/graphs/contributors)
 
 Locust is an easy to use, scriptable and scalable performance testing tool. You define the behaviour of your users in regular Python code, instead of being constrained by a UI or domain specific language that only pretends to be real code. This makes Locust infinitely expandable and very developer friendly.
