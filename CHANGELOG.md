@@ -1,14 +1,22 @@
 # Changelog
 Note that PRs for the latest version are sometimes missing here, check [github](https://github.com/locustio/locust/releases) for the latest info.
 
-## [2.7.4](https://github.com/locustio/locust/tree/2.7.4) (2022-02-13)
+## [2.8.0](https://github.com/locustio/locust/tree/2.8.0) (2022-02-13)
 
-[Full Changelog](https://github.com/locustio/locust/compare/2.7.3...2.7.4)
+[Full Changelog](https://github.com/locustio/locust/compare/2.7.3...2.8.0)
 
 **Closed issues:**
 
 - Add type hints [\#2000](https://github.com/locustio/locust/issues/2000)
 - 'Tasks' section remains empty for html on v 2.7.0 [\#1994](https://github.com/locustio/locust/issues/1994)
+
+**Merged pull requests:**
+
+- Dockerfile: only install build dependencies on arm64 \(everyone else has pre-built wheels\) [\#2011](https://github.com/locustio/locust/pull/2011) ([cyberw](https://github.com/cyberw))
+- Shrink docker image, mainly by switching base image to python3.9-slim [\#2009](https://github.com/locustio/locust/pull/2009) ([cyberw](https://github.com/cyberw))
+- Fix link to distributed load generation documentation in CPU log warning [\#2007](https://github.com/locustio/locust/pull/2007) ([mayaCostantini](https://github.com/mayaCostantini))
+- Mark package as being typed and add some missing type hints [\#2003](https://github.com/locustio/locust/pull/2003) ([RobertCraigie](https://github.com/RobertCraigie))
+- Fix empty tasks section in UI and static report bug [\#2001](https://github.com/locustio/locust/pull/2001) ([EzR1d3r](https://github.com/EzR1d3r))
 
 ## [2.7.3](https://github.com/locustio/locust/tree/2.7.3) (2022-02-06)
 

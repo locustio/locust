@@ -4,7 +4,7 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
-2.7.4
+2.8.0
 =====
 
 * Shrink docker image significantly (95MB compressed size for x64 instead of 358MB) by basing the image on python3-slim instead of python3 
