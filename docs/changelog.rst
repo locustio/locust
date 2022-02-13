@@ -7,7 +7,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 2.8.1
 =====
 
-* Further optimize docker image
+* Further optimize docker image (60MB compressed)
 
 2.8.0
 =====
