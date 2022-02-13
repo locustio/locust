@@ -4,10 +4,16 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.7.4
+=====
+
+* Shrink docker image significantly (95MB compressed size for x64 instead of 358MB) by basing the image on python3-slim instead of python3 
+* Fix empty tasks section in UI and static report bug (really) https://github.com/locustio/locust/pull/2001
+
 2.7.3
 =====
 
-* Fix 'Tasks' section remains empty in web ui in https://github.com/locustio/locust/pull/1997
+* Fix 'Tasks' section remains empty in web ui https://github.com/locustio/locust/pull/1997
 
 2.7.2
 =====
