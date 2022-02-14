@@ -20,6 +20,8 @@ EXPOSE 8089 5557
 # turn off python output buffering
 ENV PYTHONUNBUFFERED=1
 RUN useradd --create-home locust
+# ensure correct permissions
+RUN chown -R locust /opt/venv
 USER locust
 WORKDIR /home/locust
 ENTRYPOINT ["locust"]
