@@ -26,7 +26,7 @@ cmd = [
     "--header-label",
     "# Changelog\nNote that PRs for the latest version are sometimes missing here, check [github](https://github.com/locustio/locust/releases) for the latest info.",
     "--since-tag",
-    "0.9.0",
+    "0.14.6",
     "--future-release",
     version,
 ]

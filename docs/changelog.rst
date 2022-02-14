@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.8.2
+=====
+
+* Fix issue with permissions in docker image
+
 2.8.1
 =====
 
