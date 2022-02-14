@@ -13,10 +13,8 @@ COPY . /build
 RUN pip install /build/
 
 FROM base
-ENV PATH="/opt/venv/bin:$PATH"
 COPY --from=builder /opt/venv /opt/venv
-
-EXPOSE 8089 5557
+ENV PATH="/opt/venv/bin:$PATH"
 # turn off python output buffering
 ENV PYTHONUNBUFFERED=1
 RUN useradd --create-home locust
@@ -24,4 +22,5 @@ RUN useradd --create-home locust
 RUN chown -R locust /opt/venv
 USER locust
 WORKDIR /home/locust
+EXPOSE 8089 5557
 ENTRYPOINT ["locust"]
