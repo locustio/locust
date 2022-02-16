@@ -1045,3 +1045,4 @@ class StatsCSVFileWriter(StatsCSV):
 
     def stats_history_file_name(self):
         return self.base_filepath + "_stats_history.csv"
+

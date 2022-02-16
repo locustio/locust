@@ -146,7 +146,7 @@ For example, you can monitor the fail ratio of your test and stop the run if it 
 
     @events.init.add_listener
     def on_locust_init(environment, **_kwargs):
-        # dont run this on workers, we only care about the aggregated numbers
+        # don't run this on workers, we only care about the aggregated numbers
         if isinstance(environment.runner, MasterRunner) or isinstance(environment.runner, LocalRunner):
             gevent.spawn(checker, environment)
 

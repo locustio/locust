@@ -4,7 +4,7 @@
 Getting started
 ===============
 
-A Locust test is essentially a Python program. This makes it very flexible and particularly good at implementing complex user flows. But it can do simple tests as well, so lets start with that:
+A Locust test is essentially a Python program. This makes it very flexible and particularly good at implementing complex user flows. But it can do simple tests as well, so let's start with that:
 
 .. code-block:: python
 
@@ -100,4 +100,4 @@ To see all available options type: ``locust --help`` or check :ref:`configuratio
 
 |
 
-Now, lets have a more in-depth look at locustfiles and what they can do: :ref:`writing-a-locustfile`
+Now, let's have a more in-depth look at locustfiles and what they can do: :ref:`writing-a-locustfile`

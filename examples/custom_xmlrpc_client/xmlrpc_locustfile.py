@@ -64,3 +64,4 @@ class MyUser(XmlRpcUser):
     @task
     def get_random_number(self):
         self.client.get_random_number(0, 100)
+

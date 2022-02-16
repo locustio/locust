@@ -33,6 +33,6 @@ Always make sure you are running an up to date Locust version (pip3 install -U l
 
 - OS:
 - Python version:
-- Locust version: (please dont file issues for anything but the most recent release or prerelease builds)
+- Locust version: (please don't file issues for anything but the most recent release or prerelease builds)
 - Locust command line that you ran:
 - Locust file contents (anonymized if necessary):

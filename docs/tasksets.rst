@@ -170,5 +170,5 @@ For example, the following code will request URLs /1-/4 in order, and then repea
         def last_task(self):
             self.client.get("/4")
 
-Note that you dont need SequentialTaskSets to just do some requests in order. It is often easier to 
+Note that you don't need SequentialTaskSets to just do some requests in order. It is often easier to 
 just do a whole user flow in a single task.

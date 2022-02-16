@@ -4,7 +4,7 @@
 Writing a locustfile
 ======================
 
-Now, lets look at a more complete/realistic example of what your tests might look like:
+Now, let's look at a more complete/realistic example of what your tests might look like:
 
 .. code-block:: python
 
