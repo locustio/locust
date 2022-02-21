@@ -439,9 +439,14 @@ class DefaultTaskSet(TaskSet):
         return random.choice(self.user.tasks)
 
     def execute_task(self, task):
-        if hasattr(task, "tasks") and issubclass(task, TaskSet):
-            # task is  (nested) TaskSet class
-            task(self.user).run()
-        else:
-            # task is a function
-            task(self.user)
+        try:
+            if hasattr(task, "tasks") and issubclass(task, TaskSet):
+                # task is  (nested) TaskSet class
+                task(self.user).run()
+            else:
+                # task is a function
+                task(self.user)
+        except (InterruptTaskSet, ) as e:
+            if not self.user.handle_exceptions:
+                raise
+            logging.info(f"Exception of type {type(e).__name__} occurred while executing the task.")
