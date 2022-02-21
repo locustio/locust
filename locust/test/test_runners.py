@@ -553,7 +553,7 @@ class TestLocustRunner(LocustTestCase):
         self.assertFalse(test_custom_msg[0])
         self.assertEqual(1, len(self.mocked_log.warning))
         msg = self.mocked_log.warning[0]
-        self.assertIn("Unknown message type recieved", msg)
+        self.assertIn("Unknown message type received", msg)
 
     def test_swarm_endpoint_is_non_blocking(self):
         class TestUser1(User):
@@ -2605,7 +2605,7 @@ class TestMasterRunner(LocustTestCase):
             self.assertFalse(test_custom_msg[0])
             self.assertEqual(1, len(self.mocked_log.warning))
             msg = self.mocked_log.warning[0]
-            self.assertIn("Unknown message type recieved from worker", msg)
+            self.assertIn("Unknown message type received from worker", msg)
 
     def test_wait_for_workers_report_after_ramp_up(self):
         def assert_cache_hits():
@@ -3087,7 +3087,7 @@ class TestWorkerRunner(LocustTestCase):
             self.assertFalse(test_custom_msg[0])
             self.assertEqual(1, len(self.mocked_log.warning))
             msg = self.mocked_log.warning[0]
-            self.assertIn("Unknown message type recieved", msg)
+            self.assertIn("Unknown message type received", msg)
 
     def test_start_event(self):
         class MyTestUser(User):

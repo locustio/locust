@@ -175,7 +175,7 @@ class Runner:
                 #       the supplied args are emptied whenever the greenlet is dead, so we can
                 #       simply ignore the greenlets with empty args.
                 logger.debug(
-                    "ERROR: While calculating number of running users, we encountered a user that didnt have proper args %s (user_greenlet.dead=%s)",
+                    "ERROR: While calculating number of running users, we encountered a user that didn't have proper args %s (user_greenlet.dead=%s)",
                     user_greenlet,
                     user_greenlet.dead,
                 )
@@ -247,7 +247,7 @@ class Runner:
                     user = user_greenlet.args[0]
                 except IndexError:
                     logger.error(
-                        "While stopping users, we encountered a user that didnt have proper args %s", user_greenlet
+                        "While stopping users, we encountered a user that didn't have proper args %s", user_greenlet
                     )
                     continue
                 if isinstance(user, self.user_classes_by_name[user_class]):
@@ -411,7 +411,7 @@ class Runner:
                 #        Because the first stage will take 100s to complete, the second stage
                 #        will be skipped completely because the shape worker will be blocked
                 #        at the `self.start()` of the first stage.
-                #        Of couse, this isn't a problem if the load test shape is well-defined.
+                #        Of course, this isn't a problem if the load test shape is well-defined.
                 #        We should probably use a `gevent.timeout` with a duration a little over
                 #        `(user_count - prev_user_count) / spawn_rate` in order to limit the runtime
                 #        of each load test shape stage.
@@ -482,7 +482,7 @@ class LocalRunner(Runner):
         """
         super().__init__(environment)
 
-        # register listener thats logs the exception for the local runner
+        # register listener that's logs the exception for the local runner
         def on_user_error(user_instance, exception, tb):
             formatted_tb = "".join(traceback.format_tb(tb))
             self.log_exception("local", str(exception), formatted_tb)
@@ -521,7 +521,7 @@ class LocalRunner(Runner):
             msg = Message(msg_type, data, "local")
             listener(environment=self.environment, msg=msg)
         else:
-            logger.warning(f"Unknown message type recieved: {msg_type}")
+            logger.warning(f"Unknown message type received: {msg_type}")
 
 
 class DistributedRunner(Runner):
@@ -757,7 +757,7 @@ class MasterRunner(DistributedRunner):
                 gevent.sleep(0.01)
         except gevent.Timeout:
             msg_prefix = (
-                "Spawning is complete and report waittime is expired, but not all reports recieved from workers"
+                "Spawning is complete and report waittime is expired, but not all reports received from workers"
             )
         finally:
             timeout.cancel()
@@ -975,10 +975,10 @@ class MasterRunner(DistributedRunner):
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
             elif msg.type in self.custom_messages:
-                logger.debug(f"Recieved {msg.type} message from worker {msg.node_id}")
+                logger.debug(f"Received {msg.type} message from worker {msg.node_id}")
                 self.custom_messages[msg.type](environment=self.environment, msg=msg)
             else:
-                logger.warning(f"Unknown message type recieved from worker {msg.node_id}: {msg.type}")
+                logger.warning(f"Unknown message type received from worker {msg.node_id}: {msg.type}")
 
             self.check_stopped()
 
@@ -1067,7 +1067,7 @@ class WorkerRunner(DistributedRunner):
 
         self.environment.events.quitting.add_listener(on_quitting)
 
-        # register listener thats sends user exceptions to master
+        # register listener that's sends user exceptions to master
         def on_user_error(user_instance, exception, tb):
             formatted_tb = "".join(traceback.format_tb(tb))
             self.client.send(Message("exception", {"msg": str(exception), "traceback": formatted_tb}, self.client_id))
@@ -1196,10 +1196,10 @@ class WorkerRunner(DistributedRunner):
                 self._send_stats()  # send a final report, in case there were any samples not yet reported
                 self.greenlet.kill(block=True)
             elif msg.type in self.custom_messages:
-                logger.debug(f"Recieved {msg.type} message from master")
+                logger.debug(f"Received {msg.type} message from master")
                 self.custom_messages[msg.type](environment=self.environment, msg=msg)
             else:
-                logger.warning(f"Unknown message type recieved: {msg.type}")
+                logger.warning(f"Unknown message type received: {msg.type}")
 
     def stats_reporter(self):
         while True:

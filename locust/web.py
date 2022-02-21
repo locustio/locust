@@ -142,7 +142,7 @@ class WebUI:
 
             parsed_options_dict = vars(environment.parsed_options) if environment.parsed_options else {}
             for key, value in request.form.items():
-                if key == "user_count":  # if we just renamed this field to "users" we wouldnt need this
+                if key == "user_count":  # if we just renamed this field to "users" we wouldn't need this
                     user_count = int(value)
                 elif key == "spawn_rate":
                     spawn_rate = float(value)
@@ -151,7 +151,7 @@ class WebUI:
                     environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
                 elif key in parsed_options_dict:
                     # update the value in environment.parsed_options, but dont change the type.
-                    # This wont work for parameters that are None
+                    # This won't work for parameters that are None
                     parsed_options_dict[key] = type(parsed_options_dict[key])(value)
 
             if environment.shape_class:

@@ -100,7 +100,7 @@ class User(object, metaclass=UserMeta):
     fixed_count = 0
     """
     If the value > 0, the weight property will be ignored and the 'fixed_count'-instances will be spawned.
-    These Users are spawned first. If the total target count (specified by the --users arg) is not enougth
+    These Users are spawned first. If the total target count (specified by the --users arg) is not enough
     to spawn all instances of each User class with the defined property, the final count of each User is undefined.
     """
 
