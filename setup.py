@@ -11,7 +11,7 @@ ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
 setup(
     name="locust",
     install_requires=[
-        "gevent>=20.9.0",
+        "gevent>=20.12.1",
         "flask>=2.0.0",
         "Werkzeug>=2.0.0",
         "requests>=2.23.0",
