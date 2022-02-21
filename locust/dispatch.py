@@ -1,3 +1,4 @@
+from collections import defaultdict
 import contextlib
 import itertools
 import math
@@ -58,8 +59,17 @@ class UsersDispatcher(Iterator):
         #       This is especially important when iterating over a dictionary which, prior to py3.7, was
         #       completely unordered. For >=Py3.7, a dictionary keeps the insertion order. Even then,
         #       it is safer to sort the keys when repeatable behaviour is required.
-        self._worker_nodes = sorted(worker_nodes, key=lambda w: w.id)
+        worker_nodes_by_id = sorted(worker_nodes, key=lambda w: w.id)
 
+        # NOTE: Rather than just sort by worker name, we now sort by hostname too, so that
+        #       workers from the same host are spread out
+        workers_per_host = defaultdict(lambda: 0)
+        for worker_node in worker_nodes_by_id:
+            host = worker_node.id.split("_")[0]
+            worker_node._index_within_host = workers_per_host[host]
+            workers_per_host[host] = workers_per_host[host] + 1
+
+        self._worker_nodes = sorted(worker_nodes, key=lambda worker: (worker._index_within_host, worker.id))
         self._user_classes = sorted(user_classes, key=attrgetter("__name__"))
 
         assert len(user_classes) > 0
