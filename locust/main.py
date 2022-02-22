@@ -424,7 +424,6 @@ def main():
         if input_listener_greenlet is not None:
             input_listener_greenlet.kill(block=False)
 
-        environment.events.quitting.fire(environment=environment, reverse=True)
 
         # determine the process exit code
         if log.unhandled_greenlet_exception:
@@ -435,6 +434,8 @@ def main():
             code = options.exit_code_on_error
         else:
             code = 0
+
+        environment.events.quitting.fire(environment=environment, reverse=True, code=code)
 
         logger.info("Shutting down (exit code %s)" % code)
         if stats_printer_greenlet is not None:
