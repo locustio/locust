@@ -94,6 +94,13 @@ class User(object, metaclass=UserMeta):
             tasks = {ThreadPage:15, write_post:1}
     """
 
+    handle_exceptions = False
+    """
+    If set to True, whenever an exception occurs in the Locust test workflow, this will be handled and
+    logged into stdout as a single line of log with log level INFO. If set to False, it will re-raise
+    the eventual exception (or chain of exceptions) back to the caller.
+    """
+
     weight = 1
     """Probability of user class being chosen. The higher the weight, the greater the chance of it being chosen."""
 

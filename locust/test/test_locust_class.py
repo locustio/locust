@@ -8,6 +8,7 @@ from locust.env import Environment
 from locust.exception import CatchResponseError, RescheduleTask, RescheduleTaskImmediately, StopUser
 
 from .testcases import LocustTestCase, WebserverTestCase
+from ..user.task import DefaultTaskSet
 
 
 class TestTaskSet(LocustTestCase):
@@ -430,6 +431,46 @@ class TestTaskSet(LocustTestCase):
 
         MyUser(Environment()).run()
         self.assertTrue(MyTaskSet.raised_attribute_error)
+
+    def test_execute_task_raise_exception(self):
+        class MySubTaskSet(TaskSet):
+            constant(1)
+
+            @task()
+            def a_task(self):
+                self.user.sub_locust_task_executed = True
+                self.interrupt()
+
+        class MyTaskSet(DefaultTaskSet):
+            tasks = [MySubTaskSet]
+
+        self.locust.tasks = MyTaskSet.tasks
+        self.sub_locust_task_executed = False
+        loc = MyTaskSet(self.locust)
+
+        with self.assertRaises(RescheduleTaskImmediately):
+            loc.execute_task(loc.get_next_task())
+        self.assertTrue(self.locust.sub_locust_task_executed)
+
+    def test_execute_task_exception_handled(self):
+        class MySubTaskSet(TaskSet):
+            constant(1)
+
+            @task()
+            def a_task(self):
+                self.user.sub_locust_task_executed = True
+                self.interrupt()
+
+        class MyTaskSet(DefaultTaskSet):
+            tasks = [MySubTaskSet]
+
+        self.locust.tasks = MyTaskSet.tasks
+        self.locust.handle_exceptions = True
+        self.sub_locust_task_executed = False
+        loc = MyTaskSet(self.locust)
+
+        loc.execute_task(loc.get_next_task())
+        self.assertTrue(self.locust.sub_locust_task_executed)
 
 
 class TestLocustClass(LocustTestCase):

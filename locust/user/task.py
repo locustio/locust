@@ -446,7 +446,10 @@ class DefaultTaskSet(TaskSet):
             else:
                 # task is a function
                 task(self.user)
-        except (InterruptTaskSet, ) as e:
+        except (
+            InterruptTaskSet,
+            RescheduleTaskImmediately,
+        ) as e:
             if not self.user.handle_exceptions:
                 raise
             logging.info(f"Exception of type {type(e).__name__} occurred while executing the task.")
