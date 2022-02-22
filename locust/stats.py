@@ -36,7 +36,7 @@ def resize_handler(signum, frame):
 try:
     signal.signal(signal.SIGWINCH, resize_handler)
 except AttributeError:
-    pass  # Windows doesnt have SIGWINCH
+    pass  # Windows doesn't have SIGWINCH
 
 STATS_TYPE_WIDTH = 8
 

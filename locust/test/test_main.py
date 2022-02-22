@@ -432,7 +432,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
             self.assertIn("Shutting down ", stderr)
             self.assertNotIn("Traceback", stderr)
-            # check response afterwards, because it really isnt as informative as stderr
+            # check response afterwards, because it really isn't as informative as stderr
             self.assertEqual(200, response.status_code)
             self.assertIn('<body class="running">', response.text)
 
@@ -466,7 +466,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Run time limit set to 2 seconds", stderr)
             self.assertIn("Shutting down ", stderr)
             self.assertNotIn("Traceback", stderr)
-            # check response afterwards, because it really isnt as informative as stderr
+            # check response afterwards, because it really isn't as informative as stderr
             self.assertEqual(200, response.status_code)
             self.assertIn('<body class="running">', response.text)
 
@@ -516,7 +516,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Shape test starting", stderr)
             self.assertIn("Shutting down ", stderr)
             self.assertIn("autoquit time reached", stderr)
-            # check response afterwards, because it really isnt as informative as stderr
+            # check response afterwards, because it really isn't as informative as stderr
             self.assertEqual(200, response.status_code)
             self.assertIn('<body class="spawning">', response.text)
             self.assertTrue(success, "got timeout and had to kill the process")
@@ -987,7 +987,7 @@ class SecondUser(HttpUser):
             proc_worker.communicate()
 
             self.assertIn(
-                'Spawning is complete and report waittime is expired, but not all reports recieved from workers: {"User1": 2} (2 total users)',
+                'Spawning is complete and report waittime is expired, but not all reports received from workers: {"User1": 2} (2 total users)',
                 stdout,
             )
             self.assertIn("Shutting down (exit code 0)", stdout)

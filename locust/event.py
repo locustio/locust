@@ -194,7 +194,7 @@ class Events:
     """
 
     def __init__(self):
-        # For backwarde compatiblilty use also values of class attributes
+        # For backwarde compatibility use also values of class attributes
         for name, value in vars(type(self)).items():
             if value == EventHook:
                 setattr(self, name, value())

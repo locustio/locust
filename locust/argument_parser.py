@@ -233,7 +233,7 @@ def setup_parser_arguments(parser):
         help="Quits Locust entirely, X seconds after the run is finished. Only used together with --autostart. The default is to keep Locust running until you shut it down using CTRL+C",
         env_var="LOCUST_AUTOQUIT",
     )
-    # Override --headless parameter (useful because you cant disable a store_true-parameter like headless once it has been set in a config file)
+    # Override --headless parameter (useful because you can't disable a store_true-parameter like headless once it has been set in a config file)
     web_ui_group.add_argument(
         "--headful",
         action="store_true",
