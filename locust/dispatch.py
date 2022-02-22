@@ -55,21 +55,8 @@ class UsersDispatcher(Iterator):
         :param worker_nodes: List of worker nodes
         :param user_classes: The user classes
         """
-        # NOTE: We use "sorted" to ensure repeatable behaviour.
-        #       This is especially important when iterating over a dictionary which, prior to py3.7, was
-        #       completely unordered. For >=Py3.7, a dictionary keeps the insertion order. Even then,
-        #       it is safer to sort the keys when repeatable behaviour is required.
-        worker_nodes_by_id = sorted(worker_nodes, key=lambda w: w.id)
-
-        # NOTE: Rather than just sort by worker name, we now sort by hostname too, so that
-        #       workers from the same host are spread out
-        workers_per_host = defaultdict(lambda: 0)
-        for worker_node in worker_nodes_by_id:
-            host = worker_node.id.split("_")[0]
-            worker_node._index_within_host = workers_per_host[host]
-            workers_per_host[host] = workers_per_host[host] + 1
-
-        self._worker_nodes = sorted(worker_nodes, key=lambda worker: (worker._index_within_host, worker.id))
+        self._worker_nodes = worker_nodes
+        self._sort_workers()
         self._user_classes = sorted(user_classes, key=attrgetter("__name__"))
 
         assert len(user_classes) > 0
@@ -125,6 +112,20 @@ class UsersDispatcher(Iterator):
         # TODO: Is this necessary to copy the users_on_workers if we know
         #       it won't be mutated by external code?
         return self._fast_users_on_workers_copy(users_on_workers)
+
+    def _sort_workers(self):
+        # Sorting workers ensures repeatable behaviour
+        worker_nodes_by_id = sorted(self._worker_nodes, key=lambda w: w.id)
+
+        # Give every worker an index indicating how many workers came before it on that host
+        workers_per_host = defaultdict(lambda: 0)
+        for worker_node in worker_nodes_by_id:
+            host = worker_node.id.split("_")[0]
+            worker_node._index_within_host = workers_per_host[host]
+            workers_per_host[host] = workers_per_host[host] + 1
+
+        # Sort again, first by index within host, to ensure Users get started evenly across hosts
+        self._worker_nodes = sorted(self._worker_nodes, key=lambda worker: (worker._index_within_host, worker.id))
 
     def _dispatcher(self) -> Generator[Dict[str, Dict[str, int]], None, None]:
         self._dispatch_in_progress = True
@@ -194,7 +195,7 @@ class UsersDispatcher(Iterator):
         :param worker_node: The worker node to add.
         """
         self._worker_nodes.append(worker_node)
-        self._worker_nodes = sorted(self._worker_nodes, key=lambda w: w.id)
+        self._sort_workers()
         self._prepare_rebalance()
 
     def remove_worker(self, worker_node: "WorkerNode") -> None:

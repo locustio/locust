@@ -2758,13 +2758,17 @@ class TestAddWorker(unittest.TestCase):
 
         user_classes = [User1, User2, User3]
 
-        worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
+        worker_nodes = [
+            WorkerNode("hostname1_worker1"),
+            WorkerNode("hostname1_worker2"),
+            WorkerNode("hostname2_worker1"),
+        ]
 
         users_dispatcher = UsersDispatcher(worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes)
 
         sleep_time = 0.2  # Speed-up test
 
-        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        users_dispatcher.new_dispatch(target_user_count=11, spawn_rate=3)
         users_dispatcher._wait_between_dispatch = sleep_time
 
         # Dispatch iteration 1
@@ -2814,6 +2818,17 @@ class TestAddWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 3)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 3)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 3)
+
+        # Dispatch iteration 4
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 4, "User2": 4, "User3": 3})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 4)
+        # without host-based balancing the following two values would be reversed
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 3)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
 
     def test_add_two_workers_during_ramp_up(self):
         class User1(User):
