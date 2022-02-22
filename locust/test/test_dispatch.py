@@ -782,6 +782,70 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         delta = time.perf_counter() - ts
         self.assertTrue(0 <= delta <= _TOLERANCE, delta)
 
+    def test_users_are_distributed_evenly_across_hosts(self):
+        class User1(User):
+            weight = 1
+
+        class User2(User):
+            weight = 1
+
+        class User3(User):
+            weight = 1
+
+        worker_node1 = WorkerNode("hostname1_worker1")
+        worker_node2 = WorkerNode("hostname1_worker2")
+        worker_node3 = WorkerNode("hostname2_worker1")
+        worker_node4 = WorkerNode("hostname2_worker2")
+
+        sleep_time = 0.2  # Speed-up test
+
+        users_dispatcher = UsersDispatcher(
+            worker_nodes=[worker_node1, worker_node2, worker_node3, worker_node4], user_classes=[User1, User2, User3]
+        )
+        users_dispatcher.new_dispatch(target_user_count=6, spawn_rate=2)
+        users_dispatcher._wait_between_dispatch = sleep_time
+
+        ts = time.perf_counter()
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "hostname1_worker1": {"User1": 1, "User2": 0, "User3": 0},
+                "hostname1_worker2": {"User1": 0, "User2": 0, "User3": 0},
+                "hostname2_worker1": {"User1": 0, "User2": 1, "User3": 0},
+                "hostname2_worker2": {"User1": 0, "User2": 0, "User3": 0},
+            },
+        )
+        delta = time.perf_counter() - ts
+        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
+
+        ts = time.perf_counter()
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "hostname1_worker1": {"User1": 1, "User2": 0, "User3": 0},
+                "hostname1_worker2": {"User1": 0, "User2": 0, "User3": 1},
+                "hostname2_worker1": {"User1": 0, "User2": 1, "User3": 0},
+                "hostname2_worker2": {"User1": 1, "User2": 0, "User3": 0},
+            },
+        )
+        delta = time.perf_counter() - ts
+        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
+
+        ts = time.perf_counter()
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "hostname1_worker1": {"User1": 1, "User2": 1, "User3": 0},
+                "hostname1_worker2": {"User1": 0, "User2": 0, "User3": 1},
+                "hostname2_worker1": {"User1": 0, "User2": 1, "User3": 1},
+                "hostname2_worker2": {"User1": 1, "User2": 0, "User3": 0},
+            },
+        )
+        ts = time.perf_counter()
+        self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.perf_counter() - ts
+        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
+
 
 class TestWaitBetweenDispatch(unittest.TestCase):
     def test_wait_between_dispatch(self):
@@ -2694,13 +2758,17 @@ class TestAddWorker(unittest.TestCase):
 
         user_classes = [User1, User2, User3]
 
-        worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
+        worker_nodes = [
+            WorkerNode("hostname1_worker1"),
+            WorkerNode("hostname1_worker2"),
+            WorkerNode("hostname2_worker1"),
+        ]
 
         users_dispatcher = UsersDispatcher(worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes)
 
         sleep_time = 0.2  # Speed-up test
 
-        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
+        users_dispatcher.new_dispatch(target_user_count=11, spawn_rate=3)
         users_dispatcher._wait_between_dispatch = sleep_time
 
         # Dispatch iteration 1
@@ -2750,6 +2818,17 @@ class TestAddWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 3)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 3)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 3)
+
+        # Dispatch iteration 4
+        ts = time.perf_counter()
+        dispatched_users = next(users_dispatcher)
+        delta = time.perf_counter() - ts
+        self.assertTrue(sleep_time - _TOLERANCE <= delta <= sleep_time + _TOLERANCE, delta)
+        self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 4, "User2": 4, "User3": 3})
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 4)
+        # without host-based balancing the following two values would be reversed
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 3)
+        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
 
     def test_add_two_workers_during_ramp_up(self):
         class User1(User):
