@@ -137,12 +137,14 @@ def parse_locustfile_option(args=None):
         if options.help or options.version:
             # if --help or --version is specified we'll call parse_options which will print the help/version message
             parse_options(args=args)
-        if options.locustfile.endswith(".py") or options.locustfile == "locustfile":
-            note_about_file_endings = ""
-        else:
-            note_about_file_endings = "Ensure your file ends with '.py'. "
+        note_about_file_endings = ""
+        user_friendly_locustfile_name = options.locustfile
+        if options.locustfile == "locustfile":
+            user_friendly_locustfile_name = "locustfile.py"
+        elif not options.locustfile.endswith(".py"):
+            note_about_file_endings = "Ensure your locustfile ends with '.py'. "
         sys.stderr.write(
-            f"Could not find any locustfile called '{options.locustfile}'. {note_about_file_endings}See --help for available options.\n"
+            f"Could not find '{user_friendly_locustfile_name}'. {note_about_file_endings}See --help for available options.\n"
         )
         sys.exit(1)
 
