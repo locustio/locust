@@ -100,8 +100,8 @@ def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG
     parser.add_argument(
         "-f",
         "--locustfile",
-        default="locustfile",
-        help="Python module file to import, e.g. '../other.py'. Default: locustfile",
+        default="locustfile.py",
+        help="Python module to import, e.g. '../other_test.py'. Either a .py file or a package directory. Defaults to 'locustfile.py'",
         env_var="LOCUST_LOCUSTFILE",
     )
     parser.add_argument("--config", is_config_file_arg=True, help="Config file path")
@@ -137,8 +137,9 @@ def parse_locustfile_option(args=None):
         if options.help or options.version:
             # if --help or --version is specified we'll call parse_options which will print the help/version message
             parse_options(args=args)
+        note_about_file_endings = "" if options.locustfile.endswith(".py") else "Ensure your file ends with '.py'. "
         sys.stderr.write(
-            "Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.\n"
+            f"Could not find any locustfile called '{options.locustfile}'. {note_about_file_endings}See --help for available options.\n"
         )
         sys.exit(1)
 
