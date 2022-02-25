@@ -2271,11 +2271,15 @@ class TestMasterRunner(LocustTestCase):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner(user_classes=[TestUser])
 
-            run_count = [0]
+            run_count = [0, 0]
+
+            @self.environment.events.test_stopping.add_listener
+            def on_test_stopping(*a, **kw):
+                run_count[0] += 1
 
             @self.environment.events.test_stop.add_listener
             def on_test_stop(*a, **kw):
-                run_count[0] += 1
+                run_count[1] += 1
 
             for i in range(5):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
@@ -2284,6 +2288,7 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(5, len(server.outbox))
             master.quit()
             self.assertEqual(1, run_count[0])
+            self.assertEqual(1, run_count[1])
 
     def test_spawn_zero_locusts(self):
         class MyTaskSet(TaskSet):
