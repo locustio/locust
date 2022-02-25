@@ -197,19 +197,25 @@ class TestLocustRunner(LocustTestCase):
             def my_task(self):
                 pass
 
-        test_stop_run = [0]
+        test_stop_run = [0, 0]
         environment = Environment(user_classes=[User])
 
-        def on_test_stop(*args, **kwargs):
+        def on_test_stopping(*_, **__):
             test_stop_run[0] += 1
 
+        def on_test_stop(*args, **kwargs):
+            test_stop_run[1] += 1
+
+        environment.events.test_stopping.add_listener(on_test_stopping)
         environment.events.test_stop.add_listener(on_test_stop)
 
         runner = LocalRunner(environment)
         runner.start(user_count=3, spawn_rate=3, wait=False)
         self.assertEqual(0, test_stop_run[0])
+        self.assertEqual(0, test_stop_run[1])
         runner.stop()
         self.assertEqual(1, test_stop_run[0])
+        self.assertEqual(1, test_stop_run[1])
 
     def test_stop_event_quit(self):
         class MyUser(User):
@@ -2224,11 +2230,15 @@ class TestMasterRunner(LocustTestCase):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner(user_classes=[TestUser])
 
-            run_count = [0]
+            run_count = [0, 0]
+
+            @self.environment.events.test_stopping.add_listener
+            def on_test_stopping(*a, **kw):
+                run_count[0] += 1
 
             @self.environment.events.test_stop.add_listener
             def on_test_stop(*a, **kw):
-                run_count[0] += 1
+                run_count[1] += 1
 
             for i in range(5):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
@@ -2245,6 +2255,7 @@ class TestMasterRunner(LocustTestCase):
             master.stop()
             master.quit()
             self.assertEqual(1, run_count[0])
+            self.assertEqual(1, run_count[1])
 
     def test_stop_event_quit(self):
         """

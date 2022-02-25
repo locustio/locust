@@ -183,6 +183,11 @@ class Events:
     users change during a test.
     """
 
+    test_stopping: EventHook
+    """
+    Fired on each node when a load test is about to stop - before stopping users.
+    """
+
     test_stop: EventHook
     """
     Fired on each node when a load test is stopped.

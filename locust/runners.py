@@ -425,6 +425,7 @@ class Runner:
         if self.state == STATE_STOPPED:
             return
         logger.debug("Stopping all users")
+        self.environment.events.test_stopping.fire(environment=self.environment)
         self.final_user_classes_count = {**self.user_classes_count}
         self.update_state(STATE_CLEANUP)
 
@@ -794,6 +795,7 @@ class MasterRunner(DistributedRunner):
     def stop(self, send_stop_to_client: bool = True):
         if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
             logger.debug("Stopping...")
+            self.environment.events.test_stopping.fire(environment=self.environment)
             self.final_user_classes_count = {**self.reported_user_classes_count}
             self.update_state(STATE_STOPPING)
 
