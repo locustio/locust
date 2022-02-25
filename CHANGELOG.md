@@ -1,6 +1,17 @@
 # Changelog
 Note that PRs for the latest version are sometimes missing here, check [github](https://github.com/locustio/locust/releases) for the latest info.
 
+## [2.8.3](https://github.com/locustio/locust/tree/2.8.3) (2022-02-25)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.8.2...2.8.3)
+
+**Merged pull requests:**
+
+- Ran pyupgrade on the code base, removing various "Python2-isms". [\#2032](https://github.com/locustio/locust/pull/2032) ([cyberw](https://github.com/cyberw))
+- Ensure users are distributed evently across hosts during ramp up [\#2025](https://github.com/locustio/locust/pull/2025) ([cyberw](https://github.com/cyberw))
+- Bump minimum required gevent version to 20.12.1 [\#2023](https://github.com/locustio/locust/pull/2023) ([cyberw](https://github.com/cyberw))
+- Fix typos [\#2022](https://github.com/locustio/locust/pull/2022) ([kianmeng](https://github.com/kianmeng))
+
 ## [2.8.2](https://github.com/locustio/locust/tree/2.8.2) (2022-02-14)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.8.1...2.8.2)
