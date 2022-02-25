@@ -9,6 +9,11 @@ Note that PRs for the latest version are sometimes missing here, check [github](
 
 - Issue to install python libraries inside locust container when using the locust docker image version 2.8.1 [\#2015](https://github.com/locustio/locust/issues/2015)
 
+**Merged pull requests:**
+
+- Dockerfile: Fix permissions in venv to allow installing packages in derived images [\#2016](https://github.com/locustio/locust/pull/2016) ([cyberw](https://github.com/cyberw))
+- Fix locust version in docker image \(lose the .dev0\) [\#2014](https://github.com/locustio/locust/pull/2014) ([cyberw](https://github.com/cyberw))
+
 ## [2.8.1](https://github.com/locustio/locust/tree/2.8.1) (2022-02-13)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.8.0...2.8.1)

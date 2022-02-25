@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.8.3
+=====
+
+* Ensure users are distributed evently across hosts during ramp up https://github.com/locustio/locust/pull/2025 
+
 2.8.2
 =====
 
