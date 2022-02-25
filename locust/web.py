@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import csv
 import datetime
 import logging
@@ -190,7 +188,7 @@ class WebUI:
             res = get_html_report(self.environment, show_download_link=not request.args.get("download"))
             if request.args.get("download"):
                 res = app.make_response(res)
-                res.headers["Content-Disposition"] = "attachment;filename=report_%s.html" % time()
+                res.headers["Content-Disposition"] = f"attachment;filename=report_{time()}.html"
             return res
 
         def _download_csv_suggest_file_name(suggest_filename_prefix):
@@ -406,7 +404,7 @@ class WebUI:
         if self.environment.host:
             host = self.environment.host
         elif self.environment.runner.user_classes:
-            all_hosts = set([l.host for l in self.environment.runner.user_classes])
+            all_hosts = {l.host for l in self.environment.runner.user_classes}
             if len(all_hosts) == 1:
                 host = list(all_hosts)[0]
             else:

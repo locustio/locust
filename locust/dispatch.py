@@ -355,7 +355,7 @@ class UsersDispatcher(Iterator):
             normalized_values = [
                 (
                     user.__name__,
-                    round(target_min_weight * value / min([u[1] for u in users])),
+                    round(target_min_weight * value / min(u[1] for u in users)),
                 )
                 for user, value in users
             ]

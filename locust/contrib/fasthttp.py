@@ -99,7 +99,7 @@ class FastHttpSession:
         if absolute_http_url_regexp.match(path):
             return path
         else:
-            return "%s%s" % (self.base_url, path)
+            return f"{self.base_url}{path}"
 
     def _send_request_safe_mode(self, method, url, **kwargs):
         """
@@ -303,7 +303,7 @@ class FastHttpUser(User):
                 "You must specify the base host. Either in the host attribute in the User class, or on the command line using the --host option."
             )
         if not re.match(r"^https?://[^/]+", self.host, re.I):
-            raise LocustError("Invalid host (`%s`), must be a valid base URL. E.g. http://example.com" % self.host)
+            raise LocustError(f"Invalid host (`{self.host}`), must be a valid base URL. E.g. http://example.com")
 
         self.client = FastHttpSession(
             self.environment,

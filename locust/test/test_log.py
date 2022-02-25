@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 import socket
 import subprocess
 import textwrap
@@ -71,15 +71,15 @@ class TestLoggingOptions(LocustTestCase):
             ).decode("utf-8")
 
         self.assertIn(
-            "%s/INFO/locust.main: Run time limit set to 1 seconds" % socket.gethostname(),
+            f"{socket.gethostname()}/INFO/locust.main: Run time limit set to 1 seconds",
             output,
         )
         self.assertIn(
-            "%s/INFO/locust.main: --run-time limit reached. Stopping Locust" % socket.gethostname(),
+            f"{socket.gethostname()}/INFO/locust.main: --run-time limit reached. Stopping Locust",
             output,
         )
         self.assertIn(
-            "%s/INFO/locust.main: Shutting down (exit code 0)" % socket.gethostname(),
+            f"{socket.gethostname()}/INFO/locust.main: Shutting down (exit code 0)",
             output,
         )
         self.assertIn(
@@ -88,12 +88,12 @@ class TestLoggingOptions(LocustTestCase):
         )
         # check that custom message of root logger is also printed
         self.assertIn(
-            "%s/INFO/root: custom log message" % socket.gethostname(),
+            f"{socket.gethostname()}/INFO/root: custom log message",
             output,
         )
         # check that custom message of custom_logger is also printed
         self.assertIn(
-            "%s/INFO/custom_logger: test" % socket.gethostname(),
+            f"{socket.gethostname()}/INFO/custom_logger: test",
             output,
         )
 
@@ -168,7 +168,7 @@ class TestLoggingOptions(LocustTestCase):
                     ).decode("utf-8")
                 except subprocess.CalledProcessError as e:
                     raise AssertionError(
-                        "Running locust command failed. Output was:\n\n%s" % e.stdout.decode("utf-8")
+                        f"Running locust command failed. Output was:\n\n{e.stdout.decode('utf-8')}"
                     ) from e
 
                 with open(log_file_path, encoding="utf-8") as f:
@@ -183,19 +183,19 @@ class TestLoggingOptions(LocustTestCase):
 
         # check that log messages goes into file
         self.assertIn(
-            "%s/INFO/locust.main: Run time limit set to 1 seconds" % socket.gethostname(),
+            f"{socket.gethostname()}/INFO/locust.main: Run time limit set to 1 seconds",
             log_content,
         )
         self.assertIn(
-            "%s/INFO/locust.main: --run-time limit reached. Stopping Locust" % socket.gethostname(),
+            f"{socket.gethostname()}/INFO/locust.main: --run-time limit reached. Stopping Locust",
             log_content,
         )
         self.assertIn(
-            "%s/INFO/locust.main: Shutting down (exit code 0)" % socket.gethostname(),
+            f"{socket.gethostname()}/INFO/locust.main: Shutting down (exit code 0)",
             log_content,
         )
         # check that message of custom logger also went into log file
         self.assertIn(
-            "%s/INFO/root: custom log message" % socket.gethostname(),
+            f"{socket.gethostname()}/INFO/root: custom log message",
             log_content,
         )

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #
@@ -17,7 +16,7 @@ from locust.argument_parser import get_empty_argument_parser, setup_parser_argum
 # Run command `locust --help` and store output in cli-help-output.txt which is included in the docs
 def save_locust_help_output():
     cli_help_output_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "cli-help-output.txt")
-    print("Running `locust --help` command and storing output in %s" % cli_help_output_file)
+    print(f"Running `locust --help` command and storing output in {cli_help_output_file}")
     help_output = subprocess.check_output(["locust", "--help"]).decode("utf-8")
     with open(cli_help_output_file, "w") as f:
         f.write(help_output)
@@ -30,7 +29,7 @@ save_locust_help_output()
 
 def save_locust_env_variables():
     env_options_output_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "config-options.rst")
-    print("Generating RST table for Locust environment variables and storing in %s" % env_options_output_file)
+    print(f"Generating RST table for Locust environment variables and storing in {env_options_output_file}")
     parser = get_empty_argument_parser()
     setup_parser_arguments(parser)
     table_data = []
@@ -38,11 +37,9 @@ def save_locust_env_variables():
         if action.env_var:
             table_data.append(
                 (
-                    ", ".join(["``%s``" % c for c in action.option_strings]),
-                    "``%s``" % action.env_var,
-                    ", ".join(
-                        ["``%s``" % c for c in parser.get_possible_config_keys(action) if not c.startswith("--")]
-                    ),
+                    ", ".join([f"``{c}``" for c in action.option_strings]),
+                    f"``{action.env_var}``",
+                    ", ".join([f"``{c}``" for c in parser.get_possible_config_keys(action) if not c.startswith("--")]),
                     action.help,
                 )
             )

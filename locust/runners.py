@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import functools
 import json
 import logging
@@ -219,7 +218,7 @@ class Runner:
                 n += 1
                 if n % 10 == 0 or n == spawn_count:
                     logger.debug("%i users spawned" % self.user_count)
-            logger.debug("All users of class %s spawned" % user_class)
+            logger.debug(f"All users of class {user_class} spawned")
             return new_users
 
         new_users = []
@@ -258,7 +257,7 @@ class Runner:
 
             while True:
                 user_to_stop: User = to_stop.pop()
-                logger.debug("Stopping %s" % user_to_stop.greenlet.name)
+                logger.debug(f"Stopping {user_to_stop.greenlet.name}")
                 if user_to_stop.greenlet is greenlet.getcurrent():
                     # User called runner.quit(), so don't block waiting for killing to finish
                     user_to_stop.group.killone(user_to_stop.greenlet, block=False)
@@ -339,7 +338,7 @@ class Runner:
                 user_classes_spawn_count = {}
                 user_classes_stop_count = {}
                 user_classes_count = dispatched_users[self._local_worker_node.id]
-                logger.debug("Ramping to %s" % _format_user_classes_count_for_log(user_classes_count))
+                logger.debug(f"Ramping to {_format_user_classes_count_for_log(user_classes_count)}")
                 for user_class, user_class_count in user_classes_count.items():
                     if self.user_classes_count[user_class] > user_class_count:
                         user_classes_stop_count[user_class] = self.user_classes_count[user_class] - user_class_count
@@ -364,7 +363,7 @@ class Runner:
             # a gevent.sleep inside the dispatch_users function, locust won't gracefully shutdown.
             self.quit()
 
-        logger.info("All users spawned: %s" % _format_user_classes_count_for_log(self.user_classes_count))
+        logger.info(f"All users spawned: {_format_user_classes_count_for_log(self.user_classes_count)}")
 
         self.target_user_classes_count = self.user_classes_count
 
@@ -735,7 +734,7 @@ class MasterRunner(DistributedRunner):
                 dispatch_greenlets.join()
 
                 logger.debug(
-                    "Currently spawned users: %s" % _format_user_classes_count_for_log(self.reported_user_classes_count)
+                    f"Currently spawned users: {_format_user_classes_count_for_log(self.reported_user_classes_count)}"
                 )
 
             self.target_user_classes_count = _aggregate_dispatched_users(dispatched_users)
@@ -765,7 +764,7 @@ class MasterRunner(DistributedRunner):
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
         self.spawning_completed = True
 
-        logger.info("%s: %s" % (msg_prefix, _format_user_classes_count_for_log(self.reported_user_classes_count)))
+        logger.info(f"{msg_prefix}: {_format_user_classes_count_for_log(self.reported_user_classes_count)}")
 
     @functools.lru_cache()
     def _wait_for_workers_report_after_ramp_up(self) -> float:
@@ -806,7 +805,7 @@ class MasterRunner(DistributedRunner):
 
             if send_stop_to_client:
                 for client in self.clients.all:
-                    logger.debug("Sending stop message to client %s" % client.id)
+                    logger.debug(f"Sending stop message to client {client.id}")
                     self.server.send_to_client(Message("stop", None, client.id))
 
                 # Give an additional 60s for all workers to stop
@@ -825,7 +824,7 @@ class MasterRunner(DistributedRunner):
         self.stop(send_stop_to_client=False)
         logger.debug("Quitting...")
         for client in self.clients.all:
-            logger.debug("Sending quit message to client %s" % (client.id))
+            logger.debug(f"Sending quit message to client {client.id}")
             self.server.send_to_client(Message("quit", None, client.id))
         gevent.sleep(0.5)  # wait for final stats report from all workers
         self.greenlet.kill(block=True)
@@ -847,7 +846,7 @@ class MasterRunner(DistributedRunner):
 
             for client in self.clients.all:
                 if client.heartbeat < 0 and client.state != STATE_MISSING:
-                    logger.info("Worker %s failed to send heartbeat, setting state to missing." % str(client.id))
+                    logger.info(f"Worker {str(client.id)} failed to send heartbeat, setting state to missing.")
                     client.state = STATE_MISSING
                     client.user_classes_count = {}
                     if self._users_dispatcher is not None:
@@ -867,7 +866,7 @@ class MasterRunner(DistributedRunner):
             self.server.close()
             self.server = rpc.Server(self.master_bind_host, self.master_bind_port)
         except RPCError as e:
-            logger.error("Temporary failure when resetting connection: %s, will retry later." % (e))
+            logger.error(f"Temporary failure when resetting connection: {e}, will retry later.")
 
     def client_listener(self):
         while True:
@@ -875,7 +874,7 @@ class MasterRunner(DistributedRunner):
                 client_id, msg = self.server.recv_from_client()
             except RPCError as e:
                 if self.clients.ready:
-                    logger.error("RPCError found when receiving from client: %s" % (e))
+                    logger.error(f"RPCError found when receiving from client: {e}")
                 else:
                     logger.debug(
                         "RPCError found when receiving from client: %s (but no clients were expected to be connected anyway)"
@@ -923,16 +922,14 @@ class MasterRunner(DistributedRunner):
                     if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
                         # TODO: Test this situation
                         self.start(self.target_user_count, self.spawn_rate)
-                logger.info("Removing %s client from running clients" % (msg.node_id))
+                logger.info(f"Removing {msg.node_id} client from running clients")
             elif msg.type == "heartbeat":
                 if msg.node_id in self.clients:
                     c = self.clients[msg.node_id]
                     c.heartbeat = HEARTBEAT_LIVENESS
                     client_state = msg.data["state"]
                     if c.state == STATE_MISSING:
-                        logger.info(
-                            "Worker %s self-healed with heartbeat, setting state to %s." % (str(c.id), client_state)
-                        )
+                        logger.info(f"Worker {str(c.id)} self-healed with heartbeat, setting state to {client_state}.")
                         if self._users_dispatcher is not None:
                             self._users_dispatcher.add_worker(worker_node=c)
                             if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
@@ -944,7 +941,7 @@ class MasterRunner(DistributedRunner):
                         self.worker_cpu_warning_emitted = True  # used to fail the test in the end
                         c.cpu_warning_emitted = True  # used to suppress logging for this node
                         logger.warning(
-                            "Worker %s exceeded cpu threshold (will only log this once per worker)" % (msg.node_id)
+                            f"Worker {msg.node_id} exceeded cpu threshold (will only log this once per worker)"
                         )
                     if "current_memory_usage" in msg.data:
                         c.memory_usage = msg.data["current_memory_usage"]
@@ -964,9 +961,7 @@ class MasterRunner(DistributedRunner):
                         if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
                             # TODO: Test this situation
                             self.start(self.target_user_count, self.spawn_rate)
-                    logger.info(
-                        "Client %r quit. Currently %i clients connected." % (msg.node_id, len(self.clients.ready))
-                    )
+                    logger.info(f"Client {msg.node_id!r} quit. Currently {len(self.clients.ready)} clients connected.")
                     if self.worker_count - len(self.clients.missing) <= 0:
                         logger.info("The last worker quit, stopping test.")
                         self.stop()
@@ -1130,7 +1125,7 @@ class WorkerRunner(DistributedRunner):
                     )
                 )
             except RPCError as e:
-                logger.error("RPCError found when sending heartbeat: %s" % (e))
+                logger.error(f"RPCError found when sending heartbeat: {e}")
                 self.reset_connection()
             gevent.sleep(HEARTBEAT_INTERVAL)
 
@@ -1140,7 +1135,7 @@ class WorkerRunner(DistributedRunner):
             self.client.close()
             self.client = rpc.Client(self.master_host, self.master_port, self.client_id)
         except RPCError as e:
-            logger.error("Temporary failure when resetting connection: %s, will retry later." % (e))
+            logger.error(f"Temporary failure when resetting connection: {e}, will retry later.")
 
     def worker(self):
         last_received_spawn_timestamp = 0
@@ -1148,7 +1143,7 @@ class WorkerRunner(DistributedRunner):
             try:
                 msg = self.client.recv()
             except RPCError as e:
-                logger.error("RPCError found when receiving from master: %s" % (e))
+                logger.error(f"RPCError found when receiving from master: {e}")
                 continue
             if msg.type == "spawn":
                 self.client.send(Message("spawning", None, self.client_id))
@@ -1206,7 +1201,7 @@ class WorkerRunner(DistributedRunner):
             try:
                 self._send_stats()
             except RPCError as e:
-                logger.error("Temporary connection lost to master server: %s, will retry later." % (e))
+                logger.error(f"Temporary connection lost to master server: {e}, will retry later.")
             gevent.sleep(WORKER_REPORT_INTERVAL)
 
     def send_message(self, msg_type, data=None):

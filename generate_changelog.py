@@ -31,5 +31,5 @@ cmd = [
     version,
 ]
 
-print("Running command: %s\n" % " ".join(cmd))
+print(f"Running command: {' '.join(cmd)}\n")
 subprocess.run(cmd)

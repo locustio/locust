@@ -75,7 +75,7 @@ class HttpSession(requests.Session):
         if absolute_http_url_regexp.match(path):
             return path
         else:
-            return "%s%s" % (self.base_url, path)
+            return f"{self.base_url}{path}"
 
     @contextmanager
     def rename_request(self, name: str):

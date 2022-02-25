@@ -185,7 +185,7 @@ class TaskSetMeta(type):
         return type.__new__(mcs, classname, bases, class_dict)
 
 
-class TaskSet(object, metaclass=TaskSetMeta):
+class TaskSet(metaclass=TaskSetMeta):
     """
     Class defining a set of tasks that a User will execute.
 

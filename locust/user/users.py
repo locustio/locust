@@ -36,7 +36,7 @@ class UserMeta(type):
         return type.__new__(mcs, classname, bases, class_dict)
 
 
-class User(object, metaclass=UserMeta):
+class User(metaclass=UserMeta):
     """
     Represents a "user" which is to be spawned and attack the system that is to be load tested.
 

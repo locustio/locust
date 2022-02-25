@@ -2333,9 +2333,7 @@ class TestRemoveWorker(unittest.TestCase):
         ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         delta = time.perf_counter() - ts
-        self.assertTrue(
-            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
-        )
+        self.assertTrue(0 <= delta <= _TOLERANCE, f"Expected re-balance dispatch to be instantaneous but got {delta}s")
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 2, "User3": 2})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 3)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 3)
@@ -2403,9 +2401,7 @@ class TestRemoveWorker(unittest.TestCase):
         ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         delta = time.perf_counter() - ts
-        self.assertTrue(
-            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
-        )
+        self.assertTrue(0 <= delta <= _TOLERANCE, f"Expected re-balance dispatch to be instantaneous but got {delta}s")
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 2, "User3": 2})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 6)
 
@@ -2457,9 +2453,7 @@ class TestRemoveWorker(unittest.TestCase):
         ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         delta = time.perf_counter() - ts
-        self.assertTrue(
-            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
-        )
+        self.assertTrue(0 <= delta <= _TOLERANCE, f"Expected re-balance dispatch to be instantaneous but got {delta}s")
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 3, "User2": 3, "User3": 3})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 5)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
@@ -2532,9 +2526,7 @@ class TestRemoveWorker(unittest.TestCase):
         ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         delta = time.perf_counter() - ts
-        self.assertTrue(
-            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
-        )
+        self.assertTrue(0 <= delta <= _TOLERANCE, f"Expected re-balance dispatch to be instantaneous but got {delta}s")
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 3, "User2": 3, "User3": 3})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 9)
 
@@ -2619,9 +2611,7 @@ class TestRemoveWorker(unittest.TestCase):
         ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         delta = time.perf_counter() - ts
-        self.assertTrue(
-            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
-        )
+        self.assertTrue(0 <= delta <= _TOLERANCE, f"Expected re-balance dispatch to be instantaneous but got {delta}s")
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 4, "User2": 4, "User3": 4})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 6)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 6)
@@ -2693,9 +2683,7 @@ class TestRemoveWorker(unittest.TestCase):
         ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         delta = time.perf_counter() - ts
-        self.assertTrue(
-            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
-        )
+        self.assertTrue(0 <= delta <= _TOLERANCE, f"Expected re-balance dispatch to be instantaneous but got {delta}s")
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 4, "User2": 4, "User3": 4})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 12)
 
@@ -2799,9 +2787,7 @@ class TestAddWorker(unittest.TestCase):
         ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         delta = time.perf_counter() - ts
-        self.assertTrue(
-            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
-        )
+        self.assertTrue(0 <= delta <= _TOLERANCE, f"Expected re-balance dispatch to be instantaneous but got {delta}s")
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 2, "User3": 2})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 2)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 2)
@@ -2878,9 +2864,7 @@ class TestAddWorker(unittest.TestCase):
         ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         delta = time.perf_counter() - ts
-        self.assertTrue(
-            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
-        )
+        self.assertTrue(0 <= delta <= _TOLERANCE, f"Expected re-balance dispatch to be instantaneous but got {delta}s")
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 2, "User3": 2})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 2)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 2)
@@ -2936,9 +2920,7 @@ class TestAddWorker(unittest.TestCase):
         ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         delta = time.perf_counter() - ts
-        self.assertTrue(
-            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
-        )
+        self.assertTrue(0 <= delta <= _TOLERANCE, f"Expected re-balance dispatch to be instantaneous but got {delta}s")
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 3, "User2": 3, "User3": 3})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 3)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 3)
@@ -3015,9 +2997,7 @@ class TestAddWorker(unittest.TestCase):
         ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         delta = time.perf_counter() - ts
-        self.assertTrue(
-            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
-        )
+        self.assertTrue(0 <= delta <= _TOLERANCE, f"Expected re-balance dispatch to be instantaneous but got {delta}s")
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 3, "User2": 3, "User3": 3})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 3)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 3)
@@ -3108,9 +3088,7 @@ class TestAddWorker(unittest.TestCase):
         ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         delta = time.perf_counter() - ts
-        self.assertTrue(
-            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
-        )
+        self.assertTrue(0 <= delta <= _TOLERANCE, f"Expected re-balance dispatch to be instantaneous but got {delta}s")
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 4, "User2": 4, "User3": 4})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 4)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 4)
@@ -3180,9 +3158,7 @@ class TestAddWorker(unittest.TestCase):
         ts = time.perf_counter()
         dispatched_users = next(users_dispatcher)
         delta = time.perf_counter() - ts
-        self.assertTrue(
-            0 <= delta <= _TOLERANCE, "Expected re-balance dispatch to be instantaneous but got {}s".format(delta)
-        )
+        self.assertTrue(0 <= delta <= _TOLERANCE, f"Expected re-balance dispatch to be instantaneous but got {delta}s")
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 4, "User2": 4, "User3": 4})
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 4)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 4)

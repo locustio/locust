@@ -92,7 +92,7 @@ class Environment:
         self._remove_user_classes_with_weight_zero()
 
         # Validate there's no class with the same name but in different modules
-        if len(set(user_class.__name__ for user_class in self.user_classes)) != len(self.user_classes):
+        if len({user_class.__name__ for user_class in self.user_classes}) != len(self.user_classes):
             raise ValueError(
                 "The following user classes have the same class name: {}".format(
                     ", ".join(map(methodcaller("fullname"), self.user_classes))
@@ -111,7 +111,7 @@ class Environment:
         **kwargs,
     ) -> RunnerType:
         if self.runner is not None:
-            raise RunnerAlreadyExistsError("Environment.runner already exists (%s)" % self.runner)
+            raise RunnerAlreadyExistsError(f"Environment.runner already exists ({self.runner})")
         self.runner: RunnerType = runner_class(self, *args, **kwargs)
 
         # Attach the runner to the shape class so that the shape class can access user count state
