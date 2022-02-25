@@ -1,3 +1,7 @@
 # Migrate code style to Black
 7c0fcc213d3988f6e7c6ffef63b24afe00e5fbd9
 2e7a8b5697a98d1d314d6fc3ef0589f81f09d7fe
+# upgrade code style to 3.6 using pyupgrade
+6ec972f4dbb880bf0c7a11809e6c1ba194c9784c
+# upgrade code style to use f-strings using flynt
+313b80f27f525441c449593a3aeaf38389f63c13
