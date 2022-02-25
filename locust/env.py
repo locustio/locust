@@ -111,7 +111,7 @@ class Environment:
         **kwargs,
     ) -> RunnerType:
         if self.runner is not None:
-            raise RunnerAlreadyExistsError("Environment.runner already exists (%s)" % self.runner)
+            raise RunnerAlreadyExistsError(f"Environment.runner already exists ({self.runner})")
         self.runner: RunnerType = runner_class(self, *args, **kwargs)
 
         # Attach the runner to the shape class so that the shape class can access user count state

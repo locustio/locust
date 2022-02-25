@@ -121,7 +121,7 @@ def streaming_response(iterations):
     def generate():
         yield "<html><body><h1>streaming response</h1>"
         for i in range(iterations):
-            yield "<span>%s</span>\n" % i
+            yield f"<span>{i}</span>\n"
             time.sleep(0.01)
         yield "</body></html>"
 

@@ -40,7 +40,7 @@ class TestHttpSession(WebserverTestCase):
             try:
                 self.assertRaises(exception, s.get, "/")
             except KeyError:
-                self.fail("Invalid URL %s was not propagated" % url)
+                self.fail(f"Invalid URL {url} was not propagated")
 
     def test_streaming_response(self):
         """

@@ -10,7 +10,7 @@ def _(parser):
 
 @events.test_start.add_listener
 def _(environment, **kw):
-    print("Custom argument supplied: %s" % environment.parsed_options.my_argument)
+    print(f"Custom argument supplied: {environment.parsed_options.my_argument}")
 
 
 class WebsiteUser(HttpUser):

@@ -404,7 +404,7 @@ class TestLocustRunner(LocustTestCase):
         runner.spawning_greenlet.join()
         delta = time.time() - ts
         self.assertTrue(
-            0 <= delta <= 0.05, "Expected user count to increase to 10 instantaneously, instead it took %f" % delta
+            0 <= delta <= 0.05, f"Expected user count to increase to 10 instantaneously, instead it took {delta:f}"
         )
         self.assertTrue(
             runner.user_count == 10, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
@@ -414,7 +414,7 @@ class TestLocustRunner(LocustTestCase):
         runner.start(2, 4, wait=False)
         runner.spawning_greenlet.join()
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 1.05, "Expected user count to decrease to 2 in 1s, instead it took %f" % delta)
+        self.assertTrue(0 <= delta <= 1.05, f"Expected user count to decrease to 2 in 1s, instead it took {delta:f}")
         self.assertTrue(
             runner.user_count == 2, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
         )
@@ -3541,7 +3541,7 @@ class TestStopTimeout(LocustTestCase):
         runner.spawning_greenlet.join()
         delta = time.perf_counter() - ts
         self.assertTrue(
-            0 <= delta <= 0.05, "Expected user count to increase to 10 instantaneously, instead it took %f" % delta
+            0 <= delta <= 0.05, f"Expected user count to increase to 10 instantaneously, instead it took {delta:f}"
         )
         self.assertTrue(
             runner.user_count == 10, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
@@ -3551,7 +3551,7 @@ class TestStopTimeout(LocustTestCase):
         runner.start(2, 4, wait=False)
         runner.spawning_greenlet.join()
         delta = time.perf_counter() - ts
-        self.assertTrue(2 <= delta <= 2.05, "Expected user count to decrease to 2 in 2s, instead it took %f" % delta)
+        self.assertTrue(2 <= delta <= 2.05, f"Expected user count to decrease to 2 in 2s, instead it took {delta:f}")
         self.assertTrue(
             runner.user_count == 2, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
         )

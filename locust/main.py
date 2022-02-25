@@ -173,7 +173,7 @@ def main():
     if options.user_classes:
         missing = set(options.user_classes) - set(user_classes.keys())
         if missing:
-            logger.error("Unknown User(s): %s\n" % (", ".join(missing)))
+            logger.error(f"Unknown User(s): {', '.join(missing)}\n")
             sys.exit(1)
         else:
             names = set(options.user_classes) & set(user_classes.keys())
@@ -314,7 +314,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             logger.info("--run-time limit reached, stopping test")
             runner.stop()
             if options.autoquit != -1:
-                logger.debug("Autoquit time limit set to %s seconds" % options.autoquit)
+                logger.debug(f"Autoquit time limit set to {options.autoquit} seconds")
                 time.sleep(options.autoquit)
                 logger.info("--autoquit time reached, shutting down")
                 runner.quit()
@@ -376,7 +376,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                 headless_master_greenlet.link_exception(greenlet_exception_handler)
 
         if options.run_time:
-            logger.info("Run time limit set to %s seconds" % options.run_time)
+            logger.info(f"Run time limit set to {options.run_time} seconds")
             spawn_run_time_quit_greenlet()
         elif not options.worker and not environment.shape_class:
             logger.info("No run time limit set, use CTRL+C to interrupt")
@@ -434,7 +434,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         else:
             code = 0
 
-        logger.info("Shutting down (exit code %s)" % code)
+        logger.info(f"Shutting down (exit code {code})")
         if stats_printer_greenlet is not None:
             stats_printer_greenlet.kill(block=False)
         if headless_master_greenlet is not None:
@@ -464,7 +464,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     gevent.signal_handler(signal.SIGTERM, sig_term_handler)
 
     try:
-        logger.info("Starting Locust %s" % version)
+        logger.info(f"Starting Locust {version}")
         if options.autostart:
             start_automatic_run()
 

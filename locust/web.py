@@ -188,7 +188,7 @@ class WebUI:
             res = get_html_report(self.environment, show_download_link=not request.args.get("download"))
             if request.args.get("download"):
                 res = app.make_response(res)
-                res.headers["Content-Disposition"] = "attachment;filename=report_%s.html" % time()
+                res.headers["Content-Disposition"] = f"attachment;filename=report_{time()}.html"
             return res
 
         def _download_csv_suggest_file_name(suggest_filename_prefix):

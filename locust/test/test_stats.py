@@ -282,7 +282,7 @@ class TestRequestStats(unittest.TestCase):
         class Dummy:
             pass
 
-        self.stats.log_error("GET", "/", Exception("Error caused by %r" % Dummy()))
+        self.stats.log_error("GET", "/", Exception(f"Error caused by {Dummy()!r}"))
         self.assertEqual(1, len(self.stats.errors))
 
     def test_serialize_through_message(self):
