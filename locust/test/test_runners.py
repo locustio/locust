@@ -2247,8 +2247,9 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(5, len(server.outbox))
             master.stop()
             self.assertEqual(1, run_count[0])
+            self.assertEqual(1, run_count[1])
 
-            run_count[0] = 0
+            run_count = [0, 0]
             for i in range(5):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
             master.start(7, 7)
