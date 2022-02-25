@@ -89,7 +89,7 @@ def calculate_response_time_percentile(response_times, num_requests, percent):
                   but we save some CPU cycles by using the value which we already store)
     percent: The percentile we want to calculate. Specified in range: 0.0 - 1.0
     """
-    num_of_request = int((num_requests * percent))
+    num_of_request = int(num_requests * percent)
 
     processed_count = 0
     for response_time in sorted(response_times.keys(), reverse=True):
@@ -207,7 +207,7 @@ class RequestStats:
         ]
 
     def serialize_errors(self):
-        return dict([(k, e.to_dict()) for k, e in self.errors.items()])
+        return {k: e.to_dict() for k, e in self.errors.items()}
 
 
 class StatsEntry:
@@ -598,7 +598,7 @@ class StatsEntry:
 
         return tpl % (
             (self.method, self.name)
-            + tuple([self.get_response_time_percentile(p) for p in PERCENTILES_TO_REPORT])
+            + tuple(self.get_response_time_percentile(p) for p in PERCENTILES_TO_REPORT)
             + (self.num_requests,)
         )
 
@@ -643,7 +643,7 @@ class StatsError:
 
     @classmethod
     def create_key(cls, method, name, error):
-        key = "%s.%s.%r" % (method, name, StatsError.parse_error(error))
+        key = f"{method}.{name}.{StatsError.parse_error(error)!r}"
         return hashlib.md5(key.encode("utf-8")).hexdigest()
 
     def occurred(self):
@@ -662,7 +662,7 @@ class StatsError:
             # standalone, unwrapped exception
             unwrapped_error = repr(error)
 
-        return "%s %s: %s" % (self.method, self.name, unwrapped_error)
+        return f"{self.method} {self.name}: {unwrapped_error}"
 
     def to_dict(self):
         return {
@@ -973,7 +973,7 @@ class StatsCSVFileWriter(StatsCSV):
             self._failures_data_rows(self.failures_csv_writer)
             self.failures_csv_filehandle.truncate()
 
-            self.exceptions_csv_filehandle.seek((self.exceptions_csv_data_start))
+            self.exceptions_csv_filehandle.seek(self.exceptions_csv_data_start)
             self._exceptions_data_rows(self.exceptions_csv_writer)
             self.exceptions_csv_filehandle.truncate()
 

@@ -6,7 +6,7 @@ import os
 import json
 
 import gevent
-import mock
+from unittest import mock
 import locust
 from locust import HttpUser, TaskSet, task, User, constant, __version__
 from locust.env import Environment
@@ -319,10 +319,10 @@ class TestStatsPrinting(LocustTestCase):
 
 class TestCsvStats(LocustTestCase):
     STATS_BASE_NAME = "test"
-    STATS_FILENAME = "{}_stats.csv".format(STATS_BASE_NAME)
-    STATS_HISTORY_FILENAME = "{}_stats_history.csv".format(STATS_BASE_NAME)
-    STATS_FAILURES_FILENAME = "{}_failures.csv".format(STATS_BASE_NAME)
-    STATS_EXCEPTIONS_FILENAME = "{}_exceptions.csv".format(STATS_BASE_NAME)
+    STATS_FILENAME = f"{STATS_BASE_NAME}_stats.csv"
+    STATS_HISTORY_FILENAME = f"{STATS_BASE_NAME}_stats_history.csv"
+    STATS_FAILURES_FILENAME = f"{STATS_BASE_NAME}_failures.csv"
+    STATS_EXCEPTIONS_FILENAME = f"{STATS_BASE_NAME}_exceptions.csv"
 
     def setUp(self):
         super().setUp()

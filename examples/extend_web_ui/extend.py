@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This is an example of a locustfile that uses Locust's built in event and web
 UI extension hooks to track the sum of the content-length header in all
@@ -91,8 +89,8 @@ def locust_init(environment, **kwargs):
             Add route to enable downloading of content-length stats as CSV
             """
             response = make_response(content_length_csv())
-            file_name = "content_length{0}.csv".format(time())
-            disposition = "attachment;filename={0}".format(file_name)
+            file_name = f"content_length{time()}.csv"
+            disposition = f"attachment;filename={file_name}"
             response.headers["Content-type"] = "text/csv"
             response.headers["Content-disposition"] = disposition
             return response

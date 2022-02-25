@@ -33,7 +33,7 @@ def get_html_report(environment, show_download_link=True):
     if environment.host:
         host = environment.host
     elif environment.runner.user_classes:
-        all_hosts = set([l.host for l in environment.runner.user_classes])
+        all_hosts = {l.host for l in environment.runner.user_classes}
         if len(all_hosts) == 1:
             host = list(all_hosts)[0]
 

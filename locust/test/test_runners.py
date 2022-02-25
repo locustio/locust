@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from operator import itemgetter
 
 import gevent
-import mock
+from unittest import mock
 import requests
 from gevent import sleep
 from gevent.pool import Group
@@ -575,7 +575,7 @@ class TestLocustRunner(LocustTestCase):
 
         ts = time.perf_counter()
         response = requests.post(
-            "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
+            f"http://127.0.0.1:{web_ui.server.server_port}/swarm",
             data={"user_count": 20, "spawn_rate": 5, "host": "https://localhost"},
         )
         self.assertEqual(200, response.status_code)
@@ -613,7 +613,7 @@ class TestLocustRunner(LocustTestCase):
 
         ts = time.perf_counter()
         response = requests.post(
-            "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
+            f"http://127.0.0.1:{web_ui.server.server_port}/swarm",
             data={"user_count": 20, "spawn_rate": 1, "host": "https://localhost"},
         )
         self.assertEqual(200, response.status_code)
@@ -626,7 +626,7 @@ class TestLocustRunner(LocustTestCase):
 
         ts = time.perf_counter()
         response = requests.get(
-            "http://127.0.0.1:{}/stop".format(web_ui.server.server_port),
+            f"http://127.0.0.1:{web_ui.server.server_port}/stop",
         )
         self.assertEqual(200, response.status_code)
         self.assertTrue(stop_timeout <= time.perf_counter() - ts <= stop_timeout + 5, "stop endpoint took too long")
@@ -1642,7 +1642,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             ts = time.perf_counter()
             response = requests.post(
-                "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
+                f"http://127.0.0.1:{web_ui.server.server_port}/swarm",
                 data={"user_count": 20, "spawn_rate": 5, "host": "https://localhost"},
             )
             self.assertEqual(200, response.status_code)
@@ -1691,7 +1691,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             ts = time.perf_counter()
             response = requests.post(
-                "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
+                f"http://127.0.0.1:{web_ui.server.server_port}/swarm",
                 data={"user_count": 20, "spawn_rate": 1, "host": "https://localhost"},
             )
             self.assertEqual(200, response.status_code)
@@ -1704,7 +1704,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             ts = time.perf_counter()
             response = requests.get(
-                "http://127.0.0.1:{}/stop".format(web_ui.server.server_port),
+                f"http://127.0.0.1:{web_ui.server.server_port}/stop",
             )
             self.assertEqual(200, response.status_code)
             self.assertTrue(stop_timeout <= time.perf_counter() - ts <= stop_timeout + 5, "stop endpoint took too long")
@@ -2904,7 +2904,7 @@ class TestWorkerRunner(LocustTestCase):
                 self.assertLessEqual(time.perf_counter() - t0, 3)
                 sleep(0.1)
 
-            message = next((m for m in reversed(client.outbox) if m.type == "heartbeat"))
+            message = next(m for m in reversed(client.outbox) if m.type == "heartbeat")
             self.assertEqual(len(message.data), 3)
             self.assertIn("state", message.data)
             self.assertIn("current_cpu_usage", message.data)

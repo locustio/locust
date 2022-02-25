@@ -99,7 +99,7 @@ class FastHttpSession:
         if absolute_http_url_regexp.match(path):
             return path
         else:
-            return "%s%s" % (self.base_url, path)
+            return f"{self.base_url}{path}"
 
     def _send_request_safe_mode(self, method, url, **kwargs):
         """

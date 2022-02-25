@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import functools
 import json
 import logging
@@ -765,7 +764,7 @@ class MasterRunner(DistributedRunner):
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
         self.spawning_completed = True
 
-        logger.info("%s: %s" % (msg_prefix, _format_user_classes_count_for_log(self.reported_user_classes_count)))
+        logger.info(f"{msg_prefix}: {_format_user_classes_count_for_log(self.reported_user_classes_count)}")
 
     @functools.lru_cache()
     def _wait_for_workers_report_after_ramp_up(self) -> float:
@@ -930,9 +929,7 @@ class MasterRunner(DistributedRunner):
                     c.heartbeat = HEARTBEAT_LIVENESS
                     client_state = msg.data["state"]
                     if c.state == STATE_MISSING:
-                        logger.info(
-                            "Worker %s self-healed with heartbeat, setting state to %s." % (str(c.id), client_state)
-                        )
+                        logger.info(f"Worker {str(c.id)} self-healed with heartbeat, setting state to {client_state}.")
                         if self._users_dispatcher is not None:
                             self._users_dispatcher.add_worker(worker_node=c)
                             if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:

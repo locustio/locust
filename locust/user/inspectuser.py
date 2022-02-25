@@ -24,8 +24,8 @@ def print_task_ratio_json(user_classes, num_users):
 
 
 def _calc_distribution(user_classes, num_users):
-    fixed_count = sum([u.fixed_count for u in user_classes if u.fixed_count])
-    total_weight = sum([u.weight for u in user_classes if not u.fixed_count])
+    fixed_count = sum(u.fixed_count for u in user_classes if u.fixed_count)
+    total_weight = sum(u.weight for u in user_classes if not u.fixed_count)
     num_users = num_users or (total_weight if not fixed_count else 1)
     weighted_count = num_users - fixed_count
     weighted_count = weighted_count if weighted_count > 0 else 0

@@ -196,11 +196,9 @@ def main():
                 resource.setrlimit(resource.RLIMIT_NOFILE, [minimum_open_file_limit, resource.RLIM_INFINITY])
         except BaseException:
             logger.warning(
-                (
-                    f"System open file limit '{current_open_file_limit}' is below minimum setting '{minimum_open_file_limit}'. "
-                    "It's not high enough for load testing, and the OS didn't allow locust to increase it by itself. "
-                    "See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."
-                )
+                f"""System open file limit '{current_open_file_limit}' is below minimum setting '{minimum_open_file_limit}'.
+It's not high enough for load testing, and the OS didn't allow locust to increase it by itself.
+See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."""
             )
 
     # create locust Environment
@@ -237,7 +235,7 @@ def main():
         try:
             runner = environment.create_worker_runner(options.master_host, options.master_port)
             logger.debug("Connected to locust master: %s:%s", options.master_host, options.master_port)
-        except socket.error as e:
+        except OSError as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
     else:
@@ -274,7 +272,7 @@ def main():
             else:
                 web_host = options.web_host
             if web_host:
-                logger.info("Starting web interface at %s://%s:%s" % (protocol, web_host, options.web_port))
+                logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}")
             else:
                 logger.info(
                     "Starting web interface at %s://0.0.0.0:%s (accepting connections from all network interfaces)"

@@ -111,7 +111,7 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(200, r.status_code)
         self.assertEqual("", r.content.decode())
         self.assertEqual(
-            set(["OPTIONS", "DELETE", "PUT", "GET", "POST", "HEAD", "PATCH"]),
+            {"OPTIONS", "DELETE", "PUT", "GET", "POST", "HEAD", "PATCH"},
             set(r.headers["allow"].split(", ")),
         )
 

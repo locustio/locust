@@ -5,7 +5,7 @@ import grpc
 import hello_pb2 as hello__pb2
 
 
-class HelloServiceStub(object):
+class HelloServiceStub:
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -21,7 +21,7 @@ class HelloServiceStub(object):
         )
 
 
-class HelloServiceServicer(object):
+class HelloServiceServicer:
     """Missing associated documentation comment in .proto file."""
 
     def SayHello(self, request, context):
@@ -44,7 +44,7 @@ def add_HelloServiceServicer_to_server(servicer, server):
 
 
 # This class is part of an EXPERIMENTAL API.
-class HelloService(object):
+class HelloService:
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod

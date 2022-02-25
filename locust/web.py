@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import csv
 import datetime
 import logging
@@ -406,7 +404,7 @@ class WebUI:
         if self.environment.host:
             host = self.environment.host
         elif self.environment.runner.user_classes:
-            all_hosts = set([l.host for l in self.environment.runner.user_classes])
+            all_hosts = {l.host for l in self.environment.runner.user_classes}
             if len(all_hosts) == 1:
                 host = list(all_hosts)[0]
             else:
