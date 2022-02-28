@@ -1,10 +1,8 @@
 import json
-import os
 import random
 import time
 import unittest
 from collections import defaultdict
-from contextlib import contextmanager
 from operator import itemgetter
 
 import gevent
@@ -116,7 +114,22 @@ class HeyAnException(Exception):
     pass
 
 
-class TestLocustRunner(LocustTestCase):
+class LocustRunnerTestCase(LocustTestCase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.runner_stopping = False
+        self.runner_stopped = False
+
+    def setUp(self):
+        super().setUp()
+        self.reset_state()
+
+    def reset_state(self):
+        self.runner_stopping = False
+        self.runner_stopped = False
+
+
+class TestLocustRunner(LocustRunnerTestCase):
     def test_cpu_warning(self):
         _monitor_interval = runners.CPU_MONITOR_INTERVAL
         runners.CPU_MONITOR_INTERVAL = 2.0
@@ -197,25 +210,23 @@ class TestLocustRunner(LocustTestCase):
             def my_task(self):
                 pass
 
-        test_stop_run = [0, 0]
-        environment = Environment(user_classes=[User])
+        environment = Environment(user_classes=[MyUser])
 
+        @environment.events.test_stopping.add_listener
         def on_test_stopping(*_, **__):
-            test_stop_run[0] += 1
+            self.runner_stopping = True
 
-        def on_test_stop(*args, **kwargs):
-            test_stop_run[1] += 1
-
-        environment.events.test_stopping.add_listener(on_test_stopping)
-        environment.events.test_stop.add_listener(on_test_stop)
+        @environment.events.test_stop.add_listener
+        def on_test_stop(*_, **__):
+            self.runner_stopped = True
 
         runner = LocalRunner(environment)
         runner.start(user_count=3, spawn_rate=3, wait=False)
-        self.assertEqual(0, test_stop_run[0])
-        self.assertEqual(0, test_stop_run[1])
+        self.assertFalse(self.runner_stopping)
+        self.assertFalse(self.runner_stopped)
         runner.stop()
-        self.assertEqual(1, test_stop_run[0])
-        self.assertEqual(1, test_stop_run[1])
+        self.assertTrue(self.runner_stopping)
+        self.assertTrue(self.runner_stopped)
 
     def test_stop_event_quit(self):
         class MyUser(User):
@@ -225,19 +236,23 @@ class TestLocustRunner(LocustTestCase):
             def my_task(self):
                 pass
 
-        test_stop_run = [0]
-        environment = Environment(user_classes=[User])
+        environment = Environment(user_classes=[MyUser])
 
-        def on_test_stop(*args, **kwargs):
-            test_stop_run[0] += 1
+        @environment.events.test_stopping.add_listener
+        def on_test_stopping(*_, **__):
+            self.runner_stopping = True
 
-        environment.events.test_stop.add_listener(on_test_stop)
+        @environment.events.test_stop.add_listener
+        def on_test_stop(*_, **__):
+            self.runner_stopped = True
 
         runner = LocalRunner(environment)
         runner.start(user_count=3, spawn_rate=3, wait=False)
-        self.assertEqual(0, test_stop_run[0])
+        self.assertFalse(self.runner_stopping)
+        self.assertFalse(self.runner_stopped)
         runner.quit()
-        self.assertEqual(1, test_stop_run[0])
+        self.assertTrue(self.runner_stopping)
+        self.assertTrue(self.runner_stopped)
 
     def test_stop_event_stop_and_quit(self):
         class MyUser(User):
@@ -247,20 +262,24 @@ class TestLocustRunner(LocustTestCase):
             def my_task(self):
                 pass
 
-        test_stop_run = [0]
         environment = Environment(user_classes=[MyUser])
 
-        def on_test_stop(*args, **kwargs):
-            test_stop_run[0] += 1
+        @environment.events.test_stopping.add_listener
+        def on_test_stopping(*_, **__):
+            self.runner_stopping = True
 
-        environment.events.test_stop.add_listener(on_test_stop)
+        @environment.events.test_stop.add_listener
+        def on_test_stop(*_, **__):
+            self.runner_stopped = True
 
         runner = LocalRunner(environment)
         runner.start(user_count=3, spawn_rate=3, wait=False)
-        self.assertEqual(0, test_stop_run[0])
+        self.assertFalse(self.runner_stopping)
+        self.assertFalse(self.runner_stopped)
         runner.stop()
         runner.quit()
-        self.assertEqual(1, test_stop_run[0])
+        self.assertTrue(self.runner_stopping)
+        self.assertTrue(self.runner_stopped)
 
     def test_change_user_count_during_spawning(self):
         class MyUser(User):
@@ -1780,7 +1799,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertTrue(test_start_event_fired[0])
 
 
-class TestMasterRunner(LocustTestCase):
+class TestMasterRunner(LocustRunnerTestCase):
     def setUp(self):
         super().setUp()
         self.environment = Environment(events=locust.events, catch_exceptions=False)
@@ -2230,15 +2249,13 @@ class TestMasterRunner(LocustTestCase):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner(user_classes=[TestUser])
 
-            run_count = [0, 0]
-
             @self.environment.events.test_stopping.add_listener
-            def on_test_stopping(*a, **kw):
-                run_count[0] += 1
+            def on_test_stopping(*_, **__):
+                self.runner_stopping = True
 
             @self.environment.events.test_stop.add_listener
-            def on_test_stop(*a, **kw):
-                run_count[1] += 1
+            def on_test_stop(*_, **__):
+                self.runner_stopped = True
 
             for i in range(5):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
@@ -2246,17 +2263,17 @@ class TestMasterRunner(LocustTestCase):
             master.start(7, 7)
             self.assertEqual(5, len(server.outbox))
             master.stop()
-            self.assertEqual(1, run_count[0])
-            self.assertEqual(1, run_count[1])
+            self.assertTrue(self.runner_stopping)
+            self.assertTrue(self.runner_stopped)
 
-            run_count = [0, 0]
+            self.reset_state()
             for i in range(5):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
             master.start(7, 7)
             master.stop()
             master.quit()
-            self.assertEqual(1, run_count[0])
-            self.assertEqual(1, run_count[1])
+            self.assertTrue(self.runner_stopping)
+            self.assertTrue(self.runner_stopped)
 
     def test_stop_event_quit(self):
         """

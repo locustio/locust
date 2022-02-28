@@ -60,9 +60,14 @@ def _(environment, **_kwargs):
         ).json()["data"]
 
 
-@events.test_stop.add_listener
+@events.test_stopping.add_listener
 def _(environment, **_kwargs):
     print("stopping test run")
+
+
+@events.test_stop.add_listener
+def _(environment, **_kwargs):
+    print("test run stopped")
 
 
 class MyUser(HttpUser):
