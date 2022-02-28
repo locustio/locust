@@ -281,6 +281,33 @@ class TestLocustRunner(LocustRunnerTestCase):
         self.assertTrue(self.runner_stopping)
         self.assertTrue(self.runner_stopped)
 
+    def test_stopping_event(self):
+        on_stop_called = [False]
+
+        class MyUser(User):
+            on_stop_called = False
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+            def on_stop(self):
+                MyUser.on_stop_called = True
+
+        environment = Environment(user_classes=[MyUser])
+
+        @environment.events.test_stopping.add_listener
+        def on_test_stopping(*_, **__):
+            on_stop_called[0] = MyUser.on_stop_called
+            self.runner_stopping = True
+
+        runner = LocalRunner(environment)
+        runner.start(user_count=3, spawn_rate=3, wait=False)
+        runner.quit()
+        self.assertTrue(self.runner_stopping)
+        self.assertFalse(on_stop_called[0])
+
     def test_change_user_count_during_spawning(self):
         class MyUser(User):
             wait_time = constant(1)
@@ -2288,15 +2315,13 @@ class TestMasterRunner(LocustRunnerTestCase):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner(user_classes=[TestUser])
 
-            run_count = [0, 0]
-
             @self.environment.events.test_stopping.add_listener
-            def on_test_stopping(*a, **kw):
-                run_count[0] += 1
+            def on_test_stopping(*_, **__):
+                self.runner_stopping = True
 
             @self.environment.events.test_stop.add_listener
-            def on_test_stop(*a, **kw):
-                run_count[1] += 1
+            def on_test_stop(*_, **__):
+                self.runner_stopped = True
 
             for i in range(5):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
@@ -2304,8 +2329,8 @@ class TestMasterRunner(LocustRunnerTestCase):
             master.start(7, 7)
             self.assertEqual(5, len(server.outbox))
             master.quit()
-            self.assertEqual(1, run_count[0])
-            self.assertEqual(1, run_count[1])
+            self.assertTrue(self.runner_stopping)
+            self.assertTrue(self.runner_stopped)
 
     def test_spawn_zero_locusts(self):
         class MyTaskSet(TaskSet):
