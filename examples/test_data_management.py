@@ -7,9 +7,10 @@
 # 4. User start
 # 5. Inside a task
 # ...
-# 6. User stop
-# 7. Test run stop
-# 8. (not shown in this example) Locust quit
+# 6. Test run stopping
+# 7. User stop
+# 8. Test run stop
+# 9. (not shown in this example) Locust quit
 #
 # try it out by running:
 #  locust -f test_data_management.py --headless -u 2 -t 5
