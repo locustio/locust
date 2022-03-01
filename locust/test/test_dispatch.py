@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple
 
 from locust import User
 from locust.dispatch import UsersDispatcher
-from locust.runners import STATE_MISSING, WorkerNode
+from locust.runners import WorkerNode
 from locust.test.util import clear_all_functools_lru_cache
 
 _TOLERANCE = 0.025
