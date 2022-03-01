@@ -1969,6 +1969,96 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(0, master.worker_count)
             self.assertEqual(STATE_STOPPED, master.state, "All workers went missing but test didn't stop.")
 
+    @mock.patch("locust.runners.HEARTBEAT_INTERVAL", new=0.1)
+    @mock.patch("locust.runners.HEARTBEAT_DEAD_INTERNAL", new=-3)
+    def test_worker_missing_after_heartbeat_dead_interval(self):
+        class TestUser(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server, patch_env(
+            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"
+        ):
+            master = self.get_runner(user_classes=[TestUser])
+            server.mocked_send(Message("client_ready", __version__, "fake_client1"))
+            server.mocked_send(Message("client_ready", __version__, "fake_client2"))
+            server.mocked_send(Message("client_ready", __version__, "fake_client3"))
+
+            master.start(3, 3)
+            server.mocked_send(Message("spawning", None, "fake_client1"))
+            server.mocked_send(Message("spawning", None, "fake_client2"))
+            server.mocked_send(Message("spawning", None, "fake_client3"))
+
+            sleep(0.1)
+            server.mocked_send(
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client1",
+                )
+            )
+            server.mocked_send(
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client2",
+                )
+            )
+            server.mocked_send(
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client3",
+                )
+            )
+
+            sleep(0.1)
+            # initially all workers are in active state
+            self.assertEqual(0, len(master.clients.missing))
+            self.assertEqual(3, master.worker_count)
+            server.mocked_send(
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client1",
+                )
+            )
+
+            server.mocked_send(
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client2",
+                )
+            )
+
+            sleep(0.6)
+            # 4 intervals are passed since all 3 heart beats all workers are in missing state
+            self.assertEqual(3, len(master.clients.missing))
+            self.assertEqual(0, master.worker_count)
+
+            server.mocked_send(
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client1",
+                )
+            )
+
+            server.mocked_send(
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client2",
+                )
+            )
+            sleep(0.2)
+            # hearbeat received from two workers so they are active, for fake_client3 HEARTBEAT_DEAD_INTERNAL has been breached, so it will be removed from worker list
+            self.assertEqual(0, len(master.clients.missing))
+            self.assertEqual(2, master.worker_count)
+            master.stop()
+
     def test_master_total_stats(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner()

@@ -9,7 +9,6 @@ from locust.runners import STATE_MISSING, WorkerNode
 from locust.test.util import clear_all_functools_lru_cache
 
 _TOLERANCE = 0.025
-HEARTBEAT_DEAD = -10
 
 
 class TestRampUpUsersFromZero(unittest.TestCase):
@@ -3386,53 +3385,6 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
                                     users_dispatcher._get_user_current_count(user_class.__name__),
                                     user_class.fixed_count,
                                 )
-
-
-class TestRedistributeUsersWithMissingWorker(unittest.TestCase):
-    def test_remove_missing_workers_with_dead_heartbeat(self):
-        class User1(User):
-            weight = 1
-
-        class User2(User):
-            weight = 1
-
-        class User3(User):
-            weight = 1
-
-        user_classes = [User1, User2, User3]
-
-        worker_node1 = WorkerNode("1")
-        worker_node2 = WorkerNode("2")
-        worker_node3 = WorkerNode("3")
-        worker_nodes = [worker_node1, worker_node2, worker_node3]
-        worker_node2.heartbeat = HEARTBEAT_DEAD - 1
-        worker_node2.state = STATE_MISSING
-
-        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
-
-        users_dispatcher.new_dispatch(target_user_count=3, spawn_rate=3)
-        users_dispatcher._wait_between_dispatch = 0
-
-        dispatched_users = next(users_dispatcher)
-
-        # before rebalance user are distributed to missing worker too
-        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 1)
-        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 1)
-        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 1)
-
-        users_dispatcher.prepare_rebalance()
-        users_dispatcher.new_dispatch(target_user_count=3, spawn_rate=3)
-        users_dispatcher._wait_between_dispatch = 0
-
-        dispatched_users = next(users_dispatcher)
-        # dispatched_users = next(users_dispatcher)
-
-        # Here the worker nodes which are still missing after heartbead_dead interval are removed from dispatch distribution list
-        self.assertIs(len(users_dispatcher._worker_nodes), 2, "Expected one worker to be removed from dispatch list")
-
-        # worker 1 will get 2 users and worker 3 will get 1 user
-        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 2)
-        self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 1)
 
 
 def _aggregate_dispatched_users(d: Dict[str, Dict[str, int]]) -> Dict[str, int]:

@@ -59,7 +59,7 @@ WORKER_REPORT_INTERVAL = 3.0
 CPU_MONITOR_INTERVAL = 5.0
 HEARTBEAT_INTERVAL = 1
 HEARTBEAT_LIVENESS = 3
-HEARTBEAT_DEAD = -10
+HEARTBEAT_DEAD_INTERNAL = -60
 FALLBACK_INTERVAL = 5
 
 
@@ -846,14 +846,12 @@ class MasterRunner(DistributedRunner):
                 self.reset_connection()
                 continue
 
+            missing_clients_to_be_removed = []
             for client in self.clients.all:
-                if client.heartbeat < HEARTBEAT_DEAD and client.state == STATE_MISSING:
-                    if self._users_dispatcher is not None:
-                        logger.debug(
-                            "Worker %s failed to send heartbeat after being marked missing for long time, removing the worker"
-                            % str(client.id)
-                        )
-                        self._users_dispatcher.prepare_rebalance()
+                # if clients goes missing for more than HEARTBEAT_DEAD_INTERNAL then add them to be removed list
+                if client.state == STATE_MISSING and client.heartbeat <= HEARTBEAT_DEAD_INTERNAL:
+                    missing_clients_to_be_removed.append(client.id)
+
                 if client.heartbeat < 0 and client.state != STATE_MISSING:
                     logger.info("Worker %s failed to send heartbeat, setting state to missing." % str(client.id))
                     client.state = STATE_MISSING
@@ -868,6 +866,17 @@ class MasterRunner(DistributedRunner):
                         self.check_stopped()
                 else:
                     client.heartbeat -= 1
+
+            # if there are any missing clients to be removed then remove them and trigger rebalance.
+            if len(missing_clients_to_be_removed) > 0:
+                for to_remove_client_id in missing_clients_to_be_removed:
+                    if self.clients.get(to_remove_client_id) is not None:
+                        del self.clients[to_remove_client_id]
+                if self.state == STATE_RUNNING or self.state == STATE_SPAWNING:
+                    # _users_dispatcher is set to none so that during redistribution the dead clients are not picked, alternative is to call self.stop() before start
+                    self._users_dispatcher = None
+                    # trigger redistribution after missing cclient removal
+                    self.start(user_count=self.target_user_count, spawn_rate=self.spawn_rate)
 
     def reset_connection(self):
         logger.info("Reset connection to worker")
