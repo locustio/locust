@@ -6,6 +6,7 @@ from base64 import b64encode
 from urllib.parse import urlparse, urlunparse
 from ssl import SSLError
 import time
+from typing import Optional
 
 from http.cookiejar import CookieJar
 
@@ -83,7 +84,7 @@ class FastHttpSession:
         # Check for basic authentication
         parsed_url = urlparse(self.base_url)
         if parsed_url.username and parsed_url.password:
-            netloc = parsed_url.hostname
+            netloc = parsed_url.hostname or ""
             if parsed_url.port:
                 netloc += ":%d" % parsed_url.port
 
@@ -328,11 +329,11 @@ class FastResponse(CompatResponse):
 
     _response = None
 
-    encoding: str = None
+    encoding: Optional[str] = None
     """In some cases setting the encoding explicitly is needed. If so, do it before calling .text"""
 
     @property
-    def text(self) -> str:
+    def text(self) -> Optional[str]:
         """
         Returns the text content of the response as a decoded string
         """
@@ -349,7 +350,10 @@ class FastResponse(CompatResponse):
         """
         Parses the response as json and returns a dict
         """
-        return json.loads(self.text)
+        if self.text is not None:
+            return json.loads(self.text)
+        else:
+            return {}
 
     def raise_for_status(self):
         """Raise any connection errors that occurred during the request"""

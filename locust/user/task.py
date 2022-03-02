@@ -2,7 +2,7 @@ import logging
 import random
 import traceback
 from time import time
-from typing import TYPE_CHECKING, Callable, Any, List, Union, TypeVar, overload
+from typing import TYPE_CHECKING, Callable, Any, List, Union, TypeVar, Optional, overload
 from typing_extensions import final
 
 import gevent
@@ -219,7 +219,7 @@ class TaskSet(metaclass=TaskSetMeta):
             tasks = {ThreadPage:15, write_post:1}
     """
 
-    min_wait = None
+    min_wait: Optional[float] = None
     """
     Deprecated: Use wait_time instead.
     Minimum waiting time between the execution of user tasks. Can be used to override
@@ -227,7 +227,7 @@ class TaskSet(metaclass=TaskSetMeta):
     TaskSet.
     """
 
-    max_wait = None
+    max_wait: Optional[float] = None
     """
     Deprecated: Use wait_time instead.
     Maximum waiting time between the execution of user tasks. Can be used to override
@@ -243,11 +243,11 @@ class TaskSet(metaclass=TaskSetMeta):
     if not set on the TaskSet.
     """
 
-    _user = None
-    _parent = None
+    _user: "User"
+    _parent: "User"
 
     def __init__(self, parent: "User") -> None:
-        self._task_queue = []
+        self._task_queue: List[Callable] = []
         self._time_start = time()
 
         if isinstance(parent, TaskSet):

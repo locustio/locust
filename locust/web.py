@@ -1,5 +1,4 @@
 import csv
-import datetime
 import logging
 import os.path
 from functools import wraps
@@ -12,6 +11,7 @@ import gevent
 from flask import Flask, make_response, jsonify, render_template, request, send_file
 from flask_basicauth import BasicAuth
 from gevent import pywsgi
+from typing import Any, Dict
 
 from .exception import AuthCredentialsError
 from .runners import MasterRunner
@@ -61,7 +61,7 @@ class WebUI:
     server = None
     """Reference to the :class:`pyqsgi.WSGIServer` instance"""
 
-    template_args: dict = None
+    template_args: Dict[str, Any]
     """Arguments used to render index.html for the web UI. Must be used with custom templates
     extending index.html."""
 
@@ -107,6 +107,7 @@ class WebUI:
         self.auth = None
         self.greenlet = None
         self._swarm_greenlet = None
+        self.template_args = {}
 
         if auth_credentials is not None:
             credentials = auth_credentials.split(":")

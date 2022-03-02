@@ -8,8 +8,9 @@ import os
 import csv
 import signal
 import gevent
+from typing import Dict, Tuple
 
-from .exception import StopUser, CatchResponseError
+from .exception import CatchResponseError
 
 import logging
 
@@ -129,8 +130,8 @@ class RequestStats:
                                          is not needed.
         """
         self.use_response_times_cache = use_response_times_cache
-        self.entries: dict[str, StatsEntry] = {}
-        self.errors: dict[str, StatsError] = {}
+        self.entries: Dict[Tuple[str, str], StatsEntry] = {}
+        self.errors: Dict[str, StatsError] = {}
         self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
         self.history = []
 
@@ -240,11 +241,11 @@ class StatsEntry:
         """ Minimum response time """
         self.max_response_time = 0
         """ Maximum response time """
-        self.num_reqs_per_sec = {}
+        self.num_reqs_per_sec: Dict[int, int] = {}
         """ A {second => request_count} dict that holds the number of requests made per second """
-        self.num_fail_per_sec = {}
+        self.num_fail_per_sec: Dict[int, int] = {}
         """ A (second => failure_count) dict that hold the number of failures per second """
-        self.response_times = {}
+        self.response_times: Dict[int, int] = {}
         """
         A {response_time => count} dict that holds the response time distribution of all
         the requests.

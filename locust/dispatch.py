@@ -5,10 +5,9 @@ import math
 import time
 from collections.abc import Iterator
 from operator import attrgetter
-from typing import Dict, Generator, List, TYPE_CHECKING, Optional, Tuple, Type
+from typing import Dict, Generator, List, TYPE_CHECKING, Optional, Tuple, Type, Set
 
 import gevent
-import typing
 
 from roundrobin import smooth
 
@@ -62,13 +61,13 @@ class UsersDispatcher(Iterator):
         assert len(user_classes) > 0
         assert len(set(self._user_classes)) == len(self._user_classes)
 
-        self._target_user_count = None
+        self._target_user_count: int
 
-        self._spawn_rate = None
+        self._spawn_rate: float
 
-        self._user_count_per_dispatch_iteration = None
+        self._user_count_per_dispatch_iteration: int
 
-        self._wait_between_dispatch = None
+        self._wait_between_dispatch: float
 
         self._initial_users_on_workers = {
             worker_node.id: {user_class.__name__: 0 for user_class in self._user_classes}
@@ -77,18 +76,18 @@ class UsersDispatcher(Iterator):
 
         self._users_on_workers = self._fast_users_on_workers_copy(self._initial_users_on_workers)
 
-        self._current_user_count = sum(map(sum, map(dict.values, self._users_on_workers.values())))
+        self._current_user_count = self.get_current_user_count()
 
-        self._dispatcher_generator = None
+        self._dispatcher_generator: Generator[Dict[str, Dict[str, int]], None, None]
 
         self._user_generator = self._user_gen()
 
         self._worker_node_generator = itertools.cycle(self._worker_nodes)
 
         # To keep track of how long it takes for each dispatch iteration to compute
-        self._dispatch_iteration_durations = []
+        self._dispatch_iteration_durations: List[float] = []
 
-        self._active_users = []
+        self._active_users: List[Tuple[WorkerNode, str]] = []
 
         # TODO: Test that attribute is set when dispatching and unset when done dispatching
         self._dispatch_in_progress = False
@@ -98,6 +97,10 @@ class UsersDispatcher(Iterator):
         self._try_dispatch_fixed = True
 
         self._no_user_to_spawn = False
+
+    def get_current_user_count(self) -> int:
+        # https://github.com/python/mypy/issues/1507
+        return sum(map(sum, map(dict.values, self._users_on_workers.values())))  # type: ignore
 
     @property
     def dispatch_in_progress(self):
@@ -179,7 +182,7 @@ class UsersDispatcher(Iterator):
 
         self._users_on_workers = self._fast_users_on_workers_copy(self._initial_users_on_workers)
 
-        self._current_user_count = sum(map(sum, map(dict.values, self._users_on_workers.values())))
+        self._current_user_count = self.get_current_user_count()
 
         self._dispatcher_generator = self._dispatcher()
 
@@ -231,7 +234,7 @@ class UsersDispatcher(Iterator):
         self._rebalance = True
 
     @contextlib.contextmanager
-    def _wait_between_dispatch_iteration_context(self) -> None:
+    def _wait_between_dispatch_iteration_context(self) -> Generator[None, None, None]:
         t0_rel = time.perf_counter()
 
         # We don't use `try: ... finally: ...` because we don't want to sleep
@@ -301,7 +304,9 @@ class UsersDispatcher(Iterator):
 
     def _distribute_users(
         self, target_user_count: int
-    ) -> Tuple[dict, Generator[str, None, None], typing.Iterator["WorkerNode"], List[Tuple["WorkerNode", str]]]:
+    ) -> Tuple[
+        Dict[str, Dict[str, int]], Generator[Optional[str], None, None], itertools.cycle, List[Tuple["WorkerNode", str]]
+    ]:
         """
         This function might take some time to complete if the `target_user_count` is a big number. A big number
         is typically > 50 000. However, this function is only called if a worker is added or removed while a test
@@ -330,7 +335,7 @@ class UsersDispatcher(Iterator):
 
         return users_on_workers, user_gen, worker_gen, active_users
 
-    def _user_gen(self) -> Generator[str, None, None]:
+    def _user_gen(self) -> Generator[Optional[str], None, None]:
         """
         This method generates users according to their weights using
         a smooth weighted round-robin algorithm implemented by https://github.com/linnik/roundrobin.
@@ -342,7 +347,7 @@ class UsersDispatcher(Iterator):
         less accurate during ramp-up/down.
         """
 
-        def infinite_cycle_gen(users: List[Tuple[User, int]]) -> Generator[Optional[str], None, None]:
+        def infinite_cycle_gen(users: List[Tuple[Type[User], int]]) -> itertools.cycle:
             if not users:
                 return itertools.cycle([None])
 
@@ -382,7 +387,7 @@ class UsersDispatcher(Iterator):
             if self._try_dispatch_fixed:
                 self._try_dispatch_fixed = False
                 current_fixed_users_count = {u: self._get_user_current_count(u) for u in fixed_users}
-                spawned_classes = set()
+                spawned_classes: Set[str] = set()
                 while len(spawned_classes) != len(fixed_users):
                     user_name = next(cycle_fixed_gen)
                     if not user_name:
@@ -409,4 +414,5 @@ class UsersDispatcher(Iterator):
         The implementation was profiled and compared to other implementations such as dict-comprehensions
         and the one below is the most efficient.
         """
-        return dict(zip(users_on_workers.keys(), map(dict.copy, users_on_workers.values())))
+        # https://github.com/python/mypy/issues/1507
+        return dict(zip(users_on_workers.keys(), map(dict.copy, users_on_workers.values())))  # type: ignore

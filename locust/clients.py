@@ -11,6 +11,8 @@ from urllib.parse import urlparse, urlunparse
 
 from .exception import CatchResponseError, LocustError, ResponseError
 
+from typing import Union, Optional, Generator
+
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
 
@@ -78,7 +80,7 @@ class HttpSession(requests.Session):
             return f"{self.base_url}{path}"
 
     @contextmanager
-    def rename_request(self, name: str):
+    def rename_request(self, name: str) -> Generator[None, None, None]:
         """Group requests using the "with" keyword"""
 
         self.request_name = name
@@ -215,7 +217,7 @@ class ResponseContextManager(LocustResponse):
     :py:meth:`failure <locust.clients.ResponseContextManager.failure>`.
     """
 
-    _manual_result = None
+    _manual_result: Optional[Union[bool, CatchResponseError, Exception]] = None
     _entered = False
 
     def __init__(self, response, request_event, request_meta):

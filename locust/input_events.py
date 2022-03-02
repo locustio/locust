@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Callable
 
 import gevent
 import logging
@@ -88,7 +88,7 @@ def get_poller():
         return UnixKeyPoller()
 
 
-def input_listener(key_to_func_map: Dict[str, callable]):
+def input_listener(key_to_func_map: Dict[str, Callable]):
     def input_listener_func():
         try:
             poller = get_poller()

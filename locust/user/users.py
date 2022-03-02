@@ -1,5 +1,5 @@
 from locust.user.wait_time import constant
-from typing import Any, Callable, Dict, List, TypeVar, Union
+from typing import Callable, Dict, List, Optional, Union
 from typing_extensions import final
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
@@ -49,7 +49,7 @@ class User(metaclass=UserMeta):
     :py:class:`HttpUser <locust.HttpUser>` class.
     """
 
-    host: str = None
+    host: Optional[str] = None
     """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
 
     min_wait = None

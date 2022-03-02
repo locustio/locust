@@ -29,8 +29,11 @@ def deprecated_locust_meta_class(deprecation_message):
     return MetaClass
 
 
+# PEP 484 specifies "Generic metaclasses are not supported", see https://github.com/python/mypy/issues/3602, ignore typing errors
+
+
 class DeprecatedLocustClass(
-    metaclass=deprecated_locust_meta_class(
+    metaclass=deprecated_locust_meta_class(  # type: ignore
         "The Locust class has been renamed to User in version 1.0. "
         "For more info see: https://docs.locust.io/en/latest/changelog.html#changelog-1-0"
     )
@@ -39,7 +42,7 @@ class DeprecatedLocustClass(
 
 
 class DeprecatedHttpLocustClass(
-    metaclass=deprecated_locust_meta_class(
+    metaclass=deprecated_locust_meta_class(  # type: ignore
         "The HttpLocust class has been renamed to HttpUser in version 1.0. "
         "For more info see: https://docs.locust.io/en/latest/changelog.html#changelog-1-0"
     )
@@ -48,7 +51,7 @@ class DeprecatedHttpLocustClass(
 
 
 class DeprecatedFastHttpLocustClass(
-    metaclass=deprecated_locust_meta_class(
+    metaclass=deprecated_locust_meta_class(  # type: ignore
         "The FastHttpLocust class has been renamed to FastHttpUser in version 1.0. "
         "For more info see: https://docs.locust.io/en/latest/changelog.html#changelog-1-0"
     )
