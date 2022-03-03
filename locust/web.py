@@ -426,6 +426,11 @@ class WebUI:
         stats = self.environment.runner.stats
         extra_options = argument_parser.ui_extra_args_dict()
 
+        show_host_form = True
+        if self.environment.host and extra_options["not_show_host_form"]:
+            show_host_form = False
+        extra_options.pop("not_show_host_form")
+
         self.template_args = {
             "locustfile": self.environment.locustfile,
             "state": self.environment.runner.state,
@@ -441,5 +446,6 @@ class WebUI:
             "is_shape": self.environment.shape_class,
             "stats_history_enabled": options and options.stats_history_enabled,
             "tasks": dumps({}),
+            "show_host_form": show_host_form,
             "extra_options": extra_options,
         }

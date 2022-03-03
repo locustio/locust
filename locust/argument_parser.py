@@ -527,6 +527,15 @@ def ui_extra_args_dict(args=None) -> Dict[str, str]:
     locust_args = default_args_dict()
 
     parser = get_parser()
+    parser.add_argument(
+        "--not-show-host-form",
+        dest="not_show_host_form",
+        action="store_true",
+        help="Don't show Host form if LOCUST_HOST is set",
+        default=True,
+        env_var="LOCUST_NOT_SHOW_HOST_FORM",
+    )
+
     all_args = vars(parser.parse_args(args))
 
     extra_args = {k: v for k, v in all_args.items() if k not in locust_args and k in parser.args_included_in_web_ui}
