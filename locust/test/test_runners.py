@@ -733,6 +733,28 @@ class TestLocustRunner(LocustRunnerTestCase):
 
         self.assertTrue(test_start_event_fired[0])
 
+    def test_stop_users_count(self):
+        user_count = 10
+
+        class BaseUser1(User):
+            wait_time = constant(1)
+
+            @task
+            def task_a(self):
+                pass
+
+        class BaseUser2(BaseUser1):
+            wait_time = constant(1)
+
+        runner = Environment(user_classes=[BaseUser1, BaseUser2]).create_local_runner()
+        runner.start(user_count=user_count, spawn_rate=10)
+        sleep(1)
+        self.assertEqual(user_count, runner.user_count)
+
+        runner.stop()
+        sleep(1)
+        self.assertEqual(0, runner.user_count)
+
 
 class TestMasterWorkerRunners(LocustTestCase):
     def test_distributed_integration_run(self):
