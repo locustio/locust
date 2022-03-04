@@ -832,7 +832,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                 )
 
         with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3), patch_env(
-                "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"
+            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"
         ):
             # start a Master runner
             options = parse_options(["--enable-rebalancing"])
@@ -1252,8 +1252,8 @@ class TestMasterWorkerRunners(LocustTestCase):
 
         locust_worker_additional_wait_before_ready_after_stop = 5
         with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3), patch_env(
-                "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
-                str(locust_worker_additional_wait_before_ready_after_stop),
+            "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
+            str(locust_worker_additional_wait_before_ready_after_stop),
         ):
             stop_timeout = 5
             master_env = Environment(
@@ -1509,8 +1509,8 @@ class TestMasterWorkerRunners(LocustTestCase):
 
         locust_worker_additional_wait_before_ready_after_stop = 5
         with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3), patch_env(
-                "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
-                str(locust_worker_additional_wait_before_ready_after_stop),
+            "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
+            str(locust_worker_additional_wait_before_ready_after_stop),
         ):
             stop_timeout = 5
             master_env = Environment(
@@ -1627,8 +1627,8 @@ class TestMasterWorkerRunners(LocustTestCase):
 
         locust_worker_additional_wait_before_ready_after_stop = 2
         with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3), patch_env(
-                "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
-                str(locust_worker_additional_wait_before_ready_after_stop),
+            "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
+            str(locust_worker_additional_wait_before_ready_after_stop),
         ):
             stop_timeout = 0
             master_env = Environment(user_classes=[TestUser1], shape_class=TestShape(), stop_timeout=stop_timeout)
@@ -1953,7 +1953,7 @@ class TestMasterRunner(LocustRunnerTestCase):
                 gevent.sleep(600)
 
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server, patch_env(
-                "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"
+            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"
         ):
             master = self.get_runner(user_classes=[TestUser])
             server.mocked_send(Message("client_ready", __version__, "fake_client1"))
@@ -1981,7 +1981,7 @@ class TestMasterRunner(LocustRunnerTestCase):
                 gevent.sleep(600)
 
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server, patch_env(
-                "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"
+            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"
         ):
             master = self.get_runner(user_classes=[TestUser])
             server.mocked_send(Message("client_ready", __version__, "fake_client1"))
@@ -2052,7 +2052,7 @@ class TestMasterRunner(LocustRunnerTestCase):
                 gevent.sleep(600)
 
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server, patch_env(
-                "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"
+            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"
         ):
             master = self.get_runner(user_classes=[TestUser])
             server.mocked_send(Message("client_ready", __version__, "fake_client1"))
@@ -2797,7 +2797,7 @@ class TestMasterRunner(LocustRunnerTestCase):
 
         master._wait_for_workers_report_after_ramp_up.cache_clear()
         with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=1.5), patch_env(
-                "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "5.7 * WORKER_REPORT_INTERVAL"
+            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "5.7 * WORKER_REPORT_INTERVAL"
         ):
             self.assertEqual(master._wait_for_workers_report_after_ramp_up(), 5.7 * 1.5)
             assert_cache_hits()
