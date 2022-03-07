@@ -2,7 +2,7 @@ import logging
 import random
 import traceback
 from time import time
-from typing import TYPE_CHECKING, Callable, Any, List, Union, TypeVar, Optional, overload
+from typing import TYPE_CHECKING, Callable, List, Union, TypeVar, Optional, Type, overload
 from typing_extensions import final
 
 import gevent
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
-TaskT = TypeVar("TaskT", bound=Callable[[Any], None])
+TaskT = TypeVar("TaskT", bound=Union[Callable[..., None], Type["TaskSet"]])
 
 LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING = ["running", "waiting", "stopping"]
 
@@ -43,6 +43,16 @@ def task(weight: Union[TaskT, int] = 1) -> Union[TaskT, Callable[[TaskT], TaskT]
             @task(7)
             def create_thread(self):
                 pass
+
+            @task(25)
+            class ForumThread(TaskSet):
+                @task
+                def get_author(self):
+                    pass
+
+                @task
+                def get_created(self):
+                    pass
     """
 
     def decorator_func(func):
