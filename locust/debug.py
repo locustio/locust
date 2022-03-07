@@ -5,7 +5,7 @@ import locust
 from locust import User, argument_parser
 from typing import Type
 from locust.env import Environment
-from locust.exception import CatchResponseError
+from locust.exception import CatchResponseError, RescheduleTask
 
 
 def _print_t(s):
@@ -52,6 +52,8 @@ class PrintListener:
         **_kwargs,
     ):
         if exception:
+            if isinstance(exception, RescheduleTask):
+                pass
             if isinstance(exception, CatchResponseError):
                 e = str(exception)
             else:
