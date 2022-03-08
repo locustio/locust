@@ -45,7 +45,7 @@ from locust.user import (
     User,
     task,
 )
-from retry import retry
+from retry import retry  # type: ignore
 from .util import patch_env
 
 NETWORK_BROKEN = "network broken"
@@ -1408,7 +1408,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             master.stop()
 
-    @unittest.skip
+    @unittest.skip(reason="takes a lot of time and has randomness to it")
     def test_distributed_shape_fuzzy_test(self):
         """
         Incredibility useful test to find issues with dispatch logic. This test allowed to find

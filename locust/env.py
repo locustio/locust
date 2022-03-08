@@ -6,6 +6,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    Optional,
 )
 
 from configargparse import Namespace
@@ -40,13 +41,13 @@ class Environment:
         parsed_options: Namespace = None,
     ):
 
-        self.runner: Runner = None
+        self.runner: Optional[Runner] = None
         """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
 
-        self.web_ui: WebUI = None
+        self.web_ui: Optional[WebUI] = None
         """Reference to the WebUI instance"""
 
-        self.process_exit_code: int = None
+        self.process_exit_code: Optional[int] = None
         """
         If set it'll be the exit code of the Locust process
         """
@@ -112,7 +113,7 @@ class Environment:
     ) -> RunnerType:
         if self.runner is not None:
             raise RunnerAlreadyExistsError(f"Environment.runner already exists ({self.runner})")
-        self.runner: RunnerType = runner_class(self, *args, **kwargs)
+        self.runner = runner_class(self, *args, **kwargs)
 
         # Attach the runner to the shape class so that the shape class can access user count state
         if self.shape_class:

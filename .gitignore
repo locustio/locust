@@ -3,11 +3,14 @@ locust.wpr
 locust.egg-info/**
 locustio.egg-info/**
 locust/_version.py
+locust/test/mock_*.py
 docs/_build/**
 docs/cli-help-output.txt
 docs/config-options.rst
 mock.*.egg
 web_test_*.csv
+err.txt
+out.txt
 .eggs/
 dist/**
 .idea/**

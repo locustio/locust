@@ -239,7 +239,7 @@ class Runner:
             if self.user_classes_count[user_class] == 0:
                 continue
 
-            to_stop = []
+            to_stop: List[greenlet.greenlet] = []
             for user_greenlet in self.user_greenlets:
                 if len(to_stop) == stop_count:
                     break
@@ -1002,7 +1002,7 @@ class MasterRunner(DistributedRunner):
 
     @property
     def reported_user_classes_count(self) -> Dict[str, int]:
-        reported_user_classes_count = defaultdict(lambda: 0)
+        reported_user_classes_count: Dict[str, int] = defaultdict(lambda: 0)
         for client in self.clients.ready + self.clients.spawning + self.clients.running:
             for name, count in client.user_classes_count.items():
                 reported_user_classes_count[name] += count

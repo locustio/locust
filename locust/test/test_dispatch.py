@@ -1,7 +1,7 @@
 import time
 import unittest
 from operator import attrgetter
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Type
 
 from locust import User
 from locust.dispatch import UsersDispatcher
@@ -3189,7 +3189,7 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
                 self.fixed_counts, self.weights, self.target_user_count
             )
 
-    def case_handler(self, cases: List[RampUpCase], expected: Dict[str, int], user_classes: List[User]):
+    def case_handler(self, cases: List[RampUpCase], expected: List[Dict[str, int]], user_classes: List[Type[User]]):
         self.assertEqual(len(cases), len(expected))
 
         for case_num in range(len(cases)):
@@ -3448,7 +3448,7 @@ def _aggregate_dispatched_users(d: Dict[str, Dict[str, int]]) -> Dict[str, int]:
 
 
 def _user_count(d: Dict[str, Dict[str, int]]) -> int:
-    return sum(map(sum, map(dict.values, d.values())))
+    return sum(map(sum, map(dict.values, d.values())))  # type: ignore
 
 
 def _user_count_on_worker(d: Dict[str, Dict[str, int]], worker_node_id: str) -> int:

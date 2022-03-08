@@ -37,5 +37,5 @@ setup(
         "write_to": "locust/_version.py",
         "local_scheme": "no-local-version",
     },
-    setup_requires=["setuptools_scm"],
+    setup_requires=["setuptools_scm<=6.0.1"],
 )

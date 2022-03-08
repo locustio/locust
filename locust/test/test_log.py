@@ -10,6 +10,7 @@ from locust import log
 from locust.log import greenlet_exception_logger
 from .testcases import LocustTestCase
 from .util import temporary_file
+from . import changed_rlimit
 
 
 class TestGreenletExceptionLogger(LocustTestCase):
@@ -128,7 +129,10 @@ class TestLoggingOptions(LocustTestCase):
                 stderr=subprocess.STDOUT,
                 timeout=10,
             ).decode("utf-8")
-        self.assertEqual("running my_task", output.strip())
+        if not changed_rlimit:
+            self.assertTrue(output.strip().endswith("running my_task"))
+        else:
+            self.assertEqual("running my_task", output.strip())
 
     def test_log_to_file(self):
         with temporary_file(
