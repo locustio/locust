@@ -350,10 +350,7 @@ class FastResponse(CompatResponse):
         """
         Parses the response as json and returns a dict
         """
-        if self.text is not None:
-            return json.loads(self.text)
-        else:
-            return {}
+        return json.loads(self.text)  # type: ignore
 
     def raise_for_status(self):
         """Raise any connection errors that occurred during the request"""

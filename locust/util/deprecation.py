@@ -30,8 +30,6 @@ def deprecated_locust_meta_class(deprecation_message):
 
 
 # PEP 484 specifies "Generic metaclasses are not supported", see https://github.com/python/mypy/issues/3602, ignore typing errors
-
-
 class DeprecatedLocustClass(
     metaclass=deprecated_locust_meta_class(  # type: ignore
         "The Locust class has been renamed to User in version 1.0. "

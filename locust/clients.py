@@ -217,7 +217,7 @@ class ResponseContextManager(LocustResponse):
     :py:meth:`failure <locust.clients.ResponseContextManager.failure>`.
     """
 
-    _manual_result: Optional[Union[bool, CatchResponseError, Exception]] = None
+    _manual_result: Optional[Union[bool, Exception]] = None
     _entered = False
 
     def __init__(self, response, request_event, request_meta):
