@@ -424,17 +424,15 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
         # determine the process exit code
         if log.unhandled_greenlet_exception:
-            code = 2
-        elif environment.process_exit_code is not None:
-            code = environment.process_exit_code
+            environment.process_exit_code = 2
         elif len(runner.errors) or len(runner.exceptions):
-            code = options.exit_code_on_error
+            environment.process_exit_code = options.exit_code_on_error
         else:
-            code = 0
+            environment.process_exit_code = 0
 
-        environment.events.quitting.fire(environment=environment, reverse=True, exit_code=code)
+        environment.events.quitting.fire(environment=environment, reverse=True)
 
-        logger.info(f"Shutting down (exit code {code})")
+        logger.info(f"Shutting down (exit code {environment.process_exit_code})")
 
         if stats_printer_greenlet is not None:
             stats_printer_greenlet.kill(block=False)
