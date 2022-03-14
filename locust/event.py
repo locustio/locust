@@ -154,6 +154,7 @@ class Events:
     Event arguments:
 
     :param environment: Environment instance
+    :param exit_code: Locust process exit code
     """
 
     init: EventHook
