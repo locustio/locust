@@ -6,6 +6,7 @@ from base64 import b64encode
 from urllib.parse import urlparse, urlunparse
 from ssl import SSLError
 import time
+from typing import Optional
 
 from http.cookiejar import CookieJar
 
@@ -83,7 +84,7 @@ class FastHttpSession:
         # Check for basic authentication
         parsed_url = urlparse(self.base_url)
         if parsed_url.username and parsed_url.password:
-            netloc = parsed_url.hostname
+            netloc = parsed_url.hostname or ""
             if parsed_url.port:
                 netloc += ":%d" % parsed_url.port
 
@@ -99,7 +100,7 @@ class FastHttpSession:
         if absolute_http_url_regexp.match(path):
             return path
         else:
-            return "%s%s" % (self.base_url, path)
+            return f"{self.base_url}{path}"
 
     def _send_request_safe_mode(self, method, url, **kwargs):
         """
@@ -303,7 +304,7 @@ class FastHttpUser(User):
                 "You must specify the base host. Either in the host attribute in the User class, or on the command line using the --host option."
             )
         if not re.match(r"^https?://[^/]+", self.host, re.I):
-            raise LocustError("Invalid host (`%s`), must be a valid base URL. E.g. http://example.com" % self.host)
+            raise LocustError(f"Invalid host (`{self.host}`), must be a valid base URL. E.g. http://example.com")
 
         self.client = FastHttpSession(
             self.environment,
@@ -328,11 +329,11 @@ class FastResponse(CompatResponse):
 
     _response = None
 
-    encoding: str = None
+    encoding: Optional[str] = None
     """In some cases setting the encoding explicitly is needed. If so, do it before calling .text"""
 
     @property
-    def text(self) -> str:
+    def text(self) -> Optional[str]:
         """
         Returns the text content of the response as a decoded string
         """
@@ -349,7 +350,7 @@ class FastResponse(CompatResponse):
         """
         Parses the response as json and returns a dict
         """
-        return json.loads(self.text)
+        return json.loads(self.text)  # type: ignore
 
     def raise_for_status(self):
         """Raise any connection errors that occurred during the request"""

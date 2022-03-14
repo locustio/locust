@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-
 import csv
-import datetime
 import logging
 import os.path
 from functools import wraps
@@ -14,6 +11,7 @@ import gevent
 from flask import Flask, make_response, jsonify, render_template, request, send_file
 from flask_basicauth import BasicAuth
 from gevent import pywsgi
+from typing import Any, Dict
 
 from .exception import AuthCredentialsError
 from .runners import MasterRunner
@@ -63,7 +61,7 @@ class WebUI:
     server = None
     """Reference to the :class:`pyqsgi.WSGIServer` instance"""
 
-    template_args: dict = None
+    template_args: Dict[str, Any]
     """Arguments used to render index.html for the web UI. Must be used with custom templates
     extending index.html."""
 
@@ -109,6 +107,7 @@ class WebUI:
         self.auth = None
         self.greenlet = None
         self._swarm_greenlet = None
+        self.template_args = {}
 
         if auth_credentials is not None:
             credentials = auth_credentials.split(":")
@@ -190,7 +189,7 @@ class WebUI:
             res = get_html_report(self.environment, show_download_link=not request.args.get("download"))
             if request.args.get("download"):
                 res = app.make_response(res)
-                res.headers["Content-Disposition"] = "attachment;filename=report_%s.html" % time()
+                res.headers["Content-Disposition"] = f"attachment;filename=report_{time()}.html"
             return res
 
         def _download_csv_suggest_file_name(suggest_filename_prefix):
@@ -406,7 +405,7 @@ class WebUI:
         if self.environment.host:
             host = self.environment.host
         elif self.environment.runner.user_classes:
-            all_hosts = set([l.host for l in self.environment.runner.user_classes])
+            all_hosts = {l.host for l in self.environment.runner.user_classes}
             if len(all_hosts) == 1:
                 host = list(all_hosts)[0]
             else:

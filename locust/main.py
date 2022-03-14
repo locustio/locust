@@ -173,7 +173,7 @@ def main():
     if options.user_classes:
         missing = set(options.user_classes) - set(user_classes.keys())
         if missing:
-            logger.error("Unknown User(s): %s\n" % (", ".join(missing)))
+            logger.error(f"Unknown User(s): {', '.join(missing)}\n")
             sys.exit(1)
         else:
             names = set(options.user_classes) & set(user_classes.keys())
@@ -196,11 +196,9 @@ def main():
                 resource.setrlimit(resource.RLIMIT_NOFILE, [minimum_open_file_limit, resource.RLIM_INFINITY])
         except BaseException:
             logger.warning(
-                (
-                    f"System open file limit '{current_open_file_limit}' is below minimum setting '{minimum_open_file_limit}'. "
-                    "It's not high enough for load testing, and the OS didn't allow locust to increase it by itself. "
-                    "See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."
-                )
+                f"""System open file limit '{current_open_file_limit}' is below minimum setting '{minimum_open_file_limit}'.
+It's not high enough for load testing, and the OS didn't allow locust to increase it by itself.
+See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."""
             )
 
     # create locust Environment
@@ -237,7 +235,7 @@ def main():
         try:
             runner = environment.create_worker_runner(options.master_host, options.master_port)
             logger.debug("Connected to locust master: %s:%s", options.master_host, options.master_port)
-        except socket.error as e:
+        except OSError as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
     else:
@@ -274,7 +272,7 @@ def main():
             else:
                 web_host = options.web_host
             if web_host:
-                logger.info("Starting web interface at %s://%s:%s" % (protocol, web_host, options.web_port))
+                logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}")
             else:
                 logger.info(
                     "Starting web interface at %s://0.0.0.0:%s (accepting connections from all network interfaces)"
@@ -316,7 +314,7 @@ def main():
             logger.info("--run-time limit reached, stopping test")
             runner.stop()
             if options.autoquit != -1:
-                logger.debug("Autoquit time limit set to %s seconds" % options.autoquit)
+                logger.debug(f"Autoquit time limit set to {options.autoquit} seconds")
                 time.sleep(options.autoquit)
                 logger.info("--autoquit time reached, shutting down")
                 runner.quit()
@@ -378,7 +376,7 @@ def main():
                 headless_master_greenlet.link_exception(greenlet_exception_handler)
 
         if options.run_time:
-            logger.info("Run time limit set to %s seconds" % options.run_time)
+            logger.info(f"Run time limit set to {options.run_time} seconds")
             spawn_run_time_quit_greenlet()
         elif not options.worker and not environment.shape_class:
             logger.info("No run time limit set, use CTRL+C to interrupt")
@@ -436,7 +434,8 @@ def main():
 
         environment.events.quitting.fire(environment=environment, reverse=True, exit_code=code)
 
-        logger.info("Shutting down (exit code %s)" % code)
+        logger.info(f"Shutting down (exit code {code})")
+
         if stats_printer_greenlet is not None:
             stats_printer_greenlet.kill(block=False)
         if headless_master_greenlet is not None:
@@ -466,7 +465,7 @@ def main():
     gevent.signal_handler(signal.SIGTERM, sig_term_handler)
 
     try:
-        logger.info("Starting Locust %s" % version)
+        logger.info(f"Starting Locust {version}")
         if options.autostart:
             start_automatic_run()
 

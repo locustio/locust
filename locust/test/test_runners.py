@@ -1,14 +1,12 @@
 import json
-import os
 import random
 import time
 import unittest
 from collections import defaultdict
-from contextlib import contextmanager
 from operator import itemgetter
 
 import gevent
-import mock
+from unittest import mock
 import requests
 from gevent import sleep
 from gevent.pool import Group
@@ -47,7 +45,7 @@ from locust.user import (
     User,
     task,
 )
-from retry import retry
+from retry import retry  # type: ignore
 from .util import patch_env
 
 NETWORK_BROKEN = "network broken"
@@ -116,7 +114,22 @@ class HeyAnException(Exception):
     pass
 
 
-class TestLocustRunner(LocustTestCase):
+class LocustRunnerTestCase(LocustTestCase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.runner_stopping = False
+        self.runner_stopped = False
+
+    def setUp(self):
+        super().setUp()
+        self.reset_state()
+
+    def reset_state(self):
+        self.runner_stopping = False
+        self.runner_stopped = False
+
+
+class TestLocustRunner(LocustRunnerTestCase):
     def test_cpu_warning(self):
         _monitor_interval = runners.CPU_MONITOR_INTERVAL
         runners.CPU_MONITOR_INTERVAL = 2.0
@@ -197,19 +210,23 @@ class TestLocustRunner(LocustTestCase):
             def my_task(self):
                 pass
 
-        test_stop_run = [0]
-        environment = Environment(user_classes=[User])
+        environment = Environment(user_classes=[MyUser])
 
-        def on_test_stop(*args, **kwargs):
-            test_stop_run[0] += 1
+        @environment.events.test_stopping.add_listener
+        def on_test_stopping(*_, **__):
+            self.runner_stopping = True
 
-        environment.events.test_stop.add_listener(on_test_stop)
+        @environment.events.test_stop.add_listener
+        def on_test_stop(*_, **__):
+            self.runner_stopped = True
 
         runner = LocalRunner(environment)
         runner.start(user_count=3, spawn_rate=3, wait=False)
-        self.assertEqual(0, test_stop_run[0])
+        self.assertFalse(self.runner_stopping)
+        self.assertFalse(self.runner_stopped)
         runner.stop()
-        self.assertEqual(1, test_stop_run[0])
+        self.assertTrue(self.runner_stopping)
+        self.assertTrue(self.runner_stopped)
 
     def test_stop_event_quit(self):
         class MyUser(User):
@@ -219,19 +236,23 @@ class TestLocustRunner(LocustTestCase):
             def my_task(self):
                 pass
 
-        test_stop_run = [0]
-        environment = Environment(user_classes=[User])
+        environment = Environment(user_classes=[MyUser])
 
-        def on_test_stop(*args, **kwargs):
-            test_stop_run[0] += 1
+        @environment.events.test_stopping.add_listener
+        def on_test_stopping(*_, **__):
+            self.runner_stopping = True
 
-        environment.events.test_stop.add_listener(on_test_stop)
+        @environment.events.test_stop.add_listener
+        def on_test_stop(*_, **__):
+            self.runner_stopped = True
 
         runner = LocalRunner(environment)
         runner.start(user_count=3, spawn_rate=3, wait=False)
-        self.assertEqual(0, test_stop_run[0])
+        self.assertFalse(self.runner_stopping)
+        self.assertFalse(self.runner_stopped)
         runner.quit()
-        self.assertEqual(1, test_stop_run[0])
+        self.assertTrue(self.runner_stopping)
+        self.assertTrue(self.runner_stopped)
 
     def test_stop_event_stop_and_quit(self):
         class MyUser(User):
@@ -241,20 +262,51 @@ class TestLocustRunner(LocustTestCase):
             def my_task(self):
                 pass
 
-        test_stop_run = [0]
         environment = Environment(user_classes=[MyUser])
 
-        def on_test_stop(*args, **kwargs):
-            test_stop_run[0] += 1
+        @environment.events.test_stopping.add_listener
+        def on_test_stopping(*_, **__):
+            self.runner_stopping = True
 
-        environment.events.test_stop.add_listener(on_test_stop)
+        @environment.events.test_stop.add_listener
+        def on_test_stop(*_, **__):
+            self.runner_stopped = True
 
         runner = LocalRunner(environment)
         runner.start(user_count=3, spawn_rate=3, wait=False)
-        self.assertEqual(0, test_stop_run[0])
+        self.assertFalse(self.runner_stopping)
+        self.assertFalse(self.runner_stopped)
         runner.stop()
         runner.quit()
-        self.assertEqual(1, test_stop_run[0])
+        self.assertTrue(self.runner_stopping)
+        self.assertTrue(self.runner_stopped)
+
+    def test_stopping_event(self):
+        on_stop_called = [False]
+
+        class MyUser(User):
+            on_stop_called = False
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+            def on_stop(self):
+                MyUser.on_stop_called = True
+
+        environment = Environment(user_classes=[MyUser])
+
+        @environment.events.test_stopping.add_listener
+        def on_test_stopping(*_, **__):
+            on_stop_called[0] = MyUser.on_stop_called
+            self.runner_stopping = True
+
+        runner = LocalRunner(environment)
+        runner.start(user_count=3, spawn_rate=3, wait=False)
+        runner.quit()
+        self.assertTrue(self.runner_stopping)
+        self.assertFalse(on_stop_called[0])
 
     def test_change_user_count_during_spawning(self):
         class MyUser(User):
@@ -404,7 +456,7 @@ class TestLocustRunner(LocustTestCase):
         runner.spawning_greenlet.join()
         delta = time.time() - ts
         self.assertTrue(
-            0 <= delta <= 0.05, "Expected user count to increase to 10 instantaneously, instead it took %f" % delta
+            0 <= delta <= 0.05, f"Expected user count to increase to 10 instantaneously, instead it took {delta:f}"
         )
         self.assertTrue(
             runner.user_count == 10, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
@@ -414,7 +466,7 @@ class TestLocustRunner(LocustTestCase):
         runner.start(2, 4, wait=False)
         runner.spawning_greenlet.join()
         delta = time.time() - ts
-        self.assertTrue(0 <= delta <= 1.05, "Expected user count to decrease to 2 in 1s, instead it took %f" % delta)
+        self.assertTrue(0 <= delta <= 1.05, f"Expected user count to decrease to 2 in 1s, instead it took {delta:f}")
         self.assertTrue(
             runner.user_count == 2, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
         )
@@ -575,7 +627,7 @@ class TestLocustRunner(LocustTestCase):
 
         ts = time.perf_counter()
         response = requests.post(
-            "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
+            f"http://127.0.0.1:{web_ui.server.server_port}/swarm",
             data={"user_count": 20, "spawn_rate": 5, "host": "https://localhost"},
         )
         self.assertEqual(200, response.status_code)
@@ -613,7 +665,7 @@ class TestLocustRunner(LocustTestCase):
 
         ts = time.perf_counter()
         response = requests.post(
-            "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
+            f"http://127.0.0.1:{web_ui.server.server_port}/swarm",
             data={"user_count": 20, "spawn_rate": 1, "host": "https://localhost"},
         )
         self.assertEqual(200, response.status_code)
@@ -626,7 +678,7 @@ class TestLocustRunner(LocustTestCase):
 
         ts = time.perf_counter()
         response = requests.get(
-            "http://127.0.0.1:{}/stop".format(web_ui.server.server_port),
+            f"http://127.0.0.1:{web_ui.server.server_port}/stop",
         )
         self.assertEqual(200, response.status_code)
         self.assertTrue(stop_timeout <= time.perf_counter() - ts <= stop_timeout + 5, "stop endpoint took too long")
@@ -680,6 +732,28 @@ class TestLocustRunner(LocustTestCase):
         runner.quit()
 
         self.assertTrue(test_start_event_fired[0])
+
+    def test_stop_users_count(self):
+        user_count = 10
+
+        class BaseUser1(User):
+            wait_time = constant(1)
+
+            @task
+            def task_a(self):
+                pass
+
+        class BaseUser2(BaseUser1):
+            wait_time = constant(1)
+
+        runner = Environment(user_classes=[BaseUser1, BaseUser2]).create_local_runner()
+        runner.start(user_count=user_count, spawn_rate=10)
+        sleep(1)
+        self.assertEqual(user_count, runner.user_count)
+
+        runner.stop()
+        sleep(1)
+        self.assertEqual(0, runner.user_count)
 
 
 class TestMasterWorkerRunners(LocustTestCase):
@@ -1334,7 +1408,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             master.stop()
 
-    @unittest.skip
+    @unittest.skip(reason="takes a lot of time and has randomness to it")
     def test_distributed_shape_fuzzy_test(self):
         """
         Incredibility useful test to find issues with dispatch logic. This test allowed to find
@@ -1642,7 +1716,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             ts = time.perf_counter()
             response = requests.post(
-                "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
+                f"http://127.0.0.1:{web_ui.server.server_port}/swarm",
                 data={"user_count": 20, "spawn_rate": 5, "host": "https://localhost"},
             )
             self.assertEqual(200, response.status_code)
@@ -1691,7 +1765,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             ts = time.perf_counter()
             response = requests.post(
-                "http://127.0.0.1:{}/swarm".format(web_ui.server.server_port),
+                f"http://127.0.0.1:{web_ui.server.server_port}/swarm",
                 data={"user_count": 20, "spawn_rate": 1, "host": "https://localhost"},
             )
             self.assertEqual(200, response.status_code)
@@ -1704,7 +1778,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             ts = time.perf_counter()
             response = requests.get(
-                "http://127.0.0.1:{}/stop".format(web_ui.server.server_port),
+                f"http://127.0.0.1:{web_ui.server.server_port}/stop",
             )
             self.assertEqual(200, response.status_code)
             self.assertTrue(stop_timeout <= time.perf_counter() - ts <= stop_timeout + 5, "stop endpoint took too long")
@@ -1774,7 +1848,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertTrue(test_start_event_fired[0])
 
 
-class TestMasterRunner(LocustTestCase):
+class TestMasterRunner(LocustRunnerTestCase):
     def setUp(self):
         super().setUp()
         self.environment = Environment(events=locust.events, catch_exceptions=False)
@@ -1968,6 +2042,96 @@ class TestMasterRunner(LocustTestCase):
             self.assertEqual(3, len(master.clients.missing))
             self.assertEqual(0, master.worker_count)
             self.assertEqual(STATE_STOPPED, master.state, "All workers went missing but test didn't stop.")
+
+    @mock.patch("locust.runners.HEARTBEAT_INTERVAL", new=0.1)
+    @mock.patch("locust.runners.HEARTBEAT_DEAD_INTERNAL", new=-3)
+    def test_worker_missing_after_heartbeat_dead_interval(self):
+        class TestUser(User):
+            @task
+            def my_task(self):
+                gevent.sleep(600)
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server, patch_env(
+            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"
+        ):
+            master = self.get_runner(user_classes=[TestUser])
+            server.mocked_send(Message("client_ready", __version__, "fake_client1"))
+            server.mocked_send(Message("client_ready", __version__, "fake_client2"))
+            server.mocked_send(Message("client_ready", __version__, "fake_client3"))
+
+            master.start(3, 3)
+            server.mocked_send(Message("spawning", None, "fake_client1"))
+            server.mocked_send(Message("spawning", None, "fake_client2"))
+            server.mocked_send(Message("spawning", None, "fake_client3"))
+
+            sleep(0.1)
+            server.mocked_send(
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client1",
+                )
+            )
+            server.mocked_send(
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client2",
+                )
+            )
+            server.mocked_send(
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client3",
+                )
+            )
+
+            sleep(0.1)
+            # initially all workers are in active state
+            self.assertEqual(0, len(master.clients.missing))
+            self.assertEqual(3, master.worker_count)
+            server.mocked_send(
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client1",
+                )
+            )
+
+            server.mocked_send(
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client2",
+                )
+            )
+
+            sleep(0.6)
+            # 4 intervals are passed since all 3 heart beats all workers are in missing state
+            self.assertEqual(3, len(master.clients.missing))
+            self.assertEqual(0, master.worker_count)
+
+            server.mocked_send(
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client1",
+                )
+            )
+
+            server.mocked_send(
+                Message(
+                    "heartbeat",
+                    {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200, "count": 1},
+                    "fake_client2",
+                )
+            )
+            sleep(0.2)
+            # hearbeat received from two workers so they are active, for fake_client3 HEARTBEAT_DEAD_INTERNAL has been breached, so it will be removed from worker list
+            self.assertEqual(0, len(master.clients.missing))
+            self.assertEqual(2, master.worker_count)
+            master.stop()
 
     def test_master_total_stats(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
@@ -2224,11 +2388,13 @@ class TestMasterRunner(LocustTestCase):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner(user_classes=[TestUser])
 
-            run_count = [0]
+            @self.environment.events.test_stopping.add_listener
+            def on_test_stopping(*_, **__):
+                self.runner_stopping = True
 
             @self.environment.events.test_stop.add_listener
-            def on_test_stop(*a, **kw):
-                run_count[0] += 1
+            def on_test_stop(*_, **__):
+                self.runner_stopped = True
 
             for i in range(5):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
@@ -2236,15 +2402,17 @@ class TestMasterRunner(LocustTestCase):
             master.start(7, 7)
             self.assertEqual(5, len(server.outbox))
             master.stop()
-            self.assertEqual(1, run_count[0])
+            self.assertTrue(self.runner_stopping)
+            self.assertTrue(self.runner_stopped)
 
-            run_count[0] = 0
+            self.reset_state()
             for i in range(5):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
             master.start(7, 7)
             master.stop()
             master.quit()
-            self.assertEqual(1, run_count[0])
+            self.assertTrue(self.runner_stopping)
+            self.assertTrue(self.runner_stopped)
 
     def test_stop_event_quit(self):
         """
@@ -2259,11 +2427,13 @@ class TestMasterRunner(LocustTestCase):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner(user_classes=[TestUser])
 
-            run_count = [0]
+            @self.environment.events.test_stopping.add_listener
+            def on_test_stopping(*_, **__):
+                self.runner_stopping = True
 
             @self.environment.events.test_stop.add_listener
-            def on_test_stop(*a, **kw):
-                run_count[0] += 1
+            def on_test_stop(*_, **__):
+                self.runner_stopped = True
 
             for i in range(5):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
@@ -2271,7 +2441,8 @@ class TestMasterRunner(LocustTestCase):
             master.start(7, 7)
             self.assertEqual(5, len(server.outbox))
             master.quit()
-            self.assertEqual(1, run_count[0])
+            self.assertTrue(self.runner_stopping)
+            self.assertTrue(self.runner_stopped)
 
     def test_spawn_zero_locusts(self):
         class MyTaskSet(TaskSet):
@@ -2904,7 +3075,7 @@ class TestWorkerRunner(LocustTestCase):
                 self.assertLessEqual(time.perf_counter() - t0, 3)
                 sleep(0.1)
 
-            message = next((m for m in reversed(client.outbox) if m.type == "heartbeat"))
+            message = next(m for m in reversed(client.outbox) if m.type == "heartbeat")
             self.assertEqual(len(message.data), 3)
             self.assertIn("state", message.data)
             self.assertIn("current_cpu_usage", message.data)
@@ -3541,7 +3712,7 @@ class TestStopTimeout(LocustTestCase):
         runner.spawning_greenlet.join()
         delta = time.perf_counter() - ts
         self.assertTrue(
-            0 <= delta <= 0.05, "Expected user count to increase to 10 instantaneously, instead it took %f" % delta
+            0 <= delta <= 0.05, f"Expected user count to increase to 10 instantaneously, instead it took {delta:f}"
         )
         self.assertTrue(
             runner.user_count == 10, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
@@ -3551,7 +3722,7 @@ class TestStopTimeout(LocustTestCase):
         runner.start(2, 4, wait=False)
         runner.spawning_greenlet.join()
         delta = time.perf_counter() - ts
-        self.assertTrue(2 <= delta <= 2.05, "Expected user count to decrease to 2 in 2s, instead it took %f" % delta)
+        self.assertTrue(2 <= delta <= 2.05, f"Expected user count to decrease to 2 in 2s, instead it took {delta:f}")
         self.assertTrue(
             runner.user_count == 2, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
         )

@@ -7,7 +7,7 @@ class ArchivistUser(locust.HttpUser):
     def on_start(self):
         AUTH_TOKEN = None
 
-        with open("auth.text", "r") as f:
+        with open("auth.text") as f:
             AUTH_TOKEN = f.read()
 
         # Start an instance of of the SDK

@@ -1,12 +1,17 @@
 import logging
 
+from typing import List, Union, Dict
+from types import TracebackType
+
+LogMessage = List[Union[str, Dict[str, TracebackType]]]
+
 
 class MockedLoggingHandler(logging.Handler):
-    debug = []
-    warning = []
-    info = []
-    error = []
-    critical = []
+    debug: List[LogMessage] = []
+    warning: List[LogMessage] = []
+    info: List[LogMessage] = []
+    error: List[LogMessage] = []
+    critical: List[LogMessage] = []
 
     def emit(self, record):
         if record.exc_info:

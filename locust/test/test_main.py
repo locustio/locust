@@ -709,7 +709,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     )
                 except subprocess.CalledProcessError as e:
                     raise AssertionError(
-                        "Running locust command failed. Output was:\n\n%s" % e.stdout.decode("utf-8")
+                        f"Running locust command failed. Output was:\n\n{e.stdout.decode('utf-8')}"
                     ) from e
 
                 with open(html_report_file_path, encoding="utf-8") as f:

@@ -53,7 +53,7 @@ class WebsiteUser(HttpUser):
 
     def __init__(self, parent):
         self.username = usernames.pop()
-        super(WebsiteUser, self).__init__(parent)
+        super().__init__(parent)
 
     @task
     def task(self):

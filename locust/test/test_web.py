@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import csv
 import json
 import os
@@ -477,9 +476,9 @@ class TestWebUIWithTLS(LocustTestCase):
 
 class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
     STATS_BASE_NAME = "web_test"
-    STATS_FILENAME = "{}_stats.csv".format(STATS_BASE_NAME)
-    STATS_HISTORY_FILENAME = "{}_stats_history.csv".format(STATS_BASE_NAME)
-    STATS_FAILURES_FILENAME = "{}_failures.csv".format(STATS_BASE_NAME)
+    STATS_FILENAME = f"{STATS_BASE_NAME}_stats.csv"
+    STATS_HISTORY_FILENAME = f"{STATS_BASE_NAME}_stats_history.csv"
+    STATS_FAILURES_FILENAME = f"{STATS_BASE_NAME}_failures.csv"
 
     def setUp(self):
         super().setUp()

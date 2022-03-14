@@ -452,7 +452,7 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         "-V",
         action="version",
         help="Show program's version number and exit",
-        version="%(prog)s {}".format(version),
+        version=f"%(prog)s {version}",
     )
     other_group.add_argument(
         "--exit-code-on-error",

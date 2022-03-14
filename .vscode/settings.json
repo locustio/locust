@@ -21,7 +21,12 @@
         "**/.tox/": true,
         "docs/env-options.rst": true,
         "**/.editorconfig": true,
-        "**/__pycache__": true
+        "**/__pycache__": true,
+        "locust/_version.py": true,
+        "**/web_test_*.csv": true,
+        "**/.eggs/": true,
+        "**/.pytest_cache": true,
+        "**/.sass-cache/": true
     },
     "restructuredtext.confPath": "${workspaceFolder}/docs",
     "python.linting.pylintEnabled": false,
