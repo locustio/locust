@@ -8,8 +8,9 @@ import os
 import csv
 import signal
 import gevent
+from typing import Dict, Tuple
 
-from .exception import StopUser, CatchResponseError
+from .exception import CatchResponseError
 
 import logging
 
@@ -89,7 +90,7 @@ def calculate_response_time_percentile(response_times, num_requests, percent):
                   but we save some CPU cycles by using the value which we already store)
     percent: The percentile we want to calculate. Specified in range: 0.0 - 1.0
     """
-    num_of_request = int((num_requests * percent))
+    num_of_request = int(num_requests * percent)
 
     processed_count = 0
     for response_time in sorted(response_times.keys(), reverse=True):
@@ -129,8 +130,8 @@ class RequestStats:
                                          is not needed.
         """
         self.use_response_times_cache = use_response_times_cache
-        self.entries: dict[str, StatsEntry] = {}
-        self.errors: dict[str, StatsError] = {}
+        self.entries: Dict[Tuple[str, str], StatsEntry] = {}
+        self.errors: Dict[str, StatsError] = {}
         self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
         self.history = []
 
@@ -207,7 +208,7 @@ class RequestStats:
         ]
 
     def serialize_errors(self):
-        return dict([(k, e.to_dict()) for k, e in self.errors.items()])
+        return {k: e.to_dict() for k, e in self.errors.items()}
 
 
 class StatsEntry:
@@ -240,11 +241,11 @@ class StatsEntry:
         """ Minimum response time """
         self.max_response_time = 0
         """ Maximum response time """
-        self.num_reqs_per_sec = {}
+        self.num_reqs_per_sec: Dict[int, int] = {}
         """ A {second => request_count} dict that holds the number of requests made per second """
-        self.num_fail_per_sec = {}
+        self.num_fail_per_sec: Dict[int, int] = {}
         """ A (second => failure_count) dict that hold the number of failures per second """
-        self.response_times = {}
+        self.response_times: Dict[int, int] = {}
         """
         A {response_time => count} dict that holds the response time distribution of all
         the requests.
@@ -598,7 +599,7 @@ class StatsEntry:
 
         return tpl % (
             (self.method, self.name)
-            + tuple([self.get_response_time_percentile(p) for p in PERCENTILES_TO_REPORT])
+            + tuple(self.get_response_time_percentile(p) for p in PERCENTILES_TO_REPORT)
             + (self.num_requests,)
         )
 
@@ -643,7 +644,7 @@ class StatsError:
 
     @classmethod
     def create_key(cls, method, name, error):
-        key = "%s.%s.%r" % (method, name, StatsError.parse_error(error))
+        key = f"{method}.{name}.{StatsError.parse_error(error)!r}"
         return hashlib.md5(key.encode("utf-8")).hexdigest()
 
     def occurred(self):
@@ -662,7 +663,7 @@ class StatsError:
             # standalone, unwrapped exception
             unwrapped_error = repr(error)
 
-        return "%s %s: %s" % (self.method, self.name, unwrapped_error)
+        return f"{self.method} {self.name}: {unwrapped_error}"
 
     def to_dict(self):
         return {
@@ -973,7 +974,7 @@ class StatsCSVFileWriter(StatsCSV):
             self._failures_data_rows(self.failures_csv_writer)
             self.failures_csv_filehandle.truncate()
 
-            self.exceptions_csv_filehandle.seek((self.exceptions_csv_data_start))
+            self.exceptions_csv_filehandle.seek(self.exceptions_csv_data_start)
             self._exceptions_data_rows(self.exceptions_csv_writer)
             self.exceptions_csv_filehandle.truncate()
 

@@ -9,7 +9,7 @@ class LoadTestShape:
     during a load test.
     """
 
-    runner: Runner = None
+    runner: Optional[Runner] = None
     """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
 
     def __init__(self):

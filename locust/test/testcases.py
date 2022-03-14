@@ -101,7 +101,7 @@ def basic_auth():
 @app.route("/no_content_length")
 def no_content_length():
     r = send_file(
-        BytesIO("This response does not have content-length in the header".encode("utf-8")),
+        BytesIO(b"This response does not have content-length in the header"),
         etag=False,
         mimetype="text/plain",
     )
@@ -121,7 +121,7 @@ def streaming_response(iterations):
     def generate():
         yield "<html><body><h1>streaming response</h1>"
         for i in range(iterations):
-            yield "<span>%s</span>\n" % i
+            yield f"<span>{i}</span>\n"
             time.sleep(0.01)
         yield "</body></html>"
 

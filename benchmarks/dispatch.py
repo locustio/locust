@@ -539,7 +539,7 @@ if __name__ == "__main__":
             itertools.product(worker_count_cases, user_count_cases, number_of_user_classes_cases, spawn_rate_cases)
         ):
             if user_count / spawn_rate > 1000:
-                print("Skipping user_count = {:,} - spawn_rate = {:,}".format(user_count, spawn_rate))
+                print(f"Skipping user_count = {user_count:,} - spawn_rate = {spawn_rate:,}")
                 continue
 
             workers = [WorkerNode(str(i + 1)) for i in range(worker_count)]
@@ -614,10 +614,10 @@ if __name__ == "__main__":
         table.add_rows(
             [
                 [
-                    "{:,}".format(worker_count),
-                    "{:,}".format(user_count),
+                    f"{worker_count:,}",
+                    f"{user_count:,}",
                     number_of_user_classes,
-                    "{:,}".format(spawn_rate),
+                    f"{spawn_rate:,}",
                     cpu_ramp_up,
                     cpu_ramp_down,
                 ]
@@ -632,8 +632,8 @@ if __name__ == "__main__":
         print()
         print(table)
 
-        with open("results-dispatch-benchmarks-{}.txt".format(int(now)), "wt") as file:
+        with open(f"results-dispatch-benchmarks-{int(now)}.txt", "wt") as file:
             file.write(table.get_string())
 
-        with open("results-dispatch-benchmarks-{}.json".format(int(now)), "wt") as file:
+        with open(f"results-dispatch-benchmarks-{int(now)}.json", "wt") as file:
             file.write(table.get_json_string())

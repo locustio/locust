@@ -3,9 +3,9 @@ import os
 import inspect
 import locust
 from locust import User, argument_parser
-from typing import Type
+from typing import Type, Optional
 from locust.env import Environment
-from locust.exception import CatchResponseError
+from locust.exception import CatchResponseError, RescheduleTask
 
 
 def _print_t(s):
@@ -52,6 +52,8 @@ class PrintListener:
         **_kwargs,
     ):
         if exception:
+            if isinstance(exception, RescheduleTask):
+                pass
             if isinstance(exception, CatchResponseError):
                 e = str(exception)
             else:
@@ -62,8 +64,6 @@ class PrintListener:
             errortext = e[:500].replace("\n", " ")
         else:
             errortext = ""
-        if not context:
-            context = ""
 
         if response_time is None:
             response_time = -1
@@ -85,7 +85,7 @@ class PrintListener:
         _print_t(errortext.ljust(9))
 
         if self.include_context:
-            _print_t(context)
+            _print_t(context or "")
 
         if self.include_payload:
             _print_t(response._request.payload)
@@ -93,7 +93,7 @@ class PrintListener:
         print()
 
 
-_env: Environment = None  # minimal Environment for debugging
+_env: Optional[Environment] = None  # minimal Environment for debugging
 
 
 def run_single_user(
@@ -142,5 +142,5 @@ def run_single_user(
 
     # game on!
     user = user_class(_env)
-    _env.single_user_instance = user  # if you happen to need access to this from the Environment instance
+    setattr(_env, "single_user_instance", user)  # if you happen to need access to this from the Environment instance
     user.run()

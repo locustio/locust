@@ -57,13 +57,13 @@ class Server(BaseSocket):
     def __init__(self, host, port):
         BaseSocket.__init__(self, zmq.ROUTER)
         if port == 0:
-            self.port = self.socket.bind_to_random_port("tcp://%s" % host)
+            self.port = self.socket.bind_to_random_port(f"tcp://{host}")
         else:
             try:
                 self.socket.bind("tcp://%s:%i" % (host, port))
                 self.port = port
             except zmqerr.ZMQError as e:
-                raise RPCError("Socket bind failure: %s" % (e))
+                raise RPCError(f"Socket bind failure: {e}")
 
 
 class Client(BaseSocket):
