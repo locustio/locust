@@ -422,17 +422,19 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         if input_listener_greenlet is not None:
             input_listener_greenlet.kill(block=False)
 
-        # determine the process exit code
-        if log.unhandled_greenlet_exception:
-            environment.process_exit_code = 2
-        elif len(runner.errors) or len(runner.exceptions):
-            environment.process_exit_code = options.exit_code_on_error
-        else:
-            environment.process_exit_code = 0
-
         environment.events.quitting.fire(environment=environment, reverse=True)
 
-        logger.info(f"Shutting down (exit code {environment.process_exit_code})")
+        # determine the process exit code
+        if environment.process_exit_code is not None:
+            code = environment.process_exit_code
+        elif len(runner.errors) or len(runner.exceptions):
+            code = options.exit_code_on_error
+        elif log.unhandled_greenlet_exception:
+            code = 2
+        else:
+            code = 0
+
+        logger.info(f"Shutting down (exit code {code})")
 
         if stats_printer_greenlet is not None:
             stats_printer_greenlet.kill(block=False)
@@ -447,6 +449,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             print_percentile_stats(runner.stats)
             print_error_report(runner.stats)
 
+        environment.events.quit.fire(exit_code=code)
         sys.exit(code)
 
     # install SIGTERM handler

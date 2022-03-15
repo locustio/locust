@@ -149,11 +149,20 @@ class Events:
 
     quitting: EventHook
     """
-    Fired when the locust process is exiting
+    Fired when the locust process is exiting.
 
     Event arguments:
 
     :param environment: Environment instance
+    """
+
+    quit: EventHook
+    """
+    Fired after quitting. Just before process is exited anfter cleanup. Here the exit code set and final.
+
+    Event arguments:
+
+    :param exit_code: Exit code for process
     """
 
     init: EventHook
