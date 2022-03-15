@@ -7,7 +7,8 @@ For full details of the Locust changelog, please see https://github.com/locustio
 2.8.4
 =====
 
-* Add `quit` event to enable getting the locust process exit code https://github.com/locustio/locust/pull/2049
+* New event: `test_stopping`, triggered just before stopping the test https://github.com/locustio/locust/pull/2033
+* New event: `quit`, to enable getting the locust process exit code https://github.com/locustio/locust/pull/2049
 * Fix users sometimes not being stopped correctly https://github.com/locustio/locust/pull/2041
 
 2.8.3
