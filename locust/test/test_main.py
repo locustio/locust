@@ -267,8 +267,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             def _(environment, **kw):
                 environment.process_exit_code = 42
             @events.quit.add_listener
-                def _(environment, exit_code, **kw):
-                    print(f"Exit code in quit event {exit_code}")
+            def _(exit_code, **kw):
+                print(f"Exit code in quit event {exit_code}")
             class TestUser(User):
                 wait_time = constant(3)
                 @task
@@ -286,8 +286,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Starting web interface at", stderr)
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shutting down (exit code 42)", stderr)
-            self.assertEqual(42, proc.returncode)
             self.assertIn("Exit code in quit event 42", stdout)
+            self.assertEqual(42, proc.returncode)
 
     def test_webserver(self):
         with temporary_file(
