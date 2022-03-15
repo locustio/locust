@@ -10,7 +10,8 @@
 # 6. Test run stopping
 # 7. User stop
 # 8. Test run stop
-# 9. (not shown in this example) Locust quit
+# 9. Locust quitting
+# 10. Locust quit
 #
 # try it out by running:
 #  locust -f test_data_management.py --headless -u 2 -t 5
@@ -59,6 +60,11 @@ def _(environment, **_kwargs):
             "https://postman-echo.com/post",
             data="test-run-specific_" + timestring(),
         ).json()["data"]
+
+
+@events.quit.add_listener
+def _(environment, exit_code, **kwargs):
+    print(f"Locust has shut down with code {exit_code}")
 
 
 @events.test_stopping.add_listener
