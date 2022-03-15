@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.8.4
+=====
+
+* Add `quit` event to enable getting the locust process exit code https://github.com/locustio/locust/pull/2049
+* Fix users sometimes not being stopped correctly https://github.com/locustio/locust/pull/2041
+
 2.8.3
 =====
 

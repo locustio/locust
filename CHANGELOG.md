@@ -1,6 +1,19 @@
 # Changelog
 Note that PRs for the latest version are sometimes missing here, check [github](https://github.com/locustio/locust/releases) for the latest info.
 
+## [2.8.4](https://github.com/locustio/locust/tree/2.8.4) (2022-03-15)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.8.3...2.8.4)
+
+**Fixed bugs:**
+
+- Locust while running as library with grpc client not outputting stats [\#1969](https://github.com/locustio/locust/issues/1969)
+- Locust does not stop all users [\#1947](https://github.com/locustio/locust/issues/1947)
+
+**Closed issues:**
+
+- Introduce test\_stopping event [\#2031](https://github.com/locustio/locust/issues/2031)
+
 ## [2.8.3](https://github.com/locustio/locust/tree/2.8.3) (2022-02-25)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.8.2...2.8.3)
