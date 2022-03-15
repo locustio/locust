@@ -158,7 +158,7 @@ class Events:
 
     quit: EventHook
     """
-    Fired after quitting. Just before process is exited anfter cleanup. Here the exit code set and final.
+    Fired after quitting events, just before process is exited.
 
     Event arguments:
 
