@@ -53,7 +53,7 @@ terraform apply --auto-approve
 
 Click on the link below to access the UI:
 
-Result exemple:
+Result example:
 
 ```bash
 Apply complete! Resources: 14 added, 0 changed, 0 destroyed.
