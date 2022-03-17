@@ -5,13 +5,13 @@ usernames = []
 
 
 def setup_test_users(environment, msg, **kwargs):
-    # Fired when the worker recieves a message of type 'test_users'
+    # Fired when the worker receives a message of type 'test_users'
     usernames.extend(map(lambda u: u["name"], msg.data))
     environment.runner.send_message("acknowledge_users", f"Thanks for the {len(msg.data)} users!")
 
 
 def on_acknowledge(msg, **kwargs):
-    # Fired when the master recieves a message of type 'acknowledge_users'
+    # Fired when the master receives a message of type 'acknowledge_users'
     print(msg.data)
 
 
