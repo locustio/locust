@@ -1,5 +1,6 @@
 # Locust
 
+[![Support Ukraine Badge](https://bit.ly/support-ukraine-now)](https://github.com/support-ukraine/support-ukraine)
 [![PyPI](https://img.shields.io/pypi/v/locust.svg)](https://pypi.org/project/locust/)
 [![PyPI](https://img.shields.io/pypi/pyversions/locust.svg)](https://pypi.org/project/locust/)
 [![Build Status](https://github.com/locustio/locust/workflows/Tests/badge.svg)](https://github.com/locustio/locust/actions?query=workflow%3ATests)
