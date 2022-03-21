@@ -8,4 +8,4 @@ contact_links:
     about: Ask questions and look for answers on StackOverflow
   - name: Chat
     url: https://locustio.slack.com
-    about: Talk to other Locust users on the Locust Slack chat
+    about: Talk to other Locust users on Slack
