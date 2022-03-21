@@ -8,9 +8,9 @@ assignees: ''
 ---
 
 <!-- 
-If you have a general question about how to use Locust, please check Stack Overflow first https://stackoverflow.com/questions/tagged/locust
+No questions here please! If you have a question about how to use Locust read the documentation or ask on slack (https://locustio.slack.com)
 
-You can also ask new questions on SO, https://stackoverflow.com/questions/ask just remember to tag your question with "locust".
+You can also ask questions on StackOverflow, https://stackoverflow.com/questions/ask just remember to tag your question with "locust".
 -->
 
 ### Is your feature request related to a problem? Please describe.

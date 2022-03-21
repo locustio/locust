@@ -6,3 +6,6 @@ contact_links:
   - name: Question
     url: https://stackoverflow.com/questions/tagged/locust
     about: Ask questions and look for answers on StackOverflow
+  - name: Chat
+    url: https://locustio.slack.com
+    about: Talk to other Locust users on the Locust Slack chat
