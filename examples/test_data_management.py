@@ -47,7 +47,7 @@ def _(environment, **_kwargs):
 
 @events.quitting.add_listener
 def _(environment, **_kwargs):
-    print("locust is shutting down")
+    print("9. locust is shutting down")
 
 
 @events.test_start.add_listener
@@ -65,17 +65,17 @@ def _(environment, **_kwargs):
 
 @events.quit.add_listener
 def _(environment, exit_code, **kwargs):
-    print(f"Locust has shut down with code {exit_code}")
+    print(f"10. Locust has shut down with code {exit_code}")
 
 
 @events.test_stopping.add_listener
 def _(environment, **_kwargs):
-    print("stopping test run")
+    print("6. stopping test run")
 
 
 @events.test_stop.add_listener
 def _(environment, **_kwargs):
-    print("test run stopped")
+    print("8. test run stopped")
 
 
 class MyUser(HttpUser):
@@ -107,4 +107,4 @@ class MyUser(HttpUser):
 
     def on_stop(self):
         # this is a good place to clean up/release any user-specific test data
-        print("a user was stopped")
+        print("7. a user was stopped")
