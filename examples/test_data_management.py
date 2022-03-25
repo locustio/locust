@@ -2,7 +2,7 @@
 # which is very useful for fetching test data.
 #
 # 1. Locustfile parse time
-# 2. Locust start
+# 2. Locust start (init)
 # 3. Test start
 # 4. User start
 # 5. Inside a task
@@ -10,6 +10,7 @@
 # 6. Test run stopping
 # 7. User stop
 # 8. Test run stop
+# (3-8 are repeated if you restart the test in the UI)
 # 9. Locust quitting
 # 10. Locust quit
 #
