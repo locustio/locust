@@ -1,17 +1,17 @@
 import re
 import time
+from contextlib import contextmanager
+from typing import Generator, Optional, Union
+from urllib.parse import urlparse, urlunparse
 
 import requests
 from requests import Request, Response
+from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
-from contextlib import contextmanager
-
-from urllib.parse import urlparse, urlunparse
+from urllib3 import PoolManager
 
 from .exception import CatchResponseError, LocustError, ResponseError
-
-from typing import Union, Optional, Generator
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
@@ -47,7 +47,7 @@ class HttpSession(requests.Session):
                            and then mark it as successful even if the response code was not (i.e 500 or 404).
     """
 
-    def __init__(self, base_url, request_event, user, *args, **kwargs):
+    def __init__(self, base_url, request_event, user, pool_manager: Optional[PoolManager] = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.base_url = base_url
@@ -71,6 +71,9 @@ class HttpSession(requests.Session):
             )
             # configure requests to use basic auth
             self.auth = HTTPBasicAuth(parsed_url.username, parsed_url.password)
+
+        self.mount("https://", LocustHttpAdapter(pool_manager=pool_manager))
+        self.mount("http://", LocustHttpAdapter(pool_manager=pool_manager))
 
     def _build_url(self, path):
         """prepend url with hostname unless it's already an absolute URL"""
@@ -297,6 +300,16 @@ class ResponseContextManager(LocustResponse):
         if not isinstance(exc, Exception):
             exc = CatchResponseError(exc)
         self._manual_result = exc
+
+
+class LocustHttpAdapter(HTTPAdapter):
+    def __init__(self, pool_manager: Optional[PoolManager], *args, **kwargs):
+        self.poolmanager = pool_manager
+        super().__init__(*args, **kwargs)
+
+    def init_poolmanager(self, *args, **kwargs):
+        if self.poolmanager is None:
+            super().init_poolmanager(*args, **kwargs)
 
 
 # Monkey patch Response class to give some guidance
