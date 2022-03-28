@@ -56,7 +56,7 @@ class HttpSession(requests.Session):
 
         # User can group name, or use the group context manager to gather performance statistics under a specific name
         # This is an alternative to passing in the "name" parameter to the requests function
-        self.request_name = None
+        self.request_name: Optional[str] = None
 
         # Check for basic authentication
         parsed_url = urlparse(self.base_url)
