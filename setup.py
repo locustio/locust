@@ -23,6 +23,7 @@ setup(
         "Flask-Cors>=3.0.10",
         "roundrobin>=0.0.2",
         "typing-extensions>=3.7.4.3",
+        "Jinja2<3.1.0",
     ],
     test_suite="locust.test",
     tests_require=[
