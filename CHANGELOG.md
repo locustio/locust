@@ -1,6 +1,15 @@
 # Changelog
 Note that PRs for the latest version are sometimes missing here, check [github](https://github.com/locustio/locust/releases) for the latest info.
 
+## [2.8.5](https://github.com/locustio/locust/tree/2.8.5) (2022-03-28)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.8.4...2.8.5)
+
+
+**Merged pull requests:**
+
+- fix some typos [\#2052](https://github.com/locustio/locust/pull/2052) ([cuishuang](https://github.com/cuishuang))
+
 ## [2.8.4](https://github.com/locustio/locust/tree/2.8.4) (2022-03-15)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.8.3...2.8.4)
@@ -13,6 +22,14 @@ Note that PRs for the latest version are sometimes missing here, check [github](
 **Closed issues:**
 
 - Introduce test\_stopping event [\#2031](https://github.com/locustio/locust/issues/2031)
+
+**Merged pull requests:**
+
+- Add quit event, used for getting locust's exit code just before exit [\#2049](https://github.com/locustio/locust/pull/2049) ([DennisKrone](https://github.com/DennisKrone))
+- Bugfix/1947 locust does not stop all users [\#2041](https://github.com/locustio/locust/pull/2041) ([marcinh](https://github.com/marcinh))
+- fixing mypy errors with loosest rules [\#2040](https://github.com/locustio/locust/pull/2040) ([mgor](https://github.com/mgor))
+- Add test\_stopping event [\#2033](https://github.com/locustio/locust/pull/2033) ([marcinh](https://github.com/marcinh))
+- fixed load/users getting distributed to missing worker [\#2010](https://github.com/locustio/locust/pull/2010) ([radhakrishnaakamat](https://github.com/radhakrishnaakamat))
 
 ## [2.8.3](https://github.com/locustio/locust/tree/2.8.3) (2022-02-25)
 

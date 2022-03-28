@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.8.5
+=====
+
+* Fix dependency: Dont use latest Jinja2 because it has breaking changes
+
 2.8.4
 =====
 
