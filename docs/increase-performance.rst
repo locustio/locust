@@ -42,7 +42,7 @@ FastHttpUser class
 --------------------
 
 .. autoclass:: locust.contrib.fasthttp.FastHttpUser
-    :members: network_timeout, connection_timeout, max_redirects, max_retries, insecure
+    :members: network_timeout, connection_timeout, max_redirects, max_retries, insecure, concurrency, client_pool
 
 
 FastHttpSession class

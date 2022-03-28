@@ -1,18 +1,22 @@
-from locust.user.wait_time import constant
 from typing import Callable, Dict, List, Optional, Union
-from typing_extensions import final
+
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
+from typing_extensions import final
+from urllib3 import PoolManager
+
 from locust.clients import HttpSession
 from locust.exception import LocustError, StopUser
+from locust.user.wait_time import constant
 from locust.util import deprecation
+
 from .task import (
-    TaskSet,
-    DefaultTaskSet,
-    get_tasks_from_base_classes,
     LOCUST_STATE_RUNNING,
-    LOCUST_STATE_WAITING,
     LOCUST_STATE_STOPPING,
+    LOCUST_STATE_WAITING,
+    DefaultTaskSet,
+    TaskSet,
+    get_tasks_from_base_classes,
 )
 
 
@@ -226,6 +230,9 @@ class HttpUser(User):
     abstract = True
     """If abstract is True, the class is meant to be subclassed, and users will not choose this locust during a test"""
 
+    pool_manager: Optional[PoolManager] = None
+    """Connection pool manager to use. If not given, a new manager is created per single user."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.host is None:
@@ -237,6 +244,7 @@ class HttpUser(User):
             base_url=self.host,
             request_event=self.environment.events.request,
             user=self,
+            pool_manager=self.pool_manager,
         )
         session.trust_env = False
         self.client = session

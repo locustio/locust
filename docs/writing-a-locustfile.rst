@@ -609,6 +609,28 @@ requests.Session's trust_env attribute to ``False``. If you don't want this you 
 ``locust_instance.client.trust_env`` to ``True``. For further details, refer to the
 `documentation of requests <https://requests.readthedocs.io/en/master/api/#requests.Session.trust_env>`_.
 
+Connection pooling
+------------------
+
+As every :py:class:`HttpUser <locust.HttpUser>` creates new :py:class:`HttpSession <locust.clients.HttpSession>`,
+every user instance has it's own connection pools. This is similar to how real users would interact with a web server.
+
+However, if you want to share connections among all users, you can use a single pool manager. To do this, set
+:py:attr:`pool_manager <locust.HttpUser.pool_manager>` class attribute to an instance of :py:class:`urllib3.PoolManager`.
+
+.. code-block:: python
+
+    from locust import HttpUser
+    from urllib3 import PoolManager
+
+    class MyUser(HttpUser):
+
+        # All users will be limited to 10 concurrent connections at most.
+        pool_manager = PoolManager(maxsize=10, block=True)
+
+For more configuration options, refer to the
+`urllib3 documentation <https://urllib3.readthedocs.io/en/stable/reference/urllib3.poolmanager.html>`_.
+
 TaskSets
 ================================
 TaskSets is a way to structure tests of hierarchical web sites/systems. You can :ref:`read more about it here <tasksets>`

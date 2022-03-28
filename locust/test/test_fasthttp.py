@@ -3,6 +3,8 @@ import gevent
 import time
 from tempfile import NamedTemporaryFile
 
+from geventhttpclient.client import HTTPClientPool
+
 from locust.user import task, TaskSet
 from locust.contrib.fasthttp import FastHttpSession
 from locust import FastHttpUser
@@ -450,6 +452,43 @@ class TestFastHttpUserClass(WebserverTestCase):
         self.assertEqual("Authorized", response.text)
         self.assertEqual(401, locust.client.get("/basic_auth").status_code)
         self.assertEqual(401, unauthorized.client.get("/basic_auth").status_code)
+
+    def test_shared_client_pool(self):
+        shared_client_pool = HTTPClientPool(concurrency=1)
+
+        class MyUserA(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+            client_pool = shared_client_pool
+
+        class MyUserB(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+            client_pool = shared_client_pool
+
+        user_a = MyUserA(self.environment)
+        user_b = MyUserB(self.environment)
+
+        user_a.client.get("/ultra_fast")
+        user_b.client.get("/ultra_fast")
+        user_b.client.get("/ultra_fast")
+        user_a.client.get("/ultra_fast")
+
+        self.assertEqual(1, self.connections_count)
+        self.assertEqual(4, self.requests_count)
+
+    def test_client_pool_per_user_instance(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        user_a = MyUser(self.environment)
+        user_b = MyUser(self.environment)
+
+        user_a.client.get("/ultra_fast")
+        user_b.client.get("/ultra_fast")
+        user_b.client.get("/ultra_fast")
+        user_a.client.get("/ultra_fast")
+
+        self.assertEqual(2, self.connections_count)
+        self.assertEqual(4, self.requests_count)
 
 
 class TestFastHttpCatchResponse(WebserverTestCase):

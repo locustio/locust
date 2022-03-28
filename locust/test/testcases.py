@@ -193,7 +193,25 @@ class WebserverTestCase(LocustTestCase):
 
     def setUp(self):
         super().setUp()
-        self._web_server = gevent.pywsgi.WSGIServer(("127.0.0.1", 0), app, log=None)
+
+        self.connections_count = 0
+        self.requests_count = 0
+
+        class CountingWSGIHandler(gevent.pywsgi.WSGIHandler):
+            def handle(this):
+                self.connections_count += 1
+                super().handle()
+
+            def log_request(this):
+                self.requests_count += 1
+                super().log_request()
+
+        self._web_server = gevent.pywsgi.WSGIServer(
+            ("127.0.0.1", 0),
+            app,
+            log=None,
+            handler_class=CountingWSGIHandler,
+        )
         gevent.spawn(lambda: self._web_server.serve_forever())
         gevent.sleep(0.01)
         self.port = self._web_server.server_port

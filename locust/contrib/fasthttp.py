@@ -13,6 +13,7 @@ from http.cookiejar import CookieJar
 import gevent
 from gevent.timeout import Timeout
 from geventhttpclient._parser import HTTPParseError
+from geventhttpclient.client import HTTPClientPool
 from geventhttpclient.useragent import UserAgent, CompatRequest, CompatResponse, ConnectionError
 from geventhttpclient.response import HTTPConnectionClosed
 
@@ -65,7 +66,15 @@ def insecure_ssl_context_factory():
 class FastHttpSession:
     auth_header = None
 
-    def __init__(self, environment: Environment, base_url: str, user: "FastHttpUser", insecure=True, **kwargs):
+    def __init__(
+        self,
+        environment: Environment,
+        base_url: str,
+        user: "FastHttpUser",
+        insecure=True,
+        client_pool: Optional[HTTPClientPool] = None,
+        **kwargs,
+    ):
         self.environment = environment
         self.base_url = base_url
         self.cookiejar = CookieJar()
@@ -78,6 +87,7 @@ class FastHttpSession:
             cookiejar=self.cookiejar,
             ssl_context_factory=ssl_context_factory,
             insecure=insecure,
+            client_pool=client_pool,
             **kwargs,
         )
 
@@ -292,7 +302,11 @@ class FastHttpUser(User):
     """Parameter passed to FastHttpSession. Default True, meaning no SSL verification."""
 
     concurrency: int = 1
-    """Parameter passed to FastHttpSession. Describes number of concurrent requests allowed by the FastHttpSession. Default 1."""
+    """Parameter passed to FastHttpSession. Describes number of concurrent requests allowed by the FastHttpSession. Default 1.
+    Note that setting this value has no effect when custom client_pool was given."""
+
+    client_pool: Optional[HTTPClientPool] = None
+    """HTTP client pool to use. If not given, a new pool is created per single user."""
 
     abstract = True
     """Dont register this as a User class that can be run by itself"""
@@ -316,6 +330,7 @@ class FastHttpUser(User):
             insecure=self.insecure,
             concurrency=self.concurrency,
             user=self,
+            client_pool=self.client_pool,
         )
         """
         Instance of HttpSession that is created upon instantiation of User.
@@ -401,8 +416,11 @@ class LocustUserAgent(UserAgent):
     response_type = FastResponse
     valid_response_codes = frozenset([200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 301, 302, 303, 307])
 
-    def __init__(self, **kwargs):
+    def __init__(self, client_pool: Optional[HTTPClientPool] = None, **kwargs):
         super().__init__(**kwargs)
+
+        if client_pool is not None:
+            self.clientpool = client_pool
 
     def _urlopen(self, request):
         """Override _urlopen() in order to make it use the response_type attribute"""
