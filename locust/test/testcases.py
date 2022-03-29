@@ -160,6 +160,9 @@ class LocustTestCase(unittest.TestCase):
         # https://github.com/requests/requests/issues/1882
         try:
             warnings.filterwarnings(action="ignore", message="unclosed <socket object", category=ResourceWarning)
+            warnings.filterwarnings(
+                action="ignore", message="unclosed context <zmq.green.Context", category=ResourceWarning
+            )
         except NameError:
             # ResourceWarning doesn't exist in Python 2, but since the warning only appears
             # on Python 3 we don't need to mock it. Instead we can happily ignore the exception
