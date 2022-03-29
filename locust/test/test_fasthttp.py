@@ -422,7 +422,7 @@ class TestFastHttpUserClass(WebserverTestCase):
 
         l = MyLocust(self.environment)
         resp = l.client.get("/redirect", allow_redirects=False)
-        self.assertEqual("http://127.0.0.1:%i/ultra_fast" % self.port, resp.headers["location"])
+        self.assertTrue(resp.headers["location"].endswith("/ultra_fast"))
         resp = l.client.get("/redirect")  # ensure redirect still works
         self.assertFalse("location" in resp.headers)
 
