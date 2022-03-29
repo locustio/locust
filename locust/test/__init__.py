@@ -13,8 +13,3 @@ try:
     changed_rlimit = True
 except Exception:
     changed_rlimit = False
-
-import warnings
-
-# get rid of those pesky "unclosed context" warnings
-warnings.filterwarnings(action="ignore", message="unclosed", category=ResourceWarning)

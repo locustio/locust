@@ -1,2 +1,5 @@
 [tool.black]
 line-length = 120
+
+[tool.pytest.ini_options]
+filterwarnings = ["ignore::ResourceWarning"]
