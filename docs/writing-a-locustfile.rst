@@ -103,7 +103,7 @@ to make other kinds of requests, validate the response, etc, see
 
     @task(3)
     def view_items(self):
-        for item_id in range(10)
+        for item_id in range(10):
             self.client.get(f"/item?id={item_id}", name="/item")
             time.sleep(1)
 
