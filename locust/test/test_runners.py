@@ -146,8 +146,9 @@ class TestLocustRunner(LocustRunnerTestCase):
             environment = Environment(user_classes=[CpuUser])
             environment._cpu_warning_event_triggered = False
 
-            def cpu_warning(environment, **kwargs):
+            def cpu_warning(environment, cpu_usage, **kwargs):
                 environment._cpu_warning_event_triggered = True
+                environment._cpu_usage = cpu_usage
 
             environment.events.cpu_warning.add_listener(cpu_warning)
             runner = LocalRunner(environment)
@@ -155,6 +156,7 @@ class TestLocustRunner(LocustRunnerTestCase):
             runner.spawn_users({CpuUser.__name__: 1}, wait=False)
             sleep(2.5)
             self.assertTrue(environment._cpu_warning_event_triggered)
+            self.assertGreater(environment._cpu_usage, 90)
             runner.quit()
             self.assertTrue(runner.cpu_warning_emitted)
         finally:

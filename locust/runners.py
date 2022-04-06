@@ -290,7 +290,7 @@ class Runner:
             self.current_cpu_usage = process.cpu_percent()
             self.current_memory_usage = process.memory_info().rss
             if self.current_cpu_usage > CPU_WARNING_THRESHOLD:
-                self.environment.events.cpu_warning.fire(environment=self.environment)
+                self.environment.events.cpu_warning.fire(cpu_usage=self.current_cpu_usage, environment=self.environment)
                 if not self.cpu_warning_emitted:
                     logging.warning(
                         f"CPU usage above {CPU_WARNING_THRESHOLD}%! This may constrain your throughput and may even give inconsistent response time measurements! See https://docs.locust.io/en/stable/running-locust-distributed.html for how to distribute the load over multiple CPU cores or machines"
