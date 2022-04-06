@@ -56,6 +56,7 @@ STATE_INIT, STATE_SPAWNING, STATE_RUNNING, STATE_CLEANUP, STATE_STOPPING, STATE_
 ]
 WORKER_REPORT_INTERVAL = 3.0
 CPU_MONITOR_INTERVAL = 5.0
+CPU_WARNING_THRESHOLD = 90
 HEARTBEAT_INTERVAL = 1
 HEARTBEAT_LIVENESS = 3
 HEARTBEAT_DEAD_INTERNAL = -60
@@ -288,11 +289,13 @@ class Runner:
         while True:
             self.current_cpu_usage = process.cpu_percent()
             self.current_memory_usage = process.memory_info().rss
-            if self.current_cpu_usage > 90 and not self.cpu_warning_emitted:
-                logging.warning(
-                    "CPU usage above 90%! This may constrain your throughput and may even give inconsistent response time measurements! See https://docs.locust.io/en/stable/running-locust-distributed.html for how to distribute the load over multiple CPU cores or machines"
-                )
-                self.cpu_warning_emitted = True
+            if self.current_cpu_usage > CPU_WARNING_THRESHOLD:
+                self.environment.events.cpu_warning.fire(environment=self.environment, cpu_usage=self.current_cpu_usage)
+                if not self.cpu_warning_emitted:
+                    logging.warning(
+                        f"CPU usage above {CPU_WARNING_THRESHOLD}%! This may constrain your throughput and may even give inconsistent response time measurements! See https://docs.locust.io/en/stable/running-locust-distributed.html for how to distribute the load over multiple CPU cores or machines"
+                    )
+                    self.cpu_warning_emitted = True
             gevent.sleep(CPU_MONITOR_INTERVAL)
 
     def start(self, user_count: int, spawn_rate: float, wait: bool = False):
