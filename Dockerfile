@@ -10,7 +10,7 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY . /build
-RUN pip install /build/
+RUN pip --no-cache-dir install /build/
 
 FROM base
 COPY --from=builder /opt/venv /opt/venv
