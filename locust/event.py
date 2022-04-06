@@ -207,6 +207,11 @@ class Events:
     Fired when the Reset Stats button is clicked in the web UI.
     """
 
+    cpu_warning: EventHook
+    """
+    Fired when the CPU usage exceeds runners.CPU_WARNING_THRESHOLD (90% by default)
+    """
+
     def __init__(self):
         # For backwarde compatibility use also values of class attributes
         for name, value in vars(type(self)).items():
