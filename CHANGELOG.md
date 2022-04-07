@@ -1,10 +1,22 @@
 # Changelog
 Note that PRs for the latest version are sometimes missing here, check [github](https://github.com/locustio/locust/releases) for the latest info.
 
+## [2.8.6](https://github.com/locustio/locust/tree/2.8.6) (2022-04-07)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.8.5...2.8.6)
+
+**Merged pull requests:**
+
+- Further slim docker image [\#2068](https://github.com/locustio/locust/pull/2068) ([cyberw](https://github.com/cyberw))
+- Add cpu\_warning event, so listeners can do some action when CPU usage is too high [\#2067](https://github.com/locustio/locust/pull/2067) ([cyberw](https://github.com/cyberw))
+- Fix typo in example in docs [\#2064](https://github.com/locustio/locust/pull/2064) ([chalex2k](https://github.com/chalex2k))
+- Move lint tests to their own tox environments [\#2062](https://github.com/locustio/locust/pull/2062) ([kurtmckee](https://github.com/kurtmckee))
+- Bump black version to 22.3.0 [\#2060](https://github.com/locustio/locust/pull/2060) ([miedzinski](https://github.com/miedzinski))
+- Support sharing connection pools between users [\#2059](https://github.com/locustio/locust/pull/2059) ([miedzinski](https://github.com/miedzinski))
+
 ## [2.8.5](https://github.com/locustio/locust/tree/2.8.5) (2022-03-28)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.8.4...2.8.5)
-
 
 **Merged pull requests:**
 

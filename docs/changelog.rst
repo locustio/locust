@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.8.6
+=====
+
+* Support sharing connection pools between users https://github.com/locustio/locust/pull/2059
+* Add cpu_warning event, so listeners can do some action when CPU usage is too high https://github.com/locustio/locust/pull/2067
+
 2.8.5
 =====
 
