@@ -1213,7 +1213,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                     0, test_shape.get_current_user_count(), "Shape is not seeing stopped runner user count correctly"
                 )
             self.assertDictEqual(master.reported_user_classes_count, {"FixedUser1": 0, "FixedUser2": 0, "TestUser": 0})
-            sleep(0.5)
+            sleep(1.0)
             self.assertEqual(STATE_STOPPED, master.state)
 
     def test_distributed_shape_with_stop_timeout(self):
