@@ -1879,9 +1879,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             test_start_exec_count = 0
 
             @worker_env.events.test_start.add_listener
-            def on_test_start(environment, **kwargs):
-                if not isinstance(environment.runner, runners.WorkerRunner):
-                    return
+            def on_test_start(*_, **__):
                 nonlocal test_start_exec_count
                 test_start_exec_count += 1
                 sleep(3)
