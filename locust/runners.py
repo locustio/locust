@@ -1102,15 +1102,6 @@ class WorkerRunner(DistributedRunner):
         """
         self.target_user_classes_count = user_classes_count
         self.target_user_count = sum(user_classes_count.values())
-        if self.worker_state != STATE_RUNNING and self.worker_state != STATE_SPAWNING:
-            self.stats.clear_all()
-            self.exceptions = {}
-            self.cpu_warning_emitted = False
-            self.worker_cpu_warning_emitted = False
-            self.environment._filter_tasks_by_tags()
-            self.environment.events.test_start.fire(environment=self.environment)
-
-        self.worker_state = STATE_SPAWNING
 
         for user_class in self.user_classes:
             if self.environment.host:
@@ -1191,6 +1182,16 @@ class WorkerRunner(DistributedRunner):
                     or k in ["expect_workers", "tags", "exclude_tags"]
                 }
                 vars(self.environment.parsed_options).update(custom_args_from_master)
+
+                if self.worker_state != STATE_RUNNING and self.worker_state != STATE_SPAWNING:
+                    self.stats.clear_all()
+                    self.exceptions = {}
+                    self.cpu_warning_emitted = False
+                    self.worker_cpu_warning_emitted = False
+                    self.environment._filter_tasks_by_tags()
+                    self.environment.events.test_start.fire(environment=self.environment)
+
+                self.worker_state = STATE_SPAWNING
 
                 if self.spawning_greenlet:
                     # kill existing spawning greenlet before we launch new one
