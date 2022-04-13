@@ -1856,6 +1856,51 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             self.assertTrue(test_start_event_fired[0])
 
+    def test_long_running_test_start_is_run_to_completion_on_worker(self):
+        """Test for https://github.com/locustio/locust/issues/1986"""
+
+        class MyUser1(User):
+            wait_time = constant(0)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            master_env = Environment(user_classes=[MyUser1])
+            master = master_env.create_master_runner("*", 0)
+
+            sleep(0)
+
+            # start 1 worker runner
+            worker_env = Environment(user_classes=[MyUser1])
+            worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+
+            test_start_exec_count = 0
+
+            @worker_env.events.test_start.add_listener
+            def on_test_start(*_, **__):
+                nonlocal test_start_exec_count
+                test_start_exec_count += 1
+                sleep(3)
+
+            # give worker time to connect
+            sleep(0.1)
+
+            gevent.spawn(master.start, 3, spawn_rate=1)
+
+            t0 = time.perf_counter()
+            while master.user_count != 3:
+                self.assertLessEqual(time.perf_counter() - t0, 5, "Expected 3 users to be spawned")
+                sleep(0.1)
+
+            master.quit()
+
+            # make sure users are killed
+            self.assertEqual(0, worker.user_count)
+
+            self.assertEqual(test_start_exec_count, 1)
+
 
 class TestMasterRunner(LocustRunnerTestCase):
     def setUp(self):
