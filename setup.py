@@ -1,42 +1,4 @@
-import ast
-import os
-import re
-import sys
+# kept for compability, https://setuptools.pypa.io/en/latest/setuptools.html?highlight=setuptools.setup()#setup-cfg-only-projects
+import setuptools
 
-from setuptools import find_packages, setup
-
-ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
-
-setup(
-    name="locust",
-    install_requires=[
-        "gevent>=20.12.1",
-        "flask>=2.0.0",
-        "Werkzeug>=2.0.0",
-        "requests>=2.23.0",
-        "msgpack>=0.6.2",
-        "pyzmq>=22.2.1",
-        "geventhttpclient>=1.5.1",
-        "ConfigArgParse>=1.0",
-        "psutil>=5.6.7",
-        "Flask-BasicAuth>=0.2.0",
-        "Flask-Cors>=3.0.10",
-        "roundrobin>=0.0.2",
-        "typing-extensions>=3.7.4.3",
-        "Jinja2<3.1.0",
-    ],
-    test_suite="locust.test",
-    tests_require=[
-        "cryptography",
-        "mock",
-        "pyquery",
-    ],
-    extras_require={
-        ":sys_platform == 'win32'": ["pywin32"],
-    },
-    use_scm_version={
-        "write_to": "locust/_version.py",
-        "local_scheme": "no-local-version",
-    },
-    setup_requires=["setuptools_scm<=6.0.1"],
-)
+setuptools.setup()
