@@ -2828,7 +2828,7 @@ class TestWorkerRunner(LocustTestCase):
             environment = self.environment
         user_classes = user_classes or []
         environment.user_classes = user_classes
-        return WorkerRunner(environment, master_host="localhost", master_port=5557)
+        return WorkerRunner(environment, master_host="localhost", master_port=5557, retry=0)
 
     def test_worker_stop_timeout(self):
         class MyTestUser(User):
@@ -3430,6 +3430,36 @@ class TestWorkerRunner(LocustTestCase):
             client.mocked_send(Message("stop", None, "dummy_client_id"))
             gevent.sleep(0.01)
             self.assertEqual(2, run_count[0])
+
+
+    def test_worker_connect_success(self):
+        class MyTestUser(User):
+            @task
+            def the_task(self):
+                pass
+
+        with mock.patch("locust.runners.CONNECTION_TIMEOUT", new=1):
+            with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+                client.mocked_send(Message('ack', {}, "dummy_client_id"))
+                worker = self.get_runner(environment=Environment(), user_classes=[MyTestUser])
+
+                self.assertEqual('client_ready', client.outbox[0].type)
+                self.assertEqual(1, len(client.outbox))
+                self.assertTrue(worker.connected)
+
+
+    def test_worker_connect_failure(self):
+        class MyTestUser(User):
+            @task
+            def the_task(self):
+                pass
+
+        with mock.patch("locust.runners.CONNECTION_TIMEOUT", new=0.01):
+            with mock.patch("locust.runners.CONNECTION_RETRY_COUNT", new=1):
+                with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+                    with self.assertRaises(ConnectionError):
+                        self.get_runner(environment=Environment(), user_classes=[MyTestUser])
+                        self.assertEqual(2, len(client.outbox))
 
 
 class TestMessageSerializing(unittest.TestCase):
