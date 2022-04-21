@@ -3431,7 +3431,6 @@ class TestWorkerRunner(LocustTestCase):
             gevent.sleep(0.01)
             self.assertEqual(2, run_count[0])
 
-
     def test_worker_connect_success(self):
         class MyTestUser(User):
             @task
@@ -3446,7 +3445,6 @@ class TestWorkerRunner(LocustTestCase):
                 self.assertEqual('client_ready', client.outbox[0].type)
                 self.assertEqual(1, len(client.outbox))
                 self.assertTrue(worker.connected)
-
 
     def test_worker_connect_failure(self):
         class MyTestUser(User):
