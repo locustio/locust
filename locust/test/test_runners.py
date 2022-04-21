@@ -2308,8 +2308,9 @@ class TestMasterRunner(LocustRunnerTestCase):
             )
 
             master.start(100, 20)
-            self.assertEqual(5, len(server.outbox))
-            for i, (_, msg) in enumerate(server.outbox.copy()):
+            self.assertEqual(6, len(server.outbox))
+            # First element of the outbox list is ack msg. That is why it is skipped in for loop
+            for i, (_, msg) in enumerate(server.outbox[1:].copy()):
                 self.assertDictEqual({"TestUser": int((i + 1) * 20)}, msg.data["user_classes_count"])
                 server.outbox.pop()
 
@@ -2321,7 +2322,7 @@ class TestMasterRunner(LocustRunnerTestCase):
             server.mocked_send(Message("client_ready", __version__, "zeh_fake_client2"))
             self.assertEqual(2, len(master.clients))
             sleep(0.1)  # give time for messages to be sent to clients
-            self.assertEqual(2, len(server.outbox))
+            self.assertEqual(4, len(server.outbox))
             client_id, msg = server.outbox.pop()
             self.assertEqual({"TestUser": 50}, msg.data["user_classes_count"])
             client_id, msg = server.outbox.pop()
@@ -2370,7 +2371,7 @@ class TestMasterRunner(LocustRunnerTestCase):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             master.start(7, 7)
-            self.assertEqual(5, len(server.outbox))
+            self.assertEqual(10, len(server.outbox))
             self.assertEqual(1, run_count[0])
 
             # change number of users and check that test_start isn't fired again
@@ -2409,7 +2410,7 @@ class TestMasterRunner(LocustRunnerTestCase):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             master.start(7, 7)
-            self.assertEqual(5, len(server.outbox))
+            self.assertEqual(10, len(server.outbox))
             master.stop()
             self.assertTrue(self.runner_stopping)
             self.assertTrue(self.runner_stopped)
@@ -2448,7 +2449,7 @@ class TestMasterRunner(LocustRunnerTestCase):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             master.start(7, 7)
-            self.assertEqual(5, len(server.outbox))
+            self.assertEqual(10, len(server.outbox))
             master.quit()
             self.assertTrue(self.runner_stopping)
             self.assertTrue(self.runner_stopped)
@@ -2495,7 +2496,7 @@ class TestMasterRunner(LocustRunnerTestCase):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             master.start(7, 7)
-            self.assertEqual(5, len(server.outbox))
+            self.assertEqual(10, len(server.outbox))
 
             num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
 
@@ -2514,7 +2515,7 @@ class TestMasterRunner(LocustRunnerTestCase):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             master.start(2, 2)
-            self.assertEqual(5, len(server.outbox))
+            self.assertEqual(10, len(server.outbox))
 
             num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
 
@@ -2842,6 +2843,7 @@ class TestWorkerRunner(LocustTestCase):
 
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             environment = Environment()
+            client.mocked_send(Message('ack', {}, "dummy_client_id"))
             worker = self.get_runner(environment=environment, user_classes=[MyTestUser])
             self.assertEqual(1, len(client.outbox))
             self.assertEqual("client_ready", client.outbox[0].type)
@@ -2883,6 +2885,7 @@ class TestWorkerRunner(LocustTestCase):
 
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             environment = Environment(stop_timeout=None)
+            client.mocked_send(Message('ack', {}, "dummy_client_id"))
             worker = self.get_runner(environment=environment, user_classes=[MyTestUser])
             self.assertEqual(1, len(client.outbox))
             self.assertEqual("client_ready", client.outbox[0].type)
@@ -2929,6 +2932,7 @@ class TestWorkerRunner(LocustTestCase):
 
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             environment = Environment()
+            client.mocked_send(Message('ack', {}, "dummy_client_id"))
             worker = self.get_runner(environment=environment, user_classes=[MyUser])
 
             client.mocked_send(
@@ -3025,6 +3029,7 @@ class TestWorkerRunner(LocustTestCase):
 
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             environment = Environment()
+            client.mocked_send(Message('ack', {}, "dummy_client_id"))
             worker = self.get_runner(environment=environment, user_classes=[MyUser])
 
             client.mocked_send(
@@ -3077,6 +3082,7 @@ class TestWorkerRunner(LocustTestCase):
 
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             environment = Environment()
+            client.mocked_send(Message('ack', {}, "dummy_client_id"))
             worker = self.get_runner(environment=environment, user_classes=[MyUser])
 
             t0 = time.perf_counter()
@@ -3108,6 +3114,7 @@ class TestWorkerRunner(LocustTestCase):
 
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             environment = Environment()
+            client.mocked_send(Message('ack', {}, "dummy_client_id"))
             worker = self.get_runner(environment=environment, user_classes=[MyUser])
 
             client.mocked_send(
@@ -3160,6 +3167,7 @@ class TestWorkerRunner(LocustTestCase):
 
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             environment = Environment()
+            client.mocked_send(Message('ack', {}, "dummy_client_id"))
             worker = self.get_runner(environment=environment, user_classes=[MyUser1, MyUser2])
 
             client.mocked_send(
@@ -3210,6 +3218,7 @@ class TestWorkerRunner(LocustTestCase):
 
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             environment = Environment()
+            client.mocked_send(Message('ack', {}, "dummy_client_id"))
             worker = self.get_runner(environment=environment, user_classes=[MyUser])
             client.outbox.clear()
             worker.send_message("test_custom_msg", {"test_data": 123})
@@ -3234,6 +3243,7 @@ class TestWorkerRunner(LocustTestCase):
                 test_custom_msg[0] = True
                 test_custom_msg_data[0] = msg.data
 
+            client.mocked_send(Message('ack', {}, "dummy_client_id"))
             worker = self.get_runner(environment=environment, user_classes=[MyUser])
             worker.register_message("test_custom_msg", on_custom_msg)
 
@@ -3259,6 +3269,7 @@ class TestWorkerRunner(LocustTestCase):
             def on_custom_msg(msg, **kw):
                 test_custom_msg[0] = True
 
+            client.mocked_send(Message('ack', {}, "dummy_client_id"))
             worker = self.get_runner(environment=environment, user_classes=[MyUser])
             worker.register_message("test_custom_msg", on_custom_msg)
 
@@ -3287,6 +3298,7 @@ class TestWorkerRunner(LocustTestCase):
             def on_test_start(*args, **kw):
                 run_count[0] += 1
 
+            client.mocked_send(Message('ack', {}, "dummy_client_id"))
             worker = self.get_runner(environment=environment, user_classes=[MyTestUser])
             self.assertEqual(1, len(client.outbox))
             self.assertEqual("client_ready", client.outbox[0].type)
@@ -3373,6 +3385,7 @@ class TestWorkerRunner(LocustTestCase):
             def on_test_stop(*args, **kw):
                 run_count[0] += 1
 
+            client.mocked_send(Message('ack', {}, "dummy_client_id"))
             worker = self.get_runner(environment=environment, user_classes=[MyTestUser])
             self.assertEqual(1, len(client.outbox))
             self.assertEqual("client_ready", client.outbox[0].type)
@@ -3430,6 +3443,34 @@ class TestWorkerRunner(LocustTestCase):
             client.mocked_send(Message("stop", None, "dummy_client_id"))
             gevent.sleep(0.01)
             self.assertEqual(2, run_count[0])
+
+    def test_worker_connect_success(self):
+        class MyTestUser(User):
+            @task
+            def the_task(self):
+                pass
+
+        with mock.patch("locust.runners.CONNECTION_TIMEOUT", new=1):
+            with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+                client.mocked_send(Message('ack', {}, "dummy_client_id"))
+                worker = self.get_runner(environment=Environment(), user_classes=[MyTestUser])
+
+                self.assertEqual('client_ready', client.outbox[0].type)
+                self.assertEqual(1, len(client.outbox))
+                self.assertTrue(worker.connected)
+
+    def test_worker_connect_failure(self):
+        class MyTestUser(User):
+            @task
+            def the_task(self):
+                pass
+
+        with mock.patch("locust.runners.CONNECTION_TIMEOUT", new=0.01):
+            with mock.patch("locust.runners.CONNECTION_RETRY_COUNT", new=1):
+                with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+                    with self.assertRaises(ConnectionError):
+                        self.get_runner(environment=Environment(), user_classes=[MyTestUser])
+                        self.assertEqual(2, len(client.outbox))
 
 
 class TestMessageSerializing(unittest.TestCase):
