@@ -2828,7 +2828,7 @@ class TestWorkerRunner(LocustTestCase):
             environment = self.environment
         user_classes = user_classes or []
         environment.user_classes = user_classes
-        return WorkerRunner(environment, master_host="localhost", master_port=5557, retry=0)
+        return WorkerRunner(environment, master_host="localhost", master_port=5557)
 
     def test_worker_stop_timeout(self):
         class MyTestUser(User):
