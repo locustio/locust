@@ -923,7 +923,7 @@ class MasterRunner(DistributedRunner):
                         logger.warning(
                             f"A worker ({client_id}) running a different version ({msg.data}) connected, master version is {__version__}"
                         )
-                self.send_message('ack', client_id=client_id)
+                self.send_message("ack", client_id=client_id)
                 worker_node_id = msg.node_id
                 self.clients[worker_node_id] = WorkerNode(worker_node_id, heartbeat_liveness=HEARTBEAT_LIVENESS)
                 if self._users_dispatcher is not None:
