@@ -163,15 +163,12 @@ class ProcessIntegrationTest(TestCase):
         super().tearDown()
 
     def test_help_arg(self):
-        output = (
-            subprocess.check_output(
-                ["locust", "--help"],
-                stderr=subprocess.STDOUT,
-                timeout=5,
-            )
-            .decode("utf-8")
-            .strip()
-        )
+        output = subprocess.check_output(
+            ["locust", "--help"],
+            stderr=subprocess.STDOUT,
+            timeout=5,
+            text=True,
+        ).strip()
         self.assertTrue(output.startswith("Usage: locust [OPTIONS] [UserClass ...]"))
         self.assertIn("Common options:", output)
         self.assertIn("-f LOCUSTFILE, --locustfile LOCUSTFILE", output)
@@ -203,6 +200,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 ["locust", "-f", file_path, "--custom-string-arg", "command_line_value", "--web-port", str(port)],
                 stdout=PIPE,
                 stderr=PIPE,
+                text=True,
             )
             gevent.sleep(1)
 
@@ -214,8 +212,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
         proc.send_signal(signal.SIGTERM)
         stdout, stderr = proc.communicate(timeout=3)
-        stderr = stderr.decode("utf-8")
-        stdout = stdout.decode("utf-8")
         self.assertIn("Starting Locust", stderr)
         self.assertRegex(stderr, r".*Shutting down[\S\s]*Aggregated.*", "no stats table printed after shutting down")
         self.assertNotRegex(stderr, r".*Aggregated[\S\s]*Shutting down.*", "stats table printed BEFORE shutting down")
@@ -246,6 +242,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     ["locust", "-f", file_path, "--autostart"],
                     stdout=PIPE,
                     stderr=PIPE,
+                    text=True,
                 )
                 gevent.sleep(1)
             finally:
@@ -253,8 +250,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
         proc.send_signal(signal.SIGTERM)
         stdout, stderr = proc.communicate(timeout=3)
-        stderr = stderr.decode("utf-8")
-        stdout = stdout.decode("utf-8")
         self.assertIn("Starting Locust", stderr)
         self.assertIn("config_file_value", stdout)
 
@@ -277,12 +272,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
             )
         ) as file_path:
-            proc = subprocess.Popen(["locust", "-f", file_path], stdout=PIPE, stderr=PIPE)
+            proc = subprocess.Popen(["locust", "-f", file_path], stdout=PIPE, stderr=PIPE, text=True)
             gevent.sleep(1)
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
-            stderr = stderr.decode("utf-8")
-            stdout = stdout.decode("utf-8")
             self.assertIn("Starting web interface at", stderr)
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shutting down (exit code 42)", stderr)
@@ -302,11 +295,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
             )
         ) as file_path:
-            proc = subprocess.Popen(["locust", "-f", file_path], stdout=PIPE, stderr=PIPE)
+            proc = subprocess.Popen(["locust", "-f", file_path], stdout=PIPE, stderr=PIPE, text=True)
             gevent.sleep(1)
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
-            stderr = stderr.decode("utf-8")
             self.assertIn("Starting web interface at", stderr)
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shutting down (exit code 0)", stderr)
@@ -314,28 +306,25 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
     def test_default_headless_spawn_options(self):
         with mock_locustfile() as mocked:
-            output = (
-                subprocess.check_output(
-                    [
-                        "locust",
-                        "-f",
-                        mocked.file_path,
-                        "--host",
-                        "https://test.com/",
-                        "--run-time",
-                        "1s",
-                        "--headless",
-                        "--loglevel",
-                        "DEBUG",
-                        "--exit-code-on-error",
-                        "0",
-                    ],
-                    stderr=subprocess.STDOUT,
-                    timeout=3,
-                )
-                .decode("utf-8")
-                .strip()
-            )
+            output = subprocess.check_output(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--host",
+                    "https://test.com/",
+                    "--run-time",
+                    "1s",
+                    "--headless",
+                    "--loglevel",
+                    "DEBUG",
+                    "--exit-code-on-error",
+                    "0",
+                ],
+                stderr=subprocess.STDOUT,
+                timeout=3,
+                text=True,
+            ).strip()
             self.assertIn('Spawning additional {"UserSubclass": 1} ({"UserSubclass": 0} already running)...', output)
 
     def test_headless_spawn_options_wo_run_time(self):
@@ -353,11 +342,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
+                text=True,
             )
             gevent.sleep(1)
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
-            stderr = stderr.decode("utf-8")
             self.assertIn("Starting Locust", stderr)
             self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
             self.assertIn("Shutting down (exit code 0)", stderr)
@@ -389,6 +378,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
+                text=True,
             )
 
             try:
@@ -401,7 +391,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             proc.send_signal(signal.SIGTERM)
             _, stderr = proc.communicate()
-            stderr = stderr.decode("utf-8")
             self.assertIn("Shape test updating to 10 users at 1.00 spawn rate", stderr)
             self.assertTrue(success, "Got timeout and had to kill the process")
             # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
@@ -423,6 +412,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
+                text=True,
             )
             gevent.sleep(1.9)
             try:
@@ -432,7 +422,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertEqual(200, response.status_code)
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
-            stderr = stderr.decode("utf-8")
             self.assertIn("Starting Locust", stderr)
             self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
             self.assertIn("Shutting down ", stderr)
@@ -459,6 +448,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
+                text=True,
             )
             gevent.sleep(1.9)
             try:
@@ -466,7 +456,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             except Exception:
                 pass
             _, stderr = proc.communicate(timeout=2)
-            stderr = stderr.decode("utf-8")
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Run time limit set to 2 seconds", stderr)
             self.assertIn("Shutting down ", stderr)
@@ -505,6 +494,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
+                text=True,
             )
             gevent.sleep(1.9)
             response = requests.get(f"http://0.0.0.0:{port}/")
@@ -516,7 +506,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 proc.send_signal(signal.SIGTERM)
                 _, stderr = proc.communicate()
 
-            stderr = stderr.decode("utf-8")
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shape test starting", stderr)
             self.assertIn("Shutting down ", stderr)
@@ -596,6 +585,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdin=stdin_s,
                 stdout=PIPE,
                 shell=True,
+                text=True,
             )
             gevent.sleep(1)
 
@@ -612,7 +602,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             stdin.write(b"S")
             gevent.sleep(1)
 
-            output = proc.communicate()[0].decode("utf-8")
+            output = proc.communicate()[0]
             stdin.close()
             self.assertIn("Ramping to 1 users at a rate of 100.00 per second", output)
             self.assertIn('All users spawned: {"UserSubclass": 1} (1 total users)', output)
@@ -675,9 +665,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=STDOUT,
                 stdout=PIPE,
                 shell=True,
+                text=True,
             )
 
-            output = proc.communicate()[0].decode("utf-8")
+            output = proc.communicate()[0]
             self.assertIn("Ramping to 10 users at a rate of 10.00 per second", output)
             self.assertIn('All users spawned: {"User1": 2, "User2": 4, "User3": 4} (10 total users)', output)
             self.assertIn("Test task is running", output)
@@ -690,32 +681,27 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile() as mocked:
             with temporary_file("", suffix=".html") as html_report_file_path:
                 try:
-                    output = (
-                        subprocess.check_output(
-                            [
-                                "locust",
-                                "-f",
-                                mocked.file_path,
-                                "--host",
-                                "https://test.com/",
-                                "--run-time",
-                                "2s",
-                                "--headless",
-                                "--exit-code-on-error",
-                                "0",
-                                "--html",
-                                html_report_file_path,
-                            ],
-                            stderr=subprocess.STDOUT,
-                            timeout=10,
-                        )
-                        .decode("utf-8")
-                        .strip()
-                    )
+                    output = subprocess.check_output(
+                        [
+                            "locust",
+                            "-f",
+                            mocked.file_path,
+                            "--host",
+                            "https://test.com/",
+                            "--run-time",
+                            "2s",
+                            "--headless",
+                            "--exit-code-on-error",
+                            "0",
+                            "--html",
+                            html_report_file_path,
+                        ],
+                        stderr=subprocess.STDOUT,
+                        timeout=10,
+                        text=True,
+                    ).strip()
                 except subprocess.CalledProcessError as e:
-                    raise AssertionError(
-                        f"Running locust command failed. Output was:\n\n{e.stdout.decode('utf-8')}"
-                    ) from e
+                    raise AssertionError(f"Running locust command failed. Output was:\n\n{e.stdout}") from e
 
                 with open(html_report_file_path, encoding="utf-8") as f:
                     html_report_content = f.read()
@@ -751,9 +737,9 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
+                text=True,
             )
             _, stderr = proc.communicate()
-            stderr = stderr.decode("utf-8")
             self.assertIn("Waiting for workers to be ready, 0 of 2 connected", stderr)
             self.assertIn("Gave up waiting for workers to connect", stderr)
             self.assertNotIn("Traceback", stderr)
@@ -799,6 +785,7 @@ def on_test_stop(environment, **kwargs):
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
+                text=True,
             )
             proc_worker = subprocess.Popen(
                 [
@@ -811,13 +798,10 @@ def on_test_stop(environment, **kwargs):
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
+                text=True,
             )
             stdout, stderr = proc.communicate()
-            stderr = stderr.decode("utf-8")
-            stdout = stdout.decode("utf-8")
             stdout_worker, stderr_worker = proc_worker.communicate()
-            stderr_worker = stderr_worker.decode("utf-8")
-            stdout_worker = stdout_worker.decode("utf-8")
             self.assertIn("test_start on master", stdout)
             self.assertIn("test_stop on master", stdout)
             self.assertIn("test_stop on worker", stdout_worker)
@@ -869,6 +853,7 @@ class SecondUser(HttpUser):
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
+                text=True,
             )
             proc_worker = subprocess.Popen(
                 [
@@ -881,13 +866,10 @@ class SecondUser(HttpUser):
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
+                text=True,
             )
             stdout, stderr = proc.communicate()
-            stderr = stderr.decode("utf-8")
-            stdout = stdout.decode("utf-8")
             stdout_worker, stderr_worker = proc_worker.communicate()
-            stdout_worker = stdout_worker.decode("utf-8")
-            stderr_worker = stderr_worker.decode("utf-8")
             self.assertIn("task1", stdout_worker)
             self.assertNotIn("task2", stdout_worker)
             self.assertNotIn("Traceback", stderr)
@@ -925,6 +907,7 @@ class SecondUser(HttpUser):
                 ],
                 stderr=STDOUT,
                 stdout=PIPE,
+                text=True,
             )
             proc_worker = subprocess.Popen(
                 [
@@ -935,8 +918,9 @@ class SecondUser(HttpUser):
                 ],
                 stderr=STDOUT,
                 stdout=PIPE,
+                text=True,
             )
-            stdout = proc.communicate()[0].decode("utf-8")
+            stdout = proc.communicate()[0]
             proc_worker.communicate()
 
             self.assertIn('All users spawned: {"User1": 3} (3 total users)', stdout)
@@ -977,6 +961,7 @@ class SecondUser(HttpUser):
                 ],
                 stderr=STDOUT,
                 stdout=PIPE,
+                text=True,
             )
             proc_worker = subprocess.Popen(
                 [
@@ -987,8 +972,9 @@ class SecondUser(HttpUser):
                 ],
                 stderr=STDOUT,
                 stdout=PIPE,
+                text=True,
             )
-            stdout = proc.communicate()[0].decode("utf-8")
+            stdout = proc.communicate()[0]
             proc_worker.communicate()
 
             self.assertIn(

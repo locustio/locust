@@ -17,7 +17,7 @@ from locust.argument_parser import get_empty_argument_parser, setup_parser_argum
 def save_locust_help_output():
     cli_help_output_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "cli-help-output.txt")
     print(f"Running `locust --help` command and storing output in {cli_help_output_file}")
-    help_output = subprocess.check_output(["locust", "--help"]).decode("utf-8")
+    help_output = subprocess.check_output(["locust", "--help"], text=True)
     with open(cli_help_output_file, "w") as f:
         f.write(help_output)
 

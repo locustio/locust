@@ -69,7 +69,8 @@ class TestLoggingOptions(LocustTestCase):
                 ],
                 stderr=subprocess.STDOUT,
                 timeout=10,
-            ).decode("utf-8")
+                text=True,
+            )
 
         self.assertIn(
             f"{socket.gethostname()}/INFO/locust.main: Run time limit set to 1 seconds",
@@ -128,7 +129,8 @@ class TestLoggingOptions(LocustTestCase):
                 ],
                 stderr=subprocess.STDOUT,
                 timeout=10,
-            ).decode("utf-8")
+                text=True,
+            )
         if not changed_rlimit:
             self.assertTrue(output.strip().endswith("running my_task"))
         else:
@@ -169,11 +171,10 @@ class TestLoggingOptions(LocustTestCase):
                         ],
                         stderr=subprocess.STDOUT,
                         timeout=10,
-                    ).decode("utf-8")
+                        text=True,
+                    )
                 except subprocess.CalledProcessError as e:
-                    raise AssertionError(
-                        f"Running locust command failed. Output was:\n\n{e.stdout.decode('utf-8')}"
-                    ) from e
+                    raise AssertionError(f"Running locust command failed. Output was:\n\n{e.stdout}") from e
 
                 with open(log_file_path, encoding="utf-8") as f:
                     log_content = f.read()
