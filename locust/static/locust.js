@@ -237,6 +237,7 @@ var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per S
 var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times (ms)", ["Median Response Time", "95% percentile"], "ms");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 charts.push(rpsChart, responseTimeChart, usersChart);
+echarts.connect([rpsChart.chart,responseTimeChart.chart,usersChart.chart])
 update_stats_charts()
 
 const markerFlags = {
