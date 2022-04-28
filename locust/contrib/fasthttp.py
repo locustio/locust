@@ -15,7 +15,8 @@ from gevent.timeout import Timeout
 from geventhttpclient._parser import HTTPParseError
 from geventhttpclient.client import HTTPClientPool
 from geventhttpclient.useragent import UserAgent, CompatRequest, CompatResponse, ConnectionError
-from geventhttpclient.response import HTTPConnectionClosed
+from geventhttpclient.response import HTTPConnectionClosed, HTTPSocketPoolResponse
+from geventhttpclient.header import Headers
 
 from locust.user import User
 from locust.exception import LocustError, CatchResponseError, ResponseError
@@ -70,7 +71,7 @@ class FastHttpSession:
         self,
         environment: Environment,
         base_url: str,
-        user: "FastHttpUser",
+        user: Optional[User],
         insecure=True,
         client_pool: Optional[HTTPClientPool] = None,
         **kwargs,
@@ -123,7 +124,15 @@ class FastHttpSession:
             if hasattr(e, "response"):
                 r = e.response
             else:
-                r = ErrorResponse()
+                safe_kwargs = kwargs or {}
+                req = self.client._make_request(
+                    url,
+                    method=method,
+                    headers=safe_kwargs.get("headers", None),
+                    payload=safe_kwargs.get("payload", None),
+                    params=safe_kwargs.get("params", None),
+                )
+                r = ErrorResponse(url=url, request=req)
             r.error = e
             return r
 
@@ -339,10 +348,10 @@ class FastHttpUser(User):
 
 
 class FastResponse(CompatResponse):
-    headers = None
+    headers: Optional[Headers] = None
     """Dict like object containing the response headers"""
 
-    _response = None
+    _response: Optional[HTTPSocketPoolResponse] = None
 
     encoding: Optional[str] = None
     """In some cases setting the encoding explicitly is needed. If so, do it before calling .text"""
@@ -360,6 +369,26 @@ class FastResponse(CompatResponse):
             else:
                 self.encoding = self.headers.get("content-type", "").partition("charset=")[2] or "utf-8"
         return str(self.content, self.encoding, errors="replace")
+
+    @property
+    def request(self) -> Optional[CompatRequest]:
+        """
+        Returns the request for the response
+        """
+        if self._request is not None:
+            return self._request
+
+        return None
+
+    @property
+    def url(self) -> Optional[str]:
+        """
+        Get "response" URL, which is the same as the request URL. This is a small deviation from HttpSession, which gets the final (possibly redirected) URL.
+        """
+        if self.request is not None:
+            return self.request.url
+
+        return None
 
     def json(self) -> dict:
         """
@@ -402,11 +431,16 @@ class ErrorResponse:
     that doesn't have a real Response object attached. E.g. a socket error or similar
     """
 
-    headers = None
+    headers: Optional[Headers] = None
     content = None
     status_code = 0
-    error = None
-    text = None
+    error: Optional[Exception] = None
+    text: Optional[str] = None
+    request: CompatRequest
+
+    def __init__(self, url: str, request: CompatRequest):
+        self.url = url
+        self.request = request
 
     def raise_for_status(self):
         raise self.error
