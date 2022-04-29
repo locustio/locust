@@ -6,7 +6,7 @@ from base64 import b64encode
 from urllib.parse import urlparse, urlunparse
 from ssl import SSLError
 import time
-from typing import Optional
+from typing import Optional, Tuple, Dict, Any
 
 from http.cookiejar import CookieJar
 
@@ -347,6 +347,14 @@ class FastHttpUser(User):
         """
 
 
+class FastRequest(CompatRequest):
+    payload: Optional[str] = None
+
+    @property
+    def body(self) -> Optional[str]:
+        return self.payload
+
+
 class FastResponse(CompatResponse):
     headers: Optional[Headers] = None
     """Dict like object containing the response headers"""
@@ -355,6 +363,13 @@ class FastResponse(CompatResponse):
 
     encoding: Optional[str] = None
     """In some cases setting the encoding explicitly is needed. If so, do it before calling .text"""
+
+    request: Optional[FastRequest] = None
+
+    def __init__(self, ghc_response: HTTPSocketPoolResponse, request: Optional[FastRequest] = None, sent_request: Optional[str] = None):
+        super().__init__(ghc_response, request, sent_request)
+
+        self.request = request
 
     @property
     def text(self) -> Optional[str]:
@@ -369,16 +384,6 @@ class FastResponse(CompatResponse):
             else:
                 self.encoding = self.headers.get("content-type", "").partition("charset=")[2] or "utf-8"
         return str(self.content, self.encoding, errors="replace")
-
-    @property
-    def request(self) -> Optional[CompatRequest]:
-        """
-        Returns the request for the response
-        """
-        if self._request is not None:
-            return self._request
-
-        return None
 
     @property
     def url(self) -> Optional[str]:
@@ -448,6 +453,7 @@ class ErrorResponse:
 
 class LocustUserAgent(UserAgent):
     response_type = FastResponse
+    request_type = FastRequest
     valid_response_codes = frozenset([200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 301, 302, 303, 307])
 
     def __init__(self, client_pool: Optional[HTTPClientPool] = None, **kwargs):

@@ -93,6 +93,7 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(200, r.status_code)
         r = s.get("/get_cookie?name=testcookie")
         self.assertEqual("1337", r.content.decode())
+        self.assertEqual("1337", r.text)
 
     def test_head(self):
         s = self.get_client()
@@ -126,6 +127,8 @@ class TestFastHttpSession(WebserverTestCase):
         s = self.get_client()
         r = s.post("/request_method", json={"foo": "bar"})
         self.assertEqual(200, r.status_code)
+        self.assertEqual(r.request.body, '{"foo": "bar"}')
+        self.assertEqual(r.request.headers.get("Content-Type", None), "application/json")
 
     def test_catch_response_fail_successful_request(self):
         s = self.get_client()
