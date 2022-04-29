@@ -366,7 +366,12 @@ class FastResponse(CompatResponse):
 
     request: Optional[FastRequest] = None
 
-    def __init__(self, ghc_response: HTTPSocketPoolResponse, request: Optional[FastRequest] = None, sent_request: Optional[str] = None):
+    def __init__(
+        self,
+        ghc_response: HTTPSocketPoolResponse,
+        request: Optional[FastRequest] = None,
+        sent_request: Optional[str] = None,
+    ):
         super().__init__(ghc_response, request, sent_request)
 
         self.request = request
