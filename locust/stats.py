@@ -524,8 +524,15 @@ class StatsEntry:
         else:
             rps = self.total_rps
             fail_per_sec = self.total_fail_per_sec
-        return (" %-" + str(STATS_NAME_WIDTH) + "s %7d %12s  | %7d %7d %7d %7d  | %7.2f %7.2f") % (
-            (self.method and self.method + " " or "") + self.name,
+        return (
+            " %-"
+            + str(STATS_TYPE_WIDTH)
+            + "s %-"
+            + str(STATS_NAME_WIDTH)
+            + "s %7d %12s  | %7d %7d %7d %7d  | %7.2f %11.2f"
+        ) % (
+            (self.method and self.method + " " or ""),
+            self.name,
             self.num_requests,
             "%d(%.2f%%)" % (self.num_failures, self.fail_ratio * 100),
             self.avg_response_time,
@@ -598,7 +605,7 @@ class StatsEntry:
         tpl = f" %-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8d {' '.join(['%6d'] * len(PERCENTILES_TO_REPORT))}"
 
         return tpl % (
-            (self.method, self.name)
+            (self.method or "", self.name)
             + tuple(self.get_response_time_percentile(p) for p in PERCENTILES_TO_REPORT)
             + (self.num_requests,)
         )
@@ -723,14 +730,15 @@ def setup_distributed_stats_event_listeners(events, stats):
 
 def print_stats(stats, current=True):
     console_logger.info(
-        (" %-" + str(STATS_NAME_WIDTH) + "s %7s %12s  | %7s %7s %7s %7s  | %7s %7s")
-        % ("Name", "# reqs", "# fails", "Avg", "Min", "Max", "Median", "req/s", "failures/s")
+        (" %-" + str(STATS_TYPE_WIDTH) + "s %-" + str(STATS_NAME_WIDTH) + "s %7s %12s  | %7s %7s %7s %7s  | %7s %11s")
+        % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Median", "req/s", "failures/s")
     )
-    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
+    separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 8}|{"-" * (13 + 1)}|{"-" * 8}|{"-" * 7}|{"-" * 7}|{"-" * (7 + 2)}|{"-" * 8}|{"-" * 12}|'
+    console_logger.info(separator)
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
         console_logger.info(r.to_string(current=current))
-    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
+    console_logger.info(separator)
     console_logger.info(stats.total.to_string(current=current))
     console_logger.info("")
 
@@ -765,10 +773,11 @@ def print_error_report(stats):
         return
     console_logger.info("Error report")
     console_logger.info(" %-18s %-100s" % ("# occurrences", "Error"))
-    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
+    separator = f'{"-" * 18}|{"-" * ((80 + STATS_NAME_WIDTH) - 19)}|'
+    console_logger.info(separator)
     for error in stats.errors.values():
         console_logger.info(" %-18i %-100s" % (error.occurrences, error.to_name()))
-    console_logger.info("-" * (80 + STATS_NAME_WIDTH))
+    console_logger.info(separator)
     console_logger.info("")
 
 
