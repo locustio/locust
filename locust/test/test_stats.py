@@ -304,17 +304,53 @@ class TestRequestStats(unittest.TestCase):
 
 
 class TestStatsPrinting(LocustTestCase):
-    def test_print_percentile_stats(self):
-        stats = RequestStats()
+    def setUp(self):
+        super().setUp()
+
+        self.stats = RequestStats()
         for i in range(100):
-            stats.log_request("GET", "test_entry", i, 2000 + i)
-        locust.stats.print_percentile_stats(stats)
+            self.stats.log_request("GET", "test_entry", i, 2000 + i)
+            if i % 5 == 0:
+                self.stats.log_error("GET", "test_entry", RuntimeError("error"))
+
+    def test_print_percentile_stats(self):
+        locust.stats.print_percentile_stats(self.stats)
         info = self.mocked_log.info
         self.assertEqual(7, len(info))
+        self.assertEqual("Response time percentiles (approximated)", info[0])
         # check that headline contains same number of column as the value rows
         headlines = info[1].replace("# reqs", "#reqs").split()
         self.assertEqual(len(headlines), len(info[3].split()))
-        self.assertEqual(len(headlines), len(info[5].split()))
+        self.assertEqual(len(headlines) - 1, len(info[-2].split()))  # Aggregated, no "Type"
+        self.assertEqual(info[2], info[-3])  # table ascii separators
+
+    def test_print_stats(self):
+        locust.stats.print_stats(self.stats)
+        info = self.mocked_log.info
+        self.assertEqual(6, len(info))
+
+        headlines = info[0].replace("# ", "#").split()
+
+        # check number of columns in separator, which will end with a pipe as well
+        self.assertEqual(len(headlines), len(info[1].split("|")) + 1)
+        # check entry row
+        self.assertEqual(len(headlines), len(info[2].split()))
+        # check aggregated row, which is missing value in "type"-column
+        self.assertEqual(len(headlines) - 1, len(info[-2].split()))
+        # table ascii separators
+        self.assertEqual(info[1], info[-3])
+
+    def test_print_error_report(self):
+        locust.stats.print_error_report(self.stats)
+        info = self.mocked_log.info
+        self.assertEqual(6, len(info))
+        self.assertEqual("Error report", info[0])
+
+        headlines = info[1].replace("# ", "#").split()
+        # check number of columns in headlines vs table ascii separator
+        self.assertEqual(len(headlines), len(info[2].split("|")) - 1)
+        # table ascii seprators
+        self.assertEqual(info[2], info[-2])
 
 
 class TestCsvStats(LocustTestCase):
