@@ -139,7 +139,7 @@ class FastHttpSession:
     def request(
         self,
         method: str,
-        path: str,
+        url: str,
         name: str = None,
         data: str = None,
         catch_response: bool = False,
@@ -156,7 +156,7 @@ class FastHttpSession:
         Returns :py:class:`locust.contrib.fasthttp.FastResponse` object.
 
         :param method: method for the new :class:`Request` object.
-        :param path: Path that will be concatenated with the base host URL that has been specified.
+        :param url: path that will be concatenated with the base host URL that has been specified.
             Can also be a full URL, in which case the full URL will be requested, and the base host
             is ignored.
         :param name: (optional) An argument that can be specified to use as label in Locust's
@@ -179,7 +179,7 @@ class FastHttpSession:
             content will not be accounted for in the request time that is reported by Locust.
         """
         # prepend url with hostname unless it's already an absolute URL
-        url = self._build_url(path)
+        built_url = self._build_url(url)
 
         start_time = time.time()  # seconds since epoch
 
@@ -207,15 +207,15 @@ class FastHttpSession:
 
         start_perf_counter = time.perf_counter()
         # send request, and catch any exceptions
-        response = self._send_request_safe_mode(method, url, payload=data, headers=headers, **kwargs)
+        response = self._send_request_safe_mode(method, built_url, payload=data, headers=headers, **kwargs)
         request_meta = {
             "request_type": method,
-            "name": name or path,
+            "name": name or url,
             "context": context,
             "response": response,
             "exception": None,
             "start_time": start_time,
-            "url": url,  # this is a small deviation from HttpSession, which gets the final (possibly redirected) URL
+            "url": built_url,  # this is a small deviation from HttpSession, which gets the final (possibly redirected) URL
         }
 
         if not allow_redirects:
@@ -251,32 +251,32 @@ class FastHttpSession:
             self.environment.events.request.fire(**request_meta)
             return response
 
-    def delete(self, path, **kwargs):
-        return self.request("DELETE", path, **kwargs)
+    def delete(self, url, **kwargs):
+        return self.request("DELETE", url, **kwargs)
 
-    def get(self, path, **kwargs):
+    def get(self, url, **kwargs):
         """Sends a GET request"""
-        return self.request("GET", path, **kwargs)
+        return self.request("GET", url, **kwargs)
 
-    def head(self, path, **kwargs):
+    def head(self, url, **kwargs):
         """Sends a HEAD request"""
-        return self.request("HEAD", path, **kwargs)
+        return self.request("HEAD", url, **kwargs)
 
-    def options(self, path, **kwargs):
+    def options(self, url, **kwargs):
         """Sends a OPTIONS request"""
-        return self.request("OPTIONS", path, **kwargs)
+        return self.request("OPTIONS", url, **kwargs)
 
-    def patch(self, path, data=None, **kwargs):
+    def patch(self, url, data=None, **kwargs):
         """Sends a POST request"""
-        return self.request("PATCH", path, data=data, **kwargs)
+        return self.request("PATCH", url, data=data, **kwargs)
 
-    def post(self, path, data=None, **kwargs):
+    def post(self, url, data=None, **kwargs):
         """Sends a POST request"""
-        return self.request("POST", path, data=data, **kwargs)
+        return self.request("POST", url, data=data, **kwargs)
 
-    def put(self, path, data=None, **kwargs):
+    def put(self, url, data=None, **kwargs):
         """Sends a PUT request"""
-        return self.request("PUT", path, data=data, **kwargs)
+        return self.request("PUT", url, data=data, **kwargs)
 
 
 class FastHttpUser(User):
