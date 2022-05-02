@@ -381,6 +381,9 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         elif not options.worker and not environment.shape_class:
             logger.info("No run time limit set, use CTRL+C to interrupt")
 
+    if options.csv_prefix:
+        gevent.spawn(stats_csv_writer.stats_writer).link_exception(greenlet_exception_handler)
+
     if options.headless:
         start_automatic_run()
 
@@ -409,9 +412,6 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         # ensure terminal is reset, even if there is an unhandled exception in locust or someone
         # does something wild, like calling sys.exit() in the locustfile
         atexit.register(input_listener_greenlet.kill, block=True)
-
-    if options.csv_prefix:
-        gevent.spawn(stats_csv_writer.stats_writer).link_exception(greenlet_exception_handler)
 
     def shutdown():
         """
