@@ -6,7 +6,7 @@ from base64 import b64encode
 from urllib.parse import urlparse, urlunparse
 from ssl import SSLError
 import time
-from typing import Optional
+from typing import Optional, Tuple, Dict, Any
 
 from http.cookiejar import CookieJar
 
@@ -15,7 +15,8 @@ from gevent.timeout import Timeout
 from geventhttpclient._parser import HTTPParseError
 from geventhttpclient.client import HTTPClientPool
 from geventhttpclient.useragent import UserAgent, CompatRequest, CompatResponse, ConnectionError
-from geventhttpclient.response import HTTPConnectionClosed
+from geventhttpclient.response import HTTPConnectionClosed, HTTPSocketPoolResponse
+from geventhttpclient.header import Headers
 
 from locust.user import User
 from locust.exception import LocustError, CatchResponseError, ResponseError
@@ -70,7 +71,7 @@ class FastHttpSession:
         self,
         environment: Environment,
         base_url: str,
-        user: "FastHttpUser",
+        user: Optional[User],
         insecure=True,
         client_pool: Optional[HTTPClientPool] = None,
         **kwargs,
@@ -123,14 +124,22 @@ class FastHttpSession:
             if hasattr(e, "response"):
                 r = e.response
             else:
-                r = ErrorResponse()
+                safe_kwargs = kwargs or {}
+                req = self.client._make_request(
+                    url,
+                    method=method,
+                    headers=safe_kwargs.get("headers", None),
+                    payload=safe_kwargs.get("payload", None),
+                    params=safe_kwargs.get("params", None),
+                )
+                r = ErrorResponse(url=url, request=req)
             r.error = e
             return r
 
     def request(
         self,
         method: str,
-        path: str,
+        url: str,
         name: str = None,
         data: str = None,
         catch_response: bool = False,
@@ -147,7 +156,7 @@ class FastHttpSession:
         Returns :py:class:`locust.contrib.fasthttp.FastResponse` object.
 
         :param method: method for the new :class:`Request` object.
-        :param path: Path that will be concatenated with the base host URL that has been specified.
+        :param url: path that will be concatenated with the base host URL that has been specified.
             Can also be a full URL, in which case the full URL will be requested, and the base host
             is ignored.
         :param name: (optional) An argument that can be specified to use as label in Locust's
@@ -170,7 +179,7 @@ class FastHttpSession:
             content will not be accounted for in the request time that is reported by Locust.
         """
         # prepend url with hostname unless it's already an absolute URL
-        url = self._build_url(path)
+        built_url = self._build_url(url)
 
         start_time = time.time()  # seconds since epoch
 
@@ -198,15 +207,15 @@ class FastHttpSession:
 
         start_perf_counter = time.perf_counter()
         # send request, and catch any exceptions
-        response = self._send_request_safe_mode(method, url, payload=data, headers=headers, **kwargs)
+        response = self._send_request_safe_mode(method, built_url, payload=data, headers=headers, **kwargs)
         request_meta = {
             "request_type": method,
-            "name": name or path,
+            "name": name or url,
             "context": context,
             "response": response,
             "exception": None,
             "start_time": start_time,
-            "url": url,  # this is a small deviation from HttpSession, which gets the final (possibly redirected) URL
+            "url": built_url,  # this is a small deviation from HttpSession, which gets the final (possibly redirected) URL
         }
 
         if not allow_redirects:
@@ -242,32 +251,32 @@ class FastHttpSession:
             self.environment.events.request.fire(**request_meta)
             return response
 
-    def delete(self, path, **kwargs):
-        return self.request("DELETE", path, **kwargs)
+    def delete(self, url, **kwargs):
+        return self.request("DELETE", url, **kwargs)
 
-    def get(self, path, **kwargs):
+    def get(self, url, **kwargs):
         """Sends a GET request"""
-        return self.request("GET", path, **kwargs)
+        return self.request("GET", url, **kwargs)
 
-    def head(self, path, **kwargs):
+    def head(self, url, **kwargs):
         """Sends a HEAD request"""
-        return self.request("HEAD", path, **kwargs)
+        return self.request("HEAD", url, **kwargs)
 
-    def options(self, path, **kwargs):
+    def options(self, url, **kwargs):
         """Sends a OPTIONS request"""
-        return self.request("OPTIONS", path, **kwargs)
+        return self.request("OPTIONS", url, **kwargs)
 
-    def patch(self, path, data=None, **kwargs):
+    def patch(self, url, data=None, **kwargs):
         """Sends a POST request"""
-        return self.request("PATCH", path, data=data, **kwargs)
+        return self.request("PATCH", url, data=data, **kwargs)
 
-    def post(self, path, data=None, **kwargs):
+    def post(self, url, data=None, **kwargs):
         """Sends a POST request"""
-        return self.request("POST", path, data=data, **kwargs)
+        return self.request("POST", url, data=data, **kwargs)
 
-    def put(self, path, data=None, **kwargs):
+    def put(self, url, data=None, **kwargs):
         """Sends a PUT request"""
-        return self.request("PUT", path, data=data, **kwargs)
+        return self.request("PUT", url, data=data, **kwargs)
 
 
 class FastHttpUser(User):
@@ -338,14 +347,34 @@ class FastHttpUser(User):
         """
 
 
+class FastRequest(CompatRequest):
+    payload: Optional[str] = None
+
+    @property
+    def body(self) -> Optional[str]:
+        return self.payload
+
+
 class FastResponse(CompatResponse):
-    headers = None
+    headers: Optional[Headers] = None
     """Dict like object containing the response headers"""
 
-    _response = None
+    _response: Optional[HTTPSocketPoolResponse] = None
 
     encoding: Optional[str] = None
     """In some cases setting the encoding explicitly is needed. If so, do it before calling .text"""
+
+    request: Optional[FastRequest] = None
+
+    def __init__(
+        self,
+        ghc_response: HTTPSocketPoolResponse,
+        request: Optional[FastRequest] = None,
+        sent_request: Optional[str] = None,
+    ):
+        super().__init__(ghc_response, request, sent_request)
+
+        self.request = request
 
     @property
     def text(self) -> Optional[str]:
@@ -360,6 +389,16 @@ class FastResponse(CompatResponse):
             else:
                 self.encoding = self.headers.get("content-type", "").partition("charset=")[2] or "utf-8"
         return str(self.content, self.encoding, errors="replace")
+
+    @property
+    def url(self) -> Optional[str]:
+        """
+        Get "response" URL, which is the same as the request URL. This is a small deviation from HttpSession, which gets the final (possibly redirected) URL.
+        """
+        if self.request is not None:
+            return self.request.url
+
+        return None
 
     def json(self) -> dict:
         """
@@ -402,11 +441,16 @@ class ErrorResponse:
     that doesn't have a real Response object attached. E.g. a socket error or similar
     """
 
-    headers = None
+    headers: Optional[Headers] = None
     content = None
     status_code = 0
-    error = None
-    text = None
+    error: Optional[Exception] = None
+    text: Optional[str] = None
+    request: CompatRequest
+
+    def __init__(self, url: str, request: CompatRequest):
+        self.url = url
+        self.request = request
 
     def raise_for_status(self):
         raise self.error
@@ -414,6 +458,7 @@ class ErrorResponse:
 
 class LocustUserAgent(UserAgent):
     response_type = FastResponse
+    request_type = FastRequest
     valid_response_codes = frozenset([200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 301, 302, 303, 307])
 
     def __init__(self, client_pool: Optional[HTTPClientPool] = None, **kwargs):

@@ -55,7 +55,11 @@ def request_method():
 
 @app.route("/request_header_test")
 def request_header_test():
-    return request.headers["X-Header-Test"]
+    x_header_test = request.headers["X-Header-Test"]
+    response = Response(x_header_test)
+    response.headers["X-Header-Test"] = x_header_test
+
+    return response
 
 
 @app.route("/post", methods=["POST"])

@@ -25,12 +25,15 @@ class TestFastHttpSession(WebserverTestCase):
 
     def test_connection_error(self):
         s = FastHttpSession(self.environment, "http://localhost:1", user=None)
-        r = s.get("/", timeout=0.1)
+        r = s.get("/", timeout=0.1, headers={"X-Test-Headers": "hello"})
         self.assertEqual(r.status_code, 0)
         self.assertEqual(None, r.content)
         self.assertEqual(1, len(self.runner.stats.errors))
         self.assertTrue(isinstance(r.error, ConnectionRefusedError))
         self.assertTrue(isinstance(next(iter(self.runner.stats.errors.values())).error, ConnectionRefusedError))
+        self.assertEqual(r.url, "http://localhost:1/")
+        self.assertEqual(r.request.url, r.url)
+        self.assertEqual(r.request.headers.get("X-Test-Headers", ""), "hello")
 
     def test_404(self):
         s = self.get_client()
@@ -44,6 +47,8 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(204, r.status_code)
         self.assertEqual(1, self.runner.stats.get("/status/204", "GET").num_requests)
         self.assertEqual(0, self.runner.stats.get("/status/204", "GET").num_failures)
+        self.assertEqual(r.url, "http://127.0.0.1:%i/status/204" % self.port)
+        self.assertEqual(r.request.url, r.url)
 
     def test_streaming_response(self):
         """
@@ -88,6 +93,7 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(200, r.status_code)
         r = s.get("/get_cookie?name=testcookie")
         self.assertEqual("1337", r.content.decode())
+        self.assertEqual("1337", r.text)
 
     def test_head(self):
         s = self.get_client()
@@ -121,6 +127,8 @@ class TestFastHttpSession(WebserverTestCase):
         s = self.get_client()
         r = s.post("/request_method", json={"foo": "bar"})
         self.assertEqual(200, r.status_code)
+        self.assertEqual(r.request.body, '{"foo": "bar"}')
+        self.assertEqual(r.request.headers.get("Content-Type", None), "application/json")
 
     def test_catch_response_fail_successful_request(self):
         s = self.get_client()
@@ -312,7 +320,10 @@ class TestFastHttpUserClass(WebserverTestCase):
             host = "http://127.0.0.1:%i" % self.port
 
         locust = MyUser(self.environment)
-        self.assertEqual("hello", locust.client.get("/request_header_test", headers={"X-Header-Test": "hello"}).text)
+        r = locust.client.get("/request_header_test", headers={"X-Header-Test": "hello"})
+        self.assertEqual("hello", r.text)
+        self.assertEqual("hello", r.headers.get("X-Header-Test", None))
+        self.assertEqual("hello", r.request.headers.get("X-Header-Test", None))
 
     def test_client_get(self):
         class MyUser(FastHttpUser):
