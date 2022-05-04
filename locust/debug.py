@@ -127,7 +127,6 @@ def run_single_user(
         _env.parsed_options = argument_parser.parse_options()
         frame = inspect.stack()[1]
         _env.parsed_options.locustfile = os.path.basename(frame[0].f_code.co_filename)
-        _env._filter_tasks_by_tags()
         # log requests to stdout
         PrintListener(
             _env,
@@ -139,9 +138,12 @@ def run_single_user(
         # fire various events (quit and test_stop will never get called, sorry about that)
         _env.events.init.fire(environment=_env, runner=None, web_ui=None)
 
+    # do the things that the Runner usually does
+    _env.user_classes = [user_class]
+    _env._filter_tasks_by_tags()
     _env.events.test_start.fire(environment=_env)
 
-    # game on!
+    # create a single user
     user = user_class(_env)
     setattr(_env, "single_user_instance", user)  # if you happen to need access to this from the Environment instance
     user.run()
