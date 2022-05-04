@@ -127,6 +127,7 @@ def run_single_user(
         _env.parsed_options = argument_parser.parse_options()
         frame = inspect.stack()[1]
         _env.parsed_options.locustfile = os.path.basename(frame[0].f_code.co_filename)
+        _env._filter_tasks_by_tags()
         # log requests to stdout
         PrintListener(
             _env,
