@@ -528,8 +528,8 @@ class StatsEntry:
             "%-"
             + str(STATS_TYPE_WIDTH)
             + "s %-"
-            + str(STATS_NAME_WIDTH - STATS_TYPE_WIDTH)
-            + "s %7d %12s | %7d %7d %7d %7d | %7.2f %11.2f"
+            + str((STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4)
+            + "s %7d %12s |%7d %7d %7d%7d | %7.2f %11.2f"
         ) % (
             (self.method and self.method + " " or ""),
             self.name,
@@ -729,17 +729,12 @@ def setup_distributed_stats_event_listeners(events, stats):
 
 
 def print_stats(stats, current=True):
+    name_column_width = (STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4  # saved characters by compacting other columns
     console_logger.info(
-        (
-            "%-"
-            + str(STATS_TYPE_WIDTH)
-            + "s %-"
-            + str(STATS_NAME_WIDTH - STATS_TYPE_WIDTH)
-            + "s %7s %12s | %7s %7s %7s %7s | %7s %11s"
-        )
-        % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Median", "req/s", "failures/s")
+        ("%-" + str(STATS_TYPE_WIDTH) + "s %-" + str(name_column_width) + "s %7s %12s |%7s %7s %7s%7s | %7s %11s")
+        % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Med", "req/s", "failures/s")
     )
-    separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * (STATS_NAME_WIDTH - STATS_TYPE_WIDTH)}|{"-" * 7}|{"-" * 13}|{"-" * 8}|{"-" * 7}|{"-" * 7}|{"-" * 8}|{"-" * 8}|{"-" * 11}'
+    separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * (name_column_width)}|{"-" * 7}|{"-" * 13}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 8}|{"-" * 11}'
     console_logger.info(separator)
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]

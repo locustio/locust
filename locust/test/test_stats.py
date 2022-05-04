@@ -325,7 +325,7 @@ class TestStatsPrinting(LocustTestCase):
                 ),
                 (
                     "DELETE",
-                    "test" * int((STATS_NAME_WIDTH - STATS_TYPE_WIDTH) / len("test")),
+                    "test" * int((STATS_NAME_WIDTH - STATS_TYPE_WIDTH + 4) / len("test")),
                     3,
                 ),
             ]:
