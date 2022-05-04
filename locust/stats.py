@@ -525,11 +525,11 @@ class StatsEntry:
             rps = self.total_rps
             fail_per_sec = self.total_fail_per_sec
         return (
-            " %-"
+            "%-"
             + str(STATS_TYPE_WIDTH)
             + "s %-"
-            + str(STATS_NAME_WIDTH)
-            + "s %7d %12s  | %7d %7d %7d %7d  | %7.2f %11.2f"
+            + str((STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4)
+            + "s %7d %12s |%7d %7d %7d%7d | %7.2f %11.2f"
         ) % (
             (self.method and self.method + " " or ""),
             self.name,
@@ -602,7 +602,7 @@ class StatsEntry:
         if not self.num_requests:
             raise ValueError("Can't calculate percentile on url with no successful requests")
 
-        tpl = f" %-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8d {' '.join(['%6d'] * len(PERCENTILES_TO_REPORT))}"
+        tpl = f"%-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8d {' '.join(['%6d'] * len(PERCENTILES_TO_REPORT))}"
 
         return tpl % (
             (self.method or "", self.name)
@@ -729,11 +729,12 @@ def setup_distributed_stats_event_listeners(events, stats):
 
 
 def print_stats(stats, current=True):
+    name_column_width = (STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4  # saved characters by compacting other columns
     console_logger.info(
-        (" %-" + str(STATS_TYPE_WIDTH) + "s %-" + str(STATS_NAME_WIDTH) + "s %7s %12s  | %7s %7s %7s %7s  | %7s %11s")
-        % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Median", "req/s", "failures/s")
+        ("%-" + str(STATS_TYPE_WIDTH) + "s %-" + str(name_column_width) + "s %7s %12s |%7s %7s %7s%7s | %7s %11s")
+        % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Med", "req/s", "failures/s")
     )
-    separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 8}|{"-" * (13 + 1)}|{"-" * 8}|{"-" * 7}|{"-" * 7}|{"-" * (7 + 2)}|{"-" * 8}|{"-" * 12}|'
+    separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * (name_column_width)}|{"-" * 7}|{"-" * 13}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 8}|{"-" * 11}'
     console_logger.info(separator)
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
@@ -748,14 +749,14 @@ def print_percentile_stats(stats):
     headers = ("Type", "Name") + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)) + ("# reqs",)
     console_logger.info(
         (
-            f" %-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
+            f"%-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
             f"{' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}"
         )
         % headers
     )
     separator = (
-        f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 9}|{("-" * 6 + "|") * len(PERCENTILES_TO_REPORT)}'
-    )
+        f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 8}|{("-" * 6 + "|") * len(PERCENTILES_TO_REPORT)}'
+    )[:-1]
     console_logger.info(separator)
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
@@ -772,11 +773,11 @@ def print_error_report(stats):
     if not len(stats.errors):
         return
     console_logger.info("Error report")
-    console_logger.info(" %-18s %-100s" % ("# occurrences", "Error"))
-    separator = f'{"-" * 18}|{"-" * ((80 + STATS_NAME_WIDTH) - 19)}|'
+    console_logger.info("%-18s %-100s" % ("# occurrences", "Error"))
+    separator = f'{"-" * 18}|{"-" * ((80 + STATS_NAME_WIDTH) - 19)}'
     console_logger.info(separator)
     for error in stats.errors.values():
-        console_logger.info(" %-18i %-100s" % (error.occurrences, error.to_name()))
+        console_logger.info("%-18i %-100s" % (error.occurrences, error.to_name()))
     console_logger.info(separator)
     console_logger.info("")
 

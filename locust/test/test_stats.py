@@ -11,7 +11,15 @@ import locust
 from locust import HttpUser, TaskSet, task, User, constant, __version__
 from locust.env import Environment
 from locust.rpc.protocol import Message
-from locust.stats import CachedResponseTimes, RequestStats, StatsEntry, diff_response_time_dicts, PERCENTILES_TO_REPORT
+from locust.stats import (
+    CachedResponseTimes,
+    RequestStats,
+    StatsEntry,
+    diff_response_time_dicts,
+    PERCENTILES_TO_REPORT,
+    STATS_NAME_WIDTH,
+    STATS_TYPE_WIDTH,
+)
 from locust.stats import StatsCSVFileWriter
 from locust.stats import stats_history
 from locust.test.testcases import LocustTestCase
@@ -309,14 +317,26 @@ class TestStatsPrinting(LocustTestCase):
 
         self.stats = RequestStats()
         for i in range(100):
-            self.stats.log_request("GET", "test_entry", i, 2000 + i)
-            if i % 5 == 0:
-                self.stats.log_error("GET", "test_entry", RuntimeError("error"))
+            for method, name, freq in [
+                (
+                    "GET",
+                    "test_entry",
+                    5,
+                ),
+                (
+                    "DELETE",
+                    "test" * int((STATS_NAME_WIDTH - STATS_TYPE_WIDTH + 4) / len("test")),
+                    3,
+                ),
+            ]:
+                self.stats.log_request(method, name, i, 2000 + i)
+                if i % freq == 0:
+                    self.stats.log_error(method, name, RuntimeError(f"{method} error"))
 
     def test_print_percentile_stats(self):
         locust.stats.print_percentile_stats(self.stats)
         info = self.mocked_log.info
-        self.assertEqual(7, len(info))
+        self.assertEqual(8, len(info))
         self.assertEqual("Response time percentiles (approximated)", info[0])
         # check that headline contains same number of column as the value rows
         headlines = info[1].replace("# reqs", "#reqs").split()
@@ -327,12 +347,12 @@ class TestStatsPrinting(LocustTestCase):
     def test_print_stats(self):
         locust.stats.print_stats(self.stats)
         info = self.mocked_log.info
-        self.assertEqual(6, len(info))
+        self.assertEqual(7, len(info))
 
         headlines = info[0].replace("# ", "#").split()
 
-        # check number of columns in separator, which will end with a pipe as well
-        self.assertEqual(len(headlines), len(info[1].split("|")) + 1)
+        # check number of columns in separator
+        self.assertEqual(len(headlines), len(info[1].split("|")) + 2)
         # check entry row
         self.assertEqual(len(headlines), len(info[2].split()))
         # check aggregated row, which is missing value in "type"-column
@@ -343,12 +363,12 @@ class TestStatsPrinting(LocustTestCase):
     def test_print_error_report(self):
         locust.stats.print_error_report(self.stats)
         info = self.mocked_log.info
-        self.assertEqual(6, len(info))
+        self.assertEqual(7, len(info))
         self.assertEqual("Error report", info[0])
 
         headlines = info[1].replace("# ", "#").split()
         # check number of columns in headlines vs table ascii separator
-        self.assertEqual(len(headlines), len(info[2].split("|")) - 1)
+        self.assertEqual(len(headlines), len(info[2].split("|")))
         # table ascii seprators
         self.assertEqual(info[2], info[-2])
 
