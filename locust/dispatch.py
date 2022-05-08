@@ -221,6 +221,14 @@ class UsersDispatcher(Iterator):
         we started from 0 user. So, if we were currently running 500 users, then the `_distribute_users` will
         perform a fake ramp-up without any waiting and return the final distribution.
         """
+        # Reset users before recalculating since the current users is used to calculate how many
+        # fixed users to add.
+        self._users_on_workers = {
+            worker_node.id: {user_class.__name__: 0 for user_class in self._user_classes}
+            for worker_node in self._worker_nodes
+        }
+        self._try_dispatch_fixed = True
+
         users_on_workers, user_gen, worker_gen, active_users = self._distribute_users(self._current_user_count)
 
         self._users_on_workers = users_on_workers
