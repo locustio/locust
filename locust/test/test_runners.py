@@ -51,10 +51,11 @@ from .util import patch_env
 NETWORK_BROKEN = "network broken"
 
 
-def mocked_rpc():
+def mocked_rpc(raise_on_close=True):
     class MockedRpcServerClient:
         queue = Queue()
         outbox = []
+        raise_error_on_close = raise_on_close
 
         def __init__(self, *args, **kwargs):
             pass
@@ -85,7 +86,10 @@ def mocked_rpc():
             return msg.node_id, msg
 
         def close(self):
-            raise RPCError()
+            if self.raise_error_on_close:
+                raise RPCError()
+            else:
+                pass
 
     return MockedRpcServerClient
 
@@ -2678,16 +2682,31 @@ class TestMasterRunner(LocustRunnerTestCase):
     def test_master_reset_connection(self):
         """Test that connection will be reset when network issues found"""
         with mock.patch("locust.runners.FALLBACK_INTERVAL", new=0.1):
-            with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            with mock.patch("locust.rpc.rpc.Server", mocked_rpc(raise_on_close=False)) as server:
                 master = self.get_runner()
                 self.assertEqual(0, len(master.clients))
                 server.mocked_send(Message("client_ready", NETWORK_BROKEN, "fake_client"))
                 self.assertTrue(master.connection_broken)
                 server.mocked_send(Message("client_ready", __version__, "fake_client"))
-                sleep(0.2)
+                sleep(1)
                 self.assertFalse(master.connection_broken)
                 self.assertEqual(1, len(master.clients))
                 master.quit()
+
+    def test_reset_connection_after_RPCError(self):
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc(raise_on_close=False)) as server:
+            master = self.get_runner()
+            server.mocked_send(Message("client_ready", __version__, "fake_client"))
+            sleep(0.2)
+            self.assertFalse(master.connection_broken)
+            self.assertEqual(1, len(master.clients))
+
+            # Trigger RPCError
+            server.mocked_send(Message("lets_trigger_RPCError", NETWORK_BROKEN, "fake_client"))
+            self.assertTrue(master.connection_broken)
+            sleep(1)
+            self.assertFalse(master.connection_broken)
+            master.quit()
 
     def test_attributes_populated_when_calling_start(self):
         class MyUser1(User):

@@ -887,6 +887,7 @@ class MasterRunner(DistributedRunner):
         try:
             self.server.close()
             self.server = rpc.Server(self.master_bind_host, self.master_bind_port)
+            self.connection_broken = False
         except RPCError as e:
             logger.error(f"Temporary failure when resetting connection: {e}, will retry later.")
 
@@ -905,7 +906,6 @@ class MasterRunner(DistributedRunner):
                 self.connection_broken = True
                 gevent.sleep(FALLBACK_INTERVAL)
                 continue
-            self.connection_broken = False
             msg.node_id = client_id
             if msg.type == "client_ready":
                 if not msg.data:
