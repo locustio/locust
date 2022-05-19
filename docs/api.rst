@@ -144,7 +144,9 @@ Web UI class
 Other
 =====
 
-.. autoclass:: locust.stats.StatsEntry
+.. autoclass:: locust.stats.RequestStats
     :members: get
+
+.. autoclass:: locust.stats.StatsEntry
 
 .. autofunction:: locust.debug.run_single_user
