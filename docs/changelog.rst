@@ -4,6 +4,18 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.9.0
+=====
+
+* FastHttpUser improvements (including a rename of parameter "url" to "path") https://github.com/locustio/locust/pull/2083
+* Modernized build https://github.com/locustio/locust/pull/2070
+* Drop support for Python 3.6 https://github.com/locustio/locust/pull/2080
+* Add table linkage in UI https://github.com/locustio/locust/pull/2082
+* Uniform style of stats/report ascii tables https://github.com/locustio/locust/pull/2084
+* Remove explicit version requirement for jinja2 https://github.com/locustio/locust/pull/2090
+* Rebalance users even when using fixed_count https://github.com/locustio/locust/pull/2093
+* Avoid using incompatible pyzmq 23 https://github.com/locustio/locust/pull/2100
+
 2.8.6
 =====
 

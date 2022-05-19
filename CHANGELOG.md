@@ -1,6 +1,33 @@
 # Changelog
 Note that PRs for the latest version are sometimes missing here, check [github](https://github.com/locustio/locust/releases) for the latest info.
 
+## [2.9.0](https://github.com/locustio/locust/tree/2.9.0) (2022-05-19)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.8.6...2.9.0)
+
+**Fixed bugs:**
+
+- Locust is not starting with pyzmq 23.0.0 [\#2099](https://github.com/locustio/locust/issues/2099)
+- Users with `fixed_count` not being relocated after rebalance [\#2091](https://github.com/locustio/locust/issues/2091)
+- jinja2.exceptions.TemplateAssertionError: no test named 'boolean' when attempting to visit UI [\#2087](https://github.com/locustio/locust/issues/2087)
+- Output is not saved to CSV when using LoadTestShape [\#2075](https://github.com/locustio/locust/issues/2075)
+- New jinja2 pinning makes it impossible to build our codebase [\#2061](https://github.com/locustio/locust/issues/2061)
+- `test_start` event triggered multiple times on workers [\#1986](https://github.com/locustio/locust/issues/1986)
+
+**Merged pull requests:**
+
+- avoid using pyzmq 23. Fixes  \#2099 [\#2100](https://github.com/locustio/locust/pull/2100) ([cyberw](https://github.com/cyberw))
+- dispatch: rebalance users with a fixed count [\#2093](https://github.com/locustio/locust/pull/2093) ([andydunstall](https://github.com/andydunstall))
+- Remove explicit version requirement for jinja2 [\#2090](https://github.com/locustio/locust/pull/2090) ([cyberw](https://github.com/cyberw))
+- print\_stats table width fix for \#2084 [\#2088](https://github.com/locustio/locust/pull/2088) ([mgor](https://github.com/mgor))
+- Move CSV stats printer gevent spawn up a few lines [\#2085](https://github.com/locustio/locust/pull/2085) ([max-rocket-internet](https://github.com/max-rocket-internet))
+- uniform style of stats/report ascii tables [\#2084](https://github.com/locustio/locust/pull/2084) ([mgor](https://github.com/mgor))
+- FastHttpUser improvements \(including a rename of parameter "url" to "path"\) [\#2083](https://github.com/locustio/locust/pull/2083) ([mgor](https://github.com/mgor))
+- Add table linkage, you can see the data of the three tables at the sa… [\#2082](https://github.com/locustio/locust/pull/2082) ([helloNice](https://github.com/helloNice))
+- Drop support for Python 3.6 [\#2080](https://github.com/locustio/locust/pull/2080) ([cyberw](https://github.com/cyberw))
+- Ensure `test_start` is run to completion on worker [\#2072](https://github.com/locustio/locust/pull/2072) ([mboutet](https://github.com/mboutet))
+- modernized build [\#2070](https://github.com/locustio/locust/pull/2070) ([mgor](https://github.com/mgor))
+
 ## [2.8.6](https://github.com/locustio/locust/tree/2.8.6) (2022-04-07)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.8.5...2.8.6)
