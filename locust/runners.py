@@ -582,9 +582,13 @@ class WorkerNodes(MutableMapping):
         self._worker_nodes[k] = v
 
     def __delitem__(self, k: str) -> None:
+        if k not in self._worker_nodes:
+            return None
         del self._worker_nodes[k]
 
     def __getitem__(self, k: str) -> WorkerNode:
+        if k not in self._worker_nodes:
+            return None
         return self._worker_nodes[k]
 
     def __len__(self) -> int:
@@ -938,6 +942,8 @@ class MasterRunner(DistributedRunner):
                 #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
             elif msg.type == "client_stopped":
                 client = self.clients[msg.node_id]
+                if client is None:
+                    continue
                 del self.clients[msg.node_id]
                 if self._users_dispatcher is not None:
                     self._users_dispatcher.remove_worker(client)
@@ -977,6 +983,8 @@ class MasterRunner(DistributedRunner):
             elif msg.type == "quit":
                 if msg.node_id in self.clients:
                     client = self.clients[msg.node_id]
+                    if client is None:
+                        continue
                     del self.clients[msg.node_id]
                     if self._users_dispatcher is not None:
                         self._users_dispatcher.remove_worker(client)
