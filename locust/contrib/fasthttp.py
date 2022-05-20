@@ -187,6 +187,8 @@ class FastHttpSession:
             context = {**self.user.context(), **context}
 
         headers = headers or {}
+        if type(headers) is not dict:
+            print("headers is assumed to be a dictionary. You tried to use a: %s instead. That won't work (sorry about that)." % type(headers))
         if auth:
             headers["Authorization"] = _construct_basic_auth_str(auth[0], auth[1])
         elif self.auth_header:
