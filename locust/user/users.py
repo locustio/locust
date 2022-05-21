@@ -247,7 +247,7 @@ class HttpUser(User):
             pool_manager=self.pool_manager,
         )
         session.trust_env = False
-        self.client = session
+        self.client: HttpSession = session
         """
         Instance of HttpSession that is created upon instantiation of Locust.
         The client supports cookies, and therefore keeps the session between HTTP requests.
