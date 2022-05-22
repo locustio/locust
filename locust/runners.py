@@ -937,15 +937,17 @@ class MasterRunner(DistributedRunner):
                 # if abs(time() - msg.data["time"]) > 5.0:
                 #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
             elif msg.type == "client_stopped":
-                if msg.node_id in self.clients:
-                    client = self.clients[msg.node_id]
-                    del self.clients[msg.node_id]
-                    if self._users_dispatcher is not None:
-                        self._users_dispatcher.remove_worker(client)
-                        if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
-                            # TODO: Test this situation
-                            self.start(self.target_user_count, self.spawn_rate)
-                    logger.info(f"Removing {msg.node_id} client from running clients")
+                if msg.node_id not in self.clients:
+                    logger.warning(f"Received {msg.type} message from an unknown client: {msg.node_id}.")
+                    continue
+                client = self.clients[msg.node_id]
+                del self.clients[msg.node_id]
+                if self._users_dispatcher is not None:
+                    self._users_dispatcher.remove_worker(client)
+                    if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
+                        # TODO: Test this situation
+                        self.start(self.target_user_count, self.spawn_rate)
+                logger.info(f"Removing {msg.node_id} client from running clients")
             elif msg.type == "heartbeat":
                 if msg.node_id in self.clients:
                     c = self.clients[msg.node_id]
