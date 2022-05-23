@@ -13,12 +13,23 @@ from operator import (
     itemgetter,
     methodcaller,
 )
+from types import TracebackType
 from typing import (
+    TYPE_CHECKING,
     Dict,
     Iterator,
     List,
+    NoReturn,
     Union,
     ValuesView,
+    TypedDict,
+    Set,
+    Callable,
+    Optional,
+    Tuple,
+    Type,
+    Any,
+    cast,
 )
 from uuid import uuid4
 
@@ -38,9 +49,13 @@ from .rpc import (
 )
 from .stats import (
     RequestStats,
+    StatsError,
     setup_distributed_stats_event_listeners,
 )
 from . import argument_parser
+
+if TYPE_CHECKING:
+    from .env import Environment
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +81,13 @@ FALLBACK_INTERVAL = 5
 greenlet_exception_handler = greenlet_exception_logger(logger)
 
 
+class ExceptionDict(TypedDict):
+    count: int
+    msg: str
+    traceback: str
+    nodes: Set[str]
+
+
 class Runner:
     """
     Orchestrates the load test by starting and stopping the users.
@@ -77,33 +99,33 @@ class Runner:
     desired type.
     """
 
-    def __init__(self, environment):
+    def __init__(self, environment: "Environment") -> None:
         self.environment = environment
         self.user_greenlets = Group()
         self.greenlet = Group()
         self.state = STATE_INIT
-        self.spawning_greenlet = None
-        self.shape_greenlet = None
-        self.shape_last_state = None
-        self.current_cpu_usage = 0
-        self.cpu_warning_emitted = False
-        self.worker_cpu_warning_emitted = False
-        self.current_memory_usage = 0
+        self.spawning_greenlet: Optional[gevent.Greenlet] = None
+        self.shape_greenlet: Optional[gevent.Greenlet] = None
+        self.shape_last_state: Optional[Tuple[int, float]] = None
+        self.current_cpu_usage: int = 0
+        self.cpu_warning_emitted: bool = False
+        self.worker_cpu_warning_emitted: bool = False
+        self.current_memory_usage: int = 0
         self.greenlet.spawn(self.monitor_cpu_and_memory).link_exception(greenlet_exception_handler)
-        self.exceptions = {}
+        self.exceptions: Dict[int, ExceptionDict] = {}
         # Because of the way the ramp-up/ramp-down is implemented, target_user_classes_count
         # is only updated at the end of the ramp-up/ramp-down.
         # See https://github.com/locustio/locust/issues/1883#issuecomment-919239824 for context.
         self.target_user_classes_count: Dict[str, int] = {}
         # target_user_count is set before the ramp-up/ramp-down occurs.
         self.target_user_count: int = 0
-        self.custom_messages = {}
+        self.custom_messages: Dict[str, Callable[["Environment", Message], None]] = {}
 
         # Only when running in standalone mode (non-distributed)
         self._local_worker_node = WorkerNode(id="local")
         self._local_worker_node.user_classes_count = self.user_classes_count
 
-        self._users_dispatcher = None
+        self._users_dispatcher: Optional[UsersDispatcher] = None
 
         # set up event listeners for recording requests
         def on_request_success(request_type, name, response_time, response_length, **_kwargs):
@@ -121,7 +143,7 @@ class Runner:
         logging.getLogger().setLevel(loglevel)
 
         self.connection_broken = False
-        self.final_user_classes_count = {}  # just for the ratio report, fills before runner stops
+        self.final_user_classes_count: Dict[str, int] = {}  # just for the ratio report, fills before runner stops
 
         # register listener that resets stats when spawning is complete
         def on_spawning_complete(user_count):
@@ -138,11 +160,11 @@ class Runner:
             self.greenlet.kill(block=False)
 
     @property
-    def user_classes(self):
+    def user_classes(self) -> List[Type[User]]:
         return self.environment.user_classes
 
     @property
-    def user_classes_by_name(self):
+    def user_classes_by_name(self) -> Dict[str, Type[User]]:
         return self.environment.user_classes_by_name
 
     @property
@@ -150,11 +172,11 @@ class Runner:
         return self.environment.stats
 
     @property
-    def errors(self):
+    def errors(self) -> Dict[str, StatsError]:
         return self.stats.errors
 
     @property
-    def user_count(self):
+    def user_count(self) -> int:
         """
         :returns: Number of currently running users
         """
@@ -184,7 +206,7 @@ class Runner:
             user_classes_count[user.__class__.__name__] += 1
         return user_classes_count
 
-    def update_state(self, new_state):
+    def update_state(self, new_state: str) -> None:
         """
         Updates the current state
         """
@@ -210,9 +232,9 @@ class Runner:
             % (json.dumps(user_classes_spawn_count), json.dumps(self.user_classes_count))
         )
 
-        def spawn(user_class: str, spawn_count: int):
+        def spawn(user_class: str, spawn_count: int) -> List[User]:
             n = 0
-            new_users = []
+            new_users: List[User] = []
             while n < spawn_count:
                 new_user = self.user_classes_by_name[user_class](self.environment)
                 new_user.start(self.user_greenlets)
@@ -223,7 +245,7 @@ class Runner:
             logger.debug(f"All users of class {user_class} spawned")
             return new_users
 
-        new_users = []
+        new_users: List[User] = []
         for user_class, spawn_count in user_classes_spawn_count.items():
             new_users += spawn(user_class, spawn_count)
 
@@ -232,7 +254,7 @@ class Runner:
             logger.info("All users stopped\n")
         return new_users
 
-    def stop_users(self, user_classes_stop_count: Dict[str, int]):
+    def stop_users(self, user_classes_stop_count: Dict[str, int]) -> None:
         async_calls_to_stop = Group()
         stop_group = Group()
 
@@ -284,7 +306,7 @@ class Runner:
             "%g users have been stopped, %g still running", sum(user_classes_stop_count.values()), self.user_count
         )
 
-    def monitor_cpu_and_memory(self):
+    def monitor_cpu_and_memory(self) -> NoReturn:
         process = psutil.Process()
         while True:
             self.current_cpu_usage = process.cpu_percent()
@@ -298,7 +320,7 @@ class Runner:
                     self.cpu_warning_emitted = True
             gevent.sleep(CPU_MONITOR_INTERVAL)
 
-    def start(self, user_count: int, spawn_rate: float, wait: bool = False):
+    def start(self, user_count: int, spawn_rate: float, wait: bool = False) -> None:
         """
         Start running a load test
 
@@ -373,7 +395,7 @@ class Runner:
 
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
 
-    def start_shape(self):
+    def start_shape(self) -> None:
         """
         Start running a load test with a custom LoadTestShape specified in the :meth:`Environment.shape_class <locust.env.Environment.shape_class>` parameter.
         """
@@ -387,7 +409,7 @@ class Runner:
         self.shape_greenlet.link_exception(greenlet_exception_handler)
         self.environment.shape_class.reset_time()
 
-    def shape_worker(self):
+    def shape_worker(self) -> None:
         logger.info("Shape worker starting")
         while self.state == STATE_INIT or self.state == STATE_SPAWNING or self.state == STATE_RUNNING:
             new_state = self.environment.shape_class.tick()
@@ -421,7 +443,7 @@ class Runner:
                 self.start(user_count=user_count, spawn_rate=spawn_rate)
                 self.shape_last_state = new_state
 
-    def stop(self):
+    def stop(self) -> None:
         """
         Stop a running load test by stopping all running users
         """
@@ -451,21 +473,21 @@ class Runner:
         self.cpu_log_warning()
         self.environment.events.test_stop.fire(environment=self.environment)
 
-    def quit(self):
+    def quit(self) -> None:
         """
         Stop any running load test and kill all greenlets for the runner
         """
         self.stop()
         self.greenlet.kill(block=True)
 
-    def log_exception(self, node_id, msg, formatted_tb):
+    def log_exception(self, node_id: str, msg: str, formatted_tb: str) -> None:
         key = hash(formatted_tb)
         row = self.exceptions.setdefault(key, {"count": 0, "msg": msg, "traceback": formatted_tb, "nodes": set()})
         row["count"] += 1
         row["nodes"].add(node_id)
         self.exceptions[key] = row
 
-    def register_message(self, msg_type, listener):
+    def register_message(self, msg_type: str, listener: Callable[["Environment", Message], None]) -> None:
         """
         Register a listener for a custom message from another node
 
@@ -480,7 +502,7 @@ class LocalRunner(Runner):
     Runner for running single process load test
     """
 
-    def __init__(self, environment):
+    def __init__(self, environment) -> None:
         """
         :param environment: Environment instance
         """
@@ -493,7 +515,7 @@ class LocalRunner(Runner):
 
         self.environment.events.user_error.add_listener(on_user_error)
 
-    def start(self, user_count: int, spawn_rate: float, wait: bool = False):
+    def start(self, user_count: int, spawn_rate: float, wait: bool = False) -> None:
         if spawn_rate > 100:
             logger.warning(
                 "Your selected spawn rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?"
@@ -507,12 +529,12 @@ class LocalRunner(Runner):
         )
         self.spawning_greenlet.link_exception(greenlet_exception_handler)
 
-    def stop(self):
+    def stop(self) -> None:
         if self.state == STATE_STOPPED:
             return
         super().stop()
 
-    def send_message(self, msg_type, data=None):
+    def send_message(self, msg_type: str, data: Optional[Any] = None) -> None:
         """
         Emulates internodal messaging by calling registered listeners
 
@@ -529,20 +551,20 @@ class LocalRunner(Runner):
 
 
 class DistributedRunner(Runner):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._local_worker_node = None
         setup_distributed_stats_event_listeners(self.environment.events, self.stats)
 
 
 class WorkerNode:
-    def __init__(self, id: str, state=STATE_INIT, heartbeat_liveness=HEARTBEAT_LIVENESS):
+    def __init__(self, id: str, state=STATE_INIT, heartbeat_liveness=HEARTBEAT_LIVENESS) -> None:
         self.id: str = id
         self.state = state
         self.heartbeat = heartbeat_liveness
-        self.cpu_usage = 0
+        self.cpu_usage: int = 0
         self.cpu_warning_emitted = False
-        self.memory_usage = 0
+        self.memory_usage: int = 0
         # The reported users running on the worker
         self.user_classes_count: Dict[str, int] = {}
 
@@ -553,7 +575,7 @@ class WorkerNode:
 
 class WorkerNodes(MutableMapping):
     def __init__(self):
-        self._worker_nodes = {}
+        self._worker_nodes: Dict[str, WorkerNode] = {}
 
     def get_by_state(self, state) -> List[WorkerNode]:
         return [c for c in self.values() if c.state == state]
@@ -614,7 +636,7 @@ class MasterRunner(DistributedRunner):
         self.worker_cpu_warning_emitted = False
         self.master_bind_host = master_bind_host
         self.master_bind_port = master_bind_port
-        self.spawn_rate: float = 0
+        self.spawn_rate: float = 0.0
         self.spawning_completed = False
 
         self.clients = WorkerNodes()
@@ -632,13 +654,13 @@ class MasterRunner(DistributedRunner):
             else:
                 raise
 
-        self._users_dispatcher: Union[UsersDispatcher, None] = None
+        self._users_dispatcher: Optional[UsersDispatcher] = None
 
         self.greenlet.spawn(self.heartbeat_worker).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.client_listener).link_exception(greenlet_exception_handler)
 
         # listener that gathers info on how many users the worker has spawned
-        def on_worker_report(client_id, data):
+        def on_worker_report(client_id: str, data: Dict[str, Any]) -> None:
             if client_id not in self.clients:
                 logger.info("Discarded report from unrecognized worker %s", client_id)
                 return
@@ -647,19 +669,21 @@ class MasterRunner(DistributedRunner):
         self.environment.events.worker_report.add_listener(on_worker_report)
 
         # register listener that sends quit message to worker nodes
-        def on_quitting(environment, **kw):
+        def on_quitting(environment: "Environment", **kw):
             self.quit()
 
         self.environment.events.quitting.add_listener(on_quitting)
 
     def rebalancing_enabled(self) -> bool:
-        return self.environment.parsed_options and self.environment.parsed_options.enable_rebalancing
+        return self.environment.parsed_options is not None and cast(
+            bool, self.environment.parsed_options.enable_rebalancing
+        )
 
     @property
     def user_count(self) -> int:
         return sum(c.user_count for c in self.clients.values())
 
-    def cpu_log_warning(self):
+    def cpu_log_warning(self) -> bool:
         warning_emitted = Runner.cpu_log_warning(self)
         if self.worker_cpu_warning_emitted:
             logger.warning("CPU usage threshold was exceeded on workers during the test!")
@@ -795,14 +819,18 @@ class MasterRunner(DistributedRunner):
         else:
             return float(match.group("coeff")) * WORKER_REPORT_INTERVAL
 
-    def stop(self, send_stop_to_client: bool = True):
+    def stop(self, send_stop_to_client: bool = True) -> None:
         if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
             logger.debug("Stopping...")
             self.environment.events.test_stopping.fire(environment=self.environment)
             self.final_user_classes_count = {**self.reported_user_classes_count}
             self.update_state(STATE_STOPPING)
 
-            if self.environment.shape_class is not None and self.shape_greenlet is not greenlet.getcurrent():
+            if (
+                self.environment.shape_class is not None
+                and self.shape_greenlet is not None
+                and self.shape_greenlet is not greenlet.getcurrent()
+            ):
                 self.shape_greenlet.kill(block=True)
                 self.shape_greenlet = None
                 self.shape_last_state = None
@@ -826,7 +854,7 @@ class MasterRunner(DistributedRunner):
                     timeout.cancel()
             self.environment.events.test_stop.fire(environment=self.environment)
 
-    def quit(self):
+    def quit(self) -> None:
         self.stop(send_stop_to_client=False)
         logger.debug("Quitting...")
         for client in self.clients.all:
@@ -835,7 +863,7 @@ class MasterRunner(DistributedRunner):
         gevent.sleep(0.5)  # wait for final stats report from all workers
         self.greenlet.kill(block=True)
 
-    def check_stopped(self):
+    def check_stopped(self) -> None:
         if (
             not self.state == STATE_INIT
             and not self.state == STATE_STOPPED
@@ -843,7 +871,7 @@ class MasterRunner(DistributedRunner):
         ):
             self.update_state(STATE_STOPPED)
 
-    def heartbeat_worker(self):
+    def heartbeat_worker(self) -> NoReturn:
         while True:
             gevent.sleep(HEARTBEAT_INTERVAL)
             if self.connection_broken:
@@ -882,7 +910,7 @@ class MasterRunner(DistributedRunner):
                     # trigger redistribution after missing cclient removal
                     self.start(user_count=self.target_user_count, spawn_rate=self.spawn_rate)
 
-    def reset_connection(self):
+    def reset_connection(self) -> None:
         logger.info("Reset connection to worker")
         try:
             self.server.close()
@@ -891,7 +919,7 @@ class MasterRunner(DistributedRunner):
         except RPCError as e:
             logger.error(f"Temporary failure when resetting connection: {e}, will retry later.")
 
-    def client_listener(self):
+    def client_listener(self) -> NoReturn:
         while True:
             try:
                 client_id, msg = self.server.recv_from_client()
@@ -1003,7 +1031,7 @@ class MasterRunner(DistributedRunner):
             self.check_stopped()
 
     @property
-    def worker_count(self):
+    def worker_count(self) -> int:
         return len(self.clients.ready) + len(self.clients.spawning) + len(self.clients.running)
 
     @property
@@ -1014,7 +1042,7 @@ class MasterRunner(DistributedRunner):
                 reported_user_classes_count[name] += count
         return reported_user_classes_count
 
-    def send_message(self, msg_type, data=None, client_id=None):
+    def send_message(self, msg_type: str, data: Optional[Dict[str, Any]] = None, client_id: Optional[str] = None):
         """
         Sends a message to attached worker node(s)
 
@@ -1041,7 +1069,7 @@ class WorkerRunner(DistributedRunner):
     take the stats generated by the running users and send back to the :class:`MasterRunner`.
     """
 
-    def __init__(self, environment, master_host, master_port):
+    def __init__(self, environment: "Environment", master_host: str, master_port: int) -> None:
         """
         :param environment: Environment instance
         :param master_host: Host/IP to use for connection to the master
@@ -1053,7 +1081,7 @@ class WorkerRunner(DistributedRunner):
         self.master_host = master_host
         self.master_port = master_port
         self.worker_cpu_warning_emitted = False
-        self._users_dispatcher = None
+        self._users_dispatcher: Optional[UsersDispatcher] = None
         self.client = rpc.Client(master_host, master_port, self.client_id)
         self.greenlet.spawn(self.heartbeat).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.worker).link_exception(greenlet_exception_handler)
@@ -1061,7 +1089,7 @@ class WorkerRunner(DistributedRunner):
         self.greenlet.spawn(self.stats_reporter).link_exception(greenlet_exception_handler)
 
         # register listener for when all users have spawned, and report it to the master node
-        def on_spawning_complete(user_count):
+        def on_spawning_complete(user_count: int) -> None:
             assert user_count == sum(self.user_classes_count.values())
             self.client.send(
                 Message(
@@ -1075,29 +1103,29 @@ class WorkerRunner(DistributedRunner):
         self.environment.events.spawning_complete.add_listener(on_spawning_complete)
 
         # register listener that adds the current number of spawned users to the report that is sent to the master node
-        def on_report_to_master(client_id, data):
+        def on_report_to_master(client_id: str, data: Dict[str, Any]):
             data["user_classes_count"] = self.user_classes_count
             data["user_count"] = self.user_count
 
         self.environment.events.report_to_master.add_listener(on_report_to_master)
 
         # register listener that sends quit message to master
-        def on_quitting(environment, **kw):
+        def on_quitting(environment: "Environment", **kw) -> None:
             self.client.send(Message("quit", None, self.client_id))
 
         self.environment.events.quitting.add_listener(on_quitting)
 
         # register listener that's sends user exceptions to master
-        def on_user_error(user_instance, exception, tb):
+        def on_user_error(user_instance: User, exception: Exception, tb: TracebackType) -> None:
             formatted_tb = "".join(traceback.format_tb(tb))
             self.client.send(Message("exception", {"msg": str(exception), "traceback": formatted_tb}, self.client_id))
 
         self.environment.events.user_error.add_listener(on_user_error)
 
-    def start(self, user_count, spawn_rate, wait=False):
+    def start(self, user_count: int, spawn_rate: float, wait: bool = False) -> None:
         raise NotImplementedError("use start_worker")
 
-    def start_worker(self, user_classes_count: Dict[str, int], **kwargs):
+    def start_worker(self, user_classes_count: Dict[str, int], **kwargs) -> None:
         """
         Start running a load test as a worker
 
@@ -1110,8 +1138,8 @@ class WorkerRunner(DistributedRunner):
             if self.environment.host:
                 user_class.host = self.environment.host
 
-        user_classes_spawn_count = {}
-        user_classes_stop_count = {}
+        user_classes_spawn_count: Dict[Type[User], int] = {}
+        user_classes_stop_count: Dict[Type[User], int] = {}
 
         for user_class, user_class_count in user_classes_count.items():
             if self.user_classes_count[user_class] > user_class_count:
@@ -1126,7 +1154,7 @@ class WorkerRunner(DistributedRunner):
 
         self.environment.events.spawning_complete.fire(user_count=sum(self.user_classes_count.values()))
 
-    def heartbeat(self):
+    def heartbeat(self) -> NoReturn:
         while True:
             try:
                 self.client.send(
@@ -1145,7 +1173,7 @@ class WorkerRunner(DistributedRunner):
                 self.reset_connection()
             gevent.sleep(HEARTBEAT_INTERVAL)
 
-    def reset_connection(self):
+    def reset_connection(self) -> None:
         logger.info("Reset connection to master")
         try:
             self.client.close()
@@ -1153,7 +1181,7 @@ class WorkerRunner(DistributedRunner):
         except RPCError as e:
             logger.error(f"Temporary failure when resetting connection: {e}, will retry later.")
 
-    def worker(self):
+    def worker(self) -> NoReturn:
         last_received_spawn_timestamp = 0
         while True:
             try:
@@ -1222,7 +1250,7 @@ class WorkerRunner(DistributedRunner):
             else:
                 logger.warning(f"Unknown message type received: {msg.type}")
 
-    def stats_reporter(self):
+    def stats_reporter(self) -> NoReturn:
         while True:
             try:
                 self._send_stats()
@@ -1230,7 +1258,7 @@ class WorkerRunner(DistributedRunner):
                 logger.error(f"Temporary connection lost to master server: {e}, will retry later.")
             gevent.sleep(WORKER_REPORT_INTERVAL)
 
-    def send_message(self, msg_type, data=None):
+    def send_message(self, msg_type: str, data: Optional[Dict[str, Any]] = None) -> None:
         """
         Sends a message to master node
 
@@ -1240,7 +1268,7 @@ class WorkerRunner(DistributedRunner):
         logger.debug(f"Sending {msg_type} message to master")
         self.client.send(Message(msg_type, data, self.client_id))
 
-    def _send_stats(self):
+    def _send_stats(self) -> None:
         data = {}
         self.environment.events.report_to_master.fire(client_id=self.client_id, data=data)
         self.client.send(Message("stats", data, self.client_id))

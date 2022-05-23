@@ -5,19 +5,19 @@ from typing import (
     List,
     Type,
     TypeVar,
-    Union,
     Optional,
+    Union,
 )
 
 from configargparse import Namespace
 
 from .event import Events
 from .exception import RunnerAlreadyExistsError
-from .stats import RequestStats
+from .stats import RequestStats, StatsCSV
 from .runners import Runner, LocalRunner, MasterRunner, WorkerRunner
 from .web import WebUI
 from .user import User
-from .user.task import TaskSet, filter_tasks_by_tags
+from .user.task import filter_tasks_by_tags, TaskSet
 from .shape import LoadTestShape
 
 
@@ -28,17 +28,17 @@ class Environment:
     def __init__(
         self,
         *,
-        user_classes: Union[List[Type[User]], None] = None,
-        shape_class: Union[LoadTestShape, None] = None,
-        tags: Union[List[str], None] = None,
+        user_classes: Optional[List[Type[User]]] = None,
+        shape_class: Optional[LoadTestShape] = None,
+        tags: Optional[List[str]] = None,
         locustfile: str = None,
-        exclude_tags=None,
+        exclude_tags: Optional[List[str]] = None,
         events: Events = None,
         host: str = None,
         reset_stats=False,
-        stop_timeout: Union[float, None] = None,
+        stop_timeout: Optional[float] = None,
         catch_exceptions=True,
-        parsed_options: Namespace = None,
+        parsed_options: Optional[Namespace] = None,
     ):
 
         self.runner: Optional[Runner] = None
@@ -141,7 +141,7 @@ class Environment:
             master_bind_port=master_bind_port,
         )
 
-    def create_worker_runner(self, master_host, master_port) -> WorkerRunner:
+    def create_worker_runner(self, master_host: str, master_port: int) -> WorkerRunner:
         """
         Create a :class:`WorkerRunner <locust.runners.WorkerRunner>` instance for this Environment
 
@@ -161,12 +161,12 @@ class Environment:
         self,
         host="",
         port=8089,
-        auth_credentials=None,
-        tls_cert=None,
-        tls_key=None,
-        stats_csv_writer=None,
+        auth_credentials: Optional[str] = None,
+        tls_cert: Optional[str] = None,
+        tls_key: Optional[str] = None,
+        stats_csv_writer: Optional[StatsCSV] = None,
         delayed_start=False,
-    ):
+    ) -> WebUI:
         """
         Creates a :class:`WebUI <locust.web.WebUI>` instance for this Environment and start running the web server
 
@@ -194,7 +194,7 @@ class Environment:
         )
         return self.web_ui
 
-    def _filter_tasks_by_tags(self):
+    def _filter_tasks_by_tags(self) -> None:
         """
         Filter the tasks on all the user_classes recursively, according to the tags and
         exclude_tags attributes
@@ -220,7 +220,7 @@ class Environment:
         for user_class in self.user_classes:
             filter_tasks_by_tags(user_class, tags, exclude_tags)
 
-    def _remove_user_classes_with_weight_zero(self):
+    def _remove_user_classes_with_weight_zero(self) -> None:
         """
         Remove user classes having a weight of zero.
         """
@@ -235,20 +235,20 @@ class Environment:
             raise ValueError("There are no users with weight > 0.")
         self.user_classes[:] = filtered_user_classes
 
-    def assign_equal_weights(self):
+    def assign_equal_weights(self) -> None:
         """
         Update the user classes such that each user runs their specified tasks with equal
         probability.
         """
         for u in self.user_classes:
             u.weight = 1
-            user_tasks = []
+            user_tasks: List[Union[TaskSet, Callable]] = []
             tasks_frontier = u.tasks
             while len(tasks_frontier) != 0:
                 t = tasks_frontier.pop()
-                if hasattr(t, "tasks") and t.tasks:
+                if not callable(t) and hasattr(t, "tasks") and t.tasks:
                     tasks_frontier.extend(t.tasks)
-                elif isinstance(t, Callable):
+                elif callable(t):
                     if t not in user_tasks:
                         user_tasks.append(t)
                 else:

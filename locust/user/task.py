@@ -2,7 +2,7 @@ import logging
 import random
 import traceback
 from time import time
-from typing import TYPE_CHECKING, Callable, List, Union, TypeVar, Optional, Type, overload
+from typing import TYPE_CHECKING, Callable, List, Union, TypeVar, Optional, Type, overload, Protocol, Dict, Set
 from typing_extensions import final
 
 import gevent
@@ -15,9 +15,13 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
-TaskT = TypeVar("TaskT", bound=Union[Callable[..., None], Type["TaskSet"]])
+TaskT = TypeVar("TaskT", Callable[..., None], Type["TaskSet"])
 
 LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING = ["running", "waiting", "stopping"]
+
+
+class TaskHolder(Protocol[TaskT]):
+    tasks: List[TaskT]
 
 
 @overload
@@ -152,7 +156,12 @@ def get_tasks_from_base_classes(bases, class_dict):
     return new_tasks
 
 
-def filter_tasks_by_tags(task_holder, tags=None, exclude_tags=None, checked=None):
+def filter_tasks_by_tags(
+    task_holder: Type[TaskHolder],
+    tags: Optional[Set[str]] = None,
+    exclude_tags: Optional[Set[str]] = None,
+    checked: Optional[Dict[TaskT, bool]] = None,
+):
     """
     Function used by Environment to recursively remove any tasks/TaskSets from a TaskSet/User that
     shouldn't be executed according to the tag options

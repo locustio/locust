@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+from tempfile import NamedTemporaryFile
 import time
 from collections import namedtuple, OrderedDict
 from copy import copy
@@ -8,13 +9,39 @@ import os
 import csv
 import signal
 import gevent
-from typing import Dict, Tuple
+
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    NoReturn,
+    Tuple,
+    List,
+    Union,
+    TypedDict,
+    Optional,
+    OrderedDict as OrderedDictType,
+    Callable,
+    TypeVar,
+    cast,
+)
+from types import FrameType
 
 from .exception import CatchResponseError
+from .event import Events
 
 import logging
 
+with NamedTemporaryFile(mode="w") as t:
+    CSVWriter = type(csv.writer(t))
+
+if TYPE_CHECKING:
+    from .runners import Runner
+    from .env import Environment
+
 console_logger = logging.getLogger("locust.stats_logger")
+
+S = TypeVar("S", bound="StatsBase")
 
 """Space in table for request name. Auto shrink it if terminal is small (<160 characters)"""
 try:
@@ -25,7 +52,38 @@ except OSError:  # not a real terminal
 STATS_AUTORESIZE = True  # overwrite this if you dont want auto resize while running
 
 
-def resize_handler(signum, frame):
+class StatsBaseDict(TypedDict):
+    name: str
+    method: str
+
+
+class StatsEntryDict(StatsBaseDict):
+    last_request_timestamp: Optional[float]
+    start_time: float
+    num_requests: int
+    num_none_requests: int
+    num_failures: int
+    total_response_time: int
+    max_response_time: int
+    min_response_time: Optional[int]
+    total_content_length: int
+    response_times: Dict[int, int]
+    num_reqs_per_sec: Dict[int, int]
+    num_fail_per_sec: Dict[int, int]
+
+
+class StatsErrorDict(StatsBaseDict):
+    error: str
+    occurrences: int
+
+
+class StatsBase:
+    def __init__(self, name: str, method: str) -> None:
+        self.name = name
+        self.method = method
+
+
+def resize_handler(signum: int, frame: Optional[FrameType]):
     global STATS_NAME_WIDTH
     if STATS_AUTORESIZE:
         try:
@@ -68,7 +126,7 @@ class RequestStatsAdditionError(Exception):
     pass
 
 
-def get_readable_percentiles(percentile_list):
+def get_readable_percentiles(percentile_list: List[float]) -> List[str]:
     """
     Converts a list of percentiles from 0-1 fraction to 0%-100% view for using in console & csv reporting
     :param percentile_list: The list of percentiles in range 0-1
@@ -80,7 +138,7 @@ def get_readable_percentiles(percentile_list):
     ]
 
 
-def calculate_response_time_percentile(response_times, num_requests, percent):
+def calculate_response_time_percentile(response_times: Dict[int, int], num_requests: int, percent: float) -> int:
     """
     Get the response time that a certain number of percent of the requests
     finished within. Arguments:
@@ -101,7 +159,7 @@ def calculate_response_time_percentile(response_times, num_requests, percent):
     return 0
 
 
-def diff_response_time_dicts(latest, old):
+def diff_response_time_dicts(latest: Dict[int, int], old: Dict[int, int]) -> Dict[int, int]:
     """
     Returns the delta between two {response_times:request_count} dicts.
 
@@ -155,11 +213,11 @@ class RequestStats:
     def start_time(self):
         return self.total.start_time
 
-    def log_request(self, method, name, response_time, content_length):
+    def log_request(self, method: str, name: str, response_time: int, content_length: int) -> None:
         self.total.log(response_time, content_length)
         self.get(name, method).log(response_time, content_length)
 
-    def log_error(self, method, name, error):
+    def log_error(self, method: str, name: str, error: Optional[Union[Exception, str]]) -> None:
         self.total.log_error(error)
         self.get(name, method).log_error(error)
 
@@ -171,7 +229,7 @@ class RequestStats:
             self.errors[key] = entry
         entry.occurred()
 
-    def get(self, name, method):
+    def get(self, name: str, method: str) -> "StatsEntry":
         """
         Retrieve a StatsEntry instance by name and method
         """
@@ -181,7 +239,7 @@ class RequestStats:
             self.entries[(name, method)] = entry
         return entry
 
-    def reset_all(self):
+    def reset_all(self) -> None:
         """
         Go through all stats entries and reset them to zero
         """
@@ -191,32 +249,33 @@ class RequestStats:
             r.reset()
         self.history = []
 
-    def clear_all(self):
+    def clear_all(self) -> None:
         """
         Remove all stats entries and errors
         """
-        self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
+        self.total = StatsEntry(self, "Aggregated", "", use_response_times_cache=self.use_response_times_cache)
         self.entries = {}
         self.errors = {}
         self.history = []
 
-    def serialize_stats(self):
+    def serialize_stats(self) -> List["StatsEntryDict"]:
         return [
             self.entries[key].get_stripped_report()
             for key in self.entries.keys()
             if not (self.entries[key].num_requests == 0 and self.entries[key].num_failures == 0)
         ]
 
-    def serialize_errors(self):
+    def serialize_errors(self) -> Dict[str, "StatsErrorDict"]:
         return {k: e.to_dict() for k, e in self.errors.items()}
 
 
-class StatsEntry:
+class StatsEntry(StatsBase):
     """
     Represents a single stats entry (name and method)
     """
 
-    def __init__(self, stats: RequestStats, name: str, method: str, use_response_times_cache=False):
+    def __init__(self, stats: Optional[RequestStats], name: str, method: str, use_response_times_cache: bool = False):
+        super().__init__(name, method)
         self.stats = stats
         self.name = name
         """ Name (URL) of this stats entry """
@@ -229,17 +288,17 @@ class StatsEntry:
         We can use this dict to calculate the *current*  median response time, as well as other response
         time percentiles.
         """
-        self.num_requests = 0
+        self.num_requests: int = 0
         """ The number of requests made """
-        self.num_none_requests = 0
+        self.num_none_requests: int = 0
         """ The number of requests made with a None response time (typically async requests) """
-        self.num_failures = 0
+        self.num_failures: int = 0
         """ Number of failed request """
-        self.total_response_time = 0
+        self.total_response_time: int = 0
         """ Total sum of the response times """
-        self.min_response_time = None
+        self.min_response_time: Optional[int] = None
         """ Minimum response time """
-        self.max_response_time = 0
+        self.max_response_time: int = 0
         """ Maximum response time """
         self.num_reqs_per_sec: Dict[int, int] = {}
         """ A {second => request_count} dict that holds the number of requests made per second """
@@ -255,16 +314,16 @@ class StatsEntry:
 
         This dict is used to calculate the median and percentile response times.
         """
-        self.response_times_cache = None
+        self.response_times_cache: OrderedDictType[int, CachedResponseTimes]
         """
         If use_response_times_cache is set to True, this will be a {timestamp => CachedResponseTimes()}
         OrderedDict that holds a copy of the response_times dict for each of the last 20 seconds.
         """
-        self.total_content_length = 0
+        self.total_content_length: int = 0
         """ The sum of the content length of all the requests for this entry """
-        self.start_time = 0.0
+        self.start_time: float = 0.0
         """ Time of the first request for this entry """
-        self.last_request_timestamp = None
+        self.last_request_timestamp: Optional[float] = None
         """ Time of the last request for this entry """
         self.reset()
 
@@ -285,7 +344,7 @@ class StatsEntry:
             self.response_times_cache = OrderedDict()
             self._cache_response_times(int(time.time()))
 
-    def log(self, response_time, content_length):
+    def log(self, response_time: int, content_length: int) -> None:
         # get the time
         current_time = time.time()
         t = int(current_time)
@@ -301,12 +360,12 @@ class StatsEntry:
         # increase total content-length
         self.total_content_length += content_length
 
-    def _log_time_of_request(self, current_time):
+    def _log_time_of_request(self, current_time: float) -> None:
         t = int(current_time)
         self.num_reqs_per_sec[t] = self.num_reqs_per_sec.setdefault(t, 0) + 1
         self.last_request_timestamp = current_time
 
-    def _log_response_time(self, response_time):
+    def _log_response_time(self, response_time: int) -> None:
         if response_time is None:
             self.num_none_requests += 1
             return
@@ -335,13 +394,13 @@ class StatsEntry:
         self.response_times.setdefault(rounded_response_time, 0)
         self.response_times[rounded_response_time] += 1
 
-    def log_error(self, error):
+    def log_error(self, error: Optional[Union[Exception, str]]) -> None:
         self.num_failures += 1
         t = int(time.time())
         self.num_fail_per_sec[t] = self.num_fail_per_sec.setdefault(t, 0) + 1
 
     @property
-    def fail_ratio(self):
+    def fail_ratio(self) -> float:
         try:
             return float(self.num_failures) / self.num_requests
         except ZeroDivisionError:
@@ -351,14 +410,14 @@ class StatsEntry:
                 return 0.0
 
     @property
-    def avg_response_time(self):
+    def avg_response_time(self) -> float:
         try:
             return float(self.total_response_time) / (self.num_requests - self.num_none_requests)
         except ZeroDivisionError:
-            return 0
+            return 0.0
 
     @property
-    def median_response_time(self):
+    def median_response_time(self) -> int:
         if not self.response_times:
             return 0
         median = median_from_dict(self.num_requests - self.num_none_requests, self.response_times) or 0
@@ -369,18 +428,18 @@ class StatsEntry:
         # have one (or very few) really slow requests
         if median > self.max_response_time:
             median = self.max_response_time
-        elif median < self.min_response_time:
+        elif self.min_response_time is not None and median < self.min_response_time:
             median = self.min_response_time
 
         return median
 
     @property
-    def current_rps(self):
-        if self.stats.last_request_timestamp is None:
+    def current_rps(self) -> float:
+        if self.stats is None or self.stats.last_request_timestamp is None:
             return 0
         slice_start_time = max(int(self.stats.last_request_timestamp) - 12, int(self.stats.start_time or 0))
 
-        reqs = [
+        reqs: List[Union[int, float]] = [
             self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, int(self.stats.last_request_timestamp) - 2)
         ]
         return avg(reqs)
@@ -421,7 +480,7 @@ class StatsEntry:
         except ZeroDivisionError:
             return 0
 
-    def extend(self, other):
+    def extend(self, other: "StatsEntry") -> None:
         """
         Extend the data from the current StatsEntry with the stats from another
         StatsEntry instance.
@@ -461,49 +520,27 @@ class StatsEntry:
             # lag behind a second or two, but since StatsEntry.current_response_time_percentile()
             # (which is what the response times cache is used for) uses an approximation of the
             # last 10 seconds anyway, it should be fine to ignore this.
-            last_time = self.last_request_timestamp and int(self.last_request_timestamp) or None
+            last_time = int(self.last_request_timestamp) if self.last_request_timestamp else None
             if last_time and last_time > (old_last_request_timestamp and int(old_last_request_timestamp) or 0):
                 self._cache_response_times(last_time)
 
-    def serialize(self):
-        return {
-            "name": self.name,
-            "method": self.method,
-            "last_request_timestamp": self.last_request_timestamp,
-            "start_time": self.start_time,
-            "num_requests": self.num_requests,
-            "num_none_requests": self.num_none_requests,
-            "num_failures": self.num_failures,
-            "total_response_time": self.total_response_time,
-            "max_response_time": self.max_response_time,
-            "min_response_time": self.min_response_time,
-            "total_content_length": self.total_content_length,
-            "response_times": self.response_times,
-            "num_reqs_per_sec": self.num_reqs_per_sec,
-            "num_fail_per_sec": self.num_fail_per_sec,
-        }
+    def serialize(self) -> StatsEntryDict:
+        return cast(StatsEntryDict, {key: getattr(self, key, None) for key in StatsEntryDict.__annotations__.keys()})
 
     @classmethod
-    def unserialize(cls, data):
+    def unserialize(cls, data: StatsEntryDict) -> "StatsEntry":
+        """Return the unserialzed version of the specified dict"""
         obj = cls(None, data["name"], data["method"])
-        for key in [
-            "last_request_timestamp",
-            "start_time",
-            "num_requests",
-            "num_none_requests",
-            "num_failures",
-            "total_response_time",
-            "max_response_time",
-            "min_response_time",
-            "total_content_length",
-            "response_times",
-            "num_reqs_per_sec",
-            "num_fail_per_sec",
-        ]:
-            setattr(obj, key, data[key])
+        valid_keys = StatsEntryDict.__annotations__.keys()
+
+        for key, value in data.items():
+            if key in ["name", "method"] or key not in valid_keys:
+                continue
+
+            setattr(obj, key, value)
         return obj
 
-    def get_stripped_report(self):
+    def get_stripped_report(self) -> StatsEntryDict:
         """
         Return the serialized version of this StatsEntry, and then clear the current stats.
         """
@@ -511,7 +548,7 @@ class StatsEntry:
         self.reset()
         return report
 
-    def to_string(self, current=True):
+    def to_string(self, current=True) -> str:
         """
         Return the stats as a string suitable for console output. If current is True, it'll show
         the RPS and failure rate for the last 10 seconds. If it's false, it'll show the total stats
@@ -542,10 +579,10 @@ class StatsEntry:
             fail_per_sec or 0,
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.to_string(current=True)
 
-    def get_response_time_percentile(self, percent):
+    def get_response_time_percentile(self, percent: float) -> int:
         """
         Get the response time that a certain number of percent of the requests
         finished within.
@@ -554,7 +591,7 @@ class StatsEntry:
         """
         return calculate_response_time_percentile(self.response_times, self.num_requests, percent)
 
-    def get_current_response_time_percentile(self, percent):
+    def get_current_response_time_percentile(self, percent: float) -> Optional[int]:
         """
         Calculate the *current* response time for a certain percentile. We use a sliding
         window of (approximately) the last 10 seconds (specified by CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW)
@@ -572,13 +609,13 @@ class StatsEntry:
         # when trying to fetch the cached response_times. We construct this list in such a way
         # that it's ordered by preference by starting to add t-10, then t-11, t-9, t-12, t-8,
         # and so on
-        acceptable_timestamps = []
+        acceptable_timestamps: List[int] = []
         acceptable_timestamps.append(t - CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW)
         for i in range(1, 9):
             acceptable_timestamps.append(t - CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW - i)
             acceptable_timestamps.append(t - CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW + i)
 
-        cached = None
+        cached: Optional[CachedResponseTimes] = None
         for ts in acceptable_timestamps:
             if ts in self.response_times_cache:
                 cached = self.response_times_cache[ts]
@@ -597,7 +634,7 @@ class StatsEntry:
         # if time was not in response times cache window
         return None
 
-    def percentile(self):
+    def percentile(self) -> str:
         if not self.num_requests:
             raise ValueError("Can't calculate percentile on url with no successful requests")
 
@@ -609,7 +646,7 @@ class StatsEntry:
             + (self.num_requests,)
         )
 
-    def _cache_response_times(self, t):
+    def _cache_response_times(self, t: int) -> None:
         self.response_times_cache[t] = CachedResponseTimes(
             response_times=copy(self.response_times),
             num_requests=self.num_requests,
@@ -623,19 +660,20 @@ class StatsEntry:
 
         if len(self.response_times_cache) > cache_size:
             # only keep the latest 20 response_times dicts
-            for i in range(len(self.response_times_cache) - cache_size):
+            for _ in range(len(self.response_times_cache) - cache_size):
                 self.response_times_cache.popitem(last=False)
 
 
-class StatsError:
-    def __init__(self, method, name, error, occurrences=0):
+class StatsError(StatsBase):
+    def __init__(self, method: str, name: str, error: Optional[Union[Exception, str]], occurrences: int = 0):
+        super().__init__(name, method)
         self.method = method
         self.name = name
         self.error = error
         self.occurrences = occurrences
 
     @classmethod
-    def parse_error(cls, error):
+    def parse_error(cls, error: Optional[Union[Exception, str]]) -> str:
         string_error = repr(error)
         target = "object at 0x"
         target_index = string_error.find(target)
@@ -649,14 +687,14 @@ class StatsError:
         return string_error.replace(hex_address, "0x....")
 
     @classmethod
-    def create_key(cls, method, name, error):
+    def create_key(cls, method: str, name: str, error: Optional[Union[Exception, str]]) -> str:
         key = f"{method}.{name}.{StatsError.parse_error(error)!r}"
         return hashlib.md5(key.encode("utf-8")).hexdigest()
 
-    def occurred(self):
+    def occurred(self) -> None:
         self.occurrences += 1
 
-    def to_name(self):
+    def to_name(self) -> str:
         error = self.error
         if isinstance(error, CatchResponseError):
             # standalone
@@ -671,24 +709,19 @@ class StatsError:
 
         return f"{self.method} {self.name}: {unwrapped_error}"
 
-    def to_dict(self):
-        return {
-            "method": self.method,
-            "name": self.name,
-            "error": StatsError.parse_error(self.error),
-            "occurrences": self.occurrences,
-        }
+    def to_dict(self) -> StatsErrorDict:
+        return cast(StatsErrorDict, {key: getattr(self, key, None) for key in StatsErrorDict.__annotations__.keys()})
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data: StatsErrorDict) -> "StatsError":
         return cls(data["method"], data["name"], data["error"], data["occurrences"])
 
 
-def avg(values):
+def avg(values: List[Union[float, int]]) -> float:
     return sum(values, 0.0) / max(len(values), 1)
 
 
-def median_from_dict(total, count):
+def median_from_dict(total: int, count: Dict[int, int]) -> int:
     """
     total is the number of requests made
     count is a dict {response_time: count}
@@ -699,15 +732,17 @@ def median_from_dict(total, count):
             return k
         pos -= count[k]
 
+    return k
 
-def setup_distributed_stats_event_listeners(events, stats):
-    def on_report_to_master(client_id, data):
+
+def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats) -> None:
+    def on_report_to_master(client_id: str, data: Dict[str, Any]) -> None:
         data["stats"] = stats.serialize_stats()
         data["stats_total"] = stats.total.get_stripped_report()
         data["errors"] = stats.serialize_errors()
         stats.errors = {}
 
-    def on_worker_report(client_id, data):
+    def on_worker_report(client_id: str, data: Dict[str, Any]) -> None:
         for stats_data in data["stats"]:
             entry = StatsEntry.unserialize(stats_data)
             request_key = (entry.name, entry.method)
@@ -727,7 +762,7 @@ def setup_distributed_stats_event_listeners(events, stats):
     events.worker_report.add_listener(on_worker_report)
 
 
-def print_stats(stats, current=True):
+def print_stats(stats: RequestStats, current=True) -> None:
     name_column_width = (STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4  # saved characters by compacting other columns
     console_logger.info(
         ("%-" + str(STATS_TYPE_WIDTH) + "s %-" + str(name_column_width) + "s %7s %12s |%7s %7s %7s%7s | %7s %11s")
@@ -743,7 +778,7 @@ def print_stats(stats, current=True):
     console_logger.info("")
 
 
-def print_percentile_stats(stats):
+def print_percentile_stats(stats: RequestStats) -> None:
     console_logger.info("Response time percentiles (approximated)")
     headers = ("Type", "Name") + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)) + ("# reqs",)
     console_logger.info(
@@ -768,7 +803,7 @@ def print_percentile_stats(stats):
     console_logger.info("")
 
 
-def print_error_report(stats):
+def print_error_report(stats: RequestStats) -> None:
     if not len(stats.errors):
         return
     console_logger.info("Error report")
@@ -781,8 +816,8 @@ def print_error_report(stats):
     console_logger.info("")
 
 
-def stats_printer(stats):
-    def stats_printer_func():
+def stats_printer(stats: RequestStats) -> Callable[[], None]:
+    def stats_printer_func() -> None:
         while True:
             print_stats(stats)
             gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
@@ -790,11 +825,11 @@ def stats_printer(stats):
     return stats_printer_func
 
 
-def sort_stats(stats):
+def sort_stats(stats: Dict[Any, S]) -> List[S]:
     return [stats[key] for key in sorted(stats.keys())]
 
 
-def stats_history(runner):
+def stats_history(runner: "Runner") -> None:
     """Save current stats info to history for charts of report."""
     while True:
         stats = runner.stats
@@ -816,8 +851,7 @@ def stats_history(runner):
 class StatsCSV:
     """Write statistics to csv_writer stream."""
 
-    def __init__(self, environment, percentiles_to_report):
-        super().__init__()
+    def __init__(self, environment: "Environment", percentiles_to_report: List[float]) -> None:
         self.environment = environment
         self.percentiles_to_report = percentiles_to_report
 
@@ -851,7 +885,7 @@ class StatsCSV:
             "Nodes",
         ]
 
-    def _percentile_fields(self, stats_entry, use_current=False):
+    def _percentile_fields(self, stats_entry: StatsEntry, use_current: bool = False) -> Union[List[str], List[int]]:
         if not stats_entry.num_requests:
             return self.percentiles_na
         elif use_current:
@@ -859,12 +893,12 @@ class StatsCSV:
         else:
             return [int(stats_entry.get_response_time_percentile(x) or 0) for x in self.percentiles_to_report]
 
-    def requests_csv(self, csv_writer):
+    def requests_csv(self, csv_writer: CSVWriter) -> None:
         """Write requests csv with header and data rows."""
         csv_writer.writerow(self.requests_csv_columns)
         self._requests_data_rows(csv_writer)
 
-    def _requests_data_rows(self, csv_writer):
+    def _requests_data_rows(self, csv_writer: CSVWriter) -> None:
         """Write requests csv data row, excluding header."""
         stats = self.environment.stats
         for stats_entry in chain(sort_stats(stats.entries), [stats.total]):
@@ -887,11 +921,11 @@ class StatsCSV:
                 )
             )
 
-    def failures_csv(self, csv_writer):
+    def failures_csv(self, csv_writer: CSVWriter) -> None:
         csv_writer.writerow(self.failures_columns)
         self._failures_data_rows(csv_writer)
 
-    def _failures_data_rows(self, csv_writer):
+    def _failures_data_rows(self, csv_writer: CSVWriter) -> None:
         for stats_error in sort_stats(self.environment.stats.errors):
             csv_writer.writerow(
                 [
@@ -902,11 +936,14 @@ class StatsCSV:
                 ]
             )
 
-    def exceptions_csv(self, csv_writer):
+    def exceptions_csv(self, csv_writer: CSVWriter) -> None:
         csv_writer.writerow(self.exceptions_columns)
         self._exceptions_data_rows(csv_writer)
 
-    def _exceptions_data_rows(self, csv_writer):
+    def _exceptions_data_rows(self, csv_writer: CSVWriter) -> None:
+        if self.environment.runner is None:
+            return
+
         for exc in self.environment.runner.exceptions.values():
             csv_writer.writerow([exc["count"], exc["msg"], exc["traceback"], ", ".join(exc["nodes"])])
 
@@ -914,7 +951,13 @@ class StatsCSV:
 class StatsCSVFileWriter(StatsCSV):
     """Write statistics to to CSV files"""
 
-    def __init__(self, environment, percentiles_to_report, base_filepath, full_history=False):
+    def __init__(
+        self,
+        environment: "Environment",
+        percentiles_to_report: List[float],
+        base_filepath: str,
+        full_history: bool = False,
+    ):
         super().__init__(environment, percentiles_to_report)
         self.base_filepath = base_filepath
         self.full_history = full_history
@@ -927,11 +970,11 @@ class StatsCSVFileWriter(StatsCSV):
 
         self.failures_csv_filehandle = open(self.base_filepath + "_failures.csv", "w")
         self.failures_csv_writer = csv.writer(self.failures_csv_filehandle)
-        self.failures_csv_data_start = 0
+        self.failures_csv_data_start: int = 0
 
         self.exceptions_csv_filehandle = open(self.base_filepath + "_exceptions.csv", "w")
         self.exceptions_csv_writer = csv.writer(self.exceptions_csv_filehandle)
-        self.exceptions_csv_data_start = 0
+        self.exceptions_csv_data_start: int = 0
 
         self.stats_history_csv_columns = [
             "Timestamp",
@@ -950,10 +993,10 @@ class StatsCSVFileWriter(StatsCSV):
             "Total Average Content Size",
         ]
 
-    def __call__(self):
+    def __call__(self) -> None:
         self.stats_writer()
 
-    def stats_writer(self):
+    def stats_writer(self) -> NoReturn:
         """Writes all the csv files for the locust run."""
 
         # Write header row for all files and save position for non-append files
@@ -969,7 +1012,7 @@ class StatsCSVFileWriter(StatsCSV):
         self.exceptions_csv_data_start = self.exceptions_csv_filehandle.tell()
 
         # Continuously write date rows for all files
-        last_flush_time = 0
+        last_flush_time: float = 0.0
         while True:
             now = time.time()
 
@@ -996,7 +1039,7 @@ class StatsCSVFileWriter(StatsCSV):
 
             gevent.sleep(CSV_STATS_INTERVAL_SEC)
 
-    def _stats_history_data_rows(self, csv_writer, now):
+    def _stats_history_data_rows(self, csv_writer: CSVWriter, now: float) -> None:
         """
         Write CSV rows with the *current* stats. By default only includes the
         Aggregated stats entry, but if self.full_history is set to True, a row for each entry will
@@ -1007,7 +1050,7 @@ class StatsCSVFileWriter(StatsCSV):
 
         stats = self.environment.stats
         timestamp = int(now)
-        stats_entries = []
+        stats_entries: List[StatsEntry] = []
         if self.full_history:
             stats_entries = sort_stats(stats.entries)
 
@@ -1016,7 +1059,7 @@ class StatsCSVFileWriter(StatsCSV):
                 chain(
                     (
                         timestamp,
-                        self.environment.runner.user_count,
+                        self.environment.runner.user_count if self.environment.runner is not None else 0,
                         stats_entry.method or "",
                         stats_entry.name,
                         f"{stats_entry.current_rps:2f}",
@@ -1035,23 +1078,23 @@ class StatsCSVFileWriter(StatsCSV):
                 )
             )
 
-    def requests_flush(self):
+    def requests_flush(self) -> None:
         self.requests_csv_filehandle.flush()
 
-    def stats_history_flush(self):
+    def stats_history_flush(self) -> None:
         self.stats_history_csv_filehandle.flush()
 
-    def failures_flush(self):
+    def failures_flush(self) -> None:
         self.failures_csv_filehandle.flush()
 
-    def exceptions_flush(self):
+    def exceptions_flush(self) -> None:
         self.exceptions_csv_filehandle.flush()
 
-    def close_files(self):
+    def close_files(self) -> None:
         self.requests_csv_filehandle.close()
         self.stats_history_csv_filehandle.close()
         self.failures_csv_filehandle.close()
         self.exceptions_csv_filehandle.close()
 
-    def stats_history_file_name(self):
+    def stats_history_file_name(self) -> str:
         return self.base_filepath + "_stats_history.csv"
