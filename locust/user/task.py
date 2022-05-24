@@ -2,7 +2,20 @@ import logging
 import random
 import traceback
 from time import time
-from typing import TYPE_CHECKING, Callable, List, Union, TypeVar, Optional, Type, overload, Protocol, Dict, Set
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    List,
+    Union,
+    TypeVar,
+    Optional,
+    Type,
+    overload,
+    Protocol,
+    Dict,
+    Set,
+    runtime_checkable,
+)
 from typing_extensions import final
 
 import gevent
@@ -20,6 +33,7 @@ TaskT = TypeVar("TaskT", Callable[..., None], Type["TaskSet"])
 LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING = ["running", "waiting", "stopping"]
 
 
+@runtime_checkable
 class TaskHolder(Protocol[TaskT]):
     tasks: List[TaskT]
 

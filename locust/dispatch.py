@@ -49,7 +49,7 @@ class UsersDispatcher(Iterator):
             from 10 to 100.
     """
 
-    def __init__(self, worker_nodes: "List[WorkerNode]", user_classes: List[Type[User]]):
+    def __init__(self, worker_nodes: List["WorkerNode"], user_classes: List[Type[User]]):
         """
         :param worker_nodes: List of worker nodes
         :param user_classes: The user classes
@@ -397,7 +397,7 @@ class UsersDispatcher(Iterator):
                 current_fixed_users_count = {u: self._get_user_current_count(u) for u in fixed_users}
                 spawned_classes: Set[str] = set()
                 while len(spawned_classes) != len(fixed_users):
-                    user_name = next(cycle_fixed_gen)
+                    user_name: Optional[str] = next(cycle_fixed_gen)
                     if not user_name:
                         break
 

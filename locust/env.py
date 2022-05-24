@@ -17,7 +17,7 @@ from .stats import RequestStats, StatsCSV
 from .runners import Runner, LocalRunner, MasterRunner, WorkerRunner
 from .web import WebUI
 from .user import User
-from .user.task import filter_tasks_by_tags, TaskSet
+from .user.task import filter_tasks_by_tags, TaskSet, TaskHolder
 from .shape import LoadTestShape
 
 
@@ -246,7 +246,7 @@ class Environment:
             tasks_frontier = u.tasks
             while len(tasks_frontier) != 0:
                 t = tasks_frontier.pop()
-                if not callable(t) and hasattr(t, "tasks") and t.tasks:
+                if isinstance(t, TaskHolder):
                     tasks_frontier.extend(t.tasks)
                 elif callable(t):
                     if t not in user_tasks:

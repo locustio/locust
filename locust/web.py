@@ -17,7 +17,7 @@ from gevent import pywsgi
 from .exception import AuthCredentialsError
 from .runners import MasterRunner, STATE_MISSING
 from .log import greenlet_exception_logger
-from .stats import StatsCSVFileWriter, sort_stats
+from .stats import StatsCSVFileWriter, StatsErrorDict, sort_stats
 from . import stats as stats_module, __version__ as version, argument_parser
 from .stats import StatsCSV
 from .user.inspectuser import get_ratio
@@ -264,7 +264,7 @@ class WebUI:
         @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
         def request_stats() -> Response:
             stats: List[Dict[str, Any]] = []
-            errors: List[Dict[str, str]] = []
+            errors: List[StatsErrorDict] = []
 
             if environment.runner is None:
                 report = {
@@ -304,7 +304,7 @@ class WebUI:
                 )
 
             for e in environment.runner.errors.values():
-                err_dict = e.to_dict()
+                err_dict = e.serialize()
                 err_dict["name"] = escape(err_dict["name"])
                 err_dict["error"] = escape(err_dict["error"])
                 errors.append(err_dict)

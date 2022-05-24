@@ -1,3 +1,4 @@
+from abc import abstractmethod
 import datetime
 import hashlib
 from tempfile import NamedTemporaryFile
@@ -14,6 +15,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Dict,
+    Iterable,
     NoReturn,
     Tuple,
     List,
@@ -23,6 +25,7 @@ from typing import (
     OrderedDict as OrderedDictType,
     Callable,
     TypeVar,
+    Protocol,
     cast,
 )
 from types import FrameType
@@ -32,16 +35,11 @@ from .event import Events
 
 import logging
 
-with NamedTemporaryFile(mode="w") as t:
-    CSVWriter = type(csv.writer(t))
-
 if TYPE_CHECKING:
     from .runners import Runner
     from .env import Environment
 
 console_logger = logging.getLogger("locust.stats_logger")
-
-S = TypeVar("S", bound="StatsBase")
 
 """Space in table for request name. Auto shrink it if terminal is small (<160 characters)"""
 try:
@@ -50,6 +48,12 @@ except OSError:  # not a real terminal
     STATS_NAME_WIDTH = 80
 
 STATS_AUTORESIZE = True  # overwrite this if you dont want auto resize while running
+
+
+class CSVWriter(Protocol):
+    @abstractmethod
+    def writerow(self, columns: Iterable[Union[str, int, float]]) -> None:
+        ...
 
 
 class StatsBaseDict(TypedDict):
@@ -77,10 +81,12 @@ class StatsErrorDict(StatsBaseDict):
     occurrences: int
 
 
-class StatsBase:
-    def __init__(self, name: str, method: str) -> None:
-        self.name = name
-        self.method = method
+class StatsHolder(Protocol):
+    name: str
+    method: str
+
+
+S = TypeVar("S", bound=StatsHolder)
 
 
 def resize_handler(signum: int, frame: Optional[FrameType]):
@@ -266,16 +272,15 @@ class RequestStats:
         ]
 
     def serialize_errors(self) -> Dict[str, "StatsErrorDict"]:
-        return {k: e.to_dict() for k, e in self.errors.items()}
+        return {k: e.serialize() for k, e in self.errors.items()}
 
 
-class StatsEntry(StatsBase):
+class StatsEntry:
     """
     Represents a single stats entry (name and method)
     """
 
     def __init__(self, stats: Optional[RequestStats], name: str, method: str, use_response_times_cache: bool = False):
-        super().__init__(name, method)
         self.stats = stats
         self.name = name
         """ Name (URL) of this stats entry """
@@ -314,7 +319,7 @@ class StatsEntry(StatsBase):
 
         This dict is used to calculate the median and percentile response times.
         """
-        self.response_times_cache: OrderedDictType[int, CachedResponseTimes]
+        self.response_times_cache: Optional[OrderedDictType[int, CachedResponseTimes]] = None
         """
         If use_response_times_cache is set to True, this will be a {timestamp => CachedResponseTimes()}
         OrderedDict that holds a copy of the response_times dict for each of the last 20 seconds.
@@ -616,10 +621,11 @@ class StatsEntry(StatsBase):
             acceptable_timestamps.append(t - CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW + i)
 
         cached: Optional[CachedResponseTimes] = None
-        for ts in acceptable_timestamps:
-            if ts in self.response_times_cache:
-                cached = self.response_times_cache[ts]
-                break
+        if self.response_times_cache is not None:
+            for ts in acceptable_timestamps:
+                if ts in self.response_times_cache:
+                    cached = self.response_times_cache[ts]
+                    break
 
         if cached:
             # If we found an acceptable cached response times, we'll calculate a new response
@@ -647,6 +653,9 @@ class StatsEntry(StatsBase):
         )
 
     def _cache_response_times(self, t: int) -> None:
+        if self.response_times_cache is None:
+            self.response_times_cache = OrderedDict()
+
         self.response_times_cache[t] = CachedResponseTimes(
             response_times=copy(self.response_times),
             num_requests=self.num_requests,
@@ -664,9 +673,8 @@ class StatsEntry(StatsBase):
                 self.response_times_cache.popitem(last=False)
 
 
-class StatsError(StatsBase):
+class StatsError:
     def __init__(self, method: str, name: str, error: Optional[Union[Exception, str]], occurrences: int = 0):
-        super().__init__(name, method)
         self.method = method
         self.name = name
         self.error = error
@@ -709,11 +717,19 @@ class StatsError(StatsBase):
 
         return f"{self.method} {self.name}: {unwrapped_error}"
 
-    def to_dict(self) -> StatsErrorDict:
-        return cast(StatsErrorDict, {key: getattr(self, key, None) for key in StatsErrorDict.__annotations__.keys()})
+    def serialize(self) -> StatsErrorDict:
+        def _getattr(obj: "StatsError", key: str, default: Optional[Any]) -> Optional[Any]:
+            value = getattr(obj, key, default)
+
+            if key in ["error"]:
+                value = StatsError.parse_error(value)
+
+            return value
+
+        return cast(StatsErrorDict, {key: _getattr(self, key, None) for key in StatsErrorDict.__annotations__.keys()})
 
     @classmethod
-    def from_dict(cls, data: StatsErrorDict) -> "StatsError":
+    def unserialize(cls, data: StatsErrorDict) -> "StatsError":
         return cls(data["method"], data["name"], data["error"], data["occurrences"])
 
 
@@ -752,7 +768,7 @@ def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats)
 
         for error_key, error in data["errors"].items():
             if error_key not in stats.errors:
-                stats.errors[error_key] = StatsError.from_dict(error)
+                stats.errors[error_key] = StatsError.unserialize(error)
             else:
                 stats.errors[error_key].occurrences += error["occurrences"]
 
@@ -931,7 +947,7 @@ class StatsCSV:
                 [
                     stats_error.method,
                     stats_error.name,
-                    stats_error.error,
+                    StatsError.parse_error(stats_error.error),
                     stats_error.occurrences,
                 ]
             )
