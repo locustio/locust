@@ -20,14 +20,19 @@ from typing import (
     Tuple,
     List,
     Union,
-    TypedDict,
     Optional,
     OrderedDict as OrderedDictType,
     Callable,
     TypeVar,
-    Protocol,
     cast,
 )
+
+# @TODO: typing.Protocol is in python >= 3.8
+try:
+    from typing import Protocol, TypedDict
+except ImportError:
+    from typing_extensions import Protocol, TypedDict  # type: ignore
+
 from types import FrameType
 
 from .exception import CatchResponseError
