@@ -1,4 +1,5 @@
 import csv
+import json
 import logging
 import os.path
 from functools import wraps
@@ -6,26 +7,28 @@ from html import escape
 from io import StringIO
 from itertools import chain
 from time import time
+from typing import TYPE_CHECKING, Optional, Union, Any, Dict, List
 
 import gevent
-from flask import Flask, make_response, jsonify, render_template, request, send_file
+from flask import Flask, make_response, jsonify, render_template, request, send_file, Response
 from flask_basicauth import BasicAuth
 from gevent import pywsgi
-from typing import Any, Dict
 
 from .exception import AuthCredentialsError
-from .runners import MasterRunner
+from .runners import MasterRunner, STATE_MISSING
 from .log import greenlet_exception_logger
-from .stats import sort_stats
+from .stats import StatsCSVFileWriter, StatsErrorDict, sort_stats
 from . import stats as stats_module, __version__ as version, argument_parser
 from .stats import StatsCSV
 from .user.inspectuser import get_ratio
 from .util.cache import memoize
 from .util.rounding import proper_round
-from .util.timespan import parse_timespan
 from .html import get_html_report
 from flask_cors import CORS
 from json import dumps
+
+if TYPE_CHECKING:
+    from .env import Environment
 
 
 logger = logging.getLogger(__name__)
@@ -41,7 +44,7 @@ class WebUI:
     in :attr:`environment.stats <locust.env.Environment.stats>`
     """
 
-    app = None
+    app: Optional[Flask] = None
     """
     Reference to the :class:`flask.Flask` app. Can be used to add additional web routes and customize
     the Flask app in other various ways. Example::
@@ -53,12 +56,12 @@ class WebUI:
             return "your IP is: %s" % request.remote_addr
     """
 
-    greenlet = None
+    greenlet: Optional[gevent.Greenlet] = None
     """
     Greenlet of the running web server
     """
 
-    server = None
+    server: Optional[pywsgi.WSGIServer] = None
     """Reference to the :class:`pyqsgi.WSGIServer` instance"""
 
     template_args: Dict[str, Any]
@@ -67,13 +70,13 @@ class WebUI:
 
     def __init__(
         self,
-        environment,
-        host,
-        port,
-        auth_credentials=None,
-        tls_cert=None,
-        tls_key=None,
-        stats_csv_writer=None,
+        environment: "Environment",
+        host: str,
+        port: int,
+        auth_credentials: Optional[str] = None,
+        tls_cert: Optional[str] = None,
+        tls_key: Optional[str] = None,
+        stats_csv_writer: Optional[StatsCSV] = None,
         delayed_start=False,
     ):
         """
@@ -104,9 +107,9 @@ class WebUI:
         app.debug = True
         app.root_path = os.path.dirname(os.path.abspath(__file__))
         self.app.config["BASIC_AUTH_ENABLED"] = False
-        self.auth = None
-        self.greenlet = None
-        self._swarm_greenlet = None
+        self.auth: Optional[BasicAuth] = None
+        self.greenlet: Optional[gevent.Greenlet] = None
+        self._swarm_greenlet: Optional[gevent.Greenlet] = None
         self.template_args = {}
 
         if auth_credentials is not None:
@@ -128,7 +131,7 @@ class WebUI:
 
         @app.route("/")
         @self.auth_required_if_enabled
-        def index():
+        def index() -> Union[str, Response]:
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             self.update_template_args()
@@ -136,7 +139,7 @@ class WebUI:
 
         @app.route("/swarm", methods=["POST"])
         @self.auth_required_if_enabled
-        def swarm():
+        def swarm() -> Response:
             assert request.method == "POST"
 
             parsed_options_dict = vars(environment.parsed_options) if environment.parsed_options else {}
@@ -153,7 +156,7 @@ class WebUI:
                     # This won't work for parameters that are None
                     parsed_options_dict[key] = type(parsed_options_dict[key])(value)
 
-            if environment.shape_class:
+            if environment.shape_class and environment.runner is not None:
                 environment.runner.start_shape()
                 return jsonify(
                     {"success": True, "message": "Swarming started using shape class", "host": environment.host}
@@ -162,37 +165,43 @@ class WebUI:
             if self._swarm_greenlet is not None:
                 self._swarm_greenlet.kill(block=True)
                 self._swarm_greenlet = None
-            self._swarm_greenlet = gevent.spawn(environment.runner.start, user_count, spawn_rate)
-            self._swarm_greenlet.link_exception(greenlet_exception_handler)
-            return jsonify({"success": True, "message": "Swarming started", "host": environment.host})
+
+            if environment.runner is not None:
+                self._swarm_greenlet = gevent.spawn(environment.runner.start, user_count, spawn_rate)
+                self._swarm_greenlet.link_exception(greenlet_exception_handler)
+                return jsonify({"success": True, "message": "Swarming started", "host": environment.host})
+            else:
+                return jsonify({"success": False, "message": "No runner", "host": environment.host})
 
         @app.route("/stop")
         @self.auth_required_if_enabled
-        def stop():
+        def stop() -> Response:
             if self._swarm_greenlet is not None:
                 self._swarm_greenlet.kill(block=True)
                 self._swarm_greenlet = None
-            environment.runner.stop()
+            if environment.runner is not None:
+                environment.runner.stop()
             return jsonify({"success": True, "message": "Test stopped"})
 
         @app.route("/stats/reset")
         @self.auth_required_if_enabled
-        def reset_stats():
+        def reset_stats() -> str:
             environment.events.reset_stats.fire()
-            environment.runner.stats.reset_all()
-            environment.runner.exceptions = {}
+            if environment.runner is not None:
+                environment.runner.stats.reset_all()
+                environment.runner.exceptions = {}
             return "ok"
 
         @app.route("/stats/report")
         @self.auth_required_if_enabled
-        def stats_report():
+        def stats_report() -> Response:
             res = get_html_report(self.environment, show_download_link=not request.args.get("download"))
             if request.args.get("download"):
                 res = app.make_response(res)
                 res.headers["Content-Disposition"] = f"attachment;filename=report_{time()}.html"
             return res
 
-        def _download_csv_suggest_file_name(suggest_filename_prefix):
+        def _download_csv_suggest_file_name(suggest_filename_prefix: str) -> str:
             """Generate csv file download attachment filename suggestion.
 
             Arguments:
@@ -201,7 +210,7 @@ class WebUI:
 
             return f"{suggest_filename_prefix}_{time()}.csv"
 
-        def _download_csv_response(csv_data, filename_prefix):
+        def _download_csv_response(csv_data: str, filename_prefix: str) -> Response:
             """Generate csv file download response with 'csv_data'.
 
             Arguments:
@@ -218,7 +227,7 @@ class WebUI:
 
         @app.route("/stats/requests/csv")
         @self.auth_required_if_enabled
-        def request_stats_csv():
+        def request_stats_csv() -> Response:
             data = StringIO()
             writer = csv.writer(data)
             self.stats_csv_writer.requests_csv(writer)
@@ -226,9 +235,9 @@ class WebUI:
 
         @app.route("/stats/requests_full_history/csv")
         @self.auth_required_if_enabled
-        def request_stats_full_history_csv():
+        def request_stats_full_history_csv() -> Response:
             options = self.environment.parsed_options
-            if options and options.stats_history_enabled:
+            if options and options.stats_history_enabled and isinstance(self.stats_csv_writer, StatsCSVFileWriter):
                 return send_file(
                     os.path.abspath(self.stats_csv_writer.stats_history_file_name()),
                     mimetype="text/csv",
@@ -244,7 +253,7 @@ class WebUI:
 
         @app.route("/stats/failures/csv")
         @self.auth_required_if_enabled
-        def failures_stats_csv():
+        def failures_stats_csv() -> Response:
             data = StringIO()
             writer = csv.writer(data)
             self.stats_csv_writer.failures_csv(writer)
@@ -253,10 +262,28 @@ class WebUI:
         @app.route("/stats/requests")
         @self.auth_required_if_enabled
         @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
-        def request_stats():
-            stats = []
+        def request_stats() -> Response:
+            stats: List[Dict[str, Any]] = []
+            errors: List[StatsErrorDict] = []
 
-            for s in chain(sort_stats(self.environment.runner.stats.entries), [environment.runner.stats.total]):
+            if environment.runner is None:
+                report = {
+                    "stats": stats,
+                    "errors": errors,
+                    "total_rps": 0.0,
+                    "fail_ratio": 0.0,
+                    "current_response_time_percentile_95": None,
+                    "current_response_time_percentile_50": None,
+                    "state": STATE_MISSING,
+                    "user_count": 0,
+                }
+
+                if isinstance(environment.runner, MasterRunner):
+                    report.update({"workers": []})
+
+                return jsonify(report)
+
+            for s in chain(sort_stats(environment.runner.stats.entries), [environment.runner.stats.total]):
                 stats.append(
                     {
                         "method": s.method,
@@ -276,18 +303,19 @@ class WebUI:
                     }
                 )
 
-            errors = []
             for e in environment.runner.errors.values():
-                err_dict = e.to_dict()
+                err_dict = e.serialize()
                 err_dict["name"] = escape(err_dict["name"])
                 err_dict["error"] = escape(err_dict["error"])
                 errors.append(err_dict)
 
             # Truncate the total number of stats and errors displayed since a large number of rows will cause the app
             # to render extremely slowly. Aggregate stats should be preserved.
-            report = {"stats": stats[:500], "errors": errors[:500]}
+            truncated_stats = stats[:500]
             if len(stats) > 500:
-                report["stats"] += [stats[-1]]
+                truncated_stats += [stats[-1]]
+
+            report = {"stats": truncated_stats, "errors": errors[:500]}
 
             if stats:
                 report["total_rps"] = stats[len(stats) - 1]["current_rps"]
@@ -299,8 +327,7 @@ class WebUI:
                     "current_response_time_percentile_50"
                 ] = environment.runner.stats.total.get_current_response_time_percentile(0.5)
 
-            is_distributed = isinstance(environment.runner, MasterRunner)
-            if is_distributed:
+            if isinstance(environment.runner, MasterRunner):
                 workers = []
                 for worker in environment.runner.clients.values():
                     workers.append(
@@ -322,7 +349,7 @@ class WebUI:
 
         @app.route("/exceptions")
         @self.auth_required_if_enabled
-        def exceptions():
+        def exceptions() -> Response:
             return jsonify(
                 {
                     "exceptions": [
@@ -332,14 +359,14 @@ class WebUI:
                             "traceback": row["traceback"],
                             "nodes": ", ".join(row["nodes"]),
                         }
-                        for row in environment.runner.exceptions.values()
+                        for row in (environment.runner.exceptions.values() if environment.runner is not None else [])
                     ]
                 }
             )
 
         @app.route("/exceptions/csv")
         @self.auth_required_if_enabled
-        def exceptions_csv():
+        def exceptions_csv() -> Response:
             data = StringIO()
             writer = csv.writer(data)
             self.stats_csv_writer.exceptions_csv(writer)
@@ -347,10 +374,17 @@ class WebUI:
 
         @app.route("/tasks")
         @self.auth_required_if_enabled
-        def tasks():
-            is_distributed = isinstance(self.environment.runner, MasterRunner)
+        def tasks() -> Dict[str, Dict[str, Dict[str, float]]]:
             runner = self.environment.runner
-            user_spawned = runner.reported_user_classes_count if is_distributed else runner.user_classes_count
+            user_spawned: Dict[str, int]
+            if runner is None:
+                user_spawned = {}
+            else:
+                user_spawned = (
+                    runner.reported_user_classes_count
+                    if isinstance(runner, MasterRunner)
+                    else runner.user_classes_count
+                )
 
             task_data = {
                 "per_class": get_ratio(self.environment.user_classes, user_spawned, False),
