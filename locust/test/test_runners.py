@@ -2814,6 +2814,18 @@ class TestMasterRunner(LocustRunnerTestCase):
 
         master._wait_for_workers_report_after_ramp_up.cache_clear()
 
+    def test_master_discard_first_client_ready(self):
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            server.mocked_send(Message("client_ready", __version__, "dummy_client"))
+            # discard first client_ready msg
+            server.queue.get()
+            master = self.get_runner()
+            server.mocked_send(Message("client_ready", __version__, "dummy_client"))
+
+            self.assertEqual(1, len(master.clients))
+            self.assertEqual("ack", server.outbox[0][1].type)
+            self.assertEqual(1, len(server.outbox))
+
 
 class TestWorkerRunner(LocustTestCase):
     def setUp(self):
@@ -3470,7 +3482,7 @@ class TestWorkerRunner(LocustTestCase):
                 with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
                     with self.assertRaises(ConnectionError):
                         self.get_runner(environment=Environment(), user_classes=[MyTestUser])
-                        self.assertEqual(2, len(client.outbox))
+                    self.assertEqual(2, len(client.outbox))
 
 
 class TestMessageSerializing(unittest.TestCase):
