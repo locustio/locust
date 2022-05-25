@@ -638,6 +638,7 @@ class MasterRunner(DistributedRunner):
         def on_worker_report(client_id, data):
             if client_id not in self.clients:
                 logger.info("Discarded report from unrecognized worker %s", client_id)
+                self.server.send_to_client(Message("stop", None, client_id))
                 return
             self.clients[client_id].user_classes_count = data["user_classes_count"]
 
@@ -880,9 +881,9 @@ class MasterRunner(DistributedRunner):
                     self.start(user_count=self.target_user_count, spawn_rate=self.spawn_rate)
 
     def reset_connection(self):
-        logger.info("Reset connection to worker")
+        logger.info("Resetting RPC server and all client connections.")
         try:
-            self.server.close()
+            self.server.close(linger=0)
             self.server = rpc.Server(self.master_bind_host, self.master_bind_port)
         except RPCError as e:
             logger.error(f"Temporary failure when resetting connection: {e}, will retry later.")
@@ -890,18 +891,31 @@ class MasterRunner(DistributedRunner):
     def client_listener(self):
         while True:
             try:
-                client_id, msg = self.server.recv_from_client()
-            except RPCError as e:
-                if self.clients.ready:
-                    logger.error(f"RPCError found when receiving from client: {e}")
-                else:
-                    logger.debug(
-                        "RPCError found when receiving from client: %s (but no clients were expected to be connected anyway)"
-                        % (e)
-                    )
+                client_id, data = self.server.recv_from_client()
+                try:
+                    msg = self.server.msg_from_data(data)
+                except RPCError as e:
+                    if self.clients.ready or self.clients.spawning or self.clients.running:
+                        logger.error(f"RPCError found when receiving from client: {e}. Will reset client {client_id}.")
+                        try:
+                            self.server.send_to_client(Message("reconnect", None, client_id))
+                            # del self.clients[client_id]
+                        except e:
+                            logger.error(f"Error sending reconnect message to client: {e}. Will reset RPC server.")
+                            self.connection_broken = True
+                            gevent.sleep(FALLBACK_INTERVAL)
+                            continue
+                    else:
+                        logger.debug(
+                            "RPCError found when receiving from client: %s (but no clients were expected to be connected anyway)"
+                            % (e)
+                        )
+            except RPCError("ZMQ network broken"):
+                logger.error("ZMQ network broken. Will reset RPC server.")
                 self.connection_broken = True
                 gevent.sleep(FALLBACK_INTERVAL)
                 continue
+
             self.connection_broken = False
             msg.node_id = client_id
             if msg.type == "client_ready":
@@ -1209,6 +1223,9 @@ class WorkerRunner(DistributedRunner):
                 self.stop()
                 self._send_stats()  # send a final report, in case there were any samples not yet reported
                 self.greenlet.kill(block=True)
+            elif msg.type == "reonnect":
+                logger.warning("Received reconnect message from master. Resetting RPC connection.")
+                self.reset_connection()
             elif msg.type in self.custom_messages:
                 logger.debug(f"Received {msg.type} message from master")
                 self.custom_messages[msg.type](environment=self.environment, msg=msg)
