@@ -42,15 +42,21 @@ class BaseSocket:
         try:
             data = self.socket.recv_multipart()
             addr = data[0].decode()
-            msg = Message.unserialize(data[1])
-        except (UnicodeDecodeError, msgerr.ExtraData) as e:
-            raise RPCError("ZMQ interrupted message") from e
+        except UnicodeDecodeError as e:
+            raise RPCError("ZMQ interrupted or corrupted message") from e
         except zmqerr.ZMQError as e:
             raise RPCError("ZMQ network broken") from e
-        return addr, msg
+        return addr, data[1]
 
-    def close(self):
-        self.socket.close()
+    def msg_from_data(self, data):
+        try:
+            msg = Message.unserialize(data)
+        except (UnicodeDecodeError, msgerr.ExtraData) as e:
+            raise RPCError("ZMQ interrupted or corrupted message") from e
+        return msg
+
+    def close(self, linger=None):
+        self.socket.close(linger)
 
 
 class Server(BaseSocket):
