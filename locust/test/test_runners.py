@@ -3443,7 +3443,7 @@ class TestWorkerRunner(LocustTestCase):
             def the_task(self):
                 pass
 
-        with mock.patch("locust.runners.CONNECTION_TIMEOUT", new=1):
+        with mock.patch("locust.runners.CONNECT_TIMEOUT", new=1):
             with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
                 worker = self.get_runner(environment=Environment(), user_classes=[MyTestUser], client=client)
 
@@ -3457,8 +3457,8 @@ class TestWorkerRunner(LocustTestCase):
             def the_task(self):
                 pass
 
-        with mock.patch("locust.runners.CONNECTION_TIMEOUT", new=0.01):
-            with mock.patch("locust.runners.CONNECTION_RETRY_COUNT", new=1):
+        with mock.patch("locust.runners.CONNECT_TIMEOUT", new=0.01):
+            with mock.patch("locust.runners.CONNECT_RETRY_COUNT", new=1):
                 with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
                     with self.assertRaises(ConnectionError):
                         self.get_runner(

@@ -62,8 +62,8 @@ HEARTBEAT_INTERVAL = 1
 HEARTBEAT_LIVENESS = 3
 HEARTBEAT_DEAD_INTERNAL = -60
 FALLBACK_INTERVAL = 5
-CONNECTION_TIMEOUT = 5
-CONNECTION_RETRY_COUNT = 2
+CONNECT_TIMEOUT = 5
+CONNECT_RETRY_COUNT = 2
 
 
 greenlet_exception_handler = greenlet_exception_logger(logger)
@@ -1253,9 +1253,9 @@ class WorkerRunner(DistributedRunner):
     def connect_to_master(self):
         self.retry += 1
         self.client.send(Message("client_ready", __version__, self.client_id))
-        success = self.connection_event.wait(timeout=CONNECTION_TIMEOUT)
+        success = self.connection_event.wait(timeout=CONNECT_TIMEOUT)
         if not success:
-            if self.retry > CONNECTION_RETRY_COUNT:
+            if self.retry > CONNECT_RETRY_COUNT:
                 raise ConnectionError()
             self.connect_to_master()
         self.connected = True
