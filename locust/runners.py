@@ -40,6 +40,7 @@ except ImportError:
 import gevent
 import greenlet
 import psutil
+from gevent.event import Event
 from gevent.pool import Group
 
 from . import User
@@ -80,6 +81,8 @@ HEARTBEAT_INTERVAL = 1
 HEARTBEAT_LIVENESS = 3
 HEARTBEAT_DEAD_INTERNAL = -60
 FALLBACK_INTERVAL = 5
+CONNECT_TIMEOUT = 5
+CONNECT_RETRY_COUNT = 2
 
 
 greenlet_exception_handler = greenlet_exception_logger(logger)
@@ -964,6 +967,7 @@ class MasterRunner(DistributedRunner):
                         logger.warning(
                             f"A worker ({client_id}) running a different version ({msg.data}) connected, master version is {__version__}"
                         )
+                self.send_message("ack", client_id=client_id)
                 worker_node_id = msg.node_id
                 self.clients[worker_node_id] = WorkerNode(worker_node_id, heartbeat_liveness=HEARTBEAT_LIVENESS)
                 if self._users_dispatcher is not None:
@@ -1092,6 +1096,9 @@ class WorkerRunner(DistributedRunner):
         :param master_port: Port to use for connecting to the master
         """
         super().__init__(environment)
+        self.retry = 0
+        self.connected = False
+        self.connection_event = Event()
         self.worker_state = STATE_INIT
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         self.master_host = master_host
@@ -1099,9 +1106,9 @@ class WorkerRunner(DistributedRunner):
         self.worker_cpu_warning_emitted = False
         self._users_dispatcher: Optional[UsersDispatcher] = None
         self.client = rpc.Client(master_host, master_port, self.client_id)
-        self.greenlet.spawn(self.heartbeat).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.worker).link_exception(greenlet_exception_handler)
-        self.client.send(Message("client_ready", __version__, self.client_id))
+        self.connect_to_master()
+        self.greenlet.spawn(self.heartbeat).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.stats_reporter).link_exception(greenlet_exception_handler)
 
         # register listener for when all users have spawned, and report it to the master node
@@ -1205,7 +1212,9 @@ class WorkerRunner(DistributedRunner):
             except RPCError as e:
                 logger.error(f"RPCError found when receiving from master: {e}")
                 continue
-            if msg.type == "spawn":
+            if msg.type == "ack":
+                self.connection_event.set()
+            elif msg.type == "spawn":
                 self.client.send(Message("spawning", None, self.client_id))
                 job = msg.data
                 if job["timestamp"] <= last_received_spawn_timestamp:
@@ -1288,6 +1297,16 @@ class WorkerRunner(DistributedRunner):
         data: Dict[str, Any] = {}
         self.environment.events.report_to_master.fire(client_id=self.client_id, data=data)
         self.client.send(Message("stats", data, self.client_id))
+
+    def connect_to_master(self):
+        self.retry += 1
+        self.client.send(Message("client_ready", __version__, self.client_id))
+        success = self.connection_event.wait(timeout=CONNECT_TIMEOUT)
+        if not success:
+            if self.retry > CONNECT_RETRY_COUNT:
+                raise ConnectionError()
+            self.connect_to_master()
+        self.connected = True
 
 
 def _format_user_classes_count_for_log(user_classes_count: Dict[str, int]) -> str:
