@@ -943,8 +943,7 @@ class MasterRunner(DistributedRunner):
         while True:
             msg: Message
             try:
-                client_id, data = self.server.recv_from_client()
-                msg = self.server.msg_from_data(data)
+                client_id, msg = self.server.recv_from_client()
             except RPCReceiveError as e:
                 logger.error(f"RPCError when receiving from client: {e}. Will reset client {client_id}.")
                 try:

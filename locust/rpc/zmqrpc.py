@@ -46,14 +46,11 @@ class BaseSocket:
             raise RPCReceiveError("ZMQ interrupted or corrupted message") from e
         except zmqerr.ZMQError as e:
             raise RPCError("ZMQ network broken") from e
-        return addr, data[1]
-
-    def msg_from_data(self, data):
         try:
-            msg = Message.unserialize(data)
+            msg = Message.unserialize(data[1])
         except (UnicodeDecodeError, msgerr.ExtraData) as e:
             raise RPCReceiveError("ZMQ interrupted or corrupted message") from e
-        return msg
+        return addr, msg
 
     def close(self, linger=None):
         self.socket.close(linger)
