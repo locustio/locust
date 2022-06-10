@@ -1,3 +1,4 @@
+from __future__ import annotations
 import re
 import socket
 import json
@@ -6,7 +7,7 @@ from base64 import b64encode
 from urllib.parse import urlparse, urlunparse
 from ssl import SSLError
 import time
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional, Tuple, Dict, Any, Union
 
 from http.cookiejar import CookieJar
 
@@ -150,7 +151,7 @@ class FastHttpSession:
         allow_redirects=True,
         context: dict = {},
         **kwargs,
-    ):
+    ) -> Union[ResponseContextManager, FastResponse]:
         """
         Send and HTTP request
         Returns :py:class:`locust.contrib.fasthttp.FastResponse` object.

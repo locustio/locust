@@ -240,15 +240,14 @@ class HttpUser(User):
                 "You must specify the base host. Either in the host attribute in the User class, or on the command line using the --host option."
             )
 
-        session = HttpSession(
+        self.client = HttpSession(
             base_url=self.host,
             request_event=self.environment.events.request,
             user=self,
             pool_manager=self.pool_manager,
         )
-        session.trust_env = False
-        self.client: HttpSession = session
         """
         Instance of HttpSession that is created upon instantiation of Locust.
         The client supports cookies, and therefore keeps the session between HTTP requests.
         """
+        self.client.trust_env = False
