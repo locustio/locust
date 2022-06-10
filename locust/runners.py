@@ -45,7 +45,7 @@ from gevent.pool import Group
 from . import User
 from locust import __version__
 from .dispatch import UsersDispatcher
-from .exception import RPCError
+from .exception import RPCError, RPCReceiveError, RPCSendError
 from .log import greenlet_exception_logger
 from .rpc import (
     Message,
@@ -938,31 +938,35 @@ class MasterRunner(DistributedRunner):
 
     def client_listener(self) -> NoReturn:
         while True:
+            msg: Message
             try:
                 client_id, data = self.server.recv_from_client()
+                msg = self.server.msg_from_data(data)
+            except RPCReceiveError as e:
+                logger.error(f"RPCError when receiving from client: {e}. Will reset client {client_id}.")
                 try:
-                    msg = self.server.msg_from_data(data)
-                except RPCError as e:
-                    if self.clients.ready or self.clients.spawning or self.clients.running:
-                        logger.error(f"RPCError found when receiving from client: {e}. Will reset client {client_id}.")
-                        try:
-                            self.server.send_to_client(Message("reconnect", None, client_id))
-                            # del self.clients[client_id]
-                        except e:
-                            logger.error(f"Error sending reconnect message to client: {e}. Will reset RPC server.")
-                            self.connection_broken = True
-                            gevent.sleep(FALLBACK_INTERVAL)
-                            continue
-                    else:
-                        logger.debug(
-                            "RPCError found when receiving from client: %s (but no clients were expected to be connected anyway)"
-                            % (e)
-                        )
-            except RPCError("ZMQ network broken"):
-                logger.error("ZMQ network broken. Will reset RPC server.")
+                    self.server.send_to_client(Message("reconnect", None, client_id))
+                except Exception as e:
+                    logger.error(f"Error sending reconnect message to client: {e}. Will reset RPC server.")
+                    self.connection_broken = True
+                    gevent.sleep(FALLBACK_INTERVAL)
+                    continue
+            except RPCSendError as e:
+                logger.error(f"Error sending reconnect message to client: {e}. Will reset RPC server.")
                 self.connection_broken = True
                 gevent.sleep(FALLBACK_INTERVAL)
                 continue
+            except RPCError as e:
+                if self.clients.ready or self.clients.spawning or self.clients.running:
+                    logger.error(f"RPCError: {e}. Will reset RPC server.")
+                    self.connection_broken = True
+                    gevent.sleep(FALLBACK_INTERVAL)
+                    continue
+                else:
+                    logger.debug(
+                        "RPCError when receiving from client: %s (but no clients were expected to be connected anyway)"
+                        % (e)
+                    )
             msg.node_id = client_id
             if msg.type == "client_ready":
                 if not msg.data:

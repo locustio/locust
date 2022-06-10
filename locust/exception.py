@@ -54,6 +54,22 @@ class RPCError(Exception):
     """
 
 
+class RPCSendError(Exception):
+    """
+    Exception when sending message to client.
+
+    When raised from zmqrpc, sending can be retried or RPC can be reestablished.
+    """
+
+
+class RPCReceiveError(Exception):
+    """
+    Exception when receiving message from client is interrupted or message is corrupted.
+
+    When raised from zmqrpc, client connection should be reestablished.
+    """
+
+
 class AuthCredentialsError(ValueError):
     """
     Exception when the auth credentials provided
