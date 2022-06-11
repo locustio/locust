@@ -24,8 +24,7 @@ class ZMQRPC_tests(LocustTestCase):
 
     def test_client_send(self):
         self.client.send(Message("test", "message", "identity"))
-        addr, data = self.server.recv_from_client()
-        msg = self.server.msg_from_data(data)
+        addr, msg = self.server.recv_from_client()
         self.assertEqual(addr, "identity")
         self.assertEqual(msg.type, "test")
         self.assertEqual(msg.data, "message")

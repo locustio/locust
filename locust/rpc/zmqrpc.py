@@ -53,7 +53,7 @@ class BaseSocket:
         return addr, msg
 
     def close(self, linger=None):
-        self.socket.close(linger)
+        self.socket.close(linger=linger)
 
 
 class Server(BaseSocket):

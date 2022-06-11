@@ -85,7 +85,7 @@ def mocked_rpc(raise_on_close=True):
                 raise RPCError()
             return msg.node_id, msg
 
-        def close(self):
+        def close(self, linger=None):
             if self.raise_error_on_close:
                 raise RPCError()
             else:
