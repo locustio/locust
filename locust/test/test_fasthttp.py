@@ -672,3 +672,23 @@ class TestFastHttpSsl(LocustTestCase):
         self.assertEqual(200, r.status_code)
         self.assertIn("<title>Locust for None</title>", r.content.decode("utf-8"))
         self.assertIn("<p>Script: <span>None</span></p>", r.text)
+
+    def test_custom_ssl_context(self):
+        def create_custom_context():
+            context = gevent.ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = gevent.ssl.CERT_NONE
+            return context
+
+        s = FastHttpSession(self.environment, "https://127.0.0.1:%i" % self.web_port, ssl_context=create_custom_context(), user=None)
+        r = s.get("/")
+        self.assertEqual(200, r.status_code)
+        self.assertIn("<title>Locust for None</title>", r.content.decode("utf-8"))
+        self.assertIn("<p>Script: <span>None</span></p>", r.text)
+
+    def test_custom_ssl_context_error_fail(self):
+        def create_custom_context():
+            return {'ssl_context': {'cert': 'mycert.pem', 'key': 'mykey.key'}}
+
+        with FastHttpSession(self.environment, "https://127.0.0.1:%i" % self.web_port, ssl_context=create_custom_context(), user=None):
+            self.assertRaises(TypeError)

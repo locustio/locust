@@ -75,13 +75,16 @@ class FastHttpSession:
         user: Optional[User],
         insecure=True,
         client_pool: Optional[HTTPClientPool] = None,
+        ssl_context: Optional[gevent.ssl.SSLContext] = None,
         **kwargs,
     ):
         self.environment = environment
         self.base_url = base_url
         self.cookiejar = CookieJar()
         self.user = user
-        if insecure:
+        if ssl_context and self._check_ssl_context(ssl_context):
+            ssl_context_factory = lambda: ssl_context
+        elif insecure:
             ssl_context_factory = insecure_ssl_context_factory
         else:
             ssl_context_factory = gevent.ssl.create_default_context
@@ -106,6 +109,13 @@ class FastHttpSession:
             )
             # store authentication header (we construct this by using _basic_auth_str() function from requests.auth)
             self.auth_header = _construct_basic_auth_str(parsed_url.username, parsed_url.password)
+
+    def _check_ssl_context(ssl_context):
+        if not isinstance(ssl_context, gevent.ssl.SSLContext):
+            raise TypeError(
+                'You must provide a valid SSLContext. Expected type is gevent.ssl.SSLContext '
+                f'but you provided a ${type(ssl_context)}')
+        return True
 
     def _build_url(self, path):
         """prepend url with hostname unless it's already an absolute URL"""
@@ -318,6 +328,9 @@ class FastHttpUser(User):
     client_pool: Optional[HTTPClientPool] = None
     """HTTP client pool to use. If not given, a new pool is created per single user."""
 
+    ssl_context: Optional[gevent.ssl.SSLContext] = None
+    """A pre-configured SSL context for overriding the default context context created by the FastHttpSession."""
+
     abstract = True
     """Dont register this as a User class that can be run by itself"""
 
@@ -341,6 +354,7 @@ class FastHttpUser(User):
             concurrency=self.concurrency,
             user=self,
             client_pool=self.client_pool,
+            ssl_context=self.ssl_context
         )
         """
         Instance of HttpSession that is created upon instantiation of User.
