@@ -110,7 +110,7 @@ class FastHttpSession:
             # store authentication header (we construct this by using _basic_auth_str() function from requests.auth)
             self.auth_header = _construct_basic_auth_str(parsed_url.username, parsed_url.password)
 
-    def _check_ssl_context(ssl_context):
+    def _check_ssl_context(self, ssl_context):
         if not isinstance(ssl_context, gevent.ssl.SSLContext):
             raise TypeError(
                 'You must provide a valid SSLContext. Expected type is gevent.ssl.SSLContext '
