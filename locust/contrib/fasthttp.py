@@ -5,7 +5,7 @@ import json
 import json as unshadowed_json  # some methods take a named parameter called json
 from base64 import b64encode
 from urllib.parse import urlparse, urlunparse
-from ssl import SSLError
+from ssl import SSLError, SSLContext
 import time
 from typing import Optional, Tuple, Dict, Any, Union
 
@@ -75,14 +75,16 @@ class FastHttpSession:
         user: Optional[User],
         insecure=True,
         client_pool: Optional[HTTPClientPool] = None,
-        ssl_context: Optional[gevent.ssl.SSLContext] = None,
+        ssl_context: Optional[SSLContext] = None,
         **kwargs,
     ):
         self.environment = environment
         self.base_url = base_url
         self.cookiejar = CookieJar()
         self.user = user
-        if ssl_context and self._check_ssl_context(ssl_context):
+        if ssl_context:
+            if not isinstance(ssl_context, SSLContext):
+                raise TypeError('You must provide a valid SSLContext.')
             ssl_context_factory = lambda: ssl_context
         elif insecure:
             ssl_context_factory = insecure_ssl_context_factory
@@ -109,13 +111,6 @@ class FastHttpSession:
             )
             # store authentication header (we construct this by using _basic_auth_str() function from requests.auth)
             self.auth_header = _construct_basic_auth_str(parsed_url.username, parsed_url.password)
-
-    def _check_ssl_context(self, ssl_context):
-        if not isinstance(ssl_context, gevent.ssl.SSLContext):
-            raise TypeError(
-                'You must provide a valid SSLContext. Expected type is gevent.ssl.SSLContext '
-                f'but you provided a ${type(ssl_context)}')
-        return True
 
     def _build_url(self, path):
         """prepend url with hostname unless it's already an absolute URL"""
@@ -328,7 +323,7 @@ class FastHttpUser(User):
     client_pool: Optional[HTTPClientPool] = None
     """HTTP client pool to use. If not given, a new pool is created per single user."""
 
-    ssl_context: Optional[gevent.ssl.SSLContext] = None
+    ssl_context: Optional[SSLContext] = None
     """A pre-configured SSL context for overriding the default context context created by the FastHttpSession."""
 
     abstract = True
