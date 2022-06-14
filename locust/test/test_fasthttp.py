@@ -681,18 +681,12 @@ class TestFastHttpSsl(LocustTestCase):
             return context
 
         s = FastHttpSession(
-            self.environment, "https://127.0.0.1:%i" % self.web_port, ssl_context=create_custom_context(), user=None
+            self.environment,
+            "https://127.0.0.1:%i" % self.web_port,
+            ssl_context_factory=create_custom_context,
+            user=None,
         )
         r = s.get("/")
         self.assertEqual(200, r.status_code)
         self.assertIn("<title>Locust for None</title>", r.content.decode("utf-8"))
         self.assertIn("<p>Script: <span>None</span></p>", r.text)
-
-    def test_custom_ssl_context_error_fail(self):
-        def create_custom_context():
-            return {"ssl_context": {"cert": "mycert.pem", "key": "mykey.key"}}
-
-        with self.assertRaises(TypeError):
-            FastHttpSession(
-                self.environment, "https://127.0.0.1:%i" % self.web_port, ssl_context=create_custom_context(), user=None
-            )
