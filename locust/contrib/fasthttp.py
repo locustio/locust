@@ -84,7 +84,7 @@ class FastHttpSession:
         self.user = user
         if ssl_context:
             if not isinstance(ssl_context, SSLContext):
-                raise TypeError('You must provide a valid SSLContext.')
+                raise TypeError("You must provide a valid SSLContext.")
             ssl_context_factory = lambda: ssl_context
         elif insecure:
             ssl_context_factory = insecure_ssl_context_factory
@@ -349,7 +349,7 @@ class FastHttpUser(User):
             concurrency=self.concurrency,
             user=self,
             client_pool=self.client_pool,
-            ssl_context=self.ssl_context
+            ssl_context=self.ssl_context,
         )
         """
         Instance of HttpSession that is created upon instantiation of User.
