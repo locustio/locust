@@ -970,7 +970,6 @@ class MasterRunner(DistributedRunner):
                 gevent.sleep(FALLBACK_INTERVAL)
                 continue
             msg.node_id = client_id
-            logger.debug(f"Received a message: {msg.type}")  # noisy?
             if msg.type == "client_ready":
                 if not msg.data:
                     logger.error(f"An old (pre 2.0) worker tried to connect ({client_id}). That's not going to work.")
