@@ -886,7 +886,23 @@ class MasterRunner(DistributedRunner):
         if (
             not self.state == STATE_INIT
             and not self.state == STATE_STOPPED
-            and all(map(lambda x: x.state not in (STATE_RUNNING, STATE_SPAWNING, STATE_INIT), self.clients.all))
+            and (
+                (
+                    self.state == STATE_STOPPING
+                    and all(
+                        map(
+                            lambda x: x.state == STATE_INIT,
+                            self.clients.all,
+                        )
+                    )
+                )
+            )
+            or all(
+                map(
+                    lambda x: x.state not in (STATE_RUNNING, STATE_SPAWNING, STATE_INIT),
+                    self.clients.all,
+                )
+            )
         ):
             self.update_state(STATE_STOPPED)
 
