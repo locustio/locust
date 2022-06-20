@@ -682,7 +682,6 @@ class MasterRunner(DistributedRunner):
         def on_worker_report(client_id: str, data: Dict[str, Any]) -> None:
             if client_id not in self.clients:
                 logger.info("Discarded report from unrecognized worker %s", client_id)
-                self.server.send_to_client(Message("stop", None, client_id))
                 return
             self.clients[client_id].user_classes_count = data["user_classes_count"]
 
@@ -941,7 +940,8 @@ class MasterRunner(DistributedRunner):
 
     def client_listener(self) -> NoReturn:
         while True:
-            msg: Message
+            msg: Message = None
+            client_id: str = None
             try:
                 client_id, msg = self.server.recv_from_client()
             except RPCReceiveError as e:
@@ -961,14 +961,14 @@ class MasterRunner(DistributedRunner):
             except RPCError as e:
                 if self.clients.ready or self.clients.spawning or self.clients.running:
                     logger.error(f"RPCError: {e}. Will reset RPC server.")
-                    self.connection_broken = True
-                    gevent.sleep(FALLBACK_INTERVAL)
-                    continue
                 else:
                     logger.debug(
                         "RPCError when receiving from client: %s (but no clients were expected to be connected anyway)"
                         % (e)
                     )
+                self.connection_broken = True
+                gevent.sleep(FALLBACK_INTERVAL)
+                continue
             msg.node_id = client_id
             if msg.type == "client_ready":
                 if not msg.data:
