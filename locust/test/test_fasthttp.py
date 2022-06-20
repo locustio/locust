@@ -203,6 +203,58 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(s.base_url + "/wrong_url/01", kwargs["url"])  # url is unaffected by name
         self.assertDictEqual({"foo": "bar"}, kwargs["context"])
 
+    def test_custom_ssl_context_fail_with_bad_context(self):
+        """
+        Test FastHttpSession with a custom SSLContext factory that will fail as
+        we can not set verify_mode to CERT_NONE when check_hostname is enabled
+        """
+
+        def create_custom_context():
+            context = gevent.ssl.create_default_context()
+            context.check_hostname = True
+            context.verify_mode = gevent.ssl.CERT_NONE
+            return context
+
+        s = FastHttpSession(
+            self.environment,
+            "https://127.0.0.1:%i" % self.port,
+            ssl_context_factory=create_custom_context,
+            user=None,
+        )
+        with self.assertRaises(ValueError) as e:
+            s.get("/")
+        self.assertEqual(e.exception.args, ("Cannot set verify_mode to CERT_NONE when check_hostname is enabled.",))
+
+    def test_custom_ssl_context_passed_correct_to_client_pool(self):
+        """
+        Test FastHttpSession with a custom SSLContext factory with a options.name
+        that will be passed correctly to the ClientPool. It will also test a 2nd
+        factory which is not the correct one.
+        """
+
+        def custom_ssl_context():
+            context = gevent.ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = gevent.ssl.CERT_NONE
+            context.options.name = "FAKEOPTION"
+            return context
+
+        def custom_context_with_wrong_option():
+            context = gevent.ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = gevent.ssl.CERT_NONE
+            context.options.name = "OPTIONFAKED"
+            return context
+
+        s = FastHttpSession(
+            self.environment,
+            "https://127.0.0.1:%i" % self.port,
+            ssl_context_factory=custom_ssl_context,
+            user=None,
+        )
+        self.assertEqual(s.client.clientpool.client_args["ssl_context_factory"], custom_ssl_context)
+        self.assertNotEqual(s.client.clientpool.client_args["ssl_context_factory"], custom_context_with_wrong_option)
+
 
 class TestRequestStatsWithWebserver(WebserverTestCase):
     def test_request_stats_content_length(self):

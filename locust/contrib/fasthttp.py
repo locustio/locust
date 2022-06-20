@@ -7,7 +7,7 @@ from base64 import b64encode
 from urllib.parse import urlparse, urlunparse
 from ssl import SSLError
 import time
-from typing import Optional, Tuple, Dict, Any, Union
+from typing import Callable, Optional, Tuple, Dict, Any, Union
 
 from http.cookiejar import CookieJar
 
@@ -75,16 +75,18 @@ class FastHttpSession:
         user: Optional[User],
         insecure=True,
         client_pool: Optional[HTTPClientPool] = None,
+        ssl_context_factory: Optional[Callable] = None,
         **kwargs,
     ):
         self.environment = environment
         self.base_url = base_url
         self.cookiejar = CookieJar()
         self.user = user
-        if insecure:
-            ssl_context_factory = insecure_ssl_context_factory
-        else:
-            ssl_context_factory = gevent.ssl.create_default_context
+        if not ssl_context_factory:
+            if insecure:
+                ssl_context_factory = insecure_ssl_context_factory
+            else:
+                ssl_context_factory = gevent.ssl.create_default_context
         self.client = LocustUserAgent(
             cookiejar=self.cookiejar,
             ssl_context_factory=ssl_context_factory,
@@ -318,6 +320,9 @@ class FastHttpUser(User):
     client_pool: Optional[HTTPClientPool] = None
     """HTTP client pool to use. If not given, a new pool is created per single user."""
 
+    ssl_context_factory: Optional[Callable] = None
+    """A callable that return a SSLContext for overriding the default context created by the FastHttpSession."""
+
     abstract = True
     """Dont register this as a User class that can be run by itself"""
 
@@ -341,6 +346,7 @@ class FastHttpUser(User):
             concurrency=self.concurrency,
             user=self,
             client_pool=self.client_pool,
+            ssl_context_factory=self.ssl_context_factory,
         )
         """
         Instance of HttpSession that is created upon instantiation of User.

@@ -1619,6 +1619,34 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.assertEqual(2, worker.user_count, "Shape test has not started again correctly")
             master.stop()
 
+    def test_distributed_stop_with_stopping_state(self):
+        """
+        Test stopping state when workers have stopped and now ready for a next test
+        """
+
+        class TestUser(User):
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            master_env = Environment(user_classes=[TestUser])
+            master = master_env.create_master_runner("*", 0)
+
+            workers = []
+            for i in range(3):
+                worker_env = Environment(user_classes=[TestUser])
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+
+        for worker in workers:
+            worker.send_message("client_stopped", None)
+
+        sleep(1)
+        for worker in workers:
+            self.assertEqual(STATE_INIT, worker.state, "Worker sent a client_stopped, should be ready once stopped")
+        self.assertEqual(STATE_STOPPED, master.state)
+
     def test_distributed_shape_statuses_transition(self):
         """
         Full integration test that starts both a MasterRunner and five WorkerRunner instances
