@@ -1301,7 +1301,7 @@ class WorkerRunner(DistributedRunner):
                 self.stop()
                 self._send_stats()  # send a final report, in case there were any samples not yet reported
                 self.greenlet.kill(block=True)
-            elif msg.type == "reonnect":
+            elif msg.type == "reconnect":
                 logger.warning("Received reconnect message from master. Resetting RPC connection.")
                 self.reset_connection()
             elif msg.type in self.custom_messages:
