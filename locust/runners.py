@@ -956,8 +956,6 @@ class MasterRunner(DistributedRunner):
 
     def client_listener(self) -> NoReturn:
         while True:
-            msg: Message = None
-            client_id: str = None
             try:
                 client_id, msg = self.server.recv_from_client()
             except RPCReceiveError as e:
