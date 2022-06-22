@@ -2944,7 +2944,6 @@ class TestMasterRunner(LocustRunnerTestCase):
             master.start(10, 10)
             sleep(0.1)
             server.mocked_send(Message("stats", BAD_MESSAGE, "zeh_fake_client1"))
-            print(server.outbox)
             self.assertEqual(4, len(server.outbox))
 
             # Expected message order in outbox: ack, spawn, reconnect, ack
