@@ -24,6 +24,7 @@ from locust.env import Environment
 from locust.exception import (
     RPCError,
     StopUser,
+    RPCReceiveError
 )
 from locust.main import create_environment
 from locust.rpc import Message
@@ -49,6 +50,7 @@ from retry import retry  # type: ignore
 from .util import patch_env
 
 NETWORK_BROKEN = "network broken"
+BAD_MESSAGE = "bad message"
 
 
 def mocked_rpc(raise_on_close=True):
@@ -83,6 +85,8 @@ def mocked_rpc(raise_on_close=True):
             msg = Message.unserialize(results)
             if msg.data == NETWORK_BROKEN:
                 raise RPCError()
+            if msg.data == BAD_MESSAGE:
+                raise RPCReceiveError("Bad message")
             return msg.node_id, msg
 
         def close(self, linger=None):
@@ -2922,6 +2926,33 @@ class TestMasterRunner(LocustRunnerTestCase):
             self.assertEqual(1, len(master.clients))
             self.assertEqual("ack", server.outbox[0][1].type)
             self.assertEqual(1, len(server.outbox))
+    
+    def test_worker_sends_bad_message_to_master(self):
+        """
+        Validate master sends reconnect message to worker when it receives a bad message.
+        """
+
+        class TestUser(User):
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner(user_classes=[TestUser])
+            server.mocked_send(Message("client_ready", __version__, "zeh_fake_client1"))
+            self.assertEqual(1, len(master.clients))
+            self.assertTrue(
+                "zeh_fake_client1" in master.clients, "Could not find fake client in master instance's clients dict"
+            )
+
+            master.start(10, 10)
+            sleep(0.1)
+            server.mocked_send(Message("stats", BAD_MESSAGE, "zeh_fake_client1"))
+            print(server.outbox)
+            self.assertEqual(4, len(server.outbox))
+
+            # Expected message order in outbox: ack, spawn, reconnect, ack
+            self.assertEqual("reconnect", server.outbox[2][1].type, "Master didn't send worker reconnect message when expected.")
 
 
 class TestWorkerRunner(LocustTestCase):
@@ -3200,6 +3231,51 @@ class TestWorkerRunner(LocustTestCase):
             self.assertIn("current_memory_usage", message.data)
 
             worker.quit()
+
+    def test_reset_rpc_connection_to_master(self):
+        """
+        Validate worker resets RPC connection to master on "reconnect" message.
+        """
+
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc(raise_on_close=False)) as client:
+            client_id = id(client)
+            worker = self.get_runner(environment=Environment(), user_classes=[MyUser], client=client)
+            client.mocked_send(
+                Message(
+                    "spawn",
+                    {
+                        "timestamp": 1605538584,
+                        "user_classes_count": {"MyUser": 10},
+                        "host": "",
+                        "stop_timeout": None,
+                        "parsed_options": {},
+                    },
+                    "dummy_client_id",
+                )
+            )
+            sleep(0.6)
+            self.assertEqual(STATE_RUNNING, worker.state)
+            with self.assertLogs('locust.runners') as capture:
+                with mock.patch('locust.rpc.rpc.Client.close') as close:
+                    client.mocked_send(
+                        Message(
+                            "reconnect",
+                            None,
+                            "dummy_client_id",
+                        )
+                    )
+                    sleep(0)
+                    worker.spawning_greenlet.join()
+                    worker.quit()
+                    close.assert_called_once()
+            self.assertIn("WARNING:locust.runners:Received reconnect message from master. Resetting RPC connection.", capture.output)
 
     def test_change_user_count_during_spawning(self):
         class MyUser(User):
