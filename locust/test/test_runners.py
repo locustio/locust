@@ -21,11 +21,7 @@ from locust import (
 )
 from locust.argument_parser import parse_options
 from locust.env import Environment
-from locust.exception import (
-    RPCError,
-    StopUser,
-    RPCReceiveError
-)
+from locust.exception import RPCError, StopUser, RPCReceiveError
 from locust.main import create_environment
 from locust.rpc import Message
 from locust.runners import (
@@ -2926,7 +2922,7 @@ class TestMasterRunner(LocustRunnerTestCase):
             self.assertEqual(1, len(master.clients))
             self.assertEqual("ack", server.outbox[0][1].type)
             self.assertEqual(1, len(server.outbox))
-    
+
     def test_worker_sends_bad_message_to_master(self):
         """
         Validate master sends reconnect message to worker when it receives a bad message.
@@ -2952,7 +2948,9 @@ class TestMasterRunner(LocustRunnerTestCase):
             self.assertEqual(4, len(server.outbox))
 
             # Expected message order in outbox: ack, spawn, reconnect, ack
-            self.assertEqual("reconnect", server.outbox[2][1].type, "Master didn't send worker reconnect message when expected.")
+            self.assertEqual(
+                "reconnect", server.outbox[2][1].type, "Master didn't send worker reconnect message when expected."
+            )
 
 
 class TestWorkerRunner(LocustTestCase):
@@ -3262,8 +3260,8 @@ class TestWorkerRunner(LocustTestCase):
             )
             sleep(0.6)
             self.assertEqual(STATE_RUNNING, worker.state)
-            with self.assertLogs('locust.runners') as capture:
-                with mock.patch('locust.rpc.rpc.Client.close') as close:
+            with self.assertLogs("locust.runners") as capture:
+                with mock.patch("locust.rpc.rpc.Client.close") as close:
                     client.mocked_send(
                         Message(
                             "reconnect",
@@ -3275,7 +3273,10 @@ class TestWorkerRunner(LocustTestCase):
                     worker.spawning_greenlet.join()
                     worker.quit()
                     close.assert_called_once()
-            self.assertIn("WARNING:locust.runners:Received reconnect message from master. Resetting RPC connection.", capture.output)
+            self.assertIn(
+                "WARNING:locust.runners:Received reconnect message from master. Resetting RPC connection.",
+                capture.output,
+            )
 
     def test_change_user_count_during_spawning(self):
         class MyUser(User):
