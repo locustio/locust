@@ -42,7 +42,7 @@ function fillTasksFromObj() {
 }
 
 function fillTasksFromRequest() {
-    $.get('/tasks', function (data) {
+    $.get('./tasks', function (data) {
         _renderTasks(data)
     });
 }
