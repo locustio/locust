@@ -1,6 +1,28 @@
 # Changelog
 Note that PRs for the latest version are sometimes missing here, check [github](https://github.com/locustio/locust/releases) for the latest info.
 
+## [2.10.0](https://github.com/locustio/locust/tree/2.10.0) (2022-06-27)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.9.0...2.10.0)
+
+**Closed issues:**
+
+- Add ACK for worker connection [\#2044](https://github.com/locustio/locust/issues/2044)
+
+**Merged pull requests:**
+
+- Remove timeout parameter from FastHttpUser unit tests [\#2123](https://github.com/locustio/locust/pull/2123) ([cyberw](https://github.com/cyberw))
+- Convert url for getting tasks to relative [\#2121](https://github.com/locustio/locust/pull/2121) ([5imun](https://github.com/5imun))
+- More robust handling of ZMQ/RPC errors [\#2120](https://github.com/locustio/locust/pull/2120) ([solowalker27](https://github.com/solowalker27))
+- Update the link for reporting data to a database [\#2119](https://github.com/locustio/locust/pull/2119) ([AlexMooney](https://github.com/AlexMooney))
+- fix: stopping state when running more than one worker node. [\#2116](https://github.com/locustio/locust/pull/2116) ([renato-farias](https://github.com/renato-farias))
+- add support for custom SSLContext when using FastHttpUser [\#2113](https://github.com/locustio/locust/pull/2113) ([renato-farias](https://github.com/renato-farias))
+- chore: Set permissions for GitHub actions [\#2107](https://github.com/locustio/locust/pull/2107) ([naveensrinivasan](https://github.com/naveensrinivasan))
+- additional typing improvements [\#2106](https://github.com/locustio/locust/pull/2106) ([mgor](https://github.com/mgor))
+- Stop client\_listener from raising a KeyError when receiving a client\_stopped message from unknown worker [\#2102](https://github.com/locustio/locust/pull/2102) ([BirdLearn](https://github.com/BirdLearn))
+- Fix multiple resetting connection after RPCError [\#2096](https://github.com/locustio/locust/pull/2096) ([Nosibb](https://github.com/Nosibb))
+- Add ack for worker connection [\#2077](https://github.com/locustio/locust/pull/2077) ([Nosibb](https://github.com/Nosibb))
+
 ## [2.9.0](https://github.com/locustio/locust/tree/2.9.0) (2022-05-19)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.8.6...2.9.0)
