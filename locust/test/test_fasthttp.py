@@ -25,7 +25,7 @@ class TestFastHttpSession(WebserverTestCase):
 
     def test_connection_error(self):
         s = FastHttpSession(self.environment, "http://localhost:1", user=None)
-        r = s.get("/", timeout=0.1, headers={"X-Test-Headers": "hello"})
+        r = s.get("/", headers={"X-Test-Headers": "hello"})
         self.assertEqual(r.status_code, 0)
         self.assertEqual(None, r.content)
         self.assertEqual(1, len(self.runner.stats.errors))
@@ -321,7 +321,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
             host = "http://localhost:1"
 
         locust = MyUser(self.environment)
-        response = locust.client.get("/", timeout=0.1)
+        response = locust.client.get("/")
         self.assertEqual(response.status_code, 0)
         self.assertEqual(1, self.runner.stats.get("/", "GET").num_failures)
         self.assertEqual(1, self.runner.stats.get("/", "GET").num_requests)
