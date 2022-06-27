@@ -46,7 +46,7 @@ from gevent.pool import Group
 from . import User
 from locust import __version__
 from .dispatch import UsersDispatcher
-from .exception import RPCError
+from .exception import RPCError, RPCReceiveError, RPCSendError
 from .log import greenlet_exception_logger
 from .rpc import (
     Message,
@@ -946,9 +946,9 @@ class MasterRunner(DistributedRunner):
                     self.start(user_count=self.target_user_count, spawn_rate=self.spawn_rate)
 
     def reset_connection(self) -> None:
-        logger.info("Reset connection to worker")
+        logger.info("Resetting RPC server and all client connections.")
         try:
-            self.server.close()
+            self.server.close(linger=0)
             self.server = rpc.Server(self.master_bind_host, self.master_bind_port)
             self.connection_broken = False
         except RPCError as e:
@@ -958,12 +958,26 @@ class MasterRunner(DistributedRunner):
         while True:
             try:
                 client_id, msg = self.server.recv_from_client()
+            except RPCReceiveError as e:
+                logger.error(f"RPCError when receiving from client: {e}. Will reset client {client_id}.")
+                try:
+                    self.server.send_to_client(Message("reconnect", None, client_id))
+                except Exception as e:
+                    logger.error(f"Error sending reconnect message to client: {e}. Will reset RPC server.")
+                    self.connection_broken = True
+                    gevent.sleep(FALLBACK_INTERVAL)
+                    continue
+            except RPCSendError as e:
+                logger.error(f"Error sending reconnect message to client: {e}. Will reset RPC server.")
+                self.connection_broken = True
+                gevent.sleep(FALLBACK_INTERVAL)
+                continue
             except RPCError as e:
-                if self.clients.ready:
-                    logger.error(f"RPCError found when receiving from client: {e}")
+                if self.clients.ready or self.clients.spawning or self.clients.running:
+                    logger.error(f"RPCError: {e}. Will reset RPC server.")
                 else:
                     logger.debug(
-                        "RPCError found when receiving from client: %s (but no clients were expected to be connected anyway)"
+                        "RPCError when receiving from client: %s (but no clients were expected to be connected anyway)"
                         % (e)
                     )
                 self.connection_broken = True
@@ -1285,6 +1299,9 @@ class WorkerRunner(DistributedRunner):
                 self.stop()
                 self._send_stats()  # send a final report, in case there were any samples not yet reported
                 self.greenlet.kill(block=True)
+            elif msg.type == "reconnect":
+                logger.warning("Received reconnect message from master. Resetting RPC connection.")
+                self.reset_connection()
             elif msg.type in self.custom_messages:
                 logger.debug(f"Received {msg.type} message from master")
                 self.custom_messages[msg.type](environment=self.environment, msg=msg)
