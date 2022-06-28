@@ -82,7 +82,7 @@ HEARTBEAT_LIVENESS = 3
 HEARTBEAT_DEAD_INTERNAL = -60
 FALLBACK_INTERVAL = 5
 CONNECT_TIMEOUT = 5
-CONNECT_RETRY_COUNT = 2
+CONNECT_RETRY_COUNT = 60
 
 
 greenlet_exception_handler = greenlet_exception_logger(logger)
