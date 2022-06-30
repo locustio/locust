@@ -51,7 +51,6 @@
             <div style="clear:both;"></div>
         </div>
     </div>
-    
     <div class="dialogs">
         <div class="dialog start" id="start">
             <div style="position:relative;">
@@ -60,6 +59,20 @@
             <div class="padder">
                 <h2>Start new load test</h2>
                 <form action="./swarm" method="POST" id="swarm_form">
+                    {% if show_userclass_picker %}
+                        <label for="available_user_classes">UserClasses </label>
+                        <select multiple name="user_classes" id="user-classes" class="userClass">
+                        {% for user in available_user_classes %}
+                            <option value="{{user}}" selected>{{user}}</option>
+                        {% endfor %}
+                        </select><br>
+                        <label for="available_shape_classes">ShapeClass </label>
+                        <select name="shape_class" id="shape-classes" class="shapeClass">
+                        {% for shape_class in available_shape_classes %}
+                            <option value="{{shape_class}}">{{shape_class}}</option>
+                        {% endfor %}
+                        </select><br>
+                    {% endif %}
                     {% if is_shape %}
                         <label for="user_count">Number of users <span style="color:#8a8a8a;">(peak concurrency)</span></label>
                         <input type="text" name="user_count" id="user_count" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
@@ -131,7 +144,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="main" id="main">
         <nav class="menu">
             <ul class="tabs container">

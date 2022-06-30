@@ -17,8 +17,8 @@ from tempfile import NamedTemporaryFile
 
 
 @contextmanager
-def temporary_file(content, suffix="_locustfile.py"):
-    f = NamedTemporaryFile(suffix=suffix, delete=False)
+def temporary_file(content, suffix="_locustfile.py", dir=None):
+    f = NamedTemporaryFile(suffix=suffix, delete=False, dir=dir)
     f.write(content.encode("utf-8"))
     f.close()
     try:

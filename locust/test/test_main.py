@@ -4,152 +4,37 @@ import pty
 import signal
 import subprocess
 import textwrap
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 from subprocess import PIPE, STDOUT
 
 import gevent
 import requests
 
-from locust import main
-from locust.argument_parser import parse_options
-from locust.main import create_environment
-from locust.user import HttpUser, User, TaskSet
 from .mock_locustfile import mock_locustfile, MOCK_LOCUSTFILE_CONTENT
-from .testcases import LocustTestCase
 from .util import temporary_file, get_free_tcp_port, patch_env
 
 
-class TestLoadLocustfile(LocustTestCase):
-    def test_is_user_class(self):
-        self.assertFalse(main.is_user_class(User))
-        self.assertFalse(main.is_user_class(HttpUser))
-        self.assertFalse(main.is_user_class({}))
-        self.assertFalse(main.is_user_class([]))
-
-        class MyTaskSet(TaskSet):
-            pass
-
-        class MyHttpUser(HttpUser):
-            tasks = [MyTaskSet]
-
-        class MyUser(User):
-            tasks = [MyTaskSet]
-
-        self.assertTrue(main.is_user_class(MyHttpUser))
-        self.assertTrue(main.is_user_class(MyUser))
-
-        class ThriftLocust(User):
-            abstract = True
-
-        self.assertFalse(main.is_user_class(ThriftLocust))
-
-    def test_load_locust_file_from_absolute_path(self):
-        with mock_locustfile() as mocked:
-            docstring, user_classes, shape_class = main.load_locustfile(mocked.file_path)
-            self.assertIn("UserSubclass", user_classes)
-            self.assertNotIn("NotUserSubclass", user_classes)
-            self.assertNotIn("LoadTestShape", user_classes)
-            self.assertIsNone(shape_class)
-
-    def test_load_locust_file_from_relative_path(self):
-        with mock_locustfile() as mocked:
-            docstring, user_classes, shape_class = main.load_locustfile(
-                os.path.join(os.path.relpath(mocked.directory, os.getcwd()), mocked.filename)
-            )
-
-    def test_load_locust_file_with_a_dot_in_filename(self):
-        with mock_locustfile(filename_prefix="mocked.locust.file") as mocked:
-            docstring, user_classes, shape_class = main.load_locustfile(mocked.file_path)
-
-    def test_return_docstring_and_user_classes(self):
-        with mock_locustfile() as mocked:
-            docstring, user_classes, shape_class = main.load_locustfile(mocked.file_path)
-            self.assertEqual("This is a mock locust file for unit testing", docstring)
-            self.assertIn("UserSubclass", user_classes)
-            self.assertNotIn("NotUserSubclass", user_classes)
-            self.assertNotIn("LoadTestShape", user_classes)
-
-    def test_with_shape_class(self):
-        content = (
-            MOCK_LOCUSTFILE_CONTENT
-            + """class LoadTestShape(LoadTestShape):
-    pass
-        """
-        )
-        with mock_locustfile(content=content) as mocked:
-            docstring, user_classes, shape_class = main.load_locustfile(mocked.file_path)
-            self.assertEqual("This is a mock locust file for unit testing", docstring)
-            self.assertIn("UserSubclass", user_classes)
-            self.assertNotIn("NotUserSubclass", user_classes)
-            self.assertEqual(shape_class.__class__.__name__, "LoadTestShape")
-
-    def test_create_environment(self):
-        options = parse_options(
-            args=[
-                "--host",
-                "https://custom-host",
-                "--reset-stats",
-            ]
-        )
-        env = create_environment([], options)
-        self.assertEqual("https://custom-host", env.host)
-        self.assertTrue(env.reset_stats)
-
-        options = parse_options(args=[])
-        env = create_environment([], options)
-        self.assertEqual(None, env.host)
-        self.assertFalse(env.reset_stats)
-
-    def test_specify_config_file(self):
-        with temporary_file(
-            textwrap.dedent(
-                """
-            host = localhost  # With "="
-            u 100             # Short form
-            spawn-rate 5      # long form
-                              # boolean
-            headless
-            # (for some reason an inline comment makes boolean values fail in configargparse nowadays)
-        """
-            ),
-            suffix=".conf",
-        ) as conf_file_path:
-            options = parse_options(
-                args=[
-                    "--config",
-                    conf_file_path,
-                ]
-            )
-            self.assertEqual(conf_file_path, options.config)
-            self.assertEqual("localhost", options.host)
-            self.assertEqual(100, options.num_users)
-            self.assertEqual(5, options.spawn_rate)
-            self.assertTrue(options.headless)
-
-    def test_command_line_arguments_override_config_file(self):
-        with temporary_file("host=from_file", suffix=".conf") as conf_file_path:
-            options = parse_options(
-                args=[
-                    "--config",
-                    conf_file_path,
-                    "--host",
-                    "from_args",
-                ]
-            )
-            self.assertEqual("from_args", options.host)
-
-    def test_locustfile_can_be_set_in_config_file(self):
-        with temporary_file(
-            "locustfile my_locust_file.py",
-            suffix=".conf",
-        ) as conf_file_path:
-            options = parse_options(
-                args=[
-                    "--config",
-                    conf_file_path,
-                ]
-            )
-            self.assertEqual("my_locust_file.py", options.locustfile)
+MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
+    """
+    from locust import User, task, constant, events
+    class TestUser1(User):
+        wait_time = constant(1)
+        @task
+        def my_task(self):
+            print("running my_task()")
+"""
+)
+MOCK_LOCUSTFILE_CONTENT_B = textwrap.dedent(
+    """
+    from locust import User, task, constant, events
+    class TestUser2(User):
+        wait_time = constant(1)
+        @task
+        def my_task(self):
+            print("running my_task()")
+"""
+)
 
 
 class ProcessIntegrationTest(TestCase):
@@ -300,9 +185,83 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
             self.assertIn("Starting web interface at", stderr)
+            self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shutting down (exit code 0)", stderr)
             self.assertEqual(0, proc.returncode)
+
+    def test_webserver_multiple_locustfiles(self):
+        with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1:
+            with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B) as mocked2:
+                proc = subprocess.Popen(
+                    ["locust", "-f", f"{mocked1.file_path},{mocked2.file_path}"], stdout=PIPE, stderr=PIPE, text=True
+                )
+                gevent.sleep(1)
+                proc.send_signal(signal.SIGTERM)
+                stdout, stderr = proc.communicate()
+                self.assertIn("Starting web interface at", stderr)
+                self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
+                self.assertIn("Starting Locust", stderr)
+                self.assertIn("Shutting down (exit code 0)", stderr)
+                self.assertEqual(0, proc.returncode)
+
+    def test_webserver_multiple_locustfiles_in_directory(self):
+        with TemporaryDirectory() as temp_dir:
+            with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A, dir=temp_dir):
+                with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B, dir=temp_dir):
+                    proc = subprocess.Popen(["locust", "-f", temp_dir], stdout=PIPE, stderr=PIPE, text=True)
+                    gevent.sleep(1)
+                    proc.send_signal(signal.SIGTERM)
+                    stdout, stderr = proc.communicate()
+                    self.assertIn("Starting web interface at", stderr)
+                    self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
+                    self.assertIn("Starting Locust", stderr)
+                    self.assertIn("Shutting down (exit code 0)", stderr)
+                    self.assertEqual(0, proc.returncode)
+
+    def test_webserver_multiple_locustfiles_with_shape(self):
+        content = textwrap.dedent(
+            """
+            from locust import User, task, between
+            class TestUser2(User):
+                wait_time = between(2, 4)
+                @task
+                def my_task(self):
+                    print("running my_task() again")
+            """
+        )
+        with mock_locustfile(content=content) as mocked1:
+            with temporary_file(
+                content=textwrap.dedent(
+                    """
+                from locust import User, task, between, LoadTestShape
+                class LoadTestShape(LoadTestShape):
+                    def tick(self):
+                        run_time = self.get_run_time()
+                        if run_time < 2:
+                            return (10, 1)
+
+                        return None
+
+                class TestUser(User):
+                    wait_time = between(2, 4)
+                    @task
+                    def my_task(self):
+                        print("running my_task()")
+            """
+                )
+            ) as mocked2:
+                proc = subprocess.Popen(
+                    ["locust", "-f", f"{mocked1.file_path},{mocked2}"], stdout=PIPE, stderr=PIPE, text=True
+                )
+                gevent.sleep(1)
+                proc.send_signal(signal.SIGTERM)
+                stdout, stderr = proc.communicate()
+                self.assertIn("Starting web interface at", stderr)
+                self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
+                self.assertIn("Starting Locust", stderr)
+                self.assertIn("Shutting down (exit code 0)", stderr)
+                self.assertEqual(0, proc.returncode)
 
     def test_default_headless_spawn_options(self):
         with mock_locustfile() as mocked:
@@ -352,6 +311,47 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Shutting down (exit code 0)", stderr)
             self.assertEqual(0, proc.returncode)
 
+    def test_run_headless_with_multiple_locustfiles(self):
+        with TemporaryDirectory() as temp_dir:
+            with mock_locustfile(dir=temp_dir):
+                with temporary_file(
+                    content=textwrap.dedent(
+                        """
+                    from locust import User, task, constant, events
+                    class TestUser(User):
+                        wait_time = constant(1)
+                        @task
+                        def my_task(self):
+                            print("running my_task()")
+                """
+                    ),
+                    dir=temp_dir,
+                ):
+                    proc = subprocess.Popen(
+                        [
+                            "locust",
+                            "-f",
+                            temp_dir,
+                            "--headless",
+                            "-u",
+                            "2",
+                            "--exit-code-on-error",
+                            "0",
+                        ],
+                        stdout=PIPE,
+                        stderr=PIPE,
+                        text=True,
+                    )
+                    gevent.sleep(3)
+                    proc.send_signal(signal.SIGTERM)
+                    stdout, stderr = proc.communicate()
+                    self.assertIn("Starting Locust", stderr)
+                    self.assertIn("All users spawned:", stderr)
+                    self.assertIn('"TestUser": 1', stderr)
+                    self.assertIn('"UserSubclass": 1', stderr)
+                    self.assertIn("Shutting down (exit code 0)", stderr)
+                    self.assertEqual(0, proc.returncode)
+
     def test_default_headless_spawn_options_with_shape(self):
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
             """
@@ -397,6 +397,69 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
             self.assertIn("Shutting down (exit code 0)", stderr)
             self.assertEqual(0, proc.returncode)
+
+    def test_run_headless_with_multiple_locustfiles_with_shape(self):
+        content = textwrap.dedent(
+            """
+            from locust import User, task, between
+            class TestUser2(User):
+                wait_time = between(2, 4)
+                @task
+                def my_task(self):
+                    print("running my_task() again")
+            """
+        )
+        with mock_locustfile(content=content) as mocked1:
+            with temporary_file(
+                content=textwrap.dedent(
+                    """
+                from locust import User, task, between, LoadTestShape
+                class LoadTestShape(LoadTestShape):
+                    def tick(self):
+                        run_time = self.get_run_time()
+                        if run_time < 2:
+                            return (10, 1)
+
+                        return None
+
+                class TestUser(User):
+                    wait_time = between(2, 4)
+                    @task
+                    def my_task(self):
+                        print("running my_task()")
+            """
+                )
+            ) as mocked2:
+                proc = subprocess.Popen(
+                    [
+                        "locust",
+                        "-f",
+                        f"{mocked1.file_path},{mocked2}",
+                        "--host",
+                        "https://test.com/",
+                        "--headless",
+                        "--exit-code-on-error",
+                        "0",
+                    ],
+                    stdout=PIPE,
+                    stderr=PIPE,
+                    text=True,
+                )
+
+                try:
+                    success = True
+                    _, stderr = proc.communicate(timeout=5)
+                except subprocess.TimeoutExpired:
+                    success = False
+
+                proc.send_signal(signal.SIGTERM)
+                _, stderr = proc.communicate()
+                self.assertIn("Shape test updating to 10 users at 1.00 spawn rate", stderr)
+                self.assertTrue(success, "Got timeout and had to kill the process")
+                # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
+                self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
+                self.assertIn("Shutting down (exit code 0)", stderr)
+                self.assertEqual(0, proc.returncode)
 
     def test_autostart_wo_run_time(self):
         port = get_free_tcp_port()
@@ -464,6 +527,47 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertEqual(200, response.status_code)
             self.assertIn('<body class="running">', response.text)
 
+    def test_run_autostart_with_multiple_locustfiles(self):
+        with TemporaryDirectory() as temp_dir:
+            with mock_locustfile(dir=temp_dir):
+                with temporary_file(
+                    content=textwrap.dedent(
+                        """
+                    from locust import User, task, constant, events
+                    class TestUser(User):
+                        wait_time = constant(1)
+                        @task
+                        def my_task(self):
+                            print("running my_task()")
+                """
+                    ),
+                    dir=temp_dir,
+                ):
+                    proc = subprocess.Popen(
+                        [
+                            "locust",
+                            "-f",
+                            temp_dir,
+                            "--autostart",
+                            "-u",
+                            "2",
+                            "--exit-code-on-error",
+                            "0",
+                        ],
+                        stdout=PIPE,
+                        stderr=PIPE,
+                        text=True,
+                    )
+                    gevent.sleep(3)
+                    proc.send_signal(signal.SIGTERM)
+                    stdout, stderr = proc.communicate()
+                    self.assertIn("Starting Locust", stderr)
+                    self.assertIn("All users spawned:", stderr)
+                    self.assertIn('"TestUser": 1', stderr)
+                    self.assertIn('"UserSubclass": 1', stderr)
+                    self.assertIn("Shutting down (exit code 0)", stderr)
+                    self.assertEqual(0, proc.returncode)
+
     def test_autostart_w_load_shape(self):
         port = get_free_tcp_port()
         with mock_locustfile(
@@ -514,6 +618,73 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertEqual(200, response.status_code)
             self.assertIn('<body class="spawning">', response.text)
             self.assertTrue(success, "got timeout and had to kill the process")
+
+    def test_autostart_mutliple_locustfiles_with_shape(self):
+        port = get_free_tcp_port()
+        content = textwrap.dedent(
+            """
+            from locust import User, task, between
+            class TestUser2(User):
+                wait_time = between(2, 4)
+                @task
+                def my_task(self):
+                    print("running my_task() again")
+            """
+        )
+        with mock_locustfile(content=content) as mocked1:
+            with temporary_file(
+                content=textwrap.dedent(
+                    """
+                from locust import User, task, between, LoadTestShape
+                class LoadTestShape(LoadTestShape):
+                    def tick(self):
+                        run_time = self.get_run_time()
+                        if run_time < 2:
+                            return (10, 1)
+
+                        return None
+
+                class TestUser(User):
+                    wait_time = between(2, 4)
+                    @task
+                    def my_task(self):
+                        print("running my_task()")
+            """
+                )
+            ) as mocked2:
+                proc = subprocess.Popen(
+                    [
+                        "locust",
+                        "-f",
+                        f"{mocked1.file_path},{mocked2}",
+                        "--web-port",
+                        str(port),
+                        "--autostart",
+                        "--autoquit",
+                        "2",
+                    ],
+                    stdout=PIPE,
+                    stderr=PIPE,
+                    text=True,
+                )
+                gevent.sleep(1.9)
+                response = requests.get(f"http://0.0.0.0:{port}/")
+                try:
+                    success = True
+                    _, stderr = proc.communicate(timeout=5)
+                except subprocess.TimeoutExpired:
+                    success = False
+                    proc.send_signal(signal.SIGTERM)
+                    _, stderr = proc.communicate()
+
+                self.assertIn("Starting Locust", stderr)
+                self.assertIn("Shape test starting", stderr)
+                self.assertIn("Shutting down ", stderr)
+                self.assertIn("autoquit time reached", stderr)
+                # check response afterwards, because it really isn't as informative as stderr
+                self.assertEqual(200, response.status_code)
+                self.assertIn('<body class="spawning">', response.text)
+                self.assertTrue(success, "got timeout and had to kill the process")
 
     def test_web_options(self):
         port = get_free_tcp_port()
@@ -677,6 +848,41 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Shutting down (exit code 0)", output)
             self.assertEqual(0, proc.returncode)
 
+    def test_spawing_with_fixed_multiple_locustfiles(self):
+        with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1:
+            with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B) as mocked2:
+                proc = subprocess.Popen(
+                    " ".join(
+                        [
+                            "locust",
+                            "-f",
+                            f"{mocked1.file_path},{mocked2.file_path}",
+                            "--headless",
+                            "--run-time",
+                            "5s",
+                            "-u",
+                            "10",
+                            "-r",
+                            "10",
+                            "--loglevel",
+                            "INFO",
+                        ]
+                    ),
+                    stderr=STDOUT,
+                    stdout=PIPE,
+                    shell=True,
+                    text=True,
+                )
+
+                output = proc.communicate()[0]
+                self.assertIn("Ramping to 10 users at a rate of 10.00 per second", output)
+                self.assertIn('All users spawned: {"TestUser1": 5, "TestUser2": 5} (10 total users)', output)
+                self.assertIn("running my_task()", output)
+                # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
+                self.assertRegex(output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
+                self.assertIn("Shutting down (exit code 0)", output)
+                self.assertEqual(0, proc.returncode)
+
     def test_html_report_option(self):
         with mock_locustfile() as mocked:
             with temporary_file("", suffix=".html") as html_report_file_path:
@@ -718,6 +924,86 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertIn("charts-container", html_report_content)
 
         self.assertNotIn("Download the Report", html_report_content, "Download report link found in HTML content")
+
+    def test_run_with_userclass_picker(self):
+        with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
+            with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_B) as file2:
+                proc = subprocess.Popen(
+                    ["locust", "-f", f"{file1},{file2}", "--class-picker"],
+                    stdout=PIPE,
+                    stderr=PIPE,
+                    text=True,
+                )
+                gevent.sleep(1)
+                proc.send_signal(signal.SIGTERM)
+                stdout, stderr = proc.communicate()
+
+                self.assertIn("Locust is running with the UserClass Picker Enabled", stderr)
+                self.assertIn("Starting Locust", stderr)
+                self.assertIn("Starting web interface at", stderr)
+
+    def test_error_when_duplicate_userclass_names(self):
+        MOCK_LOCUSTFILE_CONTENT_C = textwrap.dedent(
+            """
+            from locust import User, task, constant, events
+            class TestUser1(User):
+                wait_time = constant(3)
+                @task
+                def my_task(self):
+                    print("running my_task()")
+        """
+        )
+        with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
+            with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
+                proc = subprocess.Popen(["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True)
+                gevent.sleep(1)
+                stdout, stderr = proc.communicate()
+
+                self.assertIn("Duplicate user class key: TestUser1", stderr)
+                self.assertEqual(1, proc.returncode)
+
+    def test_error_when_duplicate_shape_class_names(self):
+        MOCK_LOCUSTFILE_CONTENT_C = MOCK_LOCUSTFILE_CONTENT_A + textwrap.dedent(
+            """
+            from locust import LoadTestShape
+            class TestShape(LoadTestShape):
+                def tick(self):
+                    run_time = self.get_run_time()
+                    if run_time < 2:
+                        return (10, 1)
+
+                    return None
+            """
+        )
+        MOCK_LOCUSTFILE_CONTENT_D = MOCK_LOCUSTFILE_CONTENT_B + textwrap.dedent(
+            """
+            from locust import LoadTestShape
+            class TestShape(LoadTestShape):
+                def tick(self):
+                    run_time = self.get_run_time()
+                    if run_time < 2:
+                        return (10, 1)
+
+                    return None
+            """
+        )
+        with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file1:
+            with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_D) as file2:
+                proc = subprocess.Popen(["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True)
+                gevent.sleep(1)
+                stdout, stderr = proc.communicate()
+
+                self.assertIn("Duplicate shape classes: TestShape", stderr)
+                self.assertEqual(1, proc.returncode)
+
+    def test_error_when_locustfiles_directory_is_empty(self):
+        with TemporaryDirectory() as temp_dir:
+            proc = subprocess.Popen(["locust", "-f", temp_dir], stdout=PIPE, stderr=PIPE, text=True)
+            gevent.sleep(1)
+            stdout, stderr = proc.communicate()
+
+            self.assertIn(f"Could not find any locustfiles in directory '{temp_dir}'", stderr)
+            self.assertEqual(1, proc.returncode)
 
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
