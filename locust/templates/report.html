@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Test Report for {{ escape(locustfile) }}</title>
+    <title>Test Report for {{ escape(str(locustfile)) }}</title>
     <style>
         body {
             background: #173529;
@@ -45,8 +45,8 @@
                 <p class="download"><a href="?download=1">Download the Report</a></p>
             {% endif %}
             <p>During: <span class="l10n datetime">{{ start_time }}</span> - <span class="l10n datetime">{{ end_time }}</span></p>
-            <p>Target Host: <span>{{ escape(host) }}</span></p>
-            <p>Script: <span>{{ escape(locustfile) }}</span></p>
+            <p>Target Host: <span>{{ escape(str(host)) }}</span></p>
+            <p>Script: <span>{{ escape(str(locustfile)) }}</span></p>
         </div>
 
         <div class="requests">
