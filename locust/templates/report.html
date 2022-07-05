@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Test Report for {{ locustfile }}</title>
+    <title>Test Report for {{ escape(str(locustfile)) }}</title>
     <style>
         body {
             background: #173529;
@@ -45,8 +45,8 @@
                 <p class="download"><a href="?download=1">Download the Report</a></p>
             {% endif %}
             <p>During: <span class="l10n datetime">{{ start_time }}</span> - <span class="l10n datetime">{{ end_time }}</span></p>
-            <p>Target Host: <span>{{ host }}</span></p>
-            <p>Script: <span>{{ locustfile }}</span></p>
+            <p>Target Host: <span>{{ escape(str(host)) }}</span></p>
+            <p>Script: <span>{{ escape(str(locustfile)) }}</span></p>
         </div>
 
         <div class="requests">
@@ -69,8 +69,8 @@
                 <tbody>
                     {% for s in requests_statistics %}
                         <tr{% if loop.last %} class="total"{% endif %}>
-                            <td>{{ s.method or "" }}</td>
-                            <td>{{ s.name }}</td>
+                            <td>{{ escape(s.method or "") }}</td>
+                            <td>{{ escape(s.name) }}</td>
                             <td>{{ int(s.num_requests) }}</td>
                             <td>{{ int(s.num_failures) }}</td>
                             <td>{{ int(s.avg_response_time) }}</td>
@@ -105,8 +105,8 @@
                 <tbody>
                     {% for s in requests_statistics %}
                         <tr{% if loop.last %} class="total"{% endif %}>
-                            <td>{{ s.method or "" }}</td>
-                            <td>{{ s.name }}</td>
+                            <td>{{ escape(s.method or "") }}</td>
+                            <td>{{ escape(s.name) }}</td>
                             <td>{{ int(s.get_response_time_percentile(0.5)) }}</td>
                             <td>{{ int(s.get_response_time_percentile(0.6)) }}</td>
                             <td>{{ int(s.get_response_time_percentile(0.7)) }}</td>
@@ -136,9 +136,9 @@
                     <tbody>
                         {% for s in failures_statistics %}
                             <tr>
-                                <td>{{ s.method or "" }}</td>
-                                <td>{{ s.name }}</td>
-                                <td>{{ s.error }}</td>
+                                <td>{{ escape(s.method or "") }}</td>
+                                <td>{{ escape(s.name) }}</td>
+                                <td>{{ escape(str(s.error)) }}</td>
                                 <td>{{ s.occurrences }}</td>
                             </tr>
                         {% endfor %}
@@ -163,9 +163,9 @@
                         {% for s in exceptions_statistics %}
                             <tr>
                                 <td>{{ s.count }}</td>
-                                <td>{{ s.msg }}</td>
-                                <td>{{ s.traceback }}</td>
-                                <td>{{ s.nodes }}</td>
+                                <td>{{ escape(s.msg) }}</td>
+                                <td>{{ escape(s.traceback) }}</td>
+                                <td>{{ escape(s.nodes) }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -181,7 +181,7 @@
 
         <div id="tasks">
             <h2>Final ratio</h2>
-            <div class="tasks" data-tasks="{{tasks}}"></div>
+            <div class="tasks" data-tasks="{{ escape(tasks) }}"></div>
         </div>
     
     </div>
