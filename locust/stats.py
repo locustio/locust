@@ -702,7 +702,7 @@ class StatsError:
     @classmethod
     def create_key(cls, method: str, name: str, error: Optional[Union[Exception, str]]) -> str:
         key = f"{method}.{name}.{StatsError.parse_error(error)!r}"
-        return hashlib.md5(key.encode("utf-8")).hexdigest()
+        return hashlib.sha256(key.encode("utf-8")).hexdigest()
 
     def occurred(self) -> None:
         self.occurrences += 1
