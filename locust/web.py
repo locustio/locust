@@ -355,8 +355,8 @@ class WebUI:
                     "exceptions": [
                         {
                             "count": row["count"],
-                            "msg": row["msg"],
-                            "traceback": row["traceback"],
+                            "msg": escape(row["msg"]),
+                            "traceback": escape(row["traceback"]),
                             "nodes": ", ".join(row["nodes"]),
                         }
                         for row in (environment.runner.exceptions.values() if environment.runner is not None else [])
