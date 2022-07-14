@@ -64,7 +64,7 @@ def constant_throughput(task_runs_per_second):
     """
     Returns a function that will track the run time of the tasks, and for each time it's
     called it will return a wait time that will try to make the number of task runs per second
-    execution equal to the time specified by the task_runs_per_secondd argument.
+    execution equal to the time specified by the task_runs_per_second argument.
 
     If you have multiple requests in a task your RPS will of course be higher than the
     specified throughput.
