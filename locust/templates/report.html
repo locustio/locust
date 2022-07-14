@@ -243,7 +243,7 @@
         $('.sortable').click(function() {
             var table = $(this).parents('table').eq(0)
             var rowArray = table.find('tr:gt(0)').toArray()
-            var aggregatedRow = $(rowArray).get(-1)
+            var aggregatedRow = rowArray.pop()
             var rows = rowArray.sort(comparer($(this).index()))
             this.asc = !this.asc
             if (!this.asc){rows = rows.reverse()}
