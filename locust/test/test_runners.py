@@ -2219,7 +2219,7 @@ class TestMasterRunner(LocustRunnerTestCase):
                 )
             )
             sleep(0.2)
-            # hearbeat received from two workers so they are active, for fake_client3 HEARTBEAT_DEAD_INTERNAL has been breached, so it will be removed from worker list
+            # heartbeat received from two workers so they are active, for fake_client3 HEARTBEAT_DEAD_INTERNAL has been breached, so it will be removed from worker list
             self.assertEqual(0, len(master.clients.missing))
             self.assertEqual(2, master.worker_count)
             master.stop()

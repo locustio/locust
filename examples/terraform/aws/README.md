@@ -73,7 +73,7 @@ nodes_public_ip = [
 ]
 ```
 
-![locust-home](https://github.com/marcosborges/terraform-aws-loadtest-distribuited/raw/v0.4.0/assets/locust-home.png)
+![locust-home](https://github.com/marcosborges/terraform-aws-loadtest-distributed/raw/v0.4.0/assets/locust-home.png)
 
 ---
 
@@ -89,5 +89,5 @@ terraform destroy --auto-approve
 
 - [Terraform aws-get-started >> install-terraform-on-linux](https://learn.hashicorp.com/tutorials/terraform/install-cli?in=terraform/aws-get-started#install-terraform-on-linux)
 
-- [Terraform module aws loadtest distribuited](https://registry.terraform.io/modules/marcosborges/loadtest-distribuited/aws/latest)
+- [Terraform module aws loadtest distributed](https://registry.terraform.io/modules/marcosborges/loadtest-distributed/aws/latest)
 
