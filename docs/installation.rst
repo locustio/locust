@@ -3,7 +3,7 @@
 Installation
 ============
 
-`Install Python <https://docs.python-guide.org/starting/installation/>`_ 3.7 or later, if you dont already have it.
+`Install Python <https://docs.python-guide.org/starting/installation/>`_ 3.7 or later, if you don't already have it.
 
 Install Locust:
 

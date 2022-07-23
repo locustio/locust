@@ -87,7 +87,7 @@ Customization of statistics settings
 
 Default configuration for Locust statistics is set in constants of stats.py file.
 It can be tuned to specific requirements by overriding these values.
-To do this, import locust.stats module and override required settings
+To do this, import locust.stats module and override required settings:
 
 .. code-block:: python
 

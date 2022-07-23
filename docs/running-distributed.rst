@@ -64,7 +64,7 @@ Optionally used together with ``--worker`` to set the port number of the master 
 ``--master-bind-host=X.X.X.X``
 ------------------------------
 
-Optionally used together with ``--master``. Determines what network interface that the master node
+Optionally used together with ``--master``. Determines which network interface the master node
 will bind to. Defaults to * (all available interfaces).
 
 ``--master-bind-port=5557``
@@ -118,7 +118,7 @@ order to coordinate data. This can be easily accomplished with custom messages u
             environment.runner.send_message('test_users', users)  
 
 Note that when running locally (i.e. non-distributed), this functionality will be preserved; 
-the messages will simply be handled by the same runner that sends them.  
+the messages will simply be handled by the runner that sends them.  
 
 A more complete example can be found in the `examples directory <https://github.com/locustio/locust/tree/master/examples>`_ of the Locust 
 source code.
@@ -139,5 +139,5 @@ See :ref:`running-distributed-without-web-ui`
 Increase Locust's performance
 =============================
 
-If you're planning to run large-scale load tests you might be interested to use the alternative
-HTTP client that's shipped with Locust. You can read more about it here: :ref:`increase-performance`
+If you're planning to run large-scale load tests, you might be interested to use the alternative
+HTTP client that's shipped with Locust. You can read more about it here: :ref:`increase-performance`.
