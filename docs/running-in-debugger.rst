@@ -8,7 +8,7 @@ Running Locust in a debugger is extremely useful when developing your tests. Amo
 
 But debuggers sometimes have issues with complex gevent-applications like Locust, and there is a lot going on in the framework itself that you probably aren't interested in. To simplify this, Locust provides a method called :py:func:`run_single_user <locust.debug.run_single_user>`:
 
-Note that this is fairly new feature, and the api is subject to change.
+Note that this is a fairly new feature, and the api is subject to change.
 
 .. literalinclude:: ../examples/debugging.py
     :language: python
@@ -28,7 +28,7 @@ Make sure you have enabled gevent in your debugger settings. In VS Code's ``laun
 .. literalinclude:: ../.vscode/launch.json
     :language: json
 
-There is a similar setting in `PyCharm <https://www.jetbrains.com/help/pycharm/debugger-python.html>`_
+There is a similar setting in `PyCharm <https://www.jetbrains.com/help/pycharm/debugger-python.html>`_.
 
 .. note::
 
@@ -36,4 +36,4 @@ There is a similar setting in `PyCharm <https://www.jetbrains.com/help/pycharm/d
     | ``sys.settrace() should not be used when the debugger is being used``
     | It can safely be ignored (and if you know how to get rid of it, please let us know)
 
-You can execute run_single_user multiple times, as shown in `debugging_advanced.py <https://github.com/locustio/locust/tree/master/examples/debugging_advanced.py>`_
+You can execute run_single_user multiple times, as shown in `debugging_advanced.py <https://github.com/locustio/locust/tree/master/examples/debugging_advanced.py>`_.

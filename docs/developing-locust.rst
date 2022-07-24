@@ -9,7 +9,7 @@ You want to contribute to Locust? Great! Here is a list of `open bugs/feature re
 Install Locust for development
 ==============================
 
-Fork Locust on `Github <https://github.com/locustio/locust/>`_ and then run
+Fork Locust on `GitHub <https://github.com/locustio/locust/>`_ and then run
 
 .. code-block:: console
 
@@ -53,7 +53,7 @@ Then you can build the documentation locally using:
 
     make build_docs
     
-Then the documentation should be build and available at ``docs/_build/index.html``
+Then the documentation should be build and available at ``docs/_build/index.html``.
 
 
 

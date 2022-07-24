@@ -37,8 +37,8 @@ official Locust docker image as a base image::
 Running a distributed load test on Kubernetes
 =============================================
 
-The easiest way to run Locust on Kubernetes is to use a `Helm chart <https://helm.sh/>`_
+The easiest way to run Locust on Kubernetes is to use a `Helm chart <https://helm.sh/>`_.
 
-There is a good helm chart here: `github.com/deliveryhero/helm-charts <https://github.com/deliveryhero/helm-charts/tree/master/stable/locust>`_
+There is a good helm chart here: `github.com/deliveryhero/helm-charts <https://github.com/deliveryhero/helm-charts/tree/master/stable/locust>`_.
 
 Note: this Helm chart is a separate project, and not supported by Locust maintainers.
