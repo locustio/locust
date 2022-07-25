@@ -153,7 +153,7 @@ For example, to make each user wait between 0.5 and 10 seconds between every tas
 
 * :py:attr:`constant_throughput <locust.wait_time.constant_throughput>` for an adaptive time that ensures the task runs (at most) X times per second.
 
-* :py:attr:`constant_pacing <locust.wait_time.constant_pacing>` for an adaptive time that ensures the task runs (at most) once every X seconds  (it is the mathematical inverse of `constant_throughput`)
+* :py:attr:`constant_pacing <locust.wait_time.constant_pacing>` for an adaptive time that ensures the task runs (at most) once every X seconds  (it is the mathematical inverse of `constant_throughput`).
 
 .. note::
 
@@ -161,9 +161,9 @@ For example, to make each user wait between 0.5 and 10 seconds between every tas
 
     Wait time can only constrain the throughput, not launch new Users to reach the target. So, in our example, the throughput will be less than 500 if the time for the task iteration exceeds 10 seconds.
 
-    Wait time is applied *after* task execution, so if you have a high spawn rate/ramp up you may end up exceeding your target during rampup.
+    Wait time is applied *after* task execution, so if you have a high spawn rate/ramp up you may end up exceeding your target during ramp-up.
 
-    Wait times apply to *tasks*, not requests.  If you, for example, specify `wait_time = constant_throughput(2)` and do two requests in your tasks your request rate/RPS will be 4 per User.
+    Wait times apply to *tasks*, not requests. For example, if you specify `wait_time = constant_throughput(2)` and do two requests in your tasks, your request rate/RPS will be 4 per User.
 
 It's also possible to declare your own wait_time method directly on your class.
 For example, the following User class would sleep for one second, then two, then three, etc.
@@ -206,8 +206,8 @@ classes. Say for example, web users are three times more likely than mobile user
 
 Also you can set the :py:attr:`fixed_count <locust.User.fixed_count>` attribute.
 In this case the weight property will be ignored and the exact count users will be spawned.
-These users are spawned first. In the below example the only instance of AdminUser
-will be spawned to make some specific work with more accurate control
+These users are spawned first. In the example below, only one instance of AdminUser
+will be spawned, to make some specific work with more accurate control
 of request count independently of total user count.
 
 .. code-block:: python
@@ -293,7 +293,7 @@ The easiest way to add a task for a User is by using the :py:meth:`task <locust.
             print("User instance (%r) executing my_task" % self)
 
 **@task** takes an optional weight argument that can be used to specify the task's execution ratio. In
-the following example *task2* will have twice the chance of being picked as *task1*:
+the following example, *task2* will be twice as likely to be selected than *task1*:
 
 .. code-block:: python
 
@@ -343,14 +343,14 @@ with a task that looks like this::
 
     {my_task: 3, another_task: 1}
 
-*my_task* would be 3 times more likely to be executed than *another_task*.
+*my_task* would be 3 times as likely to be executed than *another_task*.
 
 Internally the above dict will actually be expanded into a list (and the ``tasks`` attribute is updated)
 that looks like this::
 
     [my_task, my_task, my_task, another_task]
 
-and then Python's ``random.choice()`` is used pick tasks from the list.
+and then Python's ``random.choice()`` is used to pick tasks from the list.
 
 
 .. _tagging-tasks:
@@ -359,7 +359,7 @@ and then Python's ``random.choice()`` is used pick tasks from the list.
 --------------
 
 By tagging tasks using the :py:func:`@tag <locust.tag>` decorator, you can be picky about what tasks are
-executed during the test using the :code:`--tags` and :code:`--exclude-tags` arguments.  Consider
+executed during the test using the :code:`--tags` and :code:`--exclude-tags` arguments. Consider
 the following example:
 
 .. code-block:: python
@@ -552,7 +552,7 @@ Here's an example of how to call a REST API and validate the response:
         except KeyError:
             response.failure("Response did not contain expected key 'greeting'")
 
-locust-plugins has a ready-made class for testing REST API:s called `RestUser <https://github.com/SvenskaSpel/locust-plugins/blob/master/examples/rest_ex.py>`_
+locust-plugins has a ready-made class for testing REST API:s called `RestUser <https://github.com/SvenskaSpel/locust-plugins/blob/master/examples/rest_ex.py>`_.
 
 .. _name-parameter:
 
@@ -573,7 +573,7 @@ Example:
         self.client.get("/blog?id=%i" % i, name="/blog?id=[id]")
 
 There may be situations where passing in a parameter into request function is not possible, such as when interacting with libraries/SDK's that
-wrap a Requests session. An alternative say of grouping requests is provided By setting the ``client.request_name`` attribute
+wrap a Requests session. An alternative way of grouping requests is provided by setting the ``client.request_name`` attribute.
 
 .. code-block:: python
 
@@ -583,7 +583,7 @@ wrap a Requests session. An alternative say of grouping requests is provided By 
         self.client.get("/blog?id=%i" % i)
     self.client.request_name=None
 
-If You want to chain multiple groupings with minimal boilerplate, you can use the ``client.rename_request()`` context manager.
+If you want to chain multiple groupings with minimal boilerplate, you can use the ``client.rename_request()`` context manager.
 
 .. code-block:: python
 
@@ -613,7 +613,7 @@ Connection pooling
 ------------------
 
 As every :py:class:`HttpUser <locust.HttpUser>` creates new :py:class:`HttpSession <locust.clients.HttpSession>`,
-every user instance has it's own connection pools. This is similar to how real users would interact with a web server.
+every user instance has its own connection pools. This is similar to how real users would interact with a web server.
 
 However, if you want to share connections among all users, you can use a single pool manager. To do this, set
 :py:attr:`pool_manager <locust.HttpUser.pool_manager>` class attribute to an instance of :py:class:`urllib3.PoolManager`.
@@ -633,7 +633,7 @@ For more configuration options, refer to the
 
 TaskSets
 ================================
-TaskSets is a way to structure tests of hierarchical web sites/systems. You can :ref:`read more about it here <tasksets>`
+TaskSets is a way to structure tests of hierarchical web sites/systems. You can :ref:`read more about it here <tasksets>`.
 
 
 How to structure your test code
@@ -661,7 +661,7 @@ follow Python best practices. Here's an example file structure of an imaginary L
   * ``locustfile.py``
   * ``requirements.txt`` (External Python dependencies is often kept in a requirements.txt)
 
-A project with multiple different locustfiles could also keep them in a separate subdirectory:
+A project with multiple locustfiles could also keep them in a separate subdirectory:
 
 * Project root
 

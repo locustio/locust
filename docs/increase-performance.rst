@@ -32,7 +32,7 @@ Just subclass FastHttpUser instead of HttpUser::
 
 .. note::
 
-    FastHttpUser/geventhttpclient is very similar to for HttpUser/python-requests, but sometimes there are subtle differences. This is particularly true if you work with the client library's internals, e.g. when manually managing cookies.
+    FastHttpUser/geventhttpclient is very similar to HttpUser/python-requests, but sometimes there are subtle differences. This is particularly true if you work with the client library's internals, e.g. when manually managing cookies.
 
 API
 ===
