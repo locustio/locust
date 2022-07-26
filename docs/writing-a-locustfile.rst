@@ -293,7 +293,7 @@ The easiest way to add a task for a User is by using the :py:meth:`task <locust.
             print("User instance (%r) executing my_task" % self)
 
 **@task** takes an optional weight argument that can be used to specify the task's execution ratio. In
-the following example, *task2* will be twice as likely to be selected than *task1*:
+the following example, *task2* will be twice as likely to be selected as *task1*:
 
 .. code-block:: python
 
@@ -343,7 +343,7 @@ with a task that looks like this::
 
     {my_task: 3, another_task: 1}
 
-*my_task* would be 3 times as likely to be executed than *another_task*.
+*my_task* would be 3 times as likely to be executed as *another_task*.
 
 Internally the above dict will actually be expanded into a list (and the ``tasks`` attribute is updated)
 that looks like this::
