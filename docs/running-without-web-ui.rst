@@ -83,4 +83,4 @@ Below is an example that'll set the exit code to non zero if any of the followin
         else:
             environment.process_exit_code = 0
 
-(this code could go into the locustfile.py or in any other file that is imported in the locustfile)
+Note that this code could go into the locustfile.py or in any other file that is imported in the locustfile.

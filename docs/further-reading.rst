@@ -22,4 +22,4 @@ You'll also find a lot of answers on `stackoverflow <https://stackoverflow.com/q
 
 In other words, just google whatever problem or error message you're getting and you are likely to find good answers out there.
 
-If you think Locust is missing some obvious feature (like stopping after a certain number of iterations/requests, setting goals/thresholds for when to fail a test run, support for additional User types like Kafka, Selenium/WebDriver etc), chances are it is implemented in `locust-plugins <https://github.com/SvenskaSpel/locust-plugins/>`_
+If you think Locust is missing some obvious feature (like stopping after a certain number of iterations/requests, setting goals/thresholds for when to fail a test run, support for additional User types like Kafka, Selenium/WebDriver etc), chances are it is implemented in `locust-plugins <https://github.com/SvenskaSpel/locust-plugins/>`_.

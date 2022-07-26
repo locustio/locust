@@ -4,7 +4,7 @@
 Getting started
 ===============
 
-A Locust test is essentially a Python program. This makes it very flexible and particularly good at implementing complex user flows. But it can do simple tests as well, so lets start with that:
+A Locust test is essentially a Python program. This makes it very flexible and particularly good at implementing complex user flows. But it can do simple tests as well, so let's start with that:
 
 .. code-block:: python
 
@@ -55,17 +55,17 @@ Number of users:
 
 .. note::
 
-    Interpreting performance test results is quite complex (and mostly out of scope for this manual), but if your graphs start looking like this, the most likely reason is that your target service/system cannot handle the load you are hitting it with (it is overloaded or "saturated")
+    Interpreting performance test results is quite complex (and mostly out of scope for this manual), but if your graphs start looking like this, the most likely reason is that your target service/system cannot handle the load you are hitting it with (it is overloaded or "saturated").
 
     The clearest sign of this is that when we get to around 9 users, response times start increasing so fast that the requests per second-curve flattens out, even though new users are still being added.
 
-    If you're having trouble generating enough load to saturate your system, or need some pointers on how to start digging into a server side problem have a look at the `Locust FAQ  <https://github.com/locustio/locust/wiki/FAQ#increase-my-request-raterps>`_
+    If you're having trouble generating enough load to saturate your system, or need some pointers on how to start digging into a server side problem have a look at the `Locust FAQ  <https://github.com/locustio/locust/wiki/FAQ#increase-my-request-raterps>`_.
 
 
 Direct command line usage / headless
 ====================================
 
-Using the Locust web UI is entirely optional. You can supply the load parameters on command line and get reports on the results in text form:
+Using the Locust web UI is entirely optional. You can supply the load parameters on the command line and get reports on the results in text form:
 
 .. code-block:: console
     :substitutions:
@@ -100,4 +100,4 @@ To see all available options type: ``locust --help`` or check :ref:`configuratio
 
 |
 
-Now, lets have a more in-depth look at locustfiles and what they can do: :ref:`writing-a-locustfile`
+Now, let's have a more in-depth look at locustfiles and what they can do: :ref:`writing-a-locustfile`.
