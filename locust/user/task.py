@@ -395,7 +395,7 @@ class TaskSet(metaclass=TaskSetMeta):
 
     def get_next_task(self):
         if not self.tasks:
-            if getattr(self.user, "task", None):
+            if getattr(self, "task", None):
                 extra_message = ", but you have set a 'task' attribute - maybe you meant to set 'tasks'?"
             else:
                 extra_message = "."
