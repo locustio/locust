@@ -395,8 +395,12 @@ class TaskSet(metaclass=TaskSetMeta):
 
     def get_next_task(self):
         if not self.tasks:
+            if getattr(self.user, "task", None):
+                extra_message = ", but you have set a 'task' attribute - maybe you meant to set 'tasks'?"
+            else:
+                extra_message = "."
             raise Exception(
-                f"No tasks defined on {self.__class__.__name__}. use the @task decorator or set the tasks property of the TaskSet"
+                f"No tasks defined on {self.__class__.__name__}{extra_message} use the @task decorator or set the 'tasks' attribute of the TaskSet"
             )
         return random.choice(self.tasks)
 
@@ -469,8 +473,12 @@ class DefaultTaskSet(TaskSet):
 
     def get_next_task(self):
         if not self.user.tasks:
+            if getattr(self.user, "task", None):
+                extra_message = ", but you have set a 'task' attribute on your class - maybe you meant to set 'tasks'?"
+            else:
+                extra_message = "."
             raise Exception(
-                f"No tasks defined on {self.user.__class__.__name__}. use the @task decorator or set the tasks property of the User (or mark it as abstract = True if you only intend to subclass it)"
+                f"No tasks defined on {self.user.__class__.__name__}{extra_message} Use the @task decorator or set the 'tasks' attribute of the User (or mark it as abstract = True if you only intend to subclass it)"
             )
         return random.choice(self.user.tasks)
 

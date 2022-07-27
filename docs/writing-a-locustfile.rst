@@ -205,7 +205,7 @@ classes. Say for example, web users are three times more likely than mobile user
         ...
 
 Also you can set the :py:attr:`fixed_count <locust.User.fixed_count>` attribute.
-In this case the weight property will be ignored and the exact count users will be spawned.
+In this case the weight attribute will be ignored and the exact count users will be spawned.
 These users are spawned first. In the example below, only one instance of AdminUser
 will be spawned, to make some specific work with more accurate control
 of request count independently of total user count.
