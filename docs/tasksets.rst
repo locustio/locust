@@ -163,7 +163,7 @@ For example, the following code will request URLs /1-/4 in order, and then repea
             self.client.get("/1")
             self.client.get("/2")
         
-        # you can still use the tasks property to specify a list of tasks
+        # you can still use the tasks attribute to specify a list of tasks
         tasks = [function_task]
         
         @task
