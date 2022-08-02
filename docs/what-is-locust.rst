@@ -8,7 +8,7 @@ You define the behaviour of your users in regular Python code, instead of being 
 
 This makes Locust infinitely expandable and very developer friendly.
 
-With this tool, You can easily measure the performance of API's and Websockets easily. And also, You can create your own custom tasks that can be shown in the locust UI.
+With this tool, You can easily measure the performance of API's and Websockets easily. And also, You can create your own custom tasks that can be shown in the locust UI
 
 To start using Locust, go to :ref:`installation`
 
