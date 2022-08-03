@@ -244,6 +244,7 @@ class WebUI:
                     as_attachment=True,
                     download_name=_download_csv_suggest_file_name("requests_full_history"),
                     etag=True,
+                    max_age=0,
                     conditional=True,
                     last_modified=None,
                 )
