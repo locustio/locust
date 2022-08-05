@@ -488,10 +488,9 @@ class LocalRunner(Runner):
         if self.state != STATE_INIT and self.state != STATE_STOPPED:
             self.update_state(STATE_SPAWNING)
 
-        if self._users_dispatcher is None:
-            self._users_dispatcher = UsersDispatcher(
-                worker_nodes=[self._local_worker_node], user_classes=self.user_classes
-            )
+        self._users_dispatcher = UsersDispatcher(
+            worker_nodes=[self._local_worker_node], user_classes=self.user_classes
+        )
 
         logger.info("Ramping to %d users at a rate of %.2f per second" % (user_count, spawn_rate))
 
