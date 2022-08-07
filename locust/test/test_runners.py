@@ -3961,12 +3961,6 @@ class TestStopTimeout(LocustTestCase):
         self.assertEqual(2, test_stop_run[0])
 
     def test_stop_timeout_with_ramp_down(self):
-        """
-        The spawn rate does not have an effect on the rate at which the users are stopped.
-        It is expected that the excess users will be stopped as soon as possible in parallel
-        (while respecting the stop_timeout).
-        """
-
         class MyTaskSet(TaskSet):
             @task
             def my_task(self):
