@@ -768,6 +768,61 @@ class TestLocustRunner(LocustRunnerTestCase):
         sleep(1)
         self.assertEqual(0, runner.user_count)
 
+    def test_user_count_starts_from_specified_amount_when_creating_new_test_after_previous_step_has_been_stopped(self):
+        """Test for https://github.com/locustio/locust/issues/2135"""
+
+        class MyUser1(User):
+            wait_time = constant(0)
+
+            @task
+            def my_task(self):
+                pass
+
+        stop_timeout = 0
+        env = Environment(user_classes=[MyUser1], stop_timeout=stop_timeout)
+        local_runner = env.create_local_runner()
+        web_ui = env.create_web_ui("127.0.0.1", 0)
+
+        gevent.sleep(0.1)
+
+        response = requests.post(
+            f"http://127.0.0.1:{web_ui.server.server_port}/swarm",
+            data={"user_count": 20, "spawn_rate": 20, "host": "https://localhost"},
+        )
+        self.assertEqual(200, response.status_code)
+
+        t0 = time.perf_counter()
+        while local_runner.user_count != 20:
+            self.assertTrue(time.perf_counter() - t0 <= 1, local_runner.user_count)
+            gevent.sleep(0.1)
+
+        response = requests.get(
+            f"http://127.0.0.1:{web_ui.server.server_port}/stop",
+        )
+        self.assertEqual(200, response.status_code)
+
+        t0 = time.perf_counter()
+        while local_runner.state != STATE_STOPPED:
+            self.assertTrue(time.perf_counter() - t0 <= 1, local_runner.state)
+            gevent.sleep(0.1)
+
+        t0 = time.perf_counter()
+        response = requests.post(
+            f"http://127.0.0.1:{web_ui.server.server_port}/swarm",
+            data={"user_count": 1, "spawn_rate": 1, "host": "https://localhost"},
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(time.perf_counter() - t0 <= 1, "Stop endpoint should not be blocking")
+
+        # Make sure user count stays at 1
+        t0 = time.perf_counter()
+        while time.perf_counter() - t0 <= 5:
+            self.assertTrue(local_runner.user_count <= 1, local_runner.user_count)
+            gevent.sleep(0.1)
+
+        local_runner.stop()
+        web_ui.stop()
+
 
 class TestMasterWorkerRunners(LocustTestCase):
     def test_distributed_integration_run(self):
