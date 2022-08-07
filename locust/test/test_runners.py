@@ -778,8 +778,7 @@ class TestLocustRunner(LocustRunnerTestCase):
             def my_task(self):
                 pass
 
-        stop_timeout = 0
-        env = Environment(user_classes=[MyUser1], stop_timeout=stop_timeout)
+        env = Environment(user_classes=[MyUser1], stop_timeout=0)
         local_runner = env.create_local_runner()
         web_ui = env.create_web_ui("127.0.0.1", 0)
 
