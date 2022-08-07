@@ -407,6 +407,8 @@ class Runner:
 
         self.stop_users(self.user_classes_count)
 
+        self._users_dispatcher = None
+
         self.update_state(STATE_STOPPED)
 
         self.cpu_log_warning()
