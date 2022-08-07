@@ -813,9 +813,10 @@ class TestLocustRunner(LocustRunnerTestCase):
         self.assertEqual(200, response.status_code)
         self.assertTrue(time.perf_counter() - t0 <= 1, "Stop endpoint should not be blocking")
 
-        # Make sure user count stays at 1
+        # Make sure user count stays at 1 over 2s (2s is arbitrary, but we
+        # wait long enough to make sure it stays constant)
         t0 = time.perf_counter()
-        while time.perf_counter() - t0 <= 5:
+        while time.perf_counter() - t0 <= 2:
             self.assertTrue(local_runner.user_count <= 1, local_runner.user_count)
             gevent.sleep(0.1)
 
