@@ -133,7 +133,7 @@ Runner classes
     :members: register_message, send_message
 
 .. autoclass:: locust.runners.WorkerRunner
-    :members: register_message, send_message
+    :members: register_message, send_message, client_id, worker_index
 
 Web UI class
 ============
