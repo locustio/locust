@@ -2662,6 +2662,37 @@ class TestMasterRunner(LocustRunnerTestCase):
 
             self.assertEqual(2, num_users, "Total number of locusts that would have been spawned is not 2")
 
+    def test_spawn_correct_worker_indexes(self):
+        """
+        Tests that workers would receive a monotonic sequence of ordinal IDs.
+        """
+
+        class TestUser(User):
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner(user_classes=[TestUser])
+
+            USERS_COUNT = 5
+
+            for i in range(USERS_COUNT):
+                server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
+
+            master.start(USERS_COUNT, USERS_COUNT)
+            self.assertEqual(USERS_COUNT * 2, len(server.outbox))
+
+            indexes = []
+            for _, msg in server.outbox:
+                if msg.type == "ack":
+                    indexes.append(msg.data["index"])
+            self.assertEqual(USERS_COUNT, len(indexes), "Total number of locusts/workers is not 5")
+
+            indexes.sort()
+            for i in range(USERS_COUNT):
+                self.assertEqual(indexes[i], i, "Worker index mismatch")
+
     def test_custom_shape_scale_up(self):
         class MyUser(User):
             @task
