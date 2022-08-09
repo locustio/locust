@@ -40,9 +40,9 @@ class MockedLocustfile:
 
 
 @contextmanager
-def mock_locustfile(filename_prefix="mock_locustfile", content=MOCK_LOCUSTFILE_CONTENT):
+def mock_locustfile(filename_prefix="mock_locustfile", content=MOCK_LOCUSTFILE_CONTENT, dir=None):
     mocked = MockedLocustfile()
-    mocked.directory = os.path.dirname(os.path.abspath(__file__))
+    mocked.directory = dir or os.path.dirname(os.path.abspath(__file__))
     mocked.filename = "%s_%s_%i.py" % (
         filename_prefix,
         str(time.time()).replace(".", "_"),

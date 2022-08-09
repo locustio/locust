@@ -39,6 +39,8 @@ class Environment:
         stop_timeout: Optional[float] = None,
         catch_exceptions=True,
         parsed_options: Optional[Namespace] = None,
+        available_user_classes: Optional[Dict[str, User]] = None,
+        available_shape_classes: Optional[Dict[str, LoadTestShape]] = None,
     ):
 
         self.runner: Optional[Runner] = None
@@ -89,21 +91,14 @@ class Environment:
         """
         self.parsed_options = parsed_options
         """Reference to the parsed command line options (used to pre-populate fields in Web UI). May be None when using Locust as a library"""
+        self.available_user_classes = available_user_classes
+        """List of the available User Classes to pick from in the UserClass Picker"""
+        self.available_shape_classes = available_shape_classes
+        """List of the available Shape Classes to pick from in the ShapeClass Picker"""
 
         self._remove_user_classes_with_weight_zero()
-
-        # Validate there's no class with the same name but in different modules
-        if len({user_class.__name__ for user_class in self.user_classes}) != len(self.user_classes):
-            raise ValueError(
-                "The following user classes have the same class name: {}".format(
-                    ", ".join(map(methodcaller("fullname"), self.user_classes))
-                )
-            )
-        if self.shape_class is not None and not isinstance(self.shape_class, LoadTestShape):
-            raise ValueError(
-                "shape_class should be instance of LoadTestShape or subclass LoadTestShape, but got: %s"
-                % self.shape_class
-            )
+        self._validate_user_class_name_uniqueness()
+        self._validate_shape_class_instance()
 
     def _create_runner(
         self,
@@ -166,6 +161,7 @@ class Environment:
         tls_key: Optional[str] = None,
         stats_csv_writer: Optional[StatsCSV] = None,
         delayed_start=False,
+        userclass_picker_is_active=False,
     ) -> WebUI:
         """
         Creates a :class:`WebUI <locust.web.WebUI>` instance for this Environment and start running the web server
@@ -191,6 +187,7 @@ class Environment:
             tls_key=tls_key,
             stats_csv_writer=stats_csv_writer,
             delayed_start=delayed_start,
+            userclass_picker_is_active=userclass_picker_is_active,
         )
         return self.web_ui
 
@@ -254,6 +251,22 @@ class Environment:
                 else:
                     raise ValueError("Unrecognized task type in user")
             u.tasks = user_tasks
+
+    def _validate_user_class_name_uniqueness(self):
+        # Validate there's no class with the same name but in different modules
+        if len({user_class.__name__ for user_class in self.user_classes}) != len(self.user_classes):
+            raise ValueError(
+                "The following user classes have the same class name: {}".format(
+                    ", ".join(map(methodcaller("fullname"), self.user_classes))
+                )
+            )
+
+    def _validate_shape_class_instance(self):
+        if self.shape_class is not None and not isinstance(self.shape_class, LoadTestShape):
+            raise ValueError(
+                "shape_class should be instance of LoadTestShape or subclass LoadTestShape, but got: %s"
+                % self.shape_class
+            )
 
     @property
     def user_classes_by_name(self) -> Dict[str, Type[User]]:

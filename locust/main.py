@@ -1,9 +1,6 @@
-import inspect
 import logging
 import os
-import importlib
 import signal
-import socket
 import sys
 import time
 import atexit
@@ -19,88 +16,25 @@ from .log import setup_logging, greenlet_exception_logger
 from . import stats
 from .stats import print_error_report, print_percentile_stats, print_stats, stats_printer, stats_history
 from .stats import StatsCSV, StatsCSVFileWriter
-from .user import User
 from .user.inspectuser import print_task_ratio, print_task_ratio_json
 from .util.timespan import parse_timespan
 from .exception import AuthCredentialsError
-from .shape import LoadTestShape
 from .input_events import input_listener
 from .html import get_html_report
-from json import dumps
+from .util.load_locustfile import load_locustfile
 
 version = locust.__version__
 
 
-def is_user_class(item):
-    """
-    Check if a variable is a runnable (non-abstract) User class
-    """
-    return bool(inspect.isclass(item) and issubclass(item, User) and item.abstract is False)
-
-
-def is_shape_class(item):
-    """
-    Check if a class is a LoadTestShape
-    """
-    return bool(
-        inspect.isclass(item) and issubclass(item, LoadTestShape) and item.__dict__["__module__"] != "locust.shape"
-    )
-
-
-def load_locustfile(path):
-    """
-    Import given locustfile path and return (docstring, callables).
-
-    Specifically, the locustfile's ``__doc__`` attribute (a string) and a
-    dictionary of ``{'name': callable}`` containing all callables which pass
-    the "is a Locust" test.
-    """
-
-    # Start with making sure the current working dir is in the sys.path
-    sys.path.insert(0, os.getcwd())
-    # Get directory and locustfile name
-    directory, locustfile = os.path.split(path)
-    # If the directory isn't in the PYTHONPATH, add it so our import will work
-    added_to_path = False
-    index = None
-    if directory not in sys.path:
-        sys.path.insert(0, directory)
-        added_to_path = True
-    # If the directory IS in the PYTHONPATH, move it to the front temporarily,
-    # otherwise other locustfiles -- like Locusts's own -- may scoop the intended
-    # one.
-    else:
-        i = sys.path.index(directory)
-        if i != 0:
-            # Store index for later restoration
-            index = i
-            # Add to front, then remove from original position
-            sys.path.insert(0, directory)
-            del sys.path[i + 1]
-    # Perform the import
-    source = importlib.machinery.SourceFileLoader(os.path.splitext(locustfile)[0], path)
-    imported = source.load_module()
-    # Remove directory from path if we added it ourselves (just to be neat)
-    if added_to_path:
-        del sys.path[0]
-    # Put back in original index if we moved it
-    if index is not None:
-        sys.path.insert(index + 1, directory)
-        del sys.path[0]
-    # Return our two-tuple
-    user_classes = {name: value for name, value in vars(imported).items() if is_user_class(value)}
-
-    # Find shape class, if any, return it
-    shape_classes = [value for name, value in vars(imported).items() if is_shape_class(value)]
-    if shape_classes:
-        shape_class = shape_classes[0]()
-    else:
-        shape_class = None
-
-    return imported.__doc__, user_classes, shape_class
-
-
-def create_environment(user_classes, options, events=None, shape_class=None, locustfile=None):
+def create_environment(
+    user_classes,
+    options,
+    events=None,
+    shape_class=None,
+    locustfile=None,
+    available_user_classes=None,
+    available_shape_classes=None,
+):
     """
     Create an Environment instance from options
     """
@@ -113,16 +47,45 @@ def create_environment(user_classes, options, events=None, shape_class=None, loc
         reset_stats=options.reset_stats,
         stop_timeout=options.stop_timeout,
         parsed_options=options,
+        available_user_classes=available_user_classes,
+        available_shape_classes=available_shape_classes,
     )
 
 
 def main():
-    # find specified locustfile and make sure it exists, using a very simplified
-    # command line parser that is only used to parse the -f option
-    locustfile = parse_locustfile_option()
+    # find specified locustfile(s) and make sure it exists, using a very simplified
+    # command line parser that is only used to parse the -f option.
+    locustfiles = parse_locustfile_option()
+    locustfiles_length = len(locustfiles)
 
-    # import the locustfile
-    docstring, user_classes, shape_class = load_locustfile(locustfile)
+    # Grabbing the Locustfile if only one was provided. Otherwise, allowing users to select the locustfile in the UI
+    # If --headless or --autostart and multiple locustfiles, all provided UserClasses will be ran
+    locustfile = locustfiles[0] if locustfiles_length == 1 else None
+
+    # Importing Locustfile(s) - setting available UserClasses and ShapeClasses to choose from in UI
+    user_classes = {}
+    available_user_classes = {}
+    available_shape_classes = {}
+    for _locustfile in locustfiles:
+        docstring, _user_classes, shape_class = load_locustfile(_locustfile)
+
+        # Setting Available Shape Classes
+        if shape_class:
+            shape_class_name = type(shape_class).__name__
+            if shape_class_name in available_shape_classes.keys():
+                sys.stderr.write(f"Duplicate shape classes: {shape_class_name}\n")
+                sys.exit(1)
+
+            available_shape_classes[shape_class_name] = shape_class
+
+        # Setting Available User Classes
+        for key, value in _user_classes.items():
+            if key in available_user_classes.keys():
+                sys.stderr.write(f"Duplicate user class key: {key}\n")
+                sys.exit(1)
+
+            user_classes[key] = value
+            available_user_classes[key] = value
 
     # parse all command line options
     options = parse_options()
@@ -202,8 +165,15 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             )
 
     # create locust Environment
+    locustfile_path = None if not locustfile else os.path.basename(locustfile)
     environment = create_environment(
-        user_classes, options, events=locust.events, shape_class=shape_class, locustfile=os.path.basename(locustfile)
+        user_classes,
+        options,
+        events=locust.events,
+        shape_class=shape_class,
+        locustfile=locustfile_path,
+        available_user_classes=available_user_classes,
+        available_shape_classes=available_shape_classes,
     )
 
     if shape_class and (options.num_users or options.spawn_rate):
@@ -289,6 +259,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                 tls_key=options.tls_key,
                 stats_csv_writer=stats_csv_writer,
                 delayed_start=True,
+                userclass_picker_is_active=options.class_picker,
             )
         except AuthCredentialsError:
             logger.error("Credentials supplied with --web-auth should have the format: username:password")
@@ -470,6 +441,8 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
     try:
         logger.info(f"Starting Locust {version}")
+        if options.class_picker:
+            logger.info("Locust is running with the UserClass Picker Enabled")
         if options.autostart:
             start_automatic_run()
 

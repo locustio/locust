@@ -5,11 +5,12 @@ from tempfile import NamedTemporaryFile
 
 from geventhttpclient.client import HTTPClientPool
 
+from locust.argument_parser import parse_options
 from locust.user import task, TaskSet
 from locust.contrib.fasthttp import FastHttpSession
 from locust import FastHttpUser
 from locust.exception import CatchResponseError, InterruptTaskSet, LocustError, ResponseError
-from locust.main import is_user_class
+from locust.util.load_locustfile import is_user_class
 from .testcases import WebserverTestCase, LocustTestCase
 from .util import create_tls_cert
 

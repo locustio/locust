@@ -1,10 +1,11 @@
 import csv
-import json
 import logging
 import os.path
+import sys
 from functools import wraps
 from html import escape
 from io import StringIO
+from json import dumps
 from itertools import chain
 from time import time
 from typing import TYPE_CHECKING, Optional, Union, Any, Dict, List
@@ -13,6 +14,7 @@ import gevent
 from flask import Flask, make_response, jsonify, render_template, request, send_file, Response
 from flask_basicauth import BasicAuth
 from gevent import pywsgi
+import locust
 
 from .exception import AuthCredentialsError
 from .runners import MasterRunner, STATE_MISSING
@@ -25,7 +27,8 @@ from .util.cache import memoize
 from .util.rounding import proper_round
 from .html import get_html_report
 from flask_cors import CORS
-from json import dumps
+from .user.inspectuser import print_task_ratio, print_task_ratio_json
+from .util.timespan import parse_timespan
 
 if TYPE_CHECKING:
     from .env import Environment
@@ -78,6 +81,7 @@ class WebUI:
         tls_key: Optional[str] = None,
         stats_csv_writer: Optional[StatsCSV] = None,
         delayed_start=False,
+        userclass_picker_is_active=False,
     ):
         """
         Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
@@ -100,6 +104,7 @@ class WebUI:
         self.port = port
         self.tls_cert = tls_cert
         self.tls_key = tls_key
+        self.userclass_picker_is_active = userclass_picker_is_active
         app = Flask(__name__)
         CORS(app)
         self.app = app
@@ -142,6 +147,37 @@ class WebUI:
         def swarm() -> Response:
             assert request.method == "POST"
 
+            # Loading UserClasses & ShapeClasses if Locust is running with UserClass Picker
+            if self.userclass_picker_is_active:
+                if not self.environment.available_user_classes:
+                    err_msg = "UserClass picker is active but there are no available UserClasses"
+                    return jsonify({"success": False, "message": err_msg, "host": environment.host})
+
+                # Getting Specified User Classes
+                form_data_user_class_names = request.form.getlist("user_classes")
+
+                # Updating UserClasses
+                if form_data_user_class_names:
+                    user_classes = {}
+                    for user_class_name, user_class_object in self.environment.available_user_classes.items():
+                        if user_class_name in form_data_user_class_names:
+                            user_classes[user_class_name] = user_class_object
+
+                else:
+                    user_classes = self.environment.available_user_classes
+                self._update_user_classes(user_classes)
+
+                # Updating ShapeClass if specified in WebUI Form
+                form_data_shape_class_name = request.form.get("shape_class", "Default")
+                if form_data_shape_class_name == "Default":
+                    self._update_shape_class(None)
+                else:
+                    self._update_shape_class(form_data_shape_class_name)
+
+                # Stopping Runners and setting user dispatchers to None so that they
+                # are recreated with the appropriate UserClasses
+                self._stop_runners()
+
             parsed_options_dict = vars(environment.parsed_options) if environment.parsed_options else {}
             for key, value in request.form.items():
                 if key == "user_count":  # if we just renamed this field to "users" we wouldn't need this
@@ -169,7 +205,16 @@ class WebUI:
             if environment.runner is not None:
                 self._swarm_greenlet = gevent.spawn(environment.runner.start, user_count, spawn_rate)
                 self._swarm_greenlet.link_exception(greenlet_exception_handler)
-                return jsonify({"success": True, "message": "Swarming started", "host": environment.host})
+                response_data = {
+                    "success": True,
+                    "message": "Swarming started",
+                    "host": environment.host,
+                }
+
+                if self.userclass_picker_is_active:
+                    response_data["user_classes"] = sorted(user_classes.keys())
+
+                return jsonify(response_data)
             else:
                 return jsonify({"success": False, "message": "No runner", "host": environment.host})
 
@@ -461,6 +506,14 @@ class WebUI:
         stats = self.environment.runner.stats
         extra_options = argument_parser.ui_extra_args_dict()
 
+        available_user_classes = (
+            None if not self.environment.available_user_classes else sorted(self.environment.available_user_classes)
+        )
+
+        available_shape_classes = ["Default"]
+        if self.environment.available_shape_classes:
+            available_shape_classes += sorted(self.environment.available_shape_classes.keys())
+
         self.template_args = {
             "locustfile": self.environment.locustfile,
             "state": self.environment.runner.state,
@@ -473,8 +526,32 @@ class WebUI:
             "num_users": options and options.num_users,
             "spawn_rate": options and options.spawn_rate,
             "worker_count": worker_count,
-            "is_shape": self.environment.shape_class,
+            "is_shape": self.environment.shape_class and not self.userclass_picker_is_active,
             "stats_history_enabled": options and options.stats_history_enabled,
             "tasks": dumps({}),
             "extra_options": extra_options,
+            "show_userclass_picker": self.userclass_picker_is_active,
+            "available_user_classes": available_user_classes,
+            "available_shape_classes": available_shape_classes,
         }
+
+    def _update_shape_class(self, shape_class_name):
+        if shape_class_name:
+            shape_class = self.environment.available_shape_classes[shape_class_name]
+        else:
+            shape_class = None
+
+        # Validating ShapeClass
+        self.environment.shape_class = shape_class
+        self.environment._validate_shape_class_instance()
+
+    def _update_user_classes(self, user_classes):
+        self.environment.user_classes = list(user_classes.values())
+
+        # Validating UserClasses
+        self.environment._remove_user_classes_with_weight_zero()
+        self.environment._validate_user_class_name_uniqueness()
+
+    def _stop_runners(self):
+        self.environment.runner.stop()
+        self.environment.runner._users_dispatcher = None
