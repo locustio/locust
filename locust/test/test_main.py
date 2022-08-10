@@ -1325,3 +1325,91 @@ class SecondUser(HttpUser):
 
             self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
+
+    def test_worker_indexes(self):
+        content = (
+            MOCK_LOCUSTFILE_CONTENT
+            + """
+class AnyUser(HttpUser):
+    host = "http://127.0.0.1:8089"
+    wait_time = between(0, 0.1)
+    @task
+    def my_task(self):
+        print("worker index:", self.environment.runner.worker_index)
+"""
+        )
+        with mock_locustfile(content=content) as mocked:
+            master = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "--master",
+                    "--expect-workers",
+                    "2",
+                    "-t",
+                    "5",
+                    "-u",
+                    "2",
+                    "-L",
+                    "DEBUG",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            proc_worker_1 = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--worker",
+                    "-L",
+                    "DEBUG",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            proc_worker_2 = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--worker",
+                    "-L",
+                    "DEBUG",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            stdout, stderr = master.communicate()
+            self.assertNotIn("Traceback", stderr)
+            self.assertEqual(0, master.returncode)
+
+            stdout_worker_1, stderr_worker_1 = proc_worker_1.communicate()
+            stdout_worker_2, stderr_worker_2 = proc_worker_2.communicate()
+            self.assertEqual(0, proc_worker_1.returncode)
+            self.assertEqual(0, proc_worker_2.returncode)
+            self.assertNotIn("Traceback", stderr_worker_1)
+            self.assertNotIn("Traceback", stderr_worker_2)
+
+            PREFIX = "worker index: "
+            p1 = stdout_worker_1.find(PREFIX)
+            if p1 == -1:
+                raise Exception(stdout_worker_1 + stderr_worker_1)
+            self.assertNotEqual(-1, p1)
+            p2 = stdout_worker_2.find(PREFIX)
+            if p2 == -1:
+                raise Exception(stdout_worker_2 + stderr_worker_2)
+            self.assertNotEqual(-1, p2)
+            found = [
+                int(stdout_worker_1[p1 + len(PREFIX) :].split("\n")[0]),
+                int(stdout_worker_2[p1 + len(PREFIX) :].split("\n")[0]),
+            ]
+            found.sort()
+            for i in range(2):
+                if found[i] != i:
+                    raise Exception(f"expected index {i} but got", found[i])
