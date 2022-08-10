@@ -883,6 +883,60 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Shutting down (exit code 0)", output)
                 self.assertEqual(0, proc.returncode)
 
+    def test_command_line_user_selection(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+        from locust import User, task, constant
+
+        class User1(User):
+            wait_time = constant(1)
+            @task
+            def t(self):
+                print("User1 is running")
+
+        class User2(User):
+            wait_time = constant(1)
+            @task
+            def t(self):
+                print("User2 is running")
+
+        class User3(User):
+            wait_time = constant(1)
+            @task
+            def t(self):
+                print("User3 is running")
+        """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                " ".join(
+                    [
+                        "locust",
+                        "-f",
+                        mocked.file_path,
+                        "--headless",
+                        "--run-time",
+                        "2s",
+                        "-u",
+                        "5",
+                        "-r",
+                        "10",
+                        "User2",
+                        "User3",
+                    ]
+                ),
+                stderr=STDOUT,
+                stdout=PIPE,
+                shell=True,
+                text=True,
+            )
+
+            output = proc.communicate()[0]
+            self.assertNotIn("User1 is running", output)
+            self.assertIn("User2 is running", output)
+            self.assertIn("User3 is running", output)
+            self.assertEqual(0, proc.returncode)
+
     def test_html_report_option(self):
         with mock_locustfile() as mocked:
             with temporary_file("", suffix=".html") as html_report_file_path:
