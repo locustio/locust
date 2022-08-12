@@ -8,8 +8,6 @@ Running Locust in a debugger is extremely useful when developing your tests. Amo
 
 But debuggers sometimes have issues with complex gevent-applications like Locust, and there is a lot going on in the framework itself that you probably aren't interested in. To simplify this, Locust provides a method called :py:func:`run_single_user <locust.debug.run_single_user>`:
 
-Note that this is a fairly new feature, and the api is subject to change.
-
 .. literalinclude:: ../examples/debugging.py
     :language: python
 
@@ -27,6 +25,31 @@ Make sure you have enabled gevent in your debugger settings. In VS Code's ``laun
 
 .. literalinclude:: ../.vscode/launch.json
     :language: json
+
+If you want to the whole Locust runtime (with ramp up, command line parsing etc), you can do that too:
+
+.. code-block:: json
+
+    {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Locust: 10 Users",
+                "type": "python",
+                "request": "launch",
+                "module": "locust",
+                "args": [
+                    "-f",
+                    "${file}",
+                    "--headless",
+                    "-u",
+                    "10"
+                ],
+                "console": "integratedTerminal",
+                "gevent": true
+            }
+        ]
+    }    
 
 There is a similar setting in `PyCharm <https://www.jetbrains.com/help/pycharm/debugger-python.html>`_.
 
