@@ -2635,7 +2635,9 @@ class TestMasterRunner(LocustRunnerTestCase):
             master.start(7, 7)
             self.assertEqual(10, len(server.outbox))
 
-            num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
+            num_users = sum(
+                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type != "ack"
+            )
 
             self.assertEqual(7, num_users, "Total number of locusts that would have been spawned is not 7")
 
@@ -2654,9 +2656,42 @@ class TestMasterRunner(LocustRunnerTestCase):
             master.start(2, 2)
             self.assertEqual(10, len(server.outbox))
 
-            num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
+            num_users = sum(
+                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type != "ack"
+            )
 
             self.assertEqual(2, num_users, "Total number of locusts that would have been spawned is not 2")
+
+    def test_spawn_correct_worker_indexes(self):
+        """
+        Tests that workers would receive a monotonic sequence of ordinal IDs.
+        """
+
+        class TestUser(User):
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner(user_classes=[TestUser])
+
+            USERS_COUNT = 5
+
+            for i in range(USERS_COUNT):
+                server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
+
+            master.start(USERS_COUNT, USERS_COUNT)
+            self.assertEqual(USERS_COUNT * 2, len(server.outbox))
+
+            indexes = []
+            for _, msg in server.outbox:
+                if msg.type == "ack":
+                    indexes.append(msg.data["index"])
+            self.assertEqual(USERS_COUNT, len(indexes), "Total number of locusts/workers is not 5")
+
+            indexes.sort()
+            for i in range(USERS_COUNT):
+                self.assertEqual(indexes[i], i, "Worker index mismatch")
 
     def test_custom_shape_scale_up(self):
         class MyUser(User):
@@ -2687,14 +2722,18 @@ class TestMasterRunner(LocustRunnerTestCase):
             sleep(0.5)
 
             # Wait for shape_worker to update user_count
-            num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
+            num_users = sum(
+                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type != "ack"
+            )
             self.assertEqual(
                 1, num_users, "Total number of users in first stage of shape test is not 1: %i" % num_users
             )
 
             # Wait for shape_worker to update user_count again
             sleep(2)
-            num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
+            num_users = sum(
+                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type != "ack"
+            )
             self.assertEqual(
                 3, num_users, "Total number of users in second stage of shape test is not 3: %i" % num_users
             )
@@ -2732,7 +2771,9 @@ class TestMasterRunner(LocustRunnerTestCase):
             sleep(0.5)
 
             # Wait for shape_worker to update user_count
-            num_users = sum(sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.data)
+            num_users = sum(
+                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type != "ack"
+            )
             self.assertEqual(
                 5, num_users, "Total number of users in first stage of shape test is not 5: %i" % num_users
             )
@@ -2741,7 +2782,7 @@ class TestMasterRunner(LocustRunnerTestCase):
             sleep(2)
             msgs = defaultdict(dict)
             for _, msg in server.outbox:
-                if not msg.data:
+                if msg.type == "ack":
                     continue
                 msgs[msg.node_id][msg.data["timestamp"]] = sum(msg.data["user_classes_count"].values())
             # Count users for the last received messages
@@ -2977,6 +3018,7 @@ class TestMasterRunner(LocustRunnerTestCase):
             self.assertEqual(1, len(master.clients))
             self.assertEqual("ack", server.outbox[0][1].type)
             self.assertEqual(1, len(server.outbox))
+            self.assertEqual(0, server.outbox[0][1].data["index"])
 
     def test_worker_sends_bad_message_to_master(self):
         """
@@ -3018,7 +3060,7 @@ class TestWorkerRunner(LocustTestCase):
 
     def get_runner(self, client, environment=None, user_classes=None, auto_connect=True):
         if auto_connect:
-            client.mocked_send(Message("ack", {}, "dummy_client_id"))
+            client.mocked_send(Message("ack", {"index": 0}, "dummy_client_id"))
         if environment is None:
             environment = self.environment
         user_classes = user_classes or []
