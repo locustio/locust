@@ -1,0 +1,15 @@
+{
+            "name": "Locust: Current File",
+            "type": "python",
+            "request": "launch",
+            "module": "locust",
+            "args": [
+                "-f",
+                "${file}",
+                "--headless",
+                // "--users=5"
+                "--config=${fileDirname}/../../../../locust.conf"
+            ],
+            "console": "integratedTerminal",
+            "gevent": true,          
+        },
