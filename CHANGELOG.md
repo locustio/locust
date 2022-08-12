@@ -1,5 +1,5 @@
 # Changelog
-Note that PRs for the latest version are sometimes missing here, check [github](https://github.com/locustio/locust/releases) for the latest info.
+Note that the latest version is usually missing here, check [github](https://github.com/locustio/locust/releases) for the latest info.
 
 ## [2.11.0](https://github.com/locustio/locust/tree/2.11.0) (2022-08-12)
 

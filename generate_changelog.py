@@ -24,9 +24,11 @@ cmd = [
     "--exclude-labels",
     "duplicate,question,invalid,wontfix,cantfix,stale",
     "--header-label",
-    "# Changelog\nNote that PRs for the latest version are sometimes missing here, check [github](https://github.com/locustio/locust/releases) for the latest info.",
+    "# Changelog\nNote that the latest version is usually missing here, check [github](https://github.com/locustio/locust/releases) for the latest info.",
     "--since-tag",
-    "0.14.6",
+    "1.0.1",
+    # "--since-commit", # these cause issues
+    # "2020-07-01 00:00:00",
     "--future-release",
     version,
 ]
