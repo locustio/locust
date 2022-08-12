@@ -144,7 +144,7 @@ class FastHttpSession:
         method: str,
         url: str,
         name: str = None,
-        data: str = None,
+        data: Union[str, dict] = None,
         catch_response: bool = False,
         stream: bool = False,
         headers: dict = None,
