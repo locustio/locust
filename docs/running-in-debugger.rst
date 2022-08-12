@@ -42,7 +42,7 @@ You can execute run_single_user multiple times, as shown in `debugging_advanced.
 Printing exactly what was sent to a web server
 ==============================================
 
-Sometimes it can be hard to understand why a request fails in Locust when it works from a regular browser/other application. Sometimes there is some slight difference in what is sent by the client, so it is useful to examine it in detail:
+Sometimes it can be hard to understand why an HTTP request fails in Locust when it works from a regular browser/other application. Here's how to examine the communication in detail:
 
 For ``HttpUser`` (`python-requests <http://python-requests.org>`_):
 
