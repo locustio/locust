@@ -1,15 +1,64 @@
 # Changelog
-# Automatic change log generation is broken at the moment. See [github](https://github.com/locustio/locust/releases) instead.
+Note that PRs for the latest version are sometimes missing here, check [github](https://github.com/locustio/locust/releases) for the latest info.
 
-------------------------------------------------------------------------------------------------------------------------------
+## [2.11.0](https://github.com/locustio/locust/tree/2.11.0) (2022-08-12)
 
-## [2.10.2](https://github.com/locustio/locust/tree/2.10.2)
+[Full Changelog](https://github.com/locustio/locust/compare/2.10.2...2.11.0)
+
+**Fixed bugs:**
+
+- Not able to achieve high RPS \(3000 users, 20 workers, 32 vcpu-64 GB RAM\) [\#2154](https://github.com/locustio/locust/issues/2154)
+- Flask 2.2.0 Update breaks request\_stats\_full\_history\_csv in web.py [\#2147](https://github.com/locustio/locust/issues/2147)
+- "New test" with different number of users [\#2135](https://github.com/locustio/locust/issues/2135)
+
+**Closed issues:**
+
+- Use of different LoadTestShape classes in the same locust file [\#2151](https://github.com/locustio/locust/issues/2151)
+
+**Merged pull requests:**
+
+- Add example launch.json for debugging the whole Locust runtime in vscode [\#2156](https://github.com/locustio/locust/pull/2156) ([SamPosh](https://github.com/SamPosh))
+- feat: add 'worker\_index' to WorkerRunner [\#2155](https://github.com/locustio/locust/pull/2155) ([gdm85](https://github.com/gdm85))
+- chore: Remove misleading docstring in test [\#2153](https://github.com/locustio/locust/pull/2153) ([mboutet](https://github.com/mboutet))
+- fix: Ensure new test starts with specified number of users after previous test has been stopped [\#2152](https://github.com/locustio/locust/pull/2152) ([mboutet](https://github.com/mboutet))
+- Pass multiple Locustfiles and allow selecting User and Shape class from the WebUI [\#2137](https://github.com/locustio/locust/pull/2137) ([mikenester](https://github.com/mikenester))
+
+## [2.10.2](https://github.com/locustio/locust/tree/2.10.2) (2022-08-03)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.10.1...2.10.2)
 
-## [2.10.1](https://github.com/locustio/locust/tree/2.10.1)
+**Fixed bugs:**
+
+- \[SocketIOUser\] - I have provided the code to turn off the SSL certification but still, I'm getting an SSL certification error [\#2144](https://github.com/locustio/locust/issues/2144)
+- HTML Report does not correctly escape statistics data [\#2126](https://github.com/locustio/locust/issues/2126)
+- "Stop" hang on "stopping" state  when there are more than one workers in distributed mode. [\#2111](https://github.com/locustio/locust/issues/2111)
+
+**Closed issues:**
+
+- Html report:  table should be sortable [\#2132](https://github.com/locustio/locust/issues/2132)
+- Funny resource URL prefix disallows using locust behind nginx proxy [\#2030](https://github.com/locustio/locust/issues/2030)
+
+**Merged pull requests:**
+
+- Fix for Flask 2.2.0 breaking changes [\#2148](https://github.com/locustio/locust/pull/2148) ([mikenester](https://github.com/mikenester))
+- style: add a report favicon [\#2145](https://github.com/locustio/locust/pull/2145) ([Pactortester](https://github.com/Pactortester))
+- Better error message when User.task is set instead of User.tasks [\#2142](https://github.com/locustio/locust/pull/2142) ([cyberw](https://github.com/cyberw))
+- Minor edits to the documentation [\#2140](https://github.com/locustio/locust/pull/2140) ([sosna](https://github.com/sosna))
+- Small documentation correction [\#2138](https://github.com/locustio/locust/pull/2138) ([andybyrne](https://github.com/andybyrne))
+- Log a warning for failed attempts to connect to master [\#2136](https://github.com/locustio/locust/pull/2136) ([gdm85](https://github.com/gdm85))
+- Test Report: Implement table sorting [\#2134](https://github.com/locustio/locust/pull/2134) ([Likqez](https://github.com/Likqez))
+- fix: Fix typo at user/wait\_time.py [\#2133](https://github.com/locustio/locust/pull/2133) ([DmytroLitvinov](https://github.com/DmytroLitvinov))
+- Fix escaping for exceptions in normal web ui \(related to \#2126\) [\#2131](https://github.com/locustio/locust/pull/2131) ([herrmanntom](https://github.com/herrmanntom))
+- Replace the MD5 usage by SHA256 [\#2130](https://github.com/locustio/locust/pull/2130) ([RenanGBarreto](https://github.com/RenanGBarreto))
+- Escape user supplied data in html report \(\#2126\) [\#2127](https://github.com/locustio/locust/pull/2127) ([herrmanntom](https://github.com/herrmanntom))
+
+## [2.10.1](https://github.com/locustio/locust/tree/2.10.1) (2022-06-28)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.10.0...2.10.1)
+
+**Merged pull requests:**
+
+- Increase CONNECT\_RETRY\_COUNT to avoid workers giving up too soon if master is not up yet [\#2125](https://github.com/locustio/locust/pull/2125) ([cyberw](https://github.com/cyberw))
 
 ## [2.10.0](https://github.com/locustio/locust/tree/2.10.0) (2022-06-27)
 

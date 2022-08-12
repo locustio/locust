@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.11.0
+======
+* Allow passing multiple Locustfiles, allow selecting User and Shape class from the WebUI https://github.com/locustio/locust/pull/2137
+* Add 'worker_index' to WorkerRunner https://github.com/locustio/locust/pull/2155
+* Fix: Ensure new test starts with specified number of users after previous test has been stopped https://github.com/locustio/locust/pull/2152
+
 2.10.2
 ======
 * Fix for Flask 2.2.0 breaking changes https://github.com/locustio/locust/pull/2148
