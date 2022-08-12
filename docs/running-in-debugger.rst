@@ -38,9 +38,9 @@ There is a similar setting in `PyCharm <https://www.jetbrains.com/help/pycharm/d
 
 You can execute run_single_user multiple times, as shown in `debugging_advanced.py <https://github.com/locustio/locust/tree/master/examples/debugging_advanced.py>`_.
 
-==============================================
-Printing exactly what was sent to a web server
-==============================================
+
+Print HTTP communication
+========================
 
 Sometimes it can be hard to understand why an HTTP request fails in Locust when it works from a regular browser/other application. Here's how to examine the communication in detail:
 
