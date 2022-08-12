@@ -1327,9 +1327,9 @@ class SecondUser(HttpUser):
             self.assertEqual(0, proc_worker.returncode)
 
     def test_worker_indexes(self):
-        content = (
-            MOCK_LOCUSTFILE_CONTENT
-            + """
+        content = """
+from locust import HttpUser, task, between
+
 class AnyUser(HttpUser):
     host = "http://127.0.0.1:8089"
     wait_time = between(0, 0.1)
@@ -1337,7 +1337,6 @@ class AnyUser(HttpUser):
     def my_task(self):
         print("worker index:", self.environment.runner.worker_index)
 """
-        )
         with mock_locustfile(content=content) as mocked:
             master = subprocess.Popen(
                 [
@@ -1387,6 +1386,7 @@ class AnyUser(HttpUser):
             )
             stdout, stderr = master.communicate()
             self.assertNotIn("Traceback", stderr)
+            self.assertIn("Shutting down (exit code 0)", stderr)
             self.assertEqual(0, master.returncode)
 
             stdout_worker_1, stderr_worker_1 = proc_worker_1.communicate()
