@@ -363,12 +363,13 @@ class UsersDispatcher(Iterator):
             # The value "2" was experimentally determined because it gave a better distribution especially
             # when dealing with weights which are close to each others, e.g. 1.5, 2, 2.4, etc.
             target_min_weight = 2
+            user_min_weight = min([u[1] for u in users if u[1] > 0] or [target_min_weight])
 
             # 'Value' here means weight or fixed count
             normalized_values = [
                 (
                     user.__name__,
-                    round(target_min_weight * value / min(u[1] for u in users)),
+                    round(target_min_weight * value / user_min_weight),
                 )
                 for user, value in users
             ]

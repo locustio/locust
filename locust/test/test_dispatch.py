@@ -3591,6 +3591,72 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
                                 )
 
 
+class TestWeight(unittest.TestCase):
+    def test_set_weight_outside_class(self):
+        class User1(User):
+            pass
+
+        class User2(User):
+            pass
+
+        User1.weight = 0
+
+        worker_node1 = WorkerNode("1")
+        worker_node2 = WorkerNode("2")
+        users_dispatcher = UsersDispatcher(worker_nodes=[worker_node1, worker_node2], user_classes=[User1, User2])
+
+        users_dispatcher._distribute_users(
+            target_user_count=1_000
+        )
+
+    def test_set_weight_inside_class(self):
+        class User1(User):
+            weight = 0
+            pass
+
+        class User2(User):
+            pass
+
+        worker_node1 = WorkerNode("1")
+        worker_node2 = WorkerNode("2")
+        users_dispatcher = UsersDispatcher(worker_nodes=[worker_node1, worker_node2], user_classes=[User1, User2])
+
+        users_dispatcher._distribute_users(
+            target_user_count=1_000
+        )
+
+    def test_set_weight_outside_class_to_one(self):
+        class User1(User):
+            weight = 0
+            pass
+
+        class User2(User):
+            pass
+
+        User1.weight = 1
+
+        worker_node1 = WorkerNode("1")
+        worker_node2 = WorkerNode("2")
+        users_dispatcher = UsersDispatcher(worker_nodes=[worker_node1, worker_node2], user_classes=[User1, User2])
+
+        users_dispatcher._distribute_users(
+            target_user_count=1_000
+        )
+
+    def test_set_weight_inside_one_class(self):
+        class User1(User):
+            weight = 0
+            pass
+
+        User1.weight = 1
+
+        worker_node1 = WorkerNode("1")
+        users_dispatcher = UsersDispatcher(worker_nodes=[worker_node1], user_classes=[User1])
+
+        users_dispatcher._distribute_users(
+            target_user_count=1_000
+        )
+
 def _aggregate_dispatched_users(d: Dict[str, Dict[str, int]]) -> Dict[str, int]:
     user_classes = list(next(iter(d.values())).keys())
     return {u: sum(d[u] for d in d.values()) for u in user_classes}
