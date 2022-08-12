@@ -28,28 +28,8 @@ Make sure you have enabled gevent in your debugger settings. In VS Code's ``laun
 
 If you want to the whole Locust runtime (with ramp up, command line parsing etc), you can do that too:
 
-.. code-block:: json
-
-    {
-        "version": "0.2.0",
-        "configurations": [
-            {
-                "name": "Locust: 10 Users",
-                "type": "python",
-                "request": "launch",
-                "module": "locust",
-                "args": [
-                    "-f",
-                    "${file}",
-                    "--headless",
-                    "-u",
-                    "10"
-                ],
-                "console": "integratedTerminal",
-                "gevent": true
-            }
-        ]
-    }    
+.. literalinclude:: ../.vscode/launch_locust.json
+    :language: json
 
 There is a similar setting in `PyCharm <https://www.jetbrains.com/help/pycharm/debugger-python.html>`_.
 

@@ -1,5 +1,8 @@
 {
-            "name": "Locust: Current File",
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Locust: 5 users, with specific config file",
             "type": "python",
             "request": "launch",
             "module": "locust",
@@ -7,9 +10,11 @@
                 "-f",
                 "${file}",
                 "--headless",
-                // "--users=5"
-                "--config=${fileDirname}/../../../../locust.conf"
+                "--users=5",
+                "--config=${fileDirname}/../locust.conf"
             ],
             "console": "integratedTerminal",
-            "gevent": true,          
-        },
+            "gevent": true
+        }
+    ]
+}
