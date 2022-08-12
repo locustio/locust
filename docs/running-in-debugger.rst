@@ -74,7 +74,7 @@ For ``FastHttpUser`` (`geventhttpclient <https://github.com/gwik/geventhttpclien
         def t(self):
             self.client.get("http://example.com/", debug_stream=sys.stderr)
 
-Example output:
+Example output (for FastHttpUser):
 
 .. code-block:: console
 
