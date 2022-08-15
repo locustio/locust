@@ -87,7 +87,7 @@ def main():
                     continue
                 else:
                     sys.stderr.write(
-                        f"Duplicate user class key: {key}, defined in both {previous_path} and {new_path}\n"
+                        f"Duplicate user class names: {key} is defined in both {previous_path} and {new_path}\n"
                     )
                     sys.exit(1)
 
