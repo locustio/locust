@@ -3605,30 +3605,38 @@ class TestWeight(unittest.TestCase):
         worker_node2 = WorkerNode("2")
         users_dispatcher = UsersDispatcher(worker_nodes=[worker_node1, worker_node2], user_classes=[User1, User2])
 
-        users_dispatcher._distribute_users(
-            target_user_count=1_000
-        )
+        users_dispatcher.new_dispatch(target_user_count=30, spawn_rate=0.5)
+        users_dispatcher._wait_between_dispatch = 0
+        iterations = list(users_dispatcher)
+
+        # Here returns: {"User1": 0, "User2": 15}
+        self.assertDictEqual(iterations[-1]["1"], {"User1": 0, "User2": 30}) 
 
     def test_set_weight_inside_class(self):
         class User1(User):
             weight = 0
-            pass
 
         class User2(User):
             pass
 
+        class User3(User):
+            weight = 0
+
         worker_node1 = WorkerNode("1")
         worker_node2 = WorkerNode("2")
-        users_dispatcher = UsersDispatcher(worker_nodes=[worker_node1, worker_node2], user_classes=[User1, User2])
+        worker_node3 = WorkerNode("3")
+        users_dispatcher = UsersDispatcher(worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3])
 
-        users_dispatcher._distribute_users(
-            target_user_count=1_000
-        )
+        users_dispatcher.new_dispatch(target_user_count=30, spawn_rate=0.5)
+        users_dispatcher._wait_between_dispatch = 0
+        iterations = list(users_dispatcher)
+
+        # Here returns: {"User1": 0, "User2": 10, "User3": 0}
+        self.assertDictEqual(iterations[-1]["1"], {"User1": 0, "User2": 30, "User3": 0}) 
 
     def test_set_weight_outside_class_to_one(self):
         class User1(User):
             weight = 0
-            pass
 
         class User2(User):
             pass
@@ -3639,23 +3647,28 @@ class TestWeight(unittest.TestCase):
         worker_node2 = WorkerNode("2")
         users_dispatcher = UsersDispatcher(worker_nodes=[worker_node1, worker_node2], user_classes=[User1, User2])
 
-        users_dispatcher._distribute_users(
-            target_user_count=1_000
-        )
+        users_dispatcher.new_dispatch(target_user_count=30, spawn_rate=0.5)
+        users_dispatcher._wait_between_dispatch = 0
+        iterations = list(users_dispatcher)
+
+        # Here returns: {"User1": 15, "User2": 0}
+        self.assertDictEqual(iterations[-1]["1"], {"User1": 15, "User2": 15}) 
+
 
     def test_set_weight_inside_one_class(self):
         class User1(User):
             weight = 0
-            pass
 
         User1.weight = 1
 
         worker_node1 = WorkerNode("1")
         users_dispatcher = UsersDispatcher(worker_nodes=[worker_node1], user_classes=[User1])
 
-        users_dispatcher._distribute_users(
-            target_user_count=1_000
-        )
+        users_dispatcher.new_dispatch(target_user_count=30, spawn_rate=0.5)
+        users_dispatcher._wait_between_dispatch = 0
+        iterations = list(users_dispatcher)
+
+        self.assertDictEqual(iterations[-1]["1"], {"User1": 30})       
 
 def _aggregate_dispatched_users(d: Dict[str, Dict[str, int]]) -> Dict[str, int]:
     user_classes = list(next(iter(d.values())).keys())
