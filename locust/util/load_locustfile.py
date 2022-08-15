@@ -23,7 +23,7 @@ def is_shape_class(item):
     )
 
 
-def load_locustfile(path) -> tuple[str, Dict[str, User], Optional[LoadTestShape]]:
+def load_locustfile(path) -> tuple[Optional[str], Dict[str, User], Optional[LoadTestShape]]:
     """
     Import given locustfile path and return (docstring, callables).
 
