@@ -897,7 +897,7 @@ class MasterRunner(DistributedRunner):
         self.stop(send_stop_to_client=False)
         logger.debug("Quitting...")
         for client in self.clients.all:
-            logger.debug(f"Sending quit message to worker {client.id}")
+            logger.debug(f"Sending quit message to worker {client.id} (index {self.get_worker_index(client.id)})")
             self.server.send_to_client(Message("quit", None, client.id))
         gevent.sleep(0.5)  # wait for final stats report from all workers
         self.greenlet.kill(block=True)
@@ -1064,7 +1064,7 @@ class MasterRunner(DistributedRunner):
                         self.worker_cpu_warning_emitted = True  # used to fail the test in the end
                         c.cpu_warning_emitted = True  # used to suppress logging for this node
                         logger.warning(
-                            f"Worker {msg.node_id} exceeded cpu threshold (will only log this once per worker)"
+                            f"Worker {msg.node_id} (index {self.get_worker_index(msg.node_id)}) exceeded cpu threshold (will only log this once per worker)"
                         )
                     if "current_memory_usage" in msg.data:
                         c.memory_usage = msg.data["current_memory_usage"]
@@ -1084,7 +1084,9 @@ class MasterRunner(DistributedRunner):
                         if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
                             # TODO: Test this situation
                             self.start(self.target_user_count, self.spawn_rate)
-                    logger.info(f"Worker {msg.node_id!r} quit. {len(self.clients.ready)} workers ready.")
+                    logger.info(
+                        f"Worker {msg.node_id!r} (index {self.get_worker_index(msg.node_id)}) quit. {len(self.clients.ready)} workers ready."
+                    )
                     if self.worker_count - len(self.clients.missing) <= 0:
                         logger.info("The last worker quit, stopping test.")
                         self.stop()
@@ -1093,10 +1095,14 @@ class MasterRunner(DistributedRunner):
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
             elif msg.type in self.custom_messages:
-                logger.debug(f"Received {msg.type} message from worker {msg.node_id}")
+                logger.debug(
+                    f"Received {msg.type} message from worker {msg.node_id} (index {self.get_worker_index(msg.node_id)})"
+                )
                 self.custom_messages[msg.type](environment=self.environment, msg=msg)
             else:
-                logger.warning(f"Unknown message type received from worker {msg.node_id}: {msg.type}")
+                logger.warning(
+                    f"Unknown message type received from worker {msg.node_id} (index {self.get_worker_index(msg.node_id)}): {msg.type}"
+                )
 
             self.check_stopped()
 
