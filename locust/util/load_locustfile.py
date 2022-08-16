@@ -2,7 +2,7 @@ import importlib
 import inspect
 import os
 import sys
-from typing import Dict, Any, Optional
+from typing import Dict, Optional, Tuple
 from ..shape import LoadTestShape
 from ..user import User
 
@@ -23,7 +23,7 @@ def is_shape_class(item):
     )
 
 
-def load_locustfile(path) -> tuple[Optional[str], Dict[str, User], Optional[LoadTestShape]]:
+def load_locustfile(path) -> Tuple[Optional[str], Dict[str, User], Optional[LoadTestShape]]:
     """
     Import given locustfile path and return (docstring, callables).
 
