@@ -4,11 +4,10 @@ import signal
 import sys
 import time
 import atexit
-
+import inspect
 import gevent
-
 import locust
-
+from typing import Dict
 from . import log
 from .argument_parser import parse_locustfile_option, parse_options
 from .env import Environment
@@ -63,7 +62,7 @@ def main():
     locustfile = locustfiles[0] if locustfiles_length == 1 else None
 
     # Importing Locustfile(s) - setting available UserClasses and ShapeClasses to choose from in UI
-    user_classes = {}
+    user_classes: Dict[str, locust.User] = {}
     available_user_classes = {}
     available_shape_classes = {}
     for _locustfile in locustfiles:
@@ -81,8 +80,16 @@ def main():
         # Setting Available User Classes
         for key, value in _user_classes.items():
             if key in available_user_classes.keys():
-                sys.stderr.write(f"Duplicate user class key: {key}\n")
-                sys.exit(1)
+                previous_path = inspect.getfile(user_classes[key])
+                new_path = inspect.getfile(value)
+                if previous_path == new_path:
+                    # The same User class was defined in two locustfiles but one probably imported the other, so we just ignore it
+                    continue
+                else:
+                    sys.stderr.write(
+                        f"Duplicate user class names: {key} is defined in both {previous_path} and {new_path}\n"
+                    )
+                    sys.exit(1)
 
             user_classes[key] = value
             available_user_classes[key] = value

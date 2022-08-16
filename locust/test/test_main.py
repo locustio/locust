@@ -1013,8 +1013,26 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 gevent.sleep(1)
                 stdout, stderr = proc.communicate()
 
-                self.assertIn("Duplicate user class key: TestUser1", stderr)
+                self.assertIn("Duplicate user class names: TestUser1 is defined", stderr)
                 self.assertEqual(1, proc.returncode)
+
+    def test_no_error_when_same_userclass_in_two_files(self):
+        with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
+            MOCK_LOCUSTFILE_CONTENT_C = textwrap.dedent(
+                f"""
+                from {os.path.basename(file1)[:-3]} import TestUser1
+            """
+            )
+            print(MOCK_LOCUSTFILE_CONTENT_C)
+            with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
+                proc = subprocess.Popen(
+                    ["locust", "-f", f"{file1},{file2}", "-t", "1", "--headless"], stdout=PIPE, stderr=PIPE, text=True
+                )
+                gevent.sleep(1)
+                stdout, stderr = proc.communicate()
+
+                self.assertIn("running my_task", stdout)
+                self.assertEqual(0, proc.returncode)
 
     def test_error_when_duplicate_shape_class_names(self):
         MOCK_LOCUSTFILE_CONTENT_C = MOCK_LOCUSTFILE_CONTENT_A + textwrap.dedent(
