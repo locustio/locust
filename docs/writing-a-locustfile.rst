@@ -589,7 +589,6 @@ If you want to chain multiple groupings with minimal boilerplate, you can use th
 
     @task
     def multiple_groupings_example(self):
-
         # Statistics for these requests will be grouped under: /blog/?id=[id]
         with self.client.rename_request("/blog?id=[id]"):
             for i in range(10):
@@ -624,7 +623,6 @@ However, if you want to share connections among all users, you can use a single 
     from urllib3 import PoolManager
 
     class MyUser(HttpUser):
-
         # All users will be limited to 10 concurrent connections at most.
         pool_manager = PoolManager(maxsize=10, block=True)
 
