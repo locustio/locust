@@ -109,7 +109,7 @@ order to coordinate data. This can be easily accomplished with custom messages u
 
     @events.test_start.add_listener
     def on_test_start(environment, **_kwargs):
-        if not isinstance(environment.runner, MasterRunner):
+        if not isinstance(environment.runner, WorkerRunner):
             users = [
                 {"name": "User1"},
                 {"name": "User2"},
