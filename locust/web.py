@@ -164,7 +164,8 @@ class WebUI:
                             user_classes[user_class_name] = user_class_object
 
                 else:
-                    user_classes = self.environment.available_user_classes
+                    user_classes = {key: value for (key, value) in self.environment.available_user_classes.items if
+                                    value in self.environment.user_classes}
                 self._update_user_classes(user_classes)
 
                 # Updating ShapeClass if specified in WebUI Form
