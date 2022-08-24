@@ -391,6 +391,59 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
+    def test_swarm_uses_pre_selected_user_classes_when_empty_payload_and_test_is_already_running_with_class_picker(
+        self,
+    ):
+        # This test validates that the correct User Classes are used when editing a running test
+        class User1(User):
+            wait_time = constant(1)
+
+            @task
+            def t(self):
+                pass
+
+        class User2(User):
+            wait_time = constant(1)
+
+            @task
+            def t(self):
+                pass
+
+        self.environment.web_ui.userclass_picker_is_active = True
+        self.environment.available_user_classes = {"User1": User1, "User2": User2}
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={
+                "user_count": 5,
+                "spawn_rate": 5,
+                "host": "https://localhost",
+                "user_classes": ["User1"],
+            },
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual("https://localhost", response.json()["host"])
+        self.assertEqual(self.environment.host, "https://localhost")
+        self.assertListEqual(["User1"], response.json()["user_classes"])
+
+        # simulating edit running load test
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={
+                "user_count": 10,
+                "spawn_rate": 10,
+            },
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual("https://localhost", response.json()["host"])
+        self.assertEqual(self.environment.host, "https://localhost")
+        self.assertListEqual(["User1"], response.json()["user_classes"])
+
+        # stop
+        gevent.sleep(1)
+        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        self.assertEqual(response.json()["message"], "Test stopped")
+
     def test_swarm_error_when_userclass_picker_is_active_but_no_available_userclasses(self):
         self.environment.web_ui.userclass_picker_is_active = True
         response = requests.post(
