@@ -304,7 +304,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             else:
                 logger.info("--autoquit not specified, leaving web ui running indefinitely")
         else:  # --headless run
-            logger.info("--run-time limit reached. Stopping Locust")
+            logger.info("--run-time limit reached, shutting down")
             runner.quit()
 
     def spawn_run_time_quit_greenlet():
@@ -325,7 +325,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             start_time = time.monotonic()
             while len(runner.clients.ready) < options.expect_workers:
                 if options.expect_workers_max_wait and options.expect_workers_max_wait < time.monotonic() - start_time:
-                    logger.error("Gave up waiting for workers to connect.")
+                    logger.error("Gave up waiting for workers to connect")
                     runner.quit()
                     sys.exit(1)
                 logging.info(

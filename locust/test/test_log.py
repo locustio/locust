@@ -77,7 +77,7 @@ class TestLoggingOptions(LocustTestCase):
             output,
         )
         self.assertIn(
-            f"{socket.gethostname()}/INFO/locust.main: --run-time limit reached. Stopping Locust",
+            f"{socket.gethostname()}/INFO/locust.main: --run-time limit reached, shutting down",
             output,
         )
         self.assertIn(
@@ -192,7 +192,7 @@ class TestLoggingOptions(LocustTestCase):
             log_content,
         )
         self.assertIn(
-            f"{socket.gethostname()}/INFO/locust.main: --run-time limit reached. Stopping Locust",
+            f"{socket.gethostname()}/INFO/locust.main: --run-time limit reached, shutting down",
             log_content,
         )
         self.assertIn(
