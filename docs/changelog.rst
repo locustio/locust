@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.11.1
+======
+* Fix issue when editing user count while running a test using --class-picker https://github.com/locustio/locust/pull/2171
+* Various minor logging fixes
+
 2.11.0
 ======
 * Allow passing multiple Locustfiles, allow selecting User and Shape class from the WebUI https://github.com/locustio/locust/pull/2137
