@@ -1,7 +1,6 @@
 import csv
 import logging
 import os.path
-import sys
 from functools import wraps
 from html import escape
 from io import StringIO
@@ -14,10 +13,9 @@ import gevent
 from flask import Flask, make_response, jsonify, render_template, request, send_file, Response
 from flask_basicauth import BasicAuth
 from gevent import pywsgi
-import locust
 
 from .exception import AuthCredentialsError
-from .runners import MasterRunner, STATE_MISSING
+from .runners import MasterRunner, STATE_RUNNING, STATE_MISSING
 from .log import greenlet_exception_logger
 from .stats import StatsCSVFileWriter, StatsErrorDict, sort_stats
 from . import stats as stats_module, __version__ as version, argument_parser
@@ -27,8 +25,6 @@ from .util.cache import memoize
 from .util.rounding import proper_round
 from .html import get_html_report
 from flask_cors import CORS
-from .user.inspectuser import print_task_ratio, print_task_ratio_json
-from .util.timespan import parse_timespan
 
 if TYPE_CHECKING:
     from .env import Environment
@@ -164,7 +160,19 @@ class WebUI:
                             user_classes[user_class_name] = user_class_object
 
                 else:
-                    user_classes = self.environment.available_user_classes
+                    if self.environment.runner and self.environment.runner.state == STATE_RUNNING:
+                        # Test is already running
+                        # Using the user classes that have already been selected
+                        user_classes = {
+                            key: value
+                            for (key, value) in self.environment.available_user_classes.items()
+                            if value in self.environment.user_classes
+                        }
+                    else:
+                        # Starting test with no user class selection
+                        # Defaulting to using all available user classes
+                        user_classes = self.environment.available_user_classes
+
                 self._update_user_classes(user_classes)
 
                 # Updating ShapeClass if specified in WebUI Form
