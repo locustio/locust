@@ -430,7 +430,7 @@ body.ready .main {
   width: 398px;
   position: absolute;
   left: 50%;
-  top: 5px;
+  top: 5%;
   margin-left: -169px;
   border-radius: 5px;
   -moz-border-radius: 5px;
