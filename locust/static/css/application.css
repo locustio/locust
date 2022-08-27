@@ -252,7 +252,7 @@ body.running .top .top-content .boxes .top_box.box_status .edit-test, body.spawn
 }
 .dialogs .dialog .padder {
   padding: 30px;
-  padding-top: 0px;
+  padding-top: 20px;
 }
 .dialogs .dialog h2 {
   color: #addf82;
@@ -447,7 +447,7 @@ a.close_link {
 }
 .about .padder {
   padding: 30px;
-  padding-top: 20px;
+  padding-top: 0px;
 }
 
 .tasks ul {
