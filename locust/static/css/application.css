@@ -252,7 +252,7 @@ body.running .top .top-content .boxes .top_box.box_status .edit-test, body.spawn
 }
 .dialogs .dialog .padder {
   padding: 30px;
-  padding-top: 0px;
+  padding-top: 20px;
 }
 .dialogs .dialog h2 {
   color: #addf82;
@@ -430,7 +430,7 @@ body.ready .main {
   width: 398px;
   position: absolute;
   left: 50%;
-  top: 5px;
+  top: 5%;
   margin-left: -169px;
   border-radius: 5px;
   -moz-border-radius: 5px;
@@ -438,9 +438,9 @@ body.ready .main {
   border: 3px solid #eee;
   background: #132b21;
   box-shadow: 0 0 60px rgba(0, 0, 0, 0.3);
-  z-index: 1;
+  z-index: 100;
 }
-.about a.close_link {
+a.close_link {
   position: absolute;
   right: 10px;
   top: 10px;
