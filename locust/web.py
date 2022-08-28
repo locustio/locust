@@ -555,6 +555,9 @@ class WebUI:
 
     def _update_user_classes(self, user_classes):
         self.environment.user_classes = list(user_classes.values())
+        # populate the locustfile which used in web ui title only
+        if self.environment.locustfile is None:
+            self.environment.locustfile = ",".join(self.environment.user_classes_by_name.keys())
 
         # Validating UserClasses
         self.environment._remove_user_classes_with_weight_zero()
