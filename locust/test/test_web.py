@@ -348,6 +348,9 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(self.environment.host, "https://localhost")
         self.assertListEqual(["User1", "User2"], response.json()["user_classes"])
 
+        self.assertIsNotNone(self.environment.locustfile, 'verify locustfile is not empty')
+        self.assertEqual(self.environment.locustfile, "User1,User2", "Verify locustfile variable used in web ui title")
+
         # stop
         gevent.sleep(1)
         response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
