@@ -554,6 +554,29 @@ class TestFastHttpUserClass(WebserverTestCase):
         self.assertEqual(2, self.connections_count)
         self.assertEqual(4, self.requests_count)
 
+    def test_client_pool_concurrency(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+            @task
+            def t(self):
+                def concurrent_request(url):
+                    response = self.client.get(url)
+                    assert response.status_code == 200
+
+                pool = gevent.pool.Pool()
+                urls = ["/slow?delay=0.2"] * 20  # these urls are all the same, but they could be different
+                for url in urls:
+                    pool.spawn(concurrent_request, url)
+                pool.join()
+
+        user = MyUser(self.environment)
+        before_requests = time.time()
+        user.t()
+        after_requests = time.time()
+        expected_delta = 0.4  # 20 requests with concurrency 10 and response time 0.2
+        self.assertAlmostEqual(before_requests + expected_delta, after_requests, delta=0.1)
+
 
 class TestFastHttpCatchResponse(WebserverTestCase):
     def setUp(self):

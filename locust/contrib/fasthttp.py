@@ -313,9 +313,10 @@ class FastHttpUser(User):
     insecure: bool = True
     """Parameter passed to FastHttpSession. Default True, meaning no SSL verification."""
 
-    concurrency: int = 1
-    """Parameter passed to FastHttpSession. Describes number of concurrent requests allowed by the FastHttpSession. Default 1.
-    Note that setting this value has no effect when custom client_pool was given."""
+    concurrency: int = 10
+    """Parameter passed to FastHttpSession. Describes number of concurrent requests allowed by the FastHttpSession. Default 10.
+    Note that setting this value has no effect when custom client_pool was given, and you need to spawn a your own gevent pool
+    to use it (as Users only have one greenlet). See test_fasthttp.py / test_client_pool_concurrency for an example."""
 
     client_pool: Optional[HTTPClientPool] = None
     """HTTP client pool to use. If not given, a new pool is created per single user."""
