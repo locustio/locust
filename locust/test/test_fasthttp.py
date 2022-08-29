@@ -564,7 +564,7 @@ class TestFastHttpUserClass(WebserverTestCase):
                     response = self.client.get(url)
                     assert response.status_code == 200
 
-                pool = gevent.pool.Pool(20)
+                pool = gevent.pool.Pool()
                 urls = ["/slow?delay=0.2"] * 20  # these urls are all the same, but they could be different
                 for url in urls:
                     pool.spawn(concurrent_request, url)

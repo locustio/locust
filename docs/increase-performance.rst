@@ -30,6 +30,23 @@ Just subclass FastHttpUser instead of HttpUser::
         def index(self):
             response = self.client.get("/")
 
+Concurrency
+===========
+
+A single FastHttpUser/geventhttpclient session can run concurrent requests, you just have to launch greenlets for each request::
+
+    @task
+    def t(self):
+        def concurrent_request(url):
+            self.client.get(url)
+
+        pool = gevent.pool.Pool()
+        urls = ["/url1", "/url2", "/url3"]
+        for url in urls:
+            pool.spawn(concurrent_request, url)
+        pool.join()
+
+
 .. note::
 
     FastHttpUser/geventhttpclient is very similar to HttpUser/python-requests, but sometimes there are subtle differences. This is particularly true if you work with the client library's internals, e.g. when manually managing cookies.
