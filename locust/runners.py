@@ -330,7 +330,7 @@ class Runner:
             gevent.sleep(CPU_MONITOR_INTERVAL)
 
     @abstractmethod
-    def start(self, user_count: int, spawn_rate: float, wait: bool = False) -> None:
+    def start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes:list=None) -> None:
         ...
 
     def start_shape(self) -> None:
@@ -364,7 +364,11 @@ class Runner:
             elif self.shape_last_state == new_state:
                 gevent.sleep(1)
             else:
-                user_count, spawn_rate = new_state
+                if len(new_state) == 2:
+                    user_count, spawn_rate = new_state
+                    user_classes = None
+                else:
+                    user_count, spawn_rate, user_classes = new_state
                 logger.info("Shape test updating to %d users at %.2f spawn rate" % (user_count, spawn_rate))
                 # TODO: This `self.start()` call is blocking until the ramp-up is completed. This can leads
                 #       to unexpected behaviours such as the one in the following example:
@@ -379,7 +383,7 @@ class Runner:
                 #        We should probably use a `gevent.timeout` with a duration a little over
                 #        `(user_count - prev_user_count) / spawn_rate` in order to limit the runtime
                 #        of each load test shape stage.
-                self.start(user_count=user_count, spawn_rate=spawn_rate)
+                self.start(user_count=user_count, spawn_rate=spawn_rate, user_classes=user_classes)
                 self.shape_last_state = new_state
 
     def stop(self) -> None:
@@ -463,7 +467,7 @@ class LocalRunner(Runner):
 
         self.environment.events.user_error.add_listener(on_user_error)
 
-    def _start(self, user_count: int, spawn_rate: float, wait: bool = False) -> None:
+    def _start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes:list = None) -> None:
         """
         Start running a load test
 
@@ -486,7 +490,10 @@ class LocalRunner(Runner):
         if wait and user_count - self.user_count > spawn_rate:
             raise ValueError("wait is True but the amount of users to add is greater than the spawn rate")
 
-        for user_class in self.user_classes:
+        if user_classes is None:
+            user_classes = self.user_classes
+
+        for user_class in user_classes:
             if self.environment.host:
                 user_class.host = self.environment.host
 
@@ -500,7 +507,7 @@ class LocalRunner(Runner):
 
         logger.info("Ramping to %d users at a rate of %.2f per second" % (user_count, spawn_rate))
 
-        cast(UsersDispatcher, self._users_dispatcher).new_dispatch(user_count, spawn_rate)
+        cast(UsersDispatcher, self._users_dispatcher).new_dispatch(user_count, spawn_rate, user_classes)
 
         try:
             for dispatched_users in self._users_dispatcher:
@@ -542,7 +549,7 @@ class LocalRunner(Runner):
 
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
 
-    def start(self, user_count: int, spawn_rate: float, wait: bool = False) -> None:
+    def start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes:list = None) -> None:
         if spawn_rate > 100:
             logger.warning(
                 "Your selected spawn rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?"
@@ -551,7 +558,7 @@ class LocalRunner(Runner):
         if self.spawning_greenlet:
             # kill existing spawning_greenlet before we start a new one
             self.spawning_greenlet.kill(block=True)
-        self.spawning_greenlet = self.greenlet.spawn(lambda: self._start(user_count, spawn_rate, wait=wait))
+        self.spawning_greenlet = self.greenlet.spawn(lambda: self._start(user_count, spawn_rate, wait=wait, user_classes=user_classes))
         self.spawning_greenlet.link_exception(greenlet_exception_handler)
 
     def stop(self) -> None:
@@ -729,7 +736,7 @@ class MasterRunner(DistributedRunner):
             warning_emitted = True
         return warning_emitted
 
-    def start(self, user_count: int, spawn_rate: float, wait=False) -> None:
+    def start(self, user_count: int, spawn_rate: float, wait=False, user_classes:list = None) -> None:
         self.spawning_completed = False
 
         self.target_user_count = user_count
@@ -739,7 +746,10 @@ class MasterRunner(DistributedRunner):
             logger.warning("You can't start a distributed test before at least one worker processes has connected")
             return
 
-        for user_class in self.user_classes:
+        if user_classes is None:
+            user_classes = self.user_classes
+
+        for user_class in user_classes:
             if self.environment.host:
                 user_class.host = self.environment.host
 
@@ -771,7 +781,7 @@ class MasterRunner(DistributedRunner):
 
         self.update_state(STATE_SPAWNING)
 
-        self._users_dispatcher.new_dispatch(target_user_count=user_count, spawn_rate=spawn_rate)
+        self._users_dispatcher.new_dispatch(target_user_count=user_count, spawn_rate=spawn_rate, user_classes=user_classes)
 
         try:
             for dispatched_users in self._users_dispatcher:
@@ -1204,7 +1214,7 @@ class WorkerRunner(DistributedRunner):
 
         self.environment.events.user_error.add_listener(on_user_error)
 
-    def start(self, user_count: int, spawn_rate: float, wait: bool = False) -> None:
+    def start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes:list = None) -> None:
         raise NotImplementedError("use start_worker")
 
     def start_worker(self, user_classes_count: Dict[str, int], **kwargs) -> None:
