@@ -476,6 +476,7 @@ class LocalRunner(Runner):
         :param wait: If True calls to this method will block until all users are spawned.
                      If False (the default), a greenlet that spawns the users will be
                      started and the call to this method will return immediately.
+        :param user_classes: The user classes to be dispatched
         """
         self.target_user_count = user_count
 
