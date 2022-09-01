@@ -1,5 +1,7 @@
 import time
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
+
+from . import User
 from .runners import Runner
 
 
@@ -33,7 +35,7 @@ class LoadTestShape:
         """
         return self.runner.user_count
 
-    def tick(self) -> Optional[Tuple[int, float, any]]:
+    def tick(self) -> Optional[Tuple[int, float], Tuple[int, float, Optional[List[User]]]]:
         """
         Returns a tuple with 2 elements to control the running load test:
 

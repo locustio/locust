@@ -12,6 +12,7 @@ class WebsiteUserA(HttpUser):
     wait_time = constant(0.5)
     tasks = [UserTasks]
 
+
 class WebsiteUserB(HttpUser):
     wait_time = constant(0.5)
     tasks = [UserTasks]
@@ -50,7 +51,7 @@ class StagesShapeWithCustomUsers(LoadTestShape):
                 # Not the smartest solution, TODO: find something better
                 try:
                     tick_data = (stage["users"], stage["spawn_rate"], stage["user_classes"])
-                except:
+                except KeyError:
                     tick_data = (stage["users"], stage["spawn_rate"])
                 return tick_data
 
