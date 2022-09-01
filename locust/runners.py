@@ -330,7 +330,7 @@ class Runner:
             gevent.sleep(CPU_MONITOR_INTERVAL)
 
     @abstractmethod
-    def start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes:list=None) -> None:
+    def start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes:Optional[List[User]]=None) -> None:
         ...
 
     def start_shape(self) -> None:
@@ -550,7 +550,7 @@ class LocalRunner(Runner):
 
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
 
-    def start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes:list = None) -> None:
+    def start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[List[User]] = None) -> None:
         if spawn_rate > 100:
             logger.warning(
                 "Your selected spawn rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?"
@@ -737,7 +737,7 @@ class MasterRunner(DistributedRunner):
             warning_emitted = True
         return warning_emitted
 
-    def start(self, user_count: int, spawn_rate: float, wait=False, user_classes:list = None) -> None:
+    def start(self, user_count: int, spawn_rate: float, wait=False, user_classes: Optional[List[User]] = None) -> None:
         self.spawning_completed = False
 
         self.target_user_count = user_count
@@ -1215,7 +1215,7 @@ class WorkerRunner(DistributedRunner):
 
         self.environment.events.user_error.add_listener(on_user_error)
 
-    def start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes:list = None) -> None:
+    def start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes:Optional[List[User]] = None) -> None:
         raise NotImplementedError("use start_worker")
 
     def start_worker(self, user_classes_count: Dict[str, int], **kwargs) -> None:
