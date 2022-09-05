@@ -163,7 +163,7 @@ class UsersDispatcher(Iterator):
 
         self._dispatch_in_progress = False
 
-    def new_dispatch(self, target_user_count: int, spawn_rate: float, user_classes: Optional[List[User]]) -> None:
+    def new_dispatch(self, target_user_count: int, spawn_rate: float, user_classes: Optional[List] = None) -> None:
         """
         Initialize a new dispatch cycle.
 
@@ -171,8 +171,9 @@ class UsersDispatcher(Iterator):
         :param spawn_rate: The spawn rate
         :param user_classes: The user classes to be used for the new dispatch
         """
-        self._user_classes = user_classes
-        self._user_generator = self._user_gen()
+        if user_classes is not None:
+            self._user_classes = user_classes
+            self._user_generator = self._user_gen()
 
         self._target_user_count = target_user_count
 

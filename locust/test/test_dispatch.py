@@ -12,6 +12,7 @@ _TOLERANCE = 0.025
 
 
 class TestRampUpUsersFromZero(unittest.TestCase):
+
     def test_ramp_up_users_to_3_workers_with_spawn_rate_of_0_5(self):
         """Final distribution should be {"User1": 3, "User2": 3, "User3": 3}"""
 
@@ -3589,6 +3590,232 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
                                     users_dispatcher._get_user_current_count(user_class.__name__),
                                     user_class.fixed_count,
                                 )
+
+class TestRampUpDifferentUsers(unittest.TestCase):
+    def test_ramp_up_different_users_for_each_dispatch(self):
+        class User1(User):
+            weight = 1
+
+        class User2(User):
+            weight = 1
+
+        class User3(User):
+            weight = 1
+
+        worker_node1 = WorkerNode("1")
+
+        sleep_time = 0.2
+
+        user_dispatcher = UsersDispatcher(
+            worker_nodes=[worker_node1], user_classes=[User1, User2, User3]
+        )
+
+        user_dispatcher.new_dispatch(target_user_count=3, spawn_rate=3)
+        self.assertDictEqual(
+            next(user_dispatcher),
+            {
+                "1": {"User1": 1, "User2": 1, "User3": 1}
+            }
+        )
+        user_dispatcher.new_dispatch(target_user_count=4, spawn_rate=1, user_classes=[User1])
+        self.assertDictEqual(next(user_dispatcher), {
+            "1": {"User1": 2, "User2": 1, "User3": 1}
+        })
+
+        user_dispatcher.new_dispatch(target_user_count=5, spawn_rate=1, user_classes=[User2])
+        self.assertDictEqual(next(user_dispatcher), {
+            "1": {"User1": 2, "User2": 2, "User3": 1}
+        })
+
+        user_dispatcher.new_dispatch(target_user_count=6, spawn_rate=1, user_classes=[User3])
+        self.assertDictEqual(next(user_dispatcher), {
+            "1": {"User1": 2, "User2": 2, "User3": 2}
+        })
+
+    def test_ramp_up_only_one_kind_of_user(self):
+        class User1(User):
+            weight = 1
+
+        class User2(User):
+            weight = 1
+
+        class User3(User):
+            weight = 1
+
+        worker_node1 = WorkerNode("1")
+
+        sleep_time = 0.2
+
+        user_dispatcher = UsersDispatcher(
+            worker_nodes=[worker_node1], user_classes=[User1, User2, User3]
+        )
+
+        user_dispatcher.new_dispatch(target_user_count=10, spawn_rate=10, user_classes=[User2])
+        self.assertDictEqual(
+            next(user_dispatcher),
+            {
+                "1": {"User1": 0, "User2": 10, "User3": 0}
+            }
+        )
+
+    def test_ramp_up_first_half_user1_second_half_user2(self):
+        class User1(User):
+            weight = 1
+
+        class User2(User):
+            weight = 1
+
+        class User3(User):
+            weight = 1
+
+        worker_node1 = WorkerNode("1")
+
+        sleep_time = 0.2
+
+        user_dispatcher = UsersDispatcher(
+            worker_nodes=[worker_node1], user_classes=[User1, User2, User3]
+        )
+
+        user_dispatcher.new_dispatch(target_user_count=10, spawn_rate=10, user_classes=[User2])
+        self.assertDictEqual(
+            next(user_dispatcher),
+            {
+                "1": {"User1": 0, "User2": 10, "User3": 0}
+            }
+        )
+
+        user_dispatcher.new_dispatch(target_user_count=40, spawn_rate=30, user_classes=[User3])
+        self.assertDictEqual(
+            next(user_dispatcher),
+            {
+                "1": {"User1": 0, "User2": 10, "User3": 30}
+            }
+        )
+
+    def test_ramp_up_first_one_user_then_all_classes(self):
+        class User1(User):
+            weight = 1
+
+        class User2(User):
+            weight = 1
+
+        class User3(User):
+            weight = 1
+
+        worker_node1 = WorkerNode("1")
+
+        sleep_time = 0.2
+
+        user_dispatcher = UsersDispatcher(
+            worker_nodes=[worker_node1], user_classes=[User1, User2, User3]
+        )
+
+        user_dispatcher.new_dispatch(target_user_count=10, spawn_rate=10, user_classes=[User2])
+        self.assertDictEqual(
+            next(user_dispatcher),
+            {
+                "1": {"User1": 0, "User2": 10, "User3": 0}
+            }
+        )
+
+        user_dispatcher.new_dispatch(target_user_count=40, spawn_rate=30, user_classes=[User1, User2, User3])
+        self.assertDictEqual(
+            next(user_dispatcher),
+            {
+                "1": {"User1": 10, "User2": 20, "User3": 10}
+            }
+        )
+
+
+    def test_ramp_up_different_users_each_dispatch_multiple_worker(self):
+        class User1(User):
+            weight = 1
+
+        class User2(User):
+            weight = 1
+
+        class User3(User):
+            weight = 1
+
+        worker_node1 = WorkerNode("1")
+        worker_node2 = WorkerNode("2")
+        worker_node3 = WorkerNode("3")
+
+        sleep_time = 0.2
+
+        user_dispatcher = UsersDispatcher(
+            worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
+        )
+
+        user_dispatcher.new_dispatch(target_user_count=9, spawn_rate=9)
+        self.assertDictEqual(
+            next(user_dispatcher),
+            {
+                "1": {"User1": 3, "User2": 0, "User3": 0},
+                "2": {"User1": 0, "User2": 3, "User3": 0},
+                "3": {"User1": 0, "User2": 0, "User3": 3},
+            }
+        )
+
+        user_dispatcher.new_dispatch(target_user_count=12, spawn_rate=3, user_classes=[User3])
+        self.assertDictEqual(
+            next(user_dispatcher),
+            {
+                "1": {"User1": 3, "User2": 0, "User3": 1},
+                "2": {"User1": 0, "User2": 3, "User3": 1},
+                "3": {"User1": 0, "User2": 0, "User3": 4},
+            }
+        )
+
+        user_dispatcher.new_dispatch(target_user_count=15, spawn_rate=3, user_classes=[User2])
+        self.assertDictEqual(
+            next(user_dispatcher),
+            {
+                "1": {"User1": 3, "User2": 1, "User3": 1},
+                "2": {"User1": 0, "User2": 4, "User3": 1},
+                "3": {"User1": 0, "User2": 1, "User3": 4},
+            }
+        )
+
+        user_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3, user_classes=[User1])
+        self.assertDictEqual(
+            next(user_dispatcher),
+            {
+                "1": {"User1": 4, "User2": 1, "User3": 1},
+                "2": {"User1": 1, "User2": 4, "User3": 1},
+                "3": {"User1": 1, "User2": 1, "User3": 4},
+            }
+        )
+
+    def test_ramp_up_one_user_class_multiple_worker(self):
+        class User1(User):
+            weight = 1
+
+        class User2(User):
+            weight = 1
+
+        class User3(User):
+            weight = 1
+
+        worker_node1 = WorkerNode("1")
+        worker_node2 = WorkerNode("2")
+        worker_node3 = WorkerNode("3")
+
+        sleep_time = 0.2
+
+        user_dispatcher = UsersDispatcher(
+            worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
+        )
+
+        user_dispatcher.new_dispatch(target_user_count=60, spawn_rate=60, user_classes=[User2])
+        self.assertDictEqual(
+            next(user_dispatcher),
+            {
+                "1": {"User1": 0, "User2": 20, "User3": 0},
+                "2": {"User1": 0, "User2": 20, "User3": 0},
+                "3": {"User1": 0, "User2": 20, "User3": 0},
+            }
+        )
 
 
 def _aggregate_dispatched_users(d: Dict[str, Dict[str, int]]) -> Dict[str, int]:
