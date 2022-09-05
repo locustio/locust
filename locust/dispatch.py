@@ -56,6 +56,7 @@ class UsersDispatcher(Iterator):
         """
         self._worker_nodes = worker_nodes
         self._sort_workers()
+        self._original_user_classes = sorted(user_classes, key=attrgetter("__name__"))
         self._user_classes = sorted(user_classes, key=attrgetter("__name__"))
 
         assert len(user_classes) > 0
@@ -229,7 +230,7 @@ class UsersDispatcher(Iterator):
         # Reset users before recalculating since the current users is used to calculate how many
         # fixed users to add.
         self._users_on_workers = {
-            worker_node.id: {user_class.__name__: 0 for user_class in self._user_classes}
+            worker_node.id: {user_class.__name__: 0 for user_class in self._original_user_classes}
             for worker_node in self._worker_nodes
         }
         self._try_dispatch_fixed = True
@@ -330,7 +331,7 @@ class UsersDispatcher(Iterator):
         worker_gen = itertools.cycle(self._worker_nodes)
 
         users_on_workers = {
-            worker_node.id: {user_class.__name__: 0 for user_class in self._user_classes}
+            worker_node.id: {user_class.__name__: 0 for user_class in self._original_user_classes}
             for worker_node in self._worker_nodes
         }
 
