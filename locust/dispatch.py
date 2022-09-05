@@ -172,7 +172,7 @@ class UsersDispatcher(Iterator):
         :param spawn_rate: The spawn rate
         :param user_classes: The user classes to be used for the new dispatch
         """
-        if user_classes is not None:
+        if user_classes is not None and user_classes != self._original_user_classes:
             self._user_classes = user_classes
             self._user_generator = self._user_gen()
 
