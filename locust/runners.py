@@ -479,7 +479,8 @@ class LocalRunner(Runner):
         :param wait: If True calls to this method will block until all users are spawned.
                      If False (the default), a greenlet that spawns the users will be
                      started and the call to this method will return immediately.
-        :param user_classes: The user classes to be dispatched
+        :param user_classes: The user classes to be dispatched, None indicates to use the classes the dispatcher was
+                             invoked with.
         """
         self.target_user_count = user_count
 
@@ -494,8 +495,6 @@ class LocalRunner(Runner):
         if wait and user_count - self.user_count > spawn_rate:
             raise ValueError("wait is True but the amount of users to add is greater than the spawn rate")
 
-        # if user_classes is None:
-        #    user_classes = self.user_classes
 
         for user_class in self.user_classes:
             if self.environment.host:
@@ -755,9 +754,6 @@ class MasterRunner(DistributedRunner):
         if not num_workers:
             logger.warning("You can't start a distributed test before at least one worker processes has connected")
             return
-
-        # if user_classes is None:
-        #    user_classes = self.user_classes
 
         for user_class in self.user_classes:
             if self.environment.host:
