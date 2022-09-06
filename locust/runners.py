@@ -494,10 +494,10 @@ class LocalRunner(Runner):
         if wait and user_count - self.user_count > spawn_rate:
             raise ValueError("wait is True but the amount of users to add is greater than the spawn rate")
 
-        if user_classes is None:
-            user_classes = self.user_classes
+        #if user_classes is None:
+        #    user_classes = self.user_classes
 
-        for user_class in user_classes:
+        for user_class in self.user_classes:
             if self.environment.host:
                 user_class.host = self.environment.host
 
@@ -756,10 +756,10 @@ class MasterRunner(DistributedRunner):
             logger.warning("You can't start a distributed test before at least one worker processes has connected")
             return
 
-        if user_classes is None:
-            user_classes = self.user_classes
+        #if user_classes is None:
+        #    user_classes = self.user_classes
 
-        for user_class in user_classes:
+        for user_class in self.user_classes:
             if self.environment.host:
                 user_class.host = self.environment.host
 
