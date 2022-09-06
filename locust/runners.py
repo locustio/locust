@@ -118,7 +118,7 @@ class Runner:
         self.state = STATE_INIT
         self.spawning_greenlet: Optional[gevent.Greenlet] = None
         self.shape_greenlet: Optional[gevent.Greenlet] = None
-        self.shape_last_state: Tuple[int, float] | Tuple[int, float, Optional[List[Type[User]]]] | None = None
+        self.shape_last_state: Union[Tuple[int, float], Tuple[int, float, Optional[List[Type[User]]]], None] = None
         self.current_cpu_usage: int = 0
         self.cpu_warning_emitted: bool = False
         self.worker_cpu_warning_emitted: bool = False
@@ -352,7 +352,7 @@ class Runner:
     def shape_worker(self) -> None:
         logger.info("Shape worker starting")
         while self.state == STATE_INIT or self.state == STATE_SPAWNING or self.state == STATE_RUNNING:
-            new_state: Tuple[int, float] | Tuple[int, float, Optional[List[Type[User]]]] | None = (
+            new_state: Union[Tuple[int, float], Tuple[int, float, Optional[List[Type[User]]]], None] = (
                 self.environment.shape_class.tick() if self.environment.shape_class is not None else None
             )
             if new_state is None:
@@ -494,7 +494,7 @@ class LocalRunner(Runner):
         if wait and user_count - self.user_count > spawn_rate:
             raise ValueError("wait is True but the amount of users to add is greater than the spawn rate")
 
-        #if user_classes is None:
+        # if user_classes is None:
         #    user_classes = self.user_classes
 
         for user_class in self.user_classes:
@@ -756,7 +756,7 @@ class MasterRunner(DistributedRunner):
             logger.warning("You can't start a distributed test before at least one worker processes has connected")
             return
 
-        #if user_classes is None:
+        # if user_classes is None:
         #    user_classes = self.user_classes
 
         for user_class in self.user_classes:
