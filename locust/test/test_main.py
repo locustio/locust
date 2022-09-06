@@ -1228,6 +1228,7 @@ class SecondUser(HttpUser):
             )
             stdout, stderr = proc.communicate()
             stdout_worker, stderr_worker = proc_worker.communicate()
+            self.assertNotIn("ERROR", stderr_worker)
             self.assertIn("task1", stdout_worker)
             self.assertNotIn("task2", stdout_worker)
             self.assertNotIn("Traceback", stderr)
