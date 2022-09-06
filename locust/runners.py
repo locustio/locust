@@ -28,6 +28,7 @@ from typing import (
     Type,
     Any,
     cast,
+    Union,
 )
 from uuid import uuid4
 
@@ -64,7 +65,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-
 STATE_INIT, STATE_SPAWNING, STATE_RUNNING, STATE_CLEANUP, STATE_STOPPING, STATE_STOPPED, STATE_MISSING = [
     "ready",
     "spawning",
@@ -83,7 +83,6 @@ HEARTBEAT_DEAD_INTERNAL = -60
 FALLBACK_INTERVAL = 5
 CONNECT_TIMEOUT = 5
 CONNECT_RETRY_COUNT = 60
-
 
 greenlet_exception_handler = greenlet_exception_logger(logger)
 
@@ -119,7 +118,7 @@ class Runner:
         self.state = STATE_INIT
         self.spawning_greenlet: Optional[gevent.Greenlet] = None
         self.shape_greenlet: Optional[gevent.Greenlet] = None
-        self.shape_last_state: Optional[Tuple[int, float]] = None
+        self.shape_last_state: Tuple[int, float] | Tuple[int, float, Optional[List[Type[User]]]] | None = None
         self.current_cpu_usage: int = 0
         self.cpu_warning_emitted: bool = False
         self.worker_cpu_warning_emitted: bool = False
@@ -330,7 +329,9 @@ class Runner:
             gevent.sleep(CPU_MONITOR_INTERVAL)
 
     @abstractmethod
-    def start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[List[User]] = None) -> None:
+    def start(
+        self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[List[Type[User]]] = None
+    ) -> None:
         ...
 
     def start_shape(self) -> None:
@@ -351,7 +352,9 @@ class Runner:
     def shape_worker(self) -> None:
         logger.info("Shape worker starting")
         while self.state == STATE_INIT or self.state == STATE_SPAWNING or self.state == STATE_RUNNING:
-            new_state = self.environment.shape_class.tick() if self.environment.shape_class is not None else None
+            new_state: Tuple[int, float] | Tuple[int, float, Optional[List[Type[User]]]] | None = (
+                self.environment.shape_class.tick() if self.environment.shape_class is not None else None
+            )
             if new_state is None:
                 logger.info("Shape test stopping")
                 if self.environment.parsed_options and self.environment.parsed_options.headless:
@@ -365,10 +368,10 @@ class Runner:
                 gevent.sleep(1)
             else:
                 if len(new_state) == 2:
-                    user_count, spawn_rate = new_state
+                    user_count, spawn_rate = new_state  # type: ignore
                     user_classes = None
                 else:
-                    user_count, spawn_rate, user_classes = new_state
+                    user_count, spawn_rate, user_classes = new_state  # type: ignore
                 logger.info("Shape test updating to %d users at %.2f spawn rate" % (user_count, spawn_rate))
                 # TODO: This `self.start()` call is blocking until the ramp-up is completed. This can leads
                 #       to unexpected behaviours such as the one in the following example:
@@ -467,7 +470,7 @@ class LocalRunner(Runner):
 
         self.environment.events.user_error.add_listener(on_user_error)
 
-    def _start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes:list = None) -> None:
+    def _start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: list = None) -> None:
         """
         Start running a load test
 
@@ -550,7 +553,9 @@ class LocalRunner(Runner):
 
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
 
-    def start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[List[User]] = None) -> None:
+    def start(
+        self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[List[Type[User]]] = None
+    ) -> None:
         if spawn_rate > 100:
             logger.warning(
                 "Your selected spawn rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?"
@@ -559,7 +564,9 @@ class LocalRunner(Runner):
         if self.spawning_greenlet:
             # kill existing spawning_greenlet before we start a new one
             self.spawning_greenlet.kill(block=True)
-        self.spawning_greenlet = self.greenlet.spawn(lambda: self._start(user_count, spawn_rate, wait=wait, user_classes=user_classes))
+        self.spawning_greenlet = self.greenlet.spawn(
+            lambda: self._start(user_count, spawn_rate, wait=wait, user_classes=user_classes)
+        )
         self.spawning_greenlet.link_exception(greenlet_exception_handler)
 
     def stop(self) -> None:
@@ -737,7 +744,9 @@ class MasterRunner(DistributedRunner):
             warning_emitted = True
         return warning_emitted
 
-    def start(self, user_count: int, spawn_rate: float, wait=False, user_classes: Optional[List[User]] = None) -> None:
+    def start(
+        self, user_count: int, spawn_rate: float, wait=False, user_classes: Optional[List[Type[User]]] = None
+    ) -> None:
         self.spawning_completed = False
 
         self.target_user_count = user_count
@@ -782,7 +791,9 @@ class MasterRunner(DistributedRunner):
 
         self.update_state(STATE_SPAWNING)
 
-        self._users_dispatcher.new_dispatch(target_user_count=user_count, spawn_rate=spawn_rate, user_classes=user_classes)
+        self._users_dispatcher.new_dispatch(
+            target_user_count=user_count, spawn_rate=spawn_rate, user_classes=user_classes
+        )
 
         try:
             for dispatched_users in self._users_dispatcher:
@@ -1215,7 +1226,9 @@ class WorkerRunner(DistributedRunner):
 
         self.environment.events.user_error.add_listener(on_user_error)
 
-    def start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[List[User]] = None) -> None:
+    def start(
+        self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[List[Type[User]]] = None
+    ) -> None:
         raise NotImplementedError("use start_worker")
 
     def start_worker(self, user_classes_count: Dict[str, int], **kwargs) -> None:
