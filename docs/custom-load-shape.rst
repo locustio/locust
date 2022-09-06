@@ -71,4 +71,3 @@ Extending the return value of the ``tick()`` with the argument ``user_classes`` 
             return None
 
 This shape would create create in the first 10 seconds 10 User of ``UserA``. In the next twenty seconds 40 of type ``UserA / UserB`` and this continues until the stages end.
-Using the extra argument makes it possible to create even more fine grained scenarios.
