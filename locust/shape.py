@@ -41,7 +41,7 @@ class LoadTestShape:
 
             user_count -- Total user count
             spawn_rate -- Number of users to start/stop per second when changing number of users
-            user_classes -- None or a List of userclasses to be spawend in it tick
+            user_classes -- None or a List of userclasses to be spawned in it tick
         If `None` is returned then the running load test will be stopped.
 
         """
