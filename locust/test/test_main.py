@@ -1170,10 +1170,8 @@ def on_test_stop(environment, **kwargs):
             self.assertEqual(0, proc_worker.returncode)
 
     def test_distributed_tags(self):
-        content = (
-            MOCK_LOCUSTFILE_CONTENT
-            + """
-from locust import tag
+        content = """
+from locust import HttpUser, TaskSet, task, between, LoadTestShape, tag
 class SecondUser(HttpUser):
     host = "http://127.0.0.1:8089"
     wait_time = between(0, 0.1)
@@ -1187,7 +1185,6 @@ class SecondUser(HttpUser):
     def task2(self):
         print("task2")
 """
-        )
         with mock_locustfile(content=content) as mocked:
             proc = subprocess.Popen(
                 [
