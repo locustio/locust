@@ -352,10 +352,10 @@ class Runner:
     def shape_worker(self) -> None:
         logger.info("Shape worker starting")
         while self.state == STATE_INIT or self.state == STATE_SPAWNING or self.state == STATE_RUNNING:
-            new_state: Union[Tuple[int, float], Tuple[int, float, Optional[List[Type[User]]]], None] = (
+            current_tick: Union[Tuple[int, float], Tuple[int, float, Optional[List[Type[User]]]], None] = (
                 self.environment.shape_class.tick() if self.environment.shape_class is not None else None
             )
-            if new_state is None:
+            if current_tick is None:
                 logger.info("Shape test stopping")
                 if self.environment.parsed_options and self.environment.parsed_options.headless:
                     self.quit()
@@ -364,14 +364,14 @@ class Runner:
                 self.shape_greenlet = None
                 self.shape_last_state = None
                 return
-            elif self.shape_last_state == new_state:
+            elif self.shape_last_state == current_tick:
                 gevent.sleep(1)
             else:
-                if len(new_state) == 2:
-                    user_count, spawn_rate = new_state  # type: ignore
+                if len(current_tick) == 2:
+                    user_count, spawn_rate = current_tick  # type: ignore
                     user_classes = None
                 else:
-                    user_count, spawn_rate, user_classes = new_state  # type: ignore
+                    user_count, spawn_rate, user_classes = current_tick  # type: ignore
                 logger.info("Shape test updating to %d users at %.2f spawn rate" % (user_count, spawn_rate))
                 # TODO: This `self.start()` call is blocking until the ramp-up is completed. This can leads
                 #       to unexpected behaviours such as the one in the following example:
@@ -387,7 +387,7 @@ class Runner:
                 #        `(user_count - prev_user_count) / spawn_rate` in order to limit the runtime
                 #        of each load test shape stage.
                 self.start(user_count=user_count, spawn_rate=spawn_rate, user_classes=user_classes)
-                self.shape_last_state = new_state
+                self.shape_last_state = current_tick
 
     def stop(self) -> None:
         """
@@ -494,7 +494,6 @@ class LocalRunner(Runner):
 
         if wait and user_count - self.user_count > spawn_rate:
             raise ValueError("wait is True but the amount of users to add is greater than the spawn rate")
-
 
         for user_class in self.user_classes:
             if self.environment.host:
