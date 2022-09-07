@@ -1,13 +1,23 @@
 # Changelog
 Note that the latest version is usually missing here, check [github](https://github.com/locustio/locust/releases) for the latest info.
 
-## [2.11.1](https://github.com/locustio/locust/tree/2.11.1) (2022-08-26)
+## [2.12.0](https://github.com/locustio/locust/tree/2.12.0) (2022-09-07)
 
-[Full Changelog](https://github.com/locustio/locust/compare/2.11.1...2.11.1)
+[Full Changelog](https://github.com/locustio/locust/compare/2.11.1...2.12.0)
 
 **Fixed bugs:**
 
 - WebUI `Edit running load test` not carried `user_classes` when enabled `--class-picker` [\#2170](https://github.com/locustio/locust/issues/2170)
+
+**Merged pull requests:**
+
+- Log warning if tag filtering gets rid of all tasks [\#2186](https://github.com/locustio/locust/pull/2186) ([cyberw](https://github.com/cyberw))
+- GitHub Workflows security hardening [\#2184](https://github.com/locustio/locust/pull/2184) ([sashashura](https://github.com/sashashura))
+- ft: LoadTestShapes with custom user classes  [\#2181](https://github.com/locustio/locust/pull/2181) ([samuelspagl](https://github.com/samuelspagl))
+- Bump FastHttpUser/geventhttpclient dependency to 2.0.2 [\#2180](https://github.com/locustio/locust/pull/2180) ([cyberw](https://github.com/cyberw))
+- Allow more recent versions of pyzmq \(it was only 23.0.0 that was broken\) [\#2179](https://github.com/locustio/locust/pull/2179) ([cyberw](https://github.com/cyberw))
+- Bump default concurrency for fast http user to 10 [\#2177](https://github.com/locustio/locust/pull/2177) ([cyberw](https://github.com/cyberw))
+- Web UI style fixes: about dialog cannot be opened in the startup page  [\#2173](https://github.com/locustio/locust/pull/2173) ([alterhu2020](https://github.com/alterhu2020))
 
 ## [2.11.1](https://github.com/locustio/locust/tree/2.11.1) (2022-08-25)
 

@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.12.0
+======
+* LoadTestShapes with custom user classes https://github.com/locustio/locust/pull/2181
+* Minor fixes and bumped some dependencies
+
 2.11.1
 ======
 * Fix issue when editing user count while running a test using --class-picker https://github.com/locustio/locust/pull/2171
