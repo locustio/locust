@@ -118,7 +118,7 @@ class Runner:
         self.state = STATE_INIT
         self.spawning_greenlet: Optional[gevent.Greenlet] = None
         self.shape_greenlet: Optional[gevent.Greenlet] = None
-        self.shape_last_state: Union[Tuple[int, float], Tuple[int, float, Optional[List[Type[User]]]], None] = None
+        self.shape_last_tick: Union[Tuple[int, float], Tuple[int, float, Optional[List[Type[User]]]], None] = None
         self.current_cpu_usage: int = 0
         self.cpu_warning_emitted: bool = False
         self.worker_cpu_warning_emitted: bool = False
@@ -362,9 +362,9 @@ class Runner:
                 else:
                     self.stop()
                 self.shape_greenlet = None
-                self.shape_last_state = None
+                self.shape_last_tick = None
                 return
-            elif self.shape_last_state == current_tick:
+            elif self.shape_last_tick == current_tick:
                 gevent.sleep(1)
             else:
                 if len(current_tick) == 2:
@@ -387,7 +387,7 @@ class Runner:
                 #        `(user_count - prev_user_count) / spawn_rate` in order to limit the runtime
                 #        of each load test shape stage.
                 self.start(user_count=user_count, spawn_rate=spawn_rate, user_classes=user_classes)
-                self.shape_last_state = current_tick
+                self.shape_last_tick = current_tick
 
     def stop(self) -> None:
         """
@@ -410,7 +410,7 @@ class Runner:
             if self.shape_greenlet is not None:
                 self.shape_greenlet.kill(block=True)
                 self.shape_greenlet = None
-            self.shape_last_state = None
+            self.shape_last_tick = None
 
         self.stop_users(self.user_classes_count)
 
@@ -889,7 +889,7 @@ class MasterRunner(DistributedRunner):
             ):
                 self.shape_greenlet.kill(block=True)
                 self.shape_greenlet = None
-                self.shape_last_state = None
+                self.shape_last_tick = None
 
             self._users_dispatcher = None
 
