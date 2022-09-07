@@ -1077,6 +1077,38 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn(f"Could not find any locustfiles in directory '{temp_dir}'", stderr)
             self.assertEqual(1, proc.returncode)
 
+    def test_error_when_no_tasks_match_tags(self):
+        content = """
+from locust import HttpUser, TaskSet, task, constant, LoadTestShape, tag
+class MyUser(HttpUser):
+    host = "http://127.0.0.1:8089"
+    wait_time = constant(1)
+    @tag("tag1")
+    @task
+    def task1(self):
+        print("task1")
+    """
+        with mock_locustfile(content=content) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "-t",
+                    "1",
+                    "--tags",
+                    "tag2",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate()
+            self.assertIn("MyUser had no tasks left after filtering", stderr)
+            self.assertIn("No tasks defined on MyUser", stderr)
+            self.assertEqual(1, proc.returncode)
+
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
     def test_expect_workers(self):
@@ -1170,10 +1202,8 @@ def on_test_stop(environment, **kwargs):
             self.assertEqual(0, proc_worker.returncode)
 
     def test_distributed_tags(self):
-        content = (
-            MOCK_LOCUSTFILE_CONTENT
-            + """
-from locust import tag
+        content = """
+from locust import HttpUser, TaskSet, task, between, LoadTestShape, tag
 class SecondUser(HttpUser):
     host = "http://127.0.0.1:8089"
     wait_time = between(0, 0.1)
@@ -1187,7 +1217,6 @@ class SecondUser(HttpUser):
     def task2(self):
         print("task2")
 """
-        )
         with mock_locustfile(content=content) as mocked:
             proc = subprocess.Popen(
                 [
@@ -1228,6 +1257,7 @@ class SecondUser(HttpUser):
             )
             stdout, stderr = proc.communicate()
             stdout_worker, stderr_worker = proc_worker.communicate()
+            self.assertNotIn("ERROR", stderr_worker)
             self.assertIn("task1", stdout_worker)
             self.assertNotIn("task2", stdout_worker)
             self.assertNotIn("Traceback", stderr)

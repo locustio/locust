@@ -208,6 +208,8 @@ def filter_tasks_by_tags(
         checked[task] = passing
 
     task_holder.tasks = new_tasks
+    if not new_tasks:
+        logging.warning(f"{task_holder.__name__} had no tasks left after filtering, instantiating it will fail!")
 
 
 class TaskSetMeta(type):
