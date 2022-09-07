@@ -40,3 +40,34 @@ This functionality is further demonstrated in the `examples on github <https://g
 - Step load pattern like Visual Studio
 
 One further method may be helpful for your custom load shapes: `get_current_user_count()`, which returns the total number of active users. This method can be used to prevent advancing to subsequent steps until the desired number of users has been reached. This is especially useful if the initialization process for each user is slow or erratic in how long it takes. If this sounds like your use case, see the `example on github <https://github.com/locustio/locust/tree/master/examples/custom_shape/wait_user_count.py>`_.
+
+
+Extend your shape with custom users
+-----------------------------------
+
+Extending the return value of the ``tick()`` with the argument ``user_classes`` makes it possible to pick the users being created for a ``tick()`` specifically.
+
+.. code-block:: python
+
+    class StagesShapeWithCustomUsers(LoadTestShape):
+
+        stages = [
+            {"duration": 10, "users": 10, "spawn_rate": 10, "user_classes": [UserA]},
+            {"duration": 30, "users": 50, "spawn_rate": 10, "user_classes": [UserA, UserB]},
+            {"duration": 60, "users": 100, "spawn_rate": 10, "user_classes": [UserB]},
+            {"duration": 120, "users": 100, "spawn_rate": 10, "user_classes": [UserA,UserB]},
+
+        def tick(self):
+            run_time = self.get_run_time()
+
+            for stage in self.stages:
+                if run_time < stage["duration"]:
+                    try:
+                        tick_data = (stage["users"], stage["spawn_rate"], stage["user_classes"])
+                    except:
+                        tick_data = (stage["users"], stage["spawn_rate"])
+                    return tick_data
+
+            return None
+
+This shape would create create in the first 10 seconds 10 User of ``UserA``. In the next twenty seconds 40 of type ``UserA / UserB`` and this continues until the stages end.

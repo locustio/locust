@@ -56,6 +56,7 @@ class UsersDispatcher(Iterator):
         """
         self._worker_nodes = worker_nodes
         self._sort_workers()
+        self._original_user_classes = sorted(user_classes, key=attrgetter("__name__"))
         self._user_classes = sorted(user_classes, key=attrgetter("__name__"))
 
         assert len(user_classes) > 0
@@ -163,13 +164,18 @@ class UsersDispatcher(Iterator):
 
         self._dispatch_in_progress = False
 
-    def new_dispatch(self, target_user_count: int, spawn_rate: float) -> None:
+    def new_dispatch(self, target_user_count: int, spawn_rate: float, user_classes: Optional[List] = None) -> None:
         """
         Initialize a new dispatch cycle.
 
         :param target_user_count: The desired user count at the end of the dispatch cycle
         :param spawn_rate: The spawn rate
+        :param user_classes: The user classes to be used for the new dispatch
         """
+        if user_classes is not None and self._user_classes != sorted(user_classes, key=attrgetter("__name__")):
+            self._user_classes = sorted(user_classes, key=attrgetter("__name__"))
+            self._user_generator = self._user_gen()
+
         self._target_user_count = target_user_count
 
         self._spawn_rate = spawn_rate
@@ -224,7 +230,7 @@ class UsersDispatcher(Iterator):
         # Reset users before recalculating since the current users is used to calculate how many
         # fixed users to add.
         self._users_on_workers = {
-            worker_node.id: {user_class.__name__: 0 for user_class in self._user_classes}
+            worker_node.id: {user_class.__name__: 0 for user_class in self._original_user_classes}
             for worker_node in self._worker_nodes
         }
         self._try_dispatch_fixed = True
@@ -325,7 +331,7 @@ class UsersDispatcher(Iterator):
         worker_gen = itertools.cycle(self._worker_nodes)
 
         users_on_workers = {
-            worker_node.id: {user_class.__name__: 0 for user_class in self._user_classes}
+            worker_node.id: {user_class.__name__: 0 for user_class in self._original_user_classes}
             for worker_node in self._worker_nodes
         }
 
