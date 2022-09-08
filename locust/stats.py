@@ -798,6 +798,25 @@ def print_stats(stats: RequestStats, current=True) -> None:
     console_logger.info(stats.total.to_string(current=current))
     console_logger.info("")
 
+def get_stats(stats: stats.RequestStats, current=True) -> str:
+    """
+        Stats will be returned as string.
+        This can be used for sending the result to user defined handlers (for ex: Reportportal)
+    """
+    name_column_width = (STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4  # saved characters by compacting other columns
+    stat_summary = (
+        "%-" + str(STATS_TYPE_WIDTH) + "s %-" + str(name_column_width) + "s %7s %12s |%7s %7s %7s%7s | %7s %11s"
+    ) % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Med", "req/s", "failures/s")
+    separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * (name_column_width)}|{"-" * 7}|{"-" * 13}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 8}|{"-" * 11}'
+    stat_summary += separator
+    for key in sorted(stats.entries.keys()):
+        r = stats.entries[key]
+        stat_summary += r.to_string(current=current)
+    stat_summary += separator
+    stat_summary += stats.total.to_string(current=current)
+    stat_summary += ""
+
+    return stat_summary
 
 def print_percentile_stats(stats: RequestStats) -> None:
     console_logger.info("Response time percentiles (approximated)")
