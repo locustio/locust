@@ -744,10 +744,13 @@ def get_stats(stats: RequestStats, current=True) -> str:
     ) % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Med", "req/s", "failures/s")
     separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * (name_column_width)}|{"-" * 7}|{"-" * 13}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 8}|{"-" * 11}'
     stat_summary += separator
+    stat_summary += "\n"
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
         stat_summary += r.to_string(current=current)
+        stat_summary += "\n"
     stat_summary += separator
+    stat_summary += "\n"
     stat_summary += stats.total.to_string(current=current)
     stat_summary += ""
 
