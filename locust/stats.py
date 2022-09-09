@@ -730,10 +730,10 @@ def setup_distributed_stats_event_listeners(events, stats):
 
 
 def print_stats(stats, current=True):
-    console_logger.info(get_stats(stats, current))
+    console_logger.info(get_stats_summary(stats, current))
 
 
-def get_stats(stats: RequestStats, current=True) -> str:
+def get_stats_summary(stats: RequestStats, current=True) -> str:
     """
     Stats will be returned as string.
     This can be used for sending the result to user defined handlers (for ex: Reportportal)
