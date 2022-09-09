@@ -783,45 +783,65 @@ def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats)
     events.worker_report.add_listener(on_worker_report)
 
 
-def print_stats(stats: RequestStats, current=True) -> None:
+def print_stats(stats: RequestStats, current=True):
+    console_logger.info(get_stats_summary(stats, current))
+
+
+def get_stats_summary(stats: RequestStats, current=True) -> str:
+    """
+    Stats will be returned as string.
+    This can be used for sending the result to user defined handlers (for ex: Reportportal)
+    """
     name_column_width = (STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4  # saved characters by compacting other columns
-    console_logger.info(
-        ("%-" + str(STATS_TYPE_WIDTH) + "s %-" + str(name_column_width) + "s %7s %12s |%7s %7s %7s%7s | %7s %11s")
-        % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Med", "req/s", "failures/s")
-    )
+    stat_summary = (
+        "%-" + str(STATS_TYPE_WIDTH) + "s %-" + str(name_column_width) + "s %7s %12s |%7s %7s %7s%7s | %7s %11s"
+    ) % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Med", "req/s", "failures/s")
     separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * (name_column_width)}|{"-" * 7}|{"-" * 13}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 8}|{"-" * 11}'
-    console_logger.info(separator)
+    stat_summary += separator
+    stat_summary += "\n"
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
-        console_logger.info(r.to_string(current=current))
-    console_logger.info(separator)
-    console_logger.info(stats.total.to_string(current=current))
-    console_logger.info("")
+        stat_summary += r.to_string(current=current)
+        stat_summary += "\n"
+    stat_summary += separator
+    stat_summary += "\n"
+    stat_summary += stats.total.to_string(current=current)
+    stat_summary += ""
+
+    return stat_summary
 
 
-def print_percentile_stats(stats: RequestStats) -> None:
-    console_logger.info("Response time percentiles (approximated)")
+def print_percentile_stats(stats):
+    console_logger.info(get_percentile_stats(stats))
+
+
+def get_percentile_stats(stats: RequestStats):
+    stat_summary = "Response time percentiles (approximated)"
+    stat_summary += "\n"
     headers = ("Type", "Name") + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)) + ("# reqs",)
-    console_logger.info(
-        (
-            f"%-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
-            f"{' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}"
-        )
-        % headers
-    )
+    stat_summary += (
+        f"%-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
+        f"{' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}"
+    ) % headers
     separator = (
         f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 8}|{("-" * 6 + "|") * len(PERCENTILES_TO_REPORT)}'
     )[:-1]
-    console_logger.info(separator)
+    stat_summary += "\n"
+    stat_summary += separator
+    stat_summary += "\n"
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
         if r.response_times:
-            console_logger.info(r.percentile())
-    console_logger.info(separator)
+            stat_summary += r.percentile()
+            stat_summary += "\n"
+    stat_summary += separator
+    stat_summary += "\n"
 
     if stats.total.response_times:
-        console_logger.info(stats.total.percentile())
-    console_logger.info("")
+        stat_summary += stats.total.percentile()
+    stat_summary += ""
+
+    return stat_summary
 
 
 def print_error_report(stats: RequestStats) -> None:
