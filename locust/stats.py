@@ -785,7 +785,7 @@ def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats)
 
 def print_stats(stats: RequestStats, current=True) -> None:
     console_logger.info(get_stats_summary(stats, current))
-
+    console_logger.info("")
 
 def get_stats_summary(stats: RequestStats, current=True) -> str:
     """
@@ -806,14 +806,14 @@ def get_stats_summary(stats: RequestStats, current=True) -> str:
     stat_summary += separator
     # stat_summary += "\n"
     stat_summary += stats.total.to_string(current=current)
-    stat_summary += ""
+    # stat_summary += ""
 
     return stat_summary
 
 
 def print_percentile_stats(stats):
     console_logger.info(get_percentile_stats(stats))
-
+    console_logger.info("")
 
 def get_percentile_stats(stats: RequestStats):
     stat_summary = "Response time percentiles (approximated)"
@@ -839,7 +839,7 @@ def get_percentile_stats(stats: RequestStats):
 
     if stats.total.response_times:
         stat_summary += stats.total.percentile()
-    stat_summary += ""
+    # stat_summary += ""
 
     return stat_summary
 
