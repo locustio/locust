@@ -783,7 +783,7 @@ def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats)
     events.worker_report.add_listener(on_worker_report)
 
 
-def print_stats(stats: RequestStats, current=True):
+def print_stats(stats: RequestStats, current=True) -> None:
     console_logger.info(get_stats_summary(stats, current))
 
 
@@ -798,13 +798,13 @@ def get_stats_summary(stats: RequestStats, current=True) -> str:
     ) % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Med", "req/s", "failures/s")
     separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * (name_column_width)}|{"-" * 7}|{"-" * 13}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 8}|{"-" * 11}'
     stat_summary += separator
-    stat_summary += "\n"
+    # stat_summary += "\n"
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
         stat_summary += r.to_string(current=current)
-        stat_summary += "\n"
+        # stat_summary += "\n"
     stat_summary += separator
-    stat_summary += "\n"
+    # stat_summary += "\n"
     stat_summary += stats.total.to_string(current=current)
     stat_summary += ""
 
@@ -817,7 +817,7 @@ def print_percentile_stats(stats):
 
 def get_percentile_stats(stats: RequestStats):
     stat_summary = "Response time percentiles (approximated)"
-    stat_summary += "\n"
+    # stat_summary += "\n"
     headers = ("Type", "Name") + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)) + ("# reqs",)
     stat_summary += (
         f"%-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
@@ -826,16 +826,16 @@ def get_percentile_stats(stats: RequestStats):
     separator = (
         f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 8}|{("-" * 6 + "|") * len(PERCENTILES_TO_REPORT)}'
     )[:-1]
-    stat_summary += "\n"
+    # stat_summary += "\n"
     stat_summary += separator
-    stat_summary += "\n"
+    # stat_summary += "\n"
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
         if r.response_times:
             stat_summary += r.percentile()
-            stat_summary += "\n"
+            # stat_summary += "\n"
     stat_summary += separator
-    stat_summary += "\n"
+    # stat_summary += "\n"
 
     if stats.total.response_times:
         stat_summary += stats.total.percentile()
