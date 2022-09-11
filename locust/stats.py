@@ -802,7 +802,7 @@ def print_stats(stats: RequestStats, current=True) -> None:
 def print_percentile_stats(stats: RequestStats) -> None:
     console_logger.info(get_percentile_stats_summary(stats))
 
-def get_percentile_stats_summary(stats: RequestStats) -> None:
+def get_percentile_stats_summary(stats: RequestStats) -> str:
     summary =("Response time percentiles (approximated)")
     headers = ("Type", "Name") + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)) + ("# reqs",)
     summary += (
