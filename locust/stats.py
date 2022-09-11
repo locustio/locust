@@ -804,6 +804,7 @@ def print_percentile_stats(stats: RequestStats) -> None:
 
 def get_percentile_stats_summary(stats: RequestStats) -> str:
     summary =("Response time percentiles (approximated)")
+    summary += ("\n")
     headers = ("Type", "Name") + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)) + ("# reqs",)
     summary += (
         (
@@ -812,19 +813,25 @@ def get_percentile_stats_summary(stats: RequestStats) -> str:
         )
         % headers
     )
+    summary += ("\n")
     separator = (
         f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 8}|{("-" * 6 + "|") * len(PERCENTILES_TO_REPORT)}'
     )[:-1]
     summary +=(separator)
+    summary += ("\n")
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
         if r.response_times:
             summary+=(r.percentile())
+            summary += ("\n")
     summary += (separator)
+    summary += ("\n")
 
     if stats.total.response_times:
         summary += (stats.total.percentile())
+        summary += ("\n")
     summary += ("")
+    summary += ("\n")
     return summary
 
 
