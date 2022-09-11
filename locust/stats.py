@@ -800,9 +800,12 @@ def print_stats(stats: RequestStats, current=True) -> None:
 
 
 def print_percentile_stats(stats: RequestStats) -> None:
-    console_logger.info("Response time percentiles (approximated)")
+    console_logger.info(get_percentile_stats_summary(stats))
+
+def get_percentile_stats_summary(stats: RequestStats) -> None:
+    summary =("Response time percentiles (approximated)")
     headers = ("Type", "Name") + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)) + ("# reqs",)
-    console_logger.info(
+    summary += (
         (
             f"%-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
             f"{' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}"
@@ -812,16 +815,17 @@ def print_percentile_stats(stats: RequestStats) -> None:
     separator = (
         f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 8}|{("-" * 6 + "|") * len(PERCENTILES_TO_REPORT)}'
     )[:-1]
-    console_logger.info(separator)
+    summary +=(separator)
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
         if r.response_times:
-            console_logger.info(r.percentile())
-    console_logger.info(separator)
+            summary+=(r.percentile())
+    summary += (separator)
 
     if stats.total.response_times:
-        console_logger.info(stats.total.percentile())
-    console_logger.info("")
+        summary += (stats.total.percentile())
+    summary += ("")
+    return summary
 
 
 def print_error_report(stats: RequestStats) -> None:
