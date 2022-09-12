@@ -1,26 +1,29 @@
 from locust import HttpUser, task, events, between
-from locust.runners import MasterRunner, WorkerRunner
+from locust.runners import MasterRunner, WorkerRunner, CustomMessageListener
+from locust.env import Environment
 
 usernames = []
 
 
-def setup_test_users(environment, msg, **kwargs):
-    # Fired when the worker receives a message of type 'test_users'
-    usernames.extend(map(lambda u: u["name"], msg.data))
-    environment.runner.send_message("acknowledge_users", f"Thanks for the {len(msg.data)} users!")
+class SetupTestUsers(CustomMessageListener):
+    def __call__(self, environment: "Environment", msg, **kwargs):
+        # Fired when the worker receives a message of type 'test_users'
+        usernames.extend(map(lambda u: u["name"], msg.data))
+        environment.runner.send_message("acknowledge_users", f"Thanks for the {len(msg.data)} users!")
 
 
-def on_acknowledge(msg, **kwargs):
-    # Fired when the master receives a message of type 'acknowledge_users'
-    print(msg.data)
+class OnAcknowledge(CustomMessageListener):
+    def __call__(self, msg, **kwargs):
+        # Fired when the master receives a message of type 'acknowledge_users'
+        print(msg.data)
 
 
 @events.init.add_listener
 def on_locust_init(environment, **_kwargs):
     if not isinstance(environment.runner, MasterRunner):
-        environment.runner.register_message("test_users", setup_test_users)
+        environment.runner.register_message("test_users", SetupTestUsers)
     if not isinstance(environment.runner, WorkerRunner):
-        environment.runner.register_message("acknowledge_users", on_acknowledge)
+        environment.runner.register_message("acknowledge_users", OnAcknowledge)
 
 
 @events.test_start.add_listener
