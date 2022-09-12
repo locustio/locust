@@ -581,7 +581,7 @@ class LocalRunner(Runner):
         """
         logger.debug(f"Running locally: sending {msg_type} message to self")
         if msg_type in self.custom_messages:
-            listener = self.custom_messages[msg_type]
+            listener = self.custom_messages[msg_type]()
             msg = Message(msg_type, data, "local")
             listener(environment=self.environment, msg=msg)
         else:
@@ -1115,7 +1115,8 @@ class MasterRunner(DistributedRunner):
                 logger.debug(
                     f"Received {msg.type} message from worker {msg.node_id} (index {self.get_worker_index(msg.node_id)})"
                 )
-                self.custom_messages[msg.type](environment=self.environment, msg=msg)
+                listener = self.custom_messages[msg.type]()
+                listener(environment=self.environment, msg=msg)
             else:
                 logger.warning(
                     f"Unknown message type received from worker {msg.node_id} (index {self.get_worker_index(msg.node_id)}): {msg.type}"
@@ -1355,7 +1356,8 @@ class WorkerRunner(DistributedRunner):
                 self.reset_connection()
             elif msg.type in self.custom_messages:
                 logger.debug(f"Received {msg.type} message from master")
-                self.custom_messages[msg.type](environment=self.environment, msg=msg)
+                listener = self.custom_messages[msg.type]()
+                listener(environment=self.environment, msg=msg)
             else:
                 logger.warning(f"Unknown message type received: {msg.type}")
 
