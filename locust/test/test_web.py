@@ -369,8 +369,15 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             def t(self):
                 pass
 
+        class User2(User):
+            wait_time = constant(1)
+
+            @task
+            def t(self):
+                pass
+
         self.environment.web_ui.userclass_picker_is_active = True
-        self.environment.available_user_classes = {"User1": User1}
+        self.environment.available_user_classes = {"User1": User1, "User2": User2}
 
         response = requests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
