@@ -356,7 +356,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
-    def test_swarm_doesnt_update_parsed_options_when_userclass_specified(self):
+    def test_swarm_updates_parsed_options_when_single_userclass_specified(self):
         """
         This test validates that environment.parsed_options.user_classes isn't overwritten
         when /swarm is hit with 'user_classes' in the data.
@@ -388,8 +388,50 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
-        # Checking parsed_options.user_classes remains empty
-        self.assertListEqual(self.environment.parsed_options.user_classes, [])
+        # Checking environment.parsed_options.user_classes was updated
+        self.assertListEqual(self.environment.parsed_options.user_classes, ["User1"])
+
+    def test_swarm_updates_parsed_options_when_multiple_userclasses_specified(self):
+        """
+        This test validates that environment.parsed_options.user_classes isn't overwritten
+        when /swarm is hit with 'user_classes' in the data.
+        """
+
+        class User1(User):
+            wait_time = constant(1)
+
+            @task
+            def t(self):
+                pass
+
+        class User2(User):
+            wait_time = constant(1)
+
+            @task
+            def t(self):
+                pass
+
+        self.environment.web_ui.userclass_picker_is_active = True
+        self.environment.available_user_classes = {"User1": User1, "User2": User2}
+
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={
+                "user_count": 5,
+                "spawn_rate": 5,
+                "host": "https://localhost",
+                "user_classes": ["User1", "User2"],
+            },
+        )
+        self.assertListEqual(["User1", "User2"], response.json()["user_classes"])
+
+        # stop
+        gevent.sleep(1)
+        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        self.assertEqual(response.json()["message"], "Test stopped")
+
+        # Checking environment.parsed_options.user_classes was updated
+        self.assertListEqual(self.environment.parsed_options.user_classes, ["User1", "User2"])
 
     def test_swarm_defaults_to_all_available_userclasses_when_userclass_picker_is_active_and_no_userclass_in_payload(
         self,
