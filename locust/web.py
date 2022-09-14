@@ -196,8 +196,8 @@ class WebUI:
                     # Replace < > to guard against XSS
                     environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
                 elif key == "user_classes":
-                    # Avoiding overriding environment.parsed_options.user_classes
-                    pass
+                    # Set environment.parsed_options.user_classes to the selected user_classes
+                    parsed_options_dict[key] = request.form.getlist("user_classes")
                 elif key in parsed_options_dict:
                     # update the value in environment.parsed_options, but dont change the type.
                     # This won't work for parameters that are None
