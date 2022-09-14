@@ -1384,18 +1384,14 @@ class WorkerRunner(DistributedRunner):
 
     def connect_to_master(self):
         self.retry += 1
+        logger.info("Waiting for master to be ready")
         self.client.send(Message("client_ready", __version__, self.client_id))
         success = self.connection_event.wait(timeout=CONNECT_TIMEOUT)
         if not success:
-            if self.retry < 3:
-                logger.debug(
-                    f"Failed to connect to master {self.master_host}:{self.master_port}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
-                )
-            else:
-                logger.warning(
-                    f"Failed to connect to master {self.master_host}:{self.master_port}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
-                )
             if self.retry > CONNECT_RETRY_COUNT:
+                logger.error(
+                    f"Failed to connect to master {self.master_host}:{self.master_port}, after {CONNECT_RETRY_COUNT} retries"
+                )
                 raise ConnectionError()
             self.connect_to_master()
         self.connected = True
