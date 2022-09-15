@@ -23,6 +23,7 @@ from .stats import StatsCSV
 from .user.inspectuser import get_ratio
 from .util.cache import memoize
 from .util.rounding import proper_round
+from .util.timespan import parse_timespan
 from .html import get_html_report
 from flask_cors import CORS
 
@@ -187,6 +188,7 @@ class WebUI:
                 self._stop_runners()
 
             parsed_options_dict = vars(environment.parsed_options) if environment.parsed_options else {}
+            run_time = None
             for key, value in request.form.items():
                 if key == "user_count":  # if we just renamed this field to "users" we wouldn't need this
                     user_count = int(value)
@@ -195,6 +197,13 @@ class WebUI:
                 elif key == "host":
                     # Replace < > to guard against XSS
                     environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
+                elif key == "run_time":
+                    try:
+                        run_time = parse_timespan(value)
+                    except ValueError:
+                        err_msg = "Valid run_time formats are : 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc."
+                        logger.error(err_msg)
+                        return jsonify({"success": False, "message": err_msg, "host": environment.host})
                 elif key in parsed_options_dict:
                     # update the value in environment.parsed_options, but dont change the type.
                     # This won't work for parameters that are None
@@ -218,6 +227,9 @@ class WebUI:
                     "message": "Swarming started",
                     "host": environment.host,
                 }
+                if run_time:
+                    gevent.spawn_later(run_time, self._stop_runners).link_exception(greenlet_exception_handler)
+                    response_data["run_time"] = run_time
 
                 if self.userclass_picker_is_active:
                     response_data["user_classes"] = sorted(user_classes.keys())
