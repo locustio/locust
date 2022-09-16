@@ -352,7 +352,7 @@ class Runner:
     def shape_worker(self) -> None:
         logger.info("Shape worker starting")
         while self.state == STATE_INIT or self.state == STATE_SPAWNING or self.state == STATE_RUNNING:
-            current_tick: Union[Tuple[int, float], Tuple[int, float, Optional[List[Type[User]]]], None] = (
+            current_tick: Tuple[int, float] | Tuple[int, float, Optional[List[Type[User]]]] | None = (
                 self.environment.shape_class.tick() if self.environment.shape_class is not None else None
             )
             if current_tick is None:
