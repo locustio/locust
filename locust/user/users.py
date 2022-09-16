@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Callable, Dict, List, Optional
 
 from gevent import GreenletExit, greenlet
