@@ -138,6 +138,7 @@ def main():
     if not user_classes:
         logger.error("No User class found!")
         sys.exit(1)
+
     # make sure specified User exists
     if options.user_classes:
         missing = set(options.user_classes) - set(user_classes.keys())
