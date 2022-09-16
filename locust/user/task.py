@@ -1,3 +1,4 @@
+from __future__ import annotations
 import logging
 import random
 import traceback
@@ -6,7 +7,6 @@ from typing import (
     TYPE_CHECKING,
     Callable,
     List,
-    Union,
     TypeVar,
     Optional,
     Type,
@@ -51,7 +51,7 @@ def task(weight: int) -> Callable[[TaskT], TaskT]:
     ...
 
 
-def task(weight: Union[TaskT, int] = 1) -> Union[TaskT, Callable[[TaskT], TaskT]]:
+def task(weight: TaskT | int = 1) -> TaskT | Callable[[TaskT], TaskT]:
     """
     Used as a convenience decorator to be able to declare tasks for a User or a TaskSet
     inline in the class. Example::
@@ -242,7 +242,7 @@ class TaskSet(metaclass=TaskSetMeta):
     will then continue in the first TaskSet).
     """
 
-    tasks: List[Union["TaskSet", Callable]] = []
+    tasks: List[TaskSet | Callable] = []
     """
     Collection of python callables and/or TaskSet classes that the User(s) will run.
 

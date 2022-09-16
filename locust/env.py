@@ -6,7 +6,6 @@ from typing import (
     Type,
     TypeVar,
     Optional,
-    Union,
 )
 
 from configargparse import Namespace

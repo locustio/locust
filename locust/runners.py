@@ -28,7 +28,6 @@ from typing import (
     Type,
     Any,
     cast,
-    Union,
 )
 from uuid import uuid4
 

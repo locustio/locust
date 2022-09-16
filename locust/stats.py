@@ -20,7 +20,6 @@ from typing import (
     NoReturn,
     Tuple,
     List,
-    Union,
     Optional,
     OrderedDict as OrderedDictType,
     Callable,

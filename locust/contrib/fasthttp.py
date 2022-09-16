@@ -7,7 +7,7 @@ from base64 import b64encode
 from urllib.parse import urlparse, urlunparse
 from ssl import SSLError
 import time
-from typing import Callable, Optional, Tuple, Dict, Any, Union
+from typing import Callable, Optional, Tuple, Dict, Any
 
 from http.cookiejar import CookieJar
 
@@ -144,7 +144,7 @@ class FastHttpSession:
         method: str,
         url: str,
         name: str = None,
-        data: Union[str, dict] = None,
+        data: str | dict = None,
         catch_response: bool = False,
         stream: bool = False,
         headers: dict = None,
@@ -153,7 +153,7 @@ class FastHttpSession:
         allow_redirects=True,
         context: dict = {},
         **kwargs,
-    ) -> Union[ResponseContextManager, FastResponse]:
+    ) -> ResponseContextManager | FastResponse:
         """
         Send and HTTP request
         Returns :py:class:`locust.contrib.fasthttp.FastResponse` object.

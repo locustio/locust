@@ -1,6 +1,6 @@
 from __future__ import annotations
 import time
-from typing import Optional, Tuple, List, Type, Union
+from typing import Optional, Tuple, List, Type
 
 from . import User
 from .runners import Runner
