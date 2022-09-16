@@ -753,14 +753,14 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.environment.web_ui.parsed_options = parse_options()
         response = requests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
-            data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost", "run_time": "5s"},
+            data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost", "run_time": "1s"},
         )
         self.assertEqual(200, response.status_code)
         self.assertEqual("https://localhost", response.json()["host"])
         self.assertEqual(self.environment.host, "https://localhost")
-        self.assertEqual(5, response.json()["run_time"])
+        self.assertEqual(1, response.json()["run_time"])
         # wait for test to run
-        gevent.sleep(7)
+        gevent.sleep(3)
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual("stopped", response.json()["state"])
 
