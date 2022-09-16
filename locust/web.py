@@ -202,6 +202,8 @@ class WebUI:
                     # Set environment.parsed_options.user_classes to the selected user_classes
                     parsed_options_dict[key] = request.form.getlist("user_classes")
                 elif key == "run_time":
+                    if not value:
+                        continue
                     try:
                         run_time = parse_timespan(value)
                     except ValueError:
