@@ -138,7 +138,6 @@ def main():
     if not user_classes:
         logger.error("No User class found!")
         sys.exit(1)
-
     # make sure specified User exists
     if options.user_classes:
         missing = set(options.user_classes) - set(user_classes.keys())
@@ -267,6 +266,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                 stats_csv_writer=stats_csv_writer,
                 delayed_start=True,
                 userclass_picker_is_active=options.class_picker,
+                run_time_is_active=options.web_run_time,
             )
         except AuthCredentialsError:
             logger.error("Credentials supplied with --web-auth should have the format: username:password")
