@@ -118,7 +118,7 @@ class Runner:
         self.state = STATE_INIT
         self.spawning_greenlet: Optional[gevent.Greenlet] = None
         self.shape_greenlet: Optional[gevent.Greenlet] = None
-        self.shape_last_tick: Union[Tuple[int, float], Tuple[int, float, Optional[List[Type[User]]]], None] = None
+        self.shape_last_tick: Tuple[int, float] | Tuple[int, float, Optional[List[Type[User]]]] | None = None
         self.current_cpu_usage: int = 0
         self.cpu_warning_emitted: bool = False
         self.worker_cpu_warning_emitted: bool = False

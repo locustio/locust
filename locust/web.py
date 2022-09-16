@@ -132,7 +132,7 @@ class WebUI:
 
         @app.route("/")
         @self.auth_required_if_enabled
-        def index() -> Union[str, Response]:
+        def index() -> str | Response:
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             self.update_template_args()

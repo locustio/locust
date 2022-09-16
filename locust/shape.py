@@ -35,7 +35,7 @@ class LoadTestShape:
         """
         return self.runner.user_count
 
-    def tick(self) -> Union[Tuple[int, float], Tuple[int, float, Optional[List[Type[User]]]], None]:
+    def tick(self) -> Tuple[int, float] | Tuple[int, float, Optional[List[Type[User]]]] | None:
         """
         Returns a tuple with 2 elements to control the running load test:
 
