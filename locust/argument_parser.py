@@ -348,6 +348,13 @@ def setup_parser_arguments(parser):
         help="Enable select boxes in the web interface to choose from all available User classes and Shape classes",
         env_var="LOCUST_USERCLASS_PICKER",
     )
+    web_ui_group.add_argument(
+        "--web-run-time",
+        default=False,
+        action="store_true",
+        help="Enable entering run time in web ui",
+        env_var="LOCUST_WEB_RUN_TIME",
+    )
 
     master_group = parser.add_argument_group(
         "Master options",
