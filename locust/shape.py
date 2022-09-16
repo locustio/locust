@@ -1,5 +1,6 @@
+from __future__ import annotations
 import time
-from typing import Optional, Tuple, List, Type, Union
+from typing import Optional, Tuple, List, Type
 
 from . import User
 from .runners import Runner
@@ -35,7 +36,7 @@ class LoadTestShape:
         """
         return self.runner.user_count
 
-    def tick(self) -> Union[Tuple[int, float], Tuple[int, float, Optional[List[Type[User]]]], None]:
+    def tick(self) -> Tuple[int, float] | Tuple[int, float, Optional[List[Type[User]]]] | None:
         """
         Returns a tuple with 2 elements to control the running load test:
 

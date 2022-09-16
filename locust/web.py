@@ -1,3 +1,4 @@
+from __future__ import annotations
 import csv
 import logging
 import os.path
@@ -7,7 +8,7 @@ from io import StringIO
 from json import dumps
 from itertools import chain
 from time import time
-from typing import TYPE_CHECKING, Optional, Union, Any, Dict, List
+from typing import TYPE_CHECKING, Optional, Any, Dict, List
 
 import gevent
 from flask import Flask, make_response, jsonify, render_template, request, send_file, Response
@@ -132,7 +133,7 @@ class WebUI:
 
         @app.route("/")
         @self.auth_required_if_enabled
-        def index() -> Union[str, Response]:
+        def index() -> str | Response:
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             self.update_template_args()

@@ -1,7 +1,8 @@
+from __future__ import annotations
 import re
 import time
 from contextlib import contextmanager
-from typing import Generator, Optional, Union
+from typing import Generator, Optional
 from urllib.parse import urlparse, urlunparse
 
 import requests
@@ -220,7 +221,7 @@ class ResponseContextManager(LocustResponse):
     :py:meth:`failure <locust.clients.ResponseContextManager.failure>`.
     """
 
-    _manual_result: Optional[Union[bool, Exception]] = None
+    _manual_result: bool | Exception | None = None
     _entered = False
 
     def __init__(self, response, request_event, request_meta):
