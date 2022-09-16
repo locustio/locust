@@ -789,6 +789,33 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual("ready", response.json()["state"])
         requests.get("http://127.0.0.1:%i/stats/reset" % self.web_port)
 
+    def test_swarm_run_time_empty_input(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task(1)
+            def my_task(self):
+                pass
+
+        self.environment.user_classes = [MyUser]
+        self.environment.web_ui.parsed_options = parse_options()
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost", "run_time": ""},
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual("https://localhost", response.json()["host"])
+        self.assertEqual(self.environment.host, "https://localhost")
+
+        # verify test is running
+        gevent.sleep(1)
+        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
+        self.assertEqual("running", response.json()["state"])
+
+        # stop
+        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+
     def test_host_value_from_user_class(self):
         class MyUser(User):
             host = "http://example.com"
