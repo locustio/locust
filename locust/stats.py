@@ -784,7 +784,7 @@ def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats)
 
 
 def print_stats(stats: RequestStats, current=True) -> None:
-    name_column_width = (STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4  # saved characters by compacting other columns
+    # name_column_width = (STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4  # saved characters by compacting other columns
     # console_logger.info(
     #     ("%-" + str(STATS_TYPE_WIDTH) + "s %-" + str(name_column_width) + "s %7s %12s |%7s %7s %7s%7s | %7s %11s")
     #     % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Med", "req/s", "failures/s")
@@ -800,6 +800,7 @@ def print_stats(stats: RequestStats, current=True) -> None:
     stat_summary = get_stats_summary(stats,current)
     for summary in stat_summary:
         console_logger.info(summary)
+    console_logger.info("")
 
 def get_stats_summary(stats: RequestStats, current=True) -> str:
     """
@@ -818,67 +819,62 @@ def get_stats_summary(stats: RequestStats, current=True) -> str:
         summary.append(r.to_string(current=current))
     summary.append(separator)
     summary.append(stats.total.to_string(current=current))
-    # summary.append("")
     return summary
 
 
 def print_percentile_stats(stats: RequestStats) -> None:
-    console_logger.info("Response time percentiles (approximated)")
-    headers = ("Type", "Name") + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)) + ("# reqs",)
-    console_logger.info(
-        (
-            f"%-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
-            f"{' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}"
-        )
-        % headers
-    )
-    separator = (
-        f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 8}|{("-" * 6 + "|") * len(PERCENTILES_TO_REPORT)}'
-    )[:-1]
-    console_logger.info(separator)
-    for key in sorted(stats.entries.keys()):
-        r = stats.entries[key]
-        if r.response_times:
-            console_logger.info(r.percentile())
-    console_logger.info(separator)
+    # console_logger.info("Response time percentiles (approximated)")
+    # headers = ("Type", "Name") + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)) + ("# reqs",)
+    # console_logger.info(
+    #     (
+    #         f"%-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
+    #         f"{' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}"
+    #     )
+    #     % headers
+    # )
+    # separator = (
+    #     f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 8}|{("-" * 6 + "|") * len(PERCENTILES_TO_REPORT)}'
+    # )[:-1]
+    # console_logger.info(separator)
+    # for key in sorted(stats.entries.keys()):
+    #     r = stats.entries[key]
+    #     if r.response_times:
+    #         console_logger.info(r.percentile())
+    # console_logger.info(separator)
 
-    if stats.total.response_times:
-        console_logger.info(stats.total.percentile())
+    # if stats.total.response_times:
+    #     console_logger.info(stats.total.percentile())
+    stat_summary = get_percentile_stats_summary(stats)
+    for summary in stat_summary:
+        console_logger.info(summary)
     console_logger.info("")
 
 def get_percentile_stats_summary(stats: RequestStats) -> str:
     """
         Percentile stats summary will be returned as string
     """
-    summary =("Response time percentiles (approximated)")
-    summary += ("\n")
+    summary = []
+    summary.append("Response time percentiles (approximated)")
     headers = ("Type", "Name") + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)) + ("# reqs",)
-    summary += (
+    summary.append(
         (
             f"%-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
             f"{' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}"
         )
         % headers
     )
-    summary += ("\n")
     separator = (
         f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 8}|{("-" * 6 + "|") * len(PERCENTILES_TO_REPORT)}'
     )[:-1]
-    summary +=(separator)
-    summary += ("\n")
+    summary.append(separator)
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
         if r.response_times:
-            summary+=(r.percentile())
-            summary += ("\n")
-    summary += (separator)
-    summary += ("\n")
+            summary.append(r.percentile())
+    summary.append(separator)
 
     if stats.total.response_times:
-        summary += (stats.total.percentile())
-        summary += ("\n")
-    summary += ("")
-    summary += ("\n")
+        summary.append(stats.total.percentile())
     return summary
 
 
