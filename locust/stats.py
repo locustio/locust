@@ -785,36 +785,40 @@ def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats)
 
 def print_stats(stats: RequestStats, current=True) -> None:
     name_column_width = (STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4  # saved characters by compacting other columns
-    console_logger.info(
-        ("%-" + str(STATS_TYPE_WIDTH) + "s %-" + str(name_column_width) + "s %7s %12s |%7s %7s %7s%7s | %7s %11s")
-        % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Med", "req/s", "failures/s")
-    )
-    separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * (name_column_width)}|{"-" * 7}|{"-" * 13}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 8}|{"-" * 11}'
-    console_logger.info(separator)
-    for key in sorted(stats.entries.keys()):
-        r = stats.entries[key]
-        console_logger.info(r.to_string(current=current))
-    console_logger.info(separator)
-    console_logger.info(stats.total.to_string(current=current))
-    console_logger.info("")
+    # console_logger.info(
+    #     ("%-" + str(STATS_TYPE_WIDTH) + "s %-" + str(name_column_width) + "s %7s %12s |%7s %7s %7s%7s | %7s %11s")
+    #     % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Med", "req/s", "failures/s")
+    # )
+    # separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * (name_column_width)}|{"-" * 7}|{"-" * 13}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 8}|{"-" * 11}'
+    # console_logger.info(separator)
+    # for key in sorted(stats.entries.keys()):
+    #     r = stats.entries[key]
+    #     console_logger.info(r.to_string(current=current))
+    # console_logger.info(separator)
+    # console_logger.info(stats.total.to_string(current=current))
+    # console_logger.info("")
+    stat_summary = get_stats_summary(stats,current)
+    for summary in stat_summary:
+        console_logger.info(summary)
 
 def get_stats_summary(stats: RequestStats, current=True) -> str:
     """
         stats summary will be returned as string
     """
     name_column_width = (STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4  # saved characters by compacting other columns
-    summary = (
+    summary = list()
+    summary.append(
         ("%-" + str(STATS_TYPE_WIDTH) + "s %-" + str(name_column_width) + "s %7s %12s |%7s %7s %7s%7s | %7s %11s")
         % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Med", "req/s", "failures/s")
     )
     separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * (name_column_width)}|{"-" * 7}|{"-" * 13}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 8}|{"-" * 11}'
-    summary += (separator)
+    summary.append(separator)
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
-        summary += (r.to_string(current=current))
-    summary += (separator)
-    summary += (stats.total.to_string(current=current))
-    summary += ("")
+        summary.append(r.to_string(current=current))
+    summary.append(separator)
+    summary.append(stats.total.to_string(current=current))
+    # summary.append("")
     return summary
 
 
