@@ -41,11 +41,21 @@ This functionality is further demonstrated in the `examples on github <https://g
 
 One further method may be helpful for your custom load shapes: `get_current_user_count()`, which returns the total number of active users. This method can be used to prevent advancing to subsequent steps until the desired number of users has been reached. This is especially useful if the initialization process for each user is slow or erratic in how long it takes. If this sounds like your use case, see the `example on github <https://github.com/locustio/locust/tree/master/examples/custom_shape/wait_user_count.py>`_.
 
+Combining Users with different load profiles
+--------------------------------------------
 
-Extend your shape with custom users
------------------------------------
+If you use the Web UI, you can add the :ref:`---class-picker <class-picker>` parameter to select which shape to use. But it often more flexible to have your User definitions in one file and your LoadTestShape in a separate one. For example, if you a high/low load Shape class defined in low_load.py and high_load.py respectively:
 
-Extending the return value of the ``tick()`` with the argument ``user_classes`` makes it possible to pick the users being created for a ``tick()`` specifically.
+.. code-block:: console
+
+    $ locust -f locustfile.py,low_load.py
+
+    $ locust -f locustfile.py,high_load.py
+
+Restricting which user types to spawn in each tick
+--------------------------------------------------
+
+Adding the element ``user_classes`` to the return value gives you more detailed control:
 
 .. code-block:: python
 

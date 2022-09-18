@@ -123,6 +123,7 @@ Example:
 
 Locust will use ``locustfile1.py``, ``locustfile2.py`` & ``more_files/locustfile3.py``
 
+.. _class-picker:
 
 Running Locust with User class UI picker
 ========================================
