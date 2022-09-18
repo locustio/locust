@@ -185,7 +185,7 @@ class WebUI:
 
                 # Setting user dispatchers to None so that the runners recreate the
                 # UserDistpatcher with the appropriate user classes
-                self._reset_runner_users_dispatcher()
+                self._reset_users_dispatcher()
 
             parsed_options_dict = vars(environment.parsed_options) if environment.parsed_options else {}
             for key, value in request.form.items():
@@ -567,5 +567,5 @@ class WebUI:
         self.environment._remove_user_classes_with_weight_zero()
         self.environment._validate_user_class_name_uniqueness()
 
-    def _reset_runner_users_dispatcher(self):
+    def _reset_users_dispatcher(self):
         self.environment.runner._users_dispatcher = None
