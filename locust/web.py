@@ -183,9 +183,9 @@ class WebUI:
                 else:
                     self._update_shape_class(form_data_shape_class_name)
 
-                # Stopping Runners and setting user dispatchers to None so that they
-                # are recreated with the appropriate UserClasses
-                self._stop_runners()
+                # Setting user dispatchers to None so that the runners recreate the
+                # UserDistpatcher with the appropriate user classes
+                self._reset_users_dispatcher()
 
             parsed_options_dict = vars(environment.parsed_options) if environment.parsed_options else {}
             for key, value in request.form.items():
@@ -567,6 +567,5 @@ class WebUI:
         self.environment._remove_user_classes_with_weight_zero()
         self.environment._validate_user_class_name_uniqueness()
 
-    def _stop_runners(self):
-        self.environment.runner.stop()
+    def _reset_users_dispatcher(self):
         self.environment.runner._users_dispatcher = None
