@@ -80,7 +80,6 @@ class WebUI:
         stats_csv_writer: Optional[StatsCSV] = None,
         delayed_start=False,
         userclass_picker_is_active=False,
-        run_time_is_active=False,
     ):
         """
         Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
@@ -104,7 +103,6 @@ class WebUI:
         self.tls_cert = tls_cert
         self.tls_key = tls_key
         self.userclass_picker_is_active = userclass_picker_is_active
-        self.run_time_is_active = run_time_is_active
         app = Flask(__name__)
         CORS(app)
         self.app = app
@@ -561,7 +559,6 @@ class WebUI:
             "show_userclass_picker": self.userclass_picker_is_active,
             "available_user_classes": available_user_classes,
             "available_shape_classes": available_shape_classes,
-            "show_run_time": self.run_time_is_active,
         }
 
     def _update_shape_class(self, shape_class_name):
