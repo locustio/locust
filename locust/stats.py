@@ -791,7 +791,7 @@ def print_stats(stats: RequestStats, current=True) -> None:
 
 def get_stats_summary(stats: RequestStats, current=True) -> List[str]:
     """
-        stats summary will be returned as string
+        stats summary will be returned as list of string
     """
     name_column_width = (STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4  # saved characters by compacting other columns
     summary = list()
@@ -817,7 +817,7 @@ def print_percentile_stats(stats: RequestStats) -> None:
 
 def get_percentile_stats_summary(stats: RequestStats) -> List[str]:
     """
-        Percentile stats summary will be returned as string
+        Percentile stats summary will be returned as list of string
     """
     summary = []
     summary.append("Response time percentiles (approximated)")
