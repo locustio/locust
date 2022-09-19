@@ -93,11 +93,14 @@
                         {% endif %}
                     </label>
                     <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or "" }}" onfocus="this.select()"/><br>
-                    <label for="run_time">
-                        Run time
-                        <span style="color:#8a8a8a;">(e.g. 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.)</span>
-                    </label>
-                    <input type="text" name="run_time" id="run_time" class="val" value="{{ run_time  or "" }}" onfocus="this.select()"/><br>
+                    <a href="#" onclick="$('.advancedOptions').toggle();">Advanced options</a>
+                    <div class="advancedOptions" style="display:none">
+                        <label for="run_time">
+                            Run time
+                            <span style="color:#8a8a8a;">(e.g. 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.)</span>
+                        </label>
+                        <input type="text" name="run_time" id="run_time" class="val" value="{{ run_time  or "" }}" onfocus="this.select()"/><br>
+                    </div>
                     {% if extra_options %}<label>Custom parameters:</label>{% endif %}
                     {% for key, value in extra_options.items() %}
                         {% if not ((value is none) or (value is boolean)) %}
