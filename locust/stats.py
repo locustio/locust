@@ -784,9 +784,8 @@ def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats)
 
 
 def print_stats(stats: RequestStats, current=True) -> None:
-    stat_summary = get_stats_summary(stats, current)
-    for summary in stat_summary:
-        console_logger.info(summary)
+    for line in get_stats_summary(stats, current):
+        console_logger.info(line)
     console_logger.info("")
 
 
@@ -811,9 +810,8 @@ def get_stats_summary(stats: RequestStats, current=True) -> List[str]:
 
 
 def print_percentile_stats(stats: RequestStats) -> None:
-    stat_summary = get_percentile_stats_summary(stats)
-    for summary in stat_summary:
-        console_logger.info(summary)
+    for line in get_percentile_stats_summary(stats):
+        console_logger.info(line)
     console_logger.info("")
 
 
@@ -821,8 +819,7 @@ def get_percentile_stats_summary(stats: RequestStats) -> List[str]:
     """
     Percentile stats summary will be returned as list of string
     """
-    summary = []
-    summary.append("Response time percentiles (approximated)")
+    summary = ["Response time percentiles (approximated)"]
     headers = ("Type", "Name") + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)) + ("# reqs",)
     summary.append(
         (
@@ -849,14 +846,12 @@ def get_percentile_stats_summary(stats: RequestStats) -> List[str]:
 def print_error_report(stats: RequestStats) -> None:
     if not len(stats.errors):
         return
-    stat_summary = get_error_report_summary(stats)
-    for summary in stat_summary:
-        console_logger.info(summary)
+    for line in get_error_report_summary(stats):
+        console_logger.info(line)
 
 
 def get_error_report_summary(stats) -> List[str]:
-    summary = []
-    summary.append("Error report")
+    summary = ["Error report"]
     summary.append("%-18s %-100s" % ("# occurrences", "Error"))
     separator = f'{"-" * 18}|{"-" * ((80 + STATS_NAME_WIDTH) - 19)}'
     summary.append(separator)
