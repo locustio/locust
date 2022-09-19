@@ -784,14 +784,15 @@ def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats)
 
 
 def print_stats(stats: RequestStats, current=True) -> None:
-    stat_summary = get_stats_summary(stats,current)
+    stat_summary = get_stats_summary(stats, current)
     for summary in stat_summary:
         console_logger.info(summary)
     console_logger.info("")
 
+
 def get_stats_summary(stats: RequestStats, current=True) -> List[str]:
     """
-        stats summary will be returned as list of string
+    stats summary will be returned as list of string
     """
     name_column_width = (STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4  # saved characters by compacting other columns
     summary = list()
@@ -815,9 +816,10 @@ def print_percentile_stats(stats: RequestStats) -> None:
         console_logger.info(summary)
     console_logger.info("")
 
+
 def get_percentile_stats_summary(stats: RequestStats) -> List[str]:
     """
-        Percentile stats summary will be returned as list of string
+    Percentile stats summary will be returned as list of string
     """
     summary = []
     summary.append("Response time percentiles (approximated)")
@@ -847,15 +849,12 @@ def get_percentile_stats_summary(stats: RequestStats) -> List[str]:
 def print_error_report(stats: RequestStats) -> None:
     if not len(stats.errors):
         return
-    stat_summary=get_error_report_summary(stats)
+    stat_summary = get_error_report_summary(stats)
     for summary in stat_summary:
         console_logger.info(summary)
-    console_logger.info("")
+
 
 def get_error_report_summary(stats) -> List[str]:
-    """ 
-        Get error report summary as list of string
-    """
     summary = []
     summary.append("Error report")
     summary.append("%-18s %-100s" % ("# occurrences", "Error"))
@@ -864,6 +863,7 @@ def get_error_report_summary(stats) -> List[str]:
     for error in stats.errors.values():
         summary.append("%-18i %-100s" % (error.occurrences, error.to_name()))
     summary.append(separator)
+    summary.append("")
     return summary
 
 
