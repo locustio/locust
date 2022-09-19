@@ -789,7 +789,7 @@ def print_stats(stats: RequestStats, current=True) -> None:
         console_logger.info(summary)
     console_logger.info("")
 
-def get_stats_summary(stats: RequestStats, current=True) -> str:
+def get_stats_summary(stats: RequestStats, current=True) -> List[str]:
     """
         stats summary will be returned as string
     """
@@ -815,7 +815,7 @@ def print_percentile_stats(stats: RequestStats) -> None:
         console_logger.info(summary)
     console_logger.info("")
 
-def get_percentile_stats_summary(stats: RequestStats) -> str:
+def get_percentile_stats_summary(stats: RequestStats) -> List[str]:
     """
         Percentile stats summary will be returned as string
     """
