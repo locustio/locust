@@ -581,5 +581,8 @@ class WebUI:
         self.environment._remove_user_classes_with_weight_zero()
         self.environment._validate_user_class_name_uniqueness()
 
+    def _stop_runners(self):
+        self.environment.runner.stop()
+
     def _reset_users_dispatcher(self):
         self.environment.runner._users_dispatcher = None
