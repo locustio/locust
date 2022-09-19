@@ -794,7 +794,7 @@ def get_stats_summary(stats: RequestStats, current=True) -> List[str]:
     stats summary will be returned as list of string
     """
     name_column_width = (STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4  # saved characters by compacting other columns
-    summary = list()
+    summary = []
     summary.append(
         ("%-" + str(STATS_TYPE_WIDTH) + "s %-" + str(name_column_width) + "s %7s %12s |%7s %7s %7s%7s | %7s %11s")
         % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Med", "req/s", "failures/s")
