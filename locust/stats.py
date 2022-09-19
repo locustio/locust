@@ -847,14 +847,24 @@ def get_percentile_stats_summary(stats: RequestStats) -> List[str]:
 def print_error_report(stats: RequestStats) -> None:
     if not len(stats.errors):
         return
-    console_logger.info("Error report")
-    console_logger.info("%-18s %-100s" % ("# occurrences", "Error"))
-    separator = f'{"-" * 18}|{"-" * ((80 + STATS_NAME_WIDTH) - 19)}'
-    console_logger.info(separator)
-    for error in stats.errors.values():
-        console_logger.info("%-18i %-100s" % (error.occurrences, error.to_name()))
-    console_logger.info(separator)
+    stat_summary=get_error_report_summary(stats)
+    for summary in stat_summary:
+        console_logger.info(summary)
     console_logger.info("")
+
+def get_error_report_summary(stats) -> List[str]:
+    """ 
+        Get error report summary as list of string
+    """
+    summary = []
+    summary.append("Error report")
+    summary.append("%-18s %-100s" % ("# occurrences", "Error"))
+    separator = f'{"-" * 18}|{"-" * ((80 + STATS_NAME_WIDTH) - 19)}'
+    summary.append(separator)
+    for error in stats.errors.values():
+        summary.append("%-18i %-100s" % (error.occurrences, error.to_name()))
+    summary.append(separator)
+    return summary
 
 
 def stats_printer(stats: RequestStats) -> Callable[[], None]:
