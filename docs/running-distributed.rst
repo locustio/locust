@@ -88,15 +88,17 @@ order to coordinate data. This can be easily accomplished with custom messages u
 .. code-block:: python
 
     from locust import events
-    from locust.runners import MasterRunner, WorkerRunner
+    from locust.runners import MasterRunner, WorkerRunner, CustomMessageListener
 
     # Fired when the worker receives a message of type 'test_users'
+    @CustomMessageListener
     def setup_test_users(environment, msg, **kwargs):
         for user in msg.data:
             print(f"User {user['name']} received")
         environment.runner.send_message('acknowledge_users', f"Thanks for the {len(msg.data)} users!")
 
     # Fired when the master receives a message of type 'acknowledge_users'
+    @CustomMessageListener
     def on_acknowledge(msg, **kwargs):
         print(msg.data)
 

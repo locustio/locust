@@ -93,10 +93,12 @@ class ExceptionDict(TypedDict):
     nodes: Set[str]
 
 
-class CustomMessageListener(Protocol):
-    @abstractmethod
+class CustomMessageListener:
+    def __init__(self, f):
+        self.f = f
+
     def __call__(self, environment: "Environment", msg: Message) -> None:
-        ...
+        self.f(environment=environment, msg=msg)
 
 
 class Runner:

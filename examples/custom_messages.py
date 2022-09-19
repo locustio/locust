@@ -1,15 +1,17 @@
 from locust import HttpUser, task, events, between
-from locust.runners import MasterRunner, WorkerRunner
+from locust.runners import MasterRunner, WorkerRunner, CustomMessageListener
 
 usernames = []
 
 
+@CustomMessageListener
 def setup_test_users(environment, msg, **kwargs):
     # Fired when the worker receives a message of type 'test_users'
     usernames.extend(map(lambda u: u["name"], msg.data))
     environment.runner.send_message("acknowledge_users", f"Thanks for the {len(msg.data)} users!")
 
 
+@CustomMessageListener
 def on_acknowledge(msg, **kwargs):
     # Fired when the master receives a message of type 'acknowledge_users'
     print(msg.data)
