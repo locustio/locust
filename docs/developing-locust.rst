@@ -39,8 +39,8 @@ Then you can run the tests by just invoking tox in the Locust project root direc
 Format code
 ===========
 
-Locust follows the `black` formatting standard. So please adhere to it
-.. _block https://github.com/psf/black
+Locust follows the `black <https://github.com/psf/black>`_. formatting standard. So please adhere to it
+
 .. code-block:: console
 
     pip3 install black
