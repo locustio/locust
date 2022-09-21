@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.12.1
+======
+* Allow setting run time from the web UI & http api by @ajt89 in https://github.com/locustio/locust/pull/2202
+* Various fixes
+
 2.12.0
 ======
 * LoadTestShapes with custom user classes https://github.com/locustio/locust/pull/2181
