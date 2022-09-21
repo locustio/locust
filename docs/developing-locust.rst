@@ -36,6 +36,16 @@ Then you can run the tests by just invoking tox in the Locust project root direc
 
     tox
 
+Format code
+===========
+
+Locust follows the black formatting standard. So please adhere to it
+
+.. code-block:: console
+
+    pip3 install black
+    python -m black <file_to_be_formatted>
+
 
 Build documentation
 ===================
