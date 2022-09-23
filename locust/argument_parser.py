@@ -535,7 +535,7 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         "-V",
         action="version",
         help="Show program's version number and exit",
-        version=f"%(prog)s {version} from {os.path.dirname(os.path.dirname(__file__))} (python {platform.python_version()})",
+        version=f"%(prog)s {version} from {os.path.dirname(__file__)} (python {platform.python_version()})",
     )
     other_group.add_argument(
         "--exit-code-on-error",
