@@ -17,7 +17,7 @@ Validate your installation:
     :substitutions:
 
     $ locust -V
-    locust |version|
+    locust |version| from /usr/local/lib/python3.10/site-packages (python 3.10.6)
 
 Now it is time to :ref:`create your first test! <quickstart>`
 
