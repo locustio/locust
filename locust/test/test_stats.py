@@ -4,6 +4,7 @@ import unittest
 import re
 import os
 import json
+import datetime
 
 import gevent
 from unittest import mock
@@ -99,6 +100,13 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(self.s.total_rps, 9 / 5.0)
         self.assertAlmostEqual(s2.total_rps, 1 / 5.0)
         self.assertEqual(self.stats.total.total_rps, 10 / 5.0)
+        
+    def test_time(self):
+        time = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
+        if len(time) <=12:
+            pass
+        else:
+            assert False, "Timestamp is not within the length"
 
     def test_rps_less_than_one_second(self):
         s = StatsEntry(self.stats, "percentile_test", "GET")
