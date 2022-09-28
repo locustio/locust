@@ -135,11 +135,11 @@ class Runner:
         self._users_dispatcher: Optional[UsersDispatcher] = None
 
         # set up event listeners for recording requests
-        def on_request_success(request_type, name, response_time, response_length, **_kwargs):
-            self.stats.log_request(request_type, name, response_time, response_length)
+        def on_request_success(request_type, name, response_time, server_response_time, response_length, **_kwargs):
+            self.stats.log_request(request_type, name, response_time, server_response_time, response_length)
 
-        def on_request_failure(request_type, name, response_time, response_length, exception, **_kwargs):
-            self.stats.log_request(request_type, name, response_time, response_length)
+        def on_request_failure(request_type, name, response_time, server_response_time, response_length, exception, **_kwargs):
+            self.stats.log_request(request_type, name, response_time, server_response_time, response_length)
             self.stats.log_error(request_type, name, exception)
 
         # temporarily set log level to ignore warnings to suppress deprecation message
