@@ -17,6 +17,7 @@ To get started right away, head over to the [documentation](http://docs.locust.i
 #### Write user test scenarios in plain old Python
 
 If you want your users to loop, perform some conditional behaviour or do some calculations, you just use the regular programming constructs provided by Python. Locust runs every user inside its own greenlet (a lightweight process/coroutine). This enables you to write your tests like normal (blocking) Python code instead of having to use callbacks or some other mechanism. Because your scenarios are “just python” you can use your regular IDE, and version control your tests as regular code (as opposed to some other tools that use XML or binary formats)
+#### 1. Locust with HTTP methods Example
 
 ```python
 from locust import HttpUser, task, between
@@ -37,7 +38,50 @@ class QuickstartUser(HttpUser):
         for item_id in range(10):
             self.client.get(f"/item?id={item_id}", name="/item")
 ```
+#### 2. Locust with GraphQL Example
 
+```python
+import json
+
+from locust import HttpUser, task, between
+
+
+class QuickstartUser(HttpUser):
+    wait_time = between(1, 2)
+
+    def __init__(self):
+        self.headers = None
+
+    def on_start(self):
+        response = self.client.post("/login", json={"username":"foo", "password":"bar"})
+        access_token = json.loads(response._content.decode('utf-8'))['data']['AccessToken']
+        self.headers = {
+            "Authorization": f"JWT {access_token}",
+        }
+    
+    #Host Domain example http://127.0.0.1:8000/
+    #Query
+    @task(1)
+    def hello_world(self):
+        response = self.client.get("graphql?query={hello_world_string}",
+                                   headers=self.headers, name="/hello_world")
+    #Mutation
+    @task(3)
+    def post_item(self):
+        body = {
+                "query": "mutation PostItemMutation($arg: String!)"
+                         "{createItem(name: $arg)"
+                         "{name}}",
+                "operationName": "PostItemMutation",
+                "variables": {"arg": "github"}
+                 }
+
+        response = self.client.post(
+            "graphql/",
+            json=body,
+            headers=self.headers,
+            name="/post_item")
+```
 #### Distributed & Scalable - supports hundreds of thousands of users
 
 Locust makes it easy to run load tests distributed over multiple machines. It is event-based (using [gevent](http://www.gevent.org/)), which makes it possible for a single process to handle many thousands concurrent users. While there may be other tools that are capable of doing more requests per second on a given hardware, the low overhead of each Locust user makes it very suitable for testing highly concurrent workloads.
