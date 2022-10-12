@@ -27,7 +27,8 @@ from typing import (
     Tuple,
     Type,
     Any,
-    cast, Callable,
+    cast,
+    Callable,
 )
 from uuid import uuid4
 
