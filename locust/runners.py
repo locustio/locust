@@ -27,7 +27,7 @@ from typing import (
     Tuple,
     Type,
     Any,
-    cast,
+    cast, Callable,
 )
 from uuid import uuid4
 
@@ -124,7 +124,7 @@ class Runner:
         self.target_user_classes_count: Dict[str, int] = {}
         # target_user_count is set before the ramp-up/ramp-down occurs.
         self.target_user_count: int = 0
-        self.custom_messages: Dict[str, any] = {}
+        self.custom_messages: Dict[str, Callable] = {}
 
         self._users_dispatcher: Optional[UsersDispatcher] = None
 
@@ -426,7 +426,7 @@ class Runner:
         row["nodes"].add(node_id)
         self.exceptions[key] = row
 
-    def register_message(self, msg_type: str, listener) -> None:
+    def register_message(self, msg_type: str, listener: Callable) -> None:
         """
         Register a listener for a custom message from another node
 
