@@ -272,9 +272,13 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             logger.error("Credentials supplied with --web-auth should have the format: username:password")
             sys.exit(1)
     else:
-        if options.autostart:
-            logger.warning("Option --autostart is ignored for headless mode and worker process.")
         web_ui = None
+
+    if options.autostart and options.headless:
+        logger.warning("The --autostart argument is implied by --headless, no need to set both.")
+
+    if options.autostart and options.worker:
+        logger.warning("The --autostart argument has no meaning on a worker.")
 
     def assign_equal_weights(environment, **kwargs):
         environment.assign_equal_weights()
@@ -291,7 +295,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         main_greenlet = web_ui.greenlet
 
     def stop_and_optionally_quit():
-        if options.autostart:
+        if options.autostart and not options.headless:
             logger.info("--run-time limit reached, stopping test")
             runner.stop()
             if options.autoquit != -1:
@@ -450,7 +454,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         logger.info(f"Starting Locust {version}")
         if options.class_picker:
             logger.info("Locust is running with the UserClass Picker Enabled")
-        if options.autostart:
+        if options.autostart and not options.headless:
             start_automatic_run()
 
         main_greenlet.join()
