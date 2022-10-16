@@ -38,6 +38,18 @@ class QuickstartUser(HttpUser):
             self.client.get(f"/item?id={item_id}", name="/item")
 ```
 
+#### Deploy on local enviroment
+
+<h3>:construction: Working enviroment:</h3>
+<li>Create Python's enviroment: <b>py -m venv env</b></li> 
+<li>Activate the enviroment on WINDOWS: <b>env\Scripts\activate</b></li>
+<li>Activate the enviroment on MAC: <b>source env/bin/activate</b></li>
+<h3>:books: Dependencies</h3>
+<li>Install dependencies with: <b>pip3 install -r requirements.txt</b></li>
+<h3>:signal_strength: Load testing</h3>
+<li>Launch <b>locust -f scripts/locustfile.py</b></li>
+<li>Open <b>http://localhost:8089/</b> on your browser</li>
+
 #### Distributed & Scalable - supports hundreds of thousands of users
 
 Locust makes it easy to run load tests distributed over multiple machines. It is event-based (using [gevent](http://www.gevent.org/)), which makes it possible for a single process to handle many thousands concurrent users. While there may be other tools that are capable of doing more requests per second on a given hardware, the low overhead of each Locust user makes it very suitable for testing highly concurrent workloads.
@@ -55,18 +67,6 @@ Even though Locust primarily works with web sites/services, it can be used to te
 ## Hackable
 
 Locust's code base is intentionally kept small and doesn't solve everything out of the box. Instead, we try to make it easy to adapt to any situation you may come across, using regular Python code. If you want to [send reporting data to that database & graphing system you like](https://github.com/SvenskaSpel/locust-plugins/blob/master/locust_plugins/dashboards/README.md), [wrap calls to a REST API](https://github.com/SvenskaSpel/locust-plugins/blob/master/examples/rest_ex.py) to handle the particulars of your system or run a [totally custom load pattern](https://docs.locust.io/en/latest/custom-load-shape.html#custom-load-shape), there is nothing stopping you!
-
-## Deploy on local enviroment
-
-<h3>:construction: Working enviroment:</h3>
-<li>Create Python's enviroment: <b>py -m venv env</b></li> 
-<li>Activate the enviroment on WINDOWS: <b>env\Scripts\activate</b></li>
-<li>Activate the enviroment on MAC: <b>source env/bin/activate</b></li>
-<h3>:books: Dependencies</h3>
-<li>Install dependencies with: <b>pip3 install -r requirements.txt</b></li>
-<h3>:signal_strength: Load testing</h3>
-<li>Launch <b>locust -f scripts/locustfile.py</b></li>
-<li>Open <b>http://localhost:8089/</b> on your browser</li>
 
 ## Links
 
