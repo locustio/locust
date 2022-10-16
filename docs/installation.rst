@@ -3,9 +3,9 @@
 Installation
 ============
 
-0. *`Install Python <https://docs.python-guide.org/starting/installation/>`_* (3.7 or later)
+0. `Install Python <https://docs.python-guide.org/starting/installation/>`_ (3.7 or later)
 
-1. *Install Locust* (check `the wiki <https://github.com/locustio/locust/wiki/Installation>`_ if you have any problems)
+1. Install Locust (check `the wiki <https://github.com/locustio/locust/wiki/Installation>`_ if you have any problems)
 
 .. code-block:: console
 
