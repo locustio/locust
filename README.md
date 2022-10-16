@@ -40,13 +40,13 @@ class QuickstartUser(HttpUser):
 
 #### Deploy on local enviroment
 
-<h3>:construction: Work enviroment:</h3>
+<h4>:construction: Work enviroment:</h4>
 <li>Create Python's enviroment: <b>py -m venv env</b></li> 
 <li>Activate the enviroment on WINDOWS: <b>env\Scripts\activate</b></li>
 <li>Activate the enviroment on MAC: <b>source env/bin/activate</b></li>
-<h3>:books: Dependencies</h3>
+<h4>:books: Dependencies</h4>
 <li>Install dependencies with: <b>pip3 install -r requirements.txt</b></li>
-<h3>:signal_strength: Load testing</h3>
+<h4>:signal_strength: Load testing</h4>
 <li>Launch <b>locust -f scripts/locustfile.py</b></li>
 <li>Open <b>http://localhost:8089/</b> on your browser</li>
 
