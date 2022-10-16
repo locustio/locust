@@ -40,7 +40,7 @@ class QuickstartUser(HttpUser):
 
 #### Deploy on local enviroment
 
-<h3>:construction: Working enviroment:</h3>
+<h3>:construction: Work enviroment:</h3>
 <li>Create Python's enviroment: <b>py -m venv env</b></li> 
 <li>Activate the enviroment on WINDOWS: <b>env\Scripts\activate</b></li>
 <li>Activate the enviroment on MAC: <b>source env/bin/activate</b></li>
