@@ -67,6 +67,7 @@ Locust's code base is intentionally kept small and doesn't solve everything out 
 <h3>:signal_strength: Load testing</h3>
 <li>Launch <b>locust -f scripts/locustfile.py</b></li>
 <li>Open <b>http://localhost:8089/</b> on your browser</li>
+
 ## Links
 
 - Website: [locust.io](https://locust.io)
