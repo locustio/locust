@@ -56,21 +56,32 @@ Even though Locust primarily works with web sites/services, it can be used to te
 
 Locust's code base is intentionally kept small and doesn't solve everything out of the box. Instead, we try to make it easy to adapt to any situation you may come across, using regular Python code. If you want to [send reporting data to that database & graphing system you like](https://github.com/SvenskaSpel/locust-plugins/blob/master/locust_plugins/dashboards/README.md), [wrap calls to a REST API](https://github.com/SvenskaSpel/locust-plugins/blob/master/examples/rest_ex.py) to handle the particulars of your system or run a [totally custom load pattern](https://docs.locust.io/en/latest/custom-load-shape.html#custom-load-shape), there is nothing stopping you!
 
+## Deploy on local enviroment
+
+<h3>:construction: Working enviroment:</h3>
+<li>Create Python's enviroment: <b>py -m venv env</b></li> 
+<li>Activate the enviroment on WINDOWS: <b>env\Scripts\activate</b></li>
+<li>Activate the enviroment on MAC: <b>source env/bin/activate</b></li>
+<h3>:books: Dependencies</h3>
+<li>Install dependencies with: <b>pip3 install -r requirements.txt</b></li>
+<h3>:signal_strength: Load testing</h3>
+<li>Launch <b>locust -f scripts/locustfile.py</b></li>
+<li>Open <b>http://localhost:8089/</b> on your browser</li>
 ## Links
 
-* Website: [locust.io](https://locust.io)
-* Documentation: [docs.locust.io](https://docs.locust.io)
-* Support/Questions: [StackOverflow](https://stackoverflow.com/questions/tagged/locust)
-* Code/issues: [GitHub](https://github.com/locustio/locust)
-* Chat/discussion: [Slack signup](https://slack.locust.io/)
+- Website: [locust.io](https://locust.io)
+- Documentation: [docs.locust.io](https://docs.locust.io)
+- Support/Questions: [StackOverflow](https://stackoverflow.com/questions/tagged/locust)
+- Code/issues: [GitHub](https://github.com/locustio/locust)
+- Chat/discussion: [Slack signup](https://slack.locust.io/)
 
 ## Authors
 
-* [Carl Bystr](http://cgbystrom.com) ([@cgbystrom](https://twitter.com/cgbystrom) on Twitter)
-* [Jonatan Heyman](http://heyman.info) ([@jonatanheyman](https://twitter.com/jonatanheyman) on Twitter)
-* [Joakim Hamrén](https://github.com/Jahaja) ([@Jahaaja](https://twitter.com/Jahaaja) on Twitter)
-* [Hugo Heyman](https://github.com/HeyHugo) ([@hugoheyman](https://twitter.com/hugoheyman) on Twitter)
-* [Lars Holmberg](https://github.com/cyberw)
+- [Carl Bystr](http://cgbystrom.com) ([@cgbystrom](https://twitter.com/cgbystrom) on Twitter)
+- [Jonatan Heyman](http://heyman.info) ([@jonatanheyman](https://twitter.com/jonatanheyman) on Twitter)
+- [Joakim Hamrén](https://github.com/Jahaja) ([@Jahaaja](https://twitter.com/Jahaaja) on Twitter)
+- [Hugo Heyman](https://github.com/HeyHugo) ([@hugoheyman](https://twitter.com/hugoheyman) on Twitter)
+- [Lars Holmberg](https://github.com/cyberw)
 
 ## License
 
