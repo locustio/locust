@@ -234,6 +234,13 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             logger.error("Valid --run-time formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
             sys.exit(1)
 
+    if options.stop_timeout:
+        try:
+            options.stop_timeout = parse_timespan(options.stop_timeout)
+        except ValueError:
+            logger.error("Valid --stop-timeout formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
+            sys.exit(1)
+
     if options.csv_prefix:
         stats_csv_writer = StatsCSVFileWriter(
             environment, stats.PERCENTILES_TO_REPORT, options.csv_prefix, options.stats_history_enabled
