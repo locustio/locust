@@ -5,7 +5,36 @@ $(window).ready(function() {
     if($("#user_count").length > 0) {
         $("#user_count").focus().select();
     }
+
+    var checkList = document.getElementById('include_tags');
+    checkList.getElementsByClassName('anchor')[0].onclick = function (evt) {
+        if (checkList.classList.contains('visible'))
+            checkList.classList.remove('visible');
+        else
+            checkList.classList.add('visible');
+    }
+
+    checkList.appendChild(populateTestGroup());
 });
+
+function populateTestGroup() {
+    var testGroups = ["friend", "group", "blocklist", "profile", "presence"]
+    var list = document.createElement('ul');
+    list.className = "items";
+    list.id = "test_group_list";
+
+    testGroups.forEach(group => {
+        var item = document.createElement('li');
+        var checkbox = document.createElement('input');
+        checkbox.name = group;
+        checkbox.type = 'checkbox';
+        checkbox.checked = true;
+        item.appendChild(checkbox);
+        item.appendChild(document.createTextNode(group));
+        list.appendChild(item);
+    });
+    return list;
+}
 
 function appearStopped() {
     $(".box_stop").hide();

@@ -86,6 +86,12 @@
                         <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users started/second)</span></label>
                         <input type="text" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "1" }}" onfocus="this.select()"/><br>
                     {% endif %}
+                    <label for="include_tags">
+                        Include test groups
+                    </label>
+                    <div name="include_tags" id="include_tags" class="dropdown-check-list" tabindex="100">
+                        <span class="anchor">Test group</span>
+                    </div>
                     <label for="host">
                         Host <span style="color:#8a8a8a;">(e.g. http://www.example.com)</span>
                         {% if override_host_warning %}

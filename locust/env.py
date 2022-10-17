@@ -190,7 +190,7 @@ class Environment:
         )
         return self.web_ui
 
-    def _filter_tasks_by_tags(self) -> None:
+    def _filter_tasks_by_tags(self, included_tags) -> None:
         """
         Filter the tasks on all the user_classes recursively, according to the tags and
         exclude_tags attributes
@@ -200,7 +200,10 @@ class Environment:
         self._tasks_filtered = True
 
         if self.tags is not None:
-            tags = set(self.tags)
+            if len(included_tags) > 0:
+                tags = set(included_tags)
+            else:
+                tags = set(self.tags)
         elif self.parsed_options and self.parsed_options.tags:
             tags = set(self.parsed_options.tags)
         else:
