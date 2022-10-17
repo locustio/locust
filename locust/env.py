@@ -200,10 +200,9 @@ class Environment:
         self._tasks_filtered = True
 
         if self.tags is not None:
-            if len(included_tags) > 0:
-                tags = set(included_tags)
-            else:
-                tags = set(self.tags)
+            tags = set(self.tags)
+        elif len(included_tags) > 0:
+            tags = set(included_tags)
         elif self.parsed_options and self.parsed_options.tags:
             tags = set(self.parsed_options.tags)
         else:
