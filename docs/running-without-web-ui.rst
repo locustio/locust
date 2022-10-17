@@ -4,39 +4,49 @@
 Running without the web UI
 =================================
 
-You can run locust without the web UI - for example if you want to run it in some automated flow, 
-like a CI server - by using the ``--headless`` flag together with ``-u`` and ``-r``:
+You can run locust without the web UI by using the ``--headless`` flag together with ``-u/--users`` and ``-r/--spawn-rate``:
 
 .. code-block:: console
+    :substitutions:
 
-    $ locust -f locust_files/my_locust_file.py --headless -u 1000 -r 100
+    $ locust -f locust_files/my_locust_file.py --headless -u 100 -r 5
+    [2021-07-24 10:41:10,947] .../INFO/locust.main: No run time limit set, use CTRL+C to interrupt.
+    [2021-07-24 10:41:10,947] .../INFO/locust.main: Starting Locust |version|
+    [2021-07-24 10:41:10,949] .../INFO/locust.runners: Ramping to 100 users using a 5.00 spawn rate
+    Name              # reqs      # fails  |     Avg     Min     Max  Median  |   req/s failures/s
+    ----------------------------------------------------------------------------------------------
+    GET /hello             1     0(0.00%)  |     115     115     115     115  |    0.00    0.00
+    GET /world             1     0(0.00%)  |     119     119     119     119  |    0.00    0.00
+    ----------------------------------------------------------------------------------------------
+    Aggregated             2     0(0.00%)  |     117     115     119     117  |    0.00    0.00
+    (...)
+    [2021-07-24 10:44:42,484] .../INFO/locust.runners: All users spawned: {"HelloWorldUser": 100} (100 total users)
+    (...)
 
-``-u`` specifies the number of Users to spawn, and ``-r`` specifies the spawn rate
-(number of users to start per second).
-
-While the test is running you can change the user count manually, even after ramp up has finished. Pressing w to add 1 user or W to add 10. Press s to remove 1 or S to remove 10.
+Even in headless mode you can you can change the user count while the test is running. Press ``w`` to add 1 user or ``W`` to add 10. Press ``s`` to remove 1 or ``S`` to remove 10.
 
 Setting a time limit for the test
 ---------------------------------
 
-If you want to specify the run time for a test, you can do that with ``--run-time`` or ``-t``:
+If you want to specify the run time for a test, you can do that with ``-t/--run-time``:
 
 .. code-block:: console
 
-    $ locust -f --headless -u 1000 -r 100 --run-time 1h30m
+    $ locust -f --headless -u 100 --run-time 1h30m
+    $ locust -f --headless -u 100 --run-time 60 # default unit is seconds
 
-Locust will shutdown once the time is up.
+Locust will shut down once the time is up. Time is calculated from the start of the test (not from when ramp up has finished).
 
 
 Allow tasks to finish their iteration on shutdown
 -------------------------------------------------
 
 By default, locust will stop your tasks immediately (without even waiting for requests to finish). 
-If you want to allow your tasks to finish their iteration, you can use ``--stop-timeout <seconds>``.
+If you want to allow all running tasks to finish their iteration, you can use ``-s/--stop-timeout <seconds>``.
 
 .. code-block:: console
 
-    $ locust -f --headless -u 1000 -r 100 --run-time 1h30m --stop-timeout 99
+    $ locust --headless --run-time 1h30m --stop-timeout 10
 
 .. _running-distributed-without-web-ui:
 
@@ -53,10 +63,11 @@ nodes have connected before starting the test.
 Controlling the exit code of the Locust process
 -----------------------------------------------
 
-When running Locust in a CI environment, you might want to control the exit code of the Locust 
-process. You can do that in your test scripts by setting the 
-:py:attr:`process_exit_code <locust.env.Environment.process_exit_code>` of the 
-:py:class:`Environment <locust.env.Environment>` instance.
+By default the locust process will give an exit code of 1 if there were any failed samples 
+(use the ``--exit-code-on-error``to change that behaviour).
+
+You can also manually control the exit code in your test scripts by setting the :py:attr:`process_exit_code <locust.env.Environment.process_exit_code>` of the 
+:py:class:`Environment <locust.env.Environment>` instance. This is particularly useful when running Locust as an automated/scheduled test, for example as part of a CI pipeline.
 
 Below is an example that'll set the exit code to non zero if any of the following conditions are met:
 

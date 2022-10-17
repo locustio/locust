@@ -37,30 +37,37 @@ Once you've started Locust, open up a browser and point it to http://localhost:8
 |
 | Point the test to your own web server and try it out!
 
-The following screenshots show what it might look like when running this test targeting 40 concurrent users with a ramp up speed of 0.5 users/s, pointed it to a server that responds to ``/hello`` and ``/world``.
+The following screenshots show what it might look like when running this test using 40 concurrent users, with a ramp up rate of 0.5 users/s.
 
 .. image:: images/webui-running-statistics.png
 
-Locust can also visualize the results as charts, showing things like requests per second (RPS):
+|
+
+Under the *Charts* tab you'll find things like requests per second (RPS):
 
 .. image:: images/total_requests_per_second.png
+
+|
 
 Response times (in milliseconds):
 
 .. image:: images/response_times.png
 
+|
+
 Number of users:
 
 .. image:: images/number_of_users.png
+
+|
 
 .. note::
 
     Interpreting performance test results is quite complex (and mostly out of scope for this manual), but if your graphs start looking like this, the most likely reason is that your target service/system cannot handle the load you are hitting it with (it is overloaded or "saturated").
 
-    The clearest sign of this is that when we get to around 9 users, response times start increasing so fast that the requests per second-curve flattens out, even though new users are still being added.
+    The clearest sign of this is that when we get to around 9 users, response times start increasing so fast that the number of requests per second stops increasing, even though new users are still being added.
 
-    If you're having trouble generating enough load to saturate your system, or need some pointers on how to start digging into a server side problem have a look at the `Locust FAQ  <https://github.com/locustio/locust/wiki/FAQ#increase-my-request-raterps>`_.
-
+    If need some pointers on how to start digging into a server side problem, or you're having trouble generating enough load to saturate your system, have a look at the `Locust FAQ  <https://github.com/locustio/locust/wiki/FAQ#increase-my-request-raterps>`_.
 
 Direct command line usage / headless
 ====================================
@@ -86,94 +93,16 @@ Using the Locust web UI is entirely optional. You can supply the load parameters
 
 See :ref:`running-without-web-ui` for more details.
 
-
-Using multiple Locustfiles at once
-==================================
-
-The ``-f/--locustfile`` option accepts a single directory of locustfiles as an option. Locust will recursively
-search the directory for ``*.py`` files, ignoring files named ``locust.py`` or those that start with "_".
-
-Example:
-
-With the following file structure:
-
-.. code-block::
-
-    ├── locustfiles/
-    │   ├── locustfile1.py
-    │   ├── locustfile2.py
-    │   └── more_files/
-    │       ├── locustfile3.py
-    │       ├── locust.py
-    │       ├── _ignoreme.py
-
-.. code-block:: console
-
-    $ locust -f locustfiles
-
-Locust will use ``locustfile1.py``, ``locustfile2.py`` & ``more_files/locustfile3.py``
-
-Additionally, ``-f/--locustfile`` accepts multiple, comma-separated locustfiles.
-
-Example:
-
-.. code-block:: console
-
-    $ locust -f locustfiles/locustfile1.py,locustfiles/locustfile2.py,locustfiles/more_files/locustfile3.py
-
-Locust will use ``locustfile1.py``, ``locustfile2.py`` & ``more_files/locustfile3.py``
-
-.. _class-picker:
-
-Running Locust with User class UI picker
-========================================
-
-You can select which Shape class and which User classes to run in the WebUI when running locust with the ``--class-picker`` flag.
-No selection uses all of the available User classes.
-
-Example:
-
-With the following file structure:
-
-.. code-block::
-
-    ├── src/
-    │   ├── some_file.py
-    ├── locustfiles/
-    │   ├── locustfile1.py
-    │   ├── locustfile2.py
-    │   └── more_files/
-    │       ├── locustfile3.py
-    │       ├── locust.py
-    │       ├── _ignoreme.py
-    │   └── shape_classes/
-    │       ├── DoubleWaveShape.py
-    │       ├── StagesShape.py
-
-
-.. code-block:: console
-
-    $ locust -f locustfiles --class-picker
-
-The Web UI will display:
-
-.. image:: images/userclass_picker_example.png
-    :width: 200
-
-|
-
 More options
 ============
 
-To run Locust distributed across multiple Python processes or machines, you can start a single Locust master process
+To run Locust distributed across multiple Python processes or machines, you start a single Locust master process
 with the ``--master`` command line parameter, and then any number of Locust worker processes using the ``--worker``
 command line parameter. See :ref:`running-distributed` for more info.
 
-Parameters can also be set through :ref:`environment variables <environment-variables>`, or in a
-:ref:`config file <configuration-file>`.
-
 To see all available options type: ``locust --help`` or check :ref:`configuration`.
 
-|
+Next steps
+==========
 
 Now, let's have a more in-depth look at locustfiles and what they can do: :ref:`writing-a-locustfile`.

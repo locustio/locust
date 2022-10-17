@@ -5,7 +5,7 @@ Configuration
 
 
 Command Line Options
------------------------------
+--------------------
 
 Locust is configured mainly through command line arguments.
 
@@ -23,21 +23,27 @@ Locust is configured mainly through command line arguments.
 Environment Variables
 ---------------------
 
-Most of the options that can be set through command line arguments can also be set through 
-environment variables. Example:
+Options can also be set through through environment variables. They are typically the same as the command line argument but capitalized and prefixed with ``LOCUST_``:
+
+On Linux/macOS:
 
 .. code-block::
 
     $ LOCUST_LOCUSTFILE=custom_locustfile.py locust
 
+On Windows:
+
+.. code-block::
+
+    > set LOCUST_LOCUSTFILE=custom_locustfile.py
+    > locust
 
 .. _configuration-file:
 
 Configuration File
 ------------------
 
-Any of the options that can be set through command line arguments can also be set by a
-configuration file in the `config file <https://github.com/bw2/ConfigArgParse#config-file-syntax>`_
+Options can also be set in a configuration file in the `config file <https://github.com/bw2/ConfigArgParse#config-file-syntax>`_
 format. 
 
 Locust will look for ``~/.locust.conf`` and ``./locust.conf`` by default, and you can specify an 
@@ -76,6 +82,86 @@ All available configuration options
 Here's a table of all the available configuration options, and their corresponding Environment and config file keys:
 
 .. include:: config-options.rst
+
+Running without the web UI
+==========================
+
+See :ref:`running-without-web-ui`
+
+Using multiple Locustfiles at once
+==================================
+
+The ``-f/--locustfile`` option accepts a single directory of locustfiles as an option. Locust will recursively
+search the directory for ``*.py`` files, ignoring files named ``locust.py`` or those that start with "_".
+
+Example:
+
+With the following file structure:
+
+.. code-block::
+
+    ├── locustfiles/
+    │   ├── locustfile1.py
+    │   ├── locustfile2.py
+    │   └── more_files/
+    │       ├── locustfile3.py
+    │       ├── locust.py
+    │       ├── _ignoreme.py
+
+.. code-block:: console
+
+    $ locust -f locustfiles
+
+Locust will use ``locustfile1.py``, ``locustfile2.py`` & ``more_files/locustfile3.py``
+
+Additionally, ``-f/--locustfile`` accepts multiple, comma-separated locustfiles.
+
+Example:
+
+.. code-block:: console
+
+    $ locust -f locustfiles/locustfile1.py,locustfiles/locustfile2.py,locustfiles/more_files/locustfile3.py
+
+Locust will use ``locustfile1.py``, ``locustfile2.py`` & ``more_files/locustfile3.py``
+
+.. _class-picker:
+
+Running Locust with User class UI picker
+========================================
+
+You can select which Shape class and which User classes to run in the WebUI when running locust with the ``--class-picker`` flag.
+No selection uses all of the available User classes.
+
+Example:
+
+With the following file structure:
+
+.. code-block::
+
+    ├── src/
+    │   ├── some_file.py
+    ├── locustfiles/
+    │   ├── locustfile1.py
+    │   ├── locustfile2.py
+    │   └── more_files/
+    │       ├── locustfile3.py
+    │       ├── locust.py
+    │       ├── _ignoreme.py
+    │   └── shape_classes/
+    │       ├── DoubleWaveShape.py
+    │       ├── StagesShape.py
+
+
+.. code-block:: console
+
+    $ locust -f locustfiles --class-picker
+
+The Web UI will display:
+
+.. image:: images/userclass_picker_example.png
+    :width: 200
+
+|
 
 Custom arguments
 ----------------
