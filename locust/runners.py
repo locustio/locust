@@ -462,7 +462,7 @@ class LocalRunner(Runner):
 
         self.environment.events.user_error.add_listener(on_user_error)
 
-    def _start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: list = None) -> None:
+    def _start(self, user_count: int, spawn_rate: float, included_tags,  wait: bool = False, user_classes: list = None) -> None:
         """
         Start running a load test
 
@@ -481,7 +481,7 @@ class LocalRunner(Runner):
             self.exceptions = {}
             self.cpu_warning_emitted = False
             self.worker_cpu_warning_emitted = False
-            self.environment._filter_tasks_by_tags()
+            self.environment._filter_tasks_by_tags(included_tags)
             self.environment.events.test_start.fire(environment=self.environment)
 
         if wait and user_count - self.user_count > spawn_rate:
@@ -544,7 +544,7 @@ class LocalRunner(Runner):
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
 
     def start(
-        self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[List[Type[User]]] = None
+        self, user_count: int, spawn_rate: float, included_tags, wait: bool = False, user_classes: Optional[List[Type[User]]] = None
     ) -> None:
         if spawn_rate > 100:
             logger.warning(
@@ -555,7 +555,7 @@ class LocalRunner(Runner):
             # kill existing spawning_greenlet before we start a new one
             self.spawning_greenlet.kill(block=True)
         self.spawning_greenlet = self.greenlet.spawn(
-            lambda: self._start(user_count, spawn_rate, wait=wait, user_classes=user_classes)
+            lambda: self._start(user_count, spawn_rate, included_tags, wait=wait, user_classes=user_classes)
         )
         self.spawning_greenlet.link_exception(greenlet_exception_handler)
 

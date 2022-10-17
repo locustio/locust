@@ -186,6 +186,7 @@ class WebUI:
 
             parsed_options_dict = vars(environment.parsed_options) if environment.parsed_options else {}
             run_time = None
+            included_tags = []
             for key, value in request.form.items():
                 if key == "user_count":  # if we just renamed this field to "users" we wouldn't need this
                     user_count = int(value)
@@ -194,6 +195,8 @@ class WebUI:
                 elif key == "host":
                     # Replace < > to guard against XSS
                     environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
+                elif value == 'on':
+                    included_tags.append(key)
                 elif key == "user_classes":
                     # Set environment.parsed_options.user_classes to the selected user_classes
                     parsed_options_dict[key] = request.form.getlist("user_classes")
@@ -222,7 +225,7 @@ class WebUI:
                 self._swarm_greenlet = None
 
             if environment.runner is not None:
-                self._swarm_greenlet = gevent.spawn(environment.runner.start, user_count, spawn_rate)
+                self._swarm_greenlet = gevent.spawn(environment.runner.start, user_count, spawn_rate, included_tags)
                 self._swarm_greenlet.link_exception(greenlet_exception_handler)
                 response_data = {
                     "success": True,
