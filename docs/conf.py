@@ -34,7 +34,7 @@ def save_locust_env_variables():
     setup_parser_arguments(parser)
     table_data = []
     for action in parser._actions:
-        if action.env_var:
+        if action.env_var and action.help != "==SUPPRESS==":
             table_data.append(
                 (
                     ", ".join([f"``{c}``" for c in action.option_strings]),
