@@ -144,6 +144,9 @@ Web UI class
 Other
 =====
 
+.. autoclass:: locust.shape.LoadTestShape
+    :members:
+
 .. autoclass:: locust.stats.RequestStats
     :members: get
 
