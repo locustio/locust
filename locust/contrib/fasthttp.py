@@ -313,6 +313,9 @@ class FastHttpUser(User):
     insecure: bool = True
     """Parameter passed to FastHttpSession. Default True, meaning no SSL verification."""
 
+    default_headers: Optional[dict] = None
+    """Parameter passed to FastHttpSession. Adds the listed headers to every request."""
+
     concurrency: int = 10
     """Parameter passed to FastHttpSession. Describes number of concurrent requests allowed by the FastHttpSession. Default 10.
     Note that setting this value has no effect when custom client_pool was given, and you need to spawn a your own gevent pool
@@ -348,6 +351,7 @@ class FastHttpUser(User):
             user=self,
             client_pool=self.client_pool,
             ssl_context_factory=self.ssl_context_factory,
+            headers=self.default_headers,
         )
         """
         Instance of HttpSession that is created upon instantiation of User.
