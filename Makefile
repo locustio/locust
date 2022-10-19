@@ -21,3 +21,9 @@ sass_watch:
 
 sass_build:
 	sass --update locust/static/sass:locust/static/css
+
+push_%:
+	docker build -f Dockerfile . -t t2gp/locust
+	aws ecr get-login-password --region us-east-1 --profile $* | docker login --username AWS --password-stdin 354767525209.dkr.ecr.us-east-1.amazonaws.com
+	docker tag locustio/locust:latest 354767525209.dkr.ecr.us-east-1.amazonaws.com/locustio/locust:latest
+	docker push 354767525209.dkr.ecr.us-east-1.amazonaws.com/locustio/locust:latest
