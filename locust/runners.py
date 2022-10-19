@@ -462,7 +462,7 @@ class LocalRunner(Runner):
 
         self.environment.events.user_error.add_listener(on_user_error)
 
-    def _start(self, user_count: int, spawn_rate: float, included_tags,  wait: bool = False, user_classes: list = None) -> None:
+    def _start(self, user_count: int, spawn_rate: float, included_tags, wait: bool = False, user_classes: list = None) -> None:
         """
         Start running a load test
 
@@ -481,7 +481,8 @@ class LocalRunner(Runner):
             self.exceptions = {}
             self.cpu_warning_emitted = False
             self.worker_cpu_warning_emitted = False
-            self.environment._filter_tasks_by_tags(included_tags)
+            self.environment.parsed_options.tags = included_tags
+            self.environment._filter_tasks_by_tags()
             self.environment.events.test_start.fire(environment=self.environment)
 
         if wait and user_count - self.user_count > spawn_rate:
@@ -735,7 +736,7 @@ class MasterRunner(DistributedRunner):
         return warning_emitted
 
     def start(
-        self, user_count: int, spawn_rate: float, wait=False, user_classes: Optional[List[Type[User]]] = None
+        self, user_count: int, spawn_rate: float, included_tags, wait=False, user_classes: Optional[List[Type[User]]] = None
     ) -> None:
         self.spawning_completed = False
 
@@ -771,6 +772,7 @@ class MasterRunner(DistributedRunner):
         if self.state != STATE_RUNNING and self.state != STATE_SPAWNING:
             self.stats.clear_all()
             self.exceptions = {}
+            self.environment.parsed_options.tags = included_tags
             self.environment._filter_tasks_by_tags()
             self.environment.events.test_start.fire(environment=self.environment)
             if self.environment.shape_class:
