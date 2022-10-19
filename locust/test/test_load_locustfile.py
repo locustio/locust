@@ -65,7 +65,8 @@ class TestLoadLocustfile(LocustTestCase):
         content = (
             MOCK_LOCUSTFILE_CONTENT
             + """class LoadTestShape(LoadTestShape):
-    pass
+                def tick(self):
+                    return None
         """
         )
         with mock_locustfile(content=content) as mocked:
