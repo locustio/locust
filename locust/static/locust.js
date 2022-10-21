@@ -78,7 +78,8 @@ var workers_tpl = $('#worker-template');
 
 function setHostName(hostname) {
     hostname = hostname || "";
-    $('#host_url').text(hostname);
+    $('#host_url_link').attr("href",hostname);
+    document.getElementById("host_url_link").innerHTML = hostname;
 }
 
 $('#swarm_form').submit(function(event) {
