@@ -1,4 +1,3 @@
-import argparse
 import os
 import platform
 import sys
@@ -133,8 +132,8 @@ def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG
         add_env_var_help=False,
         add_config_file_help=False,
         add_help=add_help,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        usage=argparse.SUPPRESS,
+        formatter_class=configargparse.RawDescriptionHelpFormatter,
+        usage=configargparse.SUPPRESS,
         description=textwrap.dedent(
             """
             Usage: locust [OPTIONS] [UserClass ...]
