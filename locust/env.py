@@ -77,8 +77,6 @@ class Environment:
         self.host = host
         """Base URL of the target system"""
         self.reset_stats = reset_stats
-        """Determines if stats should be reset once all simulated users have been spawned"""
-        self.stop_timeout = stop_timeout
         """
         If set, the runner will try to stop the running users gracefully and wait this many seconds
         before killing them hard.

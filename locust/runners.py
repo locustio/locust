@@ -287,7 +287,7 @@ class Runner:
                 if user_to_stop.greenlet is greenlet.getcurrent():
                     # User called runner.quit(), so don't block waiting for killing to finish
                     user_to_stop.group.killone(user_to_stop.greenlet, block=False)
-                elif self.environment.stop_timeout:
+                elif self.environment.parsed_options.stop_timeout:
                     async_calls_to_stop.add(gevent.spawn_later(0, user_to_stop.stop, force=False))
                     stop_group.add(user_to_stop.greenlet)
                 else:
@@ -297,10 +297,10 @@ class Runner:
 
         async_calls_to_stop.join()
 
-        if not stop_group.join(timeout=self.environment.stop_timeout):
+        if not stop_group.join(timeout=self.environment.parsed_options.stop_timeout):
             logger.info(
                 "Not all users finished their tasks & terminated in %s seconds. Stopping them..."
-                % self.environment.stop_timeout
+                % self.environment.parsed_options.stop_timeout
             )
             stop_group.kill(block=True)
 
