@@ -281,7 +281,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "0",
                     # just to test --stop-timeout argument parsing, doesnt actually validate its function:
                     "--stop-timeout",
-                    "3s",  
+                    "3s",
                 ],
                 stderr=subprocess.STDOUT,
                 timeout=3,
