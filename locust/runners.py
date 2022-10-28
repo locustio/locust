@@ -891,7 +891,7 @@ class MasterRunner(DistributedRunner):
                     self.server.send_to_client(Message("stop", None, client.id))
 
                 # Give an additional 60s for all workers to stop
-                timeout = gevent.Timeout(self.environment.stop_timeout or 0 + 60)
+                timeout = gevent.Timeout(self.environment.stop_timeout + 60)
                 timeout.start()
                 try:
                     while self.user_count != 0:
