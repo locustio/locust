@@ -287,7 +287,7 @@ class Runner:
                 if user_to_stop.greenlet is greenlet.getcurrent():
                     # User called runner.quit(), so don't block waiting for killing to finish
                     user_to_stop.group.killone(user_to_stop.greenlet, block=False)
-                elif self.environment.parsed_options.stop_timeout:
+                elif self.environment.stop_timeout:
                     async_calls_to_stop.add(gevent.spawn_later(0, user_to_stop.stop, force=False))
                     stop_group.add(user_to_stop.greenlet)
                 else:
@@ -297,10 +297,10 @@ class Runner:
 
         async_calls_to_stop.join()
 
-        if not stop_group.join(timeout=self.environment.parsed_options.stop_timeout):
+        if not stop_group.join(timeout=self.environment.stop_timeout):
             logger.info(
                 "Not all users finished their tasks & terminated in %s seconds. Stopping them..."
-                % self.environment.parsed_options.stop_timeout
+                % self.environment.stop_timeout
             )
             stop_group.kill(block=True)
 
@@ -1296,7 +1296,7 @@ class WorkerRunner(DistributedRunner):
                     )
                     continue
                 self.environment.host = job["host"]
-                self.environment.stop_timeout = job["stop_timeout"]
+                self.environment.stop_timeout = job["stop_timeout"] or 0.0
 
                 # receive custom arguments
                 if self.environment.parsed_options is None:
@@ -1334,7 +1334,7 @@ class WorkerRunner(DistributedRunner):
                 # +additional_wait is just a small buffer to account for the random network latencies and/or other
                 # random delays inherent to distributed systems.
                 additional_wait = int(os.getenv("LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP", 0))
-                gevent.sleep((self.environment.stop_timeout or 0) + additional_wait)
+                gevent.sleep(self.environment.stop_timeout + additional_wait)
                 self.client.send(Message("client_ready", __version__, self.client_id))
                 self.worker_state = STATE_INIT
             elif msg.type == "quit":

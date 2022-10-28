@@ -44,7 +44,6 @@ def create_environment(
         events=events,
         host=options.host,
         reset_stats=options.reset_stats,
-        stop_timeout=options.stop_timeout,
         parsed_options=options,
         available_user_classes=available_user_classes,
         available_shape_classes=available_shape_classes,
