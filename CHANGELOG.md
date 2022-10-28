@@ -1,6 +1,41 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.13.0](https://github.com/locustio/locust/tree/2.13.0) (2022-10-28)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.12.2...2.13.0)
+
+**Fixed bugs:**
+
+- `LoadTestShape` not included in the API docs [\#2232](https://github.com/locustio/locust/issues/2232)
+- ImportError: cannot import name 'OrderedDict' from 'typing' [\#2223](https://github.com/locustio/locust/issues/2223)
+
+**Merged pull requests:**
+
+- Fix issue with --stop timeout parsing time strings [\#2239](https://github.com/locustio/locust/pull/2239) ([cyberw](https://github.com/cyberw))
+- Make LoadTestShape a proper abstract class [\#2233](https://github.com/locustio/locust/pull/2233) ([cyberw](https://github.com/cyberw))
+- Add the ability to set default\_headers on FastHttpUser [\#2231](https://github.com/locustio/locust/pull/2231) ([cyberw](https://github.com/cyberw))
+- URL link on the host name for fast navigation to the API [\#2228](https://github.com/locustio/locust/pull/2228) ([JonanOribe](https://github.com/JonanOribe))
+
+## [2.12.2](https://github.com/locustio/locust/tree/2.12.2) (2022-10-14)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.12.1...2.12.2)
+
+**Fixed bugs:**
+
+- Class picker incorrectly populates Parsed Options [\#2192](https://github.com/locustio/locust/issues/2192)
+
+**Closed issues:**
+
+- Run time input for web-ui [\#2198](https://github.com/locustio/locust/issues/2198)
+
+**Merged pull requests:**
+
+- Run unit tests on Python 3.11 \(and explicitly support it\) [\#2225](https://github.com/locustio/locust/pull/2225) ([cyberw](https://github.com/cyberw))
+- Fix exception when someone sets both --headless and --autostart [\#2224](https://github.com/locustio/locust/pull/2224) ([cyberw](https://github.com/cyberw))
+- Delete the `CustomMessageListener` class for type consistency [\#2221](https://github.com/locustio/locust/pull/2221) ([samuelspagl](https://github.com/samuelspagl))
+- Output install location and version info when called with -V  [\#2213](https://github.com/locustio/locust/pull/2213) ([cyberw](https://github.com/cyberw))
+
 ## [2.12.1](https://github.com/locustio/locust/tree/2.12.1) (2022-09-21)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.12.0...2.12.1)

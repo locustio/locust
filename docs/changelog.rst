@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.13.0
+======
+* Add the ability to set default_headers on FastHttpUser by @cyberw in https://github.com/locustio/locust/pull/2231
+* Web UI: URL link on the host name for easy navigation by @JonanOribe in https://github.com/locustio/locust/pull/2228
+* Add support for time strings for --stop timeout (e.g. "5m30s") @cyberw in https://github.com/locustio/locust/pull/2239
+
 2.12.1
 ======
 * Allow setting run time from the web UI & http api by @ajt89 in https://github.com/locustio/locust/pull/2202
