@@ -88,7 +88,7 @@ class TestArgumentParser(LocustTestCase):
         self.assertEqual(10, options.spawn_rate)
         self.assertEqual("5m", options.run_time)
         self.assertTrue(options.reset_stats)
-        self.assertEqual(5, options.stop_timeout)
+        self.assertEqual("5", options.stop_timeout)
         self.assertEqual(["MyUserClass"], options.user_classes)
         # check default arg
         self.assertEqual(8089, options.web_port)
