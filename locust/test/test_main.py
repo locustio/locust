@@ -265,7 +265,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
     def test_default_headless_spawn_options(self):
         with mock_locustfile() as mocked:
-            output = subprocess.check_output(
+            proc = subprocess.Popen(
                 [
                     "locust",
                     "-f",
@@ -281,13 +281,16 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "0",
                     # just to test --stop-timeout argument parsing, doesnt actually validate its function:
                     "--stop-timeout",
-                    "3s",
+                    "1s",
                 ],
-                stderr=subprocess.STDOUT,
-                timeout=3,
+                stdout=PIPE,
+                stderr=PIPE,
                 text=True,
-            ).strip()
-            self.assertIn('Spawning additional {"UserSubclass": 1} ({"UserSubclass": 0} already running)...', output)
+            )
+            stdout, stderr = proc.communicate(timeout=4)
+            self.assertNotIn("Traceback", stderr)
+            self.assertIn('Spawning additional {"UserSubclass": 1} ({"UserSubclass": 0} already running)...', stderr)
+            self.assertEqual(0, proc.returncode)
 
     def test_headless_spawn_options_wo_run_time(self):
         with mock_locustfile() as mocked:
