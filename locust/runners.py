@@ -891,7 +891,7 @@ class MasterRunner(DistributedRunner):
                     self.server.send_to_client(Message("stop", None, client.id))
 
                 # Give an additional 60s for all workers to stop
-                timeout = gevent.Timeout(self.environment.stop_timeout or 0 + 60)
+                timeout = gevent.Timeout(self.environment.stop_timeout + 60)
                 timeout.start()
                 try:
                     while self.user_count != 0:
@@ -1296,7 +1296,7 @@ class WorkerRunner(DistributedRunner):
                     )
                     continue
                 self.environment.host = job["host"]
-                self.environment.stop_timeout = job["stop_timeout"]
+                self.environment.stop_timeout = job["stop_timeout"] or 0.0
 
                 # receive custom arguments
                 if self.environment.parsed_options is None:
@@ -1334,7 +1334,7 @@ class WorkerRunner(DistributedRunner):
                 # +additional_wait is just a small buffer to account for the random network latencies and/or other
                 # random delays inherent to distributed systems.
                 additional_wait = int(os.getenv("LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP", 0))
-                gevent.sleep((self.environment.stop_timeout or 0) + additional_wait)
+                gevent.sleep(self.environment.stop_timeout + additional_wait)
                 self.client.send(Message("client_ready", __version__, self.client_id))
                 self.worker_state = STATE_INIT
             elif msg.type == "quit":

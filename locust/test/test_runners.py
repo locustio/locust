@@ -107,7 +107,7 @@ class mocked_options:
         self.master_bind_port = 5557
         self.heartbeat_liveness = 3
         self.heartbeat_interval = 1
-        self.stop_timeout = None
+        self.stop_timeout = 0.0
         self.connection_broken = False
 
     def reset_stats(self):
@@ -631,8 +631,7 @@ class TestLocustRunner(LocustRunnerTestCase):
             def my_task(self):
                 gevent.sleep(600)
 
-        stop_timeout = 0
-        env = Environment(user_classes=[TestUser1, TestUser2], stop_timeout=stop_timeout)
+        env = Environment(user_classes=[TestUser1, TestUser2])
         local_runner = env.create_local_runner()
         web_ui = env.create_web_ui("127.0.0.1", 0)
 
@@ -778,7 +777,7 @@ class TestLocustRunner(LocustRunnerTestCase):
             def my_task(self):
                 pass
 
-        env = Environment(user_classes=[MyUser1], stop_timeout=0)
+        env = Environment(user_classes=[MyUser1])
         local_runner = env.create_local_runner()
         web_ui = env.create_web_ui("127.0.0.1", 0)
 
@@ -1731,8 +1730,8 @@ class TestMasterWorkerRunners(LocustTestCase):
             "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
             str(locust_worker_additional_wait_before_ready_after_stop),
         ):
-            stop_timeout = 0
-            master_env = Environment(user_classes=[TestUser1], shape_class=TestShape(), stop_timeout=stop_timeout)
+            master_env = Environment(user_classes=[TestUser1], shape_class=TestShape())
+
             master_env.shape_class.reset_time()
             master = master_env.create_master_runner("*", 0)
 
@@ -1798,8 +1797,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                 gevent.sleep(600)
 
         with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
-            stop_timeout = 0
-            master_env = Environment(user_classes=[TestUser1, TestUser2], stop_timeout=stop_timeout)
+            master_env = Environment(user_classes=[TestUser1, TestUser2])
             master = master_env.create_master_runner("*", 0)
             web_ui = master_env.create_web_ui("127.0.0.1", 0)
 
@@ -3118,9 +3116,7 @@ class TestWorkerRunner(LocustTestCase):
                 MyTestUser._test_state = 2
 
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
-            worker = self.get_runner(
-                environment=Environment(stop_timeout=None), user_classes=[MyTestUser], client=client
-            )
+            worker = self.get_runner(environment=Environment(), user_classes=[MyTestUser], client=client)
             self.assertEqual(1, len(client.outbox))
             self.assertEqual("client_ready", client.outbox[0].type)
             client.mocked_send(
@@ -3891,8 +3887,9 @@ class TestStopTimeout(LocustTestCase):
             tasks = [MySubTaskSet]
             wait_time = constant(3)
 
-        environment = create_environment([MyTestUser], mocked_options())
-        environment.stop_timeout = 0.3
+        options = mocked_options()
+        options.stop_timeout = 0.3
+        environment = create_environment([MyTestUser], options)
         runner = environment.create_local_runner()
         runner.start(1, 1, wait=True)
         gevent.sleep(0)

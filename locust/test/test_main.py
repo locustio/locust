@@ -265,7 +265,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
     def test_default_headless_spawn_options(self):
         with mock_locustfile() as mocked:
-            output = subprocess.check_output(
+            proc = subprocess.Popen(
                 [
                     "locust",
                     "-f",
@@ -279,12 +279,38 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "DEBUG",
                     "--exit-code-on-error",
                     "0",
+                    # just to test --stop-timeout argument parsing, doesnt actually validate its function:
+                    "--stop-timeout",
+                    "1s",
                 ],
-                stderr=subprocess.STDOUT,
-                timeout=3,
+                stdout=PIPE,
+                stderr=PIPE,
                 text=True,
-            ).strip()
-            self.assertIn('Spawning additional {"UserSubclass": 1} ({"UserSubclass": 0} already running)...', output)
+            )
+            stdout, stderr = proc.communicate(timeout=4)
+            self.assertNotIn("Traceback", stderr)
+            self.assertIn('Spawning additional {"UserSubclass": 1} ({"UserSubclass": 0} already running)...', stderr)
+            self.assertEqual(0, proc.returncode)
+
+    def test_invalid_stop_timeout_string(self):
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--host",
+                    "https://test.com/",
+                    "--stop-timeout",
+                    "asdf1",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate()
+            self.assertIn("ERROR/locust.main: Valid --stop-timeout formats are", stderr)
+            self.assertEqual(1, proc.returncode)
 
     def test_headless_spawn_options_wo_run_time(self):
         with mock_locustfile() as mocked:

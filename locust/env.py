@@ -78,7 +78,12 @@ class Environment:
         """Base URL of the target system"""
         self.reset_stats = reset_stats
         """Determines if stats should be reset once all simulated users have been spawned"""
-        self.stop_timeout = stop_timeout
+        if stop_timeout is not None:
+            self.stop_timeout = stop_timeout
+        elif parsed_options:
+            self.stop_timeout = float(parsed_options.stop_timeout)
+        else:
+            self.stop_timeout = 0.0
         """
         If set, the runner will try to stop the running users gracefully and wait this many seconds
         before killing them hard.

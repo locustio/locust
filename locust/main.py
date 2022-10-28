@@ -44,7 +44,6 @@ def create_environment(
         events=events,
         host=options.host,
         reset_stats=options.reset_stats,
-        stop_timeout=options.stop_timeout,
         parsed_options=options,
         available_user_classes=available_user_classes,
         available_shape_classes=available_shape_classes,
@@ -128,6 +127,13 @@ def main():
 
     logger = logging.getLogger(__name__)
     greenlet_exception_handler = greenlet_exception_logger(logger)
+
+    if options.stop_timeout:
+        try:
+            options.stop_timeout = parse_timespan(options.stop_timeout)
+        except ValueError:
+            logger.error("Valid --stop-timeout formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
+            sys.exit(1)
 
     if options.list_commands:
         print("Available Users:")
@@ -232,13 +238,6 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             options.run_time = parse_timespan(options.run_time)
         except ValueError:
             logger.error("Valid --run-time formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
-            sys.exit(1)
-
-    if options.stop_timeout:
-        try:
-            options.stop_timeout = parse_timespan(options.stop_timeout)
-        except ValueError:
-            logger.error("Valid --stop-timeout formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
             sys.exit(1)
 
     if options.csv_prefix:
