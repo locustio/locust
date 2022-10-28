@@ -292,6 +292,26 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn('Spawning additional {"UserSubclass": 1} ({"UserSubclass": 0} already running)...', stderr)
             self.assertEqual(0, proc.returncode)
 
+    def test_invalid_stop_timeout_string(self):
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--host",
+                    "https://test.com/",
+                    "--stop-timeout",
+                    "asdf1",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate()
+            self.assertIn("ERROR/locust.main: Valid --stop-timeout formats are", stderr)
+            self.assertEqual(1, proc.returncode)
+
     def test_headless_spawn_options_wo_run_time(self):
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
