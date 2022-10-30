@@ -149,7 +149,7 @@ class FastHttpSession:
         stream: bool = False,
         headers: dict | None = None,
         auth=None,
-        json: dict | None = None,  #  pylint: disable=redefined-outer-name
+        json: dict | None = None,
         allow_redirects=True,
         context: dict = {},
         **kwargs,
