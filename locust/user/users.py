@@ -27,7 +27,7 @@ class UserMeta(type):
     ratio using an {task:int} dict, or a [(task0,int), ..., (taskN,int)] list.
     """
 
-    def __new__(mcs, classname, bases, class_dict):
+    def __new__(cls, classname, bases, class_dict):
         # gather any tasks that is declared on the class (or it's bases)
         tasks = get_tasks_from_base_classes(bases, class_dict)
         class_dict["tasks"] = tasks
@@ -38,7 +38,7 @@ class UserMeta(type):
 
         deprecation.check_for_deprecated_task_set_attribute(class_dict)
 
-        return type.__new__(mcs, classname, bases, class_dict)
+        return type.__new__(cls, classname, bases, class_dict)
 
 
 class User(metaclass=UserMeta):

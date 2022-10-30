@@ -7,7 +7,7 @@ from base64 import b64encode
 from urllib.parse import urlparse, urlunparse
 from ssl import SSLError
 import time
-from typing import Callable, Optional, Tuple, Dict, Any
+from typing import Callable, Optional
 
 from http.cookiejar import CookieJar
 
@@ -149,7 +149,7 @@ class FastHttpSession:
         stream: bool = False,
         headers: dict | None = None,
         auth=None,
-        json: dict | None = None,
+        json: dict | None = None,  #  pylint: disable=redefined-outer-name
         allow_redirects=True,
         context: dict = {},
         **kwargs,
@@ -429,7 +429,7 @@ class FastResponse(CompatResponse):
         We override status_code in order to return None if no valid response was
         returned. E.g. in the case of connection errors
         """
-        return self._response is not None and self._response.get_code() or 0
+        return self._response.get_code() if self._response is not None else 0
 
     def _content(self):
         if self.headers is None:

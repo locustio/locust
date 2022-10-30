@@ -1,4 +1,3 @@
-import logging
 from locust.exception import LocustError
 from .task import TaskSet, TaskSetMeta
 
@@ -12,7 +11,7 @@ class SequentialTaskSetMeta(TaskSetMeta):
     (See https://www.python.org/dev/peps/pep-0520/)
     """
 
-    def __new__(mcs, classname, bases, class_dict):
+    def __new__(cls, classname, bases, class_dict):
         new_tasks = []
         for base in bases:
             # first get tasks from base classes
@@ -33,7 +32,7 @@ class SequentialTaskSetMeta(TaskSetMeta):
                     new_tasks.append(value)
 
         class_dict["tasks"] = new_tasks
-        return type.__new__(mcs, classname, bases, class_dict)
+        return type.__new__(cls, classname, bases, class_dict)
 
 
 class SequentialTaskSet(TaskSet, metaclass=SequentialTaskSetMeta):
