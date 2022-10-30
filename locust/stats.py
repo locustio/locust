@@ -840,7 +840,7 @@ def get_percentile_stats_summary(stats: RequestStats) -> List[str]:
 
 
 def print_error_report(stats: RequestStats) -> None:
-    if stats.errors:
+    if len(stats.errors):
         for line in get_error_report_summary(stats):
             console_logger.info(line)
 
