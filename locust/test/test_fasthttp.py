@@ -129,7 +129,7 @@ class TestFastHttpSession(WebserverTestCase):
         r = s.post("/request_method", json={"foo": "bar"})
         self.assertEqual(200, r.status_code)
         self.assertEqual(r.request.body, '{"foo": "bar"}')
-        self.assertEqual(r.request.headers.get("Content-Type", None), "application/json")
+        self.assertEqual(r.request.headers.get("Content-Type"), "application/json")
 
     def test_catch_response_fail_successful_request(self):
         s = self.get_client()
@@ -375,8 +375,8 @@ class TestFastHttpUserClass(WebserverTestCase):
         locust = MyUser(self.environment)
         r = locust.client.get("/request_header_test", headers={"X-Header-Test": "hello"})
         self.assertEqual("hello", r.text)
-        self.assertEqual("hello", r.headers.get("X-Header-Test", None))
-        self.assertEqual("hello", r.request.headers.get("X-Header-Test", None))
+        self.assertEqual("hello", r.headers.get("X-Header-Test"))
+        self.assertEqual("hello", r.request.headers.get("X-Header-Test"))
 
     def test_client_get(self):
         class MyUser(FastHttpUser):
