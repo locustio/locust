@@ -270,7 +270,9 @@ class RequestStats:
         self.history = []
 
     def serialize_stats(self) -> List["StatsEntryDict"]:
-        return [e.get_stripped_report() for e in self.entries.values() if not (e.num_requests == 0 and e.num_failures == 0)]
+        return [
+            e.get_stripped_report() for e in self.entries.values() if not (e.num_requests == 0 and e.num_failures == 0)
+        ]
 
     def serialize_errors(self) -> Dict[str, "StatsErrorDict"]:
         return {k: e.serialize() for k, e in self.errors.items()}
