@@ -271,9 +271,7 @@ class RequestStats:
 
     def serialize_stats(self) -> List["StatsEntryDict"]:
         return [
-            self.entries[key].get_stripped_report()
-            for key in self.entries.keys()
-            if not (self.entries[key].num_requests == 0 and self.entries[key].num_failures == 0)
+            e.get_stripped_report() for e in self.entries.values() if not (e.num_requests == 0 and e.num_failures == 0)
         ]
 
     def serialize_errors(self) -> Dict[str, "StatsErrorDict"]:
@@ -844,10 +842,9 @@ def get_percentile_stats_summary(stats: RequestStats) -> List[str]:
 
 
 def print_error_report(stats: RequestStats) -> None:
-    if not len(stats.errors):
-        return
-    for line in get_error_report_summary(stats):
-        console_logger.info(line)
+    if stats.errors:
+        for line in get_error_report_summary(stats):
+            console_logger.info(line)
 
 
 def get_error_report_summary(stats) -> List[str]:

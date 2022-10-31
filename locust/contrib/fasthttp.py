@@ -127,13 +127,12 @@ class FastHttpSession:
             if hasattr(e, "response"):
                 r = e.response
             else:
-                safe_kwargs = kwargs or {}
                 req = self.client._make_request(
                     url,
                     method=method,
-                    headers=safe_kwargs.get("headers", None),
-                    payload=safe_kwargs.get("payload", None),
-                    params=safe_kwargs.get("params", None),
+                    headers=kwargs.get("headers"),
+                    payload=kwargs.get("payload"),
+                    params=kwargs.get("params"),
                 )
                 r = ErrorResponse(url=url, request=req)
             r.error = e
@@ -429,7 +428,7 @@ class FastResponse(CompatResponse):
         We override status_code in order to return None if no valid response was
         returned. E.g. in the case of connection errors
         """
-        return self._response is not None and self._response.get_code() or 0
+        return self._response.get_code() if self._response is not None else 0
 
     def _content(self):
         if self.headers is None:

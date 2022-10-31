@@ -41,8 +41,8 @@ def _calc_distribution(user_classes, num_users):
 
 
 def _print_task_ratio(x, level=0):
+    padding = 2 * " " * level
     for k, v in x.items():
-        padding = 2 * " " * level
         ratio = v.get("ratio", 1)
         print(" %-10s %-50s" % (padding + "%-6.1f" % (ratio * 100), padding + k))
         if "tasks" in v:
