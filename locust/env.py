@@ -80,7 +80,7 @@ class Environment:
         """Determines if stats should be reset once all simulated users have been spawned"""
         if stop_timeout is not None:
             self.stop_timeout = stop_timeout
-        elif parsed_options:
+        elif parsed_options and parsed_options.stop_timeout:
             self.stop_timeout = float(parsed_options.stop_timeout)
         else:
             self.stop_timeout = 0.0
