@@ -304,7 +304,7 @@ def setup_parser_arguments(parser):
     web_ui_group.add_argument(
         "--autostart",
         action="store_true",
-        help="Starts the test immediately (without disabling the web UI). Use -u and -t to control user count and run time",
+        help="Starts the test immediately (like --headless, but without disabling the web UI)",
         env_var="LOCUST_AUTOSTART",
     )
     web_ui_group.add_argument(
@@ -467,13 +467,13 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
     stats_group.add_argument(
         "--print-stats",
         action="store_true",
-        help="Print stats in the console",
+        help="Enable periodic printing of request stats in UI runs",
         env_var="LOCUST_PRINT_STATS",
     )
     stats_group.add_argument(
         "--only-summary",
         action="store_true",
-        help="Only print the summary stats",
+        help="Disable periodic printing of request stats during --headless run",
         env_var="LOCUST_ONLY_SUMMARY",
     )
     stats_group.add_argument(
