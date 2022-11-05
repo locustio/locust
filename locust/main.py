@@ -299,7 +299,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             logger.info("--run-time limit reached, stopping test")
             runner.stop()
             if options.autoquit != -1:
-                logger.debug(f"Autoquit time limit set to {options.autoquit} seconds")
+                logger.debug("Autoquit time limit set to %s seconds" % options.autoquit)
                 time.sleep(options.autoquit)
                 logger.info("--autoquit time reached, shutting down")
                 runner.quit()

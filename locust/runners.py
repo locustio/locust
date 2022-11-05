@@ -244,7 +244,7 @@ class Runner:
                 n += 1
                 if n % 10 == 0 or n == spawn_count:
                     logger.debug("%i users spawned" % self.user_count)
-            logger.debug(f"All users of class {user_class} spawned")
+            logger.debug("All users of class %s spawned" % user_class)
             return new_users
 
         new_users: List[User] = []
@@ -283,7 +283,7 @@ class Runner:
 
             while True:
                 user_to_stop: User = to_stop.pop()
-                logger.debug(f"Stopping {user_to_stop.greenlet.name}")
+                logger.debug("Stopping %s" % user_to_stop.greenlet.name)
                 if user_to_stop.greenlet is greenlet.getcurrent():
                     # User called runner.quit(), so don't block waiting for killing to finish
                     user_to_stop.group.killone(user_to_stop.greenlet, block=False)
@@ -508,7 +508,7 @@ class LocalRunner(Runner):
                 user_classes_spawn_count: Dict[str, int] = {}
                 user_classes_stop_count: Dict[str, int] = {}
                 user_classes_count = dispatched_users[self._local_worker_node.id]
-                logger.debug(f"Ramping to {_format_user_classes_count_for_log(user_classes_count)}")
+                logger.debug("Ramping to %s" % _format_user_classes_count_for_log(user_classes_count))
                 for user_class_name, user_class_count in user_classes_count.items():
                     if self.user_classes_count[user_class_name] > user_class_count:
                         user_classes_stop_count[user_class_name] = (
@@ -571,7 +571,7 @@ class LocalRunner(Runner):
         :param msg_type: The type of the message to emulate sending
         :param data: Optional data to include
         """
-        logger.debug(f"Running locally: sending {msg_type} message to self")
+        logger.debug("Running locally: sending %s message to self" % msg_type)
         if msg_type in self.custom_messages:
             listener = self.custom_messages[msg_type]
             msg = Message(msg_type, data, "local")
@@ -887,7 +887,7 @@ class MasterRunner(DistributedRunner):
 
             if send_stop_to_client:
                 for client in self.clients.all:
-                    logger.debug(f"Sending stop message to worker {client.id}")
+                    logger.debug("Sending stop message to worker %s" % client.id)
                     self.server.send_to_client(Message("stop", None, client.id))
 
                 # Give an additional 60s for all workers to stop
@@ -906,7 +906,7 @@ class MasterRunner(DistributedRunner):
         self.stop(send_stop_to_client=False)
         logger.debug("Quitting...")
         for client in self.clients.all:
-            logger.debug(f"Sending quit message to worker {client.id} (index {self.get_worker_index(client.id)})")
+            logger.debug("Sending quit message to worker %s (index %s)" % (client.id, self.get_worker_index(client.id)))
             self.server.send_to_client(Message("quit", None, client.id))
         gevent.sleep(0.5)  # wait for final stats report from all workers
         self.greenlet.kill(block=True)
@@ -1137,11 +1137,11 @@ class MasterRunner(DistributedRunner):
                             If None, will send to all attached workers
         """
         if client_id:
-            logger.debug(f"Sending {msg_type} message to worker {client_id}")
+            logger.debug("Sending %s message to worker %s" % (msg_type, client_id))
             self.server.send_to_client(Message(msg_type, data, client_id))
         else:
             for client in self.clients.all:
-                logger.debug(f"Sending {msg_type} message to worker {client.id}")
+                logger.debug("Sending %s message to worker %s" % (msg_type, client_id))
                 self.server.send_to_client(Message(msg_type, data, client.id))
 
 
@@ -1346,7 +1346,7 @@ class WorkerRunner(DistributedRunner):
                 logger.warning("Received reconnect message from master. Resetting RPC connection.")
                 self.reset_connection()
             elif msg.type in self.custom_messages:
-                logger.debug(f"Received {msg.type} message from master")
+                logger.debug("Received %s message from master" % msg.type)
                 self.custom_messages[msg.type](environment=self.environment, msg=msg)
             else:
                 logger.warning(f"Unknown message type received: {msg.type}")
@@ -1366,7 +1366,7 @@ class WorkerRunner(DistributedRunner):
         :param msg_type: The type of the message to send
         :param data: Optional data to send
         """
-        logger.debug(f"Sending {msg_type} message to master")
+        logger.debug("Sending %s message to master" % msg_type)
         self.client.send(Message(msg_type, data, self.client_id))
 
     def _send_stats(self) -> None:
