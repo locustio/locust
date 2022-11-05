@@ -81,7 +81,7 @@ class Environment:
         if stop_timeout is not None:
             self.stop_timeout = stop_timeout
         elif parsed_options:
-            self.stop_timeout = float(parsed_options.stop_timeout)
+            self.stop_timeout = float(getattr(parsed_options, "stop_timeout", 0.0))
         else:
             self.stop_timeout = 0.0
         """
