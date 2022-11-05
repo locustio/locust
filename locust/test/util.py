@@ -2,9 +2,7 @@ import functools
 import gc
 import os
 import socket
-import warnings
-
-from datetime import datetime, timedelta
+import datetime
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes
@@ -57,7 +55,7 @@ def create_tls_cert(hostname):
     """Generate a TLS cert and private key to serve over https"""
     key = rsa.generate_private_key(public_exponent=2**16 + 1, key_size=2048, backend=default_backend())
     name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, hostname)])
-    now = datetime.utcnow()
+    now = datetime.datetime.now(tz=datetime.timezone.utc)
     cert = (
         x509.CertificateBuilder()
         .subject_name(name)
@@ -65,7 +63,7 @@ def create_tls_cert(hostname):
         .public_key(key.public_key())
         .serial_number(1000)
         .not_valid_before(now)
-        .not_valid_after(now + timedelta(days=10 * 365))
+        .not_valid_after(now + datetime.timedelta(days=10 * 365))
         .sign(key, hashes.SHA256(), default_backend())
     )
     cert_pem = cert.public_bytes(encoding=serialization.Encoding.PEM)
