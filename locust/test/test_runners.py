@@ -1279,6 +1279,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             finally:
                 self.assertEqual(STATE_STOPPED, master.state)
 
+    @unittest.skip(reason="takes way too long (~45s)")
     def test_distributed_shape_with_stop_timeout(self):
         """
         Full integration test that starts both a MasterRunner and five WorkerRunner instances

@@ -1699,6 +1699,7 @@ class TestRampDownUsersToZero(unittest.TestCase):
         self.assertTrue(0 <= delta <= _TOLERANCE, delta)
 
 
+@unittest.skip(reason="takes too long. run this manually if you change dispatch logic.")
 class TestRampUpThenDownThenUp(unittest.TestCase):
     def test_ramp_up_then_down_then_up(self):
         for user1_weight, user2_weight, user3_weight, user4_weight, user5_weight in [
