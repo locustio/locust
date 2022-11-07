@@ -20,7 +20,7 @@ Now the ``locust`` command will run *your* code with no need for reinstalling af
 
 To contribute your changes, push to a branch in your repo and then `open a PR on github <https://github.com/locustio/locust/compare>`_. 
 
-Before you open a pull request, make sure all the checks work. And if you are adding a feature, make sure it is documented (in docs/*.rst).
+Before you open a pull request, make sure all the checks work. And if you are adding a feature, make sure it is documented (in ``docs/*.rst``).
 
 Testing your changes
 ====================
