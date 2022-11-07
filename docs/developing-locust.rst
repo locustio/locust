@@ -4,7 +4,7 @@
 Developing Locust
 =================
 
-You want to contribute to Locust? Great! Here is a list of `open bugs/feature requests <https://github.com/locustio/locust/>`_.
+You want to contribute to Locust? Great! Here is a list of `open bugs/feature requests <https://github.com/locustio/locust/issues>`_.
 
 Install Locust for development
 ==============================
