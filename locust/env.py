@@ -94,7 +94,7 @@ class Environment:
         If False, exceptions will be raised.
         """
         self.parsed_options = parsed_options
-        """Reference to the parsed command line options (used to pre-populate fields in Web UI). May be None when using Locust as a library"""
+        """Reference to the parsed command line options (used to pre-populate fields in Web UI). When using Locust as a library, this should either be `None` or an object created by `argument_parser.parse_args()`"""
         self.available_user_classes = available_user_classes
         """List of the available User Classes to pick from in the UserClass Picker"""
         self.available_shape_classes = available_shape_classes
