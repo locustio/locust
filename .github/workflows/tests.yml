@@ -36,7 +36,7 @@ jobs:
           python -m pip install --upgrade pip
       - name: Get pip cache dir
         id: pip-cache
-        run: echo "::set-output name=dir::$(python -m pip cache dir)"
+        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
       - uses: actions/cache@v3
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
