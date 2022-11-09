@@ -10,6 +10,10 @@ Use it like this (assuming that the ``locustfile.py`` exists in the current work
 
     docker run -p 8089:8089 -v $PWD:/mnt/locust locustio/locust -f /mnt/locust/locustfile.py
 
+On Windows, this command will sometimes cause errors. Windows users should try using this instead::
+
+    docker run -p 8089:8089 --mount type=bind,source=$pwd,target=/mnt/locust locustio/locust -f /mnt/locust/locustfile.py
+
 
 Docker Compose
 ==============
