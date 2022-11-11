@@ -122,9 +122,9 @@ user when they start. For more info see :ref:`on-start-on-stop`.
 User class
 ==========
 
-A user class represents one user (or a swarming locust if you will). Locust will spawn one
-instance of the User class for each user that is being simulated. There are some common attributes that
-a User class may define.
+A user class represents one type of user/scenario for your system. When you do a test run you specify the number of concurrent 
+users you want to simulate and Locust will create an instance per user. You can add any attributes you like to these 
+classes/instances, but there are some that have special meaning to Locust:
 
 .. _wait-time:
 

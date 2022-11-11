@@ -16,8 +16,7 @@ Start by creating an :py:class:`Environment <locust.env.Environment>` instance:
 
 The :py:class:`Environment <locust.env.Environment>` instance's 
 :py:meth:`create_local_runner <locust.env.Environment.create_local_runner>`, 
-:py:meth:`create_master_runner <locust.env.Environment.create_master_runner>` or 
-:py:meth:`create_worker_runner <locust.env.Environment.create_worker_runner>` can then be used to start a 
+:py:meth:`create_master_runner <locust.env.Environment.create_master_runner>` can then be used to start a 
 :py:class:`Runner <locust.runners.Runner>` instance, which can be used to start a load test:
 
 .. code-block:: python
@@ -34,12 +33,11 @@ It is also possible to bypass the dispatch and distribution logic, and manually 
     new_users[1].my_custom_token = "custom-token-2"
     new_users[0].my_custom_token = "custom-token-1"
 
-The above example only works on standalone mode and is an experimental feature, meaning that it could be
-removed in future versions. But it's useful if you want to have fine-grained control on the spawned users. 
+The above example only works on standalone/local runner mode and is an experimental feature. A more common/better approach would be to use ``init`` or ``test_start`` :ref:`events` to get/create a list of tokens and use :ref:`on-start-on-stop` to read from that list and set them on your individual User instances.
 
 .. note::
 
-    Do not attempt to create a master runner and worker(s) in the same Python process. It does not work, and even if it did, it would not give you better performance than running a single LocalRunner. Every worker *must* run in its own process, there is no way around that.
+    While it is possible to create locust workers this way (using :py:meth:`create_worker_runner <locust.env.Environment.create_worker_runner>`), that almost never makes sense. Every worker needs to be in a separate Python process and interacting directly with the worker runner might break things. Just launch workers using the regular ``locust --worker ...`` command.
 
 We could also use the :py:class:`Environment <locust.env.Environment>` instance's 
 :py:meth:`create_web_ui <locust.env.Environment.create_web_ui>` method to start a Web UI that can be used 
