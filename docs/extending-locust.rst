@@ -9,14 +9,14 @@ Locust comes with a number of event hooks that can be used to extend Locust in d
 For example, here's how to set up an event listener that will trigger after a request is completed::
 
     from locust import events
-    
+
     @events.request.add_listener
     def my_request_handler(request_type, name, response_time, response_length, response,
                            context, exception, start_time, url, **kwargs):
         if exception:
             print(f"Request to {name} failed with exception {exception}")
         else:
-            print(f"Successfully made a request to: {name})
+            print(f"Successfully made a request to: {name}")
             print(f"The response was {response.text}")
 
 .. note::
@@ -24,10 +24,10 @@ For example, here's how to set up an event listener that will trigger after a re
     In the above example the wildcard keyword argument (\**kwargs) will be empty, because we're handling all arguments, but it prevents the code from breaking if new arguments are added in some future version of Locust.
 
     Also, it is entirely possible to implement a client that does not supply all parameters for this event.
-    For example, non-HTTP protocols might not even have the a concept of `url` or `response` object. 
+    For example, non-HTTP protocols might not even have the a concept of `url` or `response` object.
     Remove any such missing field from your listener function definition or use default arguments.
 
-When running locust in distributed mode, it may be useful to do some setup on worker nodes before running your tests. 
+When running locust in distributed mode, it may be useful to do some setup on worker nodes before running your tests.
 You can check to ensure you aren't running on the master node by checking the type of the node's :py:attr:`runner <locust.env.Environment.runner>`::
 
     from locust import events
@@ -47,7 +47,7 @@ You can check to ensure you aren't running on the master node by checking the ty
         else:
             print("Stopped test from Master node")
 
-You can also use events `to add custom command line arguments <https://github.com/locustio/locust/tree/master/examples/add_command_line_argument.py>`_. 
+You can also use events `to add custom command line arguments <https://github.com/locustio/locust/tree/master/examples/add_command_line_argument.py>`_.
 
 To see a full list of available events see :ref:`events`.
 
@@ -56,7 +56,7 @@ To see a full list of available events see :ref:`events`.
 Request context
 ===============
 
-The :py:attr:`request event <locust.event.Events.request>` has a context parameter that enable you to pass data `about` the request (things like username, tags etc). It can be set directly in the call to the request method or at the User level, by overriding the User.context() method. 
+The :py:attr:`request event <locust.event.Events.request>` has a context parameter that enable you to pass data `about` the request (things like username, tags etc). It can be set directly in the call to the request method or at the User level, by overriding the User.context() method.
 
 Context from request method::
 
@@ -70,7 +70,7 @@ Context from request method::
         def on_request(context, **kwargs):
             if context:
                 print(context["username"])
-    
+
 Context from User instance::
 
     class MyUser(HttpUser):
@@ -91,11 +91,11 @@ Adding Web Routes
 ==================
 
 Locust uses Flask to serve the web UI and therefore it is easy to add web end-points to the web UI.
-By listening to the :py:attr:`init <locust.event.Events.init>` event, we can retrieve a reference 
+By listening to the :py:attr:`init <locust.event.Events.init>` event, we can retrieve a reference
 to the Flask app instance and use that to set up a new route::
 
     from locust import events
-    
+
     @events.init.add_listener
     def on_locust_init(environment, **kw):
         @environment.web_ui.app.route("/added_page")
@@ -109,15 +109,15 @@ You should now be able to start locust and browse to http://127.0.0.1:8089/added
 Extending Web UI
 ================
 
-As an alternative to adding simple web routes, you can use `Flask Blueprints 
-<https://flask.palletsprojects.com/en/1.1.x/blueprints/>`_ and `templates 
-<https://flask.palletsprojects.com/en/1.1.x/tutorial/templates/>`_ to not only add routes but also extend 
-the web UI to allow you to show custom data along side the built-in Locust stats. This is more advanced 
-as it involves also writing and including HTML and Javascript files to be served by routes but can 
+As an alternative to adding simple web routes, you can use `Flask Blueprints
+<https://flask.palletsprojects.com/en/1.1.x/blueprints/>`_ and `templates
+<https://flask.palletsprojects.com/en/1.1.x/tutorial/templates/>`_ to not only add routes but also extend
+the web UI to allow you to show custom data along side the built-in Locust stats. This is more advanced
+as it involves also writing and including HTML and Javascript files to be served by routes but can
 greatly enhance the utility and customizability of the web UI.
 
-A working example of extending the web UI, complete with HTML and Javascript example files, can be found 
-in the `examples directory <https://github.com/locustio/locust/tree/master/examples>`_ of the Locust 
+A working example of extending the web UI, complete with HTML and Javascript example files, can be found
+in the `examples directory <https://github.com/locustio/locust/tree/master/examples>`_ of the Locust
 source code.
 
 
@@ -132,6 +132,7 @@ For example, you can monitor the fail ratio of your test and stop the run if it 
 
 .. code-block:: python
 
+    import gevent
     from locust import events
     from locust.runners import STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP, MasterRunner, LocalRunner
 
@@ -155,7 +156,7 @@ For example, you can monitor the fail ratio of your test and stop the run if it 
 Parametrizing locustfiles
 =========================
 
-There are two main ways to parametrize your locustfile. 
+There are two main ways to parametrize your locustfile.
 
 Basic environment variables
 ---------------------------
@@ -197,7 +198,7 @@ When running Locust :ref:`distributed <running-locust-distributed>`, custom argu
 Test data management
 ====================
 
-There are a number of ways to get test data into your tests (after all, your test is just a Python program and it can do whatever Python can). Locust's events give you fine-grained control over *when* to fetch/release test data. You can find a `detailed example here <https://github.com/locustio/locust/tree/master/examples/test_data_management.py>`_. 
+There are a number of ways to get test data into your tests (after all, your test is just a Python program and it can do whatever Python can). Locust's events give you fine-grained control over *when* to fetch/release test data. You can find a `detailed example here <https://github.com/locustio/locust/tree/master/examples/test_data_management.py>`_.
 
 More examples
 =============
