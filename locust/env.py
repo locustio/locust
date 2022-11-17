@@ -256,7 +256,7 @@ class Environment:
                         user_tasks.append(t)
                 else:
                     raise ValueError("Unrecognized task type in user")
-            u.tasks = user_tasks
+            u.tasks = user_tasks  # type: ignore
 
     def _validate_user_class_name_uniqueness(self):
         # Validate there's no class with the same name but in different modules
