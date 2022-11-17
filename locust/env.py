@@ -245,7 +245,7 @@ class Environment:
             u.weight = 1
             user_tasks: List[TaskSet | Callable] = []
             tasks_frontier = u.tasks
-            isinstance(tasks_frontier, list)
+            assert isinstance(tasks_frontier, list)
 
             while len(tasks_frontier) != 0:
                 t = tasks_frontier.pop()
