@@ -119,6 +119,17 @@ the :ref:`name parameter <name-parameter>` to group all those requests under an 
 Additionally we've declared an `on_start` method. A method with this name will be called for each simulated
 user when they start. For more info see :ref:`on-start-on-stop`.
 
+Auto-generating a locustfile
+============================
+
+You can use `har2locust <https://github.com/SvenskaSpel/har2locust>`_ to generate locustfiles based on a browser recording (HAR-file).
+
+It is particularly useful for beginners that are not used to writing their own locustfile, but also highly customizable for more advanced use cases.
+
+.. note::
+
+    har2locust is still in beta. It may not always generate correct locustfiles, and its interface may change between versions.
+
 User class
 ==========
 
