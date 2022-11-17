@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Tuple
 
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
@@ -84,7 +84,7 @@ class User(metaclass=UserMeta):
     Method that returns the time between the execution of locust tasks in milliseconds
     """
 
-    tasks: List[TaskSet | Callable] = []
+    tasks: List[TaskSet | Callable] | dict[Callable, int] | Tuple = []
     """
     Collection of python callables and/or TaskSet classes that the Locust user(s) will run.
 
