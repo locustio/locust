@@ -8,7 +8,8 @@ if os.getenv("LOCUST_PLAYWRIGHT", False):
 
 from gevent import monkey
 
-monkey.patch_all()
+if not monkey.is_module_patched('thread'):
+    monkey.patch_thread()
 
 from ._version import version as __version__
 from .user.sequential_taskset import SequentialTaskSet
