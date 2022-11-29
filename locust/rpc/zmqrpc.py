@@ -1,7 +1,7 @@
 import zmq.green as zmq
 from .protocol import Message
 from locust.util.exception_handler import retry
-from locust.exception import RPCError, RPCSendError, RPCReceiveError
+from locust.exception import RPCError
 import zmq.error as zmqerr
 import msgpack.exceptions as msgerr
 
@@ -19,21 +19,21 @@ class BaseSocket:
         try:
             self.socket.send(msg.serialize(), zmq.NOBLOCK)
         except zmqerr.ZMQError as e:
-            raise RPCSendError("ZMQ sent failure") from e
+            raise RPCError("ZMQ sent failure") from e
 
     @retry()
     def send_to_client(self, msg):
         try:
             self.socket.send_multipart([msg.node_id.encode(), msg.serialize()])
         except zmqerr.ZMQError as e:
-            raise RPCSendError("ZMQ sent failure") from e
+            raise RPCError("ZMQ sent failure") from e
 
     def recv(self):
         try:
             data = self.socket.recv()
             msg = Message.unserialize(data)
         except msgerr.ExtraData as e:
-            raise RPCReceiveError("ZMQ interrupted message") from e
+            raise RPCError("ZMQ interrupted message") from e
         except zmqerr.ZMQError as e:
             raise RPCError("ZMQ network broken") from e
         return msg
@@ -42,18 +42,15 @@ class BaseSocket:
         try:
             data = self.socket.recv_multipart()
             addr = data[0].decode()
-        except UnicodeDecodeError as e:
-            raise RPCReceiveError("ZMQ interrupted or corrupted message") from e
-        except zmqerr.ZMQError as e:
-            raise RPCError("ZMQ network broken") from e
-        try:
             msg = Message.unserialize(data[1])
         except (UnicodeDecodeError, msgerr.ExtraData) as e:
-            raise RPCReceiveError("ZMQ interrupted or corrupted message") from e
+            raise RPCError("ZMQ interrupted message") from e
+        except zmqerr.ZMQError as e:
+            raise RPCError("ZMQ network broken") from e
         return addr, msg
 
-    def close(self, linger=None):
-        self.socket.close(linger=linger)
+    def close(self):
+        self.socket.close()
 
 
 class Server(BaseSocket):
