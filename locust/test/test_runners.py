@@ -3040,7 +3040,7 @@ class TestMasterRunner(LocustRunnerTestCase):
             master.start(10, 10)
             sleep(0.1)
             server.mocked_send(Message("stats", BAD_MESSAGE, "zeh_fake_client1"))
-            self.assertEqual(3, len(server.outbox))
+            self.assertEqual(2, len(server.outbox))
 
 
 
