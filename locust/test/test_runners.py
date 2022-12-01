@@ -3043,7 +3043,6 @@ class TestMasterRunner(LocustRunnerTestCase):
             self.assertEqual(2, len(server.outbox))
 
 
-
 class TestWorkerRunner(LocustTestCase):
     def setUp(self):
         super().setUp()
