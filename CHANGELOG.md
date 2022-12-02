@@ -1,6 +1,40 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.13.1](https://github.com/locustio/locust/tree/2.13.1) (2022-12-01)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.13.1...2.13.1)
+
+**Closed issues:**
+
+- UnboundLocalError after receiving ZMQ corrupted message [\#2260](https://github.com/locustio/locust/issues/2260)
+
+## [2.13.1](https://github.com/locustio/locust/tree/2.13.1) (2022-12-01)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.13.0...2.13.1)
+
+**Fixed bugs:**
+
+- locust.io is down [\#2265](https://github.com/locustio/locust/issues/2265)
+- locust 2.13.0 failed to run [\#2263](https://github.com/locustio/locust/issues/2263)
+- Issue installing on M1 Mac [\#2249](https://github.com/locustio/locust/issues/2249)
+- 'Namespace' object has no attribute 'stop\_timeout' in version 2.13.0 [\#2243](https://github.com/locustio/locust/issues/2243)
+
+**Closed issues:**
+
+- locust test flask application [\#2255](https://github.com/locustio/locust/issues/2255)
+
+**Merged pull requests:**
+
+- Dont reset connection to worker if master receives a corrupted zmq message [\#2266](https://github.com/locustio/locust/pull/2266) ([marcinh](https://github.com/marcinh))
+- auto generated locustfiles from browser recordings using har2locust \(documentation\) [\#2259](https://github.com/locustio/locust/pull/2259) ([cyberw](https://github.com/cyberw))
+- Small fixes to documentation [\#2254](https://github.com/locustio/locust/pull/2254) ([jscanlannyc](https://github.com/jscanlannyc))
+- Added a better working docker command for Windows users [\#2248](https://github.com/locustio/locust/pull/2248) ([MagnusNordboe](https://github.com/MagnusNordboe))
+- Update documentation for Environment.parsed\_options [\#2247](https://github.com/locustio/locust/pull/2247) ([klazuka](https://github.com/klazuka))
+- Use C-style \(percent\) string formatting for all debug logging statements \(improves performance\) [\#2245](https://github.com/locustio/locust/pull/2245) ([cyberw](https://github.com/cyberw))
+- Replace datetime.utcnow\(\) with datetime.now\(tz=timezone.utc\), as it is kind of an antipattern [\#2244](https://github.com/locustio/locust/pull/2244) ([cyberw](https://github.com/cyberw))
+- Tiny performance enhancements [\#2240](https://github.com/locustio/locust/pull/2240) ([cyberw](https://github.com/cyberw))
+
 ## [2.13.0](https://github.com/locustio/locust/tree/2.13.0) (2022-10-28)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.12.2...2.13.0)
