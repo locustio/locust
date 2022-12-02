@@ -87,7 +87,7 @@ Context from User instance::
             print(context["username"])
 
 
-Context from a value in the response, using :ref:`catch_response <catch-response>::
+Context from a value in the response, using :ref:`catch_response <catch-response>`::
 
     with self.client.get("/", catch_response=True) as resp:
         resp.request_meta["context"]["requestId"] = resp.json()["requestId"]
