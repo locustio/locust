@@ -87,6 +87,12 @@ Context from User instance::
             print(context["username"])
 
 
+Modify context using a value in the response::
+
+    with self.client.get("/", catch_response=True) as resp:
+        resp.request_meta["context"]["requestId"] = resp.json()["requestId"]
+
+
 Adding Web Routes
 ==================
 
