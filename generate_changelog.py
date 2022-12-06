@@ -22,7 +22,7 @@ cmd = [
     "-p",
     "locust",
     "--exclude-labels",
-    "duplicate,question,invalid,wontfix,cantfix,stale",
+    "duplicate,question,invalid,wontfix,cantfix,stale,no-changelog",
     "--header-label",
     "# Detailed changelog\nThe most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).",
     "--since-tag",
