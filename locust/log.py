@@ -44,6 +44,11 @@ def setup_logging(loglevel, logfile=None):
                 "level": "INFO",
                 "propagate": False,
             },
+            "locust.stats_logger.json": {
+                "handlers": ["console_plain"],
+                "level": "INFO",
+                "propagate": False,
+            },
         },
         "root": {
             "handlers": ["console"],
