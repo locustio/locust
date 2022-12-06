@@ -32,6 +32,11 @@ def setup_logging(loglevel, logfile=None):
                 "class": "logging.StreamHandler",
                 "formatter": "plain",
             },
+            "console_plain_stdout": {
+                "class": "logging.StreamHandler",
+                "formatter": "plain",
+                "stream": "ext://sys.stdout",
+            },
         },
         "loggers": {
             "locust": {
@@ -45,7 +50,7 @@ def setup_logging(loglevel, logfile=None):
                 "propagate": False,
             },
             "locust.stats_logger.json": {
-                "handlers": ["console_plain"],
+                "handlers": ["console_plain_stdout"],
                 "level": "INFO",
                 "propagate": False,
             },

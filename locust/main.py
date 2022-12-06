@@ -13,7 +13,7 @@ from .argument_parser import parse_locustfile_option, parse_options
 from .env import Environment
 from .log import setup_logging, greenlet_exception_logger
 from . import stats
-from .stats import print_error_report, print_percentile_stats, print_stats, stats_printer, stats_history
+from .stats import print_error_report, print_percentile_stats, print_stats, print_stats_json, stats_printer, stats_history
 from .stats import StatsCSV, StatsCSVFileWriter
 from .user.inspectuser import print_task_ratio, print_task_ratio_json
 from .util.timespan import parse_timespan
@@ -435,8 +435,9 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         logger.debug("Cleaning up runner...")
         if runner is not None:
             runner.quit()
-
-        if not isinstance(runner, locust.runners.WorkerRunner):
+        if options.json:
+            print_stats_json(runner.stats)
+        elif not isinstance(runner, locust.runners.WorkerRunner):
             print_stats(runner.stats, current=False)
             print_percentile_stats(runner.stats)
             print_error_report(runner.stats)
