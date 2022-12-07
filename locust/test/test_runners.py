@@ -3040,12 +3040,7 @@ class TestMasterRunner(LocustRunnerTestCase):
             master.start(10, 10)
             sleep(0.1)
             server.mocked_send(Message("stats", BAD_MESSAGE, "zeh_fake_client1"))
-            self.assertEqual(4, len(server.outbox))
-
-            # Expected message order in outbox: ack, spawn, reconnect, ack
-            self.assertEqual(
-                "reconnect", server.outbox[2][1].type, "Master didn't send worker reconnect message when expected."
-            )
+            self.assertEqual(2, len(server.outbox))
 
 
 class TestWorkerRunner(LocustTestCase):

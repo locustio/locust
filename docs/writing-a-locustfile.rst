@@ -610,6 +610,12 @@ If you want to chain multiple groupings with minimal boilerplate, you can use th
             for i in range(10):
                 self.client.get("/article?id=%i" % i)
 
+Using :ref:`catch_response <catch-response>` and accessing `request_meta <https://github.com/locustio/locust/blob/master/locust/clients.py#L145>`_ directly, you can even rename requests based on something in the response.
+
+.. code-block:: python
+
+    with self.client.get("/", catch_response=True) as resp:
+        resp.request_meta["name"] = resp.json()["name"]
 
 
 HTTP Proxy settings

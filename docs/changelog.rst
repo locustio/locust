@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.13.1
+======
+* Document har2locust (auto generation of locustfiles from browser recordings) by @cyberw in https://github.com/locustio/locust/pull/2259
+* Dont reset connection to worker if master receives a corrupted zmq message by @marcinh in https://github.com/locustio/locust/pull/2266
+* Other minor fixes
+
 2.13.0
 ======
 * Add the ability to set default_headers on FastHttpUser by @cyberw in https://github.com/locustio/locust/pull/2231
