@@ -3078,7 +3078,7 @@ class TestMasterRunner(LocustRunnerTestCase):
 
     def test_unknown_host_sends_message_to_master(self):
         """
-        Validate master ignores message that is.
+        Validate master ignores message that is sent from unknown host
         """
 
         class TestUser(User):
