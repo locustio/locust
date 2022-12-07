@@ -994,8 +994,8 @@ class MasterRunner(DistributedRunner):
                     logger.error(f"RPCError when receiving from client: {e}. Will reset client {client_id}.")
                     try:
                         self.server.send_to_client(Message("reconnect", None, client_id))
-                    except Exception as e:
-                        logger.error(f"Error sending reconnect message to worker: {e}. Will reset RPC server.")
+                    except Exception as error:
+                        logger.error(f"Error sending reconnect message to worker: {error}. Will reset RPC server.")
                         self.connection_broken = True
                         gevent.sleep(FALLBACK_INTERVAL)
                         continue
