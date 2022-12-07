@@ -47,6 +47,8 @@ from .util import patch_env
 
 NETWORK_BROKEN = "network broken"
 BAD_MESSAGE = "bad message"
+UNRECOGNIZED_HOST_MESSAGE = "unrecognized host message"
+UNRECOGNIZED_MESSAGE = "unrecognized message"
 
 
 def mocked_rpc(raise_on_close=True):
@@ -82,7 +84,11 @@ def mocked_rpc(raise_on_close=True):
             if msg.data == NETWORK_BROKEN:
                 raise RPCError()
             if msg.data == BAD_MESSAGE:
-                raise RPCReceiveError("Bad message")
+                raise RPCReceiveError(BAD_MESSAGE, addr=msg.node_id)
+            if msg.data == UNRECOGNIZED_HOST_MESSAGE:
+                raise RPCReceiveError(UNRECOGNIZED_HOST_MESSAGE, addr="FAKE")
+            if msg.data == UNRECOGNIZED_MESSAGE:
+                raise RPCReceiveError(UNRECOGNIZED_MESSAGE)
             return msg.node_id, msg
 
         def close(self, linger=None):
@@ -3040,6 +3046,57 @@ class TestMasterRunner(LocustRunnerTestCase):
             master.start(10, 10)
             sleep(0.1)
             server.mocked_send(Message("stats", BAD_MESSAGE, "zeh_fake_client1"))
+            self.assertEqual(4, len(server.outbox))
+
+            # Expected message order in outbox: ack, spawn, reconnect, ack
+            self.assertEqual(
+                "reconnect", server.outbox[2][1].type, "Master didn't send worker reconnect message when expected."
+            )
+
+    def test_worker_sends_unrecognized_message_to_master(self):
+        """
+        Validate master ignores message from worker when it cannot parse adddress info.
+        """
+
+        class TestUser(User):
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner(user_classes=[TestUser])
+            server.mocked_send(Message("client_ready", __version__, "zeh_fake_client1"))
+            self.assertEqual(1, len(master.clients))
+            self.assertTrue(
+                "zeh_fake_client1" in master.clients, "Could not find fake client in master instance's clients dict"
+            )
+
+            master.start(10, 10)
+            sleep(0.1)
+            server.mocked_send(Message("stats", UNRECOGNIZED_MESSAGE, "zeh_fake_client1"))
+            self.assertEqual(2, len(server.outbox))
+
+    def test_unknown_host_sends_message_to_master(self):
+        """
+        Validate master ignores message that is.
+        """
+
+        class TestUser(User):
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner(user_classes=[TestUser])
+            server.mocked_send(Message("client_ready", __version__, "zeh_fake_client1"))
+            self.assertEqual(1, len(master.clients))
+            self.assertTrue(
+                "zeh_fake_client1" in master.clients, "Could not find fake client in master instance's clients dict"
+            )
+
+            master.start(10, 10)
+            sleep(0.1)
+            server.mocked_send(Message("stats", UNRECOGNIZED_HOST_MESSAGE, "unknown_host"))
             self.assertEqual(2, len(server.outbox))
 
 

@@ -988,11 +988,21 @@ class MasterRunner(DistributedRunner):
             try:
                 client_id, msg = self.server.recv_from_client()
             except RPCReceiveError as e:
-                # TODO: Add proper reconnect if https://github.com/zeromq/pyzmq/issues/1809 fixed
-                addr = e.addr
-                message = f'{e}' if not addr else f'{e} from {addr}'
-                logger.error(f"Unrecognized message detected: {message}")
-                continue
+                client_id = e.addr
+
+                if client_id and client_id in self.clients:
+                    logger.error(f"RPCError when receiving from client: {e}. Will reset client {client_id}.")
+                    try:
+                        self.server.send_to_client(Message("reconnect", None, client_id))
+                    except Exception as e:
+                        logger.error(f"Error sending reconnect message to worker: {e}. Will reset RPC server.")
+                        self.connection_broken = True
+                        gevent.sleep(FALLBACK_INTERVAL)
+                        continue
+                else:
+                    message = f"{e}" if not client_id else f"{e} from {client_id}"
+                    logger.error(f"Unrecognized message detected: {message}")
+                    continue
             except RPCSendError as e:
                 logger.error(f"Error sending reconnect message to worker: {e}. Will reset RPC server.")
                 self.connection_broken = True
