@@ -49,7 +49,7 @@ class BaseSocket:
         try:
             msg = Message.unserialize(data[1])
         except (UnicodeDecodeError, msgerr.ExtraData) as e:
-            raise RPCReceiveError(f"ZMQ interrupted or corrupted message from {addr}") from e
+            raise RPCReceiveError("ZMQ interrupted or corrupted message", addr=addr) from e
         return addr, msg
 
     def close(self, linger=None):
