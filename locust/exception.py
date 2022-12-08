@@ -69,6 +69,10 @@ class RPCReceiveError(Exception):
     When raised from zmqrpc, client connection should be reestablished.
     """
 
+    def __init__(self, *args: object, addr=None) -> None:
+        super().__init__(*args)
+        self.addr = addr
+
 
 class AuthCredentialsError(ValueError):
     """
