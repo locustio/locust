@@ -1,13 +1,22 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
-## [2.13.1](https://github.com/locustio/locust/tree/2.13.1) (2022-12-01)
+## [2.13.2](https://github.com/locustio/locust/tree/2.13.2) (2022-12-08)
 
-[Full Changelog](https://github.com/locustio/locust/compare/2.13.1...2.13.1)
+[Full Changelog](https://github.com/locustio/locust/compare/2.13.1...2.13.2)
+
+**Fixed bugs:**
+
+- Use of old term "slaves" on marketing site [\#2268](https://github.com/locustio/locust/issues/2268)
+- docs: Small errors in docs [\#2253](https://github.com/locustio/locust/issues/2253)
 
 **Closed issues:**
 
 - UnboundLocalError after receiving ZMQ corrupted message [\#2260](https://github.com/locustio/locust/issues/2260)
+
+**Merged pull requests:**
+
+- Fix: Ask worker to reconnect if master gets a broken RPC message [\#2271](https://github.com/locustio/locust/pull/2271) ([marcinh](https://github.com/marcinh))
 
 ## [2.13.1](https://github.com/locustio/locust/tree/2.13.1) (2022-12-01)
 
