@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.13.2
+======
+* Fix: Ask worker to reconnect if master gets a broken RPC message by @marcinh in #2271
+
 2.13.1
 ======
 * Document har2locust (auto generation of locustfiles from browser recordings) by @cyberw in https://github.com/locustio/locust/pull/2259
