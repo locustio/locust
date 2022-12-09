@@ -22,3 +22,7 @@ def start_server():
     server.start()
     logger.info("gRPC server started")
     server.wait_for_termination()
+
+
+if __name__ == '__main__':
+    start_server()
