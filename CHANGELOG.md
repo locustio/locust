@@ -1,13 +1,12 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
-## [2.13.2](https://github.com/locustio/locust/tree/2.13.2) (2022-12-08)
+## [2.13.2](https://github.com/locustio/locust/tree/2.13.2) (2022-12-09)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.13.1...2.13.2)
 
 **Fixed bugs:**
 
-- Use of old term "slaves" on marketing site [\#2268](https://github.com/locustio/locust/issues/2268)
 - docs: Small errors in docs [\#2253](https://github.com/locustio/locust/issues/2253)
 
 **Closed issues:**
