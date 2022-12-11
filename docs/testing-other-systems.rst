@@ -42,9 +42,10 @@ Dummy server to test:
 
 .. literalinclude:: ../examples/grpc/hello_server.py
 
-gRPC client, base User and example usage:
+gRPC client, base GrpcUser, interceptor for sending events to locust and example usage:
 
 .. literalinclude:: ../examples/grpc/locustfile.py
 
+As base class for interceptor is used `grpc-interceptor <https://pypi.org/project/grpc-interceptor/>` library.
 
 For more examples of user types, see `locust-plugins <https://github.com/SvenskaSpel/locust-plugins#users>`_ (it has users for WebSocket/SocketIO, Kafka, Selenium/WebDriver and more).
