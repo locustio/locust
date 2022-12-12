@@ -28,13 +28,11 @@ We can build a generic XML-RPC client, by wrapping :py:class:`xmlrpc.client.Serv
 gRPC
 ====
 
-We can also build a `gRPC <https://github.com/grpc/grpc>`_ User.
-
-Lets assume we have a gRPC server that we want to load test:
+Lets assume we have a `gRPC <https://github.com/grpc/grpc>`_ server that we want to load test:
 
 .. literalinclude:: ../examples/grpc/hello_server.py
 
-The generic gRPC User base class sends events to Locust using an `interceptor <https://pypi.org/project/grpc-interceptor/>`_:
+The generic GrpcUser base class sends events to Locust using an `interceptor <https://pypi.org/project/grpc-interceptor/>`_:
 
 .. literalinclude:: ../examples/grpc/grpc_user.py
 
@@ -59,7 +57,7 @@ Even if your library doesn't expose that in its interface, you may be able to ge
 REST
 ====
 
-While the base HttpUser/FastHttpUser is capable of testing RESTful endpoints, it can be simplified by using a specialized subclass :py:class:`RestUser <locust.contrib.rest.RestUser>`. It extends FastHttpUser by adding the ``rest``-method, a wrapper around ``self.client.request()`` that:
+While the base HttpUser/FastHttpUser is capable of testing RESTful endpoints, it is useful to have a specialized subclass. :py:class:`RestUser <locust.contrib.rest.RestUser>` extends :ref:`FastHttpUser <increase-performance>`, adding the ``rest``-method, a wrapper around ``self.client.request()`` that:
     
 * automatically passes ``catch_response=True``
 * automatically sets ``Content-Type`` and ``Accept`` headers to ``application/json`` (unless you have provided your own headers)
