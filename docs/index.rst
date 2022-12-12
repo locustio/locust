@@ -54,7 +54,6 @@ Other functionalities
     custom-load-shape
     retrieving-stats
     testing-other-systems
-    testing-requests-based SDK's
     increase-performance
     extending-locust
     logging
