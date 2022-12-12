@@ -1,6 +1,6 @@
 import locust
 from locust.user import task
-from archivist.archivist import Archivist  # Example SDK under test
+from archivist.archivist import Archivist  # Example library under test
 
 
 class ArchivistUser(locust.HttpUser):
@@ -10,7 +10,7 @@ class ArchivistUser(locust.HttpUser):
         with open("auth.text") as f:
             AUTH_TOKEN = f.read()
 
-        # Start an instance of of the SDK
+        # Start an instance of of the library-provided client
         self.arch: Archivist = Archivist(url=self.host, auth=AUTH_TOKEN)
         # overwrite the internal _session attribute with the locust session
         self.arch._session = self.client
