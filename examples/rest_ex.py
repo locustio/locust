@@ -1,8 +1,8 @@
 from contextlib import contextmanager
-from locust import task, run_single_user
-from locust.contrib.fasthttp import ResponseContextManager
+from locust import task, run_single_user, RestUser
+from locust.contrib.rest import RestResponseContextManager
 from locust.user.wait_time import constant
-from locust.contrib.rest import RestUser
+from typing import Generator
 
 
 class MyUser(RestUser):
@@ -78,10 +78,9 @@ class RestUserThatLooksAtErrors(RestUser):
     abstract = True
 
     @contextmanager
-    def rest(self, method, url, **kwargs) -> ResponseContextManager:
+    def rest(self, method, url, **kwargs) -> Generator[RestResponseContextManager, None, None]:
         extra_headers = {"my_header": "my_value"}
         with super().rest(method, url, headers=extra_headers, **kwargs) as resp:
-            resp: ResponseContextManager
             if resp.js and "error" in resp.js and resp.js["error"] is not None:
                 resp.failure(resp.js["error"])
             yield resp

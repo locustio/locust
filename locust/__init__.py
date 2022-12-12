@@ -16,6 +16,7 @@ from .user import wait_time
 from .user.task import task, tag, TaskSet
 from .user.users import HttpUser, User
 from .contrib.fasthttp import FastHttpUser
+from .contrib.rest import RestUser
 from .user.wait_time import between, constant, constant_pacing, constant_throughput
 from .shape import LoadTestShape
 from .debug import run_single_user
@@ -32,6 +33,7 @@ __all__ = (
     "TaskSet",
     "HttpUser",
     "FastHttpUser",
+    "RestUser",
     "User",
     "between",
     "constant",

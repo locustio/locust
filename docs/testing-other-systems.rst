@@ -68,8 +68,7 @@ While the base HttpUser/FastHttpUser is capable of testing RESTful endpoints, it
 
 .. code-block:: python
 
-    from locust.contrib.rest import RestUser
-    from locust import task
+    from locust import task, RestUser
 
     class MyUser(RestUser):
         @task
