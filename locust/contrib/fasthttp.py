@@ -283,15 +283,8 @@ class FastHttpSession:
 
 class FastHttpUser(User):
     """
-    FastHttpUser uses a different HTTP client (geventhttpclient) compared to HttpUser (python-requests).
-    It's significantly faster, but not as capable.
-
-    The behaviour of this user is defined by it's tasks. Tasks can be declared either directly on the
-    class by using the :py:func:`@task decorator <locust.task>` on the methods, or by setting
-    the :py:attr:`tasks attribute <locust.User.tasks>`.
-
-    This class creates a *client* attribute on instantiation which is an HTTP client with support
-    for keeping a user session between requests.
+    FastHttpUser uses a different HTTP client (geventhttpclient) instead of HttpUser's (python-requests).
+    It uses considerably less CPU on the load generator, and is usually useable as a drop-in-replacement.
     """
 
     # Below are various UserAgent settings. Change these in your subclass to alter FastHttpUser's behaviour.
