@@ -14,8 +14,8 @@ Locust only comes with built-in support for HTTP/HTTPS but it can be extended to
 
     Some C libraries allow for other workarounds. For example, if you want to use psycopg2 to performance test PostgreSQL, you can use `psycogreen <https://github.com/psycopg/psycogreen/>`_. If you are willing to get your hands dirty, you may also be able to patch a library yourself, but that is beyond the scope of this documentation.
 
-Example: XML-RPC
-================
+XML-RPC
+=======
 
 Lets assume we have an XML-RPC server that we want to load test.
 
@@ -25,8 +25,8 @@ We can build a generic XML-RPC client, by wrapping :py:class:`xmlrpc.client.Serv
 
 .. literalinclude:: ../examples/custom_xmlrpc_client/xmlrpc_locustfile.py
 
-Example: gRPC
-=============
+gRPC
+====
 
 We can also build a `gRPC <https://github.com/grpc/grpc>`_ User.
 
@@ -56,8 +56,8 @@ Even if your library doesn't expose that in its interface, you may be able to ge
 .. literalinclude:: ../examples/sdk_session_patching/session_patch_locustfile.py
 
 
-Example: REST
-=============
+REST
+====
 
 While the base HttpUser/FastHttpUser is capable of testing RESTful endpoints, it can be simplified by using a specialized subclass :py:class:`RestUser <locust.contrib.rest.RestUser>`. It extends FastHttpUser by adding the ``rest``-method, a wrapper around ``self.client.request()`` that:
     
@@ -78,7 +78,7 @@ While the base HttpUser/FastHttpUser is capable of testing RESTful endpoints, it
                 if resp.js and resp.js["bar"] != 1:
                     resp.failure(f"Unexpected value of foo in response {resp.text}")
 
-For a complete example, see `resp_ex.py <https://github.com/locustio/locust/tree/master/examples/resp_ex.py>`_. That also shows how you can subclass :py:class:`RestUser <locust.contrib.rest.RestUser>` to provide behaviours specific to your API, like like always sending common headers or always applying some validation to the response.
+For a complete example, see `resp_ex.py <https://github.com/locustio/locust/blob/master/examples/rest_ex.py>`_. That also shows how you can subclass :py:class:`RestUser <locust.contrib.rest.RestUser>` to provide behaviours specific to your API, like like always sending common headers or always applying some validation to the response.
 
 
 .. note::
