@@ -283,8 +283,9 @@ class FastHttpSession:
 
 class FastHttpUser(User):
     """
-    FastHttpUser uses a different HTTP client (geventhttpclient) instead of HttpUser's (python-requests).
-    It uses considerably less CPU on the load generator, and is usually useable as a drop-in-replacement.
+    FastHttpUser provides the same API as HttpUser, but uses geventhttpclient instead of python-requests
+    as its underlying client. It uses considerably less CPU on the load generator, and should work
+    as a simple drop-in-replacement in most cases.
     """
 
     # Below are various UserAgent settings. Change these in your subclass to alter FastHttpUser's behaviour.
