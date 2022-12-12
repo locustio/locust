@@ -38,7 +38,7 @@ The generic gRPC User base class sends events to Locust using an `interceptor <h
 
 .. literalinclude:: ../examples/grpc/grpc_user.py
 
-And an example test would look like this:
+And a locustfile using the above would look like this:
 
 .. literalinclude:: ../examples/grpc/locustfile.py
 
