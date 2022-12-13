@@ -57,12 +57,12 @@ Even if your library doesn't expose that in its interface, you may be able to ge
 REST
 ====
 
-While the base HttpUser/FastHttpUser is capable of testing RESTful endpoints, it is useful to have a specialized subclass. :py:class:`RestUser <locust.contrib.rest.RestUser>` extends :ref:`FastHttpUser <increase-performance>`, adding the ``rest``-method, a wrapper around ``self.client.request()`` that:
+While you can subclass :ref:`HttpUser <quickstart>`/:ref:`FastHttpUser <increase-performance>` to test RESTful HTTP endpoints, you can avoid having to reinvent the wheel by using :py:class:`RestUser <locust.contrib.rest.RestUser>`. It extends FastHttpUser, adding the ``rest`` method, a wrapper around :py:class:`self.client.request <locust.contrib.fasthttp.FastHttpUser.client>` that:
     
-* automatically passes ``catch_response=True``
-* automatically sets ``Content-Type`` and ``Accept`` headers to ``application/json`` (unless you have provided your own headers)
-* automatically checks that the response is valid json, parses it into an dict and saves it in a field called ``js`` in the response object.
-* catches any exceptions thrown in your ``with``-block and fails the sample (instead of crashing the task)
+* Defaults ``Content-Type`` and ``Accept`` headers to ``application/json``
+* Parses the JSON response to a dict called ``js`` in the response object. Marks the request as failed if the response was not valid JSON.
+* Passes ``catch_response=True`` to request() (so use a :ref:`with-block <catch-response>`)
+* Catches any exceptions thrown in your with-block and fails the sample (instead of bubbling up the exception and exiting the task run)
 
 .. code-block:: python
 
@@ -72,13 +72,22 @@ While the base HttpUser/FastHttpUser is capable of testing RESTful endpoints, it
         @task
         def t(self):
             with self.rest("POST", "/", json={"foo": 1}) as resp:
-                if resp.js and resp.js["bar"] != 1:
-                    resp.failure(f"Unexpected value of foo in response {resp.text}")
+                if resp.js is None:
+                    pass # no need to do anything, already marked as failed
+                elif "bar" not in resp.js:
+                    resp.failure(f"'bar' missing from response {resp.text}")
+                elif resp.js["bar"] != 42:
+                    resp.failure(f"'bar' had an unexpected value: {resp.js['bar']}")
 
 For a complete example, see `resp_ex.py <https://github.com/locustio/locust/blob/master/examples/rest_ex.py>`_. That also shows how you can subclass :py:class:`RestUser <locust.contrib.rest.RestUser>` to provide behaviours specific to your API, like like always sending common headers or always applying some validation to the response.
 
-
 .. note::
 
-    For more examples of user types, see `locust-plugins <https://github.com/SvenskaSpel/locust-plugins#users>`_ (it has users for WebSocket/SocketIO, Kafka, Selenium/WebDriver and more).
+    RestUser is new and details of its interface/implementation may change in new versions of Locust.
+
+
+Other examples
+==============
+
+See `locust-plugins <https://github.com/SvenskaSpel/locust-plugins#users>`_ it has users for WebSocket/SocketIO, Kafka, Selenium/WebDriver, Playwright and more.
 
