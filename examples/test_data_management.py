@@ -41,17 +41,17 @@ test_run_specific_data = None
 
 
 @events.init.add_listener
-def _(environment, **_kwargs):
+def init(environment, **_kwargs):
     print("2. Initializing locust, happens after parsing the locustfile but before test start")
 
 
 @events.quitting.add_listener
-def _(environment, **_kwargs):
-    print("9. locust is shutting down")
+def quitting(environment, **_kwargs):
+    print("9. locust is about to shut down")
 
 
 @events.test_start.add_listener
-def _(environment, **_kwargs):
+def test_start(environment, **_kwargs):
     # happens only once in headless runs, but can happen multiple times in web ui-runs
     global test_run_specific_data
     print("3. Starting test run")
@@ -64,17 +64,17 @@ def _(environment, **_kwargs):
 
 
 @events.quit.add_listener
-def _(environment, exit_code, **kwargs):
+def quit(exit_code, **kwargs):
     print(f"10. Locust has shut down with code {exit_code}")
 
 
 @events.test_stopping.add_listener
-def _(environment, **_kwargs):
+def test_stopping(environment, **_kwargs):
     print("6. stopping test run")
 
 
 @events.test_stop.add_listener
-def _(environment, **_kwargs):
+def test_stop(environment, **_kwargs):
     print("8. test run stopped")
 
 
