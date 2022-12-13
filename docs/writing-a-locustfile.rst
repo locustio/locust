@@ -543,12 +543,10 @@ You can even avoid logging a request at all by throwing an exception and then ca
         if response.status_code == 404:
             raise RescheduleTask()
 
-.. _rest:
-
 REST/JSON APIs
 --------------
 
-Here's an example of how to call a REST API and validate the response:
+:ref:`FastHttpUser <rest>` provides a ready-made ``rest`` method, but you can also do it yourself:
 
 .. code-block:: python
 
@@ -562,8 +560,6 @@ Here's an example of how to call a REST API and validate the response:
             response.failure("Response could not be decoded as JSON")
         except KeyError:
             response.failure("Response did not contain expected key 'greeting'")
-
-locust-plugins has a ready-made class for testing REST API:s called `RestUser <https://github.com/SvenskaSpel/locust-plugins/blob/master/examples/rest_ex.py>`_.
 
 .. _name-parameter:
 
