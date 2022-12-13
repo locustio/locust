@@ -360,6 +360,14 @@ class FastHttpUser(User):
     def rest(
         self, method, url, headers: Optional[dict] = None, **kwargs
     ) -> Generator[RestResponseContextManager, None, None]:
+        """
+        A wrapper for self.client.request that:
+
+        * Parses the JSON response to a dict called ``js`` in the response object. Marks the request as failed if the response was not valid JSON.
+        * Defaults ``Content-Type`` and ``Accept`` headers to ``application/json``
+        * Sets ``catch_response=True`` (so always use a :ref:`with-block <catch-response>`)
+        * Catches any unhandled exceptions thrown inside your with-block, marking the sample as failed (instead of exiting the task immediately without even firing the request event)
+        """
         headers = {"Content-Type": "application/json", "Accept": "application/json"} if headers is None else headers
         with self.client.request(method, url, catch_response=True, headers=headers, **kwargs) as r:
             resp = cast(RestResponseContextManager, r)
@@ -400,9 +408,11 @@ class FastHttpUser(User):
                     short_resp = resp.text[:200] if resp.text else resp.text
                     resp.failure(f"{e.__class__.__name__}: {e} at {', '.join(error_lines)}. Response was {short_resp}")
 
-    # some web api:s use a timestamp as part of their url (to break thru caches). this is a convenience method for that.
     @contextmanager
     def rest_(self, method, url, name=None, **kwargs) -> Generator[RestResponseContextManager, None, None]:
+        """
+        Some web api:s use a timestamp as part of their url (to break thru caches). This is a convenience method for that.
+        """
         with self.rest(method, f"{url}&_={int(time.time()*1000)}", name=name, **kwargs) as resp:
             yield resp
 
