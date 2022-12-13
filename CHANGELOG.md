@@ -1,6 +1,16 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.14.0](https://github.com/locustio/locust/tree/2.14.0) (2022-12-13)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.13.2...2.14.0)
+
+**Merged pull requests:**
+
+- Move the rest method into FastHttpUser instead of RestUser.  [\#2274](https://github.com/locustio/locust/pull/2274) ([cyberw](https://github.com/cyberw))
+- Add RestUser [\#2273](https://github.com/locustio/locust/pull/2273) ([cyberw](https://github.com/cyberw))
+- GRPC example - rewrite using interceptor [\#2272](https://github.com/locustio/locust/pull/2272) ([zifter](https://github.com/zifter))
+
 ## [2.13.2](https://github.com/locustio/locust/tree/2.13.2) (2022-12-09)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.13.1...2.13.2)
