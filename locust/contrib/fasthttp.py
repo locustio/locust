@@ -411,9 +411,13 @@ class FastHttpUser(User):
     @contextmanager
     def rest_(self, method, url, name=None, **kwargs) -> Generator[RestResponseContextManager, None, None]:
         """
-        Some web api:s use a timestamp as part of their url (to break thru caches). This is a convenience method for that.
+        Some REST api:s use a timestamp as part of their query string (mainly to break through caches).
+        This is a convenience method for that, appending a _=<timestamp> parameter automatically
         """
-        with self.rest(method, f"{url}&_={int(time.time()*1000)}", name=name, **kwargs) as resp:
+        separator = "&" if "?" in url else "?"
+        if name is None:
+            name = url + separator + "_=..."
+        with self.rest(method, f"{url}{separator}_={int(time.time()*1000)}", name=name, **kwargs) as resp:
             yield resp
 
 
