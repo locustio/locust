@@ -51,6 +51,40 @@ A single FastHttpUser/geventhttpclient session can run concurrent requests, you 
 
     FastHttpUser/geventhttpclient is very similar to HttpUser/python-requests, but sometimes there are subtle differences. This is particularly true if you work with the client library's internals, e.g. when manually managing cookies.
 
+.. _rest:
+
+REST
+====
+
+FastHttpUser also provides a ``rest`` method for testing REST/JSON HTTP interfaces:. It is a wrapper for ``self.client.request`` that:
+    
+* Parses the JSON response to a dict called ``js`` in the response object. Marks the request as failed if the response was not valid JSON.
+* Defaults ``Content-Type`` and ``Accept`` headers to ``application/json``
+* Sets ``catch_response=True`` (so always use a :ref:`with-block <catch-response>`)
+* Catches any unhandled exceptions thrown inside your with-block, marking the sample as failed (instead of exiting the task immediately without even firing the request event)
+
+.. code-block:: python
+
+    from locust import task, FastHttpUser
+
+    class MyUser(FastHttpUser):
+        @task
+        def t(self):
+            with self.rest("POST", "/", json={"foo": 1}) as resp:
+                if resp.js is None:
+                    pass # no need to do anything, already marked as failed
+                elif "bar" not in resp.js:
+                    resp.failure(f"'bar' missing from response {resp.text}")
+                elif resp.js["bar"] != 42:
+                    resp.failure(f"'bar' had an unexpected value: {resp.js['bar']}")
+
+For a complete example, see `rest.py <https://github.com/locustio/locust/blob/master/examples/rest.py>`_. That also shows how you can use inheritance to provide behaviours specific to your REST API that are common to multiple requests/testplans.
+
+.. note::
+
+    This feature is new and details of its interface/implementation may change in new versions of Locust.
+
+
 API
 ===
 

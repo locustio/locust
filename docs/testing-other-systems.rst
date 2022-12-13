@@ -53,38 +53,10 @@ Even if your library doesn't expose that in its interface, you may be able to ge
 
 .. literalinclude:: ../examples/sdk_session_patching/session_patch_locustfile.py
 
-
 REST
 ====
 
-While you can subclass :ref:`HttpUser <quickstart>`/:ref:`FastHttpUser <increase-performance>` to test RESTful HTTP endpoints, you can avoid having to reinvent the wheel by using :py:class:`RestUser <locust.contrib.rest.RestUser>`. It extends FastHttpUser, adding the ``rest`` method, a wrapper around :py:class:`self.client.request <locust.contrib.fasthttp.FastHttpUser.client>` that:
-    
-* Parses the JSON response to a dict called ``js`` in the response object. Marks the request as failed if the response was not valid JSON.
-* Defaults ``Content-Type`` and ``Accept`` headers to ``application/json``
-* Sets ``catch_response=True`` (so use a :ref:`with-block <catch-response>`)
-* Catches any unhandled exceptions thrown inside your with-block, marking the sample as failed (instead of exiting the task immediately without even firing the request event)
-
-.. code-block:: python
-
-    from locust import task, RestUser
-
-    class MyUser(RestUser):
-        @task
-        def t(self):
-            with self.rest("POST", "/", json={"foo": 1}) as resp:
-                if resp.js is None:
-                    pass # no need to do anything, already marked as failed
-                elif "bar" not in resp.js:
-                    resp.failure(f"'bar' missing from response {resp.text}")
-                elif resp.js["bar"] != 42:
-                    resp.failure(f"'bar' had an unexpected value: {resp.js['bar']}")
-
-For a complete example, see `resp_ex.py <https://github.com/locustio/locust/blob/master/examples/rest_ex.py>`_. That also shows how you can subclass :py:class:`RestUser <locust.contrib.rest.RestUser>` to provide behaviours specific to your API, like like always sending common headers or always applying some validation to the response.
-
-.. note::
-
-    RestUser is new and details of its interface/implementation may change in new versions of Locust.
-
+See :ref:`FastHttpUser <rest>`
 
 Other examples
 ==============

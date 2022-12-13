@@ -19,13 +19,8 @@ FastHttpUser class
 ==================
 
 .. autoclass:: locust.contrib.fasthttp.FastHttpUser
+    :members: wait_time, tasks, client, abstract, rest
     :noindex:
-
-RestUser class
-================
-
-.. autoclass:: locust.contrib.rest.RestUser
-    :members: rest
 
 TaskSet class
 =============
