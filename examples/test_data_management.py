@@ -86,8 +86,9 @@ class MyUser(HttpUser):
     def on_start(self):
         if MyUser.first_start:
             MyUser.first_start = False
-            # This is similar to test_start, but happens in the context of a User and will not be re-run on repeated runs.
-            # In the case of a distributed run, this would be run once per worker
+            # This is useful for similar things as to test_start, but happens in the context of a User
+            # In the case of a distributed run, this would be run once per worker.
+            # It will not be re-run on repeated runs (unless you clear the first_start flag)
             print("X. Here's where you would put things you want to run the first time a User is started")
 
         print("4. A user was started")
