@@ -646,6 +646,10 @@ TaskSets
 ================================
 TaskSets is a way to structure tests of hierarchical web sites/systems. You can :ref:`read more about it here <tasksets>`.
 
+Examples
+========
+
+There are lots of locustfile examples `here <https://github.com/locustio/locust/tree/master/examples>`_
 
 How to structure your test code
 ================================
