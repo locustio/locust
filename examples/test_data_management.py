@@ -81,8 +81,14 @@ def _(environment, **_kwargs):
 class MyUser(HttpUser):
     host = "https://postman-echo.com"
     wait_time = constant(180)  # be nice to postman-echo
+    first_start = True
 
     def on_start(self):
+        if MyUser.first_start:
+            MyUser.first_start = False
+            # this is similar to test_start, but happens in the context of a User and will not be re-run on repeated runs
+            print("X. Here's where you would put things you want to run the first time a User is started")
+
         print("4. A user was started")
         # This is a good place to fetch user-specific test data. It is executed once per User
         # If you do not want the request logged, you can replace self.client.<method> with requests.<method>
