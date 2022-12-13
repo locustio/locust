@@ -1,11 +1,11 @@
 from contextlib import contextmanager
-from locust import task, run_single_user, RestUser
-from locust.contrib.rest import RestResponseContextManager
+from locust import task, run_single_user, FastHttpUser
+from locust.contrib.fasthttp import RestResponseContextManager
 from locust.user.wait_time import constant
 from typing import Generator
 
 
-class MyUser(RestUser):
+class MyUser(FastHttpUser):
     host = "https://postman-echo.com"
     wait_time = constant(180)  # be nice to postman-echo.com, and dont run this at scale.
 
@@ -74,7 +74,7 @@ class MyUser(RestUser):
 
 # An example of how you might write a common base class for an API that always requires
 # certain headers, or where you always want to check the response in a certain way
-class RestUserThatLooksAtErrors(RestUser):
+class RestUserThatLooksAtErrors(FastHttpUser):
     abstract = True
 
     @contextmanager
