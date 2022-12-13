@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.14.0
+======
+* Add rest method to FastHttpUser to facilitate easy REST/JSON API testing https://github.com/locustio/locust/pull/2274
+
 2.13.2
 ======
 * Fix: Ask worker to reconnect if master gets a broken RPC message by @marcinh in #2271
