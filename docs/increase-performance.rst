@@ -56,7 +56,7 @@ A single FastHttpUser/geventhttpclient session can run concurrent requests, you 
 REST
 ====
 
-FastHttpUser also provides a ``rest`` method for testing REST/JSON HTTP interfaces:. It is a wrapper for ``self.client.request`` that:
+FastHttpUser provides a ``rest`` method for testing REST/JSON HTTP interfaces. It is a wrapper for ``self.client.request`` that:
     
 * Parses the JSON response to a dict called ``js`` in the response object. Marks the request as failed if the response was not valid JSON.
 * Defaults ``Content-Type`` and ``Accept`` headers to ``application/json``
@@ -93,7 +93,7 @@ FastHttpUser class
 --------------------
 
 .. autoclass:: locust.contrib.fasthttp.FastHttpUser
-    :members: network_timeout, connection_timeout, max_redirects, max_retries, insecure, concurrency, client_pool
+    :members: network_timeout, connection_timeout, max_redirects, max_retries, insecure, concurrency, client_pool, rest, rest_
 
 
 FastHttpSession class
