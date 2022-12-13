@@ -59,10 +59,10 @@ REST
 
 While you can subclass :ref:`HttpUser <quickstart>`/:ref:`FastHttpUser <increase-performance>` to test RESTful HTTP endpoints, you can avoid having to reinvent the wheel by using :py:class:`RestUser <locust.contrib.rest.RestUser>`. It extends FastHttpUser, adding the ``rest`` method, a wrapper around :py:class:`self.client.request <locust.contrib.fasthttp.FastHttpUser.client>` that:
     
-* Defaults ``Content-Type`` and ``Accept`` headers to ``application/json``
 * Parses the JSON response to a dict called ``js`` in the response object. Marks the request as failed if the response was not valid JSON.
-* Passes ``catch_response=True`` to request() (so use a :ref:`with-block <catch-response>`)
-* Catches any exceptions thrown in your with-block and fails the sample (instead of bubbling up the exception and exiting the task run)
+* Defaults ``Content-Type`` and ``Accept`` headers to ``application/json``
+* Sets ``catch_response=True`` (so use a :ref:`with-block <catch-response>`)
+* Catches any unhandled exceptions thrown inside your with-block, marking the sample as failed (instead of exiting the task immediately without even firing the request event)
 
 .. code-block:: python
 
