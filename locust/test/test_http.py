@@ -266,6 +266,22 @@ class TestHttpSession(WebserverTestCase):
         self.assertEqual(1, self.environment.stats.total.num_requests)
         self.assertEqual(1, self.environment.stats.total.num_failures)
 
+    def test_catch_response_with_name_replacement(self):
+        s = self.get_client()
+        kwargs = {}
+
+        def on_request(**kw):
+            self.assertIsNotNone(kw["exception"])
+            kwargs.update(kw)
+
+        self.environment.events.request.add_listener(on_request)
+
+        with s.get("/wrong_url/01", name="replaced_url_name") as r:
+            pass
+
+        self.assertIn("for url: replaced_url_name", str(kwargs["exception"]))
+        self.assertEqual(s.base_url + "/wrong_url/01", kwargs["url"])  # url is unaffected by name
+
     def test_catch_response_missing_with_block(self):
         s = self.get_client()
         # incorrect usage, missing with-block

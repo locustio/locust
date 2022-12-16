@@ -135,8 +135,11 @@ class HttpSession(requests.Session):
         response = self._send_request_safe_mode(method, url, **kwargs)
         response_time = (time.perf_counter() - start_perf_counter) * 1000
 
-        request_after_redirect = (response.history and response.history[0] or response).request
-        url_after_redirect = request_after_redirect.path_url
+        request_before_redirect = (response.history and response.history[0] or response).request
+        url = request_before_redirect.url
+
+        if not name:
+            name = request_before_redirect.path_url
 
         if self.user:
             context = {**self.user.context(), **context}
@@ -145,12 +148,12 @@ class HttpSession(requests.Session):
         request_meta = {
             "request_type": method,
             "response_time": response_time,
-            "name": name or url_after_redirect,
+            "name": name,
             "context": context,
             "response": response,
             "exception": None,
             "start_time": start_time,
-            "url": request_after_redirect.url,
+            "url": url,
         }
 
         # get the length of the content, but if the argument stream is set to True, we take
@@ -163,34 +166,8 @@ class HttpSession(requests.Session):
         if catch_response:
             return ResponseContextManager(response, request_event=self.request_event, request_meta=request_meta)
         else:
-            if name:
-                # Since we use the Exception message when grouping failures, in order to not get
-                # multiple failure entries for different URLs for the same name argument, we need
-                # to temporarily override the response.url attribute
-                orig_url = response.url
-                response.url = name
-
-            try:
-                response.raise_for_status()
-            except RequestException as e:
-                while (
-                    isinstance(
-                        e,
-                        (
-                            requests.exceptions.ConnectionError,
-                            requests.packages.urllib3.exceptions.ProtocolError,
-                            requests.packages.urllib3.exceptions.MaxRetryError,
-                            requests.packages.urllib3.exceptions.NewConnectionError,
-                        ),
-                    )
-                    and e.__context__  # Not sure if the above exceptions can ever be the lowest level, but it is good to be sure
-                ):
-                    e = e.__context__
-                request_meta["exception"] = e
-
-            self.request_event.fire(**request_meta)
-            if name:
-                response.url = orig_url
+            with ResponseContextManager(response, request_event=self.request_event, request_meta=request_meta):
+                pass
             return response
 
     def _send_request_safe_mode(self, method, url, **kwargs):
@@ -253,12 +230,32 @@ class ResponseContextManager(LocustResponse):
                 # we want other unknown exceptions to be raised
                 return False
         else:
+            # Since we use the Exception message when grouping failures, in order to not get
+            # multiple failure entries for different URLs for the same name argument, we need
+            # to temporarily override the response.url attribute
+            orig_url = self.url
+            self.url = self.request_meta["name"]
+
             try:
                 self.raise_for_status()
             except requests.exceptions.RequestException as e:
+                while (
+                    isinstance(
+                        e,
+                        (
+                            requests.exceptions.ConnectionError,
+                            requests.packages.urllib3.exceptions.ProtocolError,
+                            requests.packages.urllib3.exceptions.MaxRetryError,
+                            requests.packages.urllib3.exceptions.NewConnectionError,
+                        ),
+                    )
+                    and e.__context__  # Not sure if the above exceptions can ever be the lowest level, but it is good to be sure
+                ):
+                    e = e.__context__
                 self.request_meta["exception"] = e
 
             self._report_request()
+            self.url = orig_url
 
         return True
 
