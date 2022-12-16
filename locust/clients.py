@@ -166,34 +166,8 @@ class HttpSession(requests.Session):
         if catch_response:
             return ResponseContextManager(response, request_event=self.request_event, request_meta=request_meta)
         else:
-            if name:
-                # Since we use the Exception message when grouping failures, in order to not get
-                # multiple failure entries for different URLs for the same name argument, we need
-                # to temporarily override the response.url attribute
-                orig_url = response.url
-                response.url = name
-
-            try:
-                response.raise_for_status()
-            except RequestException as e:
-                while (
-                    isinstance(
-                        e,
-                        (
-                            requests.exceptions.ConnectionError,
-                            requests.packages.urllib3.exceptions.ProtocolError,
-                            requests.packages.urllib3.exceptions.MaxRetryError,
-                            requests.packages.urllib3.exceptions.NewConnectionError,
-                        ),
-                    )
-                    and e.__context__  # Not sure if the above exceptions can ever be the lowest level, but it is good to be sure
-                ):
-                    e = e.__context__
-                request_meta["exception"] = e
-
-            self.request_event.fire(**request_meta)
-            if name:
-                response.url = orig_url
+            with ResponseContextManager(response, request_event=self.request_event, request_meta=request_meta):
+                pass
             return response
 
     def _send_request_safe_mode(self, method, url, **kwargs):
@@ -256,12 +230,32 @@ class ResponseContextManager(LocustResponse):
                 # we want other unknown exceptions to be raised
                 return False
         else:
+            # Since we use the Exception message when grouping failures, in order to not get
+            # multiple failure entries for different URLs for the same name argument, we need
+            # to temporarily override the response.url attribute
+            orig_url = self.url
+            self.url = self.request_meta["name"]
+
             try:
                 self.raise_for_status()
             except requests.exceptions.RequestException as e:
+                while (
+                    isinstance(
+                        e,
+                        (
+                            requests.exceptions.ConnectionError,
+                            requests.packages.urllib3.exceptions.ProtocolError,
+                            requests.packages.urllib3.exceptions.MaxRetryError,
+                            requests.packages.urllib3.exceptions.NewConnectionError,
+                        ),
+                    )
+                    and e.__context__  # Not sure if the above exceptions can ever be the lowest level, but it is good to be sure
+                ):
+                    e = e.__context__
                 self.request_meta["exception"] = e
 
             self._report_request()
+            self.url = orig_url
 
         return True
 
