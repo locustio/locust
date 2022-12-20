@@ -120,8 +120,7 @@ order to coordinate data. This can be easily accomplished with custom messages u
 Note that when running locally (i.e. non-distributed), this functionality will be preserved; 
 the messages will simply be handled by the runner that sends them.  
 
-A more complete example can be found in the `examples directory <https://github.com/locustio/locust/tree/master/examples>`_ of the Locust 
-source code.
+For more details, see the `complete example <https://github.com/locustio/locust/tree/master/examples/custom_messages.py>`_.
 
 
 Running distributed with Docker
