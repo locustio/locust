@@ -646,3 +646,4 @@ class ResponseContextManager(FastResponse):
 class RestResponseContextManager(ResponseContextManager):
     js: dict  # This is technically an Optional, but I dont want to force everyone to check it
     error: Exception  # This one too
+    headers: Headers  # .. and this one
