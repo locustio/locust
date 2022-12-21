@@ -1,11 +1,12 @@
 .. _configuration:
 
+=============
 Configuration
 =============
 
 
 Command Line Options
---------------------
+====================
 
 Locust is configured mainly through command line arguments.
 
@@ -21,7 +22,7 @@ Locust is configured mainly through command line arguments.
 .. _environment-variables:
 
 Environment Variables
----------------------
+=====================
 
 Options can also be set through through environment variables. They are typically the same as the command line argument but capitalized and prefixed with ``LOCUST_``:
 
@@ -41,7 +42,7 @@ On Windows:
 .. _configuration-file:
 
 Configuration File
-------------------
+==================
 
 Options can also be set in a configuration file in the `config file <https://github.com/bw2/ConfigArgParse#config-file-syntax>`_
 format. 
@@ -77,7 +78,7 @@ Example:
         ~/locust.conf -> ./locust.conf -> (file specified using --conf) -> env vars -> cmd args
 
 All available configuration options
------------------------------------
+===================================
 
 Here's a table of all the available configuration options, and their corresponding Environment and config file keys:
 
@@ -164,12 +165,12 @@ The Web UI will display:
 |
 
 Custom arguments
-----------------
+================
 
 See :ref:`custom-arguments`
 
 Customization of statistics settings
-------------------------------------
+====================================
 
 Default configuration for Locust statistics is set in constants of stats.py file.
 It can be tuned to specific requirements by overriding these values.
