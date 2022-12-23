@@ -1,10 +1,10 @@
 .. _quickstart:
 
 ===============
-Getting started
+Your first test
 ===============
 
-A Locust test is essentially a Python program. This makes it very flexible and particularly good at implementing complex user flows. But it can do simple tests as well, so let's start with that:
+A Locust test is essentially just a Python program making requests to the system you want to test. This makes it very flexible and particularly good at implementing complex user flows. But it can do simple tests as well, so let's start with that:
 
 .. code-block:: python
 
@@ -18,7 +18,7 @@ A Locust test is essentially a Python program. This makes it very flexible and p
 
 This user will make HTTP requests to ``/hello``, and then ``/world``, again and again. For a full explanation and a more realistic example see :ref:`writing-a-locustfile`.
 
-Put the code in a file named *locustfile.py* in your current directory and run ``locust``:
+Change ``/hello`` and ``/world`` to some actual paths on the web site/service you want to test, put the code in a file named ``locustfile.py`` in your current directory and then run ``locust``:
 
 .. code-block:: console
     :substitutions:
@@ -30,44 +30,33 @@ Put the code in a file named *locustfile.py* in your current directory and run `
 Locust's web interface
 ==============================
 
-Once you've started Locust, open up a browser and point it to http://localhost:8089. You will be greeted with something like this:
+Open http://localhost:8089
 
 .. image:: images/webui-splash-screenshot.png
 
-|
-| Point the test to your own web server and try it out!
+| Provide the host name of your server and try it out!
 
-The following screenshots show what it might look like when running this test using 40 concurrent users, with a ramp up rate of 0.5 users/s.
+The following screenshots show what it might look like when running this test using 40 concurrent users, with a ramp up rate of 0.5 users/s, against a server with somewhat poor performance.
 
 .. image:: images/webui-running-statistics.png
 
-|
-
-Under the *Charts* tab you'll find things like requests per second (RPS):
+| Under the *Charts* tab you'll find things like requests per second (RPS), response times and number of running users:
 
 .. image:: images/total_requests_per_second.png
 
-|
-
-Response times (in milliseconds):
-
 .. image:: images/response_times.png
-
-|
-
-Number of users:
 
 .. image:: images/number_of_users.png
 
-|
-
 .. note::
 
-    Interpreting performance test results is quite complex (and mostly out of scope for this manual), but if your graphs start looking like this, the most likely reason is that your target service/system cannot handle the load you are hitting it with (it is overloaded or "saturated").
+    Interpreting performance test results is quite complex (and mostly out of scope for this manual), but if your graphs start looking like this, the target service/system cannot handle the load and you have found a bottleneck.
 
-    The clearest sign of this is that when we get to around 9 users, response times start increasing so fast that the number of requests per second stops increasing, even though new users are still being added.
+    When we get to around 9 users, response times start increasing so fast that even though Locust is still spawning more users, the number of requests per second is no longer increasing. The target service is "overloaded" or "saturated".
 
-    If need some pointers on how to start digging into a server side problem, or you're having trouble generating enough load to saturate your system, have a look at the `Locust FAQ  <https://github.com/locustio/locust/wiki/FAQ#increase-my-request-raterps>`_.
+    If your response times are *not* increasing then add even more users until you find the service's breaking point, or celebrate that your service is already performant enough for your expected load.
+
+    If you need some help digging into server side problems, or you're having trouble generating enough load to saturate your system, have a look at the `Locust FAQ  <https://github.com/locustio/locust/wiki/FAQ#increase-my-request-raterps>`_.
 
 Direct command line usage / headless
 ====================================
