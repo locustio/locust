@@ -492,7 +492,7 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         "--json",
         default=False,
         action="store_true",
-        help="Prints the final stats in JSON format to stdout. Usefull for parsing the results in other programs/scripts.",
+        help="Prints the final stats in JSON format to stdout. Useful for parsing the results in other programs/scripts. Use together with --headless and --skip-log for an output only with the json data.",
     )
 
     log_group = parser.add_argument_group("Logging options")
