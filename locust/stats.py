@@ -789,8 +789,7 @@ def print_stats(stats: RequestStats, current=True) -> None:
 
 
 def print_stats_json(stats: RequestStats) -> None:
-    json_logger = logging.getLogger("locust.stats_logger.json")
-    json_logger.info(json.dumps(stats.serialize_stats(), indent=4))
+    print(json.dumps(stats.serialize_stats(), indent=4))
 
 
 def get_stats_summary(stats: RequestStats, current=True) -> List[str]:

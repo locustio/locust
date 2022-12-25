@@ -248,12 +248,6 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     else:
         stats_csv_writer = StatsCSV(environment, stats.PERCENTILES_TO_REPORT)
 
-    if options.json:
-        # disable all logging to stdout
-        for key in logging.Logger.manager.loggerDict:
-            if key != "locust.stats_logger.json":
-                logging.getLogger(key).setLevel(logging.ERROR)
-
     # start Web UI
     if not options.headless and not options.worker:
         # spawn web greenlet
