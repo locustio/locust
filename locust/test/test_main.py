@@ -1,3 +1,4 @@
+import json
 import os
 import platform
 import pty
@@ -6,7 +7,7 @@ import subprocess
 import textwrap
 from tempfile import TemporaryDirectory
 from unittest import TestCase
-from subprocess import PIPE, STDOUT
+from subprocess import PIPE, STDOUT, DEVNULL
 
 import gevent
 import requests
@@ -1399,6 +1400,42 @@ class SecondUser(HttpUser):
 
             self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
+
+    def test_json_can_be_parsed(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import User, task, constant
+
+            class User1(User):
+                wait_time = constant(1)
+
+                @task
+                def t(self):
+                    pass
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "-t",
+                    "5s",
+                    "--json"
+                ],
+                stderr=DEVNULL,
+                stdout=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate()
+
+            try:
+                json.loads(stdout)
+            except json.JSONDecodeError:
+                self.fail(f"Trying to parse {stdout} as json failed")
+            self.assertEqual(0, proc.returncode)
 
     def test_worker_indexes(self):
         content = """
