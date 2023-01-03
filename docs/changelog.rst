@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.14.1
+======
+* Stats in json to stdout (new command line option --json) by @AndersSpringborg in https://github.com/locustio/locust/pull/2269
+
 2.14.0
 ======
 * Add rest method to FastHttpUser to facilitate easy REST/JSON API testing https://github.com/locustio/locust/pull/2274
