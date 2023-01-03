@@ -1,3 +1,4 @@
+import json
 import os
 import platform
 import pty
@@ -6,7 +7,7 @@ import subprocess
 import textwrap
 from tempfile import TemporaryDirectory
 from unittest import TestCase
-from subprocess import PIPE, STDOUT
+from subprocess import PIPE, STDOUT, DEVNULL
 
 import gevent
 import requests
@@ -1399,6 +1400,89 @@ class SecondUser(HttpUser):
 
             self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
+
+    def test_json_can_be_parsed(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import User, task, constant
+
+            class User1(User):
+                wait_time = constant(1)
+
+                @task
+                def t(self):
+                    pass
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                ["locust", "-f", mocked.file_path, "--headless", "-t", "5s", "--json"],
+                stderr=DEVNULL,
+                stdout=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate()
+
+            try:
+                json.loads(stdout)
+            except json.JSONDecodeError:
+                self.fail(f"Trying to parse {stdout} as json failed")
+            self.assertEqual(0, proc.returncode)
+
+    def test_json_schema(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import HttpUser, task, constant
+
+            class QuickstartUser(HttpUser):
+                wait_time = constant(1)
+
+                @task
+                def hello_world(self):
+                    self.client.get("/")
+
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--host",
+                    "http://google.com",
+                    "--headless",
+                    "-u",
+                    "1",
+                    "-t",
+                    "2s",
+                    "--json",
+                ],
+                stderr=DEVNULL,
+                stdout=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate()
+
+            try:
+                data = json.loads(stdout)
+            except json.JSONDecodeError:
+                self.fail(f"Trying to parse {stdout} as json failed")
+
+            self.assertEqual(0, proc.returncode)
+
+            result = data[0]
+            self.assertEqual(float, type(result["last_request_timestamp"]))
+            self.assertEqual(float, type(result["start_time"]))
+            self.assertEqual(int, type(result["num_requests"]))
+            self.assertEqual(int, type(result["num_none_requests"]))
+            self.assertEqual(float, type(result["total_response_time"]))
+            self.assertEqual(float, type(result["max_response_time"]))
+            self.assertEqual(float, type(result["min_response_time"]))
+            self.assertEqual(int, type(result["total_content_length"]))
+            self.assertEqual(dict, type(result["response_times"]))
+            self.assertEqual(dict, type(result["num_reqs_per_sec"]))
+            self.assertEqual(dict, type(result["num_fail_per_sec"]))
 
     def test_worker_indexes(self):
         content = """

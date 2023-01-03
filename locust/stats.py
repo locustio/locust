@@ -2,6 +2,7 @@ from __future__ import annotations
 from abc import abstractmethod
 import datetime
 import hashlib
+import json
 from tempfile import NamedTemporaryFile
 import time
 from collections import namedtuple, OrderedDict
@@ -785,6 +786,10 @@ def print_stats(stats: RequestStats, current=True) -> None:
     for line in get_stats_summary(stats, current):
         console_logger.info(line)
     console_logger.info("")
+
+
+def print_stats_json(stats: RequestStats) -> None:
+    print(json.dumps(stats.serialize_stats(), indent=4))
 
 
 def get_stats_summary(stats: RequestStats, current=True) -> List[str]:

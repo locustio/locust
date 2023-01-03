@@ -488,6 +488,12 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         help="Store HTML report to file path specified",
         env_var="LOCUST_HTML",
     )
+    stats_group.add_argument(
+        "--json",
+        default=False,
+        action="store_true",
+        help="Prints the final stats in JSON format to stdout. Useful for parsing the results in other programs/scripts. Use together with --headless and --skip-log for an output only with the json data.",
+    )
 
     log_group = parser.add_argument_group("Logging options")
     log_group.add_argument(
