@@ -6,7 +6,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 
 2.14.1
 ======
-* Stats in json to stdout (new command line option --json) by @AndersSpringborg in https://github.com/locustio/locust/pull/2269
+* Add --json to send stats to stdout as json by @AndersSpringborg in https://github.com/locustio/locust/pull/2269
 
 2.14.0
 ======
