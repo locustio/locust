@@ -28,7 +28,7 @@ Even in headless mode you can you can change the user count while the test is ru
 Setting a time limit for the test
 ---------------------------------
 
-If you want to specify the run time for a test, you can do that with ``-t/--run-time``:
+To specify the run time for a test, use ``-t/--run-time``:
 
 .. code-block:: console
 
@@ -42,7 +42,7 @@ Allow tasks to finish their iteration on shutdown
 -------------------------------------------------
 
 By default, Locust will stop your tasks immediately (without even waiting for requests to finish). 
-If you want to give running tasks some time to finish their iteration specify ``-s/--stop-timeout``.
+To give running tasks some time to finish their iteration, use ``-s/--stop-timeout``:
 
 .. code-block:: console
 
