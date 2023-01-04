@@ -1,6 +1,31 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.14.2](https://github.com/locustio/locust/tree/2.14.2) (2023-01-04)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.14.1...2.14.2)
+
+**Fixed bugs:**
+
+- 2.14.1 release missing py.typed file [\#2282](https://github.com/locustio/locust/issues/2282)
+
+## [2.14.1](https://github.com/locustio/locust/tree/2.14.1) (2023-01-03)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.14.0...2.14.1)
+
+**Fixed bugs:**
+
+- SetuptoolsDeprecationWarning when building with setuptools/65.5.0 [\#2279](https://github.com/locustio/locust/issues/2279)
+- Error installing locust using pipenv as a -- [\#2277](https://github.com/locustio/locust/issues/2277)
+
+**Merged pull requests:**
+
+- Fix setuptools deprecation warnings [\#2281](https://github.com/locustio/locust/pull/2281) ([heyman](https://github.com/heyman))
+- Improve documentation structure [\#2278](https://github.com/locustio/locust/pull/2278) ([THUzxj](https://github.com/THUzxj))
+- Fix exception grouping for requests with both catch\_response and name arguments [\#2276](https://github.com/locustio/locust/pull/2276) ([ianmetcalf](https://github.com/ianmetcalf))
+- remove typo in running cloud integration docs [\#2275](https://github.com/locustio/locust/pull/2275) ([WordsofDefiance](https://github.com/WordsofDefiance))
+- Stats in json to stdout \(new command line option --json\) [\#2269](https://github.com/locustio/locust/pull/2269) ([AndersSpringborg](https://github.com/AndersSpringborg))
+
 ## [2.14.0](https://github.com/locustio/locust/tree/2.14.0) (2022-12-13)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.13.2...2.14.0)
