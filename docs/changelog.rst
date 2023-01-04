@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.14.2
+======
+* Re-add py.typed marker file to package (it was missing in 2.14.1) #2282
+
 2.14.1
 ======
 * Add --json to send stats to stdout as json by @AndersSpringborg in https://github.com/locustio/locust/pull/2269
