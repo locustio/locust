@@ -103,14 +103,14 @@
                     </div>
                     {% if extra_options %}<label>Custom parameters:</label>{% endif %}
                     {% for key, value in extra_options.items() %}
-                        {% if not ((value is none) or (value is boolean)) %}
+                        {% if not ((value[0] is none) or (value[0] is boolean)) %}
                             <label for="{{key}}">{{key}}</label>
-                            <input type="text" name="{{key}}" id="{{key}}" class="val" value="{{value}}" /><br>
+                            <input type="{{'password' if value[1] else 'text'}}" name="{{key}}" id="{{key}}" class="val" value="{{value[0]}}" /><br>
                         {% endif %}
                     {% endfor %}
                     {% set glob={'header_printed': False} %}
                     {% for key, value in extra_options.items() %}
-                        {% if (value is none) or (value is boolean) %}
+                        {% if (value[0] is none) or (value[0] is boolean) %}
                             {% if not glob.header_printed %}
                                 The following custom parameters can't be set in the Web UI, because it is a boolean or None type:<br>
                                 {% set _ = glob.update({'header_printed':True}) %}
