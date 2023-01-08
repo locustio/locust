@@ -89,7 +89,7 @@
                     <label for="host">
                         Host <span style="color:#8a8a8a;">(e.g. http://www.example.com)</span>
                         {% if override_host_warning %}
-                            <span style="color:#8a8a8a; font-size:12px;">(setting this will override the host on all User classes)</span></label>
+                            <span style="color:#8a8a8a; font-size:12px;">(setting this will override the host on all User classes)</span>
                         {% endif %}
                     </label>
                     <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or "" }}" onfocus="this.select()"/><br>
@@ -103,14 +103,19 @@
                     </div>
                     {% if extra_options %}<label>Custom parameters:</label>{% endif %}
                     {% for key, value in extra_options.items() %}
-                        {% if not ((value[0] is none) or (value[0] is boolean)) %}
-                            <label for="{{key}}">{{key}}</label>
-                            <input type="{{'password' if value[1] else 'text'}}" name="{{key}}" id="{{key}}" class="val" value="{{value[0]}}" /><br>
+                        {% if not ((value.default_value is none) or (value.default_value is boolean)) %}
+                            <label for="{{key}}">
+                                {{key.replace('_', ' ').capitalize()}}
+                                {% if value.help_text %}
+                                    <span style="color:#8a8a8a;">({{value.help_text}})</span>
+                                {% endif %}
+                            </label>
+                            <input type="{{'password' if value.is_secret else 'text'}}" name="{{key}}" id="{{key}}" class="val" value="{{value.default_value}}" /><br>
                         {% endif %}
                     {% endfor %}
                     {% set glob={'header_printed': False} %}
                     {% for key, value in extra_options.items() %}
-                        {% if (value[0] is none) or (value[0] is boolean) %}
+                        {% if (value.default_value is none) or (value.default_value is boolean) %}
                             {% if not glob.header_printed %}
                                 The following custom parameters can't be set in the Web UI, because it is a boolean or None type:<br>
                                 {% set _ = glob.update({'header_printed':True}) %}

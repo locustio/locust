@@ -2,7 +2,7 @@ import os
 import platform
 import sys
 import textwrap
-from typing import Dict, List, Tuple
+from typing import Dict, List, NamedTuple
 
 import configargparse
 
@@ -614,16 +614,25 @@ def default_args_dict() -> dict:
     return vars(default_parser.parse([]))
 
 
-def ui_extra_args_dict(args=None) -> Dict[str, Tuple[str, bool]]:
+class UIExtraArgOptions(NamedTuple):
+    default_value: str
+    is_secret: bool
+    help_text: str
+
+
+def ui_extra_args_dict(args=None) -> Dict[str, UIExtraArgOptions]:
     """Get all the UI visible arguments"""
     locust_args = default_args_dict()
 
     parser = get_parser()
     all_args = vars(parser.parse_args(args))
 
-    # Set key's Tuple item two value to True if a secret argument
     extra_args = {
-        k: (v, k in parser.secret_args_included_in_web_ui)
+        k: UIExtraArgOptions(
+            default_value=v,
+            is_secret=k in parser.secret_args_included_in_web_ui,
+            help_text=parser.args_included_in_web_ui[k].help,
+        )
         for k, v in all_args.items()
         if k not in locust_args and k in parser.args_included_in_web_ui
     }
