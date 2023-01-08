@@ -288,7 +288,7 @@ class TestArgumentParser(LocustTestCase):
             parser.add_argument("--a2", help="a2 help", include_in_web_ui=False)
             parser.add_argument("--a3", help="a3 help", is_secret=True)
 
-        args = ["-u", "666", "--a1", "v1", "--a2", "v2", "--a3"]
+        args = ["-u", "666", "--a1", "v1", "--a2", "v2", "--a3", "v3"]
         options = parse_options(args=args)
         self.assertEqual(666, options.num_users)
         self.assertEqual("v1", options.a1)
