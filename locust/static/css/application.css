@@ -252,7 +252,7 @@ body.running .top .top-content .boxes .top_box.box_status .edit-test, body.spawn
 }
 .dialogs .dialog .padder {
   padding: 30px;
-  padding-top: 20px;
+  padding-top: 0px;
 }
 .dialogs .dialog h2 {
   color: #addf82;
@@ -264,14 +264,6 @@ body.running .top .top-content .boxes .top_box.box_status .edit-test, body.spawn
   margin-bottom: 10px;
   margin-top: 20px;
   font-size: 16px;
-}
-.dialogs .dialog select {
-  border: none;
-  background: #fff;
-  width: 340px;
-  font-size: 18px;
-  padding-left: 10px;
-  overflow-x: scroll;
 }
 .dialogs .dialog input.val {
   border: none;
@@ -430,7 +422,7 @@ body.ready .main {
   width: 398px;
   position: absolute;
   left: 50%;
-  top: 5%;
+  top: 5px;
   margin-left: -169px;
   border-radius: 5px;
   -moz-border-radius: 5px;
@@ -438,9 +430,9 @@ body.ready .main {
   border: 3px solid #eee;
   background: #132b21;
   box-shadow: 0 0 60px rgba(0, 0, 0, 0.3);
-  z-index: 100;
+  z-index: 4;
 }
-a.close_link {
+.about a.close_link {
   position: absolute;
   right: 10px;
   top: 10px;
@@ -455,7 +447,8 @@ a.close_link {
 }
 
 .footer {
-  position: absolute;
+  position: fixed;
+  left: 0;
   bottom: 0;
   padding: 12px 0;
   background: #132b21;
@@ -463,17 +456,11 @@ a.close_link {
   text-align: right;
   box-sizing: border-box;
   height: 40px;
+  z-index: 3;
 }
 .footer a {
   margin-right: 10px;
   color: #48a584;
 }
-
-.userClass {
-    height: 100px;
-  }
-.shapeClass {
-    height: 25px;
-  }
 
 /*# sourceMappingURL=application.css.map */
