@@ -1,5 +1,5 @@
 import gevent
-from locust import HttpUser, task
+from locust import HttpUser, task, events
 from locust.env import Environment
 from locust.stats import stats_printer, stats_history
 from locust.log import setup_logging
@@ -16,7 +16,7 @@ class MyUser(HttpUser):
 
 
 # setup Environment and Runner
-env = Environment(user_classes=[MyUser])
+env = Environment(user_classes=[MyUser], events=events)
 runner = env.create_local_runner()
 
 # start a WebUI instance
