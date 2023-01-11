@@ -286,15 +286,9 @@ class TestArgumentParser(LocustTestCase):
         def _(parser, **kw):
             parser.add_argument("--a1", help="a1 help")
             parser.add_argument("--a2", help="a2 help", include_in_web_ui=False)
+            parser.add_argument("--a3", help="a3 help", is_secret=True)
 
-        args = [
-            "-u",
-            "666",
-            "--a1",
-            "v1",
-            "--a2",
-            "v2",
-        ]
+        args = ["-u", "666", "--a1", "v1", "--a2", "v2", "--a3", "v3"]
         options = parse_options(args=args)
         self.assertEqual(666, options.num_users)
         self.assertEqual("v1", options.a1)
@@ -303,7 +297,8 @@ class TestArgumentParser(LocustTestCase):
         extra_args = ui_extra_args_dict(args)
         self.assertIn("a1", extra_args)
         self.assertNotIn("a2", extra_args)
-        self.assertEqual("v1", extra_args["a1"])
+        self.assertIn("a3", extra_args)
+        self.assertEqual("v1", extra_args["a1"].default_value)
 
 
 class TestFindLocustfiles(LocustTestCase):

@@ -2,7 +2,7 @@ import os
 import platform
 import sys
 import textwrap
-from typing import Dict, List
+from typing import Dict, List, NamedTuple
 
 import configargparse
 
@@ -26,18 +26,29 @@ class LocustArgumentParser(configargparse.ArgumentParser):
 
         Arguments:
             include_in_web_ui: If True (default), the argument will show in the UI.
+            is_secret: If True (default is False) and include_in_web_ui is True, the argument will show in the UI with a password masked text input.
 
         Returns:
             argparse.Action: the new argparse action
         """
         include_in_web_ui = kwargs.pop("include_in_web_ui", True)
+        is_secret = kwargs.pop("is_secret", False)
         action = super().add_argument(*args, **kwargs)
         action.include_in_web_ui = include_in_web_ui
+        action.is_secret = is_secret
         return action
 
     @property
     def args_included_in_web_ui(self) -> Dict[str, configargparse.Action]:
         return {a.dest: a for a in self._actions if hasattr(a, "include_in_web_ui") and a.include_in_web_ui}
+
+    @property
+    def secret_args_included_in_web_ui(self) -> Dict[str, configargparse.Action]:
+        return {
+            a.dest: a
+            for a in self._actions
+            if a.dest in self.args_included_in_web_ui and hasattr(a, "is_secret") and a.is_secret
+        }
 
 
 def _is_package(path):
@@ -603,14 +614,29 @@ def default_args_dict() -> dict:
     return vars(default_parser.parse([]))
 
 
-def ui_extra_args_dict(args=None) -> Dict[str, str]:
+class UIExtraArgOptions(NamedTuple):
+    default_value: str
+    is_secret: bool
+    help_text: str
+
+
+def ui_extra_args_dict(args=None) -> Dict[str, UIExtraArgOptions]:
     """Get all the UI visible arguments"""
     locust_args = default_args_dict()
 
     parser = get_parser()
     all_args = vars(parser.parse_args(args))
 
-    extra_args = {k: v for k, v in all_args.items() if k not in locust_args and k in parser.args_included_in_web_ui}
+    extra_args = {
+        k: UIExtraArgOptions(
+            default_value=v,
+            is_secret=k in parser.secret_args_included_in_web_ui,
+            help_text=parser.args_included_in_web_ui[k].help,
+        )
+        for k, v in all_args.items()
+        if k not in locust_args and k in parser.args_included_in_web_ui
+    }
+
     return extra_args
 
 

@@ -116,6 +116,7 @@
 
 .dialogs
     position: relative
+
     .dialog
         width: 398px
         position: absolute
@@ -287,7 +288,7 @@
     border: 3px solid #eee
     background: #132b21
     box-shadow: 0 0 60px rgba(0,0,0,0.3)
-    z-index: 1
+    z-index: 4
     
     a.close_link
         position: absolute
@@ -302,7 +303,8 @@
         padding-left: 10px
 
 .footer
-    position: absolute
+    position: fixed
+    left: 0
     bottom: 0
     padding: 12px 0
     background: #132b21
@@ -310,7 +312,8 @@
     text-align: right
     box-sizing: border-box
     height: 40px
-    
+    z-index: 3
+
     a
         margin-right: 10px
         color: #48a584

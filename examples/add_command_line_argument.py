@@ -6,6 +6,8 @@ def _(parser):
     parser.add_argument("--my-argument", type=str, env_var="LOCUST_MY_ARGUMENT", default="", help="It's working")
     # Set `include_in_web_ui` to False if you want to hide from the web UI
     parser.add_argument("--my-ui-invisible-argument", include_in_web_ui=False, default="I am invisible")
+    # Set `is_secret` to True if you want the text input to be password masked in the web UI
+    parser.add_argument("--my-ui-password-argument", is_secret=True, default="I am a secret")
 
 
 @events.test_start.add_listener
