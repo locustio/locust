@@ -13,6 +13,7 @@ class BaseSocket:
 
         self.socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
         self.socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 30)
+        self.socket.setsockopt(zmq.IPV6, 1)
 
     @retry()
     def send(self, msg):
