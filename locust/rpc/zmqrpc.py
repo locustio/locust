@@ -4,6 +4,7 @@ from locust.util.exception_handler import retry
 from locust.exception import RPCError, RPCSendError, RPCReceiveError
 import zmq.error as zmqerr
 import msgpack.exceptions as msgerr
+import socket
 
 
 class BaseSocket:
@@ -13,7 +14,8 @@ class BaseSocket:
 
         self.socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
         self.socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 30)
-        self.socket.setsockopt(zmq.IPV6, 1)
+        if socket.has_ipv6:
+            self.socket.setsockopt(zmq.IPV6, 1)
 
     @retry()
     def send(self, msg):
