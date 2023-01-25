@@ -69,16 +69,16 @@ class WebUI:
     extending index.html."""
 
     def __init__(
-            self,
-            environment: "Environment",
-            host: str,
-            port: int,
-            auth_credentials: Optional[str] = None,
-            tls_cert: Optional[str] = None,
-            tls_key: Optional[str] = None,
-            stats_csv_writer: Optional[StatsCSV] = None,
-            delayed_start=False,
-            userclass_picker_is_active=False,
+        self,
+        environment: "Environment",
+        host: str,
+        port: int,
+        auth_credentials: Optional[str] = None,
+        tls_cert: Optional[str] = None,
+        tls_key: Optional[str] = None,
+        stats_csv_writer: Optional[StatsCSV] = None,
+        delayed_start=False,
+        userclass_picker_is_active=False,
     ):
         """
         Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
@@ -550,6 +550,7 @@ class WebUI:
             "worker_count": worker_count,
             "is_shape": self.environment.shape_class and not self.userclass_picker_is_active,
             "stats_history_enabled": options and options.stats_history_enabled,
+            "stats_csv_enabled": isinstance(self.stats_csv_writer, StatsCSVFileWriter),
             "tasks": dumps({}),
             "extra_options": extra_options,
             "show_userclass_picker": self.userclass_picker_is_active,

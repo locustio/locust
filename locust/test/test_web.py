@@ -1043,7 +1043,7 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
         self.stats_csv_writer.stats_history_flush()
         gevent.kill(greenlet)
 
-        response = requests.get("http://127.0.0.1:%i/stats/requests_full_history/csv" % self.web_port)
+        response = requests.get("http://127.0.0.1:%i/stats/requests_history/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
         self._check_csv_headers(response.headers, "requests_full_history")
         self.assertIn("Content-Length", response.headers)
