@@ -31,7 +31,6 @@ from flask_cors import CORS
 if TYPE_CHECKING:
     from .env import Environment
 
-
 logger = logging.getLogger(__name__)
 greenlet_exception_handler = greenlet_exception_logger(logger)
 
@@ -70,16 +69,16 @@ class WebUI:
     extending index.html."""
 
     def __init__(
-        self,
-        environment: "Environment",
-        host: str,
-        port: int,
-        auth_credentials: Optional[str] = None,
-        tls_cert: Optional[str] = None,
-        tls_key: Optional[str] = None,
-        stats_csv_writer: Optional[StatsCSV] = None,
-        delayed_start=False,
-        userclass_picker_is_active=False,
+            self,
+            environment: "Environment",
+            host: str,
+            port: int,
+            auth_credentials: Optional[str] = None,
+            tls_cert: Optional[str] = None,
+            tls_key: Optional[str] = None,
+            stats_csv_writer: Optional[StatsCSV] = None,
+            delayed_start=False,
+            userclass_picker_is_active=False,
     ):
         """
         Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
@@ -300,23 +299,24 @@ class WebUI:
             self.stats_csv_writer.requests_csv(writer)
             return _download_csv_response(data.getvalue(), "requests")
 
-        @app.route("/stats/requests_full_history/csv")
+        @app.route("/stats/requests_history/csv")
         @self.auth_required_if_enabled
         def request_stats_full_history_csv() -> Response:
             options = self.environment.parsed_options
-            if options and options.stats_history_enabled and isinstance(self.stats_csv_writer, StatsCSVFileWriter):
+            if options and isinstance(self.stats_csv_writer, StatsCSVFileWriter):
                 return send_file(
                     os.path.abspath(self.stats_csv_writer.stats_history_file_name()),
                     mimetype="text/csv",
                     as_attachment=True,
-                    download_name=_download_csv_suggest_file_name("requests_full_history"),
+                    download_name=_download_csv_suggest_file_name(
+                        "requests_full_history" if options.stats_history_enabled else "requests_history"),
                     etag=True,
                     max_age=0,
                     conditional=True,
                     last_modified=None,
                 )
 
-            return make_response("Error: Server was not started with option to generate full history.", 404)
+            return make_response("Error: Server was not started with option to generate CSV history '--csv'.", 404)
 
         @app.route("/stats/failures/csv")
         @self.auth_required_if_enabled
