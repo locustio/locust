@@ -11,12 +11,11 @@ Because of this, Locust also comes with :py:class:`FastHttpUser <locust.contrib.
 uses `geventhttpclient <https://github.com/gwik/geventhttpclient/>`_ instead.
 It provides a very similar API and uses significantly less CPU time, sometimes increasing the maximum number of requests per second on a given hardware by as much as 5x-6x.
 
-It is impossible to say what your particular hardware can handle, but in a best case scenario
-a test using FastHttpUsers will be able to do close to 5000 requests per second per core, instead of around 850 for HttpUser (tested on a 2018 MacBook Pro i7 2.6GHz). In reality your results may vary, and you'll see smaller gains if your load tests also do other CPU-intensive things.
+It is impossible to say what your particular hardware can handle, using your particular test plan. But in a *best case scenario* (doing small requests inside a `while True`-loop) FastHttpUser will be able to do 16000 requests per second per core, instead of around 4000 for HttpUser (tested on a 2021 MacBook Pro M1 MAX using Python 3.11). Your results may vary, and you'll see smaller gains if your load tests do CPU-intensive things apart from just making requests.
 
 .. note::
 
-    As long as your load generator CPU is not overloaded, FastHttpUser's response times should be almost identical to those of HttpUser. It is not "faster" in that sense. And of course, it cannot speed up the system you are testing.
+    As long as your load generator CPU is not overloaded, FastHttpUser's response times should be almost identical to those of HttpUser. It does not make individual requests faster.
 
 How to use FastHttpUser
 ===========================
