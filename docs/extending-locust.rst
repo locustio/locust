@@ -199,7 +199,7 @@ You can add your own command line arguments to Locust, using the :py:attr:`init_
 .. literalinclude:: ../examples/add_command_line_argument.py
     :language: python
 
-When running Locust :ref:`distributed <running-locust-distributed>`, custom arguments are automatically forwarded to workers when the run is started (but not before then, so you cannot rely on forwarded arguments *before* the test has actually started).
+When running Locust :ref:`distributed <running-distributed>`, custom arguments are automatically forwarded to workers when the run is started (but not before then, so you cannot rely on forwarded arguments *before* the test has actually started).
 
 Test data management
 ====================
