@@ -32,8 +32,8 @@ To specify the run time for a test, use ``-t/--run-time``:
 
 .. code-block:: console
 
-    $ locust -f --headless -u 100 --run-time 1h30m
-    $ locust -f --headless -u 100 --run-time 60 # default unit is seconds
+    $ locust --headless -u 100 --run-time 1h30m
+    $ locust --headless -u 100 --run-time 60 # default unit is seconds
 
 Locust will shut down once the time is up. Time is calculated from the start of the test (not from when ramp up has finished).
 
