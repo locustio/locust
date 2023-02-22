@@ -375,9 +375,7 @@ class FastHttpUser(User):
             if resp.text is None:
                 # round the response time to nearest second to improve error grouping
                 response_time = round(resp.request_meta["response_time"] / 1000, 1)
-                resp.failure(
-                    f"response body None, error {resp.error}, response code {resp.status_code}, response time ~{response_time}s"
-                )
+                resp.failure(str(resp.error))
             else:
                 if resp.text:
                     try:
