@@ -373,17 +373,14 @@ class FastHttpUser(User):
             resp = cast(RestResponseContextManager, r)
             resp.js = None  # type: ignore
             if resp.text is None:
-                # round the response time to nearest second to improve error grouping
-                response_time = round(resp.request_meta["response_time"] / 1000, 1)
                 resp.failure(str(resp.error))
-            else:
-                if resp.text:
-                    try:
-                        resp.js = resp.json()
-                    except JSONDecodeError as e:
-                        resp.failure(
-                            f"Could not parse response as JSON. {resp.text[:250]}, response code {resp.status_code}, error {e}"
-                        )
+            elif resp.text:
+                try:
+                    resp.js = resp.json()
+                except JSONDecodeError as e:
+                    resp.failure(
+                        f"Could not parse response as JSON. {resp.text[:250]}, response code {resp.status_code}, error {e}"
+                    )
             try:
                 yield resp
             except AssertionError as e:

@@ -144,6 +144,11 @@ def get_cookie():
     return make_response(request.cookies.get(request.args.get("name"), ""))
 
 
+@app.route("/rest", methods=["POST"])
+def rest():
+    return request.json
+
+
 class LocustTestCase(unittest.TestCase):
     """
     Test case class that restores locust.events.EventHook listeners on tearDown, so that it is

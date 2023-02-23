@@ -717,6 +717,25 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         with self.user.client.get("/fail") as resp:
             self.assertRaises(LocustError, resp.success)
 
+    def test_rest_success(self):
+        self.last_failure_exception = None
+        with self.user.rest("POST", "/rest", json={"foo": "bar"}) as response:
+            assert response.js["foo"] == "bar"
+
+        self.assertEqual(0, self.num_failures)
+        self.assertEqual(1, self.num_success)
+
+    def test_rest_fail(self):
+        with self.user.rest("POST", "/rest", json={"foo": "bar"}) as response:
+            assert response.js["foo"] == "NOPE"
+
+        self.assertTrue(
+            isinstance(self.last_failure_exception, CatchResponseError),
+            "Failure event handler should have been passed a CatchResponseError instance",
+        )
+        self.assertEqual(1, self.num_failures)
+        self.assertEqual(0, self.num_success)
+
 
 class TestFastHttpSsl(LocustTestCase):
     def setUp(self):
