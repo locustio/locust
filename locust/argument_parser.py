@@ -12,6 +12,7 @@ version = locust.__version__
 
 
 DEFAULT_CONFIG_FILES = ["~/.locust.conf", "locust.conf"]
+WORKER_ID_PATTERN = "%(hostname)s_%(uuid)s"
 
 
 class LocustArgumentParser(configargparse.ArgumentParser):
@@ -437,6 +438,14 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --worker. Defaults to 5557.",
         env_var="LOCUST_MASTER_NODE_PORT",
         metavar="MASTER_NODE_PORT",
+    )
+    worker_group.add_argument(
+        "--worker-id-pattern",
+        type=str,
+        default=WORKER_ID_PATTERN,
+        help="Pattern of worker ID. Only used when running with --worker. Defaults to %(default)s. Variables to use: hostname, uuid",
+        env_var="LOCUST_WORKER_ID_PATTERN",
+        metavar="WORKER_ID_PATTERN",
     )
 
     tag_group = parser.add_argument_group(

@@ -19,7 +19,7 @@ from locust import (
     runners,
     __version__,
 )
-from locust.argument_parser import parse_options
+from locust.argument_parser import parse_options, WORKER_ID_PATTERN
 from locust.env import Environment
 from locust.exception import RPCError, StopUser, RPCReceiveError
 from locust.main import create_environment
@@ -3116,7 +3116,7 @@ class TestWorkerRunner(LocustTestCase):
             environment = self.environment
         user_classes = user_classes or []
         environment.user_classes = user_classes
-        return WorkerRunner(environment, master_host="localhost", master_port=5557)
+        return WorkerRunner(environment, master_host="localhost", master_port=5557, worker_id_pattern=WORKER_ID_PATTERN)
 
     def test_worker_stop_timeout(self):
         class MyTestUser(User):

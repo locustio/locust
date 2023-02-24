@@ -1164,7 +1164,7 @@ class WorkerRunner(DistributedRunner):
     # the worker index is set on ACK, if master provided it (masters <= 2.10.2 do not provide it)
     worker_index = -1
 
-    def __init__(self, environment: "Environment", master_host: str, master_port: int) -> None:
+    def __init__(self, environment: "Environment", master_host: str, master_port: int, worker_id_pattern: str) -> None:
         """
         :param environment: Environment instance
         :param master_host: Host/IP to use for connection to the master
@@ -1175,7 +1175,7 @@ class WorkerRunner(DistributedRunner):
         self.connected = False
         self.connection_event = Event()
         self.worker_state = STATE_INIT
-        self.client_id = socket.gethostname() + "_" + uuid4().hex
+        self.client_id = worker_id_pattern % {"hostname": socket.gethostname(), "uuid": uuid4().hex}
         self.master_host = master_host
         self.master_port = master_port
         self.worker_cpu_warning_emitted = False

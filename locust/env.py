@@ -10,6 +10,7 @@ from typing import (
 
 from configargparse import Namespace
 
+from .argument_parser import WORKER_ID_PATTERN
 from .event import Events
 from .exception import RunnerAlreadyExistsError
 from .stats import RequestStats, StatsCSV
@@ -140,12 +141,15 @@ class Environment:
             master_bind_port=master_bind_port,
         )
 
-    def create_worker_runner(self, master_host: str, master_port: int) -> WorkerRunner:
+    def create_worker_runner(
+        self, master_host: str, master_port: int, worker_id_pattern: str = WORKER_ID_PATTERN
+    ) -> WorkerRunner:
         """
         Create a :class:`WorkerRunner <locust.runners.WorkerRunner>` instance for this Environment
 
         :param master_host: Host/IP of a running master node
         :param master_port: Port on master node to connect to
+        :param worker_id_pattern: Pattern of worker ID
         """
         # Create a new RequestStats with use_response_times_cache set to False to save some memory
         # and CPU cycles, since the response_times_cache is not needed for Worker nodes
@@ -154,6 +158,7 @@ class Environment:
             WorkerRunner,
             master_host=master_host,
             master_port=master_port,
+            worker_id_pattern=worker_id_pattern,
         )
 
     def create_web_ui(

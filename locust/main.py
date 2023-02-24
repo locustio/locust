@@ -220,7 +220,9 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         )
     elif options.worker:
         try:
-            runner = environment.create_worker_runner(options.master_host, options.master_port)
+            runner = environment.create_worker_runner(
+                options.master_host, options.master_port, options.worker_id_pattern
+            )
             logger.debug("Connected to locust master: %s:%s", options.master_host, options.master_port)
         except OSError as e:
             logger.error("Failed to connect to the Locust master: %s", e)
