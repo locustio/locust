@@ -145,23 +145,6 @@ class TestHttpSession(WebserverTestCase):
         s.request("get", "/wrong_url")
         self.assertEqual("Not Found", kwargs["response"].text)
 
-    def test_deprecated_request_events(self):
-        s = self.get_client()
-        status = {"success_amount": 0, "failure_amount": 0}
-
-        def on_success(**kw):
-            status["success_amount"] += 1
-
-        def on_failure(**kw):
-            status["failure_amount"] += 1
-
-        self.environment.events.request_success.add_listener(on_success)
-        self.environment.events.request_failure.add_listener(on_failure)
-        s.request("get", "/request_method")
-        s.request("get", "/wrong_url")
-        self.assertEqual(1, status["success_amount"])
-        self.assertEqual(1, status["failure_amount"])
-
     def test_error_message_with_name_replacement(self):
         s = self.get_client()
         kwargs = {}

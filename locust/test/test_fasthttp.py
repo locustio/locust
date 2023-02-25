@@ -693,25 +693,6 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         self.assertRaises(LocustError, r.success)
         self.assertRaises(LocustError, r.failure, "")
 
-    def test_deprecated_request_events(self):
-        status = {"success_amount": 0, "failure_amount": 0}
-
-        def on_success(**kw):
-            status["success_amount"] += 1
-
-        def on_failure(**kw):
-            status["failure_amount"] += 1
-
-        self.environment.events.request_success.add_listener(on_success)
-        self.environment.events.request_failure.add_listener(on_failure)
-        with self.user.client.get("/ultra_fast", catch_response=True) as response:
-            pass
-        with self.user.client.get("/wrong_url", catch_response=True) as response:
-            pass
-
-        self.assertEqual(1, status["success_amount"])
-        self.assertEqual(1, status["failure_amount"])
-
     def test_missing_catch_response_true(self):
         # incorrect usage, missing catch_response=True
         with self.user.client.get("/fail") as resp:

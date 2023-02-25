@@ -73,33 +73,6 @@ class Events:
     :param exception: Exception instance that was thrown. None if request was successful.
     """
 
-    request_success: DeprecatedEventHook
-    """
-    DEPRECATED. Fired when a request is completed successfully. This event is typically used to report requests
-    when writing custom clients for locust.
-
-    Event arguments:
-
-    :param request_type: Request type method used
-    :param name: Path to the URL that was called (or override name if it was used in the call to the client)
-    :param response_time: Response time in milliseconds
-    :param response_length: Content-length of the response
-    """
-
-    request_failure: DeprecatedEventHook
-    """
-    DEPRECATED. Fired when a request fails. This event is typically used to report failed requests when writing
-    custom clients for locust.
-
-    Event arguments:
-
-    :param request_type: Request type method used
-    :param name: Path to the URL that was called (or override name if it was used in the call to the client)
-    :param response_time: Time in milliseconds until exception was thrown
-    :param response_length: Content-length of the response
-    :param exception: Exception instance that was thrown
-    """
-
     user_error: EventHook
     """
     Fired when an exception occurs inside the execution of a User class.
@@ -169,8 +142,7 @@ class Events:
     """
     Fired when Locust is started, once the Environment instance and locust runner instance
     have been created. This hook can be used by end-users' code to run code that requires access to
-    the Environment. For example to register listeners to request_success, request_failure
-    or other events.
+    the Environment. For example to register listeners to other events.
 
     Event arguments:
 
@@ -221,28 +193,3 @@ class Events:
         for name, value in self.__annotations__.items():
             if value == EventHook:
                 setattr(self, name, value())
-
-        self.request_success = DeprecatedEventHook("request_success event deprecated. Use the request event.")
-
-        self.request_failure = DeprecatedEventHook("request_failure event deprecated. Use the request event.")
-
-        def fire_deprecated_request_handlers(
-            request_type, name, response_time, response_length, exception, context, **kwargs
-        ):
-            if exception:
-                self.request_failure.fire(
-                    request_type=request_type,
-                    name=name,
-                    response_time=response_time,
-                    response_length=response_length,
-                    exception=exception,
-                )
-            else:
-                self.request_success.fire(
-                    request_type=request_type,
-                    name=name,
-                    response_time=response_time,
-                    response_length=response_length,
-                )
-
-        self.request.add_listener(fire_deprecated_request_handlers)
