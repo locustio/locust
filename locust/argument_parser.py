@@ -291,6 +291,18 @@ def setup_parser_arguments(parser):
         help="Show list of possible User classes and exit",
     )
 
+    parser.add_argument(
+        "--percentile1",
+        dest='percentile1',
+        env_var="PERCENTILE_1",
+    )
+
+    parser.add_argument(
+        "--percentile2",
+        dest='percentile2',
+        env_var="PERCENTILE_2",
+    )
+
     web_ui_group = parser.add_argument_group("Web UI options")
     web_ui_group.add_argument(
         "--web-host",

@@ -19,7 +19,7 @@ def render_template(file, **kwargs):
 
 def get_html_report(environment, show_download_link=True):
     stats = environment.runner.stats
-
+    options = environment.parsed_options
     start_ts = stats.start_time
     start_time = datetime.datetime.utcfromtimestamp(start_ts).strftime("%Y-%m-%d %H:%M:%S")
 
@@ -94,6 +94,8 @@ def get_html_report(environment, show_download_link=True):
         show_download_link=show_download_link,
         locustfile=environment.locustfile,
         tasks=dumps(task_data),
+        percentile1=options.percentile1 if options.percentile1 else 0.95,
+        percentile2=options.percentile2 if options.percentile2 else 0.5,
     )
 
     return res

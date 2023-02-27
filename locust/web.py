@@ -332,8 +332,13 @@ class WebUI:
         def request_stats() -> Response:
             stats: List[Dict[str, Any]] = []
             errors: List[StatsErrorDict] = []
-
+            options = self.environment.parsed_options
+            if not options.percentile1:
+                options.percentile1 = '0.95'
+            if not options.percentile2:
+                options.percentile2 = '0.5'
             if environment.runner is None:
+
                 report = {
                     "stats": stats,
                     "errors": errors,
@@ -389,10 +394,10 @@ class WebUI:
                 report["fail_ratio"] = environment.runner.stats.total.fail_ratio
                 report[
                     "current_response_time_percentile_95"
-                ] = environment.runner.stats.total.get_current_response_time_percentile(0.95)
+                ] = environment.runner.stats.total.get_current_response_time_percentile(float(options.percentile1))
                 report[
                     "current_response_time_percentile_50"
-                ] = environment.runner.stats.total.get_current_response_time_percentile(0.5)
+                ] = environment.runner.stats.total.get_current_response_time_percentile(float(options.percentile2))
 
             if isinstance(environment.runner, MasterRunner):
                 workers = []
@@ -555,6 +560,8 @@ class WebUI:
             "show_userclass_picker": self.userclass_picker_is_active,
             "available_user_classes": available_user_classes,
             "available_shape_classes": available_shape_classes,
+            "percentile1": options.percentile1 if options.percentile1 else 0.95,
+            "percentile2": options.percentile2 if options.percentile2 else 0.5,
         }
 
     def _update_shape_class(self, shape_class_name):

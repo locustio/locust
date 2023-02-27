@@ -110,6 +110,14 @@ def main():
         sys.stderr.write("The --slave/--expect-slaves parameters have been renamed --worker/--expect-workers\n")
         sys.exit(1)
 
+    if options.percentile1 and (float(options.percentile1) < 0 or float(options.percentile1) >1):
+        sys.stderr.write("The --percentile1/--percentile2 parameters need to be between 0 to 1. Eg : 0.95 \n")
+        sys.exit(1)
+
+    if options.percentile2 and (float(options.percentile2) < 0 or float(options.percentile2) >1):
+        sys.stderr.write("The --percentile1/--percentile2 parameters need to be between 0 to 1. Eg : 0.95 \n")
+        sys.exit(1)
+
     if options.autoquit != -1 and not options.autostart:
         sys.stderr.write("--autoquit is only meaningful in combination with --autostart\n")
         sys.exit(1)

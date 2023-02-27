@@ -884,12 +884,14 @@ def stats_history(runner: "Runner") -> None:
         if not stats.total.use_response_times_cache:
             break
         if runner.state != "stopped":
+            percentile1 = runner.environment.parsed_options.percentile1 if runner.environment.parsed_options.percentile1 else 0.95
+            percentile2 = runner.environment.parsed_options.percentile2 if runner.environment.parsed_options.percentile2 else 0.5
             r = {
                 "time": datetime.datetime.now(tz=datetime.timezone.utc).strftime("%H:%M:%S"),
                 "current_rps": stats.total.current_rps or 0,
                 "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
-                "response_time_percentile_95": stats.total.get_current_response_time_percentile(0.95) or 0,
-                "response_time_percentile_50": stats.total.get_current_response_time_percentile(0.5) or 0,
+                "response_time_percentile_95": stats.total.get_current_response_time_percentile(float(percentile1)) or 0,
+                "response_time_percentile_50": stats.total.get_current_response_time_percentile(float(percentile2)) or 0,
                 "user_count": runner.user_count or 0,
             }
             stats.history.append(r)
