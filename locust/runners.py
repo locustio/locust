@@ -1087,7 +1087,11 @@ class MasterRunner(DistributedRunner):
             elif msg.type == "stats":
                 self.environment.events.worker_report.fire(client_id=msg.node_id, data=msg.data)
             elif msg.type == "spawning":
-                self.clients[msg.node_id].state = STATE_SPAWNING
+                try:
+                    self.clients[msg.node_id].state = STATE_SPAWNING
+                except KeyError:
+                    logger.warning(f"Got spawning message from unknown worker {msg.node_id}. Asking worker to quit.")
+                    self.server.send_to_client(Message("quit", None, msg.node_id))
             elif msg.type == "spawning_complete":
                 self.clients[msg.node_id].state = STATE_RUNNING
                 self.clients[msg.node_id].user_classes_count = msg.data["user_classes_count"]
