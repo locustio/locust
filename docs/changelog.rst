@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.15.0
+======
+* Add is_secret option for custom args to be shown in the web UI masked #2284
+* Remove deprecated request_success and request_failure event handlers (only support unified request handler that was introduced in 1.5) #2306
+
 2.14.2
 ======
 * Re-add py.typed marker file to package (it was missing in 2.14.1) #2282
