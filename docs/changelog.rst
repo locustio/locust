@@ -6,12 +6,12 @@ For full details of the Locust changelog, please see https://github.com/locustio
 
 2.15.0
 ======
-* Add is_secret option for custom args to be shown in the web UI masked #2284
-* Remove deprecated request_success and request_failure event handlers (only support unified request handler that was introduced in 1.5) #2306
+* Add is_secret option for custom args to be shown in the web UI masked https://github.com/locustio/locust/pull/2284
+* Remove deprecated request_success and request_failure event handlers (only support unified request handler that was introduced in 1.5) https://github.com/locustio/locust/pull/2306
 
 2.14.2
 ======
-* Re-add py.typed marker file to package (it was missing in 2.14.1) #2282
+* Re-add py.typed marker file to package (it was missing in 2.14.1) https://github.com/locustio/locust/pull/2282
 
 2.14.1
 ======
@@ -23,7 +23,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 
 2.13.2
 ======
-* Fix: Ask worker to reconnect if master gets a broken RPC message by @marcinh in #2271
+* Fix: Ask worker to reconnect if master gets a broken RPC message by @marcinh in https://github.com/locustio/locust/pull/2271
 
 2.13.1
 ======
