@@ -7,7 +7,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 2.15.0
 ======
 * Add is_secret option for custom args to be shown in the web UI masked https://github.com/locustio/locust/pull/2284
-* Remove deprecated request_success and request_failure event handlers (only support unified request handler that was introduced in 1.5) https://github.com/locustio/locust/pull/2306
+* Breaking change: Remove deprecated request_success and request_failure event handlers (unified request handler was introduced in 1.5) https://github.com/locustio/locust/pull/2306
 
 2.14.2
 ======

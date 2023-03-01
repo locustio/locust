@@ -1,6 +1,35 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.15.0](https://github.com/locustio/locust/tree/2.15.0) (2023-03-01)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.15.0...2.15.0)
+
+**Closed issues:**
+
+- locust k8s operator [\#2188](https://github.com/locustio/locust/issues/2188)
+
+## [2.15.0](https://github.com/locustio/locust/tree/2.15.0) (2023-02-28)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.14.2...2.15.0)
+
+**Fixed bugs:**
+
+- "Download as PNG" text gets cut off [\#2307](https://github.com/locustio/locust/issues/2307)
+- New worker fails to connect until master restart [\#2302](https://github.com/locustio/locust/issues/2302)
+
+**Merged pull requests:**
+
+- Fix locustio/locust\#2302 unknown worker spawning message [\#2309](https://github.com/locustio/locust/pull/2309) ([ykvch](https://github.com/ykvch))
+- Prevent Download as PNG text from getting cut off [\#2308](https://github.com/locustio/locust/pull/2308) ([allison-strandberg](https://github.com/allison-strandberg))
+- Remove request\_success and request\_failure event handlers [\#2306](https://github.com/locustio/locust/pull/2306) ([cyberw](https://github.com/cyberw))
+- Remove verbose FastHttpUser error messages [\#2301](https://github.com/locustio/locust/pull/2301) ([cyberw](https://github.com/cyberw))
+- fix: docs describing running without web UI had improper flag -f. Cor… [\#2297](https://github.com/locustio/locust/pull/2297) ([adriangonciarz](https://github.com/adriangonciarz))
+- Update performance estimates for modern Python and hardware [\#2295](https://github.com/locustio/locust/pull/2295) ([cyberw](https://github.com/cyberw))
+- docs \(\#2188\):  Add Locust Kubernetes Operator [\#2288](https://github.com/locustio/locust/pull/2288) ([AbdelrhmanHamouda](https://github.com/AbdelrhmanHamouda))
+- add events when initialize Environment [\#2285](https://github.com/locustio/locust/pull/2285) ([keegoo](https://github.com/keegoo))
+- add is\_secret option for custom args to be shown in the web UI masked [\#2284](https://github.com/locustio/locust/pull/2284) ([mzhukovs](https://github.com/mzhukovs))
+
 ## [2.14.2](https://github.com/locustio/locust/tree/2.14.2) (2023-01-04)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.14.1...2.14.2)
@@ -1096,7 +1125,7 @@ The most important changes can also be found in [the documentation](https://docs
 **Merged pull requests:**
 
 - Remove Bad Apostrophe [\#1411](https://github.com/locustio/locust/pull/1411) ([curtisgibby](https://github.com/curtisgibby))
-- update \_\_init\_\_ file [\#1409](https://github.com/locustio/locust/pull/1409) ([manifiko](https://github.com/manifiko))
+- update \_\_init\_\_ file [\#1409](https://github.com/locustio/locust/pull/1409) ([iamtechnomage](https://github.com/iamtechnomage))
 - Rename 3 remaining instances of slave to worker [\#1400](https://github.com/locustio/locust/pull/1400) ([ibrahima](https://github.com/ibrahima))
 - The format for providing host can be confusing at times [\#1398](https://github.com/locustio/locust/pull/1398) ([jo19in1](https://github.com/jo19in1))
 - Ability to control the Locust process' exit code [\#1396](https://github.com/locustio/locust/pull/1396) ([heyman](https://github.com/heyman))
