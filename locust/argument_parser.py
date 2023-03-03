@@ -293,8 +293,8 @@ def setup_parser_arguments(parser):
 
     parser.add_argument(
         "--percentiles",
-        dest='percentiles',
-        default='0.95,0.5',
+        dest="percentiles",
+        default="0.95,0.5",
         env_var="PERCENTILES",
     )
 

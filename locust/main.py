@@ -121,17 +121,18 @@ def main():
             return False
 
     if options.percentiles:
-
-        if any([not isfloat(percentile) for percentile in options.percentiles.split(',')]):
+        if any([not isfloat(percentile) for percentile in options.percentiles.split(",")]):
             sys.stderr.write("The --percentiles parameter need to be float.  Eg 0.95 \n")
             sys.exit(1)
 
-        if any((0 > float(pecentile) or 1 < float(pecentile)) for pecentile in options.percentiles.split(',')):
+        if any((0 > float(pecentile) or 1 < float(pecentile)) for pecentile in options.percentiles.split(",")):
             sys.stderr.write("The --percentiles parameter need to be value between. 0 <= percentile <= 1 Eg 0.95 \n")
             sys.exit(1)
 
-        if len(options.percentiles.split(',')) >= 3:
-            sys.stderr.write("The --percentiles parameter can be specified up tp 2 parameters by comma separators. Eg 0.95,0.5   \n")
+        if len(options.percentiles.split(",")) >= 3:
+            sys.stderr.write(
+                "The --percentiles parameter can be specified up tp 2 parameters by comma separators. Eg 0.95,0.5   \n"
+            )
             sys.exit(1)
 
     if options.autoquit != -1 and not options.autostart:
@@ -184,7 +185,6 @@ def main():
         user_classes = list(user_classes.values())
 
     if os.name != "nt" and not options.master:
-
         try:
             import resource
 
@@ -204,7 +204,6 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
     # create locust Environment
     locustfile_path = None if not locustfile else os.path.basename(locustfile)
-
 
     environment = create_environment(
         user_classes,
@@ -500,4 +499,3 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     except Exception:
         raise
     shutdown()
-
