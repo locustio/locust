@@ -333,12 +333,17 @@ class WebUI:
             stats: List[Dict[str, Any]] = []
             errors: List[StatsErrorDict] = []
             options = self.environment.parsed_options
-            percentile1 = options.percentiles.split(',')[0] \
-                if options and options.percentiles and len(options.percentiles.split(',')) >= 1 else 0.95
-            percentile2 = options.percentiles.split(',')[1] \
-                if options and options.percentiles and len(options.percentiles.split(',')) >= 2 else 0.5
+            percentile1 = (
+                options.percentiles.split(",")[0]
+                if options and options.percentiles and len(options.percentiles.split(",")) >= 1
+                else 0.95
+            )
+            percentile2 = (
+                options.percentiles.split(",")[1]
+                if options and options.percentiles and len(options.percentiles.split(",")) >= 2
+                else 0.5
+            )
             if environment.runner is None:
-
                 report = {
                     "stats": stats,
                     "errors": errors,
@@ -541,9 +546,16 @@ class WebUI:
         if self.environment.available_shape_classes:
             available_shape_classes += sorted(self.environment.available_shape_classes.keys())
 
-        percentile1 = options.percentiles.split(',')[0] if options and options.percentiles and len(options.percentiles.split(',')) >= 1 else 0.95
-        percentile2 = options.percentiles.split(',')[1] if options and options.percentiles and len(options.percentiles.split(',')) >= 2 else 0.5
-
+        percentile1 = (
+            options.percentiles.split(",")[0]
+            if options and options.percentiles and len(options.percentiles.split(",")) >= 1
+            else 0.95
+        )
+        percentile2 = (
+            options.percentiles.split(",")[1]
+            if options and options.percentiles and len(options.percentiles.split(",")) >= 2
+            else 0.5
+        )
 
         self.template_args = {
             "locustfile": self.environment.locustfile,
