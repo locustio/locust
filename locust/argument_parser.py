@@ -292,15 +292,10 @@ def setup_parser_arguments(parser):
     )
 
     parser.add_argument(
-        "--percentile1",
-        dest='percentile1',
-        env_var="PERCENTILE_1",
-    )
-
-    parser.add_argument(
-        "--percentile2",
-        dest='percentile2',
-        env_var="PERCENTILE_2",
+        "--percentiles",
+        dest='percentiles',
+        default='0.95,0.5',
+        env_var="PERCENTILES",
     )
 
     web_ui_group = parser.add_argument_group("Web UI options")

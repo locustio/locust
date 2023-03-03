@@ -110,13 +110,29 @@ def main():
         sys.stderr.write("The --slave/--expect-slaves parameters have been renamed --worker/--expect-workers\n")
         sys.exit(1)
 
-    if options.percentile1 and (float(options.percentile1) < 0 or float(options.percentile1) >1):
-        sys.stderr.write("The --percentile1/--percentile2 parameters need to be between 0 to 1. Eg : 0.95 \n")
-        sys.exit(1)
+    def isfloat(parameter):
+        if not parameter.isdecimal():
+            try:
+                float(parameter)
+                return True
+            except ValueError:
+                return False
+        else:
+            return False
 
-    if options.percentile2 and (float(options.percentile2) < 0 or float(options.percentile2) >1):
-        sys.stderr.write("The --percentile1/--percentile2 parameters need to be between 0 to 1. Eg : 0.95 \n")
-        sys.exit(1)
+    if options.percentiles:
+
+        if any([not isfloat(percentile) for percentile in options.percentiles.split(',')]):
+            sys.stderr.write("The --percentiles parameter need to be float.  Eg 0.95 \n")
+            sys.exit(1)
+
+        if any((0 > float(pecentile) or 1 < float(pecentile)) for pecentile in options.percentiles.split(',')):
+            sys.stderr.write("The --percentiles parameter need to be value between. 0 <= percentile <= 1 Eg 0.95 \n")
+            sys.exit(1)
+
+        if len(options.percentiles.split(',')) >= 3:
+            sys.stderr.write("The --percentiles parameter can be specified up tp 2 parameters by comma separators. Eg 0.95,0.5   \n")
+            sys.exit(1)
 
     if options.autoquit != -1 and not options.autostart:
         sys.stderr.write("--autoquit is only meaningful in combination with --autostart\n")
@@ -188,6 +204,8 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
     # create locust Environment
     locustfile_path = None if not locustfile else os.path.basename(locustfile)
+
+
     environment = create_environment(
         user_classes,
         options,
@@ -482,3 +500,4 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     except Exception:
         raise
     shutdown()
+

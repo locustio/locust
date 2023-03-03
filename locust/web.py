@@ -333,10 +333,10 @@ class WebUI:
             stats: List[Dict[str, Any]] = []
             errors: List[StatsErrorDict] = []
             options = self.environment.parsed_options
-            if not options.percentile1:
-                options.percentile1 = '0.95'
-            if not options.percentile2:
-                options.percentile2 = '0.5'
+            percentile1 = options.percentiles.split(',')[0] \
+                if options and options.percentiles and len(options.percentiles.split(',')) >= 1 else 0.95
+            percentile2 = options.percentiles.split(',')[1] \
+                if options and options.percentiles and len(options.percentiles.split(',')) >= 2 else 0.5
             if environment.runner is None:
 
                 report = {
@@ -394,10 +394,10 @@ class WebUI:
                 report["fail_ratio"] = environment.runner.stats.total.fail_ratio
                 report[
                     "current_response_time_percentile_95"
-                ] = environment.runner.stats.total.get_current_response_time_percentile(float(options.percentile1))
+                ] = environment.runner.stats.total.get_current_response_time_percentile(float(percentile1))
                 report[
                     "current_response_time_percentile_50"
-                ] = environment.runner.stats.total.get_current_response_time_percentile(float(options.percentile2))
+                ] = environment.runner.stats.total.get_current_response_time_percentile(float(percentile2))
 
             if isinstance(environment.runner, MasterRunner):
                 workers = []
@@ -541,6 +541,10 @@ class WebUI:
         if self.environment.available_shape_classes:
             available_shape_classes += sorted(self.environment.available_shape_classes.keys())
 
+        percentile1 = options.percentiles.split(',')[0] if options and options.percentiles and len(options.percentiles.split(',')) >= 1 else 0.95
+        percentile2 = options.percentiles.split(',')[1] if options and options.percentiles and len(options.percentiles.split(',')) >= 2 else 0.5
+
+
         self.template_args = {
             "locustfile": self.environment.locustfile,
             "state": self.environment.runner.state,
@@ -560,8 +564,8 @@ class WebUI:
             "show_userclass_picker": self.userclass_picker_is_active,
             "available_user_classes": available_user_classes,
             "available_shape_classes": available_shape_classes,
-            "percentile1": options.percentile1 if options.percentile1 else 0.95,
-            "percentile2": options.percentile2 if options.percentile2 else 0.5,
+            "percentile1": percentile1,
+            "percentile2": percentile2,
         }
 
     def _update_shape_class(self, shape_class_name):

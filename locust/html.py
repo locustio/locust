@@ -94,8 +94,8 @@ def get_html_report(environment, show_download_link=True):
         show_download_link=show_download_link,
         locustfile=environment.locustfile,
         tasks=dumps(task_data),
-        percentile1=options.percentile1 if options.percentile1 else 0.95,
-        percentile2=options.percentile2 if options.percentile2 else 0.5,
+        percentile1=options.percentiles.split(',')[0] if options and options.percentiles and len(options.percentiles.split(',')) >= 1 else 0.95,
+        percentile2=options.percentiles.split(',')[1] if options and options.percentiles and len(options.percentiles.split(',')) >= 2 else 0.5,
     )
 
     return res

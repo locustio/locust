@@ -884,8 +884,12 @@ def stats_history(runner: "Runner") -> None:
         if not stats.total.use_response_times_cache:
             break
         if runner.state != "stopped":
-            percentile1 = runner.environment.parsed_options.percentile1 if runner.environment.parsed_options.percentile1 else 0.95
-            percentile2 = runner.environment.parsed_options.percentile2 if runner.environment.parsed_options.percentile2 else 0.5
+            percentile1 = runner.environment.parsed_options.percentiles.split(',')[0] \
+                if runner.environment.parsed_options and runner.environment.parsed_options.percentiles and \
+                   len(runner.environment.parsed_options.percentiles.split(',')) >= 1 else 0.95
+            percentile2 = runner.environment.parsed_options.percentiles.split(',')[1] \
+                if runner.environment.parsed_options and runner.environment.parsed_options.percentiles and \
+                   len(runner.environment.parsed_options.percentiles.split(',')) >= 2 else 0.5
             r = {
                 "time": datetime.datetime.now(tz=datetime.timezone.utc).strftime("%H:%M:%S"),
                 "current_rps": stats.total.current_rps or 0,
