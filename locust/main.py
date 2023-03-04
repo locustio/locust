@@ -160,7 +160,6 @@ def main():
         user_classes = list(user_classes.values())
 
     if os.name != "nt" and not options.master:
-
         try:
             import resource
 

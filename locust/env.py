@@ -41,7 +41,6 @@ class Environment:
         available_user_classes: Optional[Dict[str, User]] = None,
         available_shape_classes: Optional[Dict[str, LoadTestShape]] = None,
     ):
-
         self.runner: Optional[Runner] = None
         """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
 

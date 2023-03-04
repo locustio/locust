@@ -3555,7 +3555,6 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
             [(1, 1, 1, 1, 1), (200, 0, 0, 0, 0)],
             [(1, 1, 1, 1, 1), (0, 0, 0, 0, 0)],
         ]:
-
             u1_weight, u2_weight, u3_weight, u4_weight, u5_weight = weights
             u1_fixed_count, u2_fixed_count, u3_fixed_count, u4_fixed_count, u5_fixed_count = fixed_counts
 
@@ -3589,7 +3588,6 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
 
                 for down_to_count in down_counts:
                     for target_user_count in target_user_counts:
-
                         # Ramp-up to go to `target_user_count` #########
 
                         users_dispatcher.new_dispatch(target_user_count=target_user_count, spawn_rate=1)
