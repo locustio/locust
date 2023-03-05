@@ -54,7 +54,11 @@ Even though Locust primarily works with web sites/services, it can be used to te
 
 ## Hackable
 
-Locust's code base is intentionally kept small and doesn't solve everything out of the box. Instead, we try to make it easy to adapt to any situation you may come across, using regular Python code. If you want to [send reporting data to that database & graphing system you like](https://github.com/SvenskaSpel/locust-plugins/blob/master/locust_plugins/dashboards/README.md), [wrap calls to a REST API](https://github.com/SvenskaSpel/locust-plugins/blob/master/examples/rest_ex.py) to handle the particulars of your system or run a [totally custom load pattern](https://docs.locust.io/en/latest/custom-load-shape.html#custom-load-shape), there is nothing stopping you!
+Locust's code base is intentionally kept small and doesn't solve everything out of the box. Instead, we try to make it easy to adapt to any situation you may come across, using regular Python code. There is nothing stopping you from, for example: 
+
+* [Send real time reporting data to TimescaleDB and visualize it in Grafana](https://github.com/SvenskaSpel/locust-plugins/blob/master/locust_plugins/dashboards/README.md)
+* [Wrap calls to handle the peculiarities of your REST API](https://github.com/SvenskaSpel/locust-plugins/blob/8af21862d8129a5c3b17559677fe92192e312d8f/examples/rest_ex.py#L87) 
+* [Use a totally custom load shape/profile](https://docs.locust.io/en/latest/custom-load-shape.html#custom-load-shape)
 
 ## Links
 
@@ -66,7 +70,7 @@ Locust's code base is intentionally kept small and doesn't solve everything out 
 
 ## Authors
 
-* [Carl Bystr](http://cgbystrom.com) ([@cgbystrom](https://twitter.com/cgbystrom) on Twitter)
+* [Carl Byström](http://cgbystrom.com) ([@cgbystrom](https://twitter.com/cgbystrom) on Twitter)
 * [Jonatan Heyman](http://heyman.info) ([@jonatanheyman](https://twitter.com/jonatanheyman) on Twitter)
 * [Joakim Hamrén](https://github.com/Jahaja) ([@Jahaaja](https://twitter.com/Jahaaja) on Twitter)
 * [Hugo Heyman](https://github.com/HeyHugo) ([@hugoheyman](https://twitter.com/hugoheyman) on Twitter)
