@@ -3,6 +3,7 @@ import csv
 import logging
 import os.path
 from functools import wraps
+
 from html import escape
 from io import StringIO
 from json import dumps
@@ -20,7 +21,7 @@ from .runners import MasterRunner, STATE_RUNNING, STATE_MISSING
 from .log import greenlet_exception_logger
 from .stats import StatsCSVFileWriter, StatsErrorDict, sort_stats
 from . import stats as stats_module, __version__ as version, argument_parser
-from .stats import StatsCSV
+from .stats import StatsCSV, PERCENTILES_TO_CHART
 from .user.inspectuser import get_ratio
 from .util.cache import memoize
 from .util.rounding import proper_round
@@ -332,17 +333,7 @@ class WebUI:
         def request_stats() -> Response:
             stats: List[Dict[str, Any]] = []
             errors: List[StatsErrorDict] = []
-            options = self.environment.parsed_options
-            percentile1 = (
-                options.percentiles.split(",")[0]
-                if options and options.percentiles and len(options.percentiles.split(",")) >= 1
-                else 0.95
-            )
-            percentile2 = (
-                options.percentiles.split(",")[1]
-                if options and options.percentiles and len(options.percentiles.split(",")) >= 2
-                else 0.5
-            )
+
             if environment.runner is None:
                 report = {
                     "stats": stats,
@@ -399,10 +390,10 @@ class WebUI:
                 report["fail_ratio"] = environment.runner.stats.total.fail_ratio
                 report[
                     "current_response_time_percentile_95"
-                ] = environment.runner.stats.total.get_current_response_time_percentile(float(percentile1))
+                ] = environment.runner.stats.total.get_current_response_time_percentile(PERCENTILES_TO_CHART[0])
                 report[
                     "current_response_time_percentile_50"
-                ] = environment.runner.stats.total.get_current_response_time_percentile(float(percentile2))
+                ] = environment.runner.stats.total.get_current_response_time_percentile(PERCENTILES_TO_CHART[1])
 
             if isinstance(environment.runner, MasterRunner):
                 workers = []
@@ -546,17 +537,6 @@ class WebUI:
         if self.environment.available_shape_classes:
             available_shape_classes += sorted(self.environment.available_shape_classes.keys())
 
-        percentile1 = (
-            options.percentiles.split(",")[0]
-            if options and options.percentiles and len(options.percentiles.split(",")) >= 1
-            else 0.95
-        )
-        percentile2 = (
-            options.percentiles.split(",")[1]
-            if options and options.percentiles and len(options.percentiles.split(",")) >= 2
-            else 0.5
-        )
-
         self.template_args = {
             "locustfile": self.environment.locustfile,
             "state": self.environment.runner.state,
@@ -576,8 +556,8 @@ class WebUI:
             "show_userclass_picker": self.userclass_picker_is_active,
             "available_user_classes": available_user_classes,
             "available_shape_classes": available_shape_classes,
-            "percentile1": percentile1,
-            "percentile2": percentile2,
+            "percentile1": PERCENTILES_TO_CHART[0],
+            "percentile2": PERCENTILES_TO_CHART[1],
         }
 
     def _update_shape_class(self, shape_class_name):

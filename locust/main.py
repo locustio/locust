@@ -100,6 +100,24 @@ def main():
             user_classes[key] = value
             available_user_classes[key] = value
 
+    if len(stats.PERCENTILES_TO_CHART) > 2:
+        sys.stderr.write("stats.PERCENTILES_TO_CHART parameter can be specified up tp 2 parameters \n")
+        sys.exit(1)
+
+    def is_valid_percentile(parameter):
+        try:
+            if 0 < float(parameter) < 1:
+                return True
+            return False
+        except ValueError:
+            return False
+
+    for percentile in stats.PERCENTILES_TO_CHART:
+        if not is_valid_percentile(percentile):
+            sys.stderr.write(
+                "stats.PERCENTILES_TO_CHART parameter need to be float and value between. 0 <= percentile <= 1 Eg 0.95\n"
+            )
+            sys.exit(1)
     # parse all command line options
     options = parse_options()
 
@@ -109,31 +127,6 @@ def main():
     if options.slave or options.expect_slaves:
         sys.stderr.write("The --slave/--expect-slaves parameters have been renamed --worker/--expect-workers\n")
         sys.exit(1)
-
-    def isfloat(parameter):
-        if not parameter.isdecimal():
-            try:
-                float(parameter)
-                return True
-            except ValueError:
-                return False
-        else:
-            return False
-
-    if options.percentiles:
-        if any([not isfloat(percentile) for percentile in options.percentiles.split(",")]):
-            sys.stderr.write("The --percentiles parameter need to be float.  Eg 0.95 \n")
-            sys.exit(1)
-
-        if any((0 > float(pecentile) or 1 < float(pecentile)) for pecentile in options.percentiles.split(",")):
-            sys.stderr.write("The --percentiles parameter need to be value between. 0 <= percentile <= 1 Eg 0.95 \n")
-            sys.exit(1)
-
-        if len(options.percentiles.split(",")) >= 3:
-            sys.stderr.write(
-                "The --percentiles parameter can be specified up tp 2 parameters by comma separators. Eg 0.95,0.5   \n"
-            )
-            sys.exit(1)
 
     if options.autoquit != -1 and not options.autostart:
         sys.stderr.write("--autoquit is only meaningful in combination with --autostart\n")

@@ -133,6 +133,8 @@ CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_
 
 PERCENTILES_TO_REPORT = [0.50, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 0.999, 0.9999, 1.0]
 
+PERCENTILES_TO_CHART = [0.95, 0.50]
+
 
 class RequestStatsAdditionError(Exception):
     pass
@@ -884,27 +886,13 @@ def stats_history(runner: "Runner") -> None:
         if not stats.total.use_response_times_cache:
             break
         if runner.state != "stopped":
-            percentile1 = (
-                runner.environment.parsed_options.percentiles.split(",")[0]
-                if runner.environment.parsed_options
-                and runner.environment.parsed_options.percentiles
-                and len(runner.environment.parsed_options.percentiles.split(",")) >= 1
-                else 0.95
-            )
-            percentile2 = (
-                runner.environment.parsed_options.percentiles.split(",")[1]
-                if runner.environment.parsed_options
-                and runner.environment.parsed_options.percentiles
-                and len(runner.environment.parsed_options.percentiles.split(",")) >= 2
-                else 0.5
-            )
             r = {
                 "time": datetime.datetime.now(tz=datetime.timezone.utc).strftime("%H:%M:%S"),
                 "current_rps": stats.total.current_rps or 0,
                 "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
-                "response_time_percentile_95": stats.total.get_current_response_time_percentile(float(percentile1))
+                "response_time_percentile_95": stats.total.get_current_response_time_percentile(PERCENTILES_TO_CHART[0])
                 or 0,
-                "response_time_percentile_50": stats.total.get_current_response_time_percentile(float(percentile2))
+                "response_time_percentile_50": stats.total.get_current_response_time_percentile(PERCENTILES_TO_CHART[1])
                 or 0,
                 "user_count": runner.user_count or 0,
             }

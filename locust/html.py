@@ -8,6 +8,7 @@ from .user.inspectuser import get_ratio
 from html import escape
 from json import dumps
 from .runners import MasterRunner, STATE_STOPPED, STATE_STOPPING
+from .stats import PERCENTILES_TO_CHART
 
 
 def render_template(file, **kwargs):
@@ -94,12 +95,8 @@ def get_html_report(environment, show_download_link=True):
         show_download_link=show_download_link,
         locustfile=environment.locustfile,
         tasks=dumps(task_data),
-        percentile1=options.percentiles.split(",")[0]
-        if options and options.percentiles and len(options.percentiles.split(",")) >= 1
-        else 0.95,
-        percentile2=options.percentiles.split(",")[1]
-        if options and options.percentiles and len(options.percentiles.split(",")) >= 2
-        else 0.5,
+        percentile1=PERCENTILES_TO_CHART[0],
+        percentile2=PERCENTILES_TO_CHART[1],
     )
 
     return res

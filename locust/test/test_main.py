@@ -1136,66 +1136,6 @@ class MyUser(HttpUser):
             self.assertIn("No tasks defined on MyUser", stderr)
             self.assertEqual(1, proc.returncode)
 
-    def test_invalid_percentilesrange_options(self):
-        with mock_locustfile() as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--host",
-                    "https://test.com/",
-                    "--percentiles",
-                    "1.2",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-
-            stdout, stderr = proc.communicate()
-            self.assertIn("The --percentiles parameter need to be value between", stderr)
-
-    def test_invalid_num_percentiles_params_options(self):
-        with mock_locustfile() as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--host",
-                    "https://test.com/",
-                    "--percentiles",
-                    "0.1,0.2,0.3",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-
-            stdout, stderr = proc.communicate()
-            self.assertIn("The --percentiles parameter can be specified up tp 2 parameters by comma separators", stderr)
-
-    def test_invalid_percentiles_options(self):
-        with mock_locustfile() as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--host",
-                    "https://test.com/",
-                    "--percentiles",
-                    "98",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-
-            stdout, stderr = proc.communicate()
-            self.assertIn("The --percentiles parameter need to be float.", stderr)
-
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
     def test_expect_workers(self):
