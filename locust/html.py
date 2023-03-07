@@ -8,7 +8,6 @@ from .user.inspectuser import get_ratio
 from html import escape
 from json import dumps
 from .runners import MasterRunner, STATE_STOPPED, STATE_STOPPING
-from .stats import PERCENTILES_TO_CHART
 
 
 def render_template(file, **kwargs):
@@ -76,6 +75,7 @@ def get_html_report(environment, show_download_link=True):
         "per_class": get_ratio(environment.user_classes, user_spawned, False),
         "total": get_ratio(environment.user_classes, user_spawned, True),
     }
+    from .stats import PERCENTILES_TO_CHART
 
     res = render_template(
         "report.html",

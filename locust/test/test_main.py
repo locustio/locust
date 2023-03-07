@@ -1,7 +1,8 @@
 import json
 import os
 import platform
-#import pty
+
+# import pty
 import signal
 import subprocess
 import textwrap
@@ -198,7 +199,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             from locust import User, task, constant, events
             from locust.stats import PERCENTILES_TO_CHART
             PERCENTILES_TO_CHART[0] = 0.9
-            PERCENTILES_TO_CHART[0] = 0.4
+            PERCENTILES_TO_CHART[1] = 0.4
             class TestUser(User):
                 wait_time = constant(3)
                 @task
@@ -233,7 +234,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
             self.assertIn("parameter need to be float and value between. 0 < percentile < 1 Eg 0.95", stderr)
-
 
     def test_webserver_multiple_locustfiles(self):
         with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1:

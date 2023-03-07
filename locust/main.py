@@ -100,8 +100,10 @@ def main():
             user_classes[key] = value
             available_user_classes[key] = value
 
-    if len(stats.PERCENTILES_TO_CHART) > 2:
-        logging.error("stats.PERCENTILES_TO_CHART parameter can be specified up tp 2 parameters \n")
+    from .stats import PERCENTILES_TO_CHART
+
+    if len(PERCENTILES_TO_CHART) != 2:
+        logging.error("stats.PERCENTILES_TO_CHART parameter should be 2 parameters \n")
         sys.exit(1)
 
     def is_valid_percentile(parameter):
@@ -112,7 +114,7 @@ def main():
         except ValueError:
             return False
 
-    for percentile in stats.PERCENTILES_TO_CHART:
+    for percentile in PERCENTILES_TO_CHART:
         if not is_valid_percentile(percentile):
             logging.error(
                 "stats.PERCENTILES_TO_CHART parameter need to be float and value between. 0 < percentile < 1 Eg 0.95\n"

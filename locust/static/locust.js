@@ -301,8 +301,8 @@ function updateStats() {
             stats_history["user_count"].push({"value": report.user_count});
             stats_history["current_rps"].push({"value": total.current_rps, "users": report.user_count});
             stats_history["current_fail_per_sec"].push({"value": total.current_fail_per_sec, "users": report.user_count});
-            stats_history["response_time_percentile_2"].push({"value": report.current_response_time_percentile_50, "users": report.user_count});
-            stats_history["response_time_percentile_1"].push({"value": report.current_response_time_percentile_95, "users": report.user_count});
+            stats_history["response_time_percentile_2"].push({"value": report.current_response_time_percentile_2, "users": report.user_count});
+            stats_history["response_time_percentile_1"].push({"value": report.current_response_time_percentile_1, "users": report.user_count});
             update_stats_charts();
 
         } catch(i){
