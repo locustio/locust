@@ -356,9 +356,6 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
             # start the test
             if environment.shape_class:
-                if options.run_time:
-                    sys.stderr.write("It makes no sense to combine --run-time and LoadShapes. Bailing out.\n")
-                    sys.exit(1)
                 environment.runner.start_shape()
                 environment.runner.shape_greenlet.join()
                 stop_and_optionally_quit()
