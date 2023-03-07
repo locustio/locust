@@ -886,7 +886,6 @@ def stats_history(runner: "Runner") -> None:
         if not stats.total.use_response_times_cache:
             break
         if runner.state != "stopped":
-
             r = {
                 "time": datetime.datetime.now(tz=datetime.timezone.utc).strftime("%H:%M:%S"),
                 "current_rps": stats.total.current_rps or 0,

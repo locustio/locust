@@ -2,7 +2,7 @@ import json
 import os
 import platform
 
-# import pty
+import pty
 import signal
 import subprocess
 import textwrap
