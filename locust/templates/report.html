@@ -216,8 +216,8 @@
             responseTimeChart.chart.setOption({
                 xAxis: {data: stats_history["time"]},
                 series: [
-                    {data: stats_history["response_time_percentile_50"]},
-                    {data: stats_history["response_time_percentile_95"]},
+                    {data: stats_history["response_time_percentile_2"]},
+                    {data: stats_history["response_time_percentile_1"]},
                 ]
             });
 

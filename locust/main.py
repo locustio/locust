@@ -101,7 +101,7 @@ def main():
             available_user_classes[key] = value
 
     if len(stats.PERCENTILES_TO_CHART) > 2:
-        sys.stderr.write("stats.PERCENTILES_TO_CHART parameter can be specified up tp 2 parameters \n")
+        logging.error("stats.PERCENTILES_TO_CHART parameter can be specified up tp 2 parameters \n")
         sys.exit(1)
 
     def is_valid_percentile(parameter):
@@ -114,8 +114,8 @@ def main():
 
     for percentile in stats.PERCENTILES_TO_CHART:
         if not is_valid_percentile(percentile):
-            sys.stderr.write(
-                "stats.PERCENTILES_TO_CHART parameter need to be float and value between. 0 <= percentile <= 1 Eg 0.95\n"
+            logging.error(
+                "stats.PERCENTILES_TO_CHART parameter need to be float and value between. 0 < percentile < 1 Eg 0.95\n"
             )
             sys.exit(1)
     # parse all command line options

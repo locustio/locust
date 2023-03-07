@@ -21,7 +21,7 @@ from .runners import MasterRunner, STATE_RUNNING, STATE_MISSING
 from .log import greenlet_exception_logger
 from .stats import StatsCSVFileWriter, StatsErrorDict, sort_stats
 from . import stats as stats_module, __version__ as version, argument_parser
-from .stats import StatsCSV, PERCENTILES_TO_CHART
+from .stats import StatsCSV
 from .user.inspectuser import get_ratio
 from .util.cache import memoize
 from .util.rounding import proper_round
@@ -384,7 +384,7 @@ class WebUI:
                 truncated_stats += [stats[-1]]
 
             report = {"stats": truncated_stats, "errors": errors[:500]}
-
+            from .stats import PERCENTILES_TO_CHART
             if stats:
                 report["total_rps"] = stats[len(stats) - 1]["current_rps"]
                 report["fail_ratio"] = environment.runner.stats.total.fail_ratio
@@ -536,6 +536,8 @@ class WebUI:
         available_shape_classes = ["Default"]
         if self.environment.available_shape_classes:
             available_shape_classes += sorted(self.environment.available_shape_classes.keys())
+
+        from .stats import PERCENTILES_TO_CHART
 
         self.template_args = {
             "locustfile": self.environment.locustfile,

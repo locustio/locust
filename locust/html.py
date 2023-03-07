@@ -20,7 +20,7 @@ def render_template(file, **kwargs):
 
 def get_html_report(environment, show_download_link=True):
     stats = environment.runner.stats
-    options = environment.parsed_options
+
     start_ts = stats.start_time
     start_time = datetime.datetime.utcfromtimestamp(start_ts).strftime("%Y-%m-%d %H:%M:%S")
 

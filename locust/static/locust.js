@@ -219,8 +219,8 @@ function update_stats_charts(){
         responseTimeChart.chart.setOption({
             xAxis: {data: stats_history["time"]},
             series: [
-                {data: stats_history["response_time_percentile_50"], markLine: createMarkLine()},
-                {data: stats_history["response_time_percentile_95"]},
+                {data: stats_history["response_time_percentile_2"], markLine: createMarkLine()},
+                {data: stats_history["response_time_percentile_1"]},
             ]
         });
 
@@ -264,8 +264,8 @@ function updateStats() {
                     stats_history["user_count"].push({"value": null});
                     stats_history["current_rps"].push({"value": null});
                     stats_history["current_fail_per_sec"].push({"value": null});
-                    stats_history["response_time_percentile_50"].push({"value": null});
-                    stats_history["response_time_percentile_95"].push({"value": null});
+                    stats_history["response_time_percentile_2"].push({"value": null});
+                    stats_history["response_time_percentile_1"].push({"value": null});
                 }
 
                 // update stats chart to ensure the stop spacing appears as part 
@@ -301,8 +301,8 @@ function updateStats() {
             stats_history["user_count"].push({"value": report.user_count});
             stats_history["current_rps"].push({"value": total.current_rps, "users": report.user_count});
             stats_history["current_fail_per_sec"].push({"value": total.current_fail_per_sec, "users": report.user_count});
-            stats_history["response_time_percentile_50"].push({"value": report.current_response_time_percentile_50, "users": report.user_count});
-            stats_history["response_time_percentile_95"].push({"value": report.current_response_time_percentile_95, "users": report.user_count});
+            stats_history["response_time_percentile_2"].push({"value": report.current_response_time_percentile_50, "users": report.user_count});
+            stats_history["response_time_percentile_1"].push({"value": report.current_response_time_percentile_95, "users": report.user_count});
             update_stats_charts();
 
         } catch(i){
