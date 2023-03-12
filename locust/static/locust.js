@@ -235,7 +235,7 @@ function update_stats_charts(){
 
 // init charts
 var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS", "Failures/s"], "reqs/s", ['#00ca5a', '#ff6d6d']);
-var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times (ms)", [(percentile1 * 100).toString() + "% percentile" , (percentile2 * 100).toString() + "% percentile"], "ms");
+var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times (ms)", [(percentile1 * 100).toString() + "th percentile" , (percentile2 * 100).toString() + "th percentile"], "ms");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 charts.push(rpsChart, responseTimeChart, usersChart);
 echarts.connect([rpsChart.chart,responseTimeChart.chart,usersChart.chart])
