@@ -4,6 +4,7 @@ import pathlib
 import datetime
 from itertools import chain
 from .stats import sort_stats
+from . import stats as stats_module
 from .user.inspectuser import get_ratio
 from html import escape
 from json import dumps
@@ -75,7 +76,6 @@ def get_html_report(environment, show_download_link=True):
         "per_class": get_ratio(environment.user_classes, user_spawned, False),
         "total": get_ratio(environment.user_classes, user_spawned, True),
     }
-    from .stats import PERCENTILES_TO_CHART
 
     res = render_template(
         "report.html",
@@ -95,8 +95,8 @@ def get_html_report(environment, show_download_link=True):
         show_download_link=show_download_link,
         locustfile=environment.locustfile,
         tasks=dumps(task_data),
-        percentile1=PERCENTILES_TO_CHART[0],
-        percentile2=PERCENTILES_TO_CHART[1],
+        percentile1=stats_module.PERCENTILES_TO_CHART[0],
+        percentile2=stats_module.PERCENTILES_TO_CHART[1],
     )
 
     return res

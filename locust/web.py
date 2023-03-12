@@ -384,17 +384,20 @@ class WebUI:
                 truncated_stats += [stats[-1]]
 
             report = {"stats": truncated_stats, "errors": errors[:500]}
-            from .stats import PERCENTILES_TO_CHART
 
             if stats:
                 report["total_rps"] = stats[len(stats) - 1]["current_rps"]
                 report["fail_ratio"] = environment.runner.stats.total.fail_ratio
                 report[
                     "current_response_time_percentile_1"
-                ] = environment.runner.stats.total.get_current_response_time_percentile(PERCENTILES_TO_CHART[0])
+                ] = environment.runner.stats.total.get_current_response_time_percentile(
+                    stats_module.PERCENTILES_TO_CHART[0]
+                )
                 report[
                     "current_response_time_percentile_2"
-                ] = environment.runner.stats.total.get_current_response_time_percentile(PERCENTILES_TO_CHART[1])
+                ] = environment.runner.stats.total.get_current_response_time_percentile(
+                    stats_module.PERCENTILES_TO_CHART[1]
+                )
 
             if isinstance(environment.runner, MasterRunner):
                 workers = []
@@ -538,9 +541,6 @@ class WebUI:
         if self.environment.available_shape_classes:
             available_shape_classes += sorted(self.environment.available_shape_classes.keys())
 
-        from .stats import PERCENTILES_TO_CHART
-
-        # print(PERCENTILES_TO_CHART)
         self.template_args = {
             "locustfile": self.environment.locustfile,
             "state": self.environment.runner.state,
@@ -560,8 +560,8 @@ class WebUI:
             "show_userclass_picker": self.userclass_picker_is_active,
             "available_user_classes": available_user_classes,
             "available_shape_classes": available_shape_classes,
-            "percentile1": PERCENTILES_TO_CHART[0],
-            "percentile2": PERCENTILES_TO_CHART[1],
+            "percentile1": stats_module.PERCENTILES_TO_CHART[0],
+            "percentile2": stats_module.PERCENTILES_TO_CHART[1],
         }
 
     def _update_shape_class(self, shape_class_name):
