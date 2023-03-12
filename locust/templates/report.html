@@ -198,8 +198,10 @@
 
     <script>
         {% include 'stats_data.html' %}
+        var percentile1 = {{ percentile1|tojson }}
+        var percentile2 = {{ percentile2|tojson }}
         var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS", "Failures/s"], "reqs/s", ['#00ca5a', '#ff6d6d']);
-        var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times (ms)", ["Median Response Time", "95% percentile"], "ms");
+        var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times (ms)", [(percentile1*100).toString() + "th percentile" , (percentile2*100).toString() + "th percentile"], "ms");
         var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 
         if(stats_history["time"].length > 0){
@@ -214,8 +216,8 @@
             responseTimeChart.chart.setOption({
                 xAxis: {data: stats_history["time"]},
                 series: [
-                    {data: stats_history["response_time_percentile_50"]},
-                    {data: stats_history["response_time_percentile_95"]},
+                    {data: stats_history["response_time_percentile_1"]},
+                    {data: stats_history["response_time_percentile_2"]},
                 ]
             });
 

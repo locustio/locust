@@ -100,6 +100,24 @@ def main():
             user_classes[key] = value
             available_user_classes[key] = value
 
+    if len(stats.PERCENTILES_TO_CHART) != 2:
+        logging.error("stats.PERCENTILES_TO_CHART parameter should be 2 parameters \n")
+        sys.exit(1)
+
+    def is_valid_percentile(parameter):
+        try:
+            if 0 < float(parameter) < 1:
+                return True
+            return False
+        except ValueError:
+            return False
+
+    for percentile in stats.PERCENTILES_TO_CHART:
+        if not is_valid_percentile(percentile):
+            logging.error(
+                "stats.PERCENTILES_TO_CHART parameter need to be float and value between. 0 < percentile < 1 Eg 0.95\n"
+            )
+            sys.exit(1)
     # parse all command line options
     options = parse_options()
 
@@ -179,6 +197,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
     # create locust Environment
     locustfile_path = None if not locustfile else os.path.basename(locustfile)
+
     environment = create_environment(
         user_classes,
         options,

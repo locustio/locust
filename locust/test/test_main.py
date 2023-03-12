@@ -1,6 +1,7 @@
 import json
 import os
 import platform
+
 import pty
 import signal
 import subprocess
@@ -190,6 +191,54 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shutting down (exit code 0)", stderr)
             self.assertEqual(0, proc.returncode)
+
+    def test_percentile_parameter(self):
+        port = get_free_tcp_port()
+        with temporary_file(
+            content=textwrap.dedent(
+                """
+            from locust import User, task, constant, events
+            from locust.stats import PERCENTILES_TO_CHART
+            PERCENTILES_TO_CHART[0] = 0.9
+            PERCENTILES_TO_CHART[1] = 0.4
+            class TestUser(User):
+                wait_time = constant(3)
+                @task
+                def my_task(self):
+                    print("running my_task()")
+        """
+            )
+        ) as file_path:
+            proc = subprocess.Popen(
+                ["locust", "-f", file_path, "--web-port", str(port), "--autostart"], stdout=PIPE, stderr=PIPE, text=True
+            )
+            gevent.sleep(1)
+            response = requests.get(f"http://localhost:{port}/")
+            self.assertEqual(200, response.status_code)
+            proc.send_signal(signal.SIGTERM)
+            stdout, stderr = proc.communicate()
+            self.assertIn("Starting web interface at", stderr)
+
+    def test_invalid_percentile_parameter(self):
+        with temporary_file(
+            content=textwrap.dedent(
+                """
+            from locust import User, task, constant, events
+            from locust.stats import PERCENTILES_TO_CHART
+            PERCENTILES_TO_CHART[0] = 1.2
+            class TestUser(User):
+                wait_time = constant(3)
+                @task
+                def my_task(self):
+                    print("running my_task()")
+        """
+            )
+        ) as file_path:
+            proc = subprocess.Popen(["locust", "-f", file_path, "--autostart"], stdout=PIPE, stderr=PIPE, text=True)
+            gevent.sleep(1)
+            stdout, stderr = proc.communicate()
+            self.assertIn("parameter need to be float and value between. 0 < percentile < 1 Eg 0.95", stderr)
+            self.assertEqual(1, proc.returncode)
 
     def test_webserver_multiple_locustfiles(self):
         with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1:

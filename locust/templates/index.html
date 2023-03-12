@@ -357,6 +357,8 @@
         ]]>
     </script>
     <script type="text/javascript">
+        var percentile1 = {{ percentile1|tojson }};
+        var percentile2 = {{ percentile2|tojson }};
         {% include 'stats_data.html' %}
     </script>
     <script type="text/javascript" src="./static/chart.js?v={{ version }}"></script>
