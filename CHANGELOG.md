@@ -1,13 +1,19 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
-## [2.15.0](https://github.com/locustio/locust/tree/2.15.0) (2023-03-01)
+## [2.15.1](https://github.com/locustio/locust/tree/2.15.1) (2023-03-14)
 
-[Full Changelog](https://github.com/locustio/locust/compare/2.15.0...2.15.0)
+[Full Changelog](https://github.com/locustio/locust/compare/2.15.0...2.15.1)
 
 **Closed issues:**
 
+- Ability to specify percentiles you need for response time chart [\#2311](https://github.com/locustio/locust/issues/2311)
 - locust k8s operator [\#2188](https://github.com/locustio/locust/issues/2188)
+
+**Merged pull requests:**
+
+- Update helper text [\#2317](https://github.com/locustio/locust/pull/2317) ([rafaelhdr](https://github.com/rafaelhdr))
+- Add PERCENTILES\_TO\_CHART param in stats.py to make the Response Time Chart configurable [\#2313](https://github.com/locustio/locust/pull/2313) ([A1BOCO](https://github.com/A1BOCO))
 
 ## [2.15.0](https://github.com/locustio/locust/tree/2.15.0) (2023-02-28)
 
