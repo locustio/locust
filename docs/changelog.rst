@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.15.1
+======
+* Add PERCENTILES_TO_CHART param in stats.py to make the Response Time Chart configurable https://github.com/locustio/locust/pull/2313
+
 2.15.0
 ======
 * Add is_secret option for custom args to be shown in the web UI masked https://github.com/locustio/locust/pull/2284
