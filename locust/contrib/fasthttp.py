@@ -368,7 +368,11 @@ class FastHttpUser(User):
         * Sets ``catch_response=True`` (so always use a :ref:`with-block <catch-response>`)
         * Catches any unhandled exceptions thrown inside your with-block, marking the sample as failed (instead of exiting the task immediately without even firing the request event)
         """
-        headers = {"Content-Type": "application/json", "Accept": "application/json"} if headers is None else headers
+        headers = headers or {}
+        if not ("Content-Type" in headers or "content-type" in headers):
+            headers["Content-Type"] = "application/json"
+        if not ("Accept" in headers or "accept" in headers):
+            headers["Accept"] = "application/json"
         with self.client.request(method, url, catch_response=True, headers=headers, **kwargs) as r:
             resp = cast(RestResponseContextManager, r)
             resp.js = None  # type: ignore
