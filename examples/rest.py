@@ -20,7 +20,7 @@ class MyUser(FastHttpUser):
         with self.rest("POST", "/post", json={"foo": 1}) as resp:
             if resp.js["data"]["foo"] != 1:
                 resp.failure(f"Unexpected value of foo in response {resp.text}")
-            # assertions are a nice short way of expressiont your expectations about the response. The AssertionError thrown will be caught
+            # assertions are a nice short way of expressing your expectations about the response. The AssertionError thrown will be caught
             # and fail the request, including the message and the payload in the failure content
             assert resp.js["data"]["foo"] == 1, "Unexpected value of foo in response"
 
@@ -51,7 +51,7 @@ class MyUser(FastHttpUser):
         with self.rest("POST", "/post", json={"foo": 1}) as resp:
             1 / 0  # pylint: disable=pointless-statement
 
-        # response isnt even json, but RestUser will already have been marked it as a failure, so we dont have to do it again
+        # if the response isn't even json, but RestUser will already have been marked it as a failure, so we don't have to do it again
         with self.rest("GET", "/") as resp:
             pass
 
