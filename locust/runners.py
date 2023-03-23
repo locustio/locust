@@ -1145,7 +1145,7 @@ class MasterRunner(DistributedRunner):
             self.server.send_to_client(Message(msg_type, data, client_id))
         else:
             for client in self.clients.all:
-                logger.debug("Sending %s message to worker %s" % (msg_type, client_id))
+                logger.debug("Sending %s message to worker %s" % (msg_type, client.id))
                 self.server.send_to_client(Message(msg_type, data, client.id))
 
 
