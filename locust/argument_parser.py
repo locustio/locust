@@ -500,6 +500,24 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         env_var="LOCUST_HTML",
     )
     stats_group.add_argument(
+        "--html-browser-title",
+        dest="html_browser_title",
+        help="Change default HTML browser's title when reporting to file",
+        env_var="LOCUST_HTML_BROWSER_TITLE",
+    )
+    stats_group.add_argument(
+        "--html-body-title",
+        dest="html_body_title",
+        help="Change default HTML body title when reporting to file",
+        env_var="LOCUST_HTML_BODY_TITLE",
+    )
+    stats_group.add_argument(
+        "--html-body-subtitle",
+        dest="html_body_subtitle",
+        help="Add HTML body subtitle when reporting to file",
+        env_var="LOCUST_HTML_BODY_SUBTITLE",
+    )
+    stats_group.add_argument(
         "--json",
         default=False,
         action="store_true",
@@ -600,6 +618,11 @@ def get_parser(default_config_files=DEFAULT_CONFIG_FILES) -> LocustArgumentParse
 def parse_options(args=None) -> configargparse.Namespace:
     parser = get_parser()
     parsed_opts = parser.parse_args(args=args)
+    if (parsed_opts.html_browser_title or parsed_opts.html_body_title or parsed_opts.html_body_subtitle) and (
+        parsed_opts.html_file is None
+    ):
+        parser.error("'--html-browser-title', '--html-body-title' or '--html-body-subtitle' requires '--html'.")
+
     if parsed_opts.stats_history_enabled and (parsed_opts.csv_prefix is None):
         parser.error("'--csv-full-history' requires '--csv'.")
     return parsed_opts

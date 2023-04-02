@@ -97,6 +97,9 @@ def get_html_report(environment, show_download_link=True):
         tasks=dumps(task_data),
         percentile1=stats_module.PERCENTILES_TO_CHART[0],
         percentile2=stats_module.PERCENTILES_TO_CHART[1],
+        html_browser_title=environment.parsed_options.html_browser_title,
+        html_body_title=environment.parsed_options.html_body_title,
+        html_body_subtitle=environment.parsed_options.html_body_subtitle,
     )
 
     return res

@@ -1,7 +1,25 @@
+{# Browser Title #}
+{% if html_browser_title is defined and html_browser_title is not none %}
+{% set browser_title = escape(str(html_browser_title)) %}
+{% else %}
+{% set browser_title = 'Test Report for ' + escape(str(locustfile)) %}
+{% endif %}
+{# Body Title #}
+{% if html_body_title is defined and html_body_title is not none %}
+{% set body_title = escape(str(html_body_title)) %}
+{% else %}
+{% set body_title = 'Locust Test Report' %}
+{% endif %}
+{# Body subtitle #}
+{% if html_body_subtitle is defined and html_body_subtitle is not none %}
+{% set body_subtitle = escape(str(html_body_subtitle)) %}
+{% else %}
+{% set body_subtitle = none %}
+{% endif %}
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Test Report for {{ escape(str(locustfile)) }}</title>
+    <title>{{ browser_title }}</title>
     <link rel="shortcut icon" href="../static/img/favicon.ico" type="image/x-icon"/>
     <style>
         body {
@@ -39,7 +57,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>Locust Test Report</h1>
+        <h1>{{ body_title }}</h1>
+        {%if body_subtitle is not none%}<h2>{{ body_subtitle }}</h2>{% endif %}
 
         <div class="info">
             {% if show_download_link %}
