@@ -1092,9 +1092,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
         # make sure title appears in the report
         _, locustfile = os.path.split(mocked.file_path)
-        self.assertIn(f"<title>My Test Report</title>", html_report_content)
-        self.assertIn(f"<h1>My API Test Report</h1>", html_report_content)
-        self.assertIn(f"<h2>My API service subtitle</h2>", html_report_content)
+        self.assertIn("<title>My Test Report</title>", html_report_content)
+        self.assertIn("<h1>My API Test Report</h1>", html_report_content)
+        self.assertIn("<h2>My API service subtitle</h2>", html_report_content)
         self.assertIn(f"<p>Script: <span>{locustfile}</span></p>", html_report_content)
 
         # make sure host appears in the report
