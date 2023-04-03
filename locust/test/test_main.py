@@ -1055,6 +1055,88 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
         self.assertNotIn("Download the Report", html_report_content, "Download report link found in HTML content")
 
+    def test_html_report_options_titles(self):
+        with mock_locustfile() as mocked:
+            with temporary_file("", suffix=".html") as html_report_file_path:
+                try:
+                    output = subprocess.check_output(
+                        [
+                            "locust",
+                            "-f",
+                            mocked.file_path,
+                            "--host",
+                            "https://test.com/",
+                            "--run-time",
+                            "2s",
+                            "--headless",
+                            "--exit-code-on-error",
+                            "0",
+                            "--html",
+                            html_report_file_path,
+                            "--html-browser-title",
+                            "My Test Report",
+                            "--html-body-title",
+                            "My API Test Report",
+                            "--html-body-subtitle",
+                            "My API service subtitle",
+                        ],
+                        stderr=subprocess.STDOUT,
+                        timeout=10,
+                        text=True,
+                    ).strip()
+                except subprocess.CalledProcessError as e:
+                    raise AssertionError(f"Running locust command failed. Output was:\n\n{e.stdout}") from e
+
+                with open(html_report_file_path, encoding="utf-8") as f:
+                    html_report_content = f.read()
+
+        # make sure title appears in the report
+        _, locustfile = os.path.split(mocked.file_path)
+        self.assertIn(f"<title>My Test Report</title>", html_report_content)
+        self.assertIn(f"<h1>My API Test Report</h1>", html_report_content)
+        self.assertIn(f"<h2>My API service subtitle</h2>", html_report_content)
+        self.assertIn(f"<p>Script: <span>{locustfile}</span></p>", html_report_content)
+
+        # make sure host appears in the report
+        self.assertIn("https://test.com/", html_report_content)
+
+        # make sure the charts container appears in the report
+        self.assertIn("charts-container", html_report_content)
+
+        self.assertNotIn("Download the Report", html_report_content, "Download report link found in HTML content")
+
+    def test_html_report_options_titles_fail(self):
+        with mock_locustfile() as mocked:
+            with temporary_file("", suffix=".html"):
+                try:
+                    _ = subprocess.check_output(
+                        [
+                            "locust",
+                            "-f",
+                            mocked.file_path,
+                            "--host",
+                            "https://test.com/",
+                            "--run-time",
+                            "2s",
+                            "--headless",
+                            "--exit-code-on-error",
+                            "0",
+                            "My Test Report",
+                            "--html-body-title",
+                            "My API Test Report",
+                            "--html-body-subtitle",
+                            "My API service subtitle",
+                        ],
+                        stderr=subprocess.STDOUT,
+                        timeout=10,
+                        text=True,
+                    ).strip()
+                except subprocess.CalledProcessError as e:
+                    self.assertEqual(
+                        e.stdout.rstrip(),
+                        "locust: error: '--html-browser-title', '--html-body-title' or '--html-body-subtitle' requires '--html'.",
+                    )
+
     def test_run_with_userclass_picker(self):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_B) as file2:
