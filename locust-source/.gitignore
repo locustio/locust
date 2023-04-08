@@ -1,24 +1,3 @@
-config*
-.settings/
-target/
-artifacts/
-.classpath
-.DS_Store
-*.iml
-resultpage/
-.project
-automation.*
-conf/automation.*
-*.out
-*.log
-.factory path
-.apt_generated
-.credentials/
-.sonarlint/
-.metadata/
-.idea
-.gradle/
-
 *.pyc
 locust.wpr
 locust.egg-info/**
@@ -35,6 +14,7 @@ out.txt
 .eggs/
 dist/**
 ../.idea/vcs.xml
+*.iml
 *.ipr
 .vagrant
 build/

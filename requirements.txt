@@ -1,0 +1,9 @@
+
+
+selenium
+pytest
+locust
+requests
+beautifulsoup4
+pytest-check
+
