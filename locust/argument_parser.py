@@ -77,7 +77,7 @@ def find_locustfile(locustfile):
                     return os.path.abspath(expanded)
     else:
         # Otherwise, start in cwd and work downwards towards filesystem root
-        path = os.path.abspath(".")
+        path = os.path.abspath("")
         while True:
             for name in names:
                 joined = os.path.join(path, name)

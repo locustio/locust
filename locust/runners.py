@@ -1311,8 +1311,8 @@ class WorkerRunner(DistributedRunner):
                     k: v
                     for k, v in job["parsed_options"].items()
                     if k not in argument_parser.default_args_dict()
-                    # these settings are sometimes needed on workers
-                    or k in ["expect_workers", "tags", "exclude_tags"]
+                       # these settings are sometimes needed on workers
+                       or k in ["expect_workers", "tags", "exclude_tags"]
                 }
                 vars(self.environment.parsed_options).update(custom_args_from_master)
 
