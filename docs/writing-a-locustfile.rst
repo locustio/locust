@@ -49,7 +49,8 @@ can be used to make HTTP requests to the target system that we want to load test
 locust will create an instance of this class for every user that it simulates, and each of these
 users will start running within their own green gevent thread.
 
-For a file to be a valid locustfile it must contain at least one class inheriting from :py:class:`User <locust.HttpUser>`.
+For a file to be a valid locustfile it must contain at least one class inheriting from
+:py:class:`User <locust.User>` or its subclass.
 
 .. code-block:: python
 
