@@ -1,6 +1,3 @@
-coverage:
-	coverage run -m unittest discover
-
 test:
 	tox
 
