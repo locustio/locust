@@ -67,9 +67,6 @@ line-length = 120
 write_to = "locust/_version.py"
 local_scheme = "no-local-version"
 
-[options]
-zip_safe = false
-
 [options.packages.find]
 namespace = true
 include = ["locust*"]
