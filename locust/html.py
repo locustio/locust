@@ -86,11 +86,13 @@ def get_html_report(environment, show_download_link=True):
     html_body_title = (
         "Locust Test Report"
         if not environment.parsed_options.html_body_title
-        else environment.parsed_options.html_body_title
+        else escape(str(environment.parsed_options.html_body_title))
     )
 
     html_body_subtitle = (
-        None if not environment.parsed_options.html_body_subtitle else environment.parsed_options.html_body_subtitle
+        None
+        if not environment.parsed_options.html_body_subtitle
+        else escape(str(environment.parsed_options.html_body_subtitle))
     )
 
     res = render_template(
