@@ -1,14 +1,13 @@
 [build-system]
-requires = ["setuptools>=61", "wheel", "setuptools_scm>=6.2"]
+requires = ["setuptools>=61", "setuptools_scm", "wheel", "setuptools_scm>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "locust"
-license = { text = "MIT" }
-license_files = "LICENSE"
-obsoletes_dist = "locustio"
+license = { file = "LICENSE"}
 description = "Developer friendly load testing framework"
-readme = { file = "README.md", content-type = "text/markdown" }
+dynamic = ["version"]
+requires-python = ">=3.7"
 dependencies = [
     "gevent >=20.12.1",
     "flask >=2.0.0",
@@ -45,17 +44,21 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://locust.io/"
-"Documentation" = "https://docs.locust.io/"
-"Code" = "https://github.com/locustio/locust"
+Homepage = "https://locust.io/"
+Documentation = "https://docs.locust.io/"
+Code = "https://github.com/locustio/locust"
 "Help/Questions" = "https://stackoverflow.com/questions/tagged/locust"
 "Issue tracker" = "https://github.com/locustio/locust/issues"
 
-[tool.setuptools]
-include-package-data = true
 
-[tool.setuptools.packages]
-find = { namespaces = true }
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[tool.setuptools]
+zip-safe = false
+license-files = ["LICENSE"]
+include-package-data = false
 
 [tool.black]
 line-length = 120
@@ -64,31 +67,31 @@ line-length = 120
 write_to = "locust/_version.py"
 local_scheme = "no-local-version"
 
-[options]
-zip_safe = false
-requires-python = ">=3.7"
-
 [options.packages.find]
+namespace = true
 include = ["locust*"]
 exclude = [
     "examples",
-    "tests"
+    "tests",
 ]
 
-[options.package_data]
-locust = "py.typed"
-locust.static = "**/*"
-locust.templates = "**/*"
+[tool.setuptools.package-data]
+locust = ["py.typed"]
+"locust.static" = ["**/*"]
+"locust.templates" = ["**/*"]
 
 [project.scripts]
-console_scripts = "locust = locust.main:main"
+locust = "locust.main:main"
 
-[mypy]
+[tool.mypy]
 # missing type stubs
 ignore_missing_imports = true
 
-[mypy-requests]
+[[tool.mypy.overrides]]
+module = ["requests.*"]
 ignore_missing_imports = true
 
-[mypy-locust.dispatch]
+[[tool.mypy.overrides]]
+module = ["locust.dispatch"]
 no_strict_optional = true
+
