@@ -5,7 +5,7 @@ test:
 	tox
 
 build:
-	rm -f dist/* && python3 -m build .
+	rm -f dist/* && python3 -m pip install --upgrade build && python3 -m build .
 
 release: build
 	twine upload dist/*
