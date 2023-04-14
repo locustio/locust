@@ -77,6 +77,22 @@ def get_html_report(environment, show_download_link=True):
         "total": get_ratio(environment.user_classes, user_spawned, True),
     }
 
+    html_browser_title = (
+        "Test Report for " + escape(str(environment.locustfile))
+        if not environment.parsed_options.html_browser_title
+        else environment.parsed_options.html_browser_title
+    )
+
+    html_body_title = (
+        "Locust Test Report"
+        if not environment.parsed_options.html_body_title
+        else environment.parsed_options.html_body_title
+    )
+
+    html_body_subtitle = (
+        None if not environment.parsed_options.html_body_subtitle else environment.parsed_options.html_body_subtitle
+    )
+
     res = render_template(
         "report.html",
         int=int,
@@ -97,9 +113,9 @@ def get_html_report(environment, show_download_link=True):
         tasks=dumps(task_data),
         percentile1=stats_module.PERCENTILES_TO_CHART[0],
         percentile2=stats_module.PERCENTILES_TO_CHART[1],
-        html_browser_title=environment.parsed_options.html_browser_title,
-        html_body_title=environment.parsed_options.html_body_title,
-        html_body_subtitle=environment.parsed_options.html_body_subtitle,
+        browser_title=html_browser_title,
+        body_title=html_body_title,
+        body_subtitle=html_body_subtitle,
     )
 
     return res
