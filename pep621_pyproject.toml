@@ -1,0 +1,97 @@
+[build-system]
+requires = ["setuptools>=61", "setuptools_scm", "wheel", "setuptools_scm>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "locust"
+license = { file = "LICENSE"}
+description = "Developer friendly load testing framework"
+dynamic = ["version"]
+requires-python = ">=3.7"
+dependencies = [
+    "gevent >=20.12.1",
+    "flask >=2.0.0",
+    "Werkzeug >=2.0.0",
+    "requests >=2.23.0",
+    "msgpack >=0.6.2",
+    "pyzmq >=22.2.1, !=23.0.0",
+    "geventhttpclient >=2.0.2",
+    "ConfigArgParse >=1.0",
+    "psutil >=5.6.7",
+    "Flask-BasicAuth >=0.2.0",
+    "Flask-Cors >=3.0.10",
+    "roundrobin >=0.0.2",
+    "typing-extensions >=3.7.4.3", # This provides support for @final, @runtime_checkable, Protocol and TypedDict, and can probably be removed once we drop 3.7 support
+    "pywin32;platform_system=='Windows'",
+]
+classifiers = [
+    "Topic :: Software Development :: Testing :: Traffic Generation",
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Software Development :: Testing :: Traffic Generation",
+    "Topic :: System :: Distributed Computing",
+]
+
+[project.urls]
+Homepage = "https://locust.io/"
+Documentation = "https://docs.locust.io/"
+Code = "https://github.com/locustio/locust"
+"Help/Questions" = "https://stackoverflow.com/questions/tagged/locust"
+"Issue tracker" = "https://github.com/locustio/locust/issues"
+
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[tool.setuptools]
+zip-safe = false
+license-files = ["LICENSE"]
+include-package-data = false
+
+[tool.black]
+line-length = 120
+
+[tool.setuptools_scm]
+write_to = "locust/_version.py"
+local_scheme = "no-local-version"
+
+[options.packages.find]
+namespace = true
+include = ["locust*"]
+exclude = [
+    "examples",
+    "tests",
+]
+
+[tool.setuptools.package-data]
+locust = ["py.typed"]
+"locust.static" = ["**/*"]
+"locust.templates" = ["**/*"]
+
+[project.scripts]
+locust = "locust.main:main"
+
+[tool.mypy]
+# missing type stubs
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["requests.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["locust.dispatch"]
+no_strict_optional = true
+
