@@ -1109,7 +1109,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile() as mocked:
             with temporary_file("", suffix=".html"):
                 try:
-                    _ = subprocess.check_output(
+                    output = subprocess.check_output(
                         [
                             "locust",
                             "-f",
@@ -1121,6 +1121,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             "--headless",
                             "--exit-code-on-error",
                             "0",
+                            "--html-browser-title",
                             "My Test Report",
                             "--html-body-title",
                             "My API Test Report",
@@ -1131,6 +1132,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         timeout=10,
                         text=True,
                     ).strip()
+
+                    assert (
+                        False
+                    ), "locust: error: '--html-browser-title', '--html-body-title' or '--html-body-subtitle' should requires '--html'."
+
                 except subprocess.CalledProcessError as e:
                     self.assertEqual(
                         e.stdout.rstrip(),
