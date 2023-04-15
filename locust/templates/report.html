@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ escape(str(browser_title)) }}</title>
+    <title>{{ browser_title }}</title>
     <link rel="shortcut icon" href="../static/img/favicon.ico" type="image/x-icon"/>
     <style>
         body {
@@ -39,8 +39,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>{{ escape(str(body_title)) }}</h1>
-        {%if body_subtitle is not none%}<h2>{{ escape(str(body_subtitle)) }}</h2>{% endif %}
+        <h1>{{ body_title }}</h1>
+        {%if body_subtitle is not none%}<h2>{{ body_subtitle }}</h2>{% endif %}
 
         <div class="info">
             {% if show_download_link %}
