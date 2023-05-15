@@ -833,7 +833,7 @@ class TestMasterWorkerRunners(LocustTestCase):
     def test_distributed_integration_run(self):
         """
         Full integration test that starts both a MasterRunner and three WorkerRunner instances
-        and makes sure that their stats is sent to the Master.
+        and makes sure that their stats is sent to the Master. Also validates worker_connect event
         """
 
         class TestUser(User):
@@ -853,13 +853,19 @@ class TestMasterWorkerRunners(LocustTestCase):
         with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
             # start a Master runner
             master_env = Environment(user_classes=[TestUser])
+            worker_connect_events = []
+
+            def on_connect(client_id):
+                worker_connect_events.append(client_id)
+
+            master_env.events.worker_connect.add_listener(on_connect)
             master = master_env.create_master_runner("*", 0)
             sleep(0)
             # start 3 Worker runners
             workers = []
             for i in range(3):
                 worker_env = Environment(user_classes=[TestUser])
-                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                worker: WorkerRunner = worker_env.create_worker_runner("127.0.0.1", master.server.port)
                 workers.append(worker)
 
             # give workers time to connect
@@ -873,9 +879,12 @@ class TestMasterWorkerRunners(LocustTestCase):
             # give time for users to generate stats, and stats to be sent to master
             sleep(1)
             master.quit()
-            # make sure users are killed
+
             for worker in workers:
+                # make sure users are killed
                 self.assertEqual(0, worker.user_count)
+                # make sure events happened correctly
+                self.assertIn(worker.client_id, worker_connect_events)
 
         # check that stats are present in master
         self.assertGreater(
