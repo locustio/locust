@@ -111,6 +111,13 @@ class Events:
     :param data: Data dict with the data from the worker node
     """
 
+    worker_connect: EventHook
+    """
+    Fired on master when a new worker connects
+
+    :param client_id: Client id of the connected worker
+    """
+
     spawning_complete: EventHook
     """
     Fired when all simulated users has been spawned.
