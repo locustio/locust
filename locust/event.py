@@ -113,7 +113,7 @@ class Events:
 
     worker_connect: EventHook
     """
-    Fired on master when a new worker connects
+    Fired on master when a new worker connects. Note that is fired immediately after the connection is established, so init event may not yet have finished on worker.
 
     :param client_id: Client id of the connected worker
     """

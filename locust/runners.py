@@ -1026,7 +1026,7 @@ class MasterRunner(DistributedRunner):
                             f"A worker ({client_id}) running a different version ({msg.data}) connected, master version is {__version__}"
                         )
                 self.send_message("ack", client_id=client_id, data={"index": self.get_worker_index(client_id)})
-
+                self.environment.events.worker_connect.fire(client_id=msg.node_id)
                 self.clients[client_id] = WorkerNode(client_id, heartbeat_liveness=HEARTBEAT_LIVENESS)
                 if self._users_dispatcher is not None:
                     self._users_dispatcher.add_worker(worker_node=self.clients[client_id])
@@ -1036,7 +1036,6 @@ class MasterRunner(DistributedRunner):
                 logger.info(
                     f"Worker {client_id} (index {self.get_worker_index(client_id)}) reported as ready. {len(self.clients.ready + self.clients.running + self.clients.spawning)} workers connected."
                 )
-                self.environment.events.worker_connect.fire(client_id=msg.node_id)
                 if self.rebalancing_enabled() and self.state == STATE_RUNNING and self.spawning_completed:
                     self.start(self.target_user_count, self.spawn_rate)
                 # emit a warning if the worker's clock seem to be out of sync with our clock
