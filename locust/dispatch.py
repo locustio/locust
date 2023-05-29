@@ -409,8 +409,6 @@ class UsersDispatcher(Iterator):
 
                     if current_fixed_users_count[user_name] < fixed_users[user_name].fixed_count:
                         current_fixed_users_count[user_name] += 1
-                        if current_fixed_users_count[user_name] == fixed_users[user_name].fixed_count:
-                            spawned_classes.add(user_name)
                         yield user_name
 
                         # 'self._try_dispatch_fixed' was changed outhere,  we have to recalculate current count
@@ -418,6 +416,8 @@ class UsersDispatcher(Iterator):
                             current_fixed_users_count = {u: self._get_user_current_count(u) for u in fixed_users}
                             spawned_classes.clear()
                             self._try_dispatch_fixed = False
+                    else:
+                        spawned_classes.add(user_name)
 
             yield next(cycle_weighted_gen)
 
