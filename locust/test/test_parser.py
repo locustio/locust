@@ -78,6 +78,7 @@ class TestArgumentParser(LocustTestCase):
                 "-t",
                 "5m",
                 "--reset-stats",
+                "--exclude-failures",
                 "--stop-timeout",
                 "5",
                 "MyUserClass",
@@ -88,6 +89,7 @@ class TestArgumentParser(LocustTestCase):
         self.assertEqual(10, options.spawn_rate)
         self.assertEqual("5m", options.run_time)
         self.assertTrue(options.reset_stats)
+        self.assertTrue(options.exclude_failures_time)
         self.assertEqual("5", options.stop_timeout)
         self.assertEqual(["MyUserClass"], options.user_classes)
         # check default arg
