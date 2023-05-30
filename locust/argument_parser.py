@@ -492,7 +492,8 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         action="store_true",
         default=False,
         dest="exclude_failures_time",
-        help="Excludes response times of failed requests from time-based metrics (but not from total/failed requests count)",
+        help="Excludes response times of failed requests from time-based metrics (but not from total/failed requests count)."
+             "This option can be set or overridden for specified requests by passing 'exclude_failures=True/False' keyword parameter to the request",
         env_var="EXCLUDE_FAILURES",
     )
     stats_group.add_argument(

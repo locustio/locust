@@ -132,7 +132,12 @@ class Runner:
         # set up event listeners for recording requests
         def on_request(request_type, name, response_time, response_length, exception=None, **_kwargs):
             if exception:
-                if self.environment.parsed_options and self.environment.parsed_options.exclude_failures_time:
+                exclude_failures = None
+                if _kwargs and _kwargs.get("exclude_failures") is not None:
+                    exclude_failures = _kwargs.get("exclude_failures")
+                elif self.environment.parsed_options and self.environment.parsed_options.exclude_failures_time:
+                    exclude_failures = True
+                if exclude_failures:
                     response_time = None
                 self.stats.log_request(request_type, name, response_time, response_length)
                 self.stats.log_error(request_type, name, exception)
