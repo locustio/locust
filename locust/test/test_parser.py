@@ -93,6 +93,34 @@ class TestArgumentParser(LocustTestCase):
         # check default arg
         self.assertEqual(8089, options.web_port)
 
+    def test_parse_options_from_env(self):
+        os.environ["LOCUST_LOCUSTFILE"] = "locustfile.py"
+        os.environ["LOCUST_USERS"] = "100"
+        os.environ["LOCUST_SPAWN_RATE"] = "10"
+        os.environ["LOCUST_RUN_TIME"] = "5m"
+        os.environ["LOCUST_RESET_STATS"] = "true"
+        os.environ["LOCUST_STOP_TIMEOUT"] = "5"
+        os.environ["LOCUST_USER_CLASSES"] = "MyUserClass"
+        options = parse_options(args=[])
+
+        self.assertEqual("locustfile.py", options.locustfile)
+        self.assertEqual(100, options.num_users)
+        self.assertEqual(10, options.spawn_rate)
+        self.assertEqual("5m", options.run_time)
+        self.assertTrue(options.reset_stats)
+        self.assertEqual("5", options.stop_timeout)
+        self.assertEqual(["MyUserClass"], options.user_classes)
+        # check default arg
+        self.assertEqual(8089, options.web_port)
+
+        del os.environ["LOCUST_LOCUSTFILE"]
+        del os.environ["LOCUST_USERS"]
+        del os.environ["LOCUST_SPAWN_RATE"]
+        del os.environ["LOCUST_RUN_TIME"]
+        del os.environ["LOCUST_RESET_STATS"]
+        del os.environ["LOCUST_STOP_TIMEOUT"]
+        del os.environ["LOCUST_USER_CLASSES"]
+
     def test_parse_locustfile(self):
         with mock_locustfile() as mocked:
             locustfiles = parse_locustfile_option(
