@@ -583,7 +583,8 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         "user_classes",
         nargs="*",
         metavar="UserClass",
-        help="Optionally specify which User classes that should be used (available User classes can be listed with -l or --list)",
+        help="Optionally specify which User classes that should be used (available User classes can be listed with -l or --list). LOCUST_USER_CLASSES environment variable can also be used to specify User classes",
+        default=os.environ.get("LOCUST_USER_CLASSES", "").split(),
     )
 
 
