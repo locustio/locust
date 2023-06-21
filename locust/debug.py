@@ -22,7 +22,7 @@ class PrintListener:
 
     def __init__(
         self,
-        env: locust.env.Environment,
+        env: Environment,
         include_length=False,
         include_time=False,
         include_context=False,
@@ -122,9 +122,10 @@ def run_single_user(
         locust.log.setup_logging(loglevel)
 
     if not _env:
-        _env = locust.env.Environment(events=locust.events)
+        options = argument_parser.parse_options()
+        _env = Environment(events=locust.events, host=options.host, parsed_options=options)
+
         # in case your test goes looking for the file name of your locustfile
-        _env.parsed_options = argument_parser.parse_options()
         frame = inspect.stack()[1]
         _env.parsed_options.locustfile = os.path.basename(frame[0].f_code.co_filename)
         # log requests to stdout
@@ -142,6 +143,8 @@ def run_single_user(
     _env.user_classes = [user_class]
     _env._filter_tasks_by_tags()
     _env.events.test_start.fire(environment=_env)
+    if _env.host:
+        user_class.host = _env.host
 
     # create a single user
     user = user_class(_env)
