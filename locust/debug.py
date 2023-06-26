@@ -123,11 +123,14 @@ def run_single_user(
 
     if not _env:
         options = argument_parser.parse_options()
-        _env = Environment(events=locust.events, host=options.host, parsed_options=options)
 
         # in case your test goes looking for the file name of your locustfile
         frame = inspect.stack()[1]
-        _env.parsed_options.locustfile = os.path.basename(frame[0].f_code.co_filename)
+        locustfile = os.path.basename(frame[0].f_code.co_filename)
+        options.locustfile = locustfile
+
+        _env = Environment(events=locust.events, locustfile=locustfile, host=options.host, parsed_options=options)
+
         # log requests to stdout
         PrintListener(
             _env,
