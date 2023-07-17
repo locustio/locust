@@ -110,7 +110,15 @@
                                     <span style="color:#8a8a8a;">({{value.help_text}})</span>
                                 {% endif %}
                             </label>
-                            <input type="{{'password' if value.is_secret else 'text'}}" name="{{key}}" id="{{key}}" class="val" value="{{value.default_value}}" /><br>
+                            {% if value.choices %}
+                                <select name="{{key}}" id="{{key}}" class="val">
+                                    {% for choice in value.choices %}
+                                        <option value="{{choice}}" {% if choice == value.default_value %}selected{% endif %}>{{choice}}</option>
+                                    {% endfor %}
+                                </select><br>
+                            {% else %}
+                                <input type="{{'password' if value.is_secret else 'text'}}" name="{{key}}" id="{{key}}" class="val" value="{{value.default_value}}" /><br>
+                            {% endif %}
                         {% endif %}
                     {% endfor %}
                     {% set glob={'header_printed': False} %}
