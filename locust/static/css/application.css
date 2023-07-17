@@ -281,6 +281,14 @@ body.running .top .top-content .boxes .top_box.box_status .edit-test, body.spawn
   font-size: 24px;
   padding-left: 10px;
 }
+.dialogs .dialog select.val {
+  border: none;
+  background: #fff;
+  height: 52px;
+  width: 340px;
+  font-size: 24px;
+  padding-left: 10px;
+}
 .dialogs .dialog button {
   margin-top: 20px;
   float: right;
