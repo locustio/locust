@@ -2,7 +2,7 @@ import os
 import platform
 import sys
 import textwrap
-from typing import Dict, List, NamedTuple
+from typing import Dict, List, NamedTuple, Optional
 
 import configargparse
 
@@ -619,6 +619,7 @@ class UIExtraArgOptions(NamedTuple):
     default_value: str
     is_secret: bool
     help_text: str
+    choices: Optional[List[str]] = None
 
 
 def ui_extra_args_dict(args=None) -> Dict[str, UIExtraArgOptions]:
@@ -633,6 +634,7 @@ def ui_extra_args_dict(args=None) -> Dict[str, UIExtraArgOptions]:
             default_value=v,
             is_secret=k in parser.secret_args_included_in_web_ui,
             help_text=parser.args_included_in_web_ui[k].help,
+            choices=parser.args_included_in_web_ui[k].choices,
         )
         for k, v in all_args.items()
         if k not in locust_args and k in parser.args_included_in_web_ui
