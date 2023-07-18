@@ -4,6 +4,8 @@ from locust import HttpUser, task, events
 @events.init_command_line_parser.add_listener
 def _(parser):
     parser.add_argument("--my-argument", type=str, env_var="LOCUST_MY_ARGUMENT", default="", help="It's working")
+    # Choices will validate command line input and show a dropdown in the web UI
+    parser.add_argument("--env", choices=["dev", "staging", "prod"], default="dev", help="Environment")
     # Set `include_in_web_ui` to False if you want to hide from the web UI
     parser.add_argument("--my-ui-invisible-argument", include_in_web_ui=False, default="I am invisible")
     # Set `is_secret` to True if you want the text input to be password masked in the web UI

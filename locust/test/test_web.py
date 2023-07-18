@@ -2,6 +2,7 @@ import copy
 import csv
 import json
 import os
+import re
 import textwrap
 import traceback
 from io import StringIO
@@ -722,6 +723,30 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         )
         self.assertEqual(200, response.status_code)
         self.assertEqual(my_dict["val"], 42)
+
+    def test_custom_argument_dropdown(self):
+        class MyUser(User):
+            host = "http://example.com"
+
+        @locust.events.init_command_line_parser.add_listener
+        def _(parser, **kw):
+            parser.add_argument("--my-argument", default="a", choices=["a", "b"], help="Pick one")
+
+        parsed_options = parse_options(args=["--my-argument", "b"])
+        self.environment.user_classes = [MyUser]
+        self.environment.parsed_options = parsed_options
+        self.environment.web_ui.parsed_options = parsed_options
+
+        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+        self.assertEqual(200, response.status_code)
+
+        # regex to match the intended select tag with id from the custom argument
+        dropdown_pattern = re.compile(r"<select[^>]*id=\"my_argument\"[^>]*>", flags=re.I)
+        self.assertRegex(response.text, dropdown_pattern)
+
+        # regex to match the input that generates if it fails to find the choices
+        textfield_pattern = re.compile(r"<input[^>]*id=\"my_argument\"[^>]*>", flags=re.I)
+        self.assertNotRegex(response.text, textfield_pattern)
 
     def test_swarm_host_value_not_specified(self):
         class MyUser(User):
