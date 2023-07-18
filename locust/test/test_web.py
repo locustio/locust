@@ -740,11 +740,11 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         response = requests.get("http://127.0.0.1:%i/" % self.web_port)
         self.assertEqual(200, response.status_code)
 
-        # regex to match a select tag with id my-argument
+        # regex to match the intended select tag with id from the custom argument
         dropdown_pattern = re.compile(r"<select[^>]*id=\"my_argument\"[^>]*>", flags=re.I)
         self.assertRegex(response.text, dropdown_pattern)
 
-        # regex to match an input text tag with id my-argument
+        # regex to match the input that generates if it fails to find the choices
         textfield_pattern = re.compile(r"<input[^>]*id=\"my_argument\"[^>]*>", flags=re.I)
         self.assertNotRegex(response.text, textfield_pattern)
 
