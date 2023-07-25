@@ -62,11 +62,11 @@ HttpSession class
 Response class
 ==============
 
-This class actually resides in the `python-requests <http://python-requests.org>`_ library, 
+This class actually resides in the `requests <https://requests.readthedocs.io/>`_ library, 
 since that's what Locust is using to make HTTP requests, but it's included in the API docs 
 for locust since it's so central when writing locust load tests. You can also look at the 
 :py:class:`Response <requests.Response>` class at the 
-`requests documentation <http://python-requests.org>`_.
+`requests documentation <https://requests.readthedocs.io/>`_.
 
 .. autoclass:: requests.Response
     :inherited-members:
