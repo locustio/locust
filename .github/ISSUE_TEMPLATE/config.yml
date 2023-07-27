@@ -7,5 +7,5 @@ contact_links:
     url: https://stackoverflow.com/questions/tagged/locust
     about: Ask questions and look for answers on StackOverflow
   - name: Chat
-    url: https://locustio.slack.com
-    about: Talk to other Locust users on Slack
+    url: https://communityinviter.com/apps/locustio/locust
+    about: Talk to other Locust users on Slack (locustio.slack.com)
