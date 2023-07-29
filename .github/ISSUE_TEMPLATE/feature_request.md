@@ -8,7 +8,7 @@ assignees: ''
 ---
 
 <!-- 
-No questions here please! If you have a question about how to use Locust read the documentation or ask on slack (https://locustio.slack.com)
+No questions here please! If you have a question about how to use Locust read the documentation or ask on locustio.slack.com (sign up here: https://communityinviter.com/apps/locustio/locust)
 
 You can also ask questions on StackOverflow, https://stackoverflow.com/questions/ask just remember to tag your question with "locust".
 -->
