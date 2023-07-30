@@ -1226,6 +1226,8 @@ class MyUser(HttpUser):
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Exiting due to CTRL+C interruption", stderr)
             self.assertIn("Test Stopped", stdout)
+            # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
+            self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
 
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
