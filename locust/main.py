@@ -378,9 +378,13 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                 if options.run_time:
                     sys.stderr.write("It makes no sense to combine --run-time and LoadShapes. Bailing out.\n")
                     sys.exit(1)
-                environment.runner.start_shape()
-                environment.runner.shape_greenlet.join()
-                stop_and_optionally_quit()
+                try:
+                    environment.runner.start_shape()
+                    environment.runner.shape_greenlet.join()
+                except KeyboardInterrupt:
+                    logging.info("Exiting due to CTRL+C interruption")
+                finally:
+                    stop_and_optionally_quit()
             else:
                 headless_master_greenlet = gevent.spawn(runner.start, options.num_users, options.spawn_rate)
                 headless_master_greenlet.link_exception(greenlet_exception_handler)
