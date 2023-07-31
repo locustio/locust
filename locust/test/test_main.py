@@ -1185,6 +1185,51 @@ class MyUser(HttpUser):
             self.assertIn("No tasks defined on MyUser", stderr)
             self.assertEqual(1, proc.returncode)
 
+    def test_graceful_exit_when_keyboard_interrupt(self):
+        with temporary_file(
+            content=textwrap.dedent(
+                """
+                from locust import User, events,task, between, LoadTestShape
+                @events.test_stop.add_listener
+                def on_test_stop(environment, **kwargs) -> None:
+                    print("Test Stopped")
+
+                class LoadTestShape(LoadTestShape):
+                    def tick(self):
+                        run_time = self.get_run_time()
+                        if run_time < 2:
+                            return (10, 1)
+
+                        return None
+
+                class TestUser(User):
+                    @task
+                    def my_task(self):
+                        print("running my_task()")
+            """
+            )
+        ) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked,
+                    "--headless",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            gevent.sleep(1.9)
+            proc.send_signal(signal.SIGINT)
+            stdout, stderr = proc.communicate()
+            print(stderr, stdout)
+            self.assertIn("Shape test starting", stderr)
+            self.assertIn("Exiting due to CTRL+C interruption", stderr)
+            self.assertIn("Test Stopped", stdout)
+            # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
+            self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
+
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
     def test_expect_workers(self):
