@@ -1205,7 +1205,7 @@ class MyUser(HttpUser):
                 class TestUser(User):
                     @task
                     def my_task(self):
-                        raise KeyboardInterrupt
+                        print("running my_task()")
             """
             )
         ) as mocked:
@@ -1221,9 +1221,10 @@ class MyUser(HttpUser):
                 text=True,
             )
             gevent.sleep(1.9)
+            proc.send_signal(signal.SIGINT)
             stdout, stderr = proc.communicate()
             print(stderr, stdout)
-            self.assertIn("Starting Locust", stderr)
+            self.assertIn("Shape test starting", stderr)
             self.assertIn("Exiting due to CTRL+C interruption", stderr)
             self.assertIn("Test Stopped", stdout)
             # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
