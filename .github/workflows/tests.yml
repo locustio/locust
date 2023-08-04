@@ -133,14 +133,15 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
           skip_existing: true
-      - name: Tweet on release
-        uses: infraway/tweet-action@v1.0.1
-        with:
-          status: "New release: ${{ env.TAG }} https://github.com/locustio/locust/releases/tag/${{ env.TAG }}"
-          api_key: ${{ secrets.TWITTER_API_CONSUMER_KEY }}
-          api_key_secret: ${{ secrets.TWITTER_API_CONSUMER_SECRET }}
-          access_token: ${{ secrets.TWITTER_API_ACCESS_TOKEN_KEY }}
-          access_token_secret: ${{ secrets.TWITTER_API_ACCESS_TOKEN_SECRET }}
+    # The following is disabled because it has stopped working.
+    #   - name: Tweet on release
+    #     uses: infraway/tweet-action@v1.0.1
+    #     with:
+    #       status: "New release: ${{ env.TAG }} https://github.com/locustio/locust/releases/tag/${{ env.TAG }}"
+    #       api_key: ${{ secrets.TWITTER_API_CONSUMER_KEY }}
+    #       api_key_secret: ${{ secrets.TWITTER_API_CONSUMER_SECRET }}
+    #       access_token: ${{ secrets.TWITTER_API_ACCESS_TOKEN_KEY }}
+    #       access_token_secret: ${{ secrets.TWITTER_API_ACCESS_TOKEN_SECRET }}
 
   publish_prerelease:
     name: PyPI - Publish prerelease on merge commit on master
