@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.16.0
+======
+* Add worker_connect event https://github.com/locustio/locust/pull/2344
+* Allow selecting user classes using LOCUST_USER_CLASSES env var https://github.com/locustio/locust/pull/2355
+* Web UI dropdown for custom args with choices https://github.com/locustio/locust/pull/2372
+* Various minor fixes
+
 2.15.1
 ======
 * Add PERCENTILES_TO_CHART param in stats.py to make the Response Time Chart configurable https://github.com/locustio/locust/pull/2313
