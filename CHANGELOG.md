@@ -1,6 +1,33 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.16.0](https://github.com/locustio/locust/tree/2.16.0) (2023-08-04)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.15.1...2.16.0)
+
+**Fixed bugs:**
+
+- Bug in StagesShapeWithCustomUsers [\#2358](https://github.com/locustio/locust/issues/2358)
+- Fail to spawn fixed users when run with DoubleWave load shape [\#2345](https://github.com/locustio/locust/issues/2345)
+- KeyboardInterrupt does not gracefully exit custom load shape [\#1910](https://github.com/locustio/locust/issues/1910)
+
+**Merged pull requests:**
+
+- Fix \#1910 KeyboardInterrupt with load shapes [\#2375](https://github.com/locustio/locust/pull/2375) ([JevonCowell](https://github.com/JevonCowell))
+- update links to requests homepage [\#2373](https://github.com/locustio/locust/pull/2373) ([evgeni](https://github.com/evgeni))
+- Web UI dropdown for custom args with choices [\#2372](https://github.com/locustio/locust/pull/2372) ([ktrnka](https://github.com/ktrnka))
+- Fix passing host to user class when debugging [\#2365](https://github.com/locustio/locust/pull/2365) ([LKajan](https://github.com/LKajan))
+- Allow selecting user classes using LOCUST\_USER\_CLASSES env var [\#2355](https://github.com/locustio/locust/pull/2355) ([ibarbech](https://github.com/ibarbech))
+- Clarify documentation string for `total_content_length` [\#2354](https://github.com/locustio/locust/pull/2354) ([johenning](https://github.com/johenning))
+- Update rest.py [\#2352](https://github.com/locustio/locust/pull/2352) ([BhattcharyaCodes](https://github.com/BhattcharyaCodes))
+- Fixed the users dispatching when it got infinite loop \(fixes \#2345\) [\#2350](https://github.com/locustio/locust/pull/2350) ([EzR1d3r](https://github.com/EzR1d3r))
+- Duplicated titles [\#2346](https://github.com/locustio/locust/pull/2346) ([Daemo00](https://github.com/Daemo00))
+- Add worker\_connect event [\#2344](https://github.com/locustio/locust/pull/2344) ([cyberw](https://github.com/cyberw))
+- Remove codecov from build [\#2337](https://github.com/locustio/locust/pull/2337) ([cyberw](https://github.com/cyberw))
+- Put dependencies/project information in pyproject.toml instead of setup.cfg \(PEP621\) [\#2336](https://github.com/locustio/locust/pull/2336) ([JE-Chen](https://github.com/JE-Chen))
+- Rename link text on README.md [\#2334](https://github.com/locustio/locust/pull/2334) ([JE-Chen](https://github.com/JE-Chen))
+- Fix: show host url [\#2324](https://github.com/locustio/locust/pull/2324) ([zifter](https://github.com/zifter))
+
 ## [2.15.1](https://github.com/locustio/locust/tree/2.15.1) (2023-03-14)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.15.0...2.15.1)
@@ -883,7 +910,7 @@ The most important changes can also be found in [the documentation](https://docs
 - Feature chart sync [\#1678](https://github.com/locustio/locust/pull/1678) ([aek](https://github.com/aek))
 - Feature stats exceptions csv [\#1674](https://github.com/locustio/locust/pull/1674) ([aek](https://github.com/aek))
 - /swarm adjusted for tests with shape class [\#1671](https://github.com/locustio/locust/pull/1671) ([stanislawskwark](https://github.com/stanislawskwark))
-- Fix a typo [\#1665](https://github.com/locustio/locust/pull/1665) ([atken](https://github.com/atken))
+- Fix a typo [\#1665](https://github.com/locustio/locust/pull/1665) ([atkei](https://github.com/atkei))
 - Feature chart tooltip custom values - show user count [\#1658](https://github.com/locustio/locust/pull/1658) ([aek](https://github.com/aek))
 - Check if running from a tty on windows [\#1657](https://github.com/locustio/locust/pull/1657) ([DennisKrone](https://github.com/DennisKrone))
 - Bump Echarts version to show charts legends [\#1655](https://github.com/locustio/locust/pull/1655) ([aek](https://github.com/aek))
@@ -1152,7 +1179,6 @@ The most important changes can also be found in [the documentation](https://docs
 - We should check limits \(ulimit\) and warn if they are too low [\#1368](https://github.com/locustio/locust/issues/1368)
 - Run locust as a job but still have access to the API. [\#1305](https://github.com/locustio/locust/issues/1305)
 - error: argument --master-port: invalid int value bug [\#1226](https://github.com/locustio/locust/issues/1226)
-- Duplicate/confusing entry in pypi [\#817](https://github.com/locustio/locust/issues/817)
 
 **Merged pull requests:**
 
