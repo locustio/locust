@@ -58,6 +58,12 @@ def create_environment(
 
 
 def main():
+    try:
+        # import locust_plugins if it is installed, to allow it to register custom arguments etc
+        import locust_plugins  # pyright: ignore[reportMissingImports]
+    except ModuleNotFoundError:
+        pass
+
     # find specified locustfile(s) and make sure it exists, using a very simplified
     # command line parser that is only used to parse the -f option.
     locustfiles = parse_locustfile_option()

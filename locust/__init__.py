@@ -25,12 +25,6 @@ from .shape import LoadTestShape
 from .debug import run_single_user
 from .event import Events
 
-try:
-    # import locust_plugins if it is installed, to allow it to register custom arguments etc
-    import locust_plugins  # pyright: ignore[reportMissingImports]
-except ModuleNotFoundError:
-    pass
-
 events = Events()
 
 __all__ = (
