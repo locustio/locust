@@ -29,6 +29,12 @@ from .input_events import input_listener
 from .html import get_html_report
 from .util.load_locustfile import load_locustfile
 
+try:
+    # import locust_plugins if it is installed, to allow it to register custom arguments etc
+    import locust_plugins  # pyright: ignore[reportMissingImports]
+except ModuleNotFoundError:
+    pass
+
 version = locust.__version__
 
 
