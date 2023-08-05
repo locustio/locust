@@ -1,6 +1,16 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.16.1](https://github.com/locustio/locust/tree/2.16.1) (2023-08-05)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.16.0...2.16.1)
+
+**Merged pull requests:**
+
+- Delay importing locust-plugins to prevent circular import [\#2380](https://github.com/locustio/locust/pull/2380) ([cyberw](https://github.com/cyberw))
+- Import locust\_plugins if available to give access to its custom arguments [\#2379](https://github.com/locustio/locust/pull/2379) ([cyberw](https://github.com/cyberw))
+- Deprecate LOCUST\_PLAYWRIGHT env var [\#2378](https://github.com/locustio/locust/pull/2378) ([cyberw](https://github.com/cyberw))
+
 ## [2.16.0](https://github.com/locustio/locust/tree/2.16.0) (2023-08-04)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.15.1...2.16.0)
