@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.16.1
+======
+* Deprecate LOCUST_PLAYWRIGHT env var https://github.com/locustio/locust/pull/2378
+* Import locust_plugins if available to give access to its custom command line arguments https://github.com/locustio/locust/pull/2379
+
 2.16.0
 ======
 * Add worker_connect event https://github.com/locustio/locust/pull/2344
