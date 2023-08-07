@@ -2,10 +2,24 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Run current file",
             "type": "python",
             "request": "launch",
             "program": "${file}",
+            "console": "integratedTerminal",
+            "gevent": true
+        },
+        {
+            "name": "Run locust",
+            "type": "python",
+            "request": "launch",
+            "module": "locust",
+            "args": [
+                "-f",
+                "${file}",
+                "--headless",
+                "--users=5"
+            ],
             "console": "integratedTerminal",
             "gevent": true
         }
