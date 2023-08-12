@@ -71,8 +71,6 @@ class Environment:
         """If set, only tasks that are tagged by tags in this list will be executed. Leave this as None to use the one from parsed_options"""
         self.exclude_tags = exclude_tags
         """If set, only tasks that aren't tagged by tags in this list will be executed. Leave this as None to use the one from parsed_options"""
-        self.stats = RequestStats()
-        """Reference to RequestStats instance"""
         self.host = host
         """Base URL of the target system"""
         self.reset_stats = reset_stats
@@ -94,6 +92,12 @@ class Environment:
         """
         self.parsed_options = parsed_options
         """Reference to the parsed command line options (used to pre-populate fields in Web UI). When using Locust as a library, this should either be `None` or an object created by `argument_parser.parse_args()`"""
+        self.exclude_failed_response_time = False
+        if self.parsed_options.exclude_failed_response_time:
+            self.exclude_failed_response_time = True
+        self.stats = RequestStats(exclude_failed_response_time=self.exclude_failed_response_time)
+        """Reference to RequestStats instance"""
+
         self.available_user_classes = available_user_classes
         """List of the available User Classes to pick from in the UserClass Picker"""
         self.available_shape_classes = available_shape_classes
@@ -148,7 +152,12 @@ class Environment:
         """
         # Create a new RequestStats with use_response_times_cache set to False to save some memory
         # and CPU cycles, since the response_times_cache is not needed for Worker nodes
-        self.stats = RequestStats(use_response_times_cache=False)
+        exclude_failed_response_time = False
+        if self.parsed_options.exclude_failed_response_time:
+            exclude_failed_response_time = True
+
+        self.stats = RequestStats(use_response_times_cache=False,
+                                  exclude_failed_response_time=exclude_failed_response_time)
         return self._create_runner(
             WorkerRunner,
             master_host=master_host,

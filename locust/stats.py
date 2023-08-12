@@ -194,7 +194,7 @@ class RequestStats:
     Class that holds the request statistics. Accessible in a User from self.environment.stats
     """
 
-    def __init__(self, use_response_times_cache=True):
+    def __init__(self, use_response_times_cache=True, exclude_failed_response_time=False):
         """
         :param use_response_times_cache: The value of use_response_times_cache will be set for each StatsEntry()
                                          when they are created. Settings it to False saves some memory and CPU
@@ -202,9 +202,11 @@ class RequestStats:
                                          is not needed.
         """
         self.use_response_times_cache = use_response_times_cache
+        self.exclude_failed_response_time = exclude_failed_response_time
         self.entries: Dict[Tuple[str, str], StatsEntry] = {}
         self.errors: Dict[str, StatsError] = {}
-        self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
+        self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache,
+                                exclude_failed_response_time=self.exclude_failed_response_time)
         self.history = []
 
     @property
@@ -249,7 +251,8 @@ class RequestStats:
         """
         entry = self.entries.get((name, method))
         if not entry:
-            entry = StatsEntry(self, name, method, use_response_times_cache=self.use_response_times_cache)
+            entry = StatsEntry(self, name, method, use_response_times_cache=self.use_response_times_cache,
+                               exclude_failed_response_time=self.exclude_failed_response_time)
             self.entries[(name, method)] = entry
         return entry
 
@@ -267,7 +270,8 @@ class RequestStats:
         """
         Remove all stats entries and errors
         """
-        self.total = StatsEntry(self, "Aggregated", "", use_response_times_cache=self.use_response_times_cache)
+        self.total = StatsEntry(self, "Aggregated", "", use_response_times_cache=self.use_response_times_cache,
+                                exclude_failed_response_time=self.exclude_failed_response_time)
         self.entries = {}
         self.errors = {}
         self.history = []
@@ -286,7 +290,8 @@ class StatsEntry:
     Represents a single stats entry (name and method)
     """
 
-    def __init__(self, stats: Optional[RequestStats], name: str, method: str, use_response_times_cache: bool = False):
+    def __init__(self, stats: Optional[RequestStats], name: str, method: str, use_response_times_cache: bool = False,
+                 exclude_failed_response_time: bool = False):
         self.stats = stats
         self.name = name
         """ Name (URL) of this stats entry """
@@ -298,6 +303,10 @@ class StatsEntry:
         every second, and kept for 20 seconds (by default, will be CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW + 10).
         We can use this dict to calculate the *current*  median response time, as well as other response
         time percentiles.
+        """
+        self.exclude_failed_response_time = exclude_failed_response_time
+        """
+        If set to True, then excludes stats on failed requests 
         """
         self.num_requests: int = 0
         """ The number of requests made """
@@ -380,8 +389,14 @@ class StatsEntry:
         if response_time is None:
             self.num_none_requests += 1
             return
-
+        this_is_error = response_time < 0
+        if this_is_error:
+            response_time = -response_time
+        # and still needs to be added to total response time
         self.total_response_time += response_time
+        # we do not consider errors in the mix
+        if this_is_error:
+            return
 
         if self.min_response_time is None:
             self.min_response_time = response_time
@@ -420,10 +435,17 @@ class StatsEntry:
             else:
                 return 0.0
 
+    def get_effective_num_requests(self):
+        num_requests = self.num_requests
+        if self.exclude_failed_response_time:
+            num_requests -= self.num_failures
+        return num_requests
+
     @property
     def avg_response_time(self) -> float:
         try:
-            return float(self.total_response_time) / (self.num_requests - self.num_none_requests)
+            num_requests = self.get_effective_num_requests()
+            return float(self.total_response_time) / (num_requests - self.num_none_requests)
         except ZeroDivisionError:
             return 0.0
 
@@ -431,7 +453,8 @@ class StatsEntry:
     def median_response_time(self) -> int:
         if not self.response_times:
             return 0
-        median = median_from_dict(self.num_requests - self.num_none_requests, self.response_times) or 0
+        num_requests = self.get_effective_num_requests()
+        median = median_from_dict(num_requests - self.num_none_requests, self.response_times) or 0
 
         # Since we only use two digits of precision when calculating the median response time
         # while still using the exact values for min and max response times, the following checks
@@ -600,7 +623,8 @@ class StatsEntry:
 
         Percent specified in range: 0.0 - 1.0
         """
-        return calculate_response_time_percentile(self.response_times, self.num_requests, percent)
+        num_requests = self.get_effective_num_requests()
+        return calculate_response_time_percentile(self.response_times, num_requests, percent)
 
     def get_current_response_time_percentile(self, percent: float) -> Optional[int]:
         """
@@ -638,9 +662,10 @@ class StatsEntry:
             # times dict of the last 10 seconds (approximately) by diffing it with the current
             # total response times. Then we'll use that to calculate a response time percentile
             # for that timeframe
+            num_requests = self.get_effective_num_requests()
             return calculate_response_time_percentile(
                 diff_response_time_dicts(self.response_times, cached.response_times),
-                self.num_requests - cached.num_requests,
+                num_requests - cached.num_requests,
                 percent,
             )
         # if time was not in response times cache window
@@ -652,19 +677,20 @@ class StatsEntry:
 
         tpl = f"%-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8d {' '.join(['%6d'] * len(PERCENTILES_TO_REPORT))}"
 
+        num_requests = self.get_effective_num_requests()
         return tpl % (
             (self.method or "", self.name)
             + tuple(self.get_response_time_percentile(p) for p in PERCENTILES_TO_REPORT)
-            + (self.num_requests,)
+            + (num_requests,)
         )
 
     def _cache_response_times(self, t: int) -> None:
         if self.response_times_cache is None:
             self.response_times_cache = OrderedDict()
-
+        num_requests = self.get_effective_num_requests()
         self.response_times_cache[t] = CachedResponseTimes(
             response_times=copy(self.response_times),
-            num_requests=self.num_requests,
+            num_requests=num_requests,
         )
 
         # We'll use a cache size of CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW + 10 since - in the extreme case -

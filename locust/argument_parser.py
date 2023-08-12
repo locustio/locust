@@ -162,6 +162,13 @@ def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG
         env_var="LOCUST_LOCUSTFILE",
     )
 
+    parser.add_argument(
+        "-x",
+        "--exclude-failed-response-time",
+        default=False,
+        help="Excludes error response timing values from statistics, e.g: min, max, percentiles, avg. "
+             "Set to 'False' for compatibility reason with older version"
+    )
     parser.add_argument("--config", is_config_file_arg=True, help="Config file path")
 
     return parser

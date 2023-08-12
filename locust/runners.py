@@ -1,6 +1,7 @@
 import functools
 import json
 import logging
+import math
 import os
 import re
 import socket
@@ -131,9 +132,13 @@ class Runner:
 
         # set up event listeners for recording requests
         def on_request(request_type, name, response_time, response_length, exception=None, **_kwargs):
-            self.stats.log_request(request_type, name, response_time, response_length)
             if exception:
                 self.stats.log_error(request_type, name, exception)
+                if self.environment.parsed_options.exclude_failed_response_time:
+                    # basal hack to ensure we know that this is error, and we can fix it later
+                    response_time = -response_time
+            # log this anyway...
+            self.stats.log_request(request_type, name, response_time, response_length)
 
         self.environment.events.request.add_listener(on_request)
 
