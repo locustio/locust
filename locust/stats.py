@@ -205,8 +205,13 @@ class RequestStats:
         self.exclude_failed_response_time = exclude_failed_response_time
         self.entries: Dict[Tuple[str, str], StatsEntry] = {}
         self.errors: Dict[str, StatsError] = {}
-        self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache,
-                                exclude_failed_response_time=self.exclude_failed_response_time)
+        self.total = StatsEntry(
+            self,
+            "Aggregated",
+            None,
+            use_response_times_cache=self.use_response_times_cache,
+            exclude_failed_response_time=self.exclude_failed_response_time,
+        )
         self.history = []
 
     @property
@@ -251,8 +256,13 @@ class RequestStats:
         """
         entry = self.entries.get((name, method))
         if not entry:
-            entry = StatsEntry(self, name, method, use_response_times_cache=self.use_response_times_cache,
-                               exclude_failed_response_time=self.exclude_failed_response_time)
+            entry = StatsEntry(
+                self,
+                name,
+                method,
+                use_response_times_cache=self.use_response_times_cache,
+                exclude_failed_response_time=self.exclude_failed_response_time,
+            )
             self.entries[(name, method)] = entry
         return entry
 
@@ -270,8 +280,13 @@ class RequestStats:
         """
         Remove all stats entries and errors
         """
-        self.total = StatsEntry(self, "Aggregated", "", use_response_times_cache=self.use_response_times_cache,
-                                exclude_failed_response_time=self.exclude_failed_response_time)
+        self.total = StatsEntry(
+            self,
+            "Aggregated",
+            "",
+            use_response_times_cache=self.use_response_times_cache,
+            exclude_failed_response_time=self.exclude_failed_response_time,
+        )
         self.entries = {}
         self.errors = {}
         self.history = []
@@ -290,8 +305,14 @@ class StatsEntry:
     Represents a single stats entry (name and method)
     """
 
-    def __init__(self, stats: Optional[RequestStats], name: str, method: str, use_response_times_cache: bool = False,
-                 exclude_failed_response_time: bool = False):
+    def __init__(
+        self,
+        stats: Optional[RequestStats],
+        name: str,
+        method: str,
+        use_response_times_cache: bool = False,
+        exclude_failed_response_time: bool = False,
+    ):
         self.stats = stats
         self.name = name
         """ Name (URL) of this stats entry """
@@ -306,7 +327,7 @@ class StatsEntry:
         """
         self.exclude_failed_response_time = exclude_failed_response_time
         """
-        If set to True, then excludes stats on failed requests 
+        If set to True, then excludes stats on failed requests
         """
         self.num_requests: int = 0
         """ The number of requests made """

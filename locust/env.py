@@ -92,8 +92,9 @@ class Environment:
         """
         self.parsed_options = parsed_options
         """Reference to the parsed command line options (used to pre-populate fields in Web UI). When using Locust as a library, this should either be `None` or an object created by `argument_parser.parse_args()`"""
+        print(parsed_options)
         self.exclude_failed_response_time = False
-        if self.parsed_options.exclude_failed_response_time:
+        if self.parsed_options and self.parsed_options.exclude_failed_response_time:
             self.exclude_failed_response_time = True
         self.stats = RequestStats(exclude_failed_response_time=self.exclude_failed_response_time)
         """Reference to RequestStats instance"""
@@ -153,11 +154,12 @@ class Environment:
         # Create a new RequestStats with use_response_times_cache set to False to save some memory
         # and CPU cycles, since the response_times_cache is not needed for Worker nodes
         exclude_failed_response_time = False
-        if self.parsed_options.exclude_failed_response_time:
+        if self.parsed_options and self.parsed_options.exclude_failed_response_time:
             exclude_failed_response_time = True
 
-        self.stats = RequestStats(use_response_times_cache=False,
-                                  exclude_failed_response_time=exclude_failed_response_time)
+        self.stats = RequestStats(
+            use_response_times_cache=False, exclude_failed_response_time=exclude_failed_response_time
+        )
         return self._create_runner(
             WorkerRunner,
             master_host=master_host,
