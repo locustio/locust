@@ -104,6 +104,7 @@ class mocked_options:
     def __init__(self):
         self.spawn_rate = 5
         self.num_users = 5
+        self.exclude_failed_response_time = False
         self.host = "/"
         self.tags = None
         self.exclude_tags = None

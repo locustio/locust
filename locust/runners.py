@@ -134,7 +134,7 @@ class Runner:
         def on_request(request_type, name, response_time, response_length, exception=None, **_kwargs):
             if exception:
                 self.stats.log_error(request_type, name, exception)
-                if self.environment.parsed_options.exclude_failed_response_time:
+                if self.environment.parsed_options and self.environment.parsed_options.exclude_failed_response_time:
                     # basal hack to ensure we know that this is error, and we can fix it later
                     response_time = -response_time
             # log this anyway...
