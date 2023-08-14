@@ -92,7 +92,6 @@ class Environment:
         """
         self.parsed_options = parsed_options
         """Reference to the parsed command line options (used to pre-populate fields in Web UI). When using Locust as a library, this should either be `None` or an object created by `argument_parser.parse_args()`"""
-        print(parsed_options)
         self.exclude_failed_response_time = False
         if self.parsed_options and self.parsed_options.exclude_failed_response_time:
             self.exclude_failed_response_time = True
