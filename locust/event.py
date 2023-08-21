@@ -200,3 +200,30 @@ class Events:
         for name, value in self.__annotations__.items():
             if value == EventHook:
                 setattr(self, name, value())
+
+        self.request_success = DeprecatedEventHook("request_success event deprecated. Use the request event.")
+
+        self.request_failure = DeprecatedEventHook("request_failure event deprecated. Use the request event.")
+
+        def fire_deprecated_request_handlers(
+            request_type, name, response_time,server_response_time, response_length, exception, context, **kwargs
+        ):
+            if exception:
+                self.request_failure.fire(
+                    request_type=request_type,
+                    name=name,
+                    response_time=response_time,
+                    server_response_time = server_response_time,
+                    response_length=response_length,
+                    exception=exception,
+                )
+            else:
+                self.request_success.fire(
+                    request_type=request_type,
+                    name=name,
+                    response_time=response_time,
+                    server_response_time = server_response_time,
+                    response_length=response_length,
+                )
+
+        self.request.add_listener(fire_deprecated_request_handlers)

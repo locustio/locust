@@ -76,8 +76,12 @@ class StatsEntryDict(StatsBaseDict):
     total_response_time: int
     max_response_time: int
     min_response_time: Optional[int]
+    total_server_response_time: int
+    max_server_response_time: int
+    min_server_response_time: Optional[int]
     total_content_length: int
     response_times: Dict[int, int]
+    server_response_times: Dict[int, int]
     num_reqs_per_sec: Dict[int, int]
     num_fail_per_sec: Dict[int, int]
 
@@ -130,6 +134,7 @@ CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW = 10
 
 
 CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_requests"])
+CachedServerResponseTimes = namedtuple("CachedServerResponseTimes", ["server_response_times", "num_requests"])
 
 PERCENTILES_TO_REPORT = [0.50, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 0.999, 0.9999, 1.0]
 
@@ -172,8 +177,43 @@ def calculate_response_time_percentile(response_times: Dict[int, int], num_reque
     # if all response times were None
     return 0
 
+def calculate_server_response_time_percentile(server_response_times: Dict[int, int], num_requests: int, percent: float) -> int:
+    """
+    Get the response time that a certain number of percent of the requests
+    finished within. Arguments:
+
+    server_response_times: A StatsEntry.response_times dict
+    num_requests: Number of request made (could be derived from response_times,
+                  but we save some CPU cycles by using the value which we already store)
+    percent: The percentile we want to calculate. Specified in range: 0.0 - 1.0
+    """
+    num_of_request = int(num_requests * percent)
+
+    processed_count = 0
+    for server_response_time in sorted(server_response_times.keys(), reverse=True):
+        processed_count += server_response_times[server_response_time]
+        if num_requests - processed_count <= num_of_request:
+            return server_response_time
+    # if all response times were None
+    return 0
+
 
 def diff_response_time_dicts(latest: Dict[int, int], old: Dict[int, int]) -> Dict[int, int]:
+    """
+    Returns the delta between two {response_times:request_count} dicts.
+
+    Used together with the response_times cache to get the response times for the
+    last X seconds, which in turn is used to calculate the current response time
+    percentiles.
+    """
+    new = {}
+    for t in latest:
+        diff = latest[t] - old.get(t, 0)
+        if diff:
+            new[t] = diff
+    return new
+
+def diff_server_response_time_dicts(latest: Dict[int, int], old: Dict[int, int]) -> Dict[int, int]:
     """
     Returns the delta between two {response_times:request_count} dicts.
 
@@ -227,9 +267,9 @@ class RequestStats:
     def start_time(self):
         return self.total.start_time
 
-    def log_request(self, method: str, name: str, response_time: int, content_length: int) -> None:
-        self.total.log(response_time, content_length)
-        self.get(name, method).log(response_time, content_length)
+    def log_request(self, method: str, name: str, response_time: int, server_response_time: int, content_length: int) -> None:
+        self.total.log(response_time, server_response_time, content_length)
+        self.get(name, method).log(response_time, server_response_time, content_length)
 
     def log_error(self, method: str, name: str, error: Exception | str | None) -> None:
         self.total.log_error(error)
@@ -274,7 +314,9 @@ class RequestStats:
 
     def serialize_stats(self) -> List["StatsEntryDict"]:
         return [
-            e.get_stripped_report() for e in self.entries.values() if not (e.num_requests == 0 and e.num_failures == 0)
+            self.entries[key].get_stripped_report()
+            for key in self.entries.keys()
+            if not (self.entries[key].num_requests == 0 and self.entries[key].num_failures == 0)
         ]
 
     def serialize_errors(self) -> Dict[str, "StatsErrorDict"]:
@@ -311,6 +353,16 @@ class StatsEntry:
         """ Minimum response time """
         self.max_response_time: int = 0
         """ Maximum response time """
+
+        self.total_server_response_time: int = 0
+        """ Total sum of the server response times """
+
+        self.min_server_response_time: Optional[int] = None
+        """ Minimum server_response time """
+
+        self.max_server_response_time:int = 0
+        """ Maximum response time """
+
         self.num_reqs_per_sec: Dict[int, int] = {}
         """ A {second => request_count} dict that holds the number of requests made per second """
         self.num_fail_per_sec: Dict[int, int] = {}
@@ -322,18 +374,38 @@ class StatsEntry:
 
         The keys (the response time in ms) are rounded to store 1, 2, ... 9, 10, 20. .. 90,
         100, 200 .. 900, 1000, 2000 ... 9000, in order to save memory.
-
+    
         This dict is used to calculate the median and percentile response times.
         """
+
+        self.server_response_times: Dict[int, int] = {}
+        """
+        A {response_time => count} dict that holds the response time distribution of all
+        the requests.
+    
+        The keys (the response time in ms) are rounded to store 1, 2, ... 9, 10, 20. .. 90,
+        100, 200 .. 900, 1000, 2000 ... 9000, in order to save memory.
+    
+        This dict is used to calculate the median and percentile response times.
+        """
+
         self.response_times_cache: Optional[OrderedDictType[int, CachedResponseTimes]] = None
         """
         If use_response_times_cache is set to True, this will be a {timestamp => CachedResponseTimes()}
         OrderedDict that holds a copy of the response_times dict for each of the last 20 seconds.
         """
+        self.server_response_times_cache: Optional[OrderedDictType[int, CachedServerResponseTimes]] = None
+        """
+        If use_response_times_cache is set to True, this will be a {timestamp => CachedResponseTimes()}
+        OrderedDict that holds a copy of the response_times dict for each of the last 20 seconds.
+        """
+
         self.total_content_length: int = 0
-        """ The sum of the content length of all the responses for this entry """
+        """ The sum of the content length of all the requests for this entry """
+
         self.start_time: float = 0.0
         """ Time of the first request for this entry """
+
         self.last_request_timestamp: Optional[float] = None
         """ Time of the last request for this entry """
         self.reset()
@@ -344,9 +416,13 @@ class StatsEntry:
         self.num_none_requests = 0
         self.num_failures = 0
         self.total_response_time = 0
+        self.total_server_response_time = 0
         self.response_times = {}
         self.min_response_time = None
         self.max_response_time = 0
+        self.server_response_times = {}
+        self.min_server_response_time = None
+        self.max_server_response_time = 0
         self.last_request_timestamp = None
         self.num_reqs_per_sec = {}
         self.num_fail_per_sec = {}
@@ -354,8 +430,10 @@ class StatsEntry:
         if self.use_response_times_cache:
             self.response_times_cache = OrderedDict()
             self._cache_response_times(int(time.time()))
+            self.server_response_times_cache = OrderedDict()
+            self._cache_server_response_times(int(time.time()))
 
-    def log(self, response_time: int, content_length: int) -> None:
+    def log(self, response_time: int, server_response_time:int ,  content_length:int):
         # get the time
         current_time = time.time()
         t = int(current_time)
@@ -363,10 +441,12 @@ class StatsEntry:
         if self.use_response_times_cache and self.last_request_timestamp and t > int(self.last_request_timestamp):
             # see if we shall make a copy of the response_times dict and store in the cache
             self._cache_response_times(t - 1)
+            self._cache_server_response_times(t - 1)
 
         self.num_requests += 1
         self._log_time_of_request(current_time)
         self._log_response_time(response_time)
+        self._log_server_response_time(server_response_time)
 
         # increase total content-length
         self.total_content_length += content_length
@@ -405,6 +485,35 @@ class StatsEntry:
         self.response_times.setdefault(rounded_response_time, 0)
         self.response_times[rounded_response_time] += 1
 
+    def _log_server_response_time(self, server_response_time):
+        if server_response_time is None:
+            self.num_none_requests += 1
+            return
+
+        self.total_server_response_time += server_response_time
+
+        if self.min_server_response_time is None:
+            self.min_server_response_time = server_response_time
+
+        self.min_server_response_time = min(self.min_server_response_time, server_response_time)
+        self.max_server_response_time = max(self.max_server_response_time, server_response_time)
+
+        # to avoid to much data that has to be transferred to the master node when
+        # running in distributed mode, we save the response time rounded in a dict
+        # so that 147 becomes 150, 3432 becomes 3400 and 58760 becomes 59000
+        if server_response_time < 100:
+            rounded_server_response_time = round(server_response_time)
+        elif server_response_time < 1000:
+            rounded_server_response_time = round(server_response_time, -1)
+        elif server_response_time < 10000:
+            rounded_server_response_time = round(server_response_time, -2)
+        else:
+            rounded_server_response_time = round(server_response_time, -3)
+
+        # increase request count for the rounded key in response time dict
+        self.server_response_times.setdefault(rounded_server_response_time, 0)
+        self.server_response_times[rounded_server_response_time] += 1
+
     def log_error(self, error: Exception | str | None) -> None:
         self.num_failures += 1
         t = int(time.time())
@@ -428,6 +537,13 @@ class StatsEntry:
             return 0.0
 
     @property
+    def avg_server_response_time(self) -> float:
+        try:
+            return float(self.total_server_response_time) / (self.num_requests - self.num_none_requests)
+        except ZeroDivisionError:
+            return 0.0
+
+    @property
     def median_response_time(self) -> int:
         if not self.response_times:
             return 0
@@ -441,6 +557,23 @@ class StatsEntry:
             median = self.max_response_time
         elif self.min_response_time is not None and median < self.min_response_time:
             median = self.min_response_time
+
+        return median
+
+    @property
+    def median_server_response_time(self) -> int:
+        if not self.server_response_times:
+            return 0
+        median = median_from_dict(self.num_requests - self.num_none_requests, self.server_response_times) or 0
+
+        # Since we only use two digits of precision when calculating the median response time
+        # while still using the exact values for min and max response times, the following checks
+        # makes sure that we don't report a median > max or median < min when a StatsEntry only
+        # have one (or very few) really slow requests
+        if median > self.max_server_response_time:
+            median = self.max_server_response_time
+        elif self.min_server_response_time is not None and median < self.min_server_response_time:
+            median = self.min_server_response_time
 
         return median
 
@@ -509,16 +642,25 @@ class StatsEntry:
         self.num_none_requests += other.num_none_requests
         self.num_failures += other.num_failures
         self.total_response_time += other.total_response_time
+        self.total_server_response_time += other.total_server_response_time
         self.max_response_time = max(self.max_response_time, other.max_response_time)
+        self.max_server_response_time = max(self.max_server_response_time, other.max_server_response_time)
         if self.min_response_time is not None and other.min_response_time is not None:
             self.min_response_time = min(self.min_response_time, other.min_response_time)
         elif other.min_response_time is not None:
             # this means self.min_response_time is None, so we can safely replace it
             self.min_response_time = other.min_response_time
-        self.total_content_length += other.total_content_length
+        if self.min_server_response_time is not None and other.min_server_response_time is not None:
+            self.min_server_response_time = min(self.min_server_response_time, other.min_server_response_time)
+        elif other.min_server_response_time is not None:
+            # this means self.min_response_time is None, so we can safely replace it
+            self.min_server_response_time = other.min_server_response_time
+        self.total_content_length = self.total_content_length + other.total_content_length
 
         for key in other.response_times:
             self.response_times[key] = self.response_times.get(key, 0) + other.response_times[key]
+        for key in other.server_response_times:
+            self.server_response_times[key] = self.server_response_times.get(key, 0) + other.server_response_times[key]
         for key in other.num_reqs_per_sec:
             self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) + other.num_reqs_per_sec[key]
         for key in other.num_fail_per_sec:
@@ -534,6 +676,7 @@ class StatsEntry:
             last_time = int(self.last_request_timestamp) if self.last_request_timestamp else None
             if last_time and last_time > (old_last_request_timestamp and int(old_last_request_timestamp) or 0):
                 self._cache_response_times(last_time)
+                self._cache_server_response_times(last_time)
 
     def serialize(self) -> StatsEntryDict:
         return cast(StatsEntryDict, {key: getattr(self, key, None) for key in StatsEntryDict.__annotations__.keys()})
@@ -576,7 +719,7 @@ class StatsEntry:
             + str(STATS_TYPE_WIDTH)
             + "s %-"
             + str((STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4)
-            + "s %7d %12s |%7d %7d %7d%7d | %7.2f %11.2f"
+            + "s %7d %12s |%7d %7d %7d%7d %7d %7d %7d%7d| %7.2f %11.2f"
         ) % (
             (self.method and self.method + " " or ""),
             self.name,
@@ -586,6 +729,10 @@ class StatsEntry:
             self.min_response_time or 0,
             self.max_response_time,
             self.median_response_time or 0,
+            self.avg_server_response_time,
+            self.min_server_response_time or 0,
+            self.max_server_response_time,
+            self.median_server_response_time or 0,
             rps or 0,
             fail_per_sec or 0,
         )
@@ -601,6 +748,15 @@ class StatsEntry:
         Percent specified in range: 0.0 - 1.0
         """
         return calculate_response_time_percentile(self.response_times, self.num_requests, percent)
+
+    def get_server_response_time_percentile(self, percent: float) -> int:
+        """
+        Get the response time that a certain number of percent of the requests
+        finished within.
+
+        Percent specified in range: 0.0 - 1.0
+        """
+        return calculate_server_response_time_percentile(self.server_response_times, self.num_requests, percent)
 
     def get_current_response_time_percentile(self, percent: float) -> Optional[int]:
         """
@@ -646,15 +802,71 @@ class StatsEntry:
         # if time was not in response times cache window
         return None
 
+    def get_current_server_response_time_percentile(self, percent: float) -> Optional[int]:
+        """
+        Calculate the *current* response time for a certain percentile. We use a sliding
+        window of (approximately) the last 10 seconds (specified by CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW)
+        when calculating this.
+        """
+        if not self.use_response_times_cache:
+            raise ValueError(
+                "StatsEntry.use_response_times_cache must be set to True if we should be able to calculate the _current_ response time percentile"
+            )
+        # First, we want to determine which of the cached response_times dicts we should
+        # use to get response_times for approximately 10 seconds ago.
+        t = int(time.time())
+        # Since we can't be sure that the cache contains an entry for every second.
+        # We'll construct a list of timestamps which we consider acceptable keys to be used
+        # when trying to fetch the cached response_times. We construct this list in such a way
+        # that it's ordered by preference by starting to add t-10, then t-11, t-9, t-12, t-8,
+        # and so on
+        acceptable_timestamps = []
+        acceptable_timestamps.append(t - CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW)
+        for i in range(1, 9):
+            acceptable_timestamps.append(t - CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW - i)
+            acceptable_timestamps.append(t - CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW + i)
+
+        server_cached: Optional[CachedServerResponseTimes] = None
+        if self.server_response_times_cache is not None:
+            for ts in acceptable_timestamps:
+                if ts in self.server_response_times_cache:
+                    server_cached = self.server_response_times_cache[ts]
+                    break
+
+        if server_cached:
+            # If we fond an acceptable cached response times, we'll calculate a new response
+            # times dict of the last 10 seconds (approximately) by diffing it with the current
+            # total response times. Then we'll use that to calculate a response time percentile
+            # for that timeframe
+            return calculate_server_response_time_percentile(
+                diff_server_response_time_dicts(self.server_response_times, server_cached.server_response_times),
+                self.num_requests - server_cached.num_requests,
+                percent,
+            )
+        # if time was not in server response times cache window
+        return None
+
     def percentile(self) -> str:
         if not self.num_requests:
             raise ValueError("Can't calculate percentile on url with no successful requests")
 
-        tpl = f"%-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8d {' '.join(['%6d'] * len(PERCENTILES_TO_REPORT))}"
+        tpl = f" %-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8d {' '.join(['%6d'] * len(PERCENTILES_TO_REPORT))}"
 
         return tpl % (
             (self.method or "", self.name)
             + tuple(self.get_response_time_percentile(p) for p in PERCENTILES_TO_REPORT)
+            + (self.num_requests,)
+        )
+
+    def server_percentile(self) -> str:
+        if not self.num_requests:
+            raise ValueError("Can't calculate percentile on url with no successful requests")
+
+        tpl = f" %-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8d {' '.join(['%6d'] * len(PERCENTILES_TO_REPORT))}"
+
+        return tpl % (
+            (self.method or self.name)
+            + tuple([self.get_server_response_time_percentile(p) for p in PERCENTILES_TO_REPORT])
             + (self.num_requests,)
         )
 
@@ -677,6 +889,25 @@ class StatsEntry:
             # only keep the latest 20 response_times dicts
             for _ in range(len(self.response_times_cache) - cache_size):
                 self.response_times_cache.popitem(last=False)
+
+    def _cache_server_response_times(self, t: int) -> None:
+        if self.server_response_times_cache is None:
+            self.server_response_times_cache = OrderedDict()
+        self.server_response_times_cache[t] = CachedServerResponseTimes(
+            server_response_times=copy(self.server_response_times),
+            num_requests=self.num_requests,
+        )
+
+        # We'll use a cache size of CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW + 10 since - in the extreme case -
+        # we might still use response times (from the cache) for t-CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW-10
+        # to calculate the current response time percentile, if we're missing cached values for the subsequent
+        # 20 seconds
+        cache_size = CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW + 10
+
+        if len(self.server_response_times_cache) > cache_size:
+            # only keep the latest 20 response_times dicts
+            for _ in range(len(self.server_response_times_cache) - cache_size):
+                self.server_response_times_cache.popitem(last=False)
 
 
 class StatsError:
@@ -801,8 +1032,8 @@ def get_stats_summary(stats: RequestStats, current=True) -> List[str]:
     name_column_width = (STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4  # saved characters by compacting other columns
     summary = []
     summary.append(
-        ("%-" + str(STATS_TYPE_WIDTH) + "s %-" + str(name_column_width) + "s %7s %12s |%7s %7s %7s%7s | %7s %11s")
-        % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Med", "req/s", "failures/s")
+        (" %-" + str(STATS_TYPE_WIDTH) + "s %-" +   str(name_column_width) + "s %7s %12s  | %7s %7s %7s %7s %7s %7s %7s %7s | %7s %11s")
+        % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Median", "Server Avg", "Server Min", "Server Max", "Server Median","req/s", "failures/s")
     )
     separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * (name_column_width)}|{"-" * 7}|{"-" * 13}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 8}|{"-" * 11}'
     summary.append(separator)
@@ -816,6 +1047,8 @@ def get_stats_summary(stats: RequestStats, current=True) -> List[str]:
 
 def print_percentile_stats(stats: RequestStats) -> None:
     for line in get_percentile_stats_summary(stats):
+        console_logger.info(line)
+    for line in get_server_percentile_stats_summary(stats):
         console_logger.info(line)
     console_logger.info("")
 
@@ -844,6 +1077,33 @@ def get_percentile_stats_summary(stats: RequestStats) -> List[str]:
     summary.append(separator)
 
     if stats.total.response_times:
+        summary.append(stats.total.percentile())
+    return summary
+
+def get_server_percentile_stats_summary(stats: RequestStats) -> List[str]:
+    """
+    Percentile stats summary will be returned as list of string
+    """
+    summary = ["Server Response time percentiles (approximated)"]
+    headers = ("Type", "Name") + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)) + ("# reqs",)
+    summary.append(
+        (
+            f"%-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
+            f"{' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}"
+        )
+        % headers
+    )
+    separator = (
+        f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 8}|{("-" * 6 + "|") * len(PERCENTILES_TO_REPORT)}'
+    )[:-1]
+    summary.append(separator)
+    for key in sorted(stats.entries.keys()):
+        r = stats.entries[key]
+        if r.server_response_times:
+            summary.append(r.percentile())
+    summary.append(separator)
+
+    if stats.total.server_response_times:
         summary.append(stats.total.percentile())
     return summary
 
@@ -890,10 +1150,10 @@ def stats_history(runner: "Runner") -> None:
                 "time": datetime.datetime.now(tz=datetime.timezone.utc).strftime("%H:%M:%S"),
                 "current_rps": stats.total.current_rps or 0,
                 "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
-                "response_time_percentile_1": stats.total.get_current_response_time_percentile(PERCENTILES_TO_CHART[0])
-                or 0,
-                "response_time_percentile_2": stats.total.get_current_response_time_percentile(PERCENTILES_TO_CHART[1])
-                or 0,
+                "response_time_percentile_75": stats.total.get_current_response_time_percentile(0.75) or 0,
+                "response_time_percentile_50": stats.total.get_current_response_time_percentile(0.5) or 0,
+                "server_response_time_percentile_75": stats.total.get_current_server_response_time_percentile(0.75) or 0,
+                "server_response_time_percentile_50": stats.total.get_current_server_response_time_percentile(0.5) or 0,
                 "user_count": runner.user_count or 0,
             }
             stats.history.append(r)
@@ -906,8 +1166,10 @@ class StatsCSV:
     def __init__(self, environment: "Environment", percentiles_to_report: List[float]) -> None:
         self.environment = environment
         self.percentiles_to_report = percentiles_to_report
+        self.server_percentiles_to_report = percentiles_to_report
 
         self.percentiles_na = ["N/A"] * len(self.percentiles_to_report)
+        self.server_percentiles_na = ["N/A"] * len(self.percentiles_to_report)
 
         self.requests_csv_columns = [
             "Type",
@@ -918,10 +1180,14 @@ class StatsCSV:
             "Average Response Time",
             "Min Response Time",
             "Max Response Time",
+            "Median Server Response Time",
+            "Average Server Response Time",
+            "Min Server Response Time",
+            "Max Server Response Time",
             "Average Content Size",
             "Requests/s",
             "Failures/s",
-        ] + get_readable_percentiles(self.percentiles_to_report)
+        ] + get_readable_percentiles(self.percentiles_to_report) + get_readable_percentiles(self.server_percentiles_to_report)
 
         self.failures_columns = [
             "Method",
@@ -945,6 +1211,14 @@ class StatsCSV:
         else:
             return [int(stats_entry.get_response_time_percentile(x) or 0) for x in self.percentiles_to_report]
 
+    def _server_percentile_fields(self, stats_entry: StatsEntry, use_current: bool = False) -> List[str] | List[int]:
+        if not stats_entry.num_requests:
+            return self.percentiles_na
+        elif use_current:
+            return [int(stats_entry.get_current_server_response_time_percentile(x) or 0) for x in self.percentiles_to_report]
+        else:
+            return [int(stats_entry.get_server_response_time_percentile(x) or 0) for x in self.percentiles_to_report]
+
     def requests_csv(self, csv_writer: CSVWriter) -> None:
         """Write requests csv with header and data rows."""
         csv_writer.writerow(self.requests_csv_columns)
@@ -965,11 +1239,16 @@ class StatsCSV:
                         stats_entry.avg_response_time,
                         stats_entry.min_response_time or 0,
                         stats_entry.max_response_time,
+                        stats_entry.median_server_response_time,
+                        stats_entry.avg_server_response_time,
+                        stats_entry.min_server_response_time or 0,
+                        stats_entry.max_server_response_time,
                         stats_entry.avg_content_length,
                         stats_entry.total_rps,
                         stats_entry.total_fail_per_sec,
                     ],
                     self._percentile_fields(stats_entry),
+                    self._server_percentile_fields(stats_entry),
                 )
             )
 
@@ -1042,6 +1321,10 @@ class StatsCSVFileWriter(StatsCSV):
             "Total Average Response Time",
             "Total Min Response Time",
             "Total Max Response Time",
+            "Total Median Server Response Time",
+            "Total Average Server Response Time",
+            "Total Min Server Response Time",
+            "Total Max Server Response Time",
             "Total Average Content Size",
         ]
 
@@ -1118,6 +1401,7 @@ class StatsCSVFileWriter(StatsCSV):
                         f"{stats_entry.current_fail_per_sec:2f}",
                     ),
                     self._percentile_fields(stats_entry, use_current=self.full_history),
+                    self._server_percentile_fields(stats_entry, use_current=self.full_history),
                     (
                         stats_entry.num_requests,
                         stats_entry.num_failures,
@@ -1125,6 +1409,10 @@ class StatsCSVFileWriter(StatsCSV):
                         stats_entry.avg_response_time,
                         stats_entry.min_response_time or 0,
                         stats_entry.max_response_time,
+                        stats_entry.median_server_response_time,
+                        stats_entry.avg_server_response_time,
+                        stats_entry.min_server_response_time or 0,
+                        stats_entry.max_server_response_time,
                         stats_entry.avg_content_length,
                     ),
                 )

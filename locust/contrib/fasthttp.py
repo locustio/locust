@@ -222,6 +222,10 @@ class FastHttpSession:
             "start_time": start_time,
             "url": built_url,  # this is a small deviation from HttpSession, which gets the final (possibly redirected) URL
         }
+        if response.headers.get("X-Runtime") == None:
+            server_response_time = 0
+        else:
+            server_response_time = float(response.headers.get("X-Runtime")) * 1000
 
         if not allow_redirects:
             self.client.redirect_resonse_codes = old_redirect_response_codes
@@ -235,6 +239,7 @@ class FastHttpSession:
                 request_meta["response_length"] = len(response.content or "")
             except HTTPParseError as e:
                 request_meta["response_time"] = (time.perf_counter() - start_perf_counter) * 1000
+                request_meta["server_response_time"] = server_response_time
                 request_meta["response_length"] = 0
                 request_meta["exception"] = e
                 self.environment.events.request.fire(**request_meta)
@@ -244,6 +249,7 @@ class FastHttpSession:
         # Note: This is intentionally placed after we record the content_size above, since
         # we'll then trigger fetching of the body (unless stream=True)
         request_meta["response_time"] = int((time.perf_counter() - start_perf_counter) * 1000)
+        request_meta["server_response_time"] = server_response_time
 
         if catch_response:
             return ResponseContextManager(response, environment=self.environment, request_meta=request_meta)
