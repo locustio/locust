@@ -6,7 +6,7 @@ Only latest version is actively supported, but issues reported for earlier minor
 
 ## Reporting a Vulnerability
 
-Reported using regular GitHub issues. If there is some reason an issue cannot be made public before a fix has been made, contact @cyberw directly.
+Reported using regular GitHub issues. If there is some reason an issue cannot be made public before a fix has been made, [create a new security advisory](https://github.com/locustio/locust/security/advisories).
 
 ## How to use Locust safely
 
