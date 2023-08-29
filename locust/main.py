@@ -188,12 +188,12 @@ def main():
             import resource
 
             minimum_open_file_limit = 10000
-            current_open_file_limit = resource.getrlimit(resource.RLIMIT_NOFILE)[0]
+            (current_open_file_limit, current_open_file_limit_hard) = resource.getrlimit(resource.RLIMIT_NOFILE)
 
-            if current_open_file_limit < minimum_open_file_limit:
+            if current_open_file_limit < minimum_open_file_limit and minimum_open_file_limit < current_open_file_limit_hard:
                 # Increasing the limit to 10000 within a running process should work on at least MacOS.
                 # It does not work on all OS:es, but we should be no worse off for trying.
-                resource.setrlimit(resource.RLIMIT_NOFILE, [minimum_open_file_limit, resource.RLIM_INFINITY])
+                resource.setrlimit(resource.RLIMIT_NOFILE, [minimum_open_file_limit, current_open_file_limit_hard])
         except BaseException:
             logger.warning(
                 f"""System open file limit '{current_open_file_limit}' is below minimum setting '{minimum_open_file_limit}'.
