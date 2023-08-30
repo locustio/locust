@@ -1,4 +1,4 @@
-FROM python:3.10-slim as base
+FROM python:3.11-slim as base
 
 FROM base as builder
 RUN apt-get update && apt-get install -y git 
