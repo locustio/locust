@@ -106,7 +106,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(200, requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).status_code)
 
     def test_stats(self):
-        self.stats.log_request("GET", "/<html>", 120, 5612)
+        self.stats.log_request("GET", "/<html>", "", 120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
 
@@ -122,14 +122,14 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(120, data["stats"][1]["avg_response_time"])
 
     def test_stats_cache(self):
-        self.stats.log_request("GET", "/test", 120, 5612)
+        self.stats.log_request("GET", "/test", "", 120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         data = json.loads(response.text)
         self.assertEqual(2, len(data["stats"]))  # one entry plus Aggregated
 
         # add another entry
-        self.stats.log_request("GET", "/test2", 120, 5612)
+        self.stats.log_request("GET", "/test2", "", 120, 5612)
         data = json.loads(requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).text)
         self.assertEqual(2, len(data["stats"]))  # old value should be cached now
 
@@ -139,8 +139,8 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(3, len(data["stats"]))  # this should no longer be cached
 
     def test_stats_rounding(self):
-        self.stats.log_request("GET", "/test", 1.39764125, 2)
-        self.stats.log_request("GET", "/test", 999.9764125, 1000)
+        self.stats.log_request("GET", "/test", "", 1.39764125, 2)
+        self.stats.log_request("GET", "/test", "", 999.9764125, 1000)
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
 
@@ -149,24 +149,24 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(1000, data["stats"][0]["max_response_time"])
 
     def test_request_stats_csv(self):
-        self.stats.log_request("GET", "/test2", 120, 5612)
+        self.stats.log_request("GET", "/test2", "", 120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/requests/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
         self._check_csv_headers(response.headers, "requests")
 
     def test_request_stats_full_history_csv_not_present(self):
-        self.stats.log_request("GET", "/test2", 120, 5612)
+        self.stats.log_request("GET", "/test2", "", 120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/requests_full_history/csv" % self.web_port)
         self.assertEqual(404, response.status_code)
 
     def test_failure_stats_csv(self):
-        self.stats.log_error("GET", "/", Exception("Error1337"))
+        self.stats.log_error("GET", "/", "", Exception("Error1337"))
         response = requests.get("http://127.0.0.1:%i/stats/failures/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
         self._check_csv_headers(response.headers, "failures")
 
     def test_request_stats_with_errors(self):
-        self.stats.log_error("GET", "/", Exception("Error1337"))
+        self.stats.log_error("GET", "/", "", Exception("Error1337"))
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertIn("Error1337", response.text)
@@ -179,20 +179,21 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
 
-        self.stats.log_request("GET", "/test", 120, 5612)
-        self.stats.log_error("GET", "/", Exception("Error1337"))
+        self.stats.log_request("GET", "/test", "", 120, 5612)
+        self.stats.log_error("GET", "/", "", Exception("Error1337"))
 
-        response = requests.get("http://127.0.0.1:%i/stats/reset" % self.web_port)
+        host = "http://127.0.0.1:%i" % self.web_port
+        response = requests.get("%s/stats/reset" % host)
 
         self.assertEqual(200, response.status_code)
 
         self.assertEqual({}, self.stats.errors)
         self.assertEqual({}, self.runner.exceptions)
 
-        self.assertEqual(0, self.stats.get("/", "GET").num_requests)
-        self.assertEqual(0, self.stats.get("/", "GET").num_failures)
-        self.assertEqual(0, self.stats.get("/test", "GET").num_requests)
-        self.assertEqual(0, self.stats.get("/test", "GET").num_failures)
+        self.assertEqual(0, self.stats.get("/", "GET", host).num_requests)
+        self.assertEqual(0, self.stats.get("/", "GET", host).num_failures)
+        self.assertEqual(0, self.stats.get("/test", "GET", host).num_requests)
+        self.assertEqual(0, self.stats.get("/test", "GET", host).num_failures)
 
     def test_exceptions(self):
         try:
@@ -887,7 +888,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertIn("setting this will override the host on all User classes", response.content.decode("utf-8"))
 
     def test_report_page(self):
-        self.stats.log_request("GET", "/test", 120, 5612)
+        self.stats.log_request("GET", "/test", "", 120, 5612)
         r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
         self.assertEqual(200, r.status_code)
         self.assertIn("<title>Test Report for None</title>", r.text)
@@ -906,7 +907,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertIn("charts-container", r.text)
 
     def test_report_download(self):
-        self.stats.log_request("GET", "/test", 120, 5612)
+        self.stats.log_request("GET", "/test", "", 120, 5612)
         r = requests.get("http://127.0.0.1:%i/stats/report?download=1" % self.web_port)
         self.assertEqual(200, r.status_code)
         self.assertIn("attachment", r.headers.get("Content-Disposition", ""))
@@ -914,7 +915,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
     def test_report_host(self):
         self.environment.host = "http://test.com"
-        self.stats.log_request("GET", "/test", 120, 5612)
+        self.stats.log_request("GET", "/test", "", 120, 5612)
         r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
         self.assertEqual(200, r.status_code)
         self.assertIn("http://test.com", r.text)
@@ -929,7 +930,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         self.environment.host = None
         self.environment.user_classes = [MyUser]
-        self.stats.log_request("GET", "/test", 120, 5612)
+        self.stats.log_request("GET", "/test", "", 120, 5612)
         r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
         self.assertEqual(200, r.status_code)
         self.assertIn("http://test2.com", r.text)
@@ -941,7 +942,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             tb = e.__traceback__
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
-        self.stats.log_request("GET", "/test", 120, 5612)
+        self.stats.log_request("GET", "/test", "", 120, 5612)
         r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
         # self.assertEqual(200, r.status_code)
         self.assertIn("<h2>Exceptions Statistics</h2>", r.text)
@@ -1141,9 +1142,9 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
         self.remove_file_if_exists(self.STATS_FAILURES_FILENAME)
 
     def test_request_stats_full_history_csv(self):
-        self.stats.log_request("GET", "/test", 1.39764125, 2)
-        self.stats.log_request("GET", "/test", 999.9764125, 1000)
-        self.stats.log_request("GET", "/test2", 120, 5612)
+        self.stats.log_request("GET", "/test", "", 1.39764125, 2)
+        self.stats.log_request("GET", "/test", "", 999.9764125, 1000)
+        self.stats.log_request("GET", "/test2", "", 120, 5612)
 
         greenlet = gevent.spawn(self.stats_csv_writer.stats_writer)
         gevent.sleep(0.01)

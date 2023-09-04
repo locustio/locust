@@ -63,6 +63,7 @@ class CSVWriter(Protocol):
 class StatsBaseDict(TypedDict):
     name: str
     method: str
+    host: str
 
 
 class StatsEntryDict(StatsBaseDict):
@@ -193,7 +194,11 @@ class EntriesDict(dict):
 
     def __missing__(self, key):
         self[key] = StatsEntry(
-            self.request_stats, key[0], key[1], use_response_times_cache=self.request_stats.use_response_times_cache
+            self.request_stats,
+            key[0],
+            key[1],
+            key[2],
+            use_response_times_cache=self.request_stats.use_response_times_cache,
         )
         return self[key]
 
@@ -211,7 +216,7 @@ class RequestStats:
                                          is not needed.
         """
         self.use_response_times_cache = use_response_times_cache
-        self.entries: Dict[Tuple[str, str], StatsEntry] = EntriesDict(self)
+        self.entries: Dict[Tuple[str, str, str], StatsEntry] = EntriesDict(self)
         self.errors: Dict[str, StatsError] = {}
         self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
         self.history = []
@@ -236,27 +241,27 @@ class RequestStats:
     def start_time(self):
         return self.total.start_time
 
-    def log_request(self, method: str, name: str, response_time: int, content_length: int) -> None:
+    def log_request(self, method: str, name: str, host: str, response_time: int, content_length: int) -> None:
         self.total.log(response_time, content_length)
-        self.entries[(name, method)].log(response_time, content_length)
+        self.entries[(name, method, host)].log(response_time, content_length)
 
-    def log_error(self, method: str, name: str, error: Exception | str | None) -> None:
+    def log_error(self, method: str, name: str, host: str, error: Exception | str | None) -> None:
         self.total.log_error(error)
-        self.entries[(name, method)].log_error(error)
+        self.entries[(name, method, host)].log_error(error)
 
         # store error in errors dict
-        key = StatsError.create_key(method, name, error)
+        key = StatsError.create_key(method, name, host, error)
         entry = self.errors.get(key)
         if not entry:
-            entry = StatsError(method, name, error)
+            entry = StatsError(method, name, host, error)
             self.errors[key] = entry
         entry.occurred()
 
-    def get(self, name: str, method: str) -> "StatsEntry":
+    def get(self, name: str, method: str, host: str) -> "StatsEntry":
         """
-        Retrieve a StatsEntry instance by name and method
+        Retrieve a StatsEntry instance by name, method, and host
         """
-        return self.entries[(name, method)]
+        return self.entries[(name, method, host)]
 
     def reset_all(self) -> None:
         """
@@ -291,12 +296,21 @@ class StatsEntry:
     Represents a single stats entry (name and method)
     """
 
-    def __init__(self, stats: Optional[RequestStats], name: str, method: str, use_response_times_cache: bool = False):
+    def __init__(
+        self,
+        stats: Optional[RequestStats],
+        name: str,
+        method: str,
+        host: str = "",
+        use_response_times_cache: bool = False,
+    ):
         self.stats = stats
         self.name = name
         """ Name (URL) of this stats entry """
         self.method = method
         """ Method (GET, POST, PUT, etc.) """
+        self.host = host
+        """ Host (BASE_URL) of the request """
         self.use_response_times_cache = use_response_times_cache
         """
         If set to True, the copy of the response_time dict will be stored in response_times_cache
@@ -546,11 +560,11 @@ class StatsEntry:
     @classmethod
     def unserialize(cls, data: StatsEntryDict) -> "StatsEntry":
         """Return the unserialzed version of the specified dict"""
-        obj = cls(None, data["name"], data["method"])
+        obj = cls(None, data["name"], data["method"], data.get("host", ""))
         valid_keys = StatsEntryDict.__annotations__.keys()
 
         for key, value in data.items():
-            if key in ["name", "method"] or key not in valid_keys:
+            if key in ["name", "method", "host"] or key not in valid_keys:
                 continue
 
             setattr(obj, key, value)
@@ -699,13 +713,15 @@ class StatsEntry:
             "ninetieth_response_time": self.get_response_time_percentile(0.9),
             "ninety_ninth_response_time": self.get_response_time_percentile(0.99),
             "avg_content_length": self.avg_content_length,
+            "host": self.host,
         }
 
 
 class StatsError:
-    def __init__(self, method: str, name: str, error: Exception | str | None, occurrences: int = 0):
+    def __init__(self, method: str, name: str, host: str, error: Exception | str | None, occurrences: int = 0):
         self.method = method
         self.name = name
+        self.host = host
         self.error = error
         self.occurrences = occurrences
 
@@ -724,8 +740,8 @@ class StatsError:
         return string_error.replace(hex_address, "0x....")
 
     @classmethod
-    def create_key(cls, method: str, name: str, error: Exception | str | None) -> str:
-        key = f"{method}.{name}.{StatsError.parse_error(error)!r}"
+    def create_key(cls, method: str, name: str, host: str, error: Exception | str | None) -> str:
+        key = f"{method}.{name}.{host}.{StatsError.parse_error(error)!r}"
         return hashlib.sha256(key.encode("utf-8")).hexdigest()
 
     def occurred(self) -> None:
@@ -759,7 +775,7 @@ class StatsError:
 
     @classmethod
     def unserialize(cls, data: StatsErrorDict) -> "StatsError":
-        return cls(data["method"], data["name"], data["error"], data["occurrences"])
+        return cls(data["method"], data["name"], data.get("host", ""), data["error"], data["occurrences"])
 
     def to_dict(self, escape_string_values=False):
         return {
@@ -767,6 +783,7 @@ class StatsError:
             "name": escape(self.name),
             "error": escape(self.parse_error(self.error)),
             "occurrences": self.occurrences,
+            "host": self.host,
         }
 
 
@@ -798,9 +815,11 @@ def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats)
     def on_worker_report(client_id: str, data: Dict[str, Any]) -> None:
         for stats_data in data["stats"]:
             entry = StatsEntry.unserialize(stats_data)
-            request_key = (entry.name, entry.method)
+            request_key = (entry.name, entry.method, entry.host)
             if request_key not in stats.entries:
-                stats.entries[request_key] = StatsEntry(stats, entry.name, entry.method, use_response_times_cache=True)
+                stats.entries[request_key] = StatsEntry(
+                    stats, entry.name, entry.method, entry.host, use_response_times_cache=True
+                )
             stats.entries[request_key].extend(entry)
 
         for error_key, error in data["errors"].items():

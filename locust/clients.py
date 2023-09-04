@@ -129,6 +129,9 @@ class HttpSession(requests.Session):
 
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(url)
+        parsed_url = urlparse(url)
+        # absolute URLs may use a different host
+        actual_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
         start_time = time.time()
         start_perf_counter = time.perf_counter()
@@ -154,6 +157,7 @@ class HttpSession(requests.Session):
             "exception": None,
             "start_time": start_time,
             "url": url,
+            "host": actual_host,
         }
 
         # get the length of the content, but if the argument stream is set to True, we take

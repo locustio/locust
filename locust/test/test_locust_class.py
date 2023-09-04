@@ -701,8 +701,8 @@ class TestWebLocustClass(WebserverTestCase):
         my_locust = MyUser(self.environment)
         my_locust.t1()
 
-        self.assertEqual(1, self.runner.stats.get("new name!", "GET").num_requests)
-        self.assertEqual(0, self.runner.stats.get("/ultra_fast", "GET").num_requests)
+        self.assertEqual(1, self.runner.stats.get("new name!", "GET", my_locust.host).num_requests)
+        self.assertEqual(0, self.runner.stats.get("/ultra_fast", "GET", my_locust.host).num_requests)
 
     def test_redirect_url_original_path_as_name(self):
         class MyUser(HttpUser):
@@ -712,8 +712,8 @@ class TestWebLocustClass(WebserverTestCase):
         l.client.get("/redirect")
 
         self.assertEqual(1, len(self.runner.stats.entries))
-        self.assertEqual(1, self.runner.stats.get("/redirect", "GET").num_requests)
-        self.assertEqual(0, self.runner.stats.get("/ultra_fast", "GET").num_requests)
+        self.assertEqual(1, self.runner.stats.get("/redirect", "GET", l.host).num_requests)
+        self.assertEqual(0, self.runner.stats.get("/ultra_fast", "GET", l.host).num_requests)
 
 
 class TestCatchResponse(WebserverTestCase):

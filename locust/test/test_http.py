@@ -50,13 +50,13 @@ class TestHttpSession(WebserverTestCase):
         r = s.get("/streaming/30")
 
         # verify that the time reported includes the download time of the whole streamed response
-        self.assertGreater(self.runner.stats.get("/streaming/30", method="GET").avg_response_time, 250)
+        self.assertGreater(self.runner.stats.get("/streaming/30", method="GET", host=s.base_url).avg_response_time, 250)
         self.runner.stats.clear_all()
 
         # verify that response time does NOT include whole download time, when using stream=True
         r = s.get("/streaming/30", stream=True)
-        self.assertGreater(self.runner.stats.get("/streaming/30", method="GET").avg_response_time, 0)
-        self.assertLess(self.runner.stats.get("/streaming/30", method="GET").avg_response_time, 250)
+        self.assertGreater(self.runner.stats.get("/streaming/30", method="GET", host=s.base_url).avg_response_time, 0)
+        self.assertLess(self.runner.stats.get("/streaming/30", method="GET", host=s.base_url).avg_response_time, 250)
 
         # download the content of the streaming response (so we don't get an ugly exception in the log)
         _ = r.content
@@ -65,7 +65,7 @@ class TestHttpSession(WebserverTestCase):
         s = self.get_client()
         url = "/redirect?url=/redirect&delay=0.5"
         r = s.get(url)
-        stats = self.runner.stats.get(url, method="GET")
+        stats = self.runner.stats.get(url, method="GET", host=s.base_url)
         self.assertEqual(1, stats.num_requests)
         self.assertGreater(stats.avg_response_time, 500)
 
@@ -74,8 +74,8 @@ class TestHttpSession(WebserverTestCase):
         url = "/redirect"
         r = s.post(url)
         self.assertEqual(200, r.status_code)
-        post_stats = self.runner.stats.get(url, method="POST")
-        get_stats = self.runner.stats.get(url, method="GET")
+        post_stats = self.runner.stats.get(url, method="POST", host=s.base_url)
+        get_stats = self.runner.stats.get(url, method="GET", host=s.base_url)
         self.assertEqual(1, post_stats.num_requests)
         self.assertEqual(0, get_stats.num_requests)
 
@@ -173,15 +173,15 @@ class TestHttpSession(WebserverTestCase):
         s = self.get_client()
         with s.get("/ultra_fast", catch_response=True) as r:
             r.failure("nope")
-        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_requests)
-        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_failures)
+        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET", s.base_url).num_requests)
+        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET", s.base_url).num_failures)
 
     def test_catch_response_fail_successful_request_with_non_string_error_message(self):
         s = self.get_client()
         with s.get("/ultra_fast", catch_response=True) as r:
             r.failure({"other types are also wrapped as exceptions": True})
-        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_requests)
-        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_failures)
+        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET", s.base_url).num_requests)
+        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET", s.base_url).num_failures)
 
     def test_catch_response_pass_failed_request(self):
         s = self.get_client()
@@ -239,8 +239,8 @@ class TestHttpSession(WebserverTestCase):
         s = self.get_client()
         with s.get("/ultra_fast", catch_response=True) as r:
             pass
-        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_requests)
-        self.assertEqual(0, self.environment.stats.get("/ultra_fast", "GET").num_failures)
+        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET", s.base_url).num_requests)
+        self.assertEqual(0, self.environment.stats.get("/ultra_fast", "GET", s.base_url).num_failures)
 
     def test_catch_response_default_fail(self):
         s = self.get_client()

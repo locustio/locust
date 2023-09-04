@@ -188,6 +188,9 @@ class FastHttpSession:
         """
         # prepend url with hostname unless it's already an absolute URL
         built_url = self._build_url(url)
+        parsed_url = urlparse(built_url)
+        # absolute URLs may use a different host
+        actual_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
         start_time = time.time()  # seconds since epoch
 
@@ -224,6 +227,7 @@ class FastHttpSession:
             "exception": None,
             "start_time": start_time,
             "url": built_url,  # this is a small deviation from HttpSession, which gets the final (possibly redirected) URL
+            "host": actual_host,
         }
 
         if not allow_redirects:

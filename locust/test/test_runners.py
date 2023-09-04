@@ -353,6 +353,7 @@ class TestLocustRunner(LocustRunnerTestCase):
                     self.user.environment.events.request.fire(
                         request_type="GET",
                         name="/test",
+                        host="https://localhost",
                         response_time=666,
                         response_length=1337,
                         exception=None,
@@ -365,9 +366,9 @@ class TestLocustRunner(LocustRunnerTestCase):
         runner = LocalRunner(environment)
         runner.start(user_count=6, spawn_rate=1, wait=False)
         sleep(3)
-        self.assertGreaterEqual(runner.stats.get("/test", "GET").num_requests, 3)
+        self.assertGreaterEqual(runner.stats.get("/test", "GET", "https://localhost").num_requests, 3)
         sleep(3.25)
-        self.assertLessEqual(runner.stats.get("/test", "GET").num_requests, 1)
+        self.assertLessEqual(runner.stats.get("/test", "GET", "https://localhost").num_requests, 1)
         runner.quit()
 
     def test_no_reset_stats(self):
@@ -379,6 +380,7 @@ class TestLocustRunner(LocustRunnerTestCase):
                     self.user.environment.events.request.fire(
                         request_type="GET",
                         name="/test",
+                        host="https://localhost",
                         response_time=666,
                         response_length=1337,
                         exception=None,
@@ -390,9 +392,9 @@ class TestLocustRunner(LocustRunnerTestCase):
         runner = LocalRunner(environment)
         runner.start(user_count=6, spawn_rate=12, wait=False)
         sleep(0.25)
-        self.assertGreaterEqual(runner.stats.get("/test", "GET").num_requests, 3)
+        self.assertGreaterEqual(runner.stats.get("/test", "GET", "https://localhost").num_requests, 3)
         sleep(0.3)
-        self.assertEqual(6, runner.stats.get("/test", "GET").num_requests)
+        self.assertEqual(6, runner.stats.get("/test", "GET", "https://localhost").num_requests)
         runner.quit()
 
     def test_runner_reference_on_environment(self):
@@ -844,6 +846,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.environment.events.request.fire(
                     request_type="GET",
                     name="/",
+                    host="https://localhost",
                     response_time=1337,
                     response_length=666,
                     exception=None,
@@ -907,6 +910,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.environment.events.request.fire(
                     request_type="GET",
                     name="/",
+                    host="https://localhost",
                     response_time=1337,
                     response_length=666,
                     exception=None,
@@ -1010,6 +1014,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.environment.events.request.fire(
                     request_type="GET",
                     name=self.environment.parsed_options.my_str_argument,
+                    host="https://localhost",
                     response_time=self.environment.parsed_options.my_int_argument,
                     response_length=666,
                     exception=None,
@@ -1057,7 +1062,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                 self.assertEqual(0, worker.user_count)
 
         self.assertEqual(master_env.runner.stats.total.max_response_time, 42)
-        self.assertEqual(master_env.runner.stats.get("cool-string", "GET").avg_response_time, 42)
+        self.assertEqual(master_env.runner.stats.get("cool-string", "GET", "https://localhost").avg_response_time, 42)
 
     def test_test_stop_event(self):
         class TestUser(User):
@@ -2060,16 +2065,16 @@ class TestMasterRunner(LocustRunnerTestCase):
             master = self.get_runner()
             server.mocked_send(Message("client_ready", __version__, "fake_client"))
 
-            master.stats.get("/", "GET").log(100, 23455)
-            master.stats.get("/", "GET").log(800, 23455)
-            master.stats.get("/", "GET").log(700, 23455)
+            master.stats.get("/", "GET", "https://localhost").log(100, 23455)
+            master.stats.get("/", "GET", "https://localhost").log(800, 23455)
+            master.stats.get("/", "GET", "https://localhost").log(700, 23455)
 
             data = {"user_count": 1}
             self.environment.events.report_to_master.fire(client_id="fake_client", data=data)
             master.stats.clear_all()
 
             server.mocked_send(Message("stats", data, "fake_client"))
-            s = master.stats.get("/", "GET")
+            s = master.stats.get("/", "GET", "https://localhost")
             self.assertEqual(700, s.median_response_time)
 
     def test_worker_stats_report_with_none_response_times(self):
@@ -2077,24 +2082,24 @@ class TestMasterRunner(LocustRunnerTestCase):
             master = self.get_runner()
             server.mocked_send(Message("client_ready", __version__, "fake_client"))
 
-            master.stats.get("/mixed", "GET").log(0, 23455)
-            master.stats.get("/mixed", "GET").log(800, 23455)
-            master.stats.get("/mixed", "GET").log(700, 23455)
-            master.stats.get("/mixed", "GET").log(None, 23455)
-            master.stats.get("/mixed", "GET").log(None, 23455)
-            master.stats.get("/mixed", "GET").log(None, 23455)
-            master.stats.get("/mixed", "GET").log(None, 23455)
-            master.stats.get("/onlyNone", "GET").log(None, 23455)
+            master.stats.get("/mixed", "GET", "https://localhost").log(0, 23455)
+            master.stats.get("/mixed", "GET", "https://localhost").log(800, 23455)
+            master.stats.get("/mixed", "GET", "https://localhost").log(700, 23455)
+            master.stats.get("/mixed", "GET", "https://localhost").log(None, 23455)
+            master.stats.get("/mixed", "GET", "https://localhost").log(None, 23455)
+            master.stats.get("/mixed", "GET", "https://localhost").log(None, 23455)
+            master.stats.get("/mixed", "GET", "https://localhost").log(None, 23455)
+            master.stats.get("/onlyNone", "GET", "https://localhost").log(None, 23455)
 
             data = {"user_count": 1}
             self.environment.events.report_to_master.fire(client_id="fake_client", data=data)
             master.stats.clear_all()
 
             server.mocked_send(Message("stats", data, "fake_client"))
-            s1 = master.stats.get("/mixed", "GET")
+            s1 = master.stats.get("/mixed", "GET", "https://localhost")
             self.assertEqual(700, s1.median_response_time)
             self.assertEqual(500, s1.avg_response_time)
-            s2 = master.stats.get("/onlyNone", "GET")
+            s2 = master.stats.get("/onlyNone", "GET", "https://localhost")
             self.assertEqual(0, s2.median_response_time)
             self.assertEqual(0, s2.avg_response_time)
 
@@ -2298,10 +2303,10 @@ class TestMasterRunner(LocustRunnerTestCase):
             master = self.get_runner()
             server.mocked_send(Message("client_ready", __version__, "fake_client"))
             stats = RequestStats()
-            stats.log_request("GET", "/1", 100, 3546)
-            stats.log_request("GET", "/1", 800, 56743)
+            stats.log_request("GET", "/1", "", 100, 3546)
+            stats.log_request("GET", "/1", "", 800, 56743)
             stats2 = RequestStats()
-            stats2.log_request("GET", "/2", 700, 2201)
+            stats2.log_request("GET", "/2", "", 700, 2201)
             server.mocked_send(
                 Message(
                     "stats",
@@ -2333,14 +2338,14 @@ class TestMasterRunner(LocustRunnerTestCase):
             master = self.get_runner()
             server.mocked_send(Message("client_ready", __version__, "fake_client"))
             stats = RequestStats()
-            stats.log_request("GET", "/1", 100, 3546)
-            stats.log_request("GET", "/1", 800, 56743)
-            stats.log_request("GET", "/1", None, 56743)
+            stats.log_request("GET", "/1", "https://localhost", 100, 3546)
+            stats.log_request("GET", "/1", "https://localhost", 800, 56743)
+            stats.log_request("GET", "/1", "https://localhost", None, 56743)
             stats2 = RequestStats()
-            stats2.log_request("GET", "/2", 700, 2201)
-            stats2.log_request("GET", "/2", None, 2201)
+            stats2.log_request("GET", "/2", "https://localhost", 700, 2201)
+            stats2.log_request("GET", "/2", "https://localhost", None, 2201)
             stats3 = RequestStats()
-            stats3.log_request("GET", "/3", None, 2201)
+            stats3.log_request("GET", "/3", "https://localhost", None, 2201)
             server.mocked_send(
                 Message(
                     "stats",
@@ -2389,8 +2394,8 @@ class TestMasterRunner(LocustRunnerTestCase):
                 mocked_time.return_value += 1.0234
                 server.mocked_send(Message("client_ready", __version__, "fake_client"))
                 stats = RequestStats()
-                stats.log_request("GET", "/1", 100, 3546)
-                stats.log_request("GET", "/1", 800, 56743)
+                stats.log_request("GET", "/1", "https://localhost", 100, 3546)
+                stats.log_request("GET", "/1", "https://localhost", 800, 56743)
                 server.mocked_send(
                     Message(
                         "stats",
@@ -2405,7 +2410,7 @@ class TestMasterRunner(LocustRunnerTestCase):
                 )
                 mocked_time.return_value += 1
                 stats2 = RequestStats()
-                stats2.log_request("GET", "/2", 400, 2201)
+                stats2.log_request("GET", "/2", "https://localhost", 400, 2201)
                 server.mocked_send(
                     Message(
                         "stats",
@@ -2425,9 +2430,9 @@ class TestMasterRunner(LocustRunnerTestCase):
                 # let 10 second pass, do some more requests, send it to the master and make
                 # sure the current response time percentiles only accounts for these new requests
                 mocked_time.return_value += 10.10023
-                stats.log_request("GET", "/1", 20, 1)
-                stats.log_request("GET", "/1", 30, 1)
-                stats.log_request("GET", "/1", 3000, 1)
+                stats.log_request("GET", "/1", "https://localhost", 20, 1)
+                stats.log_request("GET", "/1", "https://localhost", 30, 1)
+                stats.log_request("GET", "/1", "https://localhost", 3000, 1)
                 server.mocked_send(
                     Message(
                         "stats",
