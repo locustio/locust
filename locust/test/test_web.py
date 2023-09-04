@@ -884,7 +884,6 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.environment.user_classes = [MyUser, MyUser2]
         response = requests.get("http://127.0.0.1:%i/" % self.web_port)
         self.assertEqual(200, response.status_code)
-        self.assertNotIn("http://example.com", response.content.decode("utf-8"))
         self.assertIn("setting this will override the host on all User classes", response.content.decode("utf-8"))
 
     def test_report_page(self):

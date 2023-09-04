@@ -386,6 +386,7 @@ class WebUI:
                 err_dict = e.serialize()
                 err_dict["name"] = escape(err_dict["name"])
                 err_dict["error"] = escape(err_dict["error"])
+                err_dict["host"] = escape(err_dict["host"]) if err_dict.get("host") else ""
                 errors.append(err_dict)
 
             # Truncate the total number of stats and errors displayed since a large number of rows will cause the app
@@ -541,16 +542,16 @@ class WebUI:
         if self.environment.host:
             host = self.environment.host
         elif self.environment.runner.user_classes:
-            all_hosts = {l.host for l in self.environment.runner.user_classes}
+            all_hosts = {user_class.host for user_class in self.environment.runner.user_classes}
             if len(all_hosts) == 1:
                 host = list(all_hosts)[0]
             else:
                 # since we have multiple User classes with different host attributes, we'll
                 # inform that specifying host will override the host for all User classes
                 override_host_warning = True
-                host = None
+                host = list(all_hosts) if self.modern_ui else ""
         else:
-            host = None
+            host = ""
 
         options = self.environment.parsed_options
 
@@ -577,7 +578,8 @@ class WebUI:
             "is_distributed": is_distributed,
             "user_count": self.environment.runner.user_count,
             "version": version,
-            "host": host if host else "",
+            "host": host,
+            "has_multiple_hosts": isinstance(host, list) and len(host) > 1,
             "history": stats.history if stats.num_requests > 0 else {},
             "override_host_warning": override_host_warning,
             "num_users": options and options.num_users,
