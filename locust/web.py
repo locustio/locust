@@ -325,7 +325,8 @@ class WebUI:
         def request_stats_csv() -> Response:
             data = StringIO()
             writer = csv.writer(data)
-            self.stats_csv_writer.requests_csv(writer)
+            group_by = request.args.get("group_by")
+            self.stats_csv_writer.requests_csv(writer, group_by=group_by)
             return _download_csv_response(data.getvalue(), "requests")
 
         @app.route("/stats/requests_full_history/csv")
@@ -351,7 +352,8 @@ class WebUI:
         def failures_stats_csv() -> Response:
             data = StringIO()
             writer = csv.writer(data)
-            self.stats_csv_writer.failures_csv(writer)
+            group_by = request.args.get("group_by")
+            self.stats_csv_writer.failures_csv(writer, group_by=group_by)
             return _download_csv_response(data.getvalue(), "failures")
 
         @app.route("/stats/requests")

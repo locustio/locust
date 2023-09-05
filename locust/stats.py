@@ -89,6 +89,7 @@ class StatsErrorDict(StatsBaseDict):
 class StatsHolder(Protocol):
     name: str
     method: str
+    host: str
 
 
 S = TypeVar("S", bound=StatsHolder)
@@ -929,6 +930,13 @@ def sort_stats(stats: Dict[Any, S]) -> List[S]:
     return [stats[key] for key in sorted(stats.keys())]
 
 
+def group_stats_by(group_by: str, stats: List[S]) -> Dict[str, List[S]]:
+    return {
+        group_name: [stat for stat in stats if getattr(stat, group_by) == group_name]
+        for group_name in set(getattr(stat, group_by) for stat in stats)
+    }
+
+
 def stats_history(runner: "Runner") -> None:
     """Save current stats info to history for charts of report."""
     while True:
@@ -995,40 +1003,64 @@ class StatsCSV:
         else:
             return [int(stats_entry.get_response_time_percentile(x) or 0) for x in self.percentiles_to_report]
 
-    def requests_csv(self, csv_writer: CSVWriter) -> None:
+    def requests_csv(self, csv_writer: CSVWriter, group_by: Optional[str] = "") -> None:
         """Write requests csv with header and data rows."""
-        csv_writer.writerow(self.requests_csv_columns)
-        self._requests_data_rows(csv_writer)
+        sorted_stats = sort_stats(self.environment.stats.entries)
+        if group_by and any(getattr(stat, group_by) for stat in sorted_stats):
+            grouped_stats = group_stats_by(group_by, sorted_stats)
 
-    def _requests_data_rows(self, csv_writer: CSVWriter) -> None:
+            for group_name, stats in grouped_stats.items():
+                csv_writer.writerow([group_name])
+                csv_writer.writerow(self.requests_csv_columns)
+                self._requests_data_rows(csv_writer, stats)
+                csv_writer.writerow([])
+        else:
+            csv_writer.writerow(self.requests_csv_columns)
+            self._requests_data_rows(csv_writer, chain(sorted_stats, [self.environment.stats.total]))
+
+    def _requests_data_rows(self, csv_writer: CSVWriter, stats_entries=None) -> None:
         """Write requests csv data row, excluding header."""
-        stats = self.environment.stats
-        for stats_entry in chain(sort_stats(stats.entries), [stats.total]):
-            csv_writer.writerow(
-                chain(
-                    [
-                        stats_entry.method,
-                        stats_entry.name,
-                        stats_entry.num_requests,
-                        stats_entry.num_failures,
-                        stats_entry.median_response_time,
-                        stats_entry.avg_response_time,
-                        stats_entry.min_response_time or 0,
-                        stats_entry.max_response_time,
-                        stats_entry.avg_content_length,
-                        stats_entry.total_rps,
-                        stats_entry.total_fail_per_sec,
-                    ],
-                    self._percentile_fields(stats_entry),
-                )
-            )
+        stats_entries = (
+            stats_entries
+            if stats_entries
+            else chain(sort_stats(self.environment.stats.entries), [self.environment.stats.total])
+        )
 
-    def failures_csv(self, csv_writer: CSVWriter) -> None:
-        csv_writer.writerow(self.failures_columns)
-        self._failures_data_rows(csv_writer)
+        for stats_entry in stats_entries:
+            rows = [
+                stats_entry.method,
+                stats_entry.name,
+                stats_entry.num_requests,
+                stats_entry.num_failures,
+                stats_entry.median_response_time,
+                stats_entry.avg_response_time,
+                stats_entry.min_response_time or 0,
+                stats_entry.max_response_time,
+                stats_entry.avg_content_length,
+                stats_entry.total_rps,
+                stats_entry.total_fail_per_sec,
+            ]
 
-    def _failures_data_rows(self, csv_writer: CSVWriter) -> None:
-        for stats_error in sort_stats(self.environment.stats.errors):
+            csv_writer.writerow(chain(rows, self._percentile_fields(stats_entry)))
+
+    def failures_csv(self, csv_writer: CSVWriter, group_by: Optional[str] = "") -> None:
+        sorted_errors = sort_stats(self.environment.stats.errors)
+        if group_by and any(getattr(error, group_by) for error in sorted_errors):
+            grouped_errors = group_stats_by(group_by, sorted_errors)
+
+            for group_name, failures in grouped_errors.items():
+                csv_writer.writerow([group_name])
+                csv_writer.writerow(self.failures_columns)
+                self._failures_data_rows(csv_writer, failures)
+                csv_writer.writerow([])
+        else:
+            csv_writer.writerow(self.failures_columns)
+            self._failures_data_rows(csv_writer, sorted_errors)
+
+    def _failures_data_rows(self, csv_writer: CSVWriter, failures_entries=None) -> None:
+        failures_entries = failures_entries if failures_entries else sort_stats(self.environment.stats.errors)
+
+        for stats_error in failures_entries:
             csv_writer.writerow(
                 [
                     stats_error.method,
