@@ -148,6 +148,23 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(1, data["stats"][0]["min_response_time"])
         self.assertEqual(1000, data["stats"][0]["max_response_time"])
 
+    def test_stats_multiple_hosts(self):
+        class UserOne(User):
+            host = "http://127.0.0.1:1"
+
+        class UserTwo(User):
+            host = "http://127.0.0.1:2"
+
+        self.environment.user_classes = [UserOne, UserTwo]
+        self.stats.clear_all()
+        self.stats.log_request("GET", "/test", "http://127.0.0.1:1", 1.39764125, 2)
+        self.stats.log_request("GET", "/test", "http://127.0.0.1:2", 1.39764125, 2)
+        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
+        self.assertEqual(
+            ["http://127.0.0.1:1", "http://127.0.0.1:2"],
+            [stat["host"] for stat in response.json()["stats"] if stat["host"]],
+        )
+
     def test_request_stats_csv(self):
         self.stats.log_request("GET", "/test2", "", 120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/requests/csv" % self.web_port)
@@ -166,10 +183,11 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self._check_csv_headers(response.headers, "failures")
 
     def test_request_stats_with_errors(self):
-        self.stats.log_error("GET", "/", "", Exception("Error1337"))
+        self.stats.log_error("GET", "/", "http://127.0.0.1", Exception("Error1337"))
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertIn("Error1337", response.text)
+        self.assertIn("http://127.0.0.1", [error["host"] for error in response.json()["errors"]])
 
     def test_reset_stats(self):
         try:
@@ -1027,6 +1045,19 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         self.assertIn(log_line, response.json().get("logs"))
 
+    def test_template_args_single_host(self):
+        class UserOne(User):
+            host = "http://127.0.0.1"
+
+        class UserTwo(User):
+            host = "http://127.0.0.1"
+
+        self.environment.user_classes = [UserOne, UserTwo]
+        self.web_ui.update_template_args()
+        self.assertEqual("http://127.0.0.1", self.web_ui.template_args["host"])
+        self.assertFalse(self.web_ui.template_args["has_multiple_hosts"])
+        self.assertFalse(self.web_ui.template_args["override_host_warning"])
+
 
 class TestWebUIAuth(LocustTestCase):
     def setUp(self):
@@ -1233,3 +1264,18 @@ class TestModernWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertTrue(d("#root"))
         self.assertIn('"locustfile": "locust.py"', str(d))
         self.assertIn('"host": "http://localhost"', str(d))
+
+    def test_template_args_multiple_hosts(self):
+        class UserOne(User):
+            host = "http://127.0.0.1:1"
+
+        class UserTwo(User):
+            host = "http://127.0.0.1:2"
+
+        self.environment.user_classes = [UserOne, UserTwo]
+        self.web_ui.update_template_args()
+        self.assertIn("http://127.0.0.1:1", self.web_ui.template_args["host"])
+        self.assertIn("http://127.0.0.1:2", self.web_ui.template_args["host"])
+
+        self.assertTrue(self.web_ui.template_args["has_multiple_hosts"])
+        self.assertTrue(self.web_ui.template_args["override_host_warning"])
