@@ -283,6 +283,21 @@ class TestRequestStats(unittest.TestCase):
         self.stats.log_error("GET", "/some-path", "", Exception("Third exception!"))
         self.assertEqual(3, len(self.stats.errors))
 
+    def test_error_grouping_with_multiple_hosts(self):
+        # reset stats
+        self.stats = RequestStats()
+
+        self.stats.log_error("GET", "/some-path", "http://127.0.0.1:1", Exception("Exception!"))
+        self.stats.log_error("GET", "/some-path", "http://127.0.0.1:2", Exception("Exception!"))
+        self.assertEqual(2, len(self.stats.errors))
+        self.assertEqual(1, list(self.stats.errors.values())[0].occurrences)
+        self.assertEqual(1, list(self.stats.errors.values())[1].occurrences)
+
+        self.stats.log_error("GET", "/some-path", "http://127.0.0.1:1", Exception("Another exception!"))
+        self.stats.log_error("GET", "/some-path", "http://127.0.0.1:1", Exception("Another exception!"))
+        self.stats.log_error("GET", "/some-path", "http://127.0.0.1:2", Exception("Third exception!"))
+        self.assertEqual(4, len(self.stats.errors))
+
     def test_error_grouping_errors_with_memory_addresses(self):
         # reset stats
         self.stats = RequestStats()
