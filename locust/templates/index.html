@@ -65,7 +65,7 @@
                         {% for user in available_user_classes %}
                             <option value="{{user}}" selected>{{user}}</option>
                         {% endfor %}
-                        </select><br>
+                        </select><br>range
                         <label for="available_shape_classes">ShapeClass </label>
                         <select name="shape_class" id="shape-classes" class="shapeClass">
                         {% for shape_class in available_shape_classes %}
@@ -73,7 +73,7 @@
                         {% endfor %}
                         </select><br>
                     {% endif %}
-                    {% if is_shape %}
+                    {% if hide_common_options %}
                         <label for="user_count">Number of users <span style="color:#8a8a8a;">(peak concurrency)</span></label>
                         <input type="text" name="user_count" id="user_count" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
                         <input type="hidden" name="user_count" id="user_count" value="0"/><br>
@@ -144,7 +144,7 @@
             <div class="padder">
                 <h2>Edit running load test</h2>
                 <form action="./swarm" method="POST" id="edit_form">
-                    {% if is_shape %}
+                    {% if hide_common_options %}
                         <label for="new_user_count">Number of users (peak concurrency)</label>
                         <input type="text" name="user_count" id="new_user_count" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
                         <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users added/stopped per second)</span></label>
@@ -155,7 +155,7 @@
                         <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users added/stopped per second)</span></label>
                         <input type="text" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "1" }}" onfocus="this.select()"/><br>
                     {% endif %}
-                    {% if is_shape %}
+                    {% if hide_common_options %}
                         <button type="submit" disabled>Start swarming</button>
                     {% else %}
                         <button type="submit">Start swarming</button>

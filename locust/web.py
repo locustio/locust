@@ -553,7 +553,10 @@ class WebUI:
             "num_users": options and options.num_users,
             "spawn_rate": options and options.spawn_rate,
             "worker_count": worker_count,
-            "is_shape": self.environment.shape_class and not self.userclass_picker_is_active,
+            "hide_common_options": (
+                self.environment.shape_class
+                and not (self.userclass_picker_is_active or self.environment.shape_class.use_common_options)
+            ),
             "stats_history_enabled": options and options.stats_history_enabled,
             "tasks": dumps({}),
             "extra_options": extra_options,

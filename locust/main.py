@@ -38,6 +38,15 @@ except ModuleNotFoundError:
 version = locust.__version__
 
 
+# Options to ignore when using a custom shape class without `use_common_options=True`
+# See: https://docs.locust.io/en/stable/custom-load-shape.html#use-common-options
+COMMON_OPTIONS = {
+    "num_users": "users",
+    "spawn_rate": "spawn-rate",
+    "run_time": "run-time",
+}
+
+
 def create_environment(
     user_classes,
     options,
@@ -214,10 +223,17 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         available_shape_classes=available_shape_classes,
     )
 
-    if shape_class and (options.num_users or options.spawn_rate):
+    if (
+        shape_class
+        and not shape_class.use_common_options
+        and any(getattr(options, opt, None) for opt in COMMON_OPTIONS)
+    ):
         logger.warning(
-            "The specified locustfile contains a shape class but a conflicting argument was specified: users or spawn-rate. Ignoring arguments"
+            "--run-time, --users or --spawn-rate have no impact on LoadShapes unless the shape class explicitly reads them. "
+            "See: docs.locust.io/en/stable/custom-load-shape.html#use-common-options"
         )
+        ignored = [f"--{arg}" for opt, arg in COMMON_OPTIONS.items() if getattr(options, opt, None)]
+        logger.warning(f"The following option(s) will be ignored: {', '.join(ignored)}")
 
     if options.show_task_ratio:
         print("\n Task ratio per User class")
@@ -381,9 +397,6 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
             # start the test
             if environment.shape_class:
-                if options.run_time:
-                    sys.stderr.write("It makes no sense to combine --run-time and LoadShapes. Bailing out.\n")
-                    sys.exit(1)
                 try:
                     environment.runner.start_shape()
                     environment.runner.shape_greenlet.join()

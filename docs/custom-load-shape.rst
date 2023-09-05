@@ -78,6 +78,7 @@ Adding the element ``user_classes`` to the return value gives you more detailed 
             {"duration": 30, "users": 50, "spawn_rate": 10, "user_classes": [UserA, UserB]},
             {"duration": 60, "users": 100, "spawn_rate": 10, "user_classes": [UserB]},
             {"duration": 120, "users": 100, "spawn_rate": 10, "user_classes": [UserA,UserB]},
+        ]
 
         def tick(self):
             run_time = self.get_run_time()
@@ -93,3 +94,30 @@ Adding the element ``user_classes`` to the return value gives you more detailed 
             return None
 
 This shape would create create in the first 10 seconds 10 User of ``UserA``. In the next twenty seconds 40 of type ``UserA / UserB`` and this continues until the stages end.
+
+
+.. _use-common-options:
+
+Reusing command line parameters in custom shapes
+------------------------------------------------
+
+By default, using a custom shape will disable default run paramaters (in both the CLI and the Web UI):
+- `--run-time` (providing this one with a custom shape will make locust to bail out)
+- `--spawn-rate`
+- `--users`
+
+
+If you need one or all of those parameters, you can force locust to accept them by setting the `use_common_options` attribute to `True`:
+
+
+.. code-block:: python
+
+    class MyCustomShape(LoadTestShape):
+
+        use_common_options = True
+
+        def tick(self):
+            expected_run_time = self.runner.environment.parsed_options.run_time
+            # Do something with this expected run time
+            ...
+            return None

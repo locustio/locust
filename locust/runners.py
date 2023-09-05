@@ -329,7 +329,7 @@ class Runner:
             logger.info("There is an ongoing shape test running. Editing is disabled")
             return
 
-        logger.info("Shape test starting. User count and spawn rate are ignored for this type of load test")
+        logger.info("Shape test starting.")
         self.update_state(STATE_INIT)
         self.shape_greenlet = self.greenlet.spawn(self.shape_worker)
         self.shape_greenlet.link_exception(greenlet_exception_handler)

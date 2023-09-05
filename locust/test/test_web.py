@@ -945,6 +945,54 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             isinstance(next(iter(self.runner.exceptions.values()))["nodes"], set), "exception object has been mutated"
         )
 
+    def test_custom_shape_deactivate_num_users_and_spawn_rate(self):
+        class TestShape(LoadTestShape):
+            def tick(self):
+                return None
+
+        self.environment.shape_class = TestShape
+
+        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+        self.assertEqual(200, response.status_code)
+
+        # regex to match the intended select tag with id from the custom argument
+        re_disabled_user_count = re.compile(
+            r"<input[^>]*id=\"(new_)?user_count\"[^>]*disabled=\"disabled\"[^>]*>", flags=re.I
+        )
+        self.assertRegex(response.text, re_disabled_user_count)
+
+        re_disabled_spawn_rate = re.compile(
+            r"<input[^>]*id=\"(new_)?spawn_rate\"[^>]*disabled=\"disabled\"[^>]*>", flags=re.I
+        )
+        self.assertRegex(response.text, re_disabled_spawn_rate)
+
+    def test_custom_shape_with_use_common_options_keep_num_users_and_spawn_rate(self):
+        class TestShape(LoadTestShape):
+            use_common_options = True
+
+            def tick(self):
+                return None
+
+        self.environment.shape_class = TestShape
+
+        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+        self.assertEqual(200, response.status_code)
+
+        # regex to match the intended select tag with id from the custom argument
+        re_user_count = re.compile(r"<input[^>]*id=\"(new_)?user_count\"[^>]*>", flags=re.I)
+        re_disabled_user_count = re.compile(
+            r"<input[^>]*id=\"(new_)?user_count\"[^>]*disabled=\"disabled\"[^>]*>", flags=re.I
+        )
+        self.assertRegex(response.text, re_user_count)
+        self.assertNotRegex(response.text, re_disabled_user_count)
+
+        re_spawn_rate = re.compile(r"<input[^>]*id=\"(new_)?spawn_rate\"[^>]*>", flags=re.I)
+        re_disabled_spawn_rate = re.compile(
+            r"<input[^>]*id=\"(new_)?spawn_rate\"[^>]*disabled=\"disabled\"[^>]*>", flags=re.I
+        )
+        self.assertRegex(response.text, re_spawn_rate)
+        self.assertNotRegex(response.text, re_disabled_spawn_rate)
+
 
 class TestWebUIAuth(LocustTestCase):
     def setUp(self):
