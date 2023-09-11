@@ -121,3 +121,67 @@ If you need one or all of those parameters, you can force locust to accept them 
             # Do something with this expected run time
             ...
             return None
+
+
+Generating users
+----------------
+
+With custom load shape, you have the possibility to generate user classes on the fly.
+This allows you to dynamically build user from an external source.
+
+.. code-block:: python
+    
+    users: list[type[User]] = []
+
+    class GeneratorShape(LoadTestShape):
+        def get_user(self, index: int) -> type[User]:
+            if index >= len(users):
+                user = self.runner.register_user(f"User{index}", (BaseUser,), {})
+                users.append(user)
+            return users[index]
+
+        def tick(self):
+            index = trunc(self.get_run_time())
+            if index >= 2:
+                return None
+            return (index + 1, 1, [self.get_user(index)])
+
+
+This will create a new `User` each second (`User0`, `User1`...).
+Note that we are using the `register_user(name, bases, attributes)` form which create the class itself,
+but you can entirely craft your own class:
+
+
+.. code-block:: python
+    
+    users: list[type[User]] = []
+
+    class GeneratorShape(LoadTestShape):
+        def get_user(self, index: int) -> type[User]:
+            if index >= len(users):
+                user = types.new_class(f"User{index}", (BaseUser,), {})
+                user. __module__ == "my_module"
+			    setattr(sys.modules[user.__module__], user.__name__, user)
+                self.runner.register_user(user)
+                users.append(user)
+            return users[index]
+
+        def tick(self):
+            index = trunc(self.get_run_time())
+            if index >= 2:
+                return None
+            return (index + 1, 1, [self.get_user(index)])
+
+
+.. note:: 
+    Registered classes will be serialized on the master using :mod:`pickle` to be sent to the workers.
+    They need to be picklable, meaning they should be importable 
+    (have a `__module__` attribute defined and be attached to this module).
+
+    If this is not the case, they will be automatically attached to the `__main__` module.
+    
+    See :ref:`pickle-inst` for more details.
+
+.. warning::
+    You need to use the same class for the same name. 
+    If not, a :exc:`ValueError` will be raised because you can't reegister multiple class with the same name.

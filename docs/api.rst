@@ -131,7 +131,7 @@ Runner classes
 =====================
 
 .. autoclass:: locust.runners.Runner
-    :members: start, stop, quit, user_count
+    :members: start, stop, quit, user_count, register_user, on_new_user_class
 
 .. autoclass:: locust.runners.LocalRunner
 

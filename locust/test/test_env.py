@@ -199,3 +199,21 @@ class TestEnvironment(LocustTestCase):
             ValueError, r"instance of LoadTestShape or subclass LoadTestShape", msg="exception message is mismatching"
         ):
             Environment(user_classes=[MyUserWithSameName1], shape_class=SubLoadTestShape)
+
+    def test_support_shape_class_without_users(self):
+        class SubLoadTestShape(LoadTestShape):
+            """Inherited from locust.env.LoadTestShape"""
+
+        class BaseUser(User):
+            @task
+            def do_something(self):
+                pass
+
+        class GeneratorShape(LoadTestShape):
+            def tick(self):
+                run_time = self.get_run_time()
+                user_cls = type(f"GenUser{run_time}", (BaseUser,), {})
+                return (1, 1, [user_cls])
+
+        environment = Environment(shape_class=GeneratorShape())
+        self.assertEqual(len(environment.user_classes), 0)

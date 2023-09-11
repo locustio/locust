@@ -2,6 +2,7 @@ import functools
 import json
 import logging
 import os
+import pickle
 import re
 import socket
 import sys
@@ -15,12 +16,15 @@ from operator import (
     methodcaller,
 )
 from types import TracebackType
+import types
 from typing import (
     TYPE_CHECKING,
     Dict,
+    Iterable,
     Iterator,
     List,
     NoReturn,
+    Union,
     ValuesView,
     Set,
     Optional,
@@ -28,6 +32,7 @@ from typing import (
     Type,
     Any,
     cast,
+    overload,
     Callable,
     TypedDict,
 )
@@ -422,6 +427,57 @@ class Runner:
         :param listener: The function to execute when the message is received
         """
         self.custom_messages[msg_type] = listener
+
+    @overload
+    def register_user(self, user: Type[User], /) -> Type[User]:
+        ...
+
+    @overload
+    def register_user(self, name: str, bases: Iterable[Type], attrs: Dict[str, Any], /) -> Type[User]:
+        ...
+
+    def register_user(self, user_or_name, bases=None, attrs=None, /) -> Type[User]:
+        """
+        Register a new user class.
+
+        If called with a single parameter, it must be a :class:`~.User`.
+
+        If called with the 3 parameters form, it will create the class and then register it.
+        In this form, parameters have the same meaning as in :func:`types.new_class`.
+
+        :param user_or_name: Either a :class:`~.User` class or a class name if creating a new class
+        :param bases: Parent classes to extend if creating a new class
+        :param attributes: Child class attributes if creating a new class
+
+        :raises ValueError: if a different class witht he same name has already been registered.
+        """
+        if isinstance(user_or_name, str) and bases is not None and attrs is not None:
+            user = types.new_class(user_or_name, bases, attrs)
+            user.__module__ = ""
+        elif issubclass(user_or_name, User) and bases is None and attrs is None:
+            user = user_or_name
+        else:
+            raise TypeError("Expect either a User class, either name, bases and attributes to create one")
+        existing = self.environment.user_classes_by_name.get(user.__name__)
+        if existing and existing is not user:
+            raise ValueError(f"The user class {user.__name__} already exists with a different definition")
+        elif not existing:
+            if not user.__module__:
+                user.__module__ = "__main__"
+                setattr(sys.modules[user.__module__], user.__name__, user)
+            self.environment.user_classes.append(user)
+            self.on_new_user_class(user)
+        return user
+
+    def on_new_user_class(self, user_class: Type[User]):
+        """
+        Called on new :class:`~.User` class registeration.
+
+        Override to perform actions on class registeration.
+
+        :param user_class: The :class:`~.User` class being registered
+        """
+        pass
 
 
 class LocalRunner(Runner):
@@ -1126,6 +1182,14 @@ class MasterRunner(DistributedRunner):
                 logger.debug("Sending %s message to worker %s" % (msg_type, client.id))
                 self.server.send_to_client(Message(msg_type, data, client.id))
 
+    def on_new_user_class(self, user_class: Type[User]):
+        payload = pickle.dumps(user_class)
+        for client in self.clients.all:
+            logger.info(
+                f"Sending new class {user_class} to worker {client.id} (index {self.get_worker_index(client.id)})"
+            )
+            self.server.send_to_client(Message("user_class", payload, client.id))
+
 
 class WorkerRunner(DistributedRunner):
     """
@@ -1269,6 +1333,10 @@ class WorkerRunner(DistributedRunner):
                 if msg.data is not None and "index" in msg.data:
                     self.worker_index = msg.data["index"]
                 self.connection_event.set()
+            elif msg.type == "user_class":
+                cls = pickle.loads(msg.data)
+                logger.info(f"Received new user class: {cls}")
+                self.environment.user_classes.append(cls)
             elif msg.type == "spawn":
                 self.client.send(Message("spawning", None, self.client_id))
                 job = msg.data

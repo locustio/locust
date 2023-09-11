@@ -1,9 +1,15 @@
+from __future__ import annotations
+
 import json
+from math import trunc
 import random
 import time
 import unittest
+import sys
+import types
 from collections import defaultdict
 from operator import itemgetter
+from typing import cast
 
 import gevent
 from unittest import mock
@@ -25,6 +31,7 @@ from locust.exception import RPCError, StopUser, RPCReceiveError
 from locust.main import create_environment
 from locust.rpc import Message
 from locust.runners import (
+    Runner,
     LocalRunner,
     STATE_INIT,
     STATE_SPAWNING,
@@ -546,6 +553,48 @@ class TestLocustRunner(LocustRunnerTestCase):
 
         runner.quit()
 
+    def test_user_classes_count_with_shape_generating_users(self):
+        class BaseUser(User):
+            wait_time = constant(1)
+
+            @task
+            def do_something(self):
+                pass
+
+        users: list[type[User]] = []
+
+        class GeneratorShape(LoadTestShape):
+            def get_user(self, index: int) -> type[User]:
+                if index >= len(users):
+                    user = cast(Runner, self.runner).register_user(f"User{index}", (BaseUser,), {})
+                    users.append(user)
+                return users[index]
+
+            def tick(self):
+                index = trunc(self.get_run_time())
+                if index >= 2:
+                    return None
+                return (index + 1, 1, [self.get_user(index)])
+
+        shape = GeneratorShape()
+        environment = Environment(shape_class=shape)
+        runner = environment.create_local_runner()
+        runner.start_shape()
+
+        sleep(0.1)
+        self.assertDictEqual({"User0": 1}, runner.user_classes_count)
+
+        sleep(1)
+        self.assertDictEqual({"User0": 1, "User1": 1}, runner.user_classes_count)
+
+        runner.shape_greenlet.join()
+        self.assertDictEqual({"User0": 0, "User1": 0}, runner.user_classes_count)
+
+        runner.quit()
+        self.assertDictEqual({"User0": 1, "User1": 1}, runner.final_user_classes_count)
+        for user in users:
+            self.assertIn(user, environment.user_classes)
+
     def test_host_class_attribute_from_web(self):
         """If host is left empty from the webUI, we should not use it"""
 
@@ -577,6 +626,86 @@ class TestLocustRunner(LocustRunnerTestCase):
         self.assertEqual(MyUser2.host, "https://host2.com")
 
         runner.quit()
+
+    def test_register_user_with_module(self):
+        class TestUser(User):
+            @task
+            def do_something(self):
+                pass
+
+        initial_module = TestUser.__module__
+        assert initial_module is not None
+
+        environment = Environment()
+        runner = environment.create_local_runner()
+
+        runner.register_user(TestUser)
+
+        assert TestUser in runner.user_classes
+        assert TestUser in environment.user_classes
+
+        user = runner.user_classes_by_name.get(TestUser.__name__)
+        assert user is TestUser
+        assert user.__module__ is initial_module
+
+    def test_register_user_without_module(self):
+        user = types.new_class("TestUser", (User,), {})
+        user.__module__ = None
+
+        environment = Environment()
+        runner = environment.create_local_runner()
+
+        runner.register_user(user)
+
+        assert user in runner.user_classes
+        assert user in environment.user_classes
+
+        assert runner.user_classes_by_name.get(user.__name__) is user
+        assert user.__module__ == "__main__"
+        assert getattr(sys.modules[user.__module__], user.__name__) is user
+
+    def test_create_and_register_user(self):
+        environment = Environment()
+        runner = environment.create_local_runner()
+
+        user = runner.register_user("TestUser", (User,), {})
+
+        assert user in runner.user_classes
+        assert user in environment.user_classes
+
+        assert runner.user_classes_by_name.get(user.__name__) is user
+        assert user.__module__ is not None
+        assert getattr(sys.modules[user.__module__], user.__name__) is user
+
+    def test_bad_register_user_signature(self):
+        environment = Environment()
+        runner = environment.create_local_runner()
+
+        with self.assertRaises(TypeError):
+            runner.register_user(User, (User,), {})
+
+    def test_can_register_the_same_user_twice(self):
+        class TestUser(User):
+            @task
+            def do_something(self):
+                pass
+
+        environment = Environment()
+        runner = environment.create_local_runner()
+
+        runner.register_user(TestUser)
+        runner.register_user(TestUser)
+
+        assert TestUser in runner.user_classes
+
+    def test_cant_register_the_same_user_name_twice(self):
+        environment = Environment()
+        runner = environment.create_local_runner()
+
+        runner.register_user(types.new_class("TestUser", (User,), {}))
+
+        with self.assertRaises(ValueError):
+            runner.register_user(types.new_class("TestUser", (User,), {}))
 
     def test_custom_message(self):
         class MyUser(User):
@@ -1800,6 +1929,82 @@ class TestMasterWorkerRunners(LocustTestCase):
                     stage += 1
                 elif state1 == STATE_RUNNING and state2 == STATE_STOPPED and stage == 3:
                     self.assertTrue(15 - tolerance <= t2 <= 15 + tolerance)
+
+    def test_distributed_shape_generating_users(self):
+        """
+        Full integration test that starts both a MasterRunner and three WorkerRunner instances
+        and tests a basic LoadTestShape with scaling up and down users
+        """
+
+        class BaseUser(User):
+            @task
+            def do_something(self):
+                pass
+
+        users: list[type[User]] = []
+
+        class GeneratorShape(LoadTestShape):
+            def get_user(self, index: int) -> type[User]:
+                if index >= len(users):
+                    user = cast(Runner, self.runner).register_user(f"User{index}", (BaseUser,), {})
+                    users.append(user)
+                return users[index]
+
+            def tick(self):
+                index = trunc(self.get_run_time())
+                if index >= 2:
+                    return None
+                return (3 * (index + 1), 3, [self.get_user(index)])
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            test_shape = GeneratorShape()
+            master_env = Environment(shape_class=test_shape)
+            master_env.shape_class.reset_time()
+            master = master_env.create_master_runner("*", 0)
+
+            workers = []
+            for i in range(3):
+                worker_env = Environment()
+                worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+                workers.append(worker)
+
+            # Give workers time to connect
+            sleep(0.1)
+
+            # Start a shape test
+            master.start_shape()
+            sleep(1)
+
+            # Ensure workers have connected and started the correct amount of users
+            for worker in workers:
+                self.assertEqual(1, worker.user_count, "Shape test has not reached stage 1")
+                self.assertEqual(
+                    3, test_shape.get_current_user_count(), "Shape is not seeing stage 1 runner user count correctly"
+                )
+            self.assertDictEqual(master.reported_user_classes_count, {"User0": 3})
+
+            # Ensure new stage with more users has been reached
+            sleep(1)
+            for worker in workers:
+                self.assertEqual(2, worker.user_count, "Shape test has not reached stage 2")
+                self.assertEqual(
+                    6, test_shape.get_current_user_count(), "Shape is not seeing stage 2 runner user count correctly"
+                )
+            self.assertDictEqual(master.reported_user_classes_count, {"User0": 3, "User1": 3})
+
+            # Ensure test stops at the end
+            sleep(2)
+            for worker in workers:
+                self.assertEqual(0, worker.user_count, "Shape test has not stopped")
+                self.assertEqual(
+                    0, test_shape.get_current_user_count(), "Shape is not seeing stopped runner user count correctly"
+                )
+            self.assertDictEqual(master.reported_user_classes_count, {"User0": 0, "User1": 0})
+
+            self.assertEqual("stopped", master.state)
+            self.assertDictEqual(master.final_user_classes_count, {"User0": 3, "User1": 3})
+            for user in users:
+                self.assertIn(user, master_env.user_classes)
 
     def test_swarm_endpoint_is_non_blocking(self):
         class TestUser1(User):

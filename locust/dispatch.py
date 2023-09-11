@@ -59,7 +59,6 @@ class UsersDispatcher(Iterator):
         self._original_user_classes = sorted(user_classes, key=attrgetter("__name__"))
         self._user_classes = sorted(user_classes, key=attrgetter("__name__"))
 
-        assert len(user_classes) > 0
         assert len(set(self._user_classes)) == len(self._user_classes)
 
         self._target_user_count: int = None
@@ -221,6 +220,10 @@ class UsersDispatcher(Iterator):
             return
         self._prepare_rebalance()
 
+    def add_user_class(self, user_class: Type[User]) -> None:
+        self._original_user_classes.append(user_class)
+        self._original_user_classes.sort(key=attrgetter("__name__"))
+
     def _prepare_rebalance(self) -> None:
         """
         When a rebalance is required because of added and/or removed workers, we compute the desired state as if
@@ -282,6 +285,8 @@ class UsersDispatcher(Iterator):
                 self._no_user_to_spawn = True
                 break
             worker_node = next(self._worker_node_generator)
+            if user not in self._users_on_workers[worker_node.id]:
+                self._users_on_workers[worker_node.id][user] = 0
             self._users_on_workers[worker_node.id][user] += 1
             self._current_user_count += 1
             self._active_users.append((worker_node, user))
