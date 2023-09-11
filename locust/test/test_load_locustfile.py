@@ -76,6 +76,41 @@ class TestLoadLocustfile(LocustTestCase):
             self.assertNotIn("NotUserSubclass", user_classes)
             self.assertEqual(shape_class.__class__.__name__, "LoadTestShape")
 
+    def test_with_abstract_shape_class(self):
+        content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
+            """\
+        class UserBaseLoadTestShape(LoadTestShape):
+            abstract = True
+
+            def tick(self):
+                pass
+
+
+        class UserLoadTestShape(UserBaseLoadTestShape):
+            pass
+        """
+        )
+
+        with mock_locustfile(content=content) as mocked:
+            _, user_classes, shape_class = main.load_locustfile(mocked.file_path)
+            self.assertNotIn("UserBaseLoadTestShape", user_classes)
+            self.assertNotIn("UserLoadTestShape", user_classes)
+            self.assertEqual(shape_class.__class__.__name__, "UserLoadTestShape")
+
+    def test_with_not_imported_shape_class(self):
+        content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
+            """\
+        class UserLoadTestShape(LoadTestShape):
+            def tick(self):
+                pass
+        """
+        )
+
+        with mock_locustfile(content=content) as mocked:
+            _, user_classes, shape_class = main.load_locustfile(mocked.file_path)
+            self.assertNotIn("UserLoadTestShape", user_classes)
+            self.assertEqual(shape_class.__class__.__name__, "UserLoadTestShape")
+
     def test_create_environment(self):
         options = parse_options(
             args=[

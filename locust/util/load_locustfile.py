@@ -18,9 +18,7 @@ def is_shape_class(item):
     """
     Check if a class is a LoadTestShape
     """
-    return bool(
-        inspect.isclass(item) and issubclass(item, LoadTestShape) and item.__dict__["__module__"] != "locust.shape"
-    )
+    return bool(inspect.isclass(item) and issubclass(item, LoadTestShape) and not getattr(item, "abstract", True))
 
 
 def load_locustfile(path) -> Tuple[Optional[str], Dict[str, User], Optional[LoadTestShape]]:

@@ -1,19 +1,32 @@
 from __future__ import annotations
 import time
-from typing import Optional, Tuple, List, Type
-from abc import ABC, abstractmethod
+from typing import ClassVar, Optional, Tuple, List, Type
+from abc import ABCMeta, abstractmethod
 
 from . import User
 from .runners import Runner
 
 
-class LoadTestShape(ABC):
+class LoadTestShapeMeta(ABCMeta):
+    """
+    Meta class for the main User class. It's used to allow User classes to specify task execution
+    ratio using an {task:int} dict, or a [(task0,int), ..., (taskN,int)] list.
+    """
+
+    def __new__(mcs, classname, bases, class_dict):
+        class_dict["abstract"] = class_dict.get("abstract", False)
+        return super().__new__(mcs, classname, bases, class_dict)
+
+
+class LoadTestShape(metaclass=LoadTestShapeMeta):
     """
     Base class for custom load shapes.
     """
 
     runner: Optional[Runner] = None
     """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
+
+    abstract: ClassVar[bool] = True
 
     def __init__(self):
         self.start_time = time.perf_counter()
