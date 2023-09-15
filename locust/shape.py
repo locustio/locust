@@ -28,6 +28,8 @@ class LoadTestShape(metaclass=LoadTestShapeMeta):
 
     abstract: ClassVar[bool] = True
 
+    use_common_options: ClassVar[bool] = False
+
     def __init__(self):
         self.start_time = time.perf_counter()
 

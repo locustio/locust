@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import os
 import platform
@@ -61,6 +63,11 @@ class ProcessIntegrationTest(TestCase):
         self.assertIn("-f LOCUSTFILE, --locustfile LOCUSTFILE", output)
         self.assertIn("Logging options:", output)
         self.assertIn("--skip-log-setup      Disable Locust's logging setup.", output)
+
+    def assert_run(self, cmd: list[str], timeout: int = 5) -> subprocess.CompletedProcess[str]:
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        self.assertEqual(0, out.returncode, f"locust run failed with exit code {out.returncode}:\n{out.stderr}")
+        return out
 
 
 class StandaloneIntegrationTests(ProcessIntegrationTest):
@@ -1143,6 +1150,86 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                 self.assertIn("Duplicate shape classes: TestShape", stderr)
                 self.assertEqual(1, proc.returncode)
+
+    def test_error_when_providing_both_run_time_and_a_shape_class(self):
+        content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
+            """
+            from locust import LoadTestShape
+            class TestShape(LoadTestShape):
+                def tick(self):
+                    return None
+            """
+        )
+        with mock_locustfile(content=content) as mocked:
+            out = self.assert_run(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--run-time=1s",
+                    "--headless",
+                    "--exit-code-on-error",
+                    "0",
+                ]
+            )
+
+            self.assertIn("--run-time, --users or --spawn-rate have no impact on LoadShapes", out.stderr)
+            self.assertIn("The following option(s) will be ignored: --run-time", out.stderr)
+
+    def test_shape_class_log_disabled_parameters(self):
+        content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
+            """
+            from locust import LoadTestShape
+
+            class TestShape(LoadTestShape):
+                def tick(self):
+                    return None
+            """
+        )
+        with mock_locustfile(content=content) as mocked:
+            out = self.assert_run(
+                [
+                    "locust",
+                    "--headless",
+                    "-f",
+                    mocked.file_path,
+                    "--exit-code-on-error=0",
+                    "--users=1",
+                    "--spawn-rate=1",
+                ]
+            )
+            self.assertIn("Shape test starting.", out.stderr)
+            self.assertIn("--run-time, --users or --spawn-rate have no impact on LoadShapes", out.stderr)
+            self.assertIn("The following option(s) will be ignored: --users, --spawn-rate", out.stderr)
+
+    def test_shape_class_with_use_common_options(self):
+        content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
+            """
+            from locust import LoadTestShape
+
+            class TestShape(LoadTestShape):
+                use_common_options = True
+
+                def tick(self):
+                    return None
+            """
+        )
+        with mock_locustfile(content=content) as mocked:
+            out = self.assert_run(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--run-time=1s",
+                    "--users=1",
+                    "--spawn-rate=1",
+                    "--headless",
+                    "--exit-code-on-error=0",
+                ]
+            )
+            self.assertIn("Shape test starting.", out.stderr)
+            self.assertNotIn("--run-time, --users or --spawn-rate have no impact on LoadShapes", out.stderr)
+            self.assertNotIn("The following option(s) will be ignored:", out.stderr)
 
     def test_error_when_locustfiles_directory_is_empty(self):
         with TemporaryDirectory() as temp_dir:
