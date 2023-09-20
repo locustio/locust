@@ -2,8 +2,7 @@ import os
 import platform
 import sys
 import textwrap
-from typing import Dict, List, NamedTuple, Optional
-
+from typing import Dict, List, NamedTuple, Optional, Any
 import configargparse
 
 import locust
@@ -358,6 +357,13 @@ def setup_parser_arguments(parser):
         action="store_true",
         help="Enable select boxes in the web interface to choose from all available User classes and Shape classes",
         env_var="LOCUST_USERCLASS_PICKER",
+    )
+    web_ui_group.add_argument(
+        "--modern-ui",
+        default=False,
+        action="store_true",
+        help="Enable using a modern React frontend as the Web UI",
+        env_var="LOCUST_MODERN_UI",
     )
 
     master_group = parser.add_argument_group(

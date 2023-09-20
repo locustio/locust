@@ -81,6 +81,7 @@ class WebUI:
         stats_csv_writer: Optional[StatsCSV] = None,
         delayed_start=False,
         userclass_picker_is_active=False,
+        modern_ui=False,
     ):
         """
         Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
@@ -104,6 +105,7 @@ class WebUI:
         self.tls_cert = tls_cert
         self.tls_key = tls_key
         self.userclass_picker_is_active = userclass_picker_is_active
+        self.modern_ui = modern_ui
         app = Flask(__name__)
         CORS(app)
         self.app = app
