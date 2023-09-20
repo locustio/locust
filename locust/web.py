@@ -260,7 +260,8 @@ class WebUI:
             if environment.runner is not None:
                 environment.runner.stats.reset_all()
                 environment.runner.exceptions = {}
-            return "ok"
+
+            return jsonify({"success": True, "message": "ok"})
 
         @app.route("/stats/report")
         @self.auth_required_if_enabled
