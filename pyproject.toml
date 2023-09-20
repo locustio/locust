@@ -94,4 +94,3 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["locust.dispatch"]
 no_strict_optional = true
-
