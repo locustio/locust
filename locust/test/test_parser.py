@@ -326,7 +326,7 @@ class TestArgumentParser(LocustTestCase):
         self.assertIn("a1", extra_args)
         self.assertNotIn("a2", extra_args)
         self.assertIn("a3", extra_args)
-        self.assertEqual("v1", extra_args["a1"].default_value)
+        self.assertEqual("v1", extra_args["a1"]["default_value"])
 
 
 class TestFindLocustfiles(LocustTestCase):
