@@ -12,7 +12,7 @@ from time import time
 from typing import TYPE_CHECKING, Optional, Any, Dict, List
 
 import gevent
-from flask import Flask, make_response, jsonify, render_template, request, send_file, Response
+from flask import Flask, make_response, jsonify, render_template, request, send_file, Response, send_from_directory
 from flask_basicauth import BasicAuth
 from gevent import pywsgi
 
@@ -111,7 +111,9 @@ class WebUI:
         self.app = app
         app.jinja_env.add_extension("jinja2.ext.do")
         app.debug = True
-        app.root_path = os.path.dirname(os.path.abspath(__file__))
+        root_path = os.path.dirname(os.path.abspath(__file__))
+        app.root_path = root_path
+        self.dashboard_build_path = f"{os.path.dirname(root_path)}/dashboard/dist"
         self.app.config["BASIC_AUTH_ENABLED"] = False
         self.auth: Optional[BasicAuth] = None
         self.greenlet: Optional[gevent.Greenlet] = None
@@ -135,12 +137,25 @@ class WebUI:
         if not delayed_start:
             self.start()
 
+        @app.route("/assets/<path:path>")
+        def send_assets(path):
+            dashboard_build_path = self.dashboard_build_path
+
+            return send_from_directory(f"{dashboard_build_path}/assets", path)
+
         @app.route("/")
         @self.auth_required_if_enabled
         def index() -> str | Response:
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             self.update_template_args()
+
+            if self.modern_ui:
+                app.template_folder = self.dashboard_build_path
+                app.static_folder = f"{self.dashboard_build_path}/assets/"
+                app.static_url_path = "/assets/"
+
+                return render_template("index.html", template_args=self.template_args)
             return render_template("index.html", **self.template_args)
 
         @app.route("/swarm", methods=["POST"])
