@@ -210,6 +210,9 @@ It's not high enough for load testing, and the OS didn't allow locust to increas
 See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."""
             )
 
+    if sys.version_info <= (3, 8):
+        logger.info("Python 3.7 support is deprecated and will be removed soon")
+
     # create locust Environment
     locustfile_path = None if not locustfile else os.path.basename(locustfile)
 
