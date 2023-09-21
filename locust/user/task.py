@@ -352,13 +352,19 @@ class TaskSet(metaclass=TaskSetMeta):
                 else:
                     self.wait()
             except InterruptTaskSet as e:
-                self.on_stop()
+                try:
+                    self.on_stop()
+                except Exception:
+                    logging.error("Uncaught exception in on_stop: \n%s", traceback.format_exc())
                 if e.reschedule:
                     raise RescheduleTaskImmediately(e.reschedule) from e
                 else:
                     raise RescheduleTask(e.reschedule) from e
             except (StopUser, GreenletExit):
-                self.on_stop()
+                try:
+                    self.on_stop()
+                except Exception:
+                    logging.error("Uncaught exception in on_stop: \n%s", traceback.format_exc())
                 raise
             except Exception as e:
                 self.user.environment.events.user_error.fire(user_instance=self, exception=e, tb=e.__traceback__)
