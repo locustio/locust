@@ -29,7 +29,7 @@ const transformKeys = <ObjectInterface extends Record<string, any>>(
     {},
   ) as ObjectInterface;
 
-const snakeToCamelCase = (string: string) =>
+export const snakeToCamelCase = (string: string) =>
   string.replace(/_([a-z0-9])/g, (_, match) => match.toUpperCase());
 const camelToSnakeCase = (string: string) =>
   string[0] === string[0].toUpperCase()

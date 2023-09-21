@@ -151,9 +151,7 @@ class WebUI:
             self.update_template_args()
 
             if self.modern_ui:
-                app.template_folder = self.dashboard_build_path
-                app.static_folder = f"{self.dashboard_build_path}/assets/"
-                app.static_url_path = "/assets/"
+                self.set_static_modern_ui()
 
                 return render_template("index.html", template_args=self.template_args)
             return render_template("index.html", **self.template_args)
@@ -523,6 +521,11 @@ class WebUI:
                 return view_func(*args, **kwargs)
 
         return wrapper
+
+    def set_static_modern_ui(self):
+        self.app.template_folder = self.dashboard_build_path
+        self.app.static_folder = f"{self.dashboard_build_path}/assets/"
+        self.app.static_url_path = "/assets/"
 
     def update_template_args(self):
         override_host_warning = False

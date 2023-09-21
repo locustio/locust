@@ -66,7 +66,19 @@ export interface ISwarmRatios {
   total: IClassRatio;
 }
 
+export interface IExtendedStatData {
+  name: string;
+  safeName: string;
+  [key: string]: number | string;
+}
+
+export interface IExtendedStat {
+  key: string;
+  data: IExtendedStatData[];
+}
+
 export interface IStatsResponse {
+  extendedStats: IExtendedStat[];
   state: SwarmState;
   stats: ISwarmStat[];
   errors: ISwarmError[];

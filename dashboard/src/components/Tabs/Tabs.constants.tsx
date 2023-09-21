@@ -7,13 +7,6 @@ import SwarmRatios from 'components/SwarnRatios/SwarmRatios';
 import WorkersTable from 'components/WorkersTable/WorkersTable';
 import { IRootState } from 'redux/store';
 
-export interface ITab {
-  component: React.ComponentType;
-  key: string;
-  title: string;
-  shouldDisplayTab?: (state: IRootState) => boolean;
-}
-
 export const baseTabs = [
   {
     component: StatsTable,

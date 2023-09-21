@@ -21,6 +21,7 @@ export default function useSwarmUi() {
 
   const { execute: updateStats } = useAsync(async () => {
     const {
+      extendedStats,
       state,
       stats,
       errors,
@@ -56,6 +57,7 @@ export default function useSwarmUi() {
     };
 
     setUi({
+      extendedStats,
       stats,
       errors,
       totalRps: totalRpsRounded,

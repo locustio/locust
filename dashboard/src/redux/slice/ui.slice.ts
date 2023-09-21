@@ -8,12 +8,14 @@ import {
   ISwarmRatios,
   ISwarmException,
   ISwarmWorker,
+  IExtendedStat,
 } from 'types/ui.types';
 import { lastElement } from 'utils/array';
 import { updateArraysAtProps } from 'utils/object';
 import { camelCaseKeys } from 'utils/string';
 
 export interface IUiState {
+  extendedStats?: IExtendedStat[];
   totalRps: number;
   failRatio: number;
   stats: ISwarmStat[];

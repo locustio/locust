@@ -1,10 +1,13 @@
 import { Link, List, ListItem } from '@mui/material';
+import { connect } from 'react-redux';
 
-import { useSelector } from 'redux/hooks';
+import { ISwarmState } from 'redux/slice/swarm.slice';
+import { IRootState } from 'redux/store';
 
-export default function Reports() {
-  const statsHistoryEnabled = useSelector(({ swarm }) => swarm.statsHistoryEnabled);
-
+function Reports({
+  extendedCsvFiles,
+  statsHistoryEnabled,
+}: Pick<ISwarmState, 'extendedCsvFiles' | 'statsHistoryEnabled'>) {
   return (
     <List sx={{ display: 'flex', flexDirection: 'column' }}>
       <ListItem>
@@ -18,7 +21,7 @@ export default function Reports() {
         </ListItem>
       )}
       <ListItem>
-        <Link href='./stats/failures/csv'>Download failures CSV</Link>
+        <Link href='/stats/failures/csv'>Download failures CSV</Link>
       </ListItem>
       <ListItem>
         <Link href='/exceptions/csv'>Download exceptions CSV</Link>
@@ -28,6 +31,19 @@ export default function Reports() {
           Download Report
         </Link>
       </ListItem>
+      {extendedCsvFiles &&
+        extendedCsvFiles.map(({ href, title }) => (
+          <ListItem>
+            <Link href={href}>{title}</Link>
+          </ListItem>
+        ))}
     </List>
   );
 }
+
+const storeConnector = ({ swarm: { extendedCsvFiles, statsHistoryEnabled } }: IRootState) => ({
+  extendedCsvFiles,
+  statsHistoryEnabled,
+});
+
+export default connect(storeConnector)(Reports);

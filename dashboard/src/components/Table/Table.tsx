@@ -8,15 +8,12 @@ import {
   TableRow,
 } from '@mui/material';
 
+import { ITableStructure } from 'types/table.types';
 import { roundToDecimalPlaces } from 'utils/number';
 
 interface ITable<Row> {
   rows: Row[];
-  structure: {
-    key: string;
-    title: string;
-    round?: number;
-  }[];
+  structure: ITableStructure[];
   children?: React.ReactElement;
 }
 

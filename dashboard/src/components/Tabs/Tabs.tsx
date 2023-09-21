@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Box, Tabs as MuiTabs, Tab as MuiTab, Container } from '@mui/material';
 import { connect } from 'react-redux';
 
-import { ITab, baseTabs, conditionalTabs } from 'components/Tabs/Tabs.constants';
+import DataTable from 'components/DataTable/DataTable';
+import { baseTabs, conditionalTabs } from 'components/Tabs/Tabs.constants';
 import { IUrlState, urlActions } from 'redux/slice/url.slice';
 import { IRootState } from 'redux/store';
+import { ITab } from 'types/tab.types';
 import { pushQuery } from 'utils/url';
 
 interface ITabs {
@@ -33,7 +35,7 @@ function Tabs({ currentTabIndexFromQuery, setUrl, tabs }: ITabs) {
         </MuiTabs>
       </Box>
       {tabs.map(
-        ({ component: Component }, index) =>
+        ({ component: Component = DataTable }, index) =>
           currentTabIndex === index && <Component key={`tabpabel-${index}`} />,
       )}
     </Container>
@@ -42,6 +44,7 @@ function Tabs({ currentTabIndexFromQuery, setUrl, tabs }: ITabs) {
 
 const storeConnector = (state: IRootState) => {
   const {
+    swarm: { extendedTabs = [] },
     url: { query: urlQuery },
   } = state;
 
@@ -49,7 +52,7 @@ const storeConnector = (state: IRootState) => {
     shouldDisplayTab(state),
   );
 
-  const tabs = [...baseTabs, ...conditionalTabsToDisplay];
+  const tabs = [...baseTabs, ...conditionalTabsToDisplay, ...extendedTabs];
 
   return {
     tabs,

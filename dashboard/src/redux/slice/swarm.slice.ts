@@ -2,6 +2,8 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import { updateStateWithPayload } from 'redux/utils';
 import { IExtraOptions, History } from 'types/swarm.types';
+import { ITab } from 'types/tab.types';
+import { ITableStructure } from 'types/table.types';
 import { camelCaseKeys } from 'utils/string';
 
 export interface ISwarmState {
@@ -12,6 +14,9 @@ export interface ISwarmState {
   availableShapeClasses: string[];
   availableUserClasses: string[];
   extraOptions: IExtraOptions;
+  extendedTabs?: ITab[];
+  extendedTables?: { key: string; structure: ITableStructure[] }[];
+  extendedCsvFiles?: { href: string; title: string }[];
   history: History[];
   host: string;
   isDistributed: boolean;
