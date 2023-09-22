@@ -133,7 +133,7 @@ class HttpSession(requests.Session):
         start_time = time.time()
         start_perf_counter = time.perf_counter()
         response = self._send_request_safe_mode(method, url, **kwargs)
-        response_time = (time.perf_counter() - start_perf_counter) * 1000
+        server_response_time = time.perf_counter()
 
         request_before_redirect = (response.history and response.history[0] or response).request
         url = request_before_redirect.url
@@ -147,7 +147,7 @@ class HttpSession(requests.Session):
         # store meta data that is used when reporting the request to locust's statistics
         request_meta = {
             "request_type": method,
-            "response_time": response_time,
+            "response_waiting_time": (server_response_time - start_perf_counter) * 1000,
             "name": name,
             "context": context,
             "response": response,
@@ -162,6 +162,10 @@ class HttpSession(requests.Session):
             request_meta["response_length"] = int(response.headers.get("content-length") or 0)
         else:
             request_meta["response_length"] = len(response.content or b"")
+        request_meta["response_fetching_time"] = (time.perf_counter() - server_response_time) * 1000
+        request_meta["response_time"] = (
+            request_meta["response_waiting_time"] + request_meta["response_fetching_time"]
+        )
 
         if catch_response:
             return ResponseContextManager(response, request_event=self.request_event, request_meta=request_meta)
