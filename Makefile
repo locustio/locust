@@ -4,6 +4,9 @@ test:
 build:
 	rm -f dist/* && python3 -m pip install --upgrade build && python3 -m build .
 
+frontend_build:
+	cd dashboard && rm -rf dist && yarn && yarn build
+
 release: build
 	twine upload dist/*
 
