@@ -1,3 +1,11 @@
+FROM node:18.0.0-alpine as dashboard-builder
+
+ADD dashboard dashboard
+ADD package.json .
+
+RUN yarn dashboard:install
+RUN yarn dashboard:build
+
 FROM python:3.11-slim as base
 
 FROM base as builder
@@ -11,6 +19,7 @@ RUN pip install /build/
 
 FROM base
 COPY --from=builder /opt/venv /opt/venv
+COPY --from=dashboard-builder dashboard/dist dashboard/dist
 ENV PATH="/opt/venv/bin:$PATH"
 # turn off python output buffering
 ENV PYTHONUNBUFFERED=1
