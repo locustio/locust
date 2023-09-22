@@ -250,9 +250,7 @@ class FastHttpSession:
         # Note: This is intentionally placed after we record the content_size above, since
         # we'll then trigger fetching of the body (unless stream=True)
         request_meta["response_fetching_time"] = (time.perf_counter() - server_response_time) * 1000
-        request_meta["response_time"] = (
-            request_meta["response_waiting_time"] + request_meta["response_fetching_time"]
-        )
+        request_meta["response_time"] = request_meta["response_waiting_time"] + request_meta["response_fetching_time"]
 
         if catch_response:
             return ResponseContextManager(response, environment=self.environment, request_meta=request_meta)

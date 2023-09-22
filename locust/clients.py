@@ -163,9 +163,7 @@ class HttpSession(requests.Session):
         else:
             request_meta["response_length"] = len(response.content or b"")
         request_meta["response_fetching_time"] = (time.perf_counter() - server_response_time) * 1000
-        request_meta["response_time"] = (
-            request_meta["response_waiting_time"] + request_meta["response_fetching_time"]
-        )
+        request_meta["response_time"] = request_meta["response_waiting_time"] + request_meta["response_fetching_time"]
 
         if catch_response:
             return ResponseContextManager(response, request_event=self.request_event, request_meta=request_meta)
