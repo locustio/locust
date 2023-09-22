@@ -1,0 +1,17 @@
+{
+  "name": "locust",
+  "version": "2.16.1",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "dashboard:install": "cd dashboard && yarn install",
+    "dashboard:dev:watch": "cd dashboard && yarn dev:watch",
+    "dashboard:dev": "cd dashboard && yarn dev",
+    "dashboard:lint": "cd dashboard && yarn lint",
+    "dashboard:format": "cd dashboard && yarn format",
+    "dashboard:type-check": "cd dashboard && yarn type-check"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
