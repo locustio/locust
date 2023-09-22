@@ -70,6 +70,37 @@ class TestFastHttpSession(WebserverTestCase):
         # download the content of the streaming response (so we don't get an ugly exception in the log)
         _ = r.content
 
+    def test_response_times_are_separated_in_request_metadata(self):
+        """
+        Test that request times for server response and fetching are accessible
+        in request metadata
+        """
+        kwargs = {}
+        def on_request(**kw):
+            kwargs.update(kw)
+        self.environment.events.request.add_listener(on_request)
+        s = self.get_client()
+
+        # Verify that fetching content time is close to 0, when stream=True
+        s.get("/streaming/50", stream=True)
+        self.assertGreater(kwargs["response_waiting_time"], 0)
+        self.assertLess(kwargs["response_waiting_time"], 250)
+        self.assertLess(kwargs["response_fetching_time"], 10)
+        self.assertAlmostEqual(
+            self.runner.stats.get("/streaming/50", method="GET").avg_response_time,
+            kwargs["response_waiting_time"] + kwargs["response_fetching_time"], delta=0.1)
+        self.runner.stats.clear_all()
+        kwargs.clear()
+
+        # Now that we actually check fetching time
+        s.get("/streaming/50")
+        self.assertGreater(kwargs["response_waiting_time"], 0)
+        self.assertLess(kwargs["response_waiting_time"], 250)
+        self.assertGreater(kwargs["response_fetching_time"], 250)
+        self.assertAlmostEqual(
+            self.runner.stats.get("/streaming/50", method="GET").avg_response_time,
+            kwargs["response_waiting_time"] + kwargs["response_fetching_time"], delta=0.1)
+
     def test_slow_redirect(self):
         s = self.get_client()
         url = "/redirect?url=/redirect&delay=0.5"

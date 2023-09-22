@@ -130,9 +130,15 @@ class HttpSession(requests.Session):
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(url)
 
+        # use stream=True to avoid closing socket and downloading content at the beginning
+        # we'll download content if actually requested a bit later
+        # 
+        # a bit of a hack to actually estimate fetching time
+        stream = kwargs.pop("stream", False)
+
         start_time = time.time()
         start_perf_counter = time.perf_counter()
-        response = self._send_request_safe_mode(method, url, **kwargs)
+        response = self._send_request_safe_mode(method, url, **kwargs, stream=True)
         server_response_time = time.perf_counter()
 
         request_before_redirect = (response.history and response.history[0] or response).request
@@ -158,7 +164,7 @@ class HttpSession(requests.Session):
 
         # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body
-        if kwargs.get("stream", False):
+        if stream:
             request_meta["response_length"] = int(response.headers.get("content-length") or 0)
         else:
             request_meta["response_length"] = len(response.content or b"")
