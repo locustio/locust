@@ -67,8 +67,10 @@ class TestHttpSession(WebserverTestCase):
         in request metadata
         """
         kwargs = {}
+
         def on_request(**kw):
             kwargs.update(kw)
+
         self.environment.events.request.add_listener(on_request)
         s = self.get_client()
 
@@ -79,7 +81,9 @@ class TestHttpSession(WebserverTestCase):
         self.assertLess(kwargs["response_fetching_time"], 10)
         self.assertAlmostEqual(
             self.runner.stats.get("/streaming/50", method="GET").avg_response_time,
-            kwargs["response_waiting_time"] + kwargs["response_fetching_time"], delta=0.1)
+            kwargs["response_waiting_time"] + kwargs["response_fetching_time"],
+            delta=0.1,
+        )
         self.runner.stats.clear_all()
         kwargs.clear()
 
@@ -90,8 +94,9 @@ class TestHttpSession(WebserverTestCase):
         self.assertGreater(kwargs["response_fetching_time"], 250)
         self.assertAlmostEqual(
             self.runner.stats.get("/streaming/50", method="GET").avg_response_time,
-            kwargs["response_waiting_time"] + kwargs["response_fetching_time"], delta=0.1)
-
+            kwargs["response_waiting_time"] + kwargs["response_fetching_time"],
+            delta=0.1,
+        )
 
     def test_slow_redirect(self):
         s = self.get_client()

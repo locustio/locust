@@ -132,7 +132,7 @@ class HttpSession(requests.Session):
 
         # use stream=True to avoid closing socket and downloading content at the beginning
         # we'll download content if actually requested a bit later
-        # 
+        #
         # a bit of a hack to actually estimate fetching time
         stream = kwargs.pop("stream", False)
 
