@@ -1,5 +1,6 @@
 ---
 name: Feature request
+about: Suggest an idea for Locust
 title: ''
 labels: feature request
 assignees: ''
