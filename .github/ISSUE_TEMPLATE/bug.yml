@@ -47,8 +47,8 @@ body:
 
   - type: textarea
     attributes:
-      label: Locustfile
-      description: The locustfile code needed to exhibit this problem
+      label: Locustfile contents
+      render: python3
     validations:
       required: true
 
@@ -66,7 +66,6 @@ body:
 
   - type: input
     attributes:
-      label: OS
-      description: Operating system
+      label: Operating system
     validations:
       required: true
