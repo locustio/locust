@@ -24,14 +24,14 @@ body:
 
   - type: textarea
     attributes:
-      label: Bug Description
-      description: Provide a clear and concise description of this bug, including the behaviour that you expected.
+      label: Description
+      description: A clear and concise description of what went wrong, and what behaviour you expected.
     validations:
       required: true
 
   - type: input
     attributes:
-      label: Command line that you ran
+      label: Command line
       description: |
         For example: locust -f mylocustfile.py -t 10s --headless
     validations:
@@ -40,6 +40,7 @@ body:
   - type: textarea
     attributes:
       label: Locustfile contents
+      description: Please remove everything that isn't necessary to trigger the issue.
       render: python3
     validations:
       required: true
