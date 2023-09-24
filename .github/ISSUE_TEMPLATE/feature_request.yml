@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest an improvement
+labels: ["feature request"]
+body:
+  - type: checkboxes
+    attributes:
+      label: Prerequisites
+      options:
+        - label: I am using [the latest version of Locust](https://github.com/locustio/locust/releases/)
+          required: true
+        - label: I am suggesting a new feature, not asking a question
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        If you just need help with something, then:
+
+         * [Check the documentation](https://docs.locust.io/en/stable/)
+         * [Check the FAQ in the wiki](https://github.com/locustio/locust/wiki/FAQ) 
+         * Search [Stack Overflow](https://stackoverflow.com/questions/tagged/locust), or [ask there](https://stackoverflow.com/questions/ask) yourself. If you tag your question with `locust` we will see it.
+         * Ask on [Locust's slack](https://locustio.slack.com) [(sign up here)](https://communityinviter.com/apps/locustio/locust)
+
+  - type: textarea
+    attributes:
+      label: Description
+      description: Describe what feature you are missing, and what alternatives you have considered.
+    validations:
+      required: true
