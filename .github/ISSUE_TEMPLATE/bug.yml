@@ -1,5 +1,6 @@
 name: Bug Report
 description: Report an error
+title: "[Bug] Replace with title"
 labels: ["bug"]
 body:
   - type: markdown
