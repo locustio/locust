@@ -138,7 +138,7 @@ Install node using nvm to easily switch between node version
 nvm --version
 ```
 
-- Finally, install the proper Node version according to engines in the package.json
+- Install the proper Node version according to engines in the locust/webui/package.json
 
 ```bash
 nvm install {version}
@@ -147,17 +147,17 @@ nvm alias default {version}
 
 ### Yarn
 
-- Install Yarn from their official website (avoid installing through Node)
+- Install Yarn from their official website (avoid installing through Node if possible)
 - Verify yarn was installed correctly
 
 ```bash
 yarn --version
 ```
 
-- Next in dashboard, install all dependencies
+- Next in web, install all dependencies
 
 ```bash
-cd dashboard
+cd locust/webui
 yarn
 ```
 
@@ -167,7 +167,7 @@ To develop the frontend, run `yarn dev`. This will start the Vite dev server and
 
 To develop while running a locust instance, run `yarn dev:watch`. This will output the static files to the `dist` directory. Then simply a locust instance using the `--modern-ui` flag. Vite will automatically detect any changed files and re-build as needed. Simply refresh the page to view the changes
 
-To compile the dashboard, run `yarn build`
+To compile the webui, run `yarn build`
 
 The frontend can additionally be built using make:
 ```bash

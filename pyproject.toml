@@ -79,6 +79,7 @@ exclude = [
 locust = ["py.typed"]
 "locust.static" = ["**/*"]
 "locust.templates" = ["**/*"]
+"locust.webui.dist" = ["**/*"]
 
 [project.scripts]
 locust = "locust.main:main"

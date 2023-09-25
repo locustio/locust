@@ -113,7 +113,7 @@ class WebUI:
         app.debug = True
         root_path = os.path.dirname(os.path.abspath(__file__))
         app.root_path = root_path
-        self.dashboard_build_path = f"{os.path.dirname(root_path)}/dashboard/dist"
+        self.webui_build_path = f"{root_path}/webui/dist"
         self.app.config["BASIC_AUTH_ENABLED"] = False
         self.auth: Optional[BasicAuth] = None
         self.greenlet: Optional[gevent.Greenlet] = None
@@ -139,9 +139,9 @@ class WebUI:
 
         @app.route("/assets/<path:path>")
         def send_assets(path):
-            dashboard_build_path = self.dashboard_build_path
+            webui_build_path = self.webui_build_path
 
-            return send_from_directory(f"{dashboard_build_path}/assets", path)
+            return send_from_directory(f"{webui_build_path}/assets", path)
 
         @app.route("/")
         @self.auth_required_if_enabled
@@ -523,8 +523,8 @@ class WebUI:
         return wrapper
 
     def set_static_modern_ui(self):
-        self.app.template_folder = self.dashboard_build_path
-        self.app.static_folder = f"{self.dashboard_build_path}/assets/"
+        self.app.template_folder = self.webui_build_path
+        self.app.static_folder = f"{self.webui_build_path}/assets/"
         self.app.static_url_path = "/assets/"
 
     def update_template_args(self):

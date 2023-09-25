@@ -47,7 +47,7 @@ jobs:
       - run: python -m pip install tox
       - run: python -m tox -e ${{ matrix.tox }}
 
-  lint_typecheck_dashboard:
+  lint_typecheck_webui:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -57,13 +57,13 @@ jobs:
           node-version: 18.x
       - uses: borales/actions-yarn@v3
         with:
-          cmd: dashboard:install
+          cmd: webui:install
       - uses: borales/actions-yarn@v3
         with:
-          cmd: dashboard:lint
+          cmd: webui:lint
       - uses: borales/actions-yarn@v3
         with:
-          cmd: dashboard:type-check
+          cmd: webui:type-check
 
   verify_docker_build:
     name: Always - Docker verify, push to tag 'master' if on master

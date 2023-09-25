@@ -1,10 +1,10 @@
-FROM node:18.0.0-alpine as dashboard-builder
+FROM node:18.0.0-alpine as webui-builder
 
-ADD dashboard dashboard
+ADD locust/webui locust/webui
 ADD package.json .
 
-RUN yarn dashboard:install
-RUN yarn dashboard:build
+RUN yarn webui:install
+RUN yarn webui:build
 
 FROM python:3.11-slim as base
 
@@ -19,7 +19,7 @@ RUN pip install /build/
 
 FROM base
 COPY --from=builder /opt/venv /opt/venv
-COPY --from=dashboard-builder dashboard/dist dashboard/dist
+COPY --from=webui-builder locust/webui/dist locust/webui/dist
 ENV PATH="/opt/venv/bin:$PATH"
 # turn off python output buffering
 ENV PYTHONUNBUFFERED=1

@@ -4,12 +4,12 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "dashboard:install": "cd dashboard && yarn install",
-    "dashboard:dev:watch": "cd dashboard && yarn dev:watch",
-    "dashboard:dev": "cd dashboard && yarn dev",
-    "dashboard:build": "cd dashboard && yarn build",
-    "dashboard:lint": "cd dashboard && yarn lint",
-    "dashboard:format": "cd dashboard && yarn format",
-    "dashboard:type-check": "cd dashboard && yarn type-check"
+    "webui:install": "cd locust/webui && yarn install",
+    "webui:dev:watch": "cd locust/webui && yarn dev:watch",
+    "webui:dev": "cd locust/webui && yarn dev",
+    "webui:build": "cd locust/webui && yarn build",
+    "webui:lint": "cd locust/webui && yarn lint",
+    "webui:format": "cd locust/webui && yarn format",
+    "webui:type-check": "cd locust/webui && yarn type-check"
   }
 }
