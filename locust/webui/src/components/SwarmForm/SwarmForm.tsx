@@ -40,6 +40,7 @@ interface ISwarmForm
       | 'isShape'
       | 'host'
       | 'overrideHostWarning'
+      | 'runTime'
       | 'showUserclassPicker'
       | 'spawnRate'
       | 'userCount'
@@ -52,6 +53,7 @@ function SwarmForm({
   extraOptions,
   isShape,
   overrideHostWarning,
+  runTime,
   setSwarm,
   showUserclassPicker,
   spawnRate,
@@ -115,6 +117,7 @@ function SwarmForm({
             </AccordionSummary>
             <AccordionDetails>
               <TextField
+                defaultValue={runTime}
                 label='Run time (e.g. 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.)'
                 name='runTime'
                 sx={{ width: '100%' }}
@@ -140,6 +143,7 @@ const storeConnector = ({
     host,
     numUsers,
     overrideHostWarning,
+    runTime,
     spawnRate,
     showUserclassPicker,
     userCount,
@@ -153,6 +157,7 @@ const storeConnector = ({
   overrideHostWarning,
   showUserclassPicker,
   numUsers,
+  runTime,
   spawnRate,
   userCount,
 });
