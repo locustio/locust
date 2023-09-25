@@ -9,7 +9,7 @@
     "noEmit": true,
     "noEmitOnError": true,
     "esModuleInterop": true,
-    "module": "commonjs",
+    "module": "ESNext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -21,7 +21,7 @@
       "*": ["src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "vite.config.ts"],
   "typeRoots": ["src/global.d.ts", "src/modules.d.ts"],
   "exclude": ["node_modules"]
 }
