@@ -194,6 +194,8 @@ class User(metaclass=UserMeta):
         elif self._state == LOCUST_STATE_RUNNING:
             self._state = LOCUST_STATE_STOPPING
             return False
+        else:
+            raise Exception(f"Tried to stop User in an unexpected state: {self._state}. This should never happen.")
 
     @property
     def group(self):
