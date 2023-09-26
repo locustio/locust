@@ -362,7 +362,7 @@ def setup_parser_arguments(parser):
         "--modern-ui",
         default=False,
         action="store_true",
-        help="*Experimental* Enable using a modern React frontend as the Web UI",
+        help="*Experimental* enable using a modern React frontend as the Web UI",
         env_var="LOCUST_MODERN_UI",
     )
 
