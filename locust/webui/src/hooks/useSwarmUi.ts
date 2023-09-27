@@ -94,9 +94,7 @@ export default function useSwarmUi() {
 
   useEffect(() => {
     // Handle showing test history on first load
-    if (swarm.state === SWARM_STATE.STOPPED) {
-      updateStats();
-      getTasks();
-    }
+    updateStats();
+    getTasks();
   }, []);
 }
