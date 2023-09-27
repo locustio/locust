@@ -43,7 +43,7 @@ interface ISwarmForm
       | 'runTime'
       | 'showUserclassPicker'
       | 'spawnRate'
-      | 'userCount'
+      | 'numUsers'
     > {}
 
 function SwarmForm({
@@ -52,12 +52,12 @@ function SwarmForm({
   host,
   extraOptions,
   isShape,
+  numUsers,
   overrideHostWarning,
   runTime,
   setSwarm,
   showUserclassPicker,
   spawnRate,
-  userCount,
 }: ISwarmForm) {
   const onStartSwarm = (inputData: ISwarmFormInput) => {
     setSwarm({ state: SWARM_STATE.RUNNING });
@@ -89,7 +89,7 @@ function SwarmForm({
           )}
 
           <TextField
-            defaultValue={(isShape && '-') || userCount || 1}
+            defaultValue={(isShape && '-') || numUsers || 1}
             disabled={!!isShape}
             label='Number of users (peak concurrency)'
             name='userCount'
@@ -146,7 +146,6 @@ const storeConnector = ({
     runTime,
     spawnRate,
     showUserclassPicker,
-    userCount,
   },
 }: IRootState) => ({
   availableShapeClasses,
@@ -159,7 +158,6 @@ const storeConnector = ({
   numUsers,
   runTime,
   spawnRate,
-  userCount,
 });
 
 const actionCreator: IDispatchProps = {
