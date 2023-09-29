@@ -8,7 +8,7 @@ const tableStructure = [
   { key: 'occurrences', title: '# Failures' },
   { key: 'method', title: 'Method' },
   { key: 'name', title: 'Name' },
-  { key: 'error', title: 'Message' },
+  { key: 'error', title: 'Message', markdown: true },
 ];
 
 function FailuresTable({ errors }: { errors: ISwarmError[] }) {
