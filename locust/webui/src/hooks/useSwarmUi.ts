@@ -80,9 +80,9 @@ export default function useSwarmUi() {
     setUi({ exceptions });
   });
 
-  useInterval(updateStats, 2000, { shouldRunInterval: swarm.state === SWARM_STATE.RUNNING });
-  useInterval(getTasks, 5000, { shouldRunInterval: swarm.state === SWARM_STATE.RUNNING });
-  useInterval(getExceptions, 5000, { shouldRunInterval: swarm.state === SWARM_STATE.RUNNING });
+  useInterval(updateStats, 2000, { shouldRunInterval: swarm.state !== SWARM_STATE.STOPPED });
+  useInterval(getTasks, 5000, { shouldRunInterval: swarm.state !== SWARM_STATE.STOPPED });
+  useInterval(getExceptions, 5000, { shouldRunInterval: swarm.state !== SWARM_STATE.STOPPED });
 
   useEffect(() => {
     if (swarm.state === SWARM_STATE.RUNNING && previousSwarmState.current === SWARM_STATE.STOPPED) {
