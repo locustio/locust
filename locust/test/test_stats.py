@@ -65,7 +65,7 @@ class TestRequestStats(unittest.TestCase):
         log(79, 1)
         log(None, 1)
         log_error(Exception("dummy fail"))
-        self.s = self.stats.get("test_entry", "GET")
+        self.s = self.stats.entries[("test_entry", "GET")]
 
     def test_percentile(self):
         s = StatsEntry(self.stats, "percentile_test", "GET")
@@ -89,7 +89,7 @@ class TestRequestStats(unittest.TestCase):
 
     def test_total_rps(self):
         self.stats.log_request("GET", "other_endpoint", 1337, 1337)
-        s2 = self.stats.get("other_endpoint", "GET")
+        s2 = self.stats.entries[("other_endpoint", "GET")]
         s2.start_time = 2.0
         s2.last_request_timestamp = 6.0
         self.s.start_time = 1.0
@@ -492,16 +492,16 @@ class TestCsvStats(LocustTestCase):
 
             server.mocked_send(Message("client_ready", __version__, "fake_client"))
 
-            master.stats.get("/", "GET").log(100, 23455)
-            master.stats.get("/", "GET").log(800, 23455)
-            master.stats.get("/", "GET").log(700, 23455)
+            master.stats.entries[("/", "GET")].log(100, 23455)
+            master.stats.entries[("/", "GET")].log(800, 23455)
+            master.stats.entries[("/", "GET")].log(700, 23455)
 
             data = {"user_count": 1}
             environment.events.report_to_master.fire(client_id="fake_client", data=data)
             master.stats.clear_all()
 
             server.mocked_send(Message("stats", data, "fake_client"))
-            s = master.stats.get("/", "GET")
+            s = master.stats.entries[("/", "GET")]
             self.assertEqual(700, s.median_response_time)
 
             gevent.kill(greenlet)
@@ -571,7 +571,7 @@ class TestCsvStats(LocustTestCase):
             }
             request_name_str = json.dumps(request_name_dict)
 
-            master.stats.get(request_name_str, "GET").log(100, 23455)
+            master.stats.entries[(request_name_str, "GET")].log(100, 23455)
             data = {"user_count": 1}
             environment.events.report_to_master.fire(client_id="fake_client", data=data)
             master.stats.clear_all()
@@ -779,9 +779,10 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
     def test_request_stats_content_length(self):
         self.locust.client.get("/ultra_fast")
         self.assertEqual(
-            self.runner.stats.get("/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response")
+            self.runner.stats.entries[("/ultra_fast", "GET")].avg_content_length, len("This is an ultra fast response")
         )
         self.locust.client.get("/ultra_fast")
+        # test legacy stats.get() function sometimes too
         self.assertEqual(
             self.runner.stats.get("/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response")
         )
@@ -790,37 +791,37 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         path = "/no_content_length"
         self.locust.client.get(path)
         self.assertEqual(
-            self.runner.stats.get(path, "GET").avg_content_length,
+            self.runner.stats.entries[(path, "GET")].avg_content_length,
             len("This response does not have content-length in the header"),
         )
 
     def test_request_stats_no_content_length_streaming(self):
         path = "/no_content_length"
         self.locust.client.get(path, stream=True)
-        self.assertEqual(0, self.runner.stats.get(path, "GET").avg_content_length)
+        self.assertEqual(0, self.runner.stats.entries[(path, "GET")].avg_content_length)
 
     def test_request_stats_named_endpoint(self):
         self.locust.client.get("/ultra_fast", name="my_custom_name")
-        self.assertEqual(1, self.runner.stats.get("my_custom_name", "GET").num_requests)
+        self.assertEqual(1, self.runner.stats.entries[("my_custom_name", "GET")].num_requests)
 
     def test_request_stats_named_endpoint_request_name(self):
         self.locust.client.request_name = "my_custom_name_1"
         self.locust.client.get("/ultra_fast")
-        self.assertEqual(1, self.runner.stats.get("my_custom_name_1", "GET").num_requests)
+        self.assertEqual(1, self.runner.stats.entries[("my_custom_name_1", "GET")].num_requests)
         self.locust.client.request_name = None
 
     def test_request_stats_named_endpoint_rename_request(self):
         with self.locust.client.rename_request("my_custom_name_3"):
             self.locust.client.get("/ultra_fast")
-        self.assertEqual(1, self.runner.stats.get("my_custom_name_3", "GET").num_requests)
+        self.assertEqual(1, self.runner.stats.entries[("my_custom_name_3", "GET")].num_requests)
 
     def test_request_stats_query_variables(self):
         self.locust.client.get("/ultra_fast?query=1")
-        self.assertEqual(1, self.runner.stats.get("/ultra_fast?query=1", "GET").num_requests)
+        self.assertEqual(1, self.runner.stats.entries[("/ultra_fast?query=1", "GET")].num_requests)
 
     def test_request_stats_put(self):
         self.locust.client.put("/put")
-        self.assertEqual(1, self.runner.stats.get("/put", "PUT").num_requests)
+        self.assertEqual(1, self.runner.stats.entries[("/put", "PUT")].num_requests)
 
     def test_request_connection_error(self):
         class MyUser(HttpUser):
@@ -829,8 +830,8 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         locust = MyUser(self.environment)
         response = locust.client.get("/", timeout=0.1)
         self.assertEqual(response.status_code, 0)
-        self.assertEqual(1, self.runner.stats.get("/", "GET").num_failures)
-        self.assertEqual(1, self.runner.stats.get("/", "GET").num_requests)
+        self.assertEqual(1, self.runner.stats.entries[("/", "GET")].num_failures)
+        self.assertEqual(1, self.runner.stats.entries[("/", "GET")].num_requests)
 
 
 class MyTaskSet(TaskSet):
