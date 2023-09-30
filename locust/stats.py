@@ -189,6 +189,17 @@ def diff_response_time_dicts(latest: Dict[int, int], old: Dict[int, int]) -> Dic
     return new
 
 
+class EntriesDict(dict):
+    def __init__(self, request_stats):
+        self.request_stats = request_stats
+
+    def __missing__(self, key):
+        self[key] = StatsEntry(
+            self.request_stats, key[0], key[1], use_response_times_cache=self.request_stats.use_response_times_cache
+        )
+        return self[key]
+
+
 class RequestStats:
     """
     Class that holds the request statistics. Accessible in a User from self.environment.stats
@@ -202,7 +213,7 @@ class RequestStats:
                                          is not needed.
         """
         self.use_response_times_cache = use_response_times_cache
-        self.entries: Dict[Tuple[str, str], StatsEntry] = {}
+        self.entries: Dict[Tuple[str, str], StatsEntry] = EntriesDict(self)
         self.errors: Dict[str, StatsError] = {}
         self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
         self.history = []
@@ -229,11 +240,11 @@ class RequestStats:
 
     def log_request(self, method: str, name: str, response_time: int, content_length: int) -> None:
         self.total.log(response_time, content_length)
-        self.get(name, method).log(response_time, content_length)
+        self.entries[(name, method)].log(response_time, content_length)
 
     def log_error(self, method: str, name: str, error: Exception | str | None) -> None:
         self.total.log_error(error)
-        self.get(name, method).log_error(error)
+        self.entries[(name, method)].log_error(error)
 
         # store error in errors dict
         key = StatsError.create_key(method, name, error)
@@ -247,11 +258,7 @@ class RequestStats:
         """
         Retrieve a StatsEntry instance by name and method
         """
-        entry = self.entries.get((name, method))
-        if not entry:
-            entry = StatsEntry(self, name, method, use_response_times_cache=self.use_response_times_cache)
-            self.entries[(name, method)] = entry
-        return entry
+        return self.entries[(name, method)]
 
     def reset_all(self) -> None:
         """
@@ -268,7 +275,7 @@ class RequestStats:
         Remove all stats entries and errors
         """
         self.total = StatsEntry(self, "Aggregated", "", use_response_times_cache=self.use_response_times_cache)
-        self.entries = {}
+        self.entries = EntriesDict(self)
         self.errors = {}
         self.history = []
 
