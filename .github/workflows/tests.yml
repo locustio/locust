@@ -20,6 +20,7 @@ jobs:
           - { name: "flake8", python: "3.10", os: ubuntu-latest, tox: "flake8" }
           - { name: "black", python: "3.10", os: ubuntu-latest, tox: "black" }
           - { name: "mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
+          - { name: "3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
           - { name: "3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
           - { name: "3.10", python: "3.10", os: ubuntu-latest, tox: py310 }
           - { name: "3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
