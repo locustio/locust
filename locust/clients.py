@@ -5,12 +5,12 @@ from contextlib import contextmanager
 from typing import Generator, Optional
 from urllib.parse import urlparse, urlunparse
 
-import requests
-from requests import Request, Response
-from requests.adapters import HTTPAdapter
-from requests.auth import HTTPBasicAuth
-from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
-from urllib3 import PoolManager
+import niquests
+from niquests import Request, Response
+from niquests.adapters import HTTPAdapter
+from niquests.auth import HTTPBasicAuth
+from niquests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
+import urllib3
 
 from .exception import CatchResponseError, LocustError, ResponseError
 
@@ -24,21 +24,21 @@ class LocustResponse(Response):
         Response.raise_for_status(self)
 
 
-class HttpSession(requests.Session):
+class HttpSession(niquests.Session):
     """
     Class for performing web requests and holding (session-) cookies between requests (in order
     to be able to log in and out of websites). Each request is logged so that locust can display
     statistics.
 
-    This is a slightly extended version of `python-request <http://python-requests.org>`_'s
-    :py:class:`requests.Session` class and mostly this class works exactly the same. However
+    This is a slightly extended version of `python-request <http://python-niquests.org>`_'s
+    :py:class:`niquests.Session` class and mostly this class works exactly the same. However
     the methods for making requests (get, post, delete, put, head, options, patch, request)
     can now take a *url* argument that's only the path part of the URL, in which case the host
     part of the URL will be prepended with the HttpSession.base_url which is normally inherited
     from a User class' host attribute.
 
     Each of the methods for making requests also takes two additional optional arguments which
-    are Locust specific and doesn't exist in python-requests. These are:
+    are Locust specific and doesn't exist in python-niquests. These are:
 
     :param name: (optional) An argument that can be specified to use as label in Locust's statistics instead of the URL path.
                  This can be used to group different URL's that are requested into a single entry in Locust's statistics.
@@ -48,7 +48,9 @@ class HttpSession(requests.Session):
                            and then mark it as successful even if the response code was not (i.e 500 or 404).
     """
 
-    def __init__(self, base_url, request_event, user, *args, pool_manager: Optional[PoolManager] = None, **kwargs):
+    def __init__(
+        self, base_url, request_event, user, *args, pool_manager: Optional[urllib3.PoolManager] = None, **kwargs
+    ):
         super().__init__(*args, **kwargs)
 
         self.base_url = base_url
@@ -95,8 +97,8 @@ class HttpSession(requests.Session):
 
     def request(self, method, url, name=None, catch_response=False, context={}, **kwargs):
         """
-        Constructs and sends a :py:class:`requests.Request`.
-        Returns :py:class:`requests.Response` object.
+        Constructs and sends a :py:class:`niquests.Request`.
+        Returns :py:class:`niquests.Response` object.
 
         :param method: method for the new :class:`Request` object.
         :param url: URL for the new :class:`Request` object.
@@ -170,6 +172,27 @@ class HttpSession(requests.Session):
                 pass
             return response
 
+    def get(self, url, **kwargs):
+        return self.request("GET", url, **kwargs)
+
+    def options(self, url, **kwargs):
+        return self.request("OPTIONS", url, **kwargs)
+
+    def head(self, url, **kwargs):
+        return self.request("HEAD", url, **kwargs)
+
+    def post(self, url, data=None, json=None, **kwargs):
+        return self.request("POST", url, data=data, json=json, **kwargs)
+
+    def put(self, url, data=None, **kwargs):
+        return self.request("PUT", url, data=data, **kwargs)
+
+    def patch(self, url, data=None, **kwargs):
+        return self.request("PATCH", data=data, **kwargs)
+
+    def delete(self, url, **kwargs):
+        return self.request("DELETE", url, **kwargs)
+
     def _send_request_safe_mode(self, method, url, **kwargs):
         """
         Send an HTTP request, and catch any exception that might occur due to connection problems.
@@ -193,7 +216,7 @@ class ResponseContextManager(LocustResponse):
     A Response class that also acts as a context manager that provides the ability to manually
     control if an HTTP request should be marked as successful or a failure in Locust's statistics
 
-    This class is a subclass of :py:class:`Response <requests.Response>` with two additional
+    This class is a subclass of :py:class:`Response <niquests.Response>` with two additional
     methods: :py:meth:`success <locust.clients.ResponseContextManager.success>` and
     :py:meth:`failure <locust.clients.ResponseContextManager.failure>`.
     """
@@ -238,15 +261,15 @@ class ResponseContextManager(LocustResponse):
 
             try:
                 self.raise_for_status()
-            except requests.exceptions.RequestException as e:
+            except niquests.exceptions.RequestException as e:
                 while (
                     isinstance(
                         e,
                         (
-                            requests.exceptions.ConnectionError,
-                            requests.packages.urllib3.exceptions.ProtocolError,
-                            requests.packages.urllib3.exceptions.MaxRetryError,
-                            requests.packages.urllib3.exceptions.NewConnectionError,
+                            niquests.exceptions.ConnectionError,
+                            urllib3.exceptions.ProtocolError,
+                            urllib3.exceptions.MaxRetryError,
+                            urllib3.exceptions.NewConnectionError,
                         ),
                     )
                     and e.__context__  # Not sure if the above exceptions can ever be the lowest level, but it is good to be sure
@@ -301,7 +324,7 @@ class ResponseContextManager(LocustResponse):
 
 
 class LocustHttpAdapter(HTTPAdapter):
-    def __init__(self, pool_manager: Optional[PoolManager], *args, **kwargs):
+    def __init__(self, pool_manager: Optional[urllib3.PoolManager], *args, **kwargs):
         self.poolmanager = pool_manager
         super().__init__(*args, **kwargs)
 

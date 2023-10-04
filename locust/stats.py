@@ -325,7 +325,7 @@ class StatsEntry:
         self.response_times: Dict[int, int] = {}
         """
         A {response_time => count} dict that holds the response time distribution of all
-        the requests.
+        the niquests.
 
         The keys (the response time in ms) are rounded to store 1, 2, ... 9, 10, 20. .. 90,
         100, 200 .. 900, 1000, 2000 ... 9000, in order to save memory.

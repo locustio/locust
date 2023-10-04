@@ -109,7 +109,7 @@ class FastHttpSession:
             self.base_url = urlunparse(
                 (parsed_url.scheme, netloc, parsed_url.path, parsed_url.params, parsed_url.query, parsed_url.fragment)
             )
-            # store authentication header (we construct this by using _basic_auth_str() function from requests.auth)
+            # store authentication header (we construct this by using _basic_auth_str() function from niquests.auth)
             self.auth_header = _construct_basic_auth_str(parsed_url.username, parsed_url.password)
 
     def _build_url(self, path):
@@ -353,7 +353,7 @@ class FastHttpUser(User):
         )
         """
         Instance of HttpSession that is created upon instantiation of User.
-        The client support cookies, and therefore keeps the session between HTTP requests.
+        The client support cookies, and therefore keeps the session between HTTP niquests.
         """
 
     @contextmanager

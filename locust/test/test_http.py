@@ -1,7 +1,7 @@
 import time
 
 from locust.user.users import HttpUser
-from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
+from niquests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 
 from locust.clients import HttpSession
 from locust.exception import LocustError, ResponseError

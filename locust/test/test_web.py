@@ -9,7 +9,7 @@ from io import StringIO
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 import gevent
-import requests
+import niquests
 from pyquery import PyQuery as pq
 
 import locust
@@ -68,14 +68,14 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         web_ui = WebUI(env, "127.0.0.1", 0)
         gevent.sleep(0.01)
         try:
-            response = requests.get("http://127.0.0.1:%i/" % web_ui.server.server_port)
+            response = niquests.get("http://127.0.0.1:%i/" % web_ui.server.server_port)
             self.assertEqual(500, response.status_code)
             self.assertEqual("Error: Locust Environment does not have any runner", response.text)
         finally:
             web_ui.stop()
 
     def test_index(self):
-        self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % self.web_port).status_code)
+        self.assertEqual(200, niquests.get("http://127.0.0.1:%i/" % self.web_port).status_code)
 
     def test_index_with_spawn_options(self):
         html_to_option = {
@@ -86,7 +86,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             # Test that setting each spawn option individually populates the corresponding field in the html, and none of the others
             self.environment.parsed_options = parse_options(html_to_option[html_name_to_test])
 
-            response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+            response = niquests.get("http://127.0.0.1:%i/" % self.web_port)
             self.assertEqual(200, response.status_code)
 
             d = pq(response.content.decode("utf-8"))
@@ -102,11 +102,11 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
                     self.assertEqual("1", edit_value, msg=f"edit value was {edit_value} for {html_name}")
 
     def test_stats_no_data(self):
-        self.assertEqual(200, requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).status_code)
+        self.assertEqual(200, niquests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).status_code)
 
     def test_stats(self):
         self.stats.log_request("GET", "/<html>", 120, 5612)
-        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
 
         data = json.loads(response.text)
@@ -122,25 +122,25 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
     def test_stats_cache(self):
         self.stats.log_request("GET", "/test", 120, 5612)
-        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         data = json.loads(response.text)
         self.assertEqual(2, len(data["stats"]))  # one entry plus Aggregated
 
         # add another entry
         self.stats.log_request("GET", "/test2", 120, 5612)
-        data = json.loads(requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).text)
+        data = json.loads(niquests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).text)
         self.assertEqual(2, len(data["stats"]))  # old value should be cached now
 
         self.web_ui.app.view_functions["request_stats"].clear_cache()
 
-        data = json.loads(requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).text)
+        data = json.loads(niquests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).text)
         self.assertEqual(3, len(data["stats"]))  # this should no longer be cached
 
     def test_stats_rounding(self):
         self.stats.log_request("GET", "/test", 1.39764125, 2)
         self.stats.log_request("GET", "/test", 999.9764125, 1000)
-        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
 
         data = json.loads(response.text)
@@ -149,24 +149,24 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
     def test_request_stats_csv(self):
         self.stats.log_request("GET", "/test2", 120, 5612)
-        response = requests.get("http://127.0.0.1:%i/stats/requests/csv" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stats/requests/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
         self._check_csv_headers(response.headers, "requests")
 
     def test_request_stats_full_history_csv_not_present(self):
         self.stats.log_request("GET", "/test2", 120, 5612)
-        response = requests.get("http://127.0.0.1:%i/stats/requests_full_history/csv" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stats/requests_full_history/csv" % self.web_port)
         self.assertEqual(404, response.status_code)
 
     def test_failure_stats_csv(self):
         self.stats.log_error("GET", "/", Exception("Error1337"))
-        response = requests.get("http://127.0.0.1:%i/stats/failures/csv" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stats/failures/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
         self._check_csv_headers(response.headers, "failures")
 
     def test_request_stats_with_errors(self):
         self.stats.log_error("GET", "/", Exception("Error1337"))
-        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertIn("Error1337", response.text)
 
@@ -181,7 +181,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.stats.log_request("GET", "/test", 120, 5612)
         self.stats.log_error("GET", "/", Exception("Error1337"))
 
-        response = requests.get("http://127.0.0.1:%i/stats/reset" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stats/reset" % self.web_port)
 
         self.assertEqual(200, response.status_code)
 
@@ -201,11 +201,11 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
 
-        response = requests.get("http://127.0.0.1:%i/exceptions" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/exceptions" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertIn("A cool test exception", response.text)
 
-        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
 
     def test_exceptions_csv(self):
@@ -216,7 +216,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
 
-        response = requests.get("http://127.0.0.1:%i/exceptions/csv" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/exceptions/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
         self._check_csv_headers(response.headers, "exceptions")
 
@@ -239,7 +239,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         self.environment.user_classes = [MyUser]
         self.environment.web_ui.parsed_options = parse_options()
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost"},
         )
@@ -248,11 +248,11 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(self.environment.host, "https://localhost")
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
         # and swarm again, with new host
         gevent.sleep(1)
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost/other"},
         )
@@ -279,7 +279,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.environment.web_ui.userclass_picker_is_active = True
         self.environment.available_user_classes = {"User1": User1, "User2": User2}
 
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={
                 "user_count": 5,
@@ -296,12 +296,12 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
         # and swarm again, with new locustfile
         gevent.sleep(1)
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={
                 "user_count": 5,
@@ -334,7 +334,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.environment.web_ui.userclass_picker_is_active = True
         self.environment.available_user_classes = {"User1": User1, "User2": User2}
 
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={
                 "user_count": 5,
@@ -354,7 +354,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
     def test_swarm_updates_parsed_options_when_single_userclass_specified(self):
@@ -380,7 +380,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.environment.web_ui.userclass_picker_is_active = True
         self.environment.available_user_classes = {"User1": User1, "User2": User2}
 
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={
                 "user_count": 5,
@@ -393,7 +393,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
         # Checking environment.parsed_options.user_classes was updated
@@ -422,7 +422,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.environment.web_ui.userclass_picker_is_active = True
         self.environment.available_user_classes = {"User1": User1, "User2": User2}
 
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={
                 "user_count": 5,
@@ -435,7 +435,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
         # Checking environment.parsed_options.user_classes was updated
@@ -460,7 +460,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         self.environment.web_ui.userclass_picker_is_active = True
         self.environment.available_user_classes = {"User1": User1, "User2": User2}
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={
                 "user_count": 5,
@@ -476,7 +476,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
     def test_swarm_uses_pre_selected_user_classes_when_empty_payload_and_test_is_already_running_with_class_picker(
@@ -499,7 +499,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         self.environment.web_ui.userclass_picker_is_active = True
         self.environment.available_user_classes = {"User1": User1, "User2": User2}
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={
                 "user_count": 5,
@@ -515,7 +515,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertListEqual(["User1"], response.json()["user_classes"])
 
         # simulating edit running load test
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={
                 "user_count": 10,
@@ -529,12 +529,12 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
     def test_swarm_error_when_userclass_picker_is_active_but_no_available_userclasses(self):
         self.environment.web_ui.userclass_picker_is_active = True
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={
                 "user_count": 5,
@@ -576,7 +576,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.environment.available_shape_classes = {"TestShape": TestShape()}
         self.environment.shape_class = None
 
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={
                 "user_count": 5,
@@ -594,7 +594,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
     def test_swarm_shape_class_defaults_to_none_when_userclass_picker_is_active(self):
@@ -627,7 +627,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.environment.available_shape_classes = {"TestShape": test_shape_instance}
         self.environment.shape_class = test_shape_instance
 
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={
                 "user_count": 5,
@@ -644,7 +644,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
     def test_swarm_userclass_shapeclass_ignored_when_userclass_picker_is_inactive(self):
@@ -676,7 +676,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.environment.available_shape_classes = {"TestShape": TestShape()}
         self.environment.shape_class = None
 
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={
                 "user_count": 5,
@@ -695,7 +695,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
     def test_swarm_custom_argument(self):
@@ -717,7 +717,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.environment.user_classes = [MyUser]
         self.environment.parsed_options = parsed_options
         self.environment.web_ui.parsed_options = parsed_options
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={"user_count": 1, "spawn_rate": 1, "host": "", "my_argument": "42"},
         )
@@ -737,7 +737,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.environment.parsed_options = parsed_options
         self.environment.web_ui.parsed_options = parsed_options
 
-        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/" % self.web_port)
         self.assertEqual(200, response.status_code)
 
         # regex to match the intended select tag with id from the custom argument
@@ -758,7 +758,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         self.environment.user_classes = [MyUser]
         self.environment.web_ui.parsed_options = parse_options()
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={"user_count": 5, "spawn_rate": 5},
         )
@@ -776,7 +776,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         self.environment.user_classes = [MyUser]
         self.environment.web_ui.parsed_options = parse_options()
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost", "run_time": "1s"},
         )
@@ -786,7 +786,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(1, response.json()["run_time"])
         # wait for test to run
         gevent.sleep(3)
-        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual("stopped", response.json()["state"])
 
     def test_swarm_run_time_invalid_input(self):
@@ -799,7 +799,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         self.environment.user_classes = [MyUser]
         self.environment.web_ui.parsed_options = parse_options()
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost", "run_time": "bad"},
         )
@@ -810,9 +810,9 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             "Valid run_time formats are : 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.", response.json()["message"]
         )
         # verify test was not started
-        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual("ready", response.json()["state"])
-        requests.get("http://127.0.0.1:%i/stats/reset" % self.web_port)
+        niquests.get("http://127.0.0.1:%i/stats/reset" % self.web_port)
 
     def test_swarm_run_time_empty_input(self):
         class MyUser(User):
@@ -824,7 +824,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         self.environment.user_classes = [MyUser]
         self.environment.web_ui.parsed_options = parse_options()
-        response = requests.post(
+        response = niquests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost", "run_time": ""},
         )
@@ -835,18 +835,18 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # verify test is running
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual("running", response.json()["state"])
 
         # stop
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stop" % self.web_port)
 
     def test_host_value_from_user_class(self):
         class MyUser(User):
             host = "http://example.com"
 
         self.environment.user_classes = [MyUser]
-        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertIn("http://example.com", response.content.decode("utf-8"))
         self.assertNotIn("setting this will override the host on all User classes", response.content.decode("utf-8"))
@@ -859,7 +859,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             host = "http://example.com"
 
         self.environment.user_classes = [MyUser, MyUser2]
-        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertIn("http://example.com", response.content.decode("utf-8"))
         self.assertNotIn("setting this will override the host on all User classes", response.content.decode("utf-8"))
@@ -872,14 +872,14 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             host = "http://example.com"
 
         self.environment.user_classes = [MyUser, MyUser2]
-        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertNotIn("http://example.com", response.content.decode("utf-8"))
         self.assertIn("setting this will override the host on all User classes", response.content.decode("utf-8"))
 
     def test_report_page(self):
         self.stats.log_request("GET", "/test", 120, 5612)
-        r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
+        r = niquests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
         self.assertEqual(200, r.status_code)
         self.assertIn("<title>Test Report for None</title>", r.text)
         self.assertIn("<p>Script: <span>None</span></p>", r.text)
@@ -891,14 +891,14 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         )
 
     def test_report_page_empty_stats(self):
-        r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
+        r = niquests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
         self.assertEqual(200, r.status_code)
         self.assertIn("<title>Test Report for None</title>", r.text)
         self.assertIn("charts-container", r.text)
 
     def test_report_download(self):
         self.stats.log_request("GET", "/test", 120, 5612)
-        r = requests.get("http://127.0.0.1:%i/stats/report?download=1" % self.web_port)
+        r = niquests.get("http://127.0.0.1:%i/stats/report?download=1" % self.web_port)
         self.assertEqual(200, r.status_code)
         self.assertIn("attachment", r.headers.get("Content-Disposition", ""))
         self.assertNotIn("Download the Report", r.text, "Download report link found in HTML content")
@@ -906,7 +906,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
     def test_report_host(self):
         self.environment.host = "http://test.com"
         self.stats.log_request("GET", "/test", 120, 5612)
-        r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
+        r = niquests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
         self.assertEqual(200, r.status_code)
         self.assertIn("http://test.com", r.text)
 
@@ -921,7 +921,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.environment.host = None
         self.environment.user_classes = [MyUser]
         self.stats.log_request("GET", "/test", 120, 5612)
-        r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
+        r = niquests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
         self.assertEqual(200, r.status_code)
         self.assertIn("http://test2.com", r.text)
 
@@ -933,7 +933,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
         self.stats.log_request("GET", "/test", 120, 5612)
-        r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
+        r = niquests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
         # self.assertEqual(200, r.status_code)
         self.assertIn("<h2>Exceptions Statistics</h2>", r.text)
 
@@ -952,7 +952,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         self.environment.shape_class = TestShape
 
-        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/" % self.web_port)
         self.assertEqual(200, response.status_code)
 
         # regex to match the intended select tag with id from the custom argument
@@ -975,7 +975,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         self.environment.shape_class = TestShape
 
-        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/" % self.web_port)
         self.assertEqual(200, response.status_code)
 
         # regex to match the intended select tag with id from the custom argument
@@ -1014,16 +1014,16 @@ class TestWebUIAuth(LocustTestCase):
 
     def test_index_with_basic_auth_enabled_correct_credentials(self):
         self.assertEqual(
-            200, requests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port, auth=("john", "doe")).status_code
+            200, niquests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port, auth=("john", "doe")).status_code
         )
 
     def test_index_with_basic_auth_enabled_incorrect_credentials(self):
         self.assertEqual(
-            401, requests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port, auth=("john", "invalid")).status_code
+            401, niquests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port, auth=("john", "invalid")).status_code
         )
 
     def test_index_with_basic_auth_enabled_blank_credentials(self):
-        self.assertEqual(401, requests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port).status_code)
+        self.assertEqual(401, niquests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port).status_code)
 
 
 class TestWebUIWithTLS(LocustTestCase):
@@ -1062,9 +1062,10 @@ class TestWebUIWithTLS(LocustTestCase):
     def test_index_with_https(self):
         # Suppress only the single warning from urllib3 needed.
         from urllib3.exceptions import InsecureRequestWarning
+        import urllib3
 
-        requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
-        self.assertEqual(200, requests.get("https://127.0.0.1:%i/" % self.web_port, verify=False).status_code)
+        urllib3.disable_warnings(category=InsecureRequestWarning)
+        self.assertEqual(200, niquests.get("https://127.0.0.1:%i/" % self.web_port, verify=False).status_code)
 
 
 class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
@@ -1116,7 +1117,7 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
         self.stats_csv_writer.stats_history_flush()
         gevent.kill(greenlet)
 
-        response = requests.get("http://127.0.0.1:%i/stats/requests_full_history/csv" % self.web_port)
+        response = niquests.get("http://127.0.0.1:%i/stats/requests_full_history/csv" % self.web_port)
         self.assertEqual(200, response.status_code)
         self._check_csv_headers(response.headers, "requests_full_history")
         self.assertIn("Content-Length", response.headers)

@@ -7,7 +7,7 @@ from operator import itemgetter
 
 import gevent
 from unittest import mock
-import requests
+import niquests
 from gevent import sleep
 from gevent.pool import Group
 from gevent.queue import Queue
@@ -644,7 +644,7 @@ class TestLocustRunner(LocustRunnerTestCase):
         gevent.sleep(0.1)
 
         ts = time.perf_counter()
-        response = requests.post(
+        response = niquests.post(
             f"http://127.0.0.1:{web_ui.server.server_port}/swarm",
             data={"user_count": 20, "spawn_rate": 5, "host": "https://localhost"},
         )
@@ -682,7 +682,7 @@ class TestLocustRunner(LocustRunnerTestCase):
         gevent.sleep(0.1)
 
         ts = time.perf_counter()
-        response = requests.post(
+        response = niquests.post(
             f"http://127.0.0.1:{web_ui.server.server_port}/swarm",
             data={"user_count": 20, "spawn_rate": 1, "host": "https://localhost"},
         )
@@ -695,7 +695,7 @@ class TestLocustRunner(LocustRunnerTestCase):
         self.assertLessEqual(local_runner.user_count, 10)
 
         ts = time.perf_counter()
-        response = requests.get(
+        response = niquests.get(
             f"http://127.0.0.1:{web_ui.server.server_port}/stop",
         )
         self.assertEqual(200, response.status_code)
@@ -789,7 +789,7 @@ class TestLocustRunner(LocustRunnerTestCase):
 
         gevent.sleep(0.1)
 
-        response = requests.post(
+        response = niquests.post(
             f"http://127.0.0.1:{web_ui.server.server_port}/swarm",
             data={"user_count": 20, "spawn_rate": 20, "host": "https://localhost"},
         )
@@ -800,7 +800,7 @@ class TestLocustRunner(LocustRunnerTestCase):
             self.assertTrue(time.perf_counter() - t0 <= 1, local_runner.user_count)
             gevent.sleep(0.1)
 
-        response = requests.get(
+        response = niquests.get(
             f"http://127.0.0.1:{web_ui.server.server_port}/stop",
         )
         self.assertEqual(200, response.status_code)
@@ -811,7 +811,7 @@ class TestLocustRunner(LocustRunnerTestCase):
             gevent.sleep(0.1)
 
         t0 = time.perf_counter()
-        response = requests.post(
+        response = niquests.post(
             f"http://127.0.0.1:{web_ui.server.server_port}/swarm",
             data={"user_count": 1, "spawn_rate": 1, "host": "https://localhost"},
         )
@@ -1830,7 +1830,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertEqual(len(master.clients.ready), len(workers))
 
             ts = time.perf_counter()
-            response = requests.post(
+            response = niquests.post(
                 f"http://127.0.0.1:{web_ui.server.server_port}/swarm",
                 data={"user_count": 20, "spawn_rate": 5, "host": "https://localhost"},
             )
@@ -1879,7 +1879,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertEqual(len(master.clients.ready), len(workers))
 
             ts = time.perf_counter()
-            response = requests.post(
+            response = niquests.post(
                 f"http://127.0.0.1:{web_ui.server.server_port}/swarm",
                 data={"user_count": 20, "spawn_rate": 1, "host": "https://localhost"},
             )
@@ -1892,7 +1892,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertLessEqual(master.user_count, 10)
 
             ts = time.perf_counter()
-            response = requests.get(
+            response = niquests.get(
                 f"http://127.0.0.1:{web_ui.server.server_port}/stop",
             )
             self.assertEqual(200, response.status_code)

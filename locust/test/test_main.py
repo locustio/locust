@@ -13,7 +13,7 @@ from unittest import TestCase
 from subprocess import PIPE, STDOUT, DEVNULL
 
 import gevent
-import requests
+import niquests
 
 from .mock_locustfile import mock_locustfile, MOCK_LOCUSTFILE_CONTENT
 from .util import temporary_file, get_free_tcp_port, patch_env
@@ -98,7 +98,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
             gevent.sleep(1)
 
-        requests.post(
+        niquests.post(
             "http://127.0.0.1:%i/swarm" % port,
             data={"user_count": 1, "spawn_rate": 1, "host": "https://localhost", "custom_string_arg": "web_form_value"},
         )
@@ -220,7 +220,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 ["locust", "-f", file_path, "--web-port", str(port), "--autostart"], stdout=PIPE, stderr=PIPE, text=True
             )
             gevent.sleep(1)
-            response = requests.get(f"http://localhost:{port}/")
+            response = niquests.get(f"http://localhost:{port}/")
             self.assertEqual(200, response.status_code)
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
@@ -562,7 +562,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
             gevent.sleep(1.9)
             try:
-                response = requests.get(f"http://0.0.0.0:{port}/")
+                response = niquests.get(f"http://0.0.0.0:{port}/")
             except Exception:
                 pass
             self.assertEqual(200, response.status_code)
@@ -598,7 +598,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
             gevent.sleep(1.9)
             try:
-                response = requests.get(f"http://0.0.0.0:{port}/")
+                response = niquests.get(f"http://0.0.0.0:{port}/")
             except Exception:
                 pass
             _, stderr = proc.communicate(timeout=2)
@@ -684,7 +684,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 text=True,
             )
             gevent.sleep(1.9)
-            response = requests.get(f"http://0.0.0.0:{port}/")
+            response = niquests.get(f"http://0.0.0.0:{port}/")
             try:
                 success = True
                 _, stderr = proc.communicate(timeout=5)
@@ -751,7 +751,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     text=True,
                 )
                 gevent.sleep(1.9)
-                response = requests.get(f"http://0.0.0.0:{port}/")
+                response = niquests.get(f"http://0.0.0.0:{port}/")
                 try:
                     success = True
                     _, stderr = proc.communicate(timeout=5)
@@ -783,7 +783,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=PIPE,
             )
             gevent.sleep(1)
-            self.assertEqual(200, requests.get("http://%s:%i/" % (interface, port), timeout=1).status_code)
+            self.assertEqual(200, niquests.get("http://%s:%i/" % (interface, port), timeout=1).status_code)
             proc.terminate()
 
         with mock_locustfile() as mocked:
@@ -801,7 +801,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=PIPE,
             )
             gevent.sleep(1)
-            self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % port, timeout=1).status_code)
+            self.assertEqual(200, niquests.get("http://127.0.0.1:%i/" % port, timeout=1).status_code)
             proc.terminate()
 
     def test_input(self):

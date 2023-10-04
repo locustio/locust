@@ -12,7 +12,7 @@ dependencies = [
     "gevent >=20.12.1",
     "flask >=2.0.0",
     "Werkzeug >=2.0.0",
-    "requests >=2.23.0",
+    "niquests >=3.0.0",
     "msgpack >=0.6.2",
     "pyzmq >=22.2.1, !=23.0.0",
     "geventhttpclient >=2.0.2",

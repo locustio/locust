@@ -68,7 +68,7 @@ class Events:
     :param name: Path to the URL that was called (or override name if it was used in the call to the client)
     :param response_time: Time in milliseconds until exception was thrown
     :param response_length: Content-length of the response
-    :param response: Response object (e.g. a :py:class:`requests.Response`)
+    :param response: Response object (e.g. a :py:class:`niquests.Response`)
     :param context: :ref:`User/request context <request_context>`
     :param exception: Exception instance that was thrown. None if request was successful.
     """

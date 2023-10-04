@@ -227,7 +227,7 @@ class HttpUser(User):
     the :py:attr:`tasks attribute <locust.User.tasks>`.
 
     This class creates a *client* attribute on instantiation which is an HTTP client with support
-    for keeping a user session between requests.
+    for keeping a user session between niquests.
     """
 
     abstract = True
@@ -251,6 +251,6 @@ class HttpUser(User):
         )
         """
         Instance of HttpSession that is created upon instantiation of Locust.
-        The client supports cookies, and therefore keeps the session between HTTP requests.
+        The client supports cookies, and therefore keeps the session between HTTP niquests.
         """
         self.client.trust_env = False
