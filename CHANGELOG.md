@@ -1,7 +1,32 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
-## [2.16.1](https://github.com/locustio/locust/tree/2.16.1) (2023-08-05)
+## [2.17.0](https://github.com/locustio/locust/tree/2.17.0) (2023-10-05)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.16.1...2.17.0)
+
+**Fixed bugs:**
+
+- report generate takes a long time  [\#2406](https://github.com/locustio/locust/issues/2406)
+- Cannot stop locust in case of exceptions in on\_stop\(\) [\#2401](https://github.com/locustio/locust/issues/2401)
+- Web UI stuck on "STOPPING" \(resubmit\) [\#2400](https://github.com/locustio/locust/issues/2400)
+
+**Closed issues:**
+
+- Dropdown menu in web UI for custom arguments [\#2371](https://github.com/locustio/locust/issues/2371)
+
+**Merged pull requests:**
+
+- Test and explicitly support Python 3.12 [\#2411](https://github.com/locustio/locust/pull/2411) ([cyberw](https://github.com/cyberw))
+- Improve performance for statistics handling [\#2410](https://github.com/locustio/locust/pull/2410) ([cyberw](https://github.com/cyberw))
+- Log a deprecation warning in Python 3.7 [\#2403](https://github.com/locustio/locust/pull/2403) ([cyberw](https://github.com/cyberw))
+- Catch exceptions in on\_stop [\#2402](https://github.com/locustio/locust/pull/2402) ([cyberw](https://github.com/cyberw))
+- Allow LoadShapes to reuse run-time, spawn-rate and users parameters [\#2395](https://github.com/locustio/locust/pull/2395) ([noirbizarre](https://github.com/noirbizarre))
+- Support user abstract load shape base classes [\#2393](https://github.com/locustio/locust/pull/2393) ([noirbizarre](https://github.com/noirbizarre))
+- chore: bump dockerfile to 3.11-slim base image [\#2388](https://github.com/locustio/locust/pull/2388) ([vejmoj1](https://github.com/vejmoj1))
+- Respect hard limit when setting open file limit \(NOFILE\) [\#2386](https://github.com/locustio/locust/pull/2386) ([benofbrown](https://github.com/benofbrown))
+
+## [2.16.1](https://github.com/locustio/locust/tree/2.16.1) (2023-08-07)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.16.0...2.16.1)
 
