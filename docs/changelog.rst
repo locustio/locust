@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.17.0
+======
+* Support user abstract load shape base classes https://github.com/locustio/locust/pull/2393
+* Allow LoadShapes to reuse run-time, spawn-rate and users parameters https://github.com/locustio/locust/pull/2395
+* Improve performance for statistics handling https://github.com/locustio/locust/pull/2410
+* Test and explicitly support Python 3.12 https://github.com/locustio/locust/pull/2411
+
 2.16.1
 ======
 * Deprecate LOCUST_PLAYWRIGHT env var https://github.com/locustio/locust/pull/2378
