@@ -1,5 +1,5 @@
-sphinx==4.3.2
-sphinx-rtd-theme==0.5.2
+sphinx==6.2.1
+sphinx-rtd-theme==1.2.2
 readthedocs-sphinx-search==0.1.2
 Sphinx-Substitution-Extensions==2020.9.30.0
 recommonmark==0.5.0
