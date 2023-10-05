@@ -6,3 +6,6 @@ recommonmark==0.5.0
 commonmark==0.9.1
 pillow==10.0.0
 mock==1.0.1
+alabaster>=0.7,<0.8,!=0.7.5
+readthedocs-sphinx-ext<2.3
+jinja2<3.1.0
