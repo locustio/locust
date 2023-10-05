@@ -7,9 +7,7 @@ The most important changes can also be found in [the documentation](https://docs
 
 **Fixed bugs:**
 
-- report generate takes a long time  [\#2406](https://github.com/locustio/locust/issues/2406)
 - Cannot stop locust in case of exceptions in on\_stop\(\) [\#2401](https://github.com/locustio/locust/issues/2401)
-- Web UI stuck on "STOPPING" \(resubmit\) [\#2400](https://github.com/locustio/locust/issues/2400)
 
 **Closed issues:**
 
