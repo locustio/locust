@@ -14,10 +14,9 @@ const themeSlice = createSlice({
   name: 'theme',
   initialState,
   reducers: {
-    setIsDarkMode: (state, { payload }) => ({
-      ...state,
-      isDarkMode: payload,
-    }),
+    setIsDarkMode: (state, { payload }) => {
+      state.isDarkMode = payload;
+    },
   },
 });
 
