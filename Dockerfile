@@ -3,7 +3,7 @@ FROM node:18.0.0-alpine as webui-builder
 ADD locust/webui locust/webui
 ADD package.json .
 
-RUN yarn webui:install
+RUN yarn webui:install --production
 RUN yarn webui:build
 
 FROM python:3.11-slim as base
