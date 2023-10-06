@@ -65,14 +65,4 @@ export const objectToQueryString = (
 };
 
 export const queryStringToObject = (queryString: string) =>
-  queryString
-    .substring(1)
-    .split('&')
-    .reduce((query, param) => {
-      const [key, value] = param.split('=');
-
-      return {
-        ...query,
-        [key]: value,
-      };
-    }, {});
+  Object.fromEntries(new URLSearchParams(queryString).entries());
