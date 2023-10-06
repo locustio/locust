@@ -1,13 +1,13 @@
-import { objectToQueryString, queryStringToObject } from 'utils/string';
+import { queryStringToObject } from 'utils/string';
 
 export const pushQuery = (query: { [key: string]: string }) => {
-  const currentUrl = new URL(window.location.href);
+  const url = new URL(window.location.href);
 
-  const newUrl = `${currentUrl.origin}${currentUrl.pathname}${objectToQueryString(query, {
-    shouldTransformKeys: false,
-  })}`;
+  for (const [key, value] of Object.entries(query)) {
+    url.searchParams.set(key, value);
+  }
 
-  window.history.pushState({ path: newUrl }, '', newUrl);
+  window.history.pushState(null, '', url);
 };
 
 export const getUrlParams = (): { [key: string]: string } | null =>
