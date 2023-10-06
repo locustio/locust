@@ -10,7 +10,6 @@ import {
   ISwarmWorker,
   IExtendedStat,
 } from 'types/ui.types';
-import { lastElement } from 'utils/array';
 import { updateArraysAtProps } from 'utils/object';
 import { camelCaseKeys } from 'utils/string';
 
@@ -66,7 +65,7 @@ const uiSlice = createSlice({
         charts: {
           ...addSpaceToChartsBetweenTests(
             state.charts as ICharts,
-            payload.length ? lastElement<string[]>(payload) : (state.charts as ICharts).time[0],
+            payload.length ? payload.at(-1) : (state.charts as ICharts).time[0],
           ),
           markers: (state.charts as ICharts).markers
             ? [...((state.charts as ICharts).markers as string[]), payload]
