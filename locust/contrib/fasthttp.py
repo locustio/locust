@@ -22,6 +22,9 @@ from geventhttpclient.useragent import UserAgent, CompatRequest, CompatResponse,
 from geventhttpclient.response import HTTPConnectionClosed, HTTPSocketPoolResponse
 from geventhttpclient.header import Headers
 
+# borrow requests's content-type header parsing
+from requests.utils import get_encoding_from_headers
+
 from locust.user import User
 from locust.exception import LocustError, CatchResponseError, ResponseError
 from locust.env import Environment
@@ -460,7 +463,7 @@ class FastResponse(CompatResponse):
             if self.headers is None:
                 self.encoding = "utf-8"
             else:
-                self.encoding = self.headers.get("content-type", "").partition("charset=")[2] or "utf-8"
+                self.encoding = get_encoding_from_headers(self.headers)
         return str(self.content, self.encoding, errors="replace")
 
     @property

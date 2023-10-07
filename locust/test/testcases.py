@@ -149,6 +149,27 @@ def rest():
     return request.json
 
 
+@app.route("/content_type_missing_charset")
+def content_type_missing_charset():
+    resp = make_response("stuff")
+    resp.headers["Content-Type"] = "Content-Type: application/json;"
+    return resp
+
+
+@app.route("/content_type_regular")
+def content_type_regular():
+    resp = make_response("stuff")
+    resp.headers["Content-Type"] = "Content-Type: application/json; charset=utf-8;"
+    return resp
+
+
+@app.route("/content_type_with_extra_stuff")
+def content_type_with_extra_stuff():
+    resp = make_response("stuff")
+    resp.headers["Content-Type"] = "Content-Type: application/json; charset=utf-8; api-version=3.0"
+    return resp
+
+
 class LocustTestCase(unittest.TestCase):
     """
     Test case class that restores locust.events.EventHook listeners on tearDown, so that it is
