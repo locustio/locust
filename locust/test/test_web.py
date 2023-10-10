@@ -1103,35 +1103,19 @@ class TestModernWebUi(LocustTestCase, _HeaderCheckMixin):
         self.web_ui.stop()
         self.runner.quit()
 
-    def test_web_ui_reference_on_environment(self):
+    def test_index_with_modern_ui(self):
         self.assertEqual(self.web_ui, self.environment.web_ui)
 
-    def test_web_ui_no_runner(self):
-        env = Environment()
-        web_ui = WebUI(env, "127.0.0.1", 0)
-        gevent.sleep(0.01)
-        try:
-            response = requests.get("http://127.0.0.1:%i/" % web_ui.server.server_port)
-            self.assertEqual(500, response.status_code)
-            self.assertEqual("Error: Locust Environment does not have any runner", response.text)
-        finally:
-            web_ui.stop()
-
-    def test_index_with_modern_ui(self):
-        self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % self.web_port).status_code)
-
-    def test_index_uses_correct_template(self):
-        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
-
-        d = pq(response.content.decode("utf-8"))
-
-        self.assertTrue(d("#root"))
-
-    def test_index_with_spawn_options(self):
         html_to_option = {
             "num_users": ["-u", "100"],
             "spawn_rate": ["-r", "10.0"],
         }
+
+        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+        d = pq(response.content.decode("utf-8"))
+
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(d("#root"))
 
         for html_name_to_test in html_to_option.keys():
             # Test that setting each spawn option individually populates the corresponding field in the html, and none of the others
@@ -1143,3 +1127,14 @@ class TestModernWebUi(LocustTestCase, _HeaderCheckMixin):
             d = pq(response.content.decode("utf-8"))
 
             self.assertIn(f'"{html_name_to_test}": {html_to_option[html_name_to_test][1]}', str(d("script")))
+
+    def test_web_ui_no_runner(self):
+        env = Environment()
+        web_ui = WebUI(env, "127.0.0.1", 0)
+        gevent.sleep(0.01)
+        try:
+            response = requests.get("http://127.0.0.1:%i/" % web_ui.server.server_port)
+            self.assertEqual(500, response.status_code)
+            self.assertEqual("Error: Locust Environment does not have any runner", response.text)
+        finally:
+            web_ui.stop()
