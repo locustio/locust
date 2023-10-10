@@ -39,8 +39,8 @@ export default function useSwarmUi() {
       userCount,
     } = statsData;
 
-    if (state === SWARM_STATE.STOPPED) {
-      setSwarm({ state: SWARM_STATE.STOPPED });
+    if (state === SWARM_STATE.STOPPED || state === SWARM_STATE.SPAWNING) {
+      setSwarm({ state });
     }
 
     const time = new Date().toLocaleTimeString();
