@@ -4,6 +4,9 @@ test:
 build:
 	rm -f dist/* && python3 -m pip install --upgrade build && python3 -m build .
 
+frontend_build:
+	yarn webui:install && yarn webui:build
+
 release: build
 	twine upload dist/*
 

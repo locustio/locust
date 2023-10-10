@@ -1,3 +1,11 @@
+FROM node:18.0.0-alpine as webui-builder
+
+ADD locust/webui locust/webui
+ADD package.json .
+
+RUN yarn webui:install --production
+RUN yarn webui:build
+
 FROM python:3.11-slim as base
 
 FROM base as builder
@@ -11,6 +19,7 @@ RUN pip install /build/
 
 FROM base
 COPY --from=builder /opt/venv /opt/venv
+COPY --from=webui-builder locust/webui/dist locust/webui/dist
 ENV PATH="/opt/venv/bin:$PATH"
 # turn off python output buffering
 ENV PYTHONUNBUFFERED=1

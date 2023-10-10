@@ -48,6 +48,24 @@ jobs:
       - run: python -m pip install tox
       - run: python -m tox -e ${{ matrix.tox }}
 
+  lint_typecheck_webui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - uses: borales/actions-yarn@v3
+        with:
+          cmd: webui:install
+      - uses: borales/actions-yarn@v3
+        with:
+          cmd: webui:lint
+      - uses: borales/actions-yarn@v3
+        with:
+          cmd: webui:type-check
+
   verify_docker_build:
     name: Always - Docker verify, push to tag 'master' if on master
     runs-on: ubuntu-latest

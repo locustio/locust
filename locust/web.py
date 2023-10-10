@@ -12,7 +12,7 @@ from time import time
 from typing import TYPE_CHECKING, Optional, Any, Dict, List
 
 import gevent
-from flask import Flask, make_response, jsonify, render_template, request, send_file, Response
+from flask import Flask, make_response, jsonify, render_template, request, send_file, Response, send_from_directory
 from flask_basicauth import BasicAuth
 from gevent import pywsgi
 
@@ -81,6 +81,7 @@ class WebUI:
         stats_csv_writer: Optional[StatsCSV] = None,
         delayed_start=False,
         userclass_picker_is_active=False,
+        modern_ui=False,
     ):
         """
         Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
@@ -104,12 +105,15 @@ class WebUI:
         self.tls_cert = tls_cert
         self.tls_key = tls_key
         self.userclass_picker_is_active = userclass_picker_is_active
+        self.modern_ui = modern_ui
         app = Flask(__name__)
         CORS(app)
         self.app = app
         app.jinja_env.add_extension("jinja2.ext.do")
         app.debug = True
-        app.root_path = os.path.dirname(os.path.abspath(__file__))
+        root_path = os.path.dirname(os.path.abspath(__file__))
+        app.root_path = root_path
+        self.webui_build_path = f"{root_path}/webui/dist"
         self.app.config["BASIC_AUTH_ENABLED"] = False
         self.auth: Optional[BasicAuth] = None
         self.greenlet: Optional[gevent.Greenlet] = None
@@ -133,12 +137,23 @@ class WebUI:
         if not delayed_start:
             self.start()
 
+        @app.route("/assets/<path:path>")
+        def send_assets(path):
+            webui_build_path = self.webui_build_path
+
+            return send_from_directory(f"{webui_build_path}/assets", path)
+
         @app.route("/")
         @self.auth_required_if_enabled
         def index() -> str | Response:
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             self.update_template_args()
+
+            if self.modern_ui:
+                self.set_static_modern_ui()
+
+                return render_template("index.html", template_args=self.template_args)
             return render_template("index.html", **self.template_args)
 
         @app.route("/swarm", methods=["POST"])
@@ -506,6 +521,11 @@ class WebUI:
 
         return wrapper
 
+    def set_static_modern_ui(self):
+        self.app.template_folder = self.webui_build_path
+        self.app.static_folder = f"{self.webui_build_path}/assets/"
+        self.app.static_url_path = "/assets/"
+
     def update_template_args(self):
         override_host_warning = False
         if self.environment.host:
@@ -560,6 +580,7 @@ class WebUI:
             "stats_history_enabled": options and options.stats_history_enabled,
             "tasks": dumps({}),
             "extra_options": extra_options,
+            "run_time": options and options.run_time,
             "show_userclass_picker": self.userclass_picker_is_active,
             "available_user_classes": available_user_classes,
             "available_shape_classes": available_shape_classes,

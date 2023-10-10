@@ -80,6 +80,7 @@ exclude = [
 locust = ["py.typed"]
 "locust.static" = ["**/*"]
 "locust.templates" = ["**/*"]
+"locust.webui.dist" = ["**/*"]
 
 [project.scripts]
 locust = "locust.main:main"
@@ -95,4 +96,3 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["locust.dispatch"]
 no_strict_optional = true
-

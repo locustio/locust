@@ -317,6 +317,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                 stats_csv_writer=stats_csv_writer,
                 delayed_start=True,
                 userclass_picker_is_active=options.class_picker,
+                modern_ui=options.modern_ui,
             )
         except AuthCredentialsError:
             logger.error("Credentials supplied with --web-auth should have the format: username:password")

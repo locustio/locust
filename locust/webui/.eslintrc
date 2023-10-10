@@ -1,0 +1,37 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "extends": ["plugin:@typescript-eslint/recommended"],
+  "plugins": ["react", "react-hooks", "@typescript-eslint", "prettier", "unused-imports", "import"],
+  "rules": {
+    "react/display-name": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "no-console": "error",
+    "react/jsx-sort-props": 2,
+    "react/sort-prop-types": 2,
+    "import/order": [
+      "error",
+      {
+        "groups": ["external", "internal"],
+        "newlines-between": "always",
+        "alphabetize": { "order": "asc", "caseInsensitive": true },
+        "pathGroups": [
+          {
+            "pattern": "react",
+            "group": "external",
+            "position": "before"
+          },
+          {
+            "pattern": "App",
+            "group": "internal"
+          },
+          {
+            "pattern": "{api,components,constants,hooks,redux,styles,types,utils}/**",
+            "group": "internal"
+          }
+        ],
+        "distinctGroup": false,
+        "pathGroupsExcludedImportTypes": ["internal"]
+      }
+    ]
+  }
+}

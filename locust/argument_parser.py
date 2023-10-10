@@ -2,8 +2,7 @@ import os
 import platform
 import sys
 import textwrap
-from typing import Dict, List, NamedTuple, Optional
-
+from typing import Dict, List, NamedTuple, Optional, Any
 import configargparse
 
 import locust
@@ -359,6 +358,13 @@ def setup_parser_arguments(parser):
         help="Enable select boxes in the web interface to choose from all available User classes and Shape classes",
         env_var="LOCUST_USERCLASS_PICKER",
     )
+    web_ui_group.add_argument(
+        "--modern-ui",
+        default=False,
+        action="store_true",
+        help="*Experimental* enable using a modern React frontend as the Web UI",
+        env_var="LOCUST_MODERN_UI",
+    )
 
     master_group = parser.add_argument_group(
         "Master options",
@@ -622,7 +628,7 @@ class UIExtraArgOptions(NamedTuple):
     choices: Optional[List[str]] = None
 
 
-def ui_extra_args_dict(args=None) -> Dict[str, UIExtraArgOptions]:
+def ui_extra_args_dict(args=None) -> Dict[str, Dict[str, Any]]:
     """Get all the UI visible arguments"""
     locust_args = default_args_dict()
 
@@ -635,7 +641,7 @@ def ui_extra_args_dict(args=None) -> Dict[str, UIExtraArgOptions]:
             is_secret=k in parser.secret_args_included_in_web_ui,
             help_text=parser.args_included_in_web_ui[k].help,
             choices=parser.args_included_in_web_ui[k].choices,
-        )
+        )._asdict()
         for k, v in all_args.items()
         if k not in locust_args and k in parser.args_included_in_web_ui
     }

@@ -58,6 +58,14 @@ The following screenshots show what it might look like when running this test us
 
     If you need some help digging into server side problems, or you're having trouble generating enough load to saturate your system, have a look at the `Locust FAQ  <https://github.com/locustio/locust/wiki/FAQ#increase-my-request-raterps>`_.
 
+There is now a modern version of the Web UI available! Try it out by setting the ``--modern-ui`` flag.
+
+.. image:: images/modern-webui-splash-screenshot.png
+
+.. note::
+
+    This feature is experimental and you may experience breaking changes.
+
 Direct command line usage / headless
 ====================================
 
@@ -89,7 +97,7 @@ To run Locust distributed across multiple Python processes or machines, you star
 with the ``--master`` command line parameter, and then any number of Locust worker processes using the ``--worker``
 command line parameter. See :ref:`running-distributed` for more info.
 
-To see all available options type: ``locust --help`` or check :ref:`configuration`.
+To see all available options type: ```locust --help`` or check :ref:`configuration`.
 
 Next steps
 ==========

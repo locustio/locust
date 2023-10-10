@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/assets/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+
+    <title>Locust</title>
+    <script type="module" crossorigin src="/assets/index-0c9ff576.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-87854ba9.js">
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script>
+      window.templateArgs = {{ template_args|tojson }}
+      // The server sets timestamps in UTC
+      // We need to convert these timestamps to locale time
+      window.templateArgs.history =
+        window.templateArgs.history.length ? window.templateArgs.history.map(({ time: serverTime, ...history }) => ({
+          ...history,
+          time: new Date(new Date().setUTCHours(...(serverTime.split(":")))).toLocaleTimeString()
+        })) : []
+    </script>
+    
+  </body>
+</html>
