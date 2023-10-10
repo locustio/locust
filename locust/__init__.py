@@ -42,6 +42,7 @@ __all__ = (
     "constant_throughput",
     "events",
     "LoadTestShape",
+    "run_single_user",
 )
 
 # Used for raising a DeprecationWarning if old Locust/HttpLocust is used
