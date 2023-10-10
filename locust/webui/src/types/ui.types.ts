@@ -32,6 +32,10 @@ export interface ISwarmException {
   traceback: string;
 }
 
+export interface ISwarmExceptionsResponse {
+  exceptions: ISwarmException[];
+}
+
 export interface ISwarmWorker {
   cpuUsage: number;
   id: string;

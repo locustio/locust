@@ -1,5 +1,6 @@
 import { combineReducers, PayloadAction } from '@reduxjs/toolkit';
 
+import { api } from 'redux/api/swarm';
 import swarm, { ISwarmState, SwarmAction } from 'redux/slice/swarm.slice';
 import theme, { IThemeState, ThemeAction } from 'redux/slice/theme.slice';
 import ui, { IUiState, UiAction } from 'redux/slice/ui.slice';
@@ -14,6 +15,6 @@ export interface IRootState {
 
 export type Action = SwarmAction | ThemeAction | UiAction | UrlAction | PayloadAction<undefined>;
 
-const rootReducer = combineReducers({ swarm, theme, ui, url });
+const rootReducer = combineReducers({ [api.reducerPath]: api.reducer, swarm, theme, ui, url });
 
 export default rootReducer;

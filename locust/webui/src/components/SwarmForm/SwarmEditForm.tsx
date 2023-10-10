@@ -1,8 +1,8 @@
 import { Box, Button, Container, TextField, Typography } from '@mui/material';
 import { connect } from 'react-redux';
 
-import { asyncRequest, REQUEST_METHODS } from 'api/asyncRequest';
 import Form from 'components/Form/Form';
+import { useStartSwarmMutation } from 'redux/api/swarm';
 import { ISwarmState } from 'redux/slice/swarm.slice';
 import { IRootState } from 'redux/store';
 
@@ -13,13 +13,11 @@ interface ISwarmForm extends ISwarmFormInput {
 }
 
 function SwarmEditForm({ onSubmit, spawnRate, userCount }: ISwarmForm) {
+  const [startSwarm] = useStartSwarmMutation();
+
   const onEditSwarm = (inputData: ISwarmFormInput) => {
     onSubmit();
-    asyncRequest('swarm', {
-      method: REQUEST_METHODS.POST,
-      body: inputData,
-      form: true,
-    });
+    startSwarm(inputData);
   };
 
   return (

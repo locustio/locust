@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { asyncRequest } from 'api/asyncRequest';
 import { SWARM_STATE } from 'constants/swarm';
-import useAsync from 'hooks/useAsync';
 import useInterval from 'hooks/useInterval';
+import { useGetExceptionsQuery, useGetStatsQuery, useGetTasksQuery } from 'redux/api/swarm';
 import { useAction, useSelector } from 'redux/hooks';
 import { swarmActions } from 'redux/slice/swarm.slice';
 import { uiActions } from 'redux/slice/ui.slice';
-import { IStatsResponse, ISwarmException, ISwarmRatios } from 'types/ui.types';
 import { roundToDecimalPlaces } from 'utils/number';
 
 export default function useSwarmUi() {
@@ -19,7 +17,15 @@ export default function useSwarmUi() {
   const previousSwarmState = useRef(swarm.state);
   const [shouldAddMarker, setShouldAddMarker] = useState(false);
 
-  const { execute: updateStats } = useAsync(async () => {
+  const { data: statsData, refetch: refetchStats } = useGetStatsQuery();
+  const { data: tasksData, refetch: refetchTasks } = useGetTasksQuery();
+  const { data: exceptionsData, refetch: refetchExceptions } = useGetExceptionsQuery();
+
+  useEffect(() => {
+    if (!statsData) {
+      return;
+    }
+
     const {
       extendedStats,
       state,
@@ -31,7 +37,7 @@ export default function useSwarmUi() {
       currentResponseTimePercentile1,
       currentResponseTimePercentile2,
       userCount,
-    } = (await asyncRequest('stats/requests')) as IStatsResponse;
+    } = statsData;
 
     if (state === SWARM_STATE.STOPPED) {
       setSwarm({ state: SWARM_STATE.STOPPED });
@@ -66,23 +72,23 @@ export default function useSwarmUi() {
       userCount,
     });
     updateCharts(newChartEntry);
-  });
+  }, [statsData]);
 
-  const { execute: getTasks } = useAsync(async () => {
-    const ratios = (await asyncRequest('tasks')) as ISwarmRatios;
+  useEffect(() => {
+    if (tasksData) {
+      setUi({ ratios: tasksData });
+    }
+  }, [tasksData]);
 
-    setUi({ ratios });
-  });
+  useEffect(() => {
+    if (exceptionsData) {
+      setUi({ exceptions: exceptionsData.exceptions });
+    }
+  }, [exceptionsData]);
 
-  const { execute: getExceptions } = useAsync(async () => {
-    const { exceptions } = (await asyncRequest('exceptions')) as { exceptions: ISwarmException[] };
-
-    setUi({ exceptions });
-  });
-
-  useInterval(updateStats, 2000, { shouldRunInterval: swarm.state !== SWARM_STATE.STOPPED });
-  useInterval(getTasks, 5000, { shouldRunInterval: swarm.state !== SWARM_STATE.STOPPED });
-  useInterval(getExceptions, 5000, { shouldRunInterval: swarm.state !== SWARM_STATE.STOPPED });
+  useInterval(refetchStats, 2000, { shouldRunInterval: swarm.state !== SWARM_STATE.STOPPED });
+  useInterval(refetchTasks, 5000, { shouldRunInterval: swarm.state !== SWARM_STATE.STOPPED });
+  useInterval(refetchExceptions, 5000, { shouldRunInterval: swarm.state !== SWARM_STATE.STOPPED });
 
   useEffect(() => {
     if (swarm.state === SWARM_STATE.RUNNING && previousSwarmState.current === SWARM_STATE.STOPPED) {
@@ -91,10 +97,4 @@ export default function useSwarmUi() {
 
     previousSwarmState.current = swarm.state;
   }, [swarm.state, previousSwarmState]);
-
-  useEffect(() => {
-    // Handle showing test history on first load
-    updateStats();
-    getTasks();
-  }, []);
 }

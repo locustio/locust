@@ -11,11 +11,11 @@ import {
 } from '@mui/material';
 import { connect } from 'react-redux';
 
-import { asyncRequest, REQUEST_METHODS } from 'api/asyncRequest';
 import Form from 'components/Form/Form';
 import Select from 'components/Form/Select';
 import CustomParameters from 'components/SwarmForm/SwarmCustomParmeters';
 import { SWARM_STATE } from 'constants/swarm';
+import { useStartSwarmMutation } from 'redux/api/swarm';
 import { swarmActions, ISwarmState } from 'redux/slice/swarm.slice';
 import { IRootState } from 'redux/store';
 import { isEmpty } from 'utils/object';
@@ -59,14 +59,12 @@ function SwarmForm({
   showUserclassPicker,
   spawnRate,
 }: ISwarmForm) {
+  const [startSwarm] = useStartSwarmMutation();
+
   const onStartSwarm = (inputData: ISwarmFormInput) => {
     setSwarm({ state: SWARM_STATE.RUNNING });
 
-    asyncRequest('swarm', {
-      method: REQUEST_METHODS.POST,
-      body: inputData,
-      form: true,
-    });
+    startSwarm(inputData);
   };
 
   return (

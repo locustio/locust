@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@mui/material';
 
-import { asyncRequest } from 'api/asyncRequest';
-
 export default function StopButton() {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -11,7 +9,7 @@ export default function StopButton() {
   }, []);
 
   const onStopButtonClick = () => {
-    asyncRequest('stop');
+    fetch('stop');
     setIsLoading(true);
   };
 
