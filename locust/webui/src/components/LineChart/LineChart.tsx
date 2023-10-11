@@ -8,10 +8,8 @@ import {
   TooltipComponentFormatterCallbackParams,
   DefaultLabelFormatterCallbackParams,
 } from 'echarts';
-import { connect } from 'react-redux';
 
 import { IUiState } from 'redux/slice/ui.slice';
-import { IRootState } from 'redux/store';
 import { ICharts } from 'types/ui.types';
 
 interface ILine {
@@ -151,7 +149,7 @@ registerTheme('locust', {
   },
 });
 
-function LineChart({ charts, title, lines }: ILineChart) {
+export default function LineChart({ charts, title, lines }: ILineChart) {
   const [chart, setChart] = useState<ECharts | null>(null);
 
   const chartContainer = useRef<HTMLDivElement | null>(null);
@@ -188,7 +186,3 @@ function LineChart({ charts, title, lines }: ILineChart) {
 
   return <div ref={chartContainer} style={{ width: '100%', height: '300px' }}></div>;
 }
-
-const storeConnector = ({ ui: { charts } }: IRootState) => ({ charts });
-
-export default connect(storeConnector)(LineChart);

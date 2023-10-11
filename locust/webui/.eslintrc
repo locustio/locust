@@ -25,6 +25,10 @@
             "group": "internal"
           },
           {
+            "pattern": "Report",
+            "group": "internal"
+          },
+          {
             "pattern": "{api,components,constants,hooks,redux,styles,types,utils}/**",
             "group": "internal"
           }

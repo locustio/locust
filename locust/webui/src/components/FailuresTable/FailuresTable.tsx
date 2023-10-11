@@ -11,7 +11,7 @@ const tableStructure = [
   { key: 'error', title: 'Message', markdown: true },
 ];
 
-function FailuresTable({ errors }: { errors: ISwarmError[] }) {
+export function FailuresTable({ errors }: { errors: ISwarmError[] }) {
   return <Table<ISwarmError> rows={errors} structure={tableStructure} />;
 }
 

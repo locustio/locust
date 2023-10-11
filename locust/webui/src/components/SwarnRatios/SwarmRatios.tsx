@@ -21,7 +21,7 @@ function NestedRatioList({ classRatio }: { classRatio: IClassRatio }) {
   );
 }
 
-function SwarmRatios({ ratios: { perClass, total } }: { ratios: IUiState['ratios'] }) {
+export function SwarmRatios({ ratios: { perClass, total } }: { ratios: IUiState['ratios'] }) {
   if (!perClass && !total) {
     return null;
   }

@@ -37,7 +37,7 @@ export interface ISwarmState {
 
 export type SwarmAction = PayloadAction<Partial<ISwarmState>>;
 
-const initialState: ISwarmState = camelCaseKeys(window.templateArgs);
+const initialState = camelCaseKeys(window.templateArgs) as ISwarmState;
 
 const swarmSlice = createSlice({
   name: 'swarm',
