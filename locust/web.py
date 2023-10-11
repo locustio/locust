@@ -110,9 +110,9 @@ class WebUI:
         self.app = app
         app.jinja_env.add_extension("jinja2.ext.do")
         app.debug = True
-        root_path = os.path.dirname(os.path.abspath(__file__))
-        app.root_path = root_path
-        self.webui_build_path = f"{root_path}/webui/dist"
+        self.root_path = os.path.dirname(os.path.abspath(__file__))
+        app.root_path = self.root_path
+        self.webui_build_path = f"{self.root_path}/webui/dist"
         self.app.config["BASIC_AUTH_ENABLED"] = False
         self.auth: Optional[BasicAuth] = None
         self.greenlet: Optional[gevent.Greenlet] = None
@@ -277,7 +277,20 @@ class WebUI:
         @app.route("/stats/report")
         @self.auth_required_if_enabled
         def stats_report() -> Response:
-            res = get_html_report(self.environment, show_download_link=not request.args.get("download"))
+            if self.modern_ui:
+                self.set_static_modern_ui()
+                static_path = f"{self.webui_build_path}/assets"
+            else:
+                static_path = f"{self.root_path}/static"
+
+            theme = request.args.get("theme", "")
+            res = get_html_report(
+                self.environment,
+                static_path=static_path,
+                show_download_link=not request.args.get("download"),
+                use_modern_ui=self.modern_ui,
+                theme=theme,
+            )
             if request.args.get("download"):
                 res = app.make_response(res)
                 res.headers["Content-Disposition"] = f"attachment;filename=report_{time()}.html"

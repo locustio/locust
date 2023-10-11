@@ -1,5 +1,6 @@
 from jinja2 import Environment, FileSystemLoader
 import os
+import glob
 import pathlib
 import datetime
 from itertools import chain
@@ -9,6 +10,10 @@ from .user.inspectuser import get_ratio
 from html import escape
 from json import dumps
 from .runners import MasterRunner, STATE_STOPPED, STATE_STOPPING
+from flask import render_template as flask_render_template
+
+
+PERCENTILES_FOR_HTML_REPORT = [0.50, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1.0]
 
 
 def render_template(file, **kwargs):
@@ -18,7 +23,13 @@ def render_template(file, **kwargs):
     return template.render(**kwargs)
 
 
-def get_html_report(environment, show_download_link=True):
+def get_html_report(
+    environment,
+    static_path=os.path.join(os.path.dirname(__file__), "static"),
+    show_download_link=True,
+    use_modern_ui=False,
+    theme="",
+):
     stats = environment.runner.stats
 
     start_ts = stats.start_time
@@ -47,22 +58,27 @@ def get_html_report(environment, show_download_link=True):
     history = stats.history
 
     static_js = []
-    js_files = ["jquery-1.11.3.min.js", "echarts.common.min.js", "vintage.js", "chart.js", "tasks.js"]
+    if use_modern_ui:
+        js_files = [os.path.basename(filepath) for filepath in glob.glob(os.path.join(static_path, "*.js"))]
+    else:
+        js_files = ["jquery-1.11.3.min.js", "echarts.common.min.js", "vintage.js", "chart.js", "tasks.js"]
+
     for js_file in js_files:
-        path = os.path.join(os.path.dirname(__file__), "static", js_file)
-        static_js.append("// " + js_file)
+        path = os.path.join(static_path, js_file)
+        static_js.append("// " + js_file + "\n")
         with open(path, encoding="utf8") as f:
             static_js.append(f.read())
         static_js.extend(["", ""])
 
-    static_css = []
-    css_files = ["tables.css"]
-    for css_file in css_files:
-        path = os.path.join(os.path.dirname(__file__), "static", "css", css_file)
-        static_css.append("/* " + css_file + " */")
-        with open(path, encoding="utf8") as f:
-            static_css.append(f.read())
-        static_css.extend(["", ""])
+    if not use_modern_ui:
+        static_css = []
+        css_files = ["tables.css"]
+        for css_file in css_files:
+            path = os.path.join(static_path, "css", css_file)
+            static_css.append("/* " + css_file + " */")
+            with open(path, encoding="utf8") as f:
+                static_css.append(f.read())
+            static_css.extend(["", ""])
 
     is_distributed = isinstance(environment.runner, MasterRunner)
     user_spawned = (
@@ -77,26 +93,59 @@ def get_html_report(environment, show_download_link=True):
         "total": get_ratio(environment.user_classes, user_spawned, True),
     }
 
-    res = render_template(
-        "report.html",
-        int=int,
-        round=round,
-        escape=escape,
-        str=str,
-        requests_statistics=requests_statistics,
-        failures_statistics=failures_statistics,
-        exceptions_statistics=exceptions_statistics,
-        start_time=start_time,
-        end_time=end_time,
-        host=host,
-        history=history,
-        static_js="\n".join(static_js),
-        static_css="\n".join(static_css),
-        show_download_link=show_download_link,
-        locustfile=environment.locustfile,
-        tasks=dumps(task_data),
-        percentile1=stats_module.PERCENTILES_TO_CHART[0],
-        percentile2=stats_module.PERCENTILES_TO_CHART[1],
-    )
+    if use_modern_ui:
+        res = flask_render_template(
+            "report.html",
+            template_args={
+                "is_report": True,
+                "requests_statistics": [stat.to_dict(escape_string_values=True) for stat in requests_statistics],
+                "failures_statistics": [stat.to_dict() for stat in failures_statistics],
+                "exceptions_statistics": [stat for stat in exceptions_statistics],
+                "response_time_statistics": [
+                    {
+                        "name": escape(stat.name),
+                        "method": escape(stat.method),
+                        **{
+                            str(percentile): stat.get_response_time_percentile(percentile)
+                            for percentile in PERCENTILES_FOR_HTML_REPORT
+                        },
+                    }
+                    for stat in requests_statistics
+                ],
+                "start_time": start_time,
+                "end_time": end_time,
+                "host": escape(str(host)),
+                "history": history,
+                "show_download_link": show_download_link,
+                "locustfile": escape(str(environment.locustfile)),
+                "tasks": task_data,
+                "percentile1": stats_module.PERCENTILES_TO_CHART[0],
+                "percentile2": stats_module.PERCENTILES_TO_CHART[1],
+            },
+            theme=theme,
+            static_js="\n".join(static_js),
+        )
+    else:
+        res = render_template(
+            "report.html",
+            int=int,
+            round=round,
+            escape=escape,
+            str=str,
+            requests_statistics=requests_statistics,
+            failures_statistics=failures_statistics,
+            exceptions_statistics=exceptions_statistics,
+            start_time=start_time,
+            end_time=end_time,
+            host=host,
+            history=history,
+            static_js="\n".join(static_js),
+            static_css="\n".join(static_css),
+            show_download_link=show_download_link,
+            locustfile=environment.locustfile,
+            tasks=dumps(task_data),
+            percentile1=stats_module.PERCENTILES_TO_CHART[0],
+            percentile2=stats_module.PERCENTILES_TO_CHART[1],
+        )
 
     return res
