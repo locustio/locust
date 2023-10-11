@@ -24,7 +24,6 @@ from . import stats as stats_module, __version__ as version, argument_parser
 from .stats import StatsCSV
 from .user.inspectuser import get_ratio
 from .util.cache import memoize
-from .util.rounding import proper_round
 from .util.timespan import parse_timespan
 from .html import get_html_report
 from flask_cors import CORS
@@ -367,24 +366,7 @@ class WebUI:
                 return jsonify(report)
 
             for s in chain(sort_stats(environment.runner.stats.entries), [environment.runner.stats.total]):
-                stats.append(
-                    {
-                        "method": s.method,
-                        "name": s.name,
-                        "safe_name": escape(s.name, quote=False),
-                        "num_requests": s.num_requests,
-                        "num_failures": s.num_failures,
-                        "avg_response_time": s.avg_response_time,
-                        "min_response_time": 0 if s.min_response_time is None else proper_round(s.min_response_time),
-                        "max_response_time": proper_round(s.max_response_time),
-                        "current_rps": s.current_rps,
-                        "current_fail_per_sec": s.current_fail_per_sec,
-                        "median_response_time": s.median_response_time,
-                        "ninetieth_response_time": s.get_response_time_percentile(0.9),
-                        "ninety_ninth_response_time": s.get_response_time_percentile(0.99),
-                        "avg_content_length": s.avg_content_length,
-                    }
-                )
+                stats.append(s.to_dict())
 
             for e in environment.runner.errors.values():
                 err_dict = e.serialize()
