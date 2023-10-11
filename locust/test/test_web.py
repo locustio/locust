@@ -993,6 +993,18 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertRegex(response.text, re_spawn_rate)
         self.assertNotRegex(response.text, re_disabled_spawn_rate)
 
+    def test_html_stats_report(self):
+        self.environment.locustfile = "locust.py"
+        self.environment.host = "http://localhost"
+
+        response = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
+        self.assertEqual(200, response.status_code)
+
+        d = pq(response.content.decode("utf-8"))
+
+        self.assertIn("Script: <span>locust.py</span>", str(d))
+        self.assertIn("Target Host: <span>http://localhost</span>", str(d))
+
 
 class TestWebUIAuth(LocustTestCase):
     def setUp(self):
@@ -1133,7 +1145,7 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual("Aggregated", rows[3][3])
 
 
-class TestModernWebUi(LocustTestCase, _HeaderCheckMixin):
+class TestModernWebUI(LocustTestCase, _HeaderCheckMixin):
     def setUp(self):
         super().setUp()
 
@@ -1186,3 +1198,16 @@ class TestModernWebUi(LocustTestCase, _HeaderCheckMixin):
             self.assertEqual("Error: Locust Environment does not have any runner", response.text)
         finally:
             web_ui.stop()
+
+    def test_html_stats_report(self):
+        self.environment.locustfile = "locust.py"
+        self.environment.host = "http://localhost"
+
+        response = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
+        self.assertEqual(200, response.status_code)
+
+        d = pq(response.content.decode("utf-8"))
+
+        self.assertTrue(d("#root"))
+        self.assertIn('"locustfile": "locust.py"', str(d))
+        self.assertIn('"host": "http://localhost"', str(d))

@@ -689,7 +689,7 @@ class StatsEntry:
 
     def to_dict(self, escape_string_values=False):
         return {
-            "method": escape(self.method) if escape_string_values else self.method,
+            "method": escape(self.method or "") if escape_string_values else self.method,
             "name": escape(self.name) if escape_string_values else self.name,
             "safe_name": escape(self.name, quote=False),
             "num_requests": self.num_requests,

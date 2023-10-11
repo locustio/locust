@@ -104,7 +104,7 @@ def get_html_report(
                 "response_time_statistics": [
                     {
                         "name": escape(stat.name),
-                        "method": escape(stat.method),
+                        "method": escape(stat.method or ""),
                         **{
                             str(percentile): stat.get_response_time_percentile(percentile)
                             for percentile in PERCENTILES_FOR_HTML_REPORT
