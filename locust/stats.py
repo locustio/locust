@@ -765,6 +765,14 @@ class StatsError:
     def unserialize(cls, data: StatsErrorDict) -> "StatsError":
         return cls(data["method"], data["name"], data["error"], data["occurrences"])
 
+    def to_dict(self, escape_string_values=False):
+        return {
+            "method": escape(self.method),
+            "name": escape(self.name),
+            "error": escape(self.parse_error(self.error)),
+            "occurrences": self.occurrences,
+        }
+
 
 def avg(values: List[float | int]) -> float:
     return sum(values, 0.0) / max(len(values), 1)
