@@ -11,7 +11,7 @@ export default function Navbar() {
         <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Link
             color='inherit'
-            href='#'
+            href='/'
             sx={{ display: 'flex', alignItems: 'center', columnGap: 2 }}
             underline='none'
           >

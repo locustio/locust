@@ -9,10 +9,10 @@ const tableStructure = [
   { key: 'traceback', title: 'Traceback' },
 ];
 
-function FailuresTable({ exceptions }: { exceptions: ISwarmException[] }) {
+export function ExceptionsTable({ exceptions }: { exceptions: ISwarmException[] }) {
   return <Table<ISwarmException> rows={exceptions} structure={tableStructure} />;
 }
 
 const storeConnector = ({ ui: { exceptions } }: IRootState) => ({ exceptions });
 
-export default connect(storeConnector)(FailuresTable);
+export default connect(storeConnector)(ExceptionsTable);

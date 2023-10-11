@@ -32,6 +32,12 @@ export interface ISwarmException {
   traceback: string;
 }
 
+export interface IResponseTime {
+  method: string;
+  name: string;
+  [percentile: string]: string | number;
+}
+
 export interface ISwarmExceptionsResponse {
   exceptions: ISwarmException[];
 }

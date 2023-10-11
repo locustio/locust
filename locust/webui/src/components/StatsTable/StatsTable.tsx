@@ -20,7 +20,7 @@ const tableStructure = [
   { key: 'currentFailPerSec', title: 'Current Failures/s', round: 2 },
 ];
 
-function StatsTable({ stats }: { stats: ISwarmStat[] }) {
+export function StatsTable({ stats }: { stats: ISwarmStat[] }) {
   return <Table<ISwarmStat> rows={stats} structure={tableStructure} />;
 }
 
