@@ -21,7 +21,6 @@ dependencies = [
     "Flask-BasicAuth >=0.2.0",
     "Flask-Cors >=3.0.10",
     "roundrobin >=0.0.2",
-    "typing-extensions >=3.7.4.3", # This provides support for @final, @runtime_checkable, Protocol and TypedDict, and can probably be removed once we drop 3.7 support
     "pywin32;platform_system=='Windows'",
 ]
 classifiers = [
