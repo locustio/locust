@@ -29,15 +29,9 @@ from typing import (
     Any,
     cast,
     Callable,
+    TypedDict,
 )
 from uuid import uuid4
-
-# @TODO: typing.Protocol is in python >= 3.8
-try:
-    from typing import Protocol, TypedDict
-except ImportError:
-    from typing_extensions import Protocol, TypedDict  # type: ignore
-
 import gevent
 import greenlet
 import psutil
@@ -836,7 +830,7 @@ class MasterRunner(DistributedRunner):
 
         logger.info(f"{msg_prefix}: {_format_user_classes_count_for_log(self.reported_user_classes_count)}")
 
-    @functools.lru_cache()
+    @functools.lru_cache
     def _wait_for_workers_report_after_ramp_up(self) -> float:
         """
         The amount of time to wait after a ramp-up in order for all the workers to report their state
@@ -909,13 +903,11 @@ class MasterRunner(DistributedRunner):
             not self.state == STATE_INIT
             and not self.state == STATE_STOPPED
             and (
-                (
-                    self.state == STATE_STOPPING
-                    and all(
-                        map(
-                            lambda x: x.state == STATE_INIT,
-                            self.clients.all,
-                        )
+                self.state == STATE_STOPPING
+                and all(
+                    map(
+                        lambda x: x.state == STATE_INIT,
+                        self.clients.all,
                     )
                 )
             )

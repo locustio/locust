@@ -1,9 +1,8 @@
 from __future__ import annotations
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, final
 
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
-from typing_extensions import final
 from urllib3 import PoolManager
 
 from locust.clients import HttpSession
