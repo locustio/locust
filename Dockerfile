@@ -3,9 +3,7 @@ FROM node:18.0.0-alpine as webui-builder
 ADD locust/webui locust/webui
 ADD package.json .
 
-RUN yarn webui:install --production \
-    || yarn webui:install --production
-# Occasionally fails with 'An unexpected error occurred: "https://registry.yarnpkg.com/@mui/base/-/base-5.0.0-beta.16.tgz: ESOCKETTIMEDOUT".'
+RUN yarn webui:install --production --network-timeout 60000
 
 RUN yarn webui:build
 
