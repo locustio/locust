@@ -7,7 +7,7 @@ name = "locust"
 license = { text = "MIT"}
 description = "Developer friendly load testing framework"
 dynamic = ["version"]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = [
     "gevent >=20.12.1",
     "flask >=2.0.0",
@@ -21,7 +21,6 @@ dependencies = [
     "Flask-BasicAuth >=0.2.0",
     "Flask-Cors >=3.0.10",
     "roundrobin >=0.0.2",
-    "typing-extensions >=3.7.4.3", # This provides support for @final, @runtime_checkable, Protocol and TypedDict, and can probably be removed once we drop 3.7 support
     "pywin32;platform_system=='Windows'",
 ]
 classifiers = [
@@ -31,7 +30,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",

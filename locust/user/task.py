@@ -13,14 +13,10 @@ from typing import (
     overload,
     Dict,
     Set,
+    Protocol,
+    final,
+    runtime_checkable,
 )
-
-# @TODO: typing.Protocol and typing.final is in python >= 3.8
-try:
-    from typing import Protocol, final, runtime_checkable
-except ImportError:
-    from typing_extensions import Protocol, final, runtime_checkable  # type: ignore
-
 import gevent
 from gevent import GreenletExit
 
