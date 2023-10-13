@@ -285,12 +285,11 @@ class WebUI:
         @app.route("/stats/report")
         @self.auth_required_if_enabled
         def stats_report() -> Response:
-            theme = request.args.get("theme", "")
             res = get_html_report(
                 self.environment,
                 show_download_link=not request.args.get("download"),
                 use_modern_ui=self.modern_ui,
-                theme=theme,
+                **request.args.to_dict(),
             )
             if request.args.get("download"):
                 res = app.make_response(res)

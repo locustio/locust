@@ -21,12 +21,7 @@ def render_template(file, template_path, **kwargs):
     return template.render(**kwargs)
 
 
-def get_html_report(
-    environment,
-    show_download_link=True,
-    use_modern_ui=False,
-    theme="",
-):
+def get_html_report(environment, show_download_link=True, use_modern_ui=False, theme="", **kwargs):
     root_path = os.path.dirname(os.path.abspath(__file__))
     if use_modern_ui:
         static_path = os.path.join(root_path, "webui", "dist", "assets")
@@ -53,6 +48,8 @@ def get_html_report(
         all_hosts = {l.host for l in environment.runner.user_classes}
         if len(all_hosts) == 1:
             host = list(all_hosts)[0]
+        elif use_modern_ui:
+            host = list(all_hosts)
 
     requests_statistics = list(chain(sort_stats(stats.entries), [stats.total]))
     failures_statistics = sort_stats(stats.errors)
@@ -111,6 +108,7 @@ def get_html_report(
                     {
                         "name": escape(stat.name),
                         "method": escape(stat.method or ""),
+                        "host": escape(stat.host or ""),
                         **{
                             str(percentile): stat.get_response_time_percentile(percentile)
                             for percentile in PERCENTILES_FOR_HTML_REPORT
@@ -120,13 +118,17 @@ def get_html_report(
                 ],
                 "start_time": start_time,
                 "end_time": end_time,
-                "host": escape(str(host)),
+                "has_multiple_hosts": isinstance(host, list)
+                and len(host) > 1
+                and any(stat.host for stat in requests_statistics),
+                "host": escape(host) if isinstance(host, str) else [escape(h) for h in host],
                 "history": history,
                 "show_download_link": show_download_link,
                 "locustfile": escape(str(environment.locustfile)),
                 "tasks": task_data,
                 "percentile1": stats_module.PERCENTILES_TO_CHART[0],
                 "percentile2": stats_module.PERCENTILES_TO_CHART[1],
+                **kwargs,
             },
             theme=theme,
             static_js="\n".join(static_js),
