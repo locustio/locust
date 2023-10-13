@@ -20,7 +20,10 @@ export default function Report({
   startTime,
   endTime,
   charts,
+  hasMultipleHosts,
   host,
+  groupFailuresBy,
+  groupStatsBy,
   exceptionsStatistics,
   requestsStatistics,
   failuresStatistics,
@@ -55,9 +58,25 @@ export default function Report({
             </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', columnGap: 0.5 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              columnGap: 0.5,
+              flexDirection: Array.isArray(host) ? 'column' : 'row',
+            }}
+          >
             <Typography fontWeight={600}>Target Host:</Typography>
-            <Typography>{host || 'None'}</Typography>
+            {Array.isArray(host) ? (
+              <ul>
+                {host.map((h, index) => (
+                  <li key={`host-${index}`}>
+                    <Typography>{h}</Typography>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <Typography>{host || 'None'}</Typography>
+            )}
           </Box>
 
           <Box sx={{ display: 'flex', columnGap: 0.5 }}>
@@ -71,19 +90,32 @@ export default function Report({
             <Typography component='h2' mb={1} noWrap variant='h4'>
               Request Statistics
             </Typography>
-            <StatsTable stats={requestsStatistics} />
+            <StatsTable
+              canGroupBy={false}
+              groupBy={groupStatsBy}
+              hasMultipleHosts={hasMultipleHosts}
+              stats={requestsStatistics}
+            />
           </Box>
           <Box>
             <Typography component='h2' mb={1} noWrap variant='h4'>
               Response Time Statistics
             </Typography>
-            <ResponseTimeTable responseTimes={responseTimeStatistics} />
+            <ResponseTimeTable
+              hasMultipleHosts={hasMultipleHosts}
+              responseTimes={responseTimeStatistics}
+            />
           </Box>
           <Box>
             <Typography component='h2' mb={1} noWrap variant='h4'>
               Failures Statistics
             </Typography>
-            <FailuresTable errors={failuresStatistics} />
+            <FailuresTable
+              canGroupBy={false}
+              errors={failuresStatistics}
+              groupBy={groupFailuresBy}
+              hasMultipleHosts={hasMultipleHosts}
+            />
           </Box>
           {!!exceptionsStatistics.length && (
             <Box>

@@ -12,6 +12,7 @@ export interface ISwarmStat {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   minResponseTime: number;
   name: string;
+  host: string;
   ninetiethResponseTime: number;
   ninetyNinthResponseTime: number;
   numFailures: number;
@@ -22,6 +23,7 @@ export interface ISwarmStat {
 export interface ISwarmError {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   name: string;
+  host: string;
   occurrences: number;
 }
 
@@ -102,4 +104,12 @@ export interface IStatsResponse {
 
 export interface ILogsResponse {
   logs: string[];
+}
+
+export interface ITableState {
+  groupBy?: string;
+}
+
+export interface ITables {
+  [key: string]: ITableState;
 }

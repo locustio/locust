@@ -3,16 +3,21 @@ import { useMemo } from 'react';
 import Table from 'components/Table/Table';
 import { IResponseTime } from 'types/ui.types';
 
+interface IResponseTimeTable {
+  hasMultipleHosts: boolean;
+  responseTimes: IResponseTime[];
+}
+
 const tableStructure = [
   { key: 'method', title: 'Method' },
   { key: 'name', title: 'Name' },
 ];
 
-interface IResponseTimeTable {
-  responseTimes: IResponseTime[];
-}
+export default function ResponseTimeTable({
+  hasMultipleHosts,
 
-export default function ResponseTimeTable({ responseTimes }: IResponseTimeTable) {
+  responseTimes,
+}: IResponseTimeTable) {
   const percentileColumns = useMemo(
     () =>
       Object.keys(responseTimes[0])
@@ -21,5 +26,11 @@ export default function ResponseTimeTable({ responseTimes }: IResponseTimeTable)
     [responseTimes],
   );
 
-  return <Table rows={responseTimes} structure={[...tableStructure, ...percentileColumns]} />;
+  return (
+    <Table<IResponseTime>
+      groupOptions={hasMultipleHosts && ['host']}
+      rows={responseTimes}
+      structure={[...tableStructure, ...percentileColumns]}
+    />
+  );
 }

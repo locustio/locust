@@ -2,8 +2,17 @@ import { connect } from 'react-redux';
 
 import Table from 'components/Table/Table';
 import useSortByField from 'hooks/useSortByField';
+import { IUiState } from 'redux/slice/ui.slice';
 import { IRootState } from 'redux/store';
 import { ISwarmStat } from 'types/ui.types';
+
+interface IStatsTable {
+  groupBy?: string;
+  canGroupBy?: boolean;
+  hasMultipleHosts: boolean;
+  stats: ISwarmStat[];
+  updateUi?: (payload: Partial<IUiState>) => void;
+}
 
 const tableStructure = [
   { key: 'method', title: 'Type' },
@@ -21,7 +30,7 @@ const tableStructure = [
   { key: 'currentFailPerSec', title: 'Current Failures/s', round: 2 },
 ];
 
-export function StatsTable({ stats }: { stats: ISwarmStat[] }) {
+export function StatsTable({ canGroupBy = true, groupBy, hasMultipleHosts, stats }: IStatsTable) {
   const { onTableHeadClick, sortedStats, currentSortField } = useSortByField<ISwarmStat>(stats, {
     hasTotalRow: true,
   });
@@ -29,6 +38,9 @@ export function StatsTable({ stats }: { stats: ISwarmStat[] }) {
   return (
     <Table<ISwarmStat>
       currentSortField={currentSortField}
+      groupBy={groupBy}
+      groupOptions={canGroupBy && hasMultipleHosts && ['host']}
+      label='stats'
       onTableHeadClick={onTableHeadClick}
       rows={sortedStats}
       structure={tableStructure}
@@ -36,6 +48,9 @@ export function StatsTable({ stats }: { stats: ISwarmStat[] }) {
   );
 }
 
-const storeConnector = ({ ui: { stats } }: IRootState) => ({ stats });
+const storeConnector = ({ swarm: { hasMultipleHosts }, ui: { stats } }: IRootState) => ({
+  hasMultipleHosts: hasMultipleHosts && (stats.length === 1 || stats.some(({ host }) => host)),
+  stats,
+});
 
 export default connect(storeConnector)(StatsTable);

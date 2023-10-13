@@ -14,13 +14,17 @@ export default function StateButtons() {
     return null;
   }
 
-  return swarmState === SWARM_STATE.STOPPED ? (
-    <NewTestButton />
-  ) : (
-    <Box sx={{ display: 'flex', columnGap: 2 }}>
-      <EditButton />
-      <StopButton />
-      <ResetButton />
+  return (
+    <Box sx={{ display: 'flex', columnGap: 2, height: 50 }}>
+      {swarmState === SWARM_STATE.STOPPED ? (
+        <NewTestButton />
+      ) : (
+        <>
+          <EditButton />
+          <StopButton />
+          <ResetButton />
+        </>
+      )}
     </Box>
   );
 }

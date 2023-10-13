@@ -9,6 +9,7 @@ import {
   ISwarmException,
   ISwarmWorker,
   IExtendedStat,
+  ITables,
 } from 'types/ui.types';
 import { updateArraysAtProps } from 'utils/object';
 import { camelCaseKeys } from 'utils/string';
@@ -23,6 +24,7 @@ export interface IUiState {
   exceptions: ISwarmException[];
   ratios: ISwarmRatios;
   charts: ICharts;
+  tables: ITables;
   userCount: number;
 }
 
@@ -35,6 +37,7 @@ const initialState = {
   errors: [],
   exceptions: [],
   charts: camelCaseKeys(window.templateArgs).history.reduce(updateArraysAtProps, {}),
+  tables: {},
   ratios: {},
   userCount: 0,
 };
@@ -55,6 +58,13 @@ const uiSlice = createSlice({
   initialState,
   reducers: {
     setUi: updateStateWithPayload,
+    updateTable: (state, { payload }) => ({
+      ...state,
+      tables: {
+        ...state.tables,
+        [payload.label]: payload.state,
+      },
+    }),
     updateCharts: (state, { payload }) => ({
       ...state,
       charts: updateArraysAtProps<ICharts>(state.charts as ICharts, payload),

@@ -100,7 +100,7 @@ function SwarmForm({
             title='Disabled for tests using LoadTestShape class'
           />
           <TextField
-            defaultValue={host}
+            defaultValue={Array.isArray(host) ? '' : host}
             label={`Host ${
               overrideHostWarning
                 ? '(setting this will override the host for the User classes)'

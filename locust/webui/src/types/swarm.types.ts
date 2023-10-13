@@ -25,8 +25,11 @@ export interface IReport {
   showDownloadLink: boolean;
   startTime: string;
   endTime: string;
+  hasMultipleHosts: boolean;
   host: string;
   charts: ICharts;
+  groupFailuresBy?: string;
+  groupStatsBy?: string;
   requestsStatistics: ISwarmStat[];
   failuresStatistics: ISwarmError[];
   responseTimeStatistics: IResponseTime[];

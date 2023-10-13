@@ -6,18 +6,41 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Typography,
+  Box,
+  SelectChangeEvent,
 } from '@mui/material';
 import Markdown from 'react-markdown';
 
+import Select from 'components/Form/Select';
+import { useAction, useSelector } from 'redux/hooks';
+import { uiActions } from 'redux/slice/ui.slice';
 import { ITableStructure } from 'types/table.types';
+import { ITableState } from 'types/ui.types';
 import { roundToDecimalPlaces } from 'utils/number';
 
-interface ITable<Row> {
+type BaseRow = Record<string, string | number>;
+
+interface IBaseTable<Row> {
+  groupBy?: string;
   rows: Row[];
   structure: ITableStructure[];
-  children?: React.ReactElement;
   onTableHeadClick?: (event: React.MouseEvent<HTMLElement>) => void;
   currentSortField?: string;
+}
+
+interface IGroupedTableWithSelect<Row> extends IBaseTable<Row> {
+  label: string;
+  groupOptions: string[];
+}
+
+interface IGroupedTable<Row> extends IBaseTable<Row> {
+  children?: React.ReactElement;
+}
+
+interface ITable<Row> extends IBaseTable<Row> {
+  label?: string;
+  groupOptions?: string[] | false;
 }
 
 export interface ITableRowProps {
@@ -44,12 +67,12 @@ function TableRowContent({ content, round, markdown }: ITableRowContent) {
   return content;
 }
 
-export default function Table<Row extends Record<string, any> = Record<string, string | number>>({
+function BaseTable<Row extends Record<string, any> = BaseRow>({
   rows,
   structure,
   onTableHeadClick,
   currentSortField,
-}: ITable<Row>) {
+}: IBaseTable<Row>) {
   return (
     <TableContainer component={Paper}>
       <MuiTable>
@@ -84,4 +107,100 @@ export default function Table<Row extends Record<string, any> = Record<string, s
       </MuiTable>
     </TableContainer>
   );
+}
+
+function GroupedTableWithSelect<Row extends Record<string, any> = BaseRow>({
+  label,
+  groupOptions,
+  ...baseTableProps
+}: IGroupedTableWithSelect<Row>) {
+  const updateTable = useAction(uiActions.updateTable);
+  const { groupBy } = useSelector(
+    ({ ui: { tables } }) => (label && tables[label]) || ({} as ITableState),
+  );
+
+  const onChange = (event: SelectChangeEvent<unknown>) => {
+    const selectedGroupOption = event.target.value as string;
+    const selectedGroupByValue = selectedGroupOption !== 'None' ? selectedGroupOption : undefined;
+
+    updateTable({ label, state: { groupBy: selectedGroupByValue } });
+  };
+
+  return (
+    <GroupedTable groupBy={groupBy} {...baseTableProps}>
+      <Select
+        defaultValue={groupBy}
+        label='Group By'
+        name='groupBy'
+        onChange={onChange}
+        options={['None', ...groupOptions]}
+        sx={{ my: 2 }}
+      />
+    </GroupedTable>
+  );
+}
+
+function GroupedTable<Row extends Record<string, any> = BaseRow>({
+  rows,
+  groupBy,
+  children,
+  ...baseTableProps
+}: IGroupedTable<Row>) {
+  const groupedRows =
+    groupBy &&
+    rows.reduce(
+      (groups: { [key: string]: Row[] }, row) => ({
+        ...groups,
+        [row[groupBy]]: groups[row[groupBy] as string]
+          ? [...groups[row[groupBy] as string], row]
+          : [row],
+      }),
+      {},
+    );
+
+  return (
+    <Paper sx={{ width: '100%', p: 2 }}>
+      {children && children}
+
+      {groupBy ? (
+        Object.entries(groupedRows as { [key: string]: Row[] }).map(([group, groupedRows]) => (
+          <Box sx={{ my: 2 }}>
+            {group && (
+              <Typography component='div' id='tableTitle' sx={{ flex: '1 1 100%' }} variant='h6'>
+                {group}
+              </Typography>
+            )}
+            <BaseTable {...baseTableProps} rows={groupedRows} />
+          </Box>
+        ))
+      ) : (
+        <BaseTable {...baseTableProps} rows={rows} />
+      )}
+    </Paper>
+  );
+}
+
+export default function Table<Row extends Record<string, any> = BaseRow>({
+  rows,
+  groupOptions,
+  label,
+  groupBy,
+  ...baseTableProps
+}: ITable<Row>) {
+  if (groupBy) {
+    return <GroupedTable<Row> groupBy={groupBy} rows={rows} {...baseTableProps} />;
+  }
+
+  if (label && groupOptions) {
+    return (
+      <GroupedTableWithSelect<Row>
+        groupOptions={groupOptions}
+        label={label}
+        rows={rows}
+        {...baseTableProps}
+      />
+    );
+  }
+
+  return <BaseTable<Row> {...baseTableProps} rows={rows} />;
 }

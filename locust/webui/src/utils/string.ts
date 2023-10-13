@@ -48,3 +48,23 @@ export const toTitleCase = (string: string) =>
 
 export const queryStringToObject = (queryString: string) =>
   Object.fromEntries(new URLSearchParams(queryString).entries());
+
+export const objectToQueryString = (query: { [key: string]: string | undefined } | undefined) => {
+  if (!query) {
+    return '';
+  }
+
+  const queryParameters = Object.entries(query).reduce(
+    (parameters, [key, value]) =>
+      value
+        ? [
+            ...parameters,
+            `${encodeURIComponent(camelToSnakeCase(key))}=${encodeURIComponent(value)}`,
+          ]
+        : parameters,
+
+    [] as string[],
+  );
+
+  return queryParameters.length ? `?${queryParameters.join('&')}` : '';
+};

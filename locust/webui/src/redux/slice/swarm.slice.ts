@@ -17,8 +17,9 @@ export interface ISwarmState {
   extendedTabs?: ITab[];
   extendedTables?: { key: string; structure: ITableStructure[] }[];
   extendedCsvFiles?: { href: string; title: string }[];
+  hasMultipleHosts: boolean;
   history: History[];
-  host: string;
+  host: string | string[];
   isDistributed: boolean;
   isShape: boolean | null;
   locustfile: string;

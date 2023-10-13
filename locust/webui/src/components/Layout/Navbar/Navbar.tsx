@@ -29,7 +29,7 @@ export default function Navbar() {
               Locust
             </Typography>
           </Link>
-          <Box sx={{ display: 'flex', columnGap: 6 }}>
+          <Box sx={{ display: 'flex', columnGap: 6, alignItems: 'center' }}>
             <SwarmMonitor />
             <StateButtons />
             <DarkLightToggle />

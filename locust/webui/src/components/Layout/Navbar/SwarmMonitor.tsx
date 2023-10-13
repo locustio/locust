@@ -23,7 +23,15 @@ function SwarmMonitor({
     <Box sx={{ display: 'flex', columnGap: 2 }}>
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         <Typography variant='button'>Host</Typography>
-        <Typography>{host}</Typography>
+        {Array.isArray(host) ? (
+          <Box maxHeight={50} overflow='auto'>
+            {host.map((h, index) => (
+              <Typography key={`host-${index}`}>{h}</Typography>
+            ))}
+          </Box>
+        ) : (
+          <Typography>{host}</Typography>
+        )}
       </Box>
       <Divider flexItem orientation='vertical' />
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>

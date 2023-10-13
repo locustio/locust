@@ -2,20 +2,29 @@ import { Link, List, ListItem } from '@mui/material';
 import { connect } from 'react-redux';
 
 import { THEME_MODE } from 'constants/theme';
-import { useSelector } from 'redux/hooks';
 import { ISwarmState } from 'redux/slice/swarm.slice';
 import { IRootState } from 'redux/store';
+import { objectToQueryString } from 'utils/string';
+
+interface IReports extends Pick<ISwarmState, 'extendedCsvFiles' | 'statsHistoryEnabled'> {
+  isDarkMode: boolean;
+  groupFailuresBy?: string;
+  groupStatsBy?: string;
+}
 
 function Reports({
   extendedCsvFiles,
+  groupFailuresBy,
+  groupStatsBy,
+  isDarkMode,
   statsHistoryEnabled,
-}: Pick<ISwarmState, 'extendedCsvFiles' | 'statsHistoryEnabled'>) {
-  const isDarkMode = useSelector(({ theme: { isDarkMode } }) => isDarkMode);
-
+}: IReports) {
   return (
     <List sx={{ display: 'flex', flexDirection: 'column' }}>
       <ListItem>
-        <Link href='/stats/requests/csv'>Download requests CSV</Link>
+        <Link href={`/stats/requests/csv${objectToQueryString({ groupBy: groupStatsBy })}`}>
+          Download requests CSV
+        </Link>
       </ListItem>
       {statsHistoryEnabled && (
         <ListItem>
@@ -25,14 +34,20 @@ function Reports({
         </ListItem>
       )}
       <ListItem>
-        <Link href='/stats/failures/csv'>Download failures CSV</Link>
+        <Link href={`/stats/failures/csv${objectToQueryString({ groupBy: groupFailuresBy })}`}>
+          Download failures CSV
+        </Link>
       </ListItem>
       <ListItem>
         <Link href='/exceptions/csv'>Download exceptions CSV</Link>
       </ListItem>
       <ListItem>
         <Link
-          href={`/stats/report?theme=${isDarkMode ? THEME_MODE.DARK : THEME_MODE.LIGHT}`}
+          href={`/stats/report${objectToQueryString({
+            theme: isDarkMode ? THEME_MODE.DARK : THEME_MODE.LIGHT,
+            groupStatsBy,
+            groupFailuresBy,
+          })}`}
           target='_blank'
         >
           Download Report
@@ -48,8 +63,17 @@ function Reports({
   );
 }
 
-const storeConnector = ({ swarm: { extendedCsvFiles, statsHistoryEnabled } }: IRootState) => ({
+const storeConnector = ({
+  theme: { isDarkMode },
+  swarm: { extendedCsvFiles, statsHistoryEnabled },
+  ui: {
+    tables: { stats: statsTableState, failures: failuresTableState },
+  },
+}: IRootState) => ({
   extendedCsvFiles,
+  groupFailuresBy: failuresTableState && failuresTableState.groupBy,
+  groupStatsBy: statsTableState && statsTableState.groupBy,
+  isDarkMode,
   statsHistoryEnabled,
 });
 

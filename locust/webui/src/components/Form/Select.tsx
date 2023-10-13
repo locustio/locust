@@ -14,6 +14,7 @@ export default function Select({
   options,
   multiple = false,
   defaultValue,
+  onChange,
   sx,
 }: ISelect) {
   return (
@@ -27,6 +28,7 @@ export default function Select({
         multiple={multiple}
         name={name}
         native
+        onChange={onChange}
       >
         {options.map((option, index) => (
           <option key={`option-${option}-${index}`} value={option}>
