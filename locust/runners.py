@@ -973,102 +973,43 @@ class MasterRunner(DistributedRunner):
             try:
                 client_id, msg = self.server.recv_from_client()
             except RPCReceiveError as e:
-                client_id = e.addr
-
-                if client_id and client_id in self.clients:
-                    logger.error(f"RPCError when receiving from client: {e}. Will reset client {client_id}.")
-                    try:
-                        self.server.send_to_client(Message("reconnect", None, client_id))
-                    except Exception as error:
-                        logger.error(f"Error sending reconnect message to worker: {error}. Will reset RPC server.")
-                        self.connection_broken = True
-                        gevent.sleep(FALLBACK_INTERVAL)
-                        continue
-                else:
-                    message = f"{e}" if not client_id else f"{e} from {client_id}"
-                    logger.error(f"Unrecognized message detected: {message}")
+                if self.__handle_rpc_receive_error(e):
                     continue
             except RPCSendError as e:
-                logger.error(f"Error sending reconnect message to worker: {e}. Will reset RPC server.")
-                self.connection_broken = True
-                gevent.sleep(FALLBACK_INTERVAL)
+                self.__print_logs_and_break_connection(f"Error sending reconnect message to worker: {e}. Will reset RPC server.")
                 continue
             except RPCError as e:
                 if self.clients.ready or self.clients.spawning or self.clients.running:
-                    logger.error(f"RPCError: {e}. Will reset RPC server.")
+                    self.__print_logs_and_break_connection(f"RPCError: {e}. Will reset RPC server.")
                 else:
-                    logger.debug(
-                        "RPCError when receiving from worker: %s (but no workers were expected to be connected anyway)"
-                        % (e)
-                    )
-                self.connection_broken = True
-                gevent.sleep(FALLBACK_INTERVAL)
+                    self.__print_logs_and_break_connection("RPCError when receiving from worker: %s (but no workers were expected to be connected anyway)"
+                        % (e), debug=True)
                 continue
+            
             if msg.type == "client_ready":
                 if not msg.data:
                     logger.error(f"An old (pre 2.0) worker tried to connect ({client_id}). That's not going to work.")
                     continue
                 elif msg.data != __version__ and msg.data != -1:
-                    if msg.data[0:4] == __version__[0:4]:
-                        logger.debug(
-                            f"A worker ({client_id}) running a different patch version ({msg.data}) connected, master version is {__version__}"
-                        )
-                    else:
-                        logger.warning(
-                            f"A worker ({client_id}) running a different version ({msg.data}) connected, master version is {__version__}"
-                        )
+                    self.__handle_different_version_worker(client_id, msg.data)
                 self.send_message("ack", client_id=client_id, data={"index": self.get_worker_index(client_id)})
-                self.environment.events.worker_connect.fire(client_id=msg.node_id)
-                self.clients[client_id] = WorkerNode(client_id, heartbeat_liveness=HEARTBEAT_LIVENESS)
-                if self._users_dispatcher is not None:
-                    self._users_dispatcher.add_worker(worker_node=self.clients[client_id])
-                    if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
-                        # TODO: Test this situation
-                        self.start(self.target_user_count, self.spawn_rate)
-                logger.info(
-                    f"Worker {client_id} (index {self.get_worker_index(client_id)}) reported as ready. {len(self.clients.ready + self.clients.running + self.clients.spawning)} workers connected."
-                )
-                if self.rebalancing_enabled() and self.state == STATE_RUNNING and self.spawning_completed:
-                    self.start(self.target_user_count, self.spawn_rate)
-                # emit a warning if the worker's clock seem to be out of sync with our clock
-                # if abs(time() - msg.data["time"]) > 5.0:
-                #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
+                self.__process_worker_ready(client_id, msg)
             elif msg.type == "client_stopped":
                 if msg.node_id not in self.clients:
                     logger.warning(f"Received {msg.type} message from an unknown worker: {msg.node_id}.")
                     continue
+                
                 client = self.clients[msg.node_id]
-                del self.clients[msg.node_id]
-                if self._users_dispatcher is not None:
-                    self._users_dispatcher.remove_worker(client)
-                    if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
-                        # TODO: Test this situation
-                        self.start(self.target_user_count, self.spawn_rate)
+                self.__remove_stopped_worker(client, msg.node_id)       
                 logger.info(
                     f"Worker {msg.node_id} (index {self.get_worker_index(client_id)}) reported that it has stopped, removing from running workers"
                 )
             elif msg.type == "heartbeat":
                 if msg.node_id in self.clients:
-                    c = self.clients[msg.node_id]
-                    c.heartbeat = HEARTBEAT_LIVENESS
-                    client_state = msg.data["state"]
-                    if c.state == STATE_MISSING:
-                        logger.info(f"Worker {str(c.id)} self-healed with heartbeat, setting state to {client_state}.")
-                        if self._users_dispatcher is not None:
-                            self._users_dispatcher.add_worker(worker_node=c)
-                            if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
-                                # TODO: Test this situation
-                                self.start(self.target_user_count, self.spawn_rate)
-                    c.state = client_state
-                    c.cpu_usage = msg.data["current_cpu_usage"]
-                    if not c.cpu_warning_emitted and c.cpu_usage > 90:
-                        self.worker_cpu_warning_emitted = True  # used to fail the test in the end
-                        c.cpu_warning_emitted = True  # used to suppress logging for this node
-                        logger.warning(
-                            f"Worker {msg.node_id} (index {self.get_worker_index(msg.node_id)}) exceeded cpu threshold (will only log this once per worker)"
-                        )
-                    if "current_memory_usage" in msg.data:
-                        c.memory_usage = msg.data["current_memory_usage"]
+                    client = self.clients[msg.node_id]
+                    self.__update_client_state(client, msg)
+                    self.__handle_cpu_usage_warning(client)
+                    self.__update_memory_usage(client, msg)
             elif msg.type == "stats":
                 self.environment.events.worker_report.fire(client_id=msg.node_id, data=msg.data)
             elif msg.type == "spawning":
@@ -1083,20 +1024,14 @@ class MasterRunner(DistributedRunner):
             elif msg.type == "quit":
                 if msg.node_id in self.clients:
                     client = self.clients[msg.node_id]
-                    del self.clients[msg.node_id]
-                    if self._users_dispatcher is not None:
-                        self._users_dispatcher.remove_worker(client)
-                        if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
-                            # TODO: Test this situation
-                            self.start(self.target_user_count, self.spawn_rate)
+                    self.__remove_quit_worker(client, msg.node_id)
+
+                    num_ready_workers = len(self.clients.ready)
                     logger.info(
-                        f"Worker {msg.node_id!r} (index {self.get_worker_index(msg.node_id)}) quit. {len(self.clients.ready)} workers ready."
+                        f"Worker {msg.node_id!r} (index {self.get_worker_index(msg.node_id)}) quit. {num_ready_workers} workers ready."
                     )
-                    if self.worker_count - len(self.clients.missing) <= 0:
-                        logger.info("The last worker quit, stopping test.")
-                        self.stop()
-                        if self.environment.parsed_options and self.environment.parsed_options.headless:
-                            self.quit()
+
+                    self.__check_last_worker_quit()
             elif msg.type == "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
             elif msg.type in self.custom_messages:
@@ -1139,6 +1074,118 @@ class MasterRunner(DistributedRunner):
             for client in self.clients.all:
                 logger.debug("Sending %s message to worker %s" % (msg_type, client.id))
                 self.server.send_to_client(Message(msg_type, data, client.id))
+
+    # Handling the errors from the client:
+    def __print_logs_and_break_connection(self, log_message: str, debug=False):
+        if (debug):
+            logger.debug(log_message)
+        else:
+            logger.error(log_message)
+        self.connection_broken = True
+        gevent.sleep(FALLBACK_INTERVAL)
+
+    def __handle_rpc_receive_error(self, e) -> bool:  # returns True if RPC server needs to be reset
+        client_id = e.addr
+
+        if client_id and client_id in self.clients:
+            logger.error(f"RPCError when receiving from client: {e}. Will reset client {client_id}.")
+            try:
+                self.server.send_to_client(Message("reconnect", None, client_id))
+            except Exception as error:
+                self.__print_logs_and_break_connection(f"Error sending reconnect message to worker: {error}. Will reset RPC server.")
+                return True
+        else:
+            message = f"{e}" if not client_id else f"{e} from {client_id}"
+            logger.error(f"Unrecognized message detected: {message}")
+            return True
+        return False
+    
+    # Handling messages from the client:
+
+    def __handle_different_version_worker(self, client_id, version):
+        if version[0:4] == __version__[0:4]:
+            logger.debug(
+                f"A worker ({client_id}) running a different patch version ({version}) connected, master version is {__version__}"
+            )
+        else:
+            logger.warning(
+                f"A worker ({client_id}) running a different version ({version}) connected, master version is {__version__}"
+            )
+    def __process_worker_ready(self, client_id, msg):
+        self.environment.events.worker_connect.fire(client_id=msg.node_id)
+        self.clients[client_id] = WorkerNode(client_id, heartbeat_liveness=HEARTBEAT_LIVENESS)
+
+        if self._users_dispatcher is not None:
+            self._users_dispatcher.add_worker(worker_node=self.clients[client_id])
+            if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
+                # TODO: Test this situation
+                self.start(self.target_user_count, self.spawn_rate)
+
+        num_connected_workers = len(self.clients.ready + self.clients.running + self.clients.spawning)
+        logger.info(
+            f"Worker {client_id} (index {self.get_worker_index(client_id)}) reported as ready. {num_connected_workers} workers connected."
+        )
+
+        if self.rebalancing_enabled() and self.state == STATE_RUNNING and self.spawning_completed:
+            self.start(self.target_user_count, self.spawn_rate)
+        # emit a warning if the worker's clock seem to be out of sync with our clock
+        # if abs(time() - msg.data["time"]) > 5.0:
+        #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
+    
+    def __remove_stopped_worker(self, client, node_id):
+        del self.clients[node_id]
+        if self._users_dispatcher is not None:
+            self._users_dispatcher.remove_worker(client)
+            if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
+                # TODO: Test this situation
+                self.start(self.target_user_count, self.spawn_rate)
+
+
+    def __update_client_state(self, client, msg):
+        client.heartbeat = HEARTBEAT_LIVENESS
+        client_state = msg.data["state"]
+
+        if client.state == STATE_MISSING:
+            self.__handle_missing_worker(client, client_state)
+
+        client.state = client_state
+        client.cpu_usage = msg.data["current_cpu_usage"]
+
+    def __handle_missing_worker(self, client, client_state):
+        logger.info(f"Worker {str(client.id)} self-healed with heartbeat, setting state to {client_state}.")
+        if self._users_dispatcher is not None:
+            self._users_dispatcher.add_worker(worker_node=client)
+            if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
+                # TODO: Test this situation
+                self.start(self.target_user_count, self.spawn_rate)
+
+    def __handle_cpu_usage_warning(self, client):
+        if not client.cpu_warning_emitted and client.cpu_usage > 90:
+            self.worker_cpu_warning_emitted = True
+            client.cpu_warning_emitted = True
+            logger.warning(
+                f"Worker {client.id} (index {self.get_worker_index(client.id)}) exceeded cpu threshold (will only log this once per worker)"
+            )
+
+    def __update_memory_usage(self, client, msg):
+        if "current_memory_usage" in msg.data:
+            client.memory_usage = msg.data["current_memory_usage"]
+
+    def __remove_quit_worker(self, client, client_id):
+        del self.clients[client_id]
+        if self._users_dispatcher is not None:
+            self._users_dispatcher.remove_worker(client)
+            if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
+                # TODO: Test this situation
+                self.start(self.target_user_count, self.spawn_rate)
+
+    def __check_last_worker_quit(self):
+        if self.worker_count - len(self.clients.missing) <= 0:
+            logger.info("The last worker quit, stopping test.")
+            self.stop()
+            if self.environment.parsed_options and self.environment.parsed_options.headless:
+                self.quit()
+
 
 
 class WorkerRunner(DistributedRunner):
