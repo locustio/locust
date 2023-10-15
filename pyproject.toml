@@ -42,6 +42,9 @@ classifiers = [
     "Topic :: System :: Distributed Computing",
 ]
 
+[project.optional-dependencies]
+completion = ["argcomplete"]
+
 [project.urls]
 Homepage = "https://locust.io/"
 Documentation = "https://docs.locust.io/"
