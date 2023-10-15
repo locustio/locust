@@ -5,6 +5,14 @@ import textwrap
 from typing import Dict, List, NamedTuple, Optional, Any
 import configargparse
 
+try:
+    from argcomplete import autocomplete
+except ImportError:
+
+    def autocomplete(parser):
+        return None
+
+
 import locust
 
 version = locust.__version__
@@ -606,6 +614,7 @@ def get_parser(default_config_files=DEFAULT_CONFIG_FILES) -> LocustArgumentParse
 
 def parse_options(args=None) -> configargparse.Namespace:
     parser = get_parser()
+    autocomplete(parser)
     parsed_opts = parser.parse_args(args=args)
     if parsed_opts.stats_history_enabled and (parsed_opts.csv_prefix is None):
         parser.error("'--csv-full-history' requires '--csv'.")
@@ -633,6 +642,7 @@ def ui_extra_args_dict(args=None) -> Dict[str, Dict[str, Any]]:
     locust_args = default_args_dict()
 
     parser = get_parser()
+    autocomplete(parser)
     all_args = vars(parser.parse_args(args))
 
     extra_args = {
