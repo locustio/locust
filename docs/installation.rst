@@ -21,6 +21,27 @@ Installation
 
 3. Done! Now you can :ref:`create your first test <quickstart>`
 
+Optional: CLI tab completion
+----------------------------
+
+Locust uses the argcomplete_ module to provide tab completions for the ``locust`` command line interface.
+This is entirely optional; if you don't care about tab completion, you can skip this section entirely!
+If you do want to enable tab completion, first install the ``argcomplete`` module
+into the same environment where you installed ``locust``:
+
+.. code-block:: console
+
+    $ pip3 install argcomplete
+
+Then add this line to your shell config file
+(``~/.bashrc`` if you use ``bash``, ``~/.zshrc`` if you use ``zsh``):
+
+.. code-block:: console
+
+    eval "$(register-python-argcomplete locust)"
+
+Restart your shell, and you should have working tab completion for the ``locust`` CLI!
+If this doesn't work, `check the argcomplete documentation <https://kislyuk.github.io/argcomplete/>`_.
 
 Pre-release builds
 ------------------
@@ -37,3 +58,5 @@ Install for development
 -----------------------
 
 If you want to modify Locust, or contribute to the project, see :ref:`developing-locust`.
+
+.. _argcomplete: https://github.com/kislyuk/argcomplete
