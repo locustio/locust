@@ -47,15 +47,12 @@ def constant_pacing(wait_time):
     """
 
     def wait_time_func(self):
-        if not hasattr(self, "_cp_last_run"):
-            self._cp_last_wait_time = wait_time
-            self._cp_last_run = time()
-            return wait_time
-        else:
-            run_time = time() - self._cp_last_run - self._cp_last_wait_time
-            self._cp_last_wait_time = max(0, wait_time - run_time)
-            self._cp_last_run = time()
-            return self._cp_last_wait_time
+        if not hasattr(self, "_cp_last_wait_time"):
+            self._cp_last_wait_time = 0
+        run_time = time() - self._cp_last_run - self._cp_last_wait_time
+        self._cp_last_wait_time = max(0, wait_time - run_time)
+        self._cp_last_run = time()
+        return self._cp_last_wait_time
 
     return wait_time_func
 
