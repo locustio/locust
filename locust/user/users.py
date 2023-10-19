@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Callable, Dict, List, Optional, final
 
+import time
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
 from urllib3 import PoolManager
@@ -119,6 +120,7 @@ class User(metaclass=UserMeta):
         self._greenlet: greenlet.Greenlet = None
         self._group: Group
         self._taskset_instance: TaskSet = None
+        self._cp_last_run = time.time()  # used by constant_pacing wait_time
 
     def on_start(self):
         """
