@@ -900,23 +900,9 @@ class MasterRunner(DistributedRunner):
 
     def check_stopped(self) -> None:
         if (
-            not self.state == STATE_INIT
-            and not self.state == STATE_STOPPED
-            and (
-                self.state == STATE_STOPPING
-                and all(
-                    map(
-                        lambda x: x.state == STATE_INIT,
-                        self.clients.all,
-                    )
-                )
-            )
-            or all(
-                map(
-                    lambda x: x.state not in (STATE_RUNNING, STATE_SPAWNING, STATE_INIT),
-                    self.clients.all,
-                )
-            )
+            self.state == STATE_STOPPING
+            and all(x.state == STATE_INIT for x in self.clients.all)
+            or all(x.state not in (STATE_RUNNING, STATE_SPAWNING, STATE_INIT) for x in self.clients.all)
         ):
             self.update_state(STATE_STOPPED)
 
