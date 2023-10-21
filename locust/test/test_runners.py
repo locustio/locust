@@ -1,3 +1,4 @@
+import collections
 import json
 import random
 import time
@@ -2835,7 +2836,7 @@ class TestMasterRunner(LocustRunnerTestCase):
         class MyTaskSet(TaskSet):
             def __init__(self, *a, **kw):
                 super().__init__(*a, **kw)
-                self._task_queue = [self.will_error, self.will_stop]
+                self._task_queue = collections.deque((self.will_error, self.will_stop))
 
             @task(1)
             def will_error(self):
