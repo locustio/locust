@@ -12,6 +12,10 @@
         <div class="top-content container">
             <img src="./static/img/logo.png?v={{ version }}" class="logo" />
             <div class="boxes">
+                <div class="top_box box_rps box_running" id="box_elapsedtime">
+                    <div class="label">ELAPSED</div>
+                    <div class="value" id="elapsed-time">0</div>
+                </div>
                 <div class="top_box box_url">
                     <div class="label">HOST</div>
                     <div class="value" id="host_url">
@@ -131,7 +135,7 @@
                             {{key}}<br>
                         {% endif %}
                     {% endfor %}
-                    <button type="submit">Start swarming</button>
+                    <button id="btn-start" type="submit">Start swarming</button>
                 </form>
                 <div style="clear:right;margin-bottom: 60px;"></div>
             </div>
@@ -378,6 +382,27 @@
             setTimeout(updateTasksWithTimeout, 1000);
         }
         updateTasksWithTimeout()
+
+        /* Time elapsed */
+        let timeBox = document.querySelector("#elapsed-time");
+        let start = document.querySelector("#btn-start");
+        let stop = document.querySelector(".stop-button");
+        let reset = document.querySelector(".reset-button");
+        let startTime = Date.now();
+        let clock = 0;
+        start.addEventListener('click', () => {
+            timer = 0;
+            clock = setInterval(() => {
+                let elapsed = (Date.now() - startTime) / 1000.0;
+                timeBox.innerText = elapsed.toFixed(1);
+            }, 100);
+        });
+        stop.addEventListener('click', () => {
+            clearInterval(clock);
+        });
+        reset.addEventListener('click', () => {
+            startTime = Date.now();
+        });
     </script>
     {% block extended_script %}
     {% endblock extended_script %}
