@@ -1,6 +1,32 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.18.0](https://github.com/locustio/locust/tree/2.18.0) (2023-10-26)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.17.0...2.18.0)
+
+**Fixed bugs:**
+
+- Pacing and RPS trouble [\#2427](https://github.com/locustio/locust/issues/2427)
+- Content-Type with version information is not properly parsed [\#2415](https://github.com/locustio/locust/issues/2415)
+
+**Closed issues:**
+
+- Modernize the report.html when using the --modern-ui Flag [\#2419](https://github.com/locustio/locust/issues/2419)
+- Proposal for Re-Writing the Web UI [\#2396](https://github.com/locustio/locust/issues/2396)
+
+**Merged pull requests:**
+
+- Revert support for argcomplete [\#2434](https://github.com/locustio/locust/pull/2434) ([cyberw](https://github.com/cyberw))
+- refactor\(MasterRunner\): simplify condition in check\_stopped [\#2432](https://github.com/locustio/locust/pull/2432) ([tdadela](https://github.com/tdadela))
+- Fix too long first wait time for constant\_pacing \(and constant\_throughput\) [\#2428](https://github.com/locustio/locust/pull/2428) ([cyberw](https://github.com/cyberw))
+- Support argcomplete as an optional dependency [\#2423](https://github.com/locustio/locust/pull/2423) ([singingwolfboy](https://github.com/singingwolfboy))
+- Stop supporting Python 3.7 [\#2421](https://github.com/locustio/locust/pull/2421) ([cyberw](https://github.com/cyberw))
+- \[Feature/2419\] Modernize the report.html when using the --modern-ui Flag [\#2420](https://github.com/locustio/locust/pull/2420) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add run\_single\_user to \_\_all\_\_ variable [\#2417](https://github.com/locustio/locust/pull/2417) ([tdadela](https://github.com/tdadela))
+- Make FastHttpUser use requests encoding detection [\#2416](https://github.com/locustio/locust/pull/2416) ([cyberw](https://github.com/cyberw))
+- Add a modern web UI based on React, MaterialUI and Vite [\#2405](https://github.com/locustio/locust/pull/2405) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
 ## [2.17.0](https://github.com/locustio/locust/tree/2.17.0) (2023-10-05)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.16.1...2.17.0)
@@ -19,7 +45,7 @@ The most important changes can also be found in [the documentation](https://docs
 - Improve performance for statistics handling [\#2410](https://github.com/locustio/locust/pull/2410) ([cyberw](https://github.com/cyberw))
 - Log a deprecation warning in Python 3.7 [\#2403](https://github.com/locustio/locust/pull/2403) ([cyberw](https://github.com/cyberw))
 - Catch exceptions in on\_stop [\#2402](https://github.com/locustio/locust/pull/2402) ([cyberw](https://github.com/cyberw))
-- Allow LoadShapes to reuse run-time, spawn-rate and users parameters [\#2395](https://github.com/locustio/locust/pull/2395) ([noirbizarre](https://github.com/noirbizarre))
+- Allow LoadTestShapes to reuse run-time, spawn-rate and users parameters [\#2395](https://github.com/locustio/locust/pull/2395) ([noirbizarre](https://github.com/noirbizarre))
 - Support user abstract load shape base classes [\#2393](https://github.com/locustio/locust/pull/2393) ([noirbizarre](https://github.com/noirbizarre))
 - chore: bump dockerfile to 3.11-slim base image [\#2388](https://github.com/locustio/locust/pull/2388) ([vejmoj1](https://github.com/vejmoj1))
 - Respect hard limit when setting open file limit \(NOFILE\) [\#2386](https://github.com/locustio/locust/pull/2386) ([benofbrown](https://github.com/benofbrown))
