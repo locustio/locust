@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.18.0
+======
+* Add a modern web UI based on React, MaterialUI and Vite (activated using --modern-ui) https://github.com/locustio/locust/pull/2405
+* Stop supporting Python 3.7 https://github.com/locustio/locust/pull/2421
+* Fix too long first wait time for constant_pacing (and constant_throughput) https://github.com/locustio/locust/pull/2428
+
 2.17.0
 ======
 * Support user abstract load shape base classes https://github.com/locustio/locust/pull/2393
