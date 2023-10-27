@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#000000" />
 
     <title>Locust</title>
-    <script type="module" crossorigin src="/assets/index-f6041128.js"></script>
+    <script type="module" crossorigin src="/assets/index-908b1e34.js"></script>
   </head>
   <body>
     <div id="root"></div>
@@ -17,19 +17,11 @@
       // The server sets timestamps in UTC
       // We need to convert these timestamps to locale time
       window.templateArgs.history =
-      window.templateArgs.history.length ? window.templateArgs.history.map(({ time: serverTime, ...history }) => ({
-        ...history,
-        time: new Date(new Date().setUTCHours(...(serverTime.split(":")))).toLocaleTimeString()
-      })) : []
+        window.templateArgs.history.length ? window.templateArgs.history.map(({ time: serverTime, ...history }) => ({
+          ...history,
+          time: new Date(new Date().setUTCHours(...(serverTime.split(":")))).toLocaleTimeString()
+        })) : []
     </script>
-
-
-    {% if static_js %}
-      <script>
-        {{ static_js|safe }}
-      </script>
-    {% else %}
-      
-    {% endif %}
+    
   </body>
 </html>
