@@ -62,7 +62,7 @@ function SwarmForm({
   const [startSwarm] = useStartSwarmMutation();
 
   const onStartSwarm = (inputData: ISwarmFormInput) => {
-    setSwarm({ state: SWARM_STATE.RUNNING });
+    setSwarm({ state: SWARM_STATE.RUNNING, host: inputData.host || host });
 
     startSwarm(inputData);
   };
