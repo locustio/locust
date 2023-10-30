@@ -474,6 +474,20 @@ class WebUI:
             }
             return task_data
 
+        @app.route("/logs")
+        @self.auth_required_if_enabled
+        def logs():
+            log_reader_handler = [
+                handler for handler in logging.getLogger("root").handlers if handler.name == "log_reader"
+            ]
+
+            if log_reader_handler:
+                logs = log_reader_handler[0].logs
+            else:
+                logs = []
+
+            return jsonify({"logs": logs})
+
     def start(self):
         self.greenlet = gevent.spawn(self.start_server)
         self.greenlet.link_exception(greenlet_exception_handler)
