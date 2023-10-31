@@ -65,7 +65,6 @@ def load_locustfile(path) -> Tuple[Optional[str], Dict[str, User], List[LoadTest
     user_classes = {name: value for name, value in vars(imported).items() if is_user_class(value)}
 
     # Find shape class, if any, return it
-    _shape_classes = [value for name, value in vars(imported).items() if is_shape_class(value)]
-    shape_classes = [shape_class() for shape_class in _shape_classes]
+    shape_classes = [value() for name, value in vars(imported).items() if is_shape_class(value)]
 
     return imported.__doc__, user_classes, shape_classes
