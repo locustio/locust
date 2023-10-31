@@ -86,17 +86,20 @@ def main():
     user_classes: Dict[str, locust.User] = {}
     available_user_classes = {}
     available_shape_classes = {}
+    shape_class = None
     for _locustfile in locustfiles:
-        docstring, _user_classes, shape_class = load_locustfile(_locustfile)
+        docstring, _user_classes, shape_classes = load_locustfile(_locustfile)
 
         # Setting Available Shape Classes
-        if shape_class:
-            shape_class_name = type(shape_class).__name__
-            if shape_class_name in available_shape_classes.keys():
-                sys.stderr.write(f"Duplicate shape classes: {shape_class_name}\n")
-                sys.exit(1)
+        if shape_classes:
+            shape_class = shape_classes[0]
+            for shape_class in shape_classes:
+                shape_class_name = type(shape_class).__name__
+                if shape_class_name in available_shape_classes.keys():
+                    sys.stderr.write(f"Duplicate shape classes: {shape_class_name}\n")
+                    sys.exit(1)
 
-            available_shape_classes[shape_class_name] = shape_class
+                available_shape_classes[shape_class_name] = shape_class
 
         # Setting Available User Classes
         for key, value in _user_classes.items():

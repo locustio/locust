@@ -229,7 +229,11 @@ class WebUI:
             if environment.shape_class and environment.runner is not None:
                 environment.runner.start_shape()
                 return jsonify(
-                    {"success": True, "message": "Swarming started using shape class", "host": environment.host}
+                    {
+                        "success": True,
+                        "message": f"Swarming started using shape class '{type(environment.shape_class).__name__}'",
+                        "host": environment.host,
+                    }
                 )
 
             if self._swarm_greenlet is not None:

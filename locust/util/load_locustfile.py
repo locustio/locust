@@ -2,7 +2,7 @@ import importlib
 import inspect
 import os
 import sys
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from ..shape import LoadTestShape
 from ..user import User
 
@@ -21,7 +21,7 @@ def is_shape_class(item):
     return bool(inspect.isclass(item) and issubclass(item, LoadTestShape) and not getattr(item, "abstract", True))
 
 
-def load_locustfile(path) -> Tuple[Optional[str], Dict[str, User], Optional[LoadTestShape]]:
+def load_locustfile(path) -> Tuple[Optional[str], Dict[str, User], List[LoadTestShape]]:
     """
     Import given locustfile path and return (docstring, callables).
 
@@ -65,10 +65,7 @@ def load_locustfile(path) -> Tuple[Optional[str], Dict[str, User], Optional[Load
     user_classes = {name: value for name, value in vars(imported).items() if is_user_class(value)}
 
     # Find shape class, if any, return it
-    shape_classes = [value for name, value in vars(imported).items() if is_shape_class(value)]
-    if shape_classes:
-        shape_class = shape_classes[0]()
-    else:
-        shape_class = None
+    _shape_classes = [value for name, value in vars(imported).items() if is_shape_class(value)]
+    shape_classes = [shape_class() for shape_class in _shape_classes]
 
-    return imported.__doc__, user_classes, shape_class
+    return imported.__doc__, user_classes, shape_classes
