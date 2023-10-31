@@ -563,7 +563,15 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             def t(self):
                 pass
 
-        class TestShape(LoadTestShape):
+        class TestShape1(LoadTestShape):
+            def tick(self):
+                run_time = self.get_run_time()
+                if run_time < 10:
+                    return 4, 4
+                else:
+                    return None
+
+        class TestShape2(LoadTestShape):
             def tick(self):
                 run_time = self.get_run_time()
                 if run_time < 10:
@@ -573,8 +581,8 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         self.environment.web_ui.userclass_picker_is_active = True
         self.environment.available_user_classes = {"User1": User1, "User2": User2}
-        self.environment.available_shape_classes = {"TestShape": TestShape()}
-        self.environment.shape_class = None
+        self.environment.available_shape_classes = {"TestShape1": TestShape1(), "TestShape2": TestShape2()}
+        self.environment.shape_class = TestShape1()
 
         response = requests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
@@ -583,14 +591,14 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
                 "spawn_rate": 5,
                 "host": "https://localhost",
                 "user_classes": "User1",
-                "shape_class": "TestShape",
+                "shape_class": "TestShape2",
             },
         )
 
         self.assertEqual(200, response.status_code)
         self.assertEqual("https://localhost", response.json()["host"])
         self.assertEqual(self.environment.host, "https://localhost")
-        assert isinstance(self.environment.shape_class, TestShape)
+        assert isinstance(self.environment.shape_class, TestShape2)
 
         # stop
         gevent.sleep(1)
