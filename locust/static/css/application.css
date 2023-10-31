@@ -470,5 +470,22 @@ body.ready .main {
   margin-right: 10px;
   color: #48a584;
 }
+.userClass {
+  border: none;
+  background: #fff;
+  height: 100px;
+  width: 340px;
+  font-size: 18px;
+  padding-left: 10px;
+}
+
+.shapeClass {
+  border: none;
+  background: #fff;
+  /* height: 100px; */
+  width: 340px;
+  font-size: 18px;
+  padding-left: 10px;
+}
 
 /*# sourceMappingURL=application.css.map */
