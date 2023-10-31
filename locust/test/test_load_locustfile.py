@@ -89,12 +89,12 @@ class TestLoadLocustfile(LocustTestCase):
         """
         )
         with mock_locustfile(content=content) as mocked:
-            docstring, user_classes, shape_class = main.load_locustfile(mocked.file_path)
+            docstring, user_classes, shape_classes = main.load_locustfile(mocked.file_path)
             self.assertEqual("This is a mock locust file for unit testing", docstring)
             self.assertIn("UserSubclass", user_classes)
             self.assertNotIn("NotUserSubclass", user_classes)
-            self.assertEqual(shape_class[0].__class__.__name__, "LoadTestShape1")
-            self.assertEqual(shape_class[1].__class__.__name__, "LoadTestShape2")
+            self.assertEqual(shape_classes[0].__class__.__name__, "LoadTestShape1")
+            self.assertEqual(shape_classes[1].__class__.__name__, "LoadTestShape2")
 
     def test_with_abstract_shape_class(self):
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
