@@ -136,6 +136,12 @@ class WebUI:
         if not delayed_start:
             self.start()
 
+        @app.errorhandler(Exception)
+        def handle_exception(error):
+            error_message = str(error)
+            logger.log(logging.CRITICAL, error_message)
+            return make_response(error_message, 500)
+
         @app.route("/assets/<path:path>")
         def send_assets(path):
             webui_build_path = self.webui_build_path
