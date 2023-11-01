@@ -5,7 +5,10 @@ import time
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
 from urllib3 import PoolManager
+import logging
+import traceback
 
+logger = logging.getLogger(__name__)
 from locust.clients import HttpSession
 from locust.exception import LocustError, StopUser
 from locust.user.wait_time import constant
@@ -19,6 +22,8 @@ from .task import (
     TaskSet,
     get_tasks_from_base_classes,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class UserMeta(type):
@@ -140,7 +145,12 @@ class User(metaclass=UserMeta):
         self._taskset_instance = DefaultTaskSet(self)
         try:
             # run the TaskSet on_start method, if it has one
-            self.on_start()
+            try:
+                self.on_start()
+            except Exception as e:
+                # unhandled exceptions inside tasks are logged in TaskSet.run, but since we're not yet there...
+                logger.error("%s\n%s", e, traceback.format_exc())
+                raise
 
             self._taskset_instance.run()
         except (GreenletExit, StopUser):
