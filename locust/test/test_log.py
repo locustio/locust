@@ -210,7 +210,7 @@ class TestLoggingOptions(LocustTestCase):
             textwrap.dedent(
                 """
             from locust import HttpUser, task
-            
+
             class TestUser(HttpUser):
                 host = "invalidhost"
 
