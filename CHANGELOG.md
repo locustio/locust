@@ -1,6 +1,26 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.18.1](https://github.com/locustio/locust/tree/2.18.1) (2023-11-01)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.18.0...2.18.1)
+
+**Fixed bugs:**
+
+- Modern UI shows wrong \(old\) hostname when setting hostname in start dialog [\#2435](https://github.com/locustio/locust/issues/2435)
+- Unable to load multiple custom shape classes in web UI from --class-picker [\#2412](https://github.com/locustio/locust/issues/2412)
+
+**Closed issues:**
+
+- Add Log Viewer to Modern UI [\#2437](https://github.com/locustio/locust/issues/2437)
+
+**Merged pull requests:**
+
+- Log unhandled exceptions thrown in User.on\_start [\#2442](https://github.com/locustio/locust/pull/2442) ([cyberw](https://github.com/cyberw))
+- Fix for UserClass picker not loading all available Shape Classes [\#2441](https://github.com/locustio/locust/pull/2441) ([mikenester](https://github.com/mikenester))
+- Add Log Viewer to Modern UI [\#2440](https://github.com/locustio/locust/pull/2440) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Modern UI shows wrong \(old\) hostname when setting hostname in start dialog [\#2436](https://github.com/locustio/locust/pull/2436) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
 ## [2.18.0](https://github.com/locustio/locust/tree/2.18.0) (2023-10-26)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.17.0...2.18.0)
