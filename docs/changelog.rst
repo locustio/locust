@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.18.1
+======
+* Add Log Viewer to Modern UI https://github.com/locustio/locust/pull/2440
+
 2.18.0
 ======
 * Add a modern web UI based on React, MaterialUI and Vite (activated using --modern-ui) https://github.com/locustio/locust/pull/2405
