@@ -99,3 +99,7 @@ export interface IStatsResponse {
   currentResponseTimePercentile2: number | null;
   userCount: number;
 }
+
+export interface ILogsResponse {
+  logs: string[];
+}

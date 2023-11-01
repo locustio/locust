@@ -1,6 +1,11 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-import { IStatsResponse, ISwarmExceptionsResponse, ISwarmRatios } from 'types/ui.types';
+import {
+  IStatsResponse,
+  ISwarmExceptionsResponse,
+  ISwarmRatios,
+  ILogsResponse,
+} from 'types/ui.types';
 import { createFormData } from 'utils/object';
 import { camelCaseKeys, snakeCaseKeys } from 'utils/string';
 
@@ -19,6 +24,10 @@ export const api = createApi({
       query: () => 'exceptions',
       transformResponse: camelCaseKeys<ISwarmExceptionsResponse>,
     }),
+    getLogs: builder.query<ILogsResponse, void>({
+      query: () => 'logs',
+      transformResponse: camelCaseKeys<ILogsResponse>,
+    }),
 
     startSwarm: builder.mutation({
       query: body => ({
@@ -31,5 +40,10 @@ export const api = createApi({
   }),
 });
 
-export const { useGetStatsQuery, useGetTasksQuery, useGetExceptionsQuery, useStartSwarmMutation } =
-  api;
+export const {
+  useGetStatsQuery,
+  useGetTasksQuery,
+  useGetExceptionsQuery,
+  useGetLogsQuery,
+  useStartSwarmMutation,
+} = api;

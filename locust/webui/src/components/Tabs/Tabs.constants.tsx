@@ -1,5 +1,6 @@
 import ExceptionsTable from 'components/ExceptionsTable/ExceptionsTable';
 import FailuresTable from 'components/FailuresTable/FailuresTable';
+import LogViewer from 'components/LogViewer/LogViewer';
 import Reports from 'components/Reports/Reports';
 import StatsTable from 'components/StatsTable/StatsTable';
 import SwarmCharts from 'components/SwarmCharts/SwarmCharts';
@@ -37,6 +38,11 @@ export const baseTabs = [
     component: Reports,
     key: 'reports',
     title: 'Download Data',
+  },
+  {
+    component: LogViewer,
+    key: 'log_viewer',
+    title: 'Logs',
   },
 ];
 

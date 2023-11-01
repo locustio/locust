@@ -5,13 +5,13 @@ import os
 import re
 import textwrap
 import traceback
+import logging
 from io import StringIO
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 import gevent
 import requests
 from pyquery import PyQuery as pq
-
 import locust
 from locust import constant, LoadTestShape
 from locust.argument_parser import get_parser, parse_options
@@ -21,6 +21,7 @@ from locust.runners import Runner
 from locust import stats
 from locust.stats import StatsCSVFileWriter
 from locust.web import WebUI
+from locust.log import LogReader
 
 from .mock_locustfile import mock_locustfile
 from .testcases import LocustTestCase
@@ -1012,6 +1013,19 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         self.assertIn("Script: <span>locust.py</span>", str(d))
         self.assertIn("Target Host: <span>http://localhost</span>", str(d))
+
+    def test_logs(self):
+        log_handler = LogReader()
+        log_handler.name = "log_reader"
+        log_handler.setLevel(logging.INFO)
+        logger = logging.getLogger("root")
+        logger.addHandler(log_handler)
+        log_line = "some log info"
+        logger.info(log_line)
+
+        response = requests.get("http://127.0.0.1:%i/logs" % self.web_port)
+
+        self.assertIn(log_line, response.json().get("logs"))
 
 
 class TestWebUIAuth(LocustTestCase):
