@@ -124,64 +124,74 @@ Making changes to Locust's Modern Web UI
 
 The modern Web UI is built using React and Typescript
 
-## Setup
+Setup
+-----
 
-### Node
+Node
+````
 
 Install node using nvm to easily switch between node version
 
-- Copy and run the install line from [nvm](https://github.com/nvm-sh/nvm) (starts with curl/wget ...)
+- Copy and run the install line from `nvm <https://github.com/nvm-sh/nvm>`_ (starts with curl/wget ...)
 
 - Verify nvm was installed correctly
 
-```bash
-nvm --version
-```
+.. code-block:: console
 
-- Install the proper Node version according to engines in the locust/webui/package.json
+    $ nvm --version
 
-```bash
-nvm install {version}
-nvm alias default {version}
-```
+- Install the proper Node version according to engines in the ``locust/webui/package.json``
 
-### Yarn
+.. code-block:: console
+
+    $ nvm install {version}
+    $ nvm alias default {version}
+
+Yarn
+````
 
 - Install Yarn from their official website (avoid installing through Node if possible)
 - Verify yarn was installed correctly
 
-```bash
-yarn --version
-```
+.. code-block:: console
+
+    $ yarn --version
 
 - Next in web, install all dependencies
 
-```bash
-cd locust/webui
-yarn
-```
+.. code-block:: console
 
-## Developing
+    $ cd locust/webui
+    $ yarn
 
-To develop the frontend, run `yarn dev`. This will start the Vite dev server and allow for viewing and editing the frontend, without needing to a run a locust web server
 
-To develop while running a locust instance, run `yarn dev:watch`. This will output the static files to the `dist` directory. Then simply a locust instance using the `--modern-ui` flag. Vite will automatically detect any changed files and re-build as needed. Simply refresh the page to view the changes
+Developing
+----------
 
-To compile the webui, run `yarn build`
+To develop the frontend, run ``yarn dev``. This will start the Vite dev server and allow for viewing and editing the frontend, without needing to a run a locust web server
+
+To develop while running a locust instance, run ``yarn dev:watch``. This will output the static files to the ``dist`` directory. Then simply a locust instance using the ``--modern-ui`` flag. Vite will automatically detect any changed files and re-build as needed. Simply refresh the page to view the changes
+
+To compile the webui, run ``yarn build``
 
 The frontend can additionally be built using make:
-```bash
-make frontend_build
-```
 
-## Linting
+.. code-block:: console
 
-Run `yarn lint` to detect lint failures in the frontend project. Running `yarn lint --fix` will resolve any issues that are automatically resolvable. Your IDE can aditionally be configured with ESLint to resolve these issues on save.
+    $ make frontend_build
 
-## Formatting
 
-Run `yarn format` to fix any formatting issues in the frontend project. Once again your IDE can be configured to automatically format on save.
+Linting
+-------
 
-## Typechecking
+Run ``yarn lint`` to detect lint failures in the frontend project. Running ``yarn lint --fix`` will resolve any issues that are automatically resolvable. Your IDE can aditionally be configured with ESLint to resolve these issues on save.
 
-We use Typescript in the frontend project. Run `yarn type-check` to find any issues.
+Formatting
+----------
+
+Run ``yarn format`` to fix any formatting issues in the frontend project. Once again your IDE can be configured to automatically format on save.
+
+Typechecking
+------------
+
+We use Typescript in the frontend project. Run ``yarn type-check`` to find any issues.
