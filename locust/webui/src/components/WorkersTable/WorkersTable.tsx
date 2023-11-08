@@ -1,6 +1,7 @@
 import { connect } from 'react-redux';
 
 import Table from 'components/Table/Table';
+import useSortByField from 'hooks/useSortByField';
 import { IRootState } from 'redux/store';
 import { ISwarmWorker } from 'types/ui.types';
 
@@ -13,7 +14,20 @@ const tableStructure = [
 ];
 
 function WorkersTable({ workers = [] }: { workers?: ISwarmWorker[] }) {
-  return <Table<ISwarmWorker> rows={workers} structure={tableStructure} />;
+  const {
+    onTableHeadClick,
+    sortedStats: sortedWorkers,
+    currentSortField,
+  } = useSortByField<ISwarmWorker>(workers, { defaultSortKey: 'worker' as keyof ISwarmWorker });
+
+  return (
+    <Table<ISwarmWorker>
+      currentSortField={currentSortField}
+      onTableHeadClick={onTableHeadClick}
+      rows={sortedWorkers}
+      structure={tableStructure}
+    />
+  );
 }
 
 const storeConnector = ({ ui: { workers } }: IRootState) => ({ workers });

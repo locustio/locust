@@ -16,6 +16,8 @@ interface ITable<Row> {
   rows: Row[];
   structure: ITableStructure[];
   children?: React.ReactElement;
+  onTableHeadClick?: (event: React.MouseEvent<HTMLElement>) => void;
+  currentSortField?: string;
 }
 
 export interface ITableRowProps {
@@ -45,6 +47,8 @@ function TableRowContent({ content, round, markdown }: ITableRowContent) {
 export default function Table<Row extends Record<string, any> = Record<string, string | number>>({
   rows,
   structure,
+  onTableHeadClick,
+  currentSortField,
 }: ITable<Row>) {
   return (
     <TableContainer component={Paper}>
@@ -52,7 +56,17 @@ export default function Table<Row extends Record<string, any> = Record<string, s
         <TableHead>
           <TableRow>
             {structure.map(({ title, key }) => (
-              <TableCell key={`table-head-${key}`}>{title}</TableCell>
+              <TableCell
+                data-sortkey={key}
+                key={`table-head-${key}`}
+                onClick={onTableHeadClick}
+                sx={{
+                  cursor: onTableHeadClick ? 'pointer' : 'default',
+                  color: currentSortField === key ? 'primary.main' : 'text.primary',
+                }}
+              >
+                {title}
+              </TableCell>
             ))}
           </TableRow>
         </TableHead>
