@@ -463,7 +463,7 @@ class FastResponse(CompatResponse):
             if self.headers is None:
                 self.encoding = "utf-8"
             else:
-                self.encoding = get_encoding_from_headers(self.headers)
+                self.encoding = get_encoding_from_headers(self.headers) or ""
         return str(self.content, self.encoding, errors="replace")
 
     @property
