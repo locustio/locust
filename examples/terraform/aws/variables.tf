@@ -1,3 +1,9 @@
+variable "aws_region" {
+    type = string
+    default = "us-east-1"
+    description = "AWS Region"
+}
+
 variable "node_size" {
     description = "Size of total nodes"
     default = 2
@@ -14,4 +20,10 @@ variable "locust_plan_filename" {
 variable "subnet_name" {
     default = "subnet-prd-a"
     description = "Subnet name"
+}
+
+variable "ssh_export_pem" {
+ description = "Export private ssh key"
+ type        = bool
+ default     = false
 }

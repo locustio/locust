@@ -27,6 +27,6 @@ module "loadtest" {
 
     subnet_id = data.aws_subnet.current.id
     locust_plan_filename = var.locust_plan_filename
-    ssh_export_pem = false
+    ssh_export_pem = var.ssh_export_pem
 
 }
