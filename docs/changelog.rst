@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.18.2
+======
+* FastHttpUser: encoding return str when response is empty by https://github.com/locustio/locust/pull/2451
+
 2.18.1
 ======
 * Add Log Viewer to Modern UI https://github.com/locustio/locust/pull/2440
