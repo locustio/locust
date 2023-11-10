@@ -1,6 +1,21 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.18.2](https://github.com/locustio/locust/tree/2.18.2) (2023-11-10)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.18.1...2.18.2)
+
+**Fixed bugs:**
+
+- 2.18 - fasthttp error for no content response [\#2450](https://github.com/locustio/locust/issues/2450)
+- Segmentation fault running the locust command [\#2447](https://github.com/locustio/locust/issues/2447)
+
+**Merged pull requests:**
+
+- Add terraform variables [\#2455](https://github.com/locustio/locust/pull/2455) ([sdarwin](https://github.com/sdarwin))
+- FastHttpUser: encoding return str when response is empty [\#2451](https://github.com/locustio/locust/pull/2451) ([scottARob](https://github.com/scottARob))
+- Fix docs: modern UI developing guide [\#2446](https://github.com/locustio/locust/pull/2446) ([zifter](https://github.com/zifter))
+
 ## [2.18.1](https://github.com/locustio/locust/tree/2.18.1) (2023-11-01)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.18.0...2.18.1)
