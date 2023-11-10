@@ -10,26 +10,31 @@ from .user.inspectuser import get_ratio
 from html import escape
 from json import dumps
 from .runners import MasterRunner, STATE_STOPPED, STATE_STOPPING
-from flask import render_template as flask_render_template
 
 
 PERCENTILES_FOR_HTML_REPORT = [0.50, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1.0]
 
 
-def render_template(file, **kwargs):
-    templates_path = os.path.join(pathlib.Path(__file__).parent.absolute(), "templates")
-    env = Environment(loader=FileSystemLoader(templates_path), extensions=["jinja2.ext.do"])
+def render_template(file, template_path, **kwargs):
+    env = Environment(loader=FileSystemLoader(template_path), extensions=["jinja2.ext.do"])
     template = env.get_template(file)
     return template.render(**kwargs)
 
 
 def get_html_report(
     environment,
-    static_path=os.path.join(os.path.dirname(__file__), "static"),
     show_download_link=True,
     use_modern_ui=False,
     theme="",
 ):
+    root_path = os.path.dirname(os.path.abspath(__file__))
+    if use_modern_ui:
+        static_path = os.path.join(root_path, "webui", "dist", "assets")
+        template_path = os.path.join(root_path, "webui", "dist")
+    else:
+        static_path = os.path.join(root_path, "static")
+        template_path = os.path.join(root_path, "templates")
+
     stats = environment.runner.stats
 
     start_ts = stats.start_time
@@ -94,8 +99,9 @@ def get_html_report(
     }
 
     if use_modern_ui:
-        res = flask_render_template(
+        res = render_template(
             "report.html",
+            template_path,
             template_args={
                 "is_report": True,
                 "requests_statistics": [stat.to_dict(escape_string_values=True) for stat in requests_statistics],
@@ -128,6 +134,7 @@ def get_html_report(
     else:
         res = render_template(
             "report.html",
+            template_path,
             int=int,
             round=round,
             escape=escape,

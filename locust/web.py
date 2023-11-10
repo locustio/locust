@@ -110,9 +110,9 @@ class WebUI:
         self.app = app
         app.jinja_env.add_extension("jinja2.ext.do")
         app.debug = True
-        self.root_path = os.path.dirname(os.path.abspath(__file__))
-        app.root_path = self.root_path
-        self.webui_build_path = f"{self.root_path}/webui/dist"
+        root_path = os.path.dirname(os.path.abspath(__file__))
+        app.root_path = root_path
+        self.webui_build_path = os.path.join(root_path, "webui", "dist")
         self.app.config["BASIC_AUTH_ENABLED"] = False
         self.auth: Optional[BasicAuth] = None
         self.greenlet: Optional[gevent.Greenlet] = None
@@ -144,9 +144,7 @@ class WebUI:
 
         @app.route("/assets/<path:path>")
         def send_assets(path):
-            webui_build_path = self.webui_build_path
-
-            return send_from_directory(f"{webui_build_path}/assets", path)
+            return send_from_directory(os.path.join(self.webui_build_path, "assets"), path)
 
         @app.route("/")
         @self.auth_required_if_enabled
@@ -287,16 +285,9 @@ class WebUI:
         @app.route("/stats/report")
         @self.auth_required_if_enabled
         def stats_report() -> Response:
-            if self.modern_ui:
-                self.set_static_modern_ui()
-                static_path = f"{self.webui_build_path}/assets"
-            else:
-                static_path = f"{self.root_path}/static"
-
             theme = request.args.get("theme", "")
             res = get_html_report(
                 self.environment,
-                static_path=static_path,
                 show_download_link=not request.args.get("download"),
                 use_modern_ui=self.modern_ui,
                 theme=theme,
@@ -542,7 +533,7 @@ class WebUI:
 
     def set_static_modern_ui(self):
         self.app.template_folder = self.webui_build_path
-        self.app.static_folder = f"{self.webui_build_path}/assets/"
+        self.app.static_folder = os.path.join(self.webui_build_path, "assets")
         self.app.static_url_path = "/assets/"
 
     def update_template_args(self):

@@ -495,8 +495,8 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         logger.info("Got SIGTERM signal")
         shutdown()
 
-    def save_html_report():
-        html_report = get_html_report(environment, show_download_link=False)
+    def save_html_report(use_modern_ui=False):
+        html_report = get_html_report(environment, show_download_link=False, use_modern_ui=use_modern_ui)
         logger.info("writing html report to file: %s", options.html_file)
         with open(options.html_file, "w", encoding="utf-8") as file:
             file.write(html_report)
@@ -512,10 +512,10 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
         main_greenlet.join()
         if options.html_file:
-            save_html_report()
+            save_html_report(options.modern_ui)
     except KeyboardInterrupt:
         if options.html_file:
-            save_html_report()
+            save_html_report(options.modern_ui)
     except Exception:
         raise
     shutdown()
