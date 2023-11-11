@@ -52,7 +52,15 @@ export default function useSortByField<IStat>(
       const sortField = (event.target as HTMLElement).getAttribute('data-sortkey') as keyof IStat;
 
       if (sortField === currentSortField.current) {
-        setShouldReverse(!shouldReverse);
+        if (shouldReverse) {
+          // reset to intial state on 3rd click
+          setShouldReverse(false);
+          currentSortField.current = undefined;
+          setSortedStats(stats);
+          return;
+        } else {
+          setShouldReverse(true);
+        }
       } else if (shouldReverse) {
         // reset reverse when sorting by new field
         setShouldReverse(false);
