@@ -8,10 +8,11 @@ import ResponseTimeTable from 'components/ResponseTimeTable/ResponseTimeTable';
 import { StatsTable } from 'components/StatsTable/StatsTable';
 import { SwarmCharts } from 'components/SwarmCharts/SwarmCharts';
 import { SwarmRatios } from 'components/SwarnRatios/SwarmRatios';
-import createTheme, { THEME_MODE } from 'styles/theme';
+import { INITIAL_THEME } from 'constants/theme';
+import createTheme from 'styles/theme';
 import { IReport } from 'types/swarm.types';
 
-const theme = createTheme(window.theme || THEME_MODE.LIGHT);
+const theme = createTheme(window.theme || INITIAL_THEME);
 
 export default function Report({
   locustfile,
