@@ -7,9 +7,10 @@ import Layout from 'components/Layout/Layout';
 import SwarmForm from 'components/SwarmForm/SwarmForm';
 import Tabs from 'components/Tabs/Tabs';
 import { SWARM_STATE } from 'constants/swarm';
+import { THEME_MODE } from 'constants/theme';
 import useSwarmUi from 'hooks/useSwarmUi';
 import { IRootState } from 'redux/store';
-import createTheme, { THEME_MODE } from 'styles/theme';
+import createTheme from 'styles/theme';
 import { SwarmState } from 'types/ui.types';
 
 interface IApp {

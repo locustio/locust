@@ -3,9 +3,9 @@ import DarkModeIcon from '@mui/icons-material/Brightness4';
 import LightModeIcon from '@mui/icons-material/Brightness7';
 import { IconButton } from '@mui/material';
 
+import { INITIAL_THEME, THEME_MODE } from 'constants/theme';
 import { useAction, useSelector } from 'redux/hooks';
 import { themeActions } from 'redux/slice/theme.slice';
-import { THEME_MODE } from 'styles/theme';
 
 export default function DarkLightToggle() {
   const isDarkMode = useSelector(({ theme: { isDarkMode } }) => isDarkMode);
@@ -14,10 +14,7 @@ export default function DarkLightToggle() {
   useEffect(() => {
     // set dark mode based on local storage
     // or users browser preferences
-    setIsDarkMode(
-      localStorage.theme === THEME_MODE.DARK ||
-        (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
-    );
+    setIsDarkMode(INITIAL_THEME === THEME_MODE.DARK);
   }, []);
 
   const toggleMode = () => {
