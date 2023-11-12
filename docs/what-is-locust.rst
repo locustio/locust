@@ -61,9 +61,9 @@ Previous versions of Locust used terminology borrowed from nature (swarming, hat
 Authors
 =======
 
-- `Jonatan Heyman <http://heyman.info>`_ (`@jonatanheyman <https://twitter.com/jonatanheyman>`_ on Twitter)
-- Lars Holmberg (`@cyberw <https://github.com/cyberw>`_ on Github)
-- Andrew Baldwin (`@andrewbaldwin44 <https://github.com/andrewbaldwin44>`_ on Github)
+- Jonatan Heyman (`@heyman <https://github.com/heyman>`_)
+- Lars Holmberg (`@cyberw <https://github.com/cyberw>`_)
+- Andrew Baldwin (`@andrewbaldwin44 <https://github.com/andrewbaldwin44>`_)
 - Carl Byström, Joakim Hamrén & Hugo Heyman
 
 Many thanks to our other great `contributors <https://github.com/locustio/locust/graphs/contributors>`_!
