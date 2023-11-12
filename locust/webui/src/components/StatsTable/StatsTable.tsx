@@ -1,6 +1,7 @@
 import { connect } from 'react-redux';
 
 import Table from 'components/Table/Table';
+import useSortByField from 'hooks/useSortByField';
 import { IRootState } from 'redux/store';
 import { ISwarmStat } from 'types/ui.types';
 
@@ -21,7 +22,18 @@ const tableStructure = [
 ];
 
 export function StatsTable({ stats }: { stats: ISwarmStat[] }) {
-  return <Table<ISwarmStat> rows={stats} structure={tableStructure} />;
+  const { onTableHeadClick, sortedStats, currentSortField } = useSortByField<ISwarmStat>(stats, {
+    hasTotalRow: true,
+  });
+
+  return (
+    <Table<ISwarmStat>
+      currentSortField={currentSortField}
+      onTableHeadClick={onTableHeadClick}
+      rows={sortedStats}
+      structure={tableStructure}
+    />
+  );
 }
 
 const storeConnector = ({ ui: { stats } }: IRootState) => ({ stats });
