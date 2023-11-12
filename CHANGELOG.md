@@ -1,6 +1,20 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.18.3](https://github.com/locustio/locust/tree/2.18.3) (2023-11-12)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.18.2...2.18.3)
+
+**Closed issues:**
+
+- Add Modern UI HTML Report to --html Option [\#2458](https://github.com/locustio/locust/issues/2458)
+
+**Merged pull requests:**
+
+- List Andrew as maintainer of the Modern web UI [\#2460](https://github.com/locustio/locust/pull/2460) ([cyberw](https://github.com/cyberw))
+- Add Modern UI HTML Report to --html Option [\#2459](https://github.com/locustio/locust/pull/2459) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Modern UI: Add sorting to columns on statistics page and downloaded report [\#2453](https://github.com/locustio/locust/pull/2453) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
 ## [2.18.2](https://github.com/locustio/locust/tree/2.18.2) (2023-11-10)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.18.1...2.18.2)
