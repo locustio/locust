@@ -4,9 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.18.3
+======
+* Modern UI: Add sorting to columns on statistics page and downloaded report https://github.com/locustio/locust/pull/2453
+
 2.18.2
 ======
-* FastHttpUser: encoding return str when response is empty by https://github.com/locustio/locust/pull/2451
+* FastHttpUser: encoding return str when response is empty https://github.com/locustio/locust/pull/2451
 
 2.18.1
 ======
