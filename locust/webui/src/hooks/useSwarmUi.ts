@@ -8,6 +8,8 @@ import { swarmActions } from 'redux/slice/swarm.slice';
 import { uiActions } from 'redux/slice/ui.slice';
 import { roundToDecimalPlaces } from 'utils/number';
 
+const STATS_REFETCH_INTERVAL = 2000;
+
 export default function useSwarmUi() {
   const setSwarm = useAction(swarmActions.setSwarm);
   const setUi = useAction(uiActions.setUi);
@@ -21,58 +23,67 @@ export default function useSwarmUi() {
   const { data: tasksData, refetch: refetchTasks } = useGetTasksQuery();
   const { data: exceptionsData, refetch: refetchExceptions } = useGetExceptionsQuery();
 
-  useEffect(() => {
-    if (!statsData) {
-      return;
-    }
+  const shouldRunRefetchInterval =
+    swarm.state === SWARM_STATE.SPAWNING || swarm.state == SWARM_STATE.RUNNING;
 
-    const {
-      extendedStats,
-      state,
-      stats,
-      errors,
-      totalRps,
-      failRatio,
-      workers,
-      currentResponseTimePercentile1,
-      currentResponseTimePercentile2,
-      userCount,
-    } = statsData;
+  useInterval(
+    () => {
+      if (!statsData) {
+        return;
+      }
 
-    if (state === SWARM_STATE.STOPPED || state === SWARM_STATE.SPAWNING) {
-      setSwarm({ state });
-    }
+      const {
+        extendedStats,
+        state,
+        stats,
+        errors,
+        totalRps,
+        failRatio,
+        workers,
+        currentResponseTimePercentile1,
+        currentResponseTimePercentile2,
+        userCount,
+      } = statsData;
 
-    const time = new Date().toLocaleTimeString();
+      if (state === SWARM_STATE.STOPPED || state === SWARM_STATE.SPAWNING) {
+        setSwarm({ state });
+      }
 
-    if (shouldAddMarker) {
-      setShouldAddMarker(false);
-      updateChartMarkers(time);
-    }
+      const time = new Date().toLocaleTimeString();
 
-    const totalRpsRounded = roundToDecimalPlaces(totalRps, 2);
-    const toalFailureRounded = roundToDecimalPlaces(failRatio * 100);
+      if (shouldAddMarker) {
+        setShouldAddMarker(false);
+        updateChartMarkers(time);
+      }
 
-    const newChartEntry = {
-      currentRps: totalRpsRounded,
-      currentFailPerSec: failRatio,
-      responseTimePercentile1: currentResponseTimePercentile1,
-      responseTimePercentile2: currentResponseTimePercentile2,
-      userCount: userCount,
-      time,
-    };
+      const totalRpsRounded = roundToDecimalPlaces(totalRps, 2);
+      const toalFailureRounded = roundToDecimalPlaces(failRatio * 100);
 
-    setUi({
-      extendedStats,
-      stats,
-      errors,
-      totalRps: totalRpsRounded,
-      failRatio: toalFailureRounded,
-      workers,
-      userCount,
-    });
-    updateCharts(newChartEntry);
-  }, [statsData]);
+      const newChartEntry = {
+        currentRps: totalRpsRounded,
+        currentFailPerSec: failRatio,
+        responseTimePercentile1: currentResponseTimePercentile1,
+        responseTimePercentile2: currentResponseTimePercentile2,
+        userCount: userCount,
+        time,
+      };
+
+      setUi({
+        extendedStats,
+        stats,
+        errors,
+        totalRps: totalRpsRounded,
+        failRatio: toalFailureRounded,
+        workers,
+        userCount,
+      });
+      updateCharts(newChartEntry);
+    },
+    STATS_REFETCH_INTERVAL,
+    {
+      shouldRunInterval: !!statsData && shouldRunRefetchInterval,
+    },
+  );
 
   useEffect(() => {
     if (tasksData) {
@@ -86,9 +97,15 @@ export default function useSwarmUi() {
     }
   }, [exceptionsData]);
 
-  useInterval(refetchStats, 2000, { shouldRunInterval: swarm.state !== SWARM_STATE.STOPPED });
-  useInterval(refetchTasks, 5000, { shouldRunInterval: swarm.state !== SWARM_STATE.STOPPED });
-  useInterval(refetchExceptions, 5000, { shouldRunInterval: swarm.state !== SWARM_STATE.STOPPED });
+  useInterval(refetchStats, STATS_REFETCH_INTERVAL, {
+    shouldRunInterval: shouldRunRefetchInterval,
+  });
+  useInterval(refetchTasks, 5000, {
+    shouldRunInterval: shouldRunRefetchInterval,
+  });
+  useInterval(refetchExceptions, 5000, {
+    shouldRunInterval: shouldRunRefetchInterval,
+  });
 
   useEffect(() => {
     if (swarm.state === SWARM_STATE.RUNNING && previousSwarmState.current === SWARM_STATE.STOPPED) {
