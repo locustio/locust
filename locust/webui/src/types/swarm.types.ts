@@ -37,4 +37,6 @@ export interface IReport {
 export interface IReportTemplateArgs extends IReport {
   history: ICharts[];
   is_report?: boolean;
+  percentile1: number;
+  percentile2: number;
 }
