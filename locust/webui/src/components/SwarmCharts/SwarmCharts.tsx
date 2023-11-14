@@ -15,13 +15,19 @@ const availableSwarmCharts: ILineChartProps[] = [
   {
     title: 'Response Times (ms)',
     lines: [
-      { name: 'Median Response Time', key: 'responseTimePercentile1' },
-      { name: '95% percentile', key: 'responseTimePercentile2' },
+      {
+        name: `${window.templateArgs.percentile1 * 100}th percentile`,
+        key: 'responseTimePercentile1',
+      },
+      {
+        name: `${window.templateArgs.percentile2 * 100}th percentile`,
+        key: 'responseTimePercentile2',
+      },
     ],
   },
   {
     title: 'Number of Users',
-    lines: [{ name: '"Number of Users"', key: 'userCount' }],
+    lines: [{ name: 'Number of Users', key: 'userCount' }],
   },
 ];
 

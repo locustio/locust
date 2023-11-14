@@ -26,6 +26,15 @@ export default function useSwarmUi() {
   const shouldRunRefetchInterval =
     swarm.state === SWARM_STATE.SPAWNING || swarm.state == SWARM_STATE.RUNNING;
 
+  useEffect(() => {
+    if (
+      statsData &&
+      (statsData.state === SWARM_STATE.STOPPED || statsData.state === SWARM_STATE.SPAWNING)
+    ) {
+      setSwarm({ state: statsData.state });
+    }
+  }, [statsData && statsData.state]);
+
   useInterval(
     () => {
       if (!statsData) {
@@ -34,7 +43,6 @@ export default function useSwarmUi() {
 
       const {
         extendedStats,
-        state,
         stats,
         errors,
         totalRps,
@@ -44,10 +52,6 @@ export default function useSwarmUi() {
         currentResponseTimePercentile2,
         userCount,
       } = statsData;
-
-      if (state === SWARM_STATE.STOPPED || state === SWARM_STATE.SPAWNING) {
-        setSwarm({ state });
-      }
 
       const time = new Date().toLocaleTimeString();
 

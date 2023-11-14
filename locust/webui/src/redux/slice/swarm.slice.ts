@@ -24,6 +24,8 @@ export interface ISwarmState {
   locustfile: string;
   numUsers: number | null;
   overrideHostWarning: boolean;
+  percentile1: number;
+  percentile2: number;
   runTime: number;
   showUserclassPicker: boolean;
   spawnRate: number | null;
