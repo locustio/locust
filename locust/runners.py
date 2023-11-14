@@ -348,7 +348,7 @@ class Runner:
             else:
                 shape_adjustment_start = time.time()
                 if len(current_tick) == 2:
-                    current_tick = (*current_tick, None)
+                    current_tick = (*current_tick, None)  # type: ignore
                 user_count, spawn_rate, user_classes = current_tick  # type: ignore
                 logger.info("Shape test updating to %d users at %.2f spawn rate" % (user_count, spawn_rate))
                 # TODO: This `self.start()` call is blocking until the ramp-up is completed. This can leads
