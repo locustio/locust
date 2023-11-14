@@ -56,7 +56,8 @@ def load_locustfile(path) -> Tuple[Optional[str], Dict[str, User], List[LoadTest
     loader = importlib.machinery.SourceFileLoader(os.path.splitext(locustfile)[0], path)
     spec = importlib.util.spec_from_loader(loader.name, loader)
     assert spec
-    imported = importlib.util.module_from_spec(spec)
+    imported_module = importlib.util.module_from_spec(spec)
+    loader.exec_module(imported_module)
 
     # Remove directory from path if we added it ourselves (just to be neat)
     if added_to_path:
