@@ -346,11 +346,10 @@ class Runner:
             elif self.shape_last_tick == current_tick:
                 gevent.sleep(1)
             else:
+                shape_adjustment_start = time.time()
                 if len(current_tick) == 2:
-                    user_count, spawn_rate = current_tick  # type: ignore
-                    user_classes = None
-                else:
-                    user_count, spawn_rate, user_classes = current_tick  # type: ignore
+                    current_tick = (*current_tick, None)
+                user_count, spawn_rate, user_classes = current_tick  # type: ignore
                 logger.info("Shape test updating to %d users at %.2f spawn rate" % (user_count, spawn_rate))
                 # TODO: This `self.start()` call is blocking until the ramp-up is completed. This can leads
                 #       to unexpected behaviours such as the one in the following example:
@@ -367,6 +366,9 @@ class Runner:
                 #        of each load test shape stage.
                 self.start(user_count=user_count, spawn_rate=spawn_rate, user_classes=user_classes)
                 self.shape_last_tick = current_tick
+                shape_adjustment_time_ms = time.time() - shape_adjustment_start
+                if shape_adjustment_time_ms < 1:
+                    gevent.sleep(1 - shape_adjustment_time_ms)
 
     def stop(self) -> None:
         """
