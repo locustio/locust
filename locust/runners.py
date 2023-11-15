@@ -345,7 +345,6 @@ class Runner:
                 self.shape_last_tick = None
                 return
             elif self.shape_last_tick != current_tick:
-                shape_adjustment_start = time.time()
                 if len(current_tick) == 2:
                     user_count, spawn_rate = current_tick  # type: ignore
                     user_classes = None
