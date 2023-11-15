@@ -333,6 +333,7 @@ class Runner:
     def shape_worker(self) -> None:
         logger.info("Shape worker starting")
         while self.state == STATE_INIT or self.state == STATE_SPAWNING or self.state == STATE_RUNNING:
+            shape_adjustment_start = time.time()
             current_tick = self.environment.shape_class.tick() if self.environment.shape_class is not None else None
             if current_tick is None:
                 logger.info("Shape test stopping")
@@ -343,11 +344,13 @@ class Runner:
                 self.shape_greenlet = None
                 self.shape_last_tick = None
                 return
-            elif self.shape_last_tick == current_tick:
-                gevent.sleep(1)
-            else:
+            elif self.shape_last_tick != current_tick:
                 shape_adjustment_start = time.time()
-                user_count, spawn_rate, user_classes = current_tick if len(current_tick) == 3 else (*current_tick, None)  # type: ignore
+                if len(current_tick) == 2:
+                    user_count, spawn_rate = current_tick  # type: ignore
+                    user_classes = None
+                else:
+                    user_count, spawn_rate, user_classes = current_tick  # type: ignore
                 logger.info("Shape test updating to %d users at %.2f spawn rate" % (user_count, spawn_rate))
                 # TODO: This `self.start()` call is blocking until the ramp-up is completed. This can leads
                 #       to unexpected behaviours such as the one in the following example:
@@ -364,8 +367,8 @@ class Runner:
                 #        of each load test shape stage.
                 self.start(user_count=user_count, spawn_rate=spawn_rate, user_classes=user_classes)
                 self.shape_last_tick = current_tick
-                shape_adjustment_time_ms = time.time() - shape_adjustment_start
-                gevent.sleep(max(1 - shape_adjustment_time_ms, 0))
+            shape_adjustment_time_ms = time.time() - shape_adjustment_start
+            gevent.sleep(max(1 - shape_adjustment_time_ms, 0))
 
     def stop(self) -> None:
         """
