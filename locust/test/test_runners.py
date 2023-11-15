@@ -2707,6 +2707,67 @@ class TestMasterRunner(LocustRunnerTestCase):
             for i in range(USERS_COUNT):
                 self.assertEqual(indexes[i], i, "Worker index mismatch")
 
+    def test_custom_shape_scale_interval(self):
+        class MyUser(User):
+            @task
+            def my_task(self):
+                pass
+
+        class TestShape(LoadTestShape):
+            def __init__(self):
+                super().__init__()
+                self._users_num = [1, 1, 1, 2, 2, 3, 3, 3, 4]
+                self._index = 0
+
+            def tick(self):
+                if self._index >= len(self._users_num):
+                    return None
+                users_num = self._users_num[self._index]
+                self._index += 1
+                return users_num, users_num
+
+        self.environment.shape_class = TestShape()
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner(user_classes=[MyUser])
+            for i in range(5):
+                server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
+
+            # Start the shape_worker
+            self.environment.shape_class.reset_time()
+            master.start_shape()
+
+            # Wait for shape_worker to update user_count
+            sleep(0.5)
+            num_users = sum(
+                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type != "ack"
+            )
+            self.assertEqual(
+                1, num_users, "Total number of users in first stage of shape test is not 1: %i" % num_users
+            )
+
+            # Wait for shape_worker to update user_count again
+            sleep(1.5)
+            num_users = sum(
+                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type != "ack"
+            )
+            self.assertEqual(
+                1, num_users, "Total number of users in second stage of shape test is not 1: %i" % num_users
+            )
+
+            # Wait for shape_worker to update user_count few times but not reach the end yet
+            sleep(2.5)
+            num_users = sum(
+                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type != "ack"
+            )
+            self.assertEqual(
+                3, num_users, "Total number of users in second stage of shape test is not 3: %i" % num_users
+            )
+
+            # Wait to ensure shape_worker has stopped the test
+            sleep(3)
+            self.assertEqual("stopped", master.state, "The test has not been stopped by the shape class")
+
     def test_custom_shape_scale_up(self):
         class MyUser(User):
             @task
