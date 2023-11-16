@@ -7,10 +7,6 @@ import { ITableStructure } from 'types/table.types';
 import { camelCaseKeys } from 'utils/string';
 
 export interface ISwarmState {
-  auth: {
-    email: string;
-    name: string;
-  };
   availableShapeClasses: string[];
   availableUserClasses: string[];
   extraOptions: IExtraOptions;
@@ -26,7 +22,7 @@ export interface ISwarmState {
   overrideHostWarning: boolean;
   percentile1: number;
   percentile2: number;
-  runTime: number;
+  runTime?: number;
   showUserclassPicker: boolean;
   spawnRate: number | null;
   state: string;
