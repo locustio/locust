@@ -28,11 +28,16 @@ export interface ITableRowProps {
 
 export interface ITableRowContent {
   content: string | number;
+  formatter?: (content: string | number) => string;
   round?: number;
   markdown?: boolean;
 }
 
-function TableRowContent({ content, round, markdown }: ITableRowContent) {
+function TableRowContent({ content, formatter, round, markdown }: ITableRowContent) {
+  if (formatter) {
+    return formatter(content);
+  }
+
   if (round) {
     return roundToDecimalPlaces(content as number, round);
   }
@@ -73,9 +78,9 @@ export default function Table<Row extends Record<string, any> = Record<string, s
         <TableBody>
           {rows.map((row, index) => (
             <TableRow key={`${row.name}-${index}`}>
-              {structure.map(({ key, round, markdown }, index) => (
+              {structure.map(({ key, ...tableRowProps }, index) => (
                 <TableCell key={`table-row=${index}`}>
-                  <TableRowContent content={row[key]} markdown={markdown} round={round} />
+                  <TableRowContent content={row[key]} {...tableRowProps} />
                 </TableCell>
               ))}
             </TableRow>

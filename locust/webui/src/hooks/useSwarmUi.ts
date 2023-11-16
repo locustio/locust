@@ -17,6 +17,7 @@ export default function useSwarmUi() {
   const updateChartMarkers = useAction(uiActions.updateChartMarkers);
   const swarm = useSelector(({ swarm }) => swarm);
   const previousSwarmState = useRef(swarm.state);
+  const hasSetInitStats = useRef(false);
   const [shouldAddMarker, setShouldAddMarker] = useState(false);
 
   const { data: statsData, refetch: refetchStats } = useGetStatsQuery();
@@ -25,6 +26,54 @@ export default function useSwarmUi() {
 
   const shouldRunRefetchInterval =
     swarm.state === SWARM_STATE.SPAWNING || swarm.state == SWARM_STATE.RUNNING;
+
+  const updateStatsUi = () => {
+    if (!statsData) {
+      return;
+    }
+
+    const {
+      extendedStats,
+      stats,
+      errors,
+      totalRps,
+      failRatio,
+      workers,
+      currentResponseTimePercentile1,
+      currentResponseTimePercentile2,
+      userCount,
+    } = statsData;
+
+    const time = new Date().toLocaleTimeString();
+
+    if (shouldAddMarker) {
+      setShouldAddMarker(false);
+      updateChartMarkers(time);
+    }
+
+    const totalRpsRounded = roundToDecimalPlaces(totalRps, 2);
+    const toalFailureRounded = roundToDecimalPlaces(failRatio * 100);
+
+    const newChartEntry = {
+      currentRps: totalRpsRounded,
+      currentFailPerSec: failRatio,
+      responseTimePercentile1: currentResponseTimePercentile1,
+      responseTimePercentile2: currentResponseTimePercentile2,
+      userCount: userCount,
+      time,
+    };
+
+    setUi({
+      extendedStats,
+      stats,
+      errors,
+      totalRps: totalRpsRounded,
+      failRatio: toalFailureRounded,
+      workers,
+      userCount,
+    });
+    updateCharts(newChartEntry);
+  };
 
   useEffect(() => {
     if (
@@ -35,59 +84,20 @@ export default function useSwarmUi() {
     }
   }, [statsData && statsData.state]);
 
-  useInterval(
-    () => {
-      if (!statsData) {
-        return;
+  useEffect(() => {
+    if (statsData) {
+      if (!hasSetInitStats.current) {
+        // handle setting stats on first load
+        updateStatsUi();
       }
 
-      const {
-        extendedStats,
-        stats,
-        errors,
-        totalRps,
-        failRatio,
-        workers,
-        currentResponseTimePercentile1,
-        currentResponseTimePercentile2,
-        userCount,
-      } = statsData;
+      hasSetInitStats.current = true;
+    }
+  }, [statsData]);
 
-      const time = new Date().toLocaleTimeString();
-
-      if (shouldAddMarker) {
-        setShouldAddMarker(false);
-        updateChartMarkers(time);
-      }
-
-      const totalRpsRounded = roundToDecimalPlaces(totalRps, 2);
-      const toalFailureRounded = roundToDecimalPlaces(failRatio * 100);
-
-      const newChartEntry = {
-        currentRps: totalRpsRounded,
-        currentFailPerSec: failRatio,
-        responseTimePercentile1: currentResponseTimePercentile1,
-        responseTimePercentile2: currentResponseTimePercentile2,
-        userCount: userCount,
-        time,
-      };
-
-      setUi({
-        extendedStats,
-        stats,
-        errors,
-        totalRps: totalRpsRounded,
-        failRatio: toalFailureRounded,
-        workers,
-        userCount,
-      });
-      updateCharts(newChartEntry);
-    },
-    STATS_REFETCH_INTERVAL,
-    {
-      shouldRunInterval: !!statsData && shouldRunRefetchInterval,
-    },
-  );
+  useInterval(updateStatsUi, STATS_REFETCH_INTERVAL, {
+    shouldRunInterval: !!statsData && shouldRunRefetchInterval,
+  });
 
   useEffect(() => {
     if (tasksData) {

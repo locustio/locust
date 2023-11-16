@@ -11,6 +11,7 @@ const availableSwarmCharts: ILineChartProps[] = [
       { name: 'RPS', key: 'currentRps' },
       { name: 'Failures/s', key: 'currentFailPerSec' },
     ],
+    colors: ['#00ca5a', '#ff6d6d'],
   },
   {
     title: 'Response Times (ms)',

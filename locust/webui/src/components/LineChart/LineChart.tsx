@@ -5,8 +5,9 @@ import {
   dispose,
   ECharts,
   EChartsOption,
-  TooltipComponentFormatterCallbackParams,
   DefaultLabelFormatterCallbackParams,
+  connect,
+  TooltipComponentOption,
 } from 'echarts';
 
 import { IUiState } from 'redux/slice/ui.slice';
@@ -21,25 +22,42 @@ interface ICreateOptions {
   title: string;
   seriesData: EChartsOption['Series'][];
   charts: ICharts;
+  colors?: string[];
 }
 
 export interface ILineChartProps {
   title: string;
   lines: ILine[];
+  colors?: string[];
 }
 
 interface ILineChart extends ILineChartProps {
-  title: string;
-  lines: ILine[];
   charts: ICharts;
 }
 
-const createOptions = ({ charts, title, seriesData }: ICreateOptions) => ({
+const CHART_TEXT_COLOR = '#b3c3bc';
+const CHART_AXIS_COLOR = '#5b6f66';
+const CHART_COLOR_PALETTE = ['#00ca5a', '#ffca5a'];
+
+registerTheme('locust', {
+  color: CHART_COLOR_PALETTE,
+  backgroundColor: '#27272a',
+  xAxis: { lineColor: '#f00' },
+  graph: {
+    color: CHART_COLOR_PALETTE,
+  },
+  textStyle: { color: CHART_TEXT_COLOR },
+  title: {
+    textStyle: { color: CHART_TEXT_COLOR },
+  },
+});
+
+const createOptions = ({ charts, title, seriesData, colors }: ICreateOptions) => ({
   legend: {
     icon: 'circle',
-    inactiveColor: '#b3c3bc',
+    inactiveColor: CHART_TEXT_COLOR,
     textStyle: {
-      color: '#b3c3bc',
+      color: CHART_TEXT_COLOR,
     },
   },
   title: {
@@ -49,7 +67,7 @@ const createOptions = ({ charts, title, seriesData }: ICreateOptions) => ({
   },
   tooltip: {
     trigger: 'axis',
-    formatter: (params: TooltipComponentFormatterCallbackParams) => {
+    formatter: (params: TooltipComponentOption) => {
       if (
         !!params &&
         Array.isArray(params) &&
@@ -57,7 +75,8 @@ const createOptions = ({ charts, title, seriesData }: ICreateOptions) => ({
         params.some(param => !!param.value)
       ) {
         return params.reduce(
-          (tooltipText, { color, seriesName, value }) => `
+          (tooltipText, { axisValue, color, seriesName, value }, index) => `
+          ${index === 0 ? axisValue : ''}
           ${tooltipText}
           <br>
           <span style="color:${color};">
@@ -74,7 +93,7 @@ const createOptions = ({ charts, title, seriesData }: ICreateOptions) => ({
       animation: true,
     },
     textStyle: {
-      color: '#b3c3bc',
+      color: CHART_TEXT_COLOR,
       fontSize: 13,
     },
     backgroundColor: 'rgba(21,35,28, 0.93)',
@@ -88,7 +107,7 @@ const createOptions = ({ charts, title, seriesData }: ICreateOptions) => ({
     },
     axisLine: {
       lineStyle: {
-        color: '#5b6f66',
+        color: CHART_AXIS_COLOR,
       },
     },
     data: charts.time,
@@ -101,13 +120,13 @@ const createOptions = ({ charts, title, seriesData }: ICreateOptions) => ({
     },
     axisLine: {
       lineStyle: {
-        color: '#5b6f66',
+        color: CHART_AXIS_COLOR,
       },
     },
   },
   series: seriesData,
   grid: { x: 60, y: 70, x2: 40, y2: 40 },
-  color: ['#00ca5a', '#ff6d6d'],
+  color: colors,
   toolbox: {
     feature: {
       saveAsImage: {
@@ -136,20 +155,11 @@ const createMarkLine = (charts: ICharts) => ({
   label: {
     formatter: (params: DefaultLabelFormatterCallbackParams) => `Run #${params.dataIndex + 1}`,
   },
-  lineStyle: { color: '#5b6f66' },
+  lineStyle: { color: CHART_AXIS_COLOR },
   data: (charts.markers || []).map((timeMarker: string) => ({ xAxis: timeMarker })),
 });
 
-registerTheme('locust', {
-  backgroundColor: '#27272a',
-  xAxis: { lineColor: '#f00' },
-  textStyle: { color: '#b3c3bc' },
-  title: {
-    textStyle: { color: '#b3c3bc' },
-  },
-});
-
-export default function LineChart({ charts, title, lines }: ILineChart) {
+export default function LineChart({ charts, title, lines, colors }: ILineChart) {
   const [chart, setChart] = useState<ECharts | null>(null);
 
   const chartContainer = useRef<HTMLDivElement | null>(null);
@@ -161,13 +171,20 @@ export default function LineChart({ charts, title, lines }: ILineChart) {
 
     const initChart = init(chartContainer.current, 'locust');
     initChart.setOption(
-      createOptions({ charts, title, seriesData: getSeriesData({ charts, lines }) }),
+      createOptions({ charts, title, seriesData: getSeriesData({ charts, lines }), colors }),
     );
+
+    const handleChartResize = () => initChart.resize();
+    window.addEventListener('resize', handleChartResize);
+
+    initChart.group = 'swarmCharts';
+    connect('swarmCharts');
 
     setChart(initChart);
 
     return () => {
       dispose(initChart);
+      window.removeEventListener('resize', handleChartResize);
     };
   }, [chartContainer]);
 
