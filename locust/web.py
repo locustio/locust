@@ -367,6 +367,7 @@ class WebUI:
                     "stats": stats,
                     "errors": errors,
                     "total_rps": 0.0,
+                    "total_fail_per_sec": 0.0,
                     "fail_ratio": 0.0,
                     "current_response_time_percentile_1": None,
                     "current_response_time_percentile_2": None,
@@ -395,9 +396,11 @@ class WebUI:
                 truncated_stats += [stats[-1]]
 
             report = {"stats": truncated_stats, "errors": errors[:500]}
+            total_stats = stats[-1]
 
             if stats:
-                report["total_rps"] = stats[len(stats) - 1]["current_rps"]
+                report["total_rps"] = total_stats["current_rps"]
+                report["total_fail_per_sec"] = total_stats["current_fail_per_sec"]
                 report["fail_ratio"] = environment.runner.stats.total.fail_ratio
                 report[
                     "current_response_time_percentile_1"
