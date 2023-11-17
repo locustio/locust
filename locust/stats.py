@@ -634,8 +634,8 @@ class StatsEntry:
         cached: Optional[CachedResponseTimes] = None
         if self.response_times_cache is not None:
             for ts in acceptable_timestamps:
-                if ts in self.response_times_cache:
-                    cached = self.response_times_cache[ts]
+                cached = self.response_times_cache.get(ts)
+                if cached is not None:
                     break
 
         if cached:
