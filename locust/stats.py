@@ -389,10 +389,10 @@ class StatsEntry:
         self.total_response_time += response_time
 
         if self.min_response_time is None:
-            self.min_response_time = self.max_response_time = response_time
+            self.min_response_time = response_time
         else:
             self.min_response_time = min(self.min_response_time, response_time)
-            self.max_response_time = max(self.max_response_time, response_time)
+        self.max_response_time = max(self.max_response_time, response_time)
 
         # to avoid to much data that has to be transferred to the master node when
         # running in distributed mode, we save the response time rounded in a dict
@@ -634,8 +634,8 @@ class StatsEntry:
         cached: Optional[CachedResponseTimes] = None
         if self.response_times_cache is not None:
             for ts in acceptable_timestamps:
-                cached = self.response_times_cache.get(ts)
-                if cached is not None:
+                if ts in self.response_times_cache:
+                    cached = self.response_times_cache[ts]
                     break
 
         if cached:
