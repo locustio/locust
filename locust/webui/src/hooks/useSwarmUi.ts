@@ -37,6 +37,7 @@ export default function useSwarmUi() {
       stats,
       errors,
       totalRps,
+      totalFailPerSec,
       failRatio,
       workers,
       currentResponseTimePercentile1,
@@ -52,11 +53,12 @@ export default function useSwarmUi() {
     }
 
     const totalRpsRounded = roundToDecimalPlaces(totalRps, 2);
-    const toalFailureRounded = roundToDecimalPlaces(failRatio * 100);
+    const totalFailPerSecRounded = roundToDecimalPlaces(totalFailPerSec, 2);
+    const totalFailureRatioRounded = roundToDecimalPlaces(failRatio * 100);
 
     const newChartEntry = {
       currentRps: totalRpsRounded,
-      currentFailPerSec: failRatio,
+      currentFailPerSec: totalFailPerSecRounded,
       responseTimePercentile1: currentResponseTimePercentile1,
       responseTimePercentile2: currentResponseTimePercentile2,
       userCount: userCount,
@@ -68,7 +70,7 @@ export default function useSwarmUi() {
       stats,
       errors,
       totalRps: totalRpsRounded,
-      failRatio: toalFailureRounded,
+      failRatio: totalFailureRatioRounded,
       workers,
       userCount,
     });
