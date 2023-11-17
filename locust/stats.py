@@ -390,8 +390,8 @@ class StatsEntry:
 
         if self.min_response_time is None:
             self.min_response_time = response_time
-
-        self.min_response_time = min(self.min_response_time, response_time)
+        else:
+            self.min_response_time = min(self.min_response_time, response_time)
         self.max_response_time = max(self.max_response_time, response_time)
 
         # to avoid to much data that has to be transferred to the master node when
