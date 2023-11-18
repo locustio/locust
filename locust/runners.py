@@ -1360,7 +1360,11 @@ class WorkerRunner(DistributedRunner):
     def connect_to_master(self):
         self.retry += 1
         self.client.send(Message("client_ready", __version__, self.client_id))
-        success = self.connection_event.wait(timeout=CONNECT_TIMEOUT)
+        try:
+            success = self.connection_event.wait(timeout=CONNECT_TIMEOUT)
+        except KeyboardInterrupt:
+            # dont complain about getting CTRL-C
+            sys.exit(1)
         if not success:
             if self.retry < 3:
                 logger.debug(

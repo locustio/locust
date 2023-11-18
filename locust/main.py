@@ -28,6 +28,7 @@ from .exception import AuthCredentialsError
 from .input_events import input_listener
 from .html import get_html_report
 from .util.load_locustfile import load_locustfile
+import traceback
 
 try:
     # import locust_plugins if it is installed, to allow it to register custom arguments etc
@@ -37,6 +38,7 @@ except ModuleNotFoundError:
 
 version = locust.__version__
 
+first_call = True
 
 # Options to ignore when using a custom shape class without `use_common_options=True`
 # See: https://docs.locust.io/en/stable/custom-load-shape.html#use-common-options
@@ -161,6 +163,78 @@ def main():
         else:
             sys.stderr.write("Invalid --loglevel. Valid values are: DEBUG/INFO/WARNING/ERROR/CRITICAL\n")
             sys.exit(1)
+
+    children = []
+
+    if options.processes:
+        if os.name == "nt":
+            raise Exception("--processes is not supported in Windows (except in WSL)")
+        if options.processes == -1:
+            options.processes = os.cpu_count()
+            assert options.processes, "couldnt detect number of cpus!?"
+        elif options.processes < -1:
+            raise Exception(f"invalid processes count {options.processes}")
+        for _ in range(options.processes):
+            child_pid = gevent.fork()
+            if child_pid:
+                children.append(child_pid)
+                logging.debug(f"Started child worker with pid #{child_pid}")
+            else:
+                # child is always a worker, even when it wasnt set on command line
+                options.worker = True
+                # remove options that dont make sense on worker
+                options.run_time = None
+                options.autostart = None
+                break
+        else:
+            # we're in the parent process
+            def sigint_handler(_signal, _frame):
+                # ignore the first sigint in parent, and wait for the children to handle sigint
+                global first_call
+                if first_call:
+                    first_call = False
+                else:
+                    # if parent gets repeated sigint, we kill the children hard
+                    for child_pid in children:
+                        try:
+                            logging.debug(f"Sending SIGKILL to child with pid {child_pid}")
+                            os.kill(child_pid, signal.SIGKILL)
+                        except ProcessLookupError:
+                            pass  # process already dead
+                        except:
+                            logging.error(traceback.format_exc())
+                    sys.exit(1)
+
+            if options.worker:
+                signal.signal(signal.SIGINT, sigint_handler)
+                exit_code = 0
+                # nothing more to do, just wait for the children to exit
+                for child_pid in children:
+                    _, child_status = os.waitpid(child_pid, 0)
+                    child_exit_code = os.waitstatus_to_exitcode(child_status)
+                    exit_code = max(exit_code, child_exit_code)
+                sys.exit(exit_code)
+            else:
+                options.master = True
+                options.expect_workers = options.processes
+
+                def kill_workers(children):
+                    exit_code = 0
+                    logging.debug("Sending SIGINT to children")
+                    for child_pid in children:
+                        try:
+                            os.kill(child_pid, signal.SIGINT)
+                        except ProcessLookupError:
+                            pass  # never mind, process was already dead
+                    logging.debug("waiting for children to terminate")
+                    for child_pid in children:
+                        _, child_status = os.waitpid(child_pid, 0)
+                        child_exit_code = os.waitstatus_to_exitcode(child_status)
+                        exit_code = max(exit_code, child_exit_code)
+                    if exit_code > 1:
+                        logging.error(f"bad response code from worker children: {exit_code}")
+
+                atexit.register(kill_workers, children)
 
     logger = logging.getLogger(__name__)
     greenlet_exception_handler = greenlet_exception_logger(logger)
@@ -486,7 +560,6 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             print_stats(runner.stats, current=False)
             print_percentile_stats(runner.stats)
             print_error_report(runner.stats)
-
         environment.events.quit.fire(exit_code=code)
         sys.exit(code)
 
