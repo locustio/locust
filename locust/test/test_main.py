@@ -1837,8 +1837,16 @@ class AnyUser(HttpUser):
 
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
-                f"locust -f {mocked.file_path} --processes 4 --headless -L DEBUG",
-                shell=True,
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--processes",
+                    "4",
+                    "--headless",
+                    "-L",
+                    "DEBUG",
+                ],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
