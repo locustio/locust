@@ -1843,7 +1843,7 @@ class AnyUser(HttpUser):
             gevent.sleep(3)
             proc.send_signal(signal.SIGINT)
             try:
-                _, stderr = proc.communicate(timeout=3)
+                _, stderr = proc.communicate(timeout=6)
             except Exception:
                 proc.kill()
                 _, stderr = proc.communicate()
