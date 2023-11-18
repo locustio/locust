@@ -5,7 +5,7 @@ import os
 import sys
 import platform
 import unittest
-
+import socket
 import pty
 import signal
 import subprocess
@@ -18,6 +18,11 @@ import requests
 
 from .mock_locustfile import mock_locustfile, MOCK_LOCUSTFILE_CONTENT
 from .util import temporary_file, get_free_tcp_port, patch_env
+
+
+def is_port_in_use(port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(("localhost", port)) == 0
 
 
 MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
@@ -45,12 +50,14 @@ MOCK_LOCUSTFILE_CONTENT_B = textwrap.dedent(
 class ProcessIntegrationTest(TestCase):
     def setUp(self):
         super().setUp()
+        assert not is_port_in_use(5557)
         self.timeout = gevent.Timeout(10)
         self.timeout.start()
 
     def tearDown(self):
         self.timeout.cancel()
         super().tearDown()
+        assert not is_port_in_use(5557)
 
     def test_help_arg(self):
         output = subprocess.check_output(
@@ -1826,5 +1833,6 @@ class AnyUser(HttpUser):
                 _, stderr = proc.communicate()
                 assert False, f"locust process never finished: {stderr}"
             self.assertNotIn("Traceback", stderr)
+            self.assertIn("(index 3) reported as ready", stderr)
             self.assertIn("The last worker quit, stopping test", stderr)
             self.assertIn("Shutting down (exit code 0)", stderr)
