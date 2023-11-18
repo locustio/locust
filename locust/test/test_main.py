@@ -50,13 +50,6 @@ MOCK_LOCUSTFILE_CONTENT_B = textwrap.dedent(
 class ProcessIntegrationTest(TestCase):
     def setUp(self):
         super().setUp()
-        for _ in range(10):
-            if not is_port_in_use(5557):
-                break
-            else:
-                gevent.sleep(1)
-        else:
-            raise Exception("Port 5557 was busy when starting a new test")
         self.timeout = gevent.Timeout(10)
         self.timeout.start()
 
@@ -1334,6 +1327,22 @@ class MyUser(HttpUser):
 
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
+    failed_port_check = False
+
+    def setUp(self):
+        if self.failed_port_check:
+            # fail immediately
+            raise Exception("Port 5557 was (still) busy when starting a new test case")
+        for _ in range(5):
+            if not is_port_in_use(5557):
+                break
+            else:
+                gevent.sleep(1)
+        else:
+            self.failed_port_check = True
+            raise Exception("Port 5557 was (still) busy when starting a new test case")
+        super().setUp()
+
     def test_expect_workers(self):
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
