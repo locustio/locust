@@ -1832,6 +1832,9 @@ class AnyUser(HttpUser):
             self.assertIn("Shutting down (exit code 0)", master_stderr)
 
     def test_processes_ctrl_c(self):
+        # this test case might take >10s
+        self.timeout.cancel()
+
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
                 f"locust -f {mocked.file_path} --processes 4 --headless",
@@ -1846,7 +1849,7 @@ class AnyUser(HttpUser):
                 _, stderr = proc.communicate(timeout=6)
             except Exception:
                 proc.kill()
-                _, stderr = proc.communicate()
+                _, stderr = proc.communicate(timeout=10)
                 assert False, f"locust process never finished: {stderr}"
             self.assertNotIn("Traceback", stderr)
             self.assertIn("(index 3) reported as ready", stderr)
