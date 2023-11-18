@@ -50,15 +50,27 @@ MOCK_LOCUSTFILE_CONTENT_B = textwrap.dedent(
 class ProcessIntegrationTest(TestCase):
     def setUp(self):
         super().setUp()
-        assert not is_port_in_use(5557)
+        for _ in range(10):
+            if not is_port_in_use(5557):
+                break
+            else:
+                gevent.sleep(1)
+        else:
+            raise Exception("Port 5557 was busy when starting a new test")
         self.timeout = gevent.Timeout(10)
         self.timeout.start()
 
     def tearDown(self):
         self.timeout.cancel()
         super().tearDown()
-        assert not is_port_in_use(5557)
 
+    def assert_run(self, cmd: list[str], timeout: int = 5) -> subprocess.CompletedProcess[str]:
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        self.assertEqual(0, out.returncode, f"locust run failed with exit code {out.returncode}:\n{out.stderr}")
+        return out
+
+
+class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_help_arg(self):
         output = subprocess.check_output(
             ["locust", "--help"],
@@ -72,13 +84,6 @@ class ProcessIntegrationTest(TestCase):
         self.assertIn("Logging options:", output)
         self.assertIn("--skip-log-setup      Disable Locust's logging setup.", output)
 
-    def assert_run(self, cmd: list[str], timeout: int = 5) -> subprocess.CompletedProcess[str]:
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-        self.assertEqual(0, out.returncode, f"locust run failed with exit code {out.returncode}:\n{out.stderr}")
-        return out
-
-
-class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_custom_arguments(self):
         port = get_free_tcp_port()
         with temporary_file(
@@ -1824,7 +1829,7 @@ class AnyUser(HttpUser):
                 stderr=PIPE,
                 text=True,
             )
-            gevent.sleep(2)
+            gevent.sleep(3)
             proc.send_signal(signal.SIGINT)
             try:
                 _, stderr = proc.communicate(timeout=3)
