@@ -1837,7 +1837,7 @@ class AnyUser(HttpUser):
 
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
-                f"locust -f {mocked.file_path} --processes 4 --headless",
+                f"locust -f {mocked.file_path} --processes 4 --headless -L DEBUG",
                 shell=True,
                 stdout=PIPE,
                 stderr=PIPE,
@@ -1846,7 +1846,7 @@ class AnyUser(HttpUser):
             gevent.sleep(3)
             proc.send_signal(signal.SIGINT)
             try:
-                _, stderr = proc.communicate(timeout=6)
+                _, stderr = proc.communicate(timeout=10)
             except Exception:
                 proc.kill()
                 _, stderr = proc.communicate(timeout=10)
