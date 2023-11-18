@@ -211,7 +211,7 @@ def main():
                 # nothing more to do, just wait for the children to exit
                 for child_pid in children:
                     _, child_status = os.waitpid(child_pid, 0)
-                    if sys.version_info >= (3, 8):  # dammit python 3.8...
+                    if sys.version_info > (3, 8):  # dammit python 3.8...
                         child_exit_code = os.waitstatus_to_exitcode(child_status)
                         exit_code = max(exit_code, child_exit_code)
                 sys.exit(exit_code)
