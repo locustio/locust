@@ -201,7 +201,7 @@ def main():
                             os.kill(child_pid, signal.SIGKILL)
                         except ProcessLookupError:
                             pass  # process already dead
-                        except:
+                        except Exception:
                             logging.error(traceback.format_exc())
                     sys.exit(1)
 

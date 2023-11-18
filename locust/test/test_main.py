@@ -1761,7 +1761,7 @@ class AnyUser(HttpUser):
             )
             try:
                 _, stderr = proc.communicate(timeout=9)
-            except:
+            except Exception:
                 proc.kill()
                 assert False, f"locust process never finished: {command}"
             self.assertNotIn("Traceback", stderr)
@@ -1780,7 +1780,7 @@ class AnyUser(HttpUser):
             )
             try:
                 _, stderr = proc.communicate(timeout=9)
-            except:
+            except Exception:
                 proc.kill()
                 assert False, f"locust process never finished: {command}"
             self.assertNotIn("Traceback", stderr)
@@ -1807,17 +1807,19 @@ class AnyUser(HttpUser):
 
             try:
                 _, worker_stderr = worker_parent_proc.communicate(timeout=9)
-            except:
+            except Exception:
                 master_proc.kill()
                 worker_parent_proc.kill()
                 _, worker_stderr = worker_parent_proc.communicate()
+                _, master_stderr = master_proc.communicate()
                 assert False, f"worker never finished: {worker_stderr}"
 
             try:
                 _, master_stderr = master_proc.communicate(timeout=9)
-            except:
+            except Exception:
                 master_proc.kill()
                 worker_parent_proc.kill()
+                _, worker_stderr = worker_parent_proc.communicate()
                 _, master_stderr = master_proc.communicate()
                 assert False, f"master never finished: {master_stderr}"
 
@@ -1842,7 +1844,7 @@ class AnyUser(HttpUser):
             proc.send_signal(signal.SIGINT)
             try:
                 _, stderr = proc.communicate(timeout=3)
-            except:
+            except Exception:
                 proc.kill()
                 _, stderr = proc.communicate()
                 assert False, f"locust process never finished: {stderr}"
