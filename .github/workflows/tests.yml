@@ -14,12 +14,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          #- {name: Linux, python: '3.9', os: ubuntu-latest, tox: py39}
           #- {name: Windows, python: '3.9', os: windows-latest, tox: py39}
           #- {name: Mac, python: '3.9', os: macos-latest, tox: py39}
           - { name: "flake8", python: "3.11", os: ubuntu-latest, tox: "flake8" }
           - { name: "black", python: "3.11", os: ubuntu-latest, tox: "black" }
           - { name: "mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
+          # run some integration tests and abort immediately if they fail, for faster feedback
+          - { name: "fail_fast_test_main", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main }
           - { name: "3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
           - { name: "3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
           - { name: "3.10", python: "3.10", os: ubuntu-latest, tox: py310 }

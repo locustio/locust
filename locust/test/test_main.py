@@ -5,7 +5,7 @@ import os
 import sys
 import platform
 import unittest
-
+import socket
 import pty
 import signal
 import subprocess
@@ -18,6 +18,11 @@ import requests
 
 from .mock_locustfile import mock_locustfile, MOCK_LOCUSTFILE_CONTENT
 from .util import temporary_file, get_free_tcp_port, patch_env
+
+
+def is_port_in_use(port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(("localhost", port)) == 0
 
 
 MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
@@ -52,6 +57,13 @@ class ProcessIntegrationTest(TestCase):
         self.timeout.cancel()
         super().tearDown()
 
+    def assert_run(self, cmd: list[str], timeout: int = 5) -> subprocess.CompletedProcess[str]:
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        self.assertEqual(0, out.returncode, f"locust run failed with exit code {out.returncode}:\n{out.stderr}")
+        return out
+
+
+class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_help_arg(self):
         output = subprocess.check_output(
             ["locust", "--help"],
@@ -65,13 +77,6 @@ class ProcessIntegrationTest(TestCase):
         self.assertIn("Logging options:", output)
         self.assertIn("--skip-log-setup      Disable Locust's logging setup.", output)
 
-    def assert_run(self, cmd: list[str], timeout: int = 5) -> subprocess.CompletedProcess[str]:
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-        self.assertEqual(0, out.returncode, f"locust run failed with exit code {out.returncode}:\n{out.stderr}")
-        return out
-
-
-class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_custom_arguments(self):
         port = get_free_tcp_port()
         with temporary_file(
@@ -1322,6 +1327,22 @@ class MyUser(HttpUser):
 
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
+    failed_port_check = False
+
+    def setUp(self):
+        if self.failed_port_check:
+            # fail immediately
+            raise Exception("Port 5557 was (still) busy when starting a new test case")
+        for _ in range(5):
+            if not is_port_in_use(5557):
+                break
+            else:
+                gevent.sleep(1)
+        else:
+            self.failed_port_check = True
+            raise Exception("Port 5557 was (still) busy when starting a new test case")
+        super().setUp()
+
     def test_expect_workers(self):
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
@@ -1727,3 +1748,115 @@ class AnyUser(HttpUser):
             for i in range(2):
                 if found[i] != i:
                     raise Exception(f"expected index {i} but got", found[i])
+
+    def test_processes(self):
+        with mock_locustfile() as mocked:
+            command = f"locust -f {mocked.file_path} --processes 4 --headless --run-time 1 --exit-code-on-error 0"
+            proc = subprocess.Popen(
+                command,
+                shell=True,
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            try:
+                _, stderr = proc.communicate(timeout=9)
+            except Exception:
+                proc.kill()
+                assert False, f"locust process never finished: {command}"
+            self.assertNotIn("Traceback", stderr)
+            self.assertIn("(index 3) reported as ready", stderr)
+            self.assertIn("Shutting down (exit code 0)", stderr)
+
+    def test_processes_autodetect(self):
+        with mock_locustfile() as mocked:
+            command = f"locust -f {mocked.file_path} --processes -1 --headless --run-time 1 --exit-code-on-error 0"
+            proc = subprocess.Popen(
+                command,
+                shell=True,
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            try:
+                _, stderr = proc.communicate(timeout=9)
+            except Exception:
+                proc.kill()
+                assert False, f"locust process never finished: {command}"
+            self.assertNotIn("Traceback", stderr)
+            self.assertIn("(index 0) reported as ready", stderr)
+            self.assertIn("Shutting down (exit code 0)", stderr)
+
+    def test_processes_separate_worker(self):
+        with mock_locustfile() as mocked:
+            master_proc = subprocess.Popen(
+                f"locust -f {mocked.file_path} --master --headless --run-time 1 --exit-code-on-error 0 --expect-workers-max-wait 2",
+                shell=True,
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+
+            worker_parent_proc = subprocess.Popen(
+                f"locust -f {mocked.file_path} --processes 4 --worker",
+                shell=True,
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+
+            try:
+                _, worker_stderr = worker_parent_proc.communicate(timeout=9)
+            except Exception:
+                master_proc.kill()
+                worker_parent_proc.kill()
+                _, worker_stderr = worker_parent_proc.communicate()
+                _, master_stderr = master_proc.communicate()
+                assert False, f"worker never finished: {worker_stderr}"
+
+            try:
+                _, master_stderr = master_proc.communicate(timeout=9)
+            except Exception:
+                master_proc.kill()
+                worker_parent_proc.kill()
+                _, worker_stderr = worker_parent_proc.communicate()
+                _, master_stderr = master_proc.communicate()
+                assert False, f"master never finished: {master_stderr}"
+
+            _, worker_stderr = worker_parent_proc.communicate()
+            _, master_stderr = master_proc.communicate()
+            self.assertNotIn("Traceback", worker_stderr)
+            self.assertNotIn("Traceback", master_stderr)
+            self.assertNotIn("Gave up waiting for workers to connect", master_stderr)
+            self.assertIn("(index 3) reported as ready", master_stderr)
+            self.assertIn("Shutting down (exit code 0)", master_stderr)
+
+    def test_processes_ctrl_c(self):
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--processes",
+                    "4",
+                    "--headless",
+                    "-L",
+                    "DEBUG",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            gevent.sleep(3)
+            proc.send_signal(signal.SIGINT)
+            try:
+                _, stderr = proc.communicate(timeout=3)
+            except Exception:
+                proc.kill()
+                _, stderr = proc.communicate()
+                assert False, f"locust process never finished: {stderr}"
+            self.assertNotIn("Traceback", stderr)
+            self.assertIn("(index 3) reported as ready", stderr)
+            self.assertIn("The last worker quit, stopping test", stderr)
+            self.assertIn("Shutting down (exit code 0)", stderr)
