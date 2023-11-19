@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.18.4
+======
+* Various fixes to Modern UI
+* Ensure to wait a second before next call to LoadTestShape's tick() @wiatrak2
+
 2.18.3
 ======
 * Modern UI: Add sorting to columns on statistics page and downloaded report https://github.com/locustio/locust/pull/2453
