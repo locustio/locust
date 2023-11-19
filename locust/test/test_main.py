@@ -1875,8 +1875,15 @@ class AnyUser(HttpUser):
 """
         with mock_locustfile(content=content) as mocked:
             master_proc = subprocess.Popen(
-                f"locust -f {mocked.file_path} --master --headless --expect-workers 2",
-                shell=True,
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--master",
+                    "--headless",
+                    "--expect-workers",
+                    "2",
+                ],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
@@ -1900,7 +1907,7 @@ class AnyUser(HttpUser):
             master_proc.kill()
             master_proc.wait()
             try:
-                _, worker_stderr = worker_parent_proc.communicate(timeout=9)
+                _, worker_stderr = worker_parent_proc.communicate(timeout=7)
             except Exception:
                 worker_parent_proc.kill()
                 _, worker_stderr = worker_parent_proc.communicate()
