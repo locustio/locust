@@ -230,8 +230,9 @@ def main():
                     logging.debug("waiting for children to terminate")
                     for child_pid in children:
                         _, child_status = os.waitpid(child_pid, 0)
-                        child_exit_code = os.waitstatus_to_exitcode(child_status)
-                        exit_code = max(exit_code, child_exit_code)
+                        if sys.version_info > (3, 8):  # dammit python 3.8...
+                            child_exit_code = os.waitstatus_to_exitcode(child_status)
+                            exit_code = max(exit_code, child_exit_code)
                     if exit_code > 1:
                         logging.error(f"bad response code from worker children: {exit_code}")
 
