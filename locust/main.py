@@ -38,8 +38,6 @@ except ModuleNotFoundError:
 
 version = locust.__version__
 
-first_call = True
-
 # Options to ignore when using a custom shape class without `use_common_options=True`
 # See: https://docs.locust.io/en/stable/custom-load-shape.html#use-common-options
 COMMON_OPTIONS = {
@@ -191,10 +189,7 @@ def main():
             if options.worker:
                 # ignore the first sigint in parent, and wait for the children to handle sigint
                 def sigint_handler(_signal, _frame):
-                    global first_call
-                    if first_call:
-                        first_call = False
-                    else:
+                    if getattr(sigint_handler, "has_run"):
                         # if parent gets repeated sigint, we kill the children hard
                         for child_pid in children:
                             try:
@@ -205,6 +200,7 @@ def main():
                             except Exception:
                                 logging.error(traceback.format_exc())
                         sys.exit(1)
+                    sigint_handler.has_run = True
 
                 signal.signal(signal.SIGINT, sigint_handler)
                 exit_code = 0
