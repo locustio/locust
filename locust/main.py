@@ -189,7 +189,7 @@ def main():
             if options.worker:
                 # ignore the first sigint in parent, and wait for the children to handle sigint
                 def sigint_handler(_signal, _frame):
-                    if getattr(sigint_handler, "has_run"):
+                    if getattr(sigint_handler, "has_run", False):
                         # if parent gets repeated sigint, we kill the children hard
                         for child_pid in children:
                             try:
