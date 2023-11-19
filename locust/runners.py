@@ -74,6 +74,7 @@ CPU_WARNING_THRESHOLD = 90
 HEARTBEAT_INTERVAL = 1
 HEARTBEAT_LIVENESS = 3
 HEARTBEAT_DEAD_INTERNAL = -60
+MASTER_HEARTBEAT_TIMEOUT = 60
 FALLBACK_INTERVAL = 5
 CONNECT_TIMEOUT = 5
 CONNECT_RETRY_COUNT = 60
@@ -1056,6 +1057,9 @@ class MasterRunner(DistributedRunner):
                         )
                     if "current_memory_usage" in msg.data:
                         c.memory_usage = msg.data["current_memory_usage"]
+                    self.send_message("heartbeat", client_id=msg.node_id)
+                else:
+                    logging.debug(f"Got heartbeat message from unknown worker {msg.node_id}")
             elif msg.type == "stats":
                 self.environment.events.worker_report.fire(client_id=msg.node_id, data=msg.data)
             elif msg.type == "spawning":
@@ -1149,6 +1153,7 @@ class WorkerRunner(DistributedRunner):
         super().__init__(environment)
         self.retry = 0
         self.connected = False
+        self.last_heartbeat_timestamp = time.time()  # will be overwritten on connect, but lets keep the linter happy
         self.connection_event = Event()
         self.worker_state = STATE_INIT
         self.client_id = socket.gethostname() + "_" + uuid4().hex
@@ -1160,6 +1165,7 @@ class WorkerRunner(DistributedRunner):
         self.greenlet.spawn(self.worker).link_exception(greenlet_exception_handler)
         self.connect_to_master()
         self.greenlet.spawn(self.heartbeat).link_exception(greenlet_exception_handler)
+        self.greenlet.spawn(self.heartbeat_timeout_checker).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.stats_reporter).link_exception(greenlet_exception_handler)
 
         # register listener for when all users have spawned, and report it to the master node
@@ -1249,6 +1255,13 @@ class WorkerRunner(DistributedRunner):
                 self.reset_connection()
             gevent.sleep(HEARTBEAT_INTERVAL)
 
+    def heartbeat_timeout_checker(self) -> NoReturn:
+        while True:
+            gevent.sleep(1)
+            if self.connected and self.last_heartbeat_timestamp < time.time() - MASTER_HEARTBEAT_TIMEOUT:
+                logger.error(f"Didn't get heartbeat from master in over {MASTER_HEARTBEAT_TIMEOUT}s")
+                self.quit()
+
     def reset_connection(self) -> None:
         logger.info("Reset connection to master")
         try:
@@ -1328,6 +1341,8 @@ class WorkerRunner(DistributedRunner):
             elif msg.type == "reconnect":
                 logger.warning("Received reconnect message from master. Resetting RPC connection.")
                 self.reset_connection()
+            elif msg.type == "heartbeat":
+                self.last_heartbeat_timestamp = time.time()
             elif msg.type in self.custom_messages:
                 logger.debug("Received %s message from master" % msg.type)
                 self.custom_messages[msg.type](environment=self.environment, msg=msg)
@@ -1378,6 +1393,7 @@ class WorkerRunner(DistributedRunner):
                 raise ConnectionError()
             self.connect_to_master()
         self.connected = True
+        self.last_heartbeat_timestamp = time.time()
 
 
 def _format_user_classes_count_for_log(user_classes_count: Dict[str, int]) -> str:

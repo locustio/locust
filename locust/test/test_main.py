@@ -1860,3 +1860,58 @@ class AnyUser(HttpUser):
             self.assertIn("(index 3) reported as ready", stderr)
             self.assertIn("The last worker quit, stopping test", stderr)
             self.assertIn("Shutting down (exit code 0)", stderr)
+
+    def test_workers_shut_down_if_master_is_gone(self):
+        content = """
+from locust import HttpUser, task, constant, runners
+runners.MASTER_HEARTBEAT_TIMEOUT = 3
+
+class AnyUser(HttpUser):
+    host = "http://127.0.0.1:8089"
+    wait_time = constant(1)
+    @task
+    def my_task(self):
+        print("worker index:", self.environment.runner.worker_index)
+"""
+        with mock_locustfile(content=content) as mocked:
+            master_proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--master",
+                    "--headless",
+                    "--expect-workers",
+                    "2",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+
+            worker_parent_proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--worker",
+                    "--processes",
+                    "2",
+                    "--headless",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            gevent.sleep(1)
+            master_proc.kill()
+            master_proc.wait()
+            try:
+                _, worker_stderr = worker_parent_proc.communicate(timeout=7)
+            except Exception:
+                worker_parent_proc.kill()
+                _, worker_stderr = worker_parent_proc.communicate()
+                assert False, f"worker never finished: {worker_stderr}"
+
+            self.assertNotIn("Traceback", worker_stderr)
+            self.assertIn("Didn't get heartbeat from master in over ", worker_stderr)
