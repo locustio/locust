@@ -7,7 +7,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 2.18.4
 ======
 * Various fixes to Modern UI
-* Ensure to wait a second before next call to LoadTestShape's tick() @wiatrak2
+* Ensure to wait a second before next call to LoadTestShape's tick() https://github.com/locustio/locust/pull/2465
 
 2.18.3
 ======
