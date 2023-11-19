@@ -580,7 +580,6 @@ class WorkerNode:
         self.id: str = id
         self.state = state
         self.heartbeat = heartbeat_liveness
-        self.last_heartbeat_received = time.time()
         self.cpu_usage: int = 0
         self.cpu_warning_emitted = False
         self.memory_usage: int = 0
@@ -1152,6 +1151,7 @@ class WorkerRunner(DistributedRunner):
         super().__init__(environment)
         self.retry = 0
         self.connected = False
+        self.last_heartbeat_timestamp = time.time()  # will be overwritten on connect, but lets keep the linter happy
         self.connection_event = Event()
         self.worker_state = STATE_INIT
         self.client_id = socket.gethostname() + "_" + uuid4().hex
@@ -1391,6 +1391,7 @@ class WorkerRunner(DistributedRunner):
                 raise ConnectionError()
             self.connect_to_master()
         self.connected = True
+        self.last_heartbeat_timestamp = time.time()
 
 
 def _format_user_classes_count_for_log(user_classes_count: Dict[str, int]) -> str:
