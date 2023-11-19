@@ -188,24 +188,24 @@ def main():
                 break
         else:
             # we're in the parent process
-            def sigint_handler(_signal, _frame):
-                # ignore the first sigint in parent, and wait for the children to handle sigint
-                global first_call
-                if first_call:
-                    first_call = False
-                else:
-                    # if parent gets repeated sigint, we kill the children hard
-                    for child_pid in children:
-                        try:
-                            logging.debug(f"Sending SIGKILL to child with pid {child_pid}")
-                            os.kill(child_pid, signal.SIGKILL)
-                        except ProcessLookupError:
-                            pass  # process already dead
-                        except Exception:
-                            logging.error(traceback.format_exc())
-                    sys.exit(1)
-
             if options.worker:
+                # ignore the first sigint in parent, and wait for the children to handle sigint
+                def sigint_handler(_signal, _frame):
+                    global first_call
+                    if first_call:
+                        first_call = False
+                    else:
+                        # if parent gets repeated sigint, we kill the children hard
+                        for child_pid in children:
+                            try:
+                                logging.debug(f"Sending SIGKILL to child with pid {child_pid}")
+                                os.kill(child_pid, signal.SIGKILL)
+                            except ProcessLookupError:
+                                pass  # process already dead
+                            except Exception:
+                                logging.error(traceback.format_exc())
+                        sys.exit(1)
+
                 signal.signal(signal.SIGINT, sigint_handler)
                 exit_code = 0
                 # nothing more to do, just wait for the children to exit
