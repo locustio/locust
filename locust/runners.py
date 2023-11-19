@@ -1058,6 +1058,8 @@ class MasterRunner(DistributedRunner):
                     if "current_memory_usage" in msg.data:
                         c.memory_usage = msg.data["current_memory_usage"]
                     self.send_message("heartbeat", client_id=msg.node_id)
+                else:
+                    logging.debug(f"Got heartbeat message from unknown worker {msg.node_id}")
             elif msg.type == "stats":
                 self.environment.events.worker_report.fire(client_id=msg.node_id, data=msg.data)
             elif msg.type == "spawning":
