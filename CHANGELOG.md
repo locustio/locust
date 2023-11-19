@@ -1,6 +1,32 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.18.4](https://github.com/locustio/locust/tree/2.18.4) (2023-11-19)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.18.3...2.18.4)
+
+**Fixed bugs:**
+
+- Total RPS Charts | Failures line chart does not display current number of failures [\#2469](https://github.com/locustio/locust/issues/2469)
+- Modern UI: Lack of information about time and user count in charts [\#2467](https://github.com/locustio/locust/issues/2467)
+- Modern UI: Wrong chart's legend for overridden percentiles values  [\#2463](https://github.com/locustio/locust/issues/2463)
+- Modern UI: Can't sort columns on statistics page and downloaded report [\#2449](https://github.com/locustio/locust/issues/2449)
+- Incorrect RPS when decreasing the number of users [\#2399](https://github.com/locustio/locust/issues/2399)
+
+**Closed issues:**
+
+- Improve UI of Sorting Columns [\#2466](https://github.com/locustio/locust/issues/2466)
+
+**Merged pull requests:**
+
+- Log deprecation warning in python 3.8 [\#2473](https://github.com/locustio/locust/pull/2473) ([cyberw](https://github.com/cyberw))
+- Modern UI - Failures line chart does not display current number of failures [\#2471](https://github.com/locustio/locust/pull/2471) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Tiny optimization of StatsEntry.\_log\_response\_time [\#2470](https://github.com/locustio/locust/pull/2470) ([lailongwei](https://github.com/lailongwei))
+- Modern UI: Add Time to Chart Tooltips [\#2468](https://github.com/locustio/locust/pull/2468) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Ensure to wait a second before next `tick()` [\#2465](https://github.com/locustio/locust/pull/2465) ([wiatrak2](https://github.com/wiatrak2))
+- Modern UI: Wrong chart's legend for Response Times [\#2464](https://github.com/locustio/locust/pull/2464) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Replace Updating Stats useEffect Hook with useInterval [\#2462](https://github.com/locustio/locust/pull/2462) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
 ## [2.18.3](https://github.com/locustio/locust/tree/2.18.3) (2023-11-12)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.18.2...2.18.3)
