@@ -1153,7 +1153,7 @@ class WorkerRunner(DistributedRunner):
         super().__init__(environment)
         self.retry = 0
         self.connected = False
-        self.last_heartbeat_timestamp = time.time()  # will be overwritten on connect, but lets keep the linter happy
+        self.last_heartbeat_timestamp = None
         self.connection_event = Event()
         self.worker_state = STATE_INIT
         self.client_id = socket.gethostname() + "_" + uuid4().hex
@@ -1258,7 +1258,7 @@ class WorkerRunner(DistributedRunner):
     def heartbeat_timeout_checker(self) -> NoReturn:
         while True:
             gevent.sleep(1)
-            if self.connected and self.last_heartbeat_timestamp < time.time() - MASTER_HEARTBEAT_TIMEOUT:
+            if self.last_heartbeat_timestamp and self.last_heartbeat_timestamp < time.time() - MASTER_HEARTBEAT_TIMEOUT:
                 logger.error(f"Didn't get heartbeat from master in over {MASTER_HEARTBEAT_TIMEOUT}s")
                 self.quit()
 
@@ -1393,7 +1393,6 @@ class WorkerRunner(DistributedRunner):
                 raise ConnectionError()
             self.connect_to_master()
         self.connected = True
-        self.last_heartbeat_timestamp = time.time()
 
 
 def _format_user_classes_count_for_log(user_classes_count: Dict[str, int]) -> str:
