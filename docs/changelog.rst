@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.19.0
+======
+* Add --processes parameter to automatically fork subprocesses for workers https://github.com/locustio/locust/pull/2472
+* Automatically shut down workers if master goes missing for too long https://github.com/locustio/locust/pull/2474
+* Update minimum version of various dependencies https://github.com/locustio/locust/pull/2476
+
 2.18.4
 ======
 * Various fixes to Modern UI
