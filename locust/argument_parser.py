@@ -426,7 +426,7 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
     worker_group.add_argument(
         "--processes",
         type=int,
-        help="Number of times to fork the locust process, to enable using multiple CPU cores. Use -1 to launch one process per CPU core in your system. Combine with --worker flag or let it automatically set --worker and --master flags for an all-in-one-solution. Not available on Windows. Experimental.",
+        help="Number of worker processes to launch. Automatically sets --master and --worker, but can be combined with --worker to only launch workers. Use -1 to launch one process per CPU core in your system. Default is 0 (standalone). Not supported on Windows, because it uses fork.",
         env_var="LOCUST_PROCESSES",
     )
     worker_group.add_argument(
