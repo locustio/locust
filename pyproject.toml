@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "locust"
-license = { text = "MIT"}
+license = { text = "MIT" }
 description = "Developer friendly load testing framework"
 dynamic = ["version"]
 requires-python = ">=3.8"
@@ -16,7 +16,7 @@ dependencies = [
     "msgpack >=0.6.2",
     "pyzmq >=22.2.1, !=23.0.0",
     "geventhttpclient >=2.0.2",
-    "ConfigArgParse >=1.0",
+    "ConfigArgParse >=1.7",
     "psutil >=5.6.7",
     "Flask-BasicAuth >=0.2.0",
     "Flask-Cors >=3.0.10",
@@ -69,10 +69,7 @@ local_scheme = "no-local-version"
 [options.packages.find]
 namespace = true
 include = ["locust*"]
-exclude = [
-    "examples",
-    "tests",
-]
+exclude = ["examples", "tests"]
 
 [tool.setuptools.package-data]
 locust = ["py.typed"]
