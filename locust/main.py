@@ -166,12 +166,21 @@ def main():
 
     if options.processes:
         if os.name == "nt":
-            raise Exception("--processes is not supported in Windows (except in WSL)")
+            sys.stderr.write("--processes is not supported in Windows (except in WSL)\n")
+            sys.exit(1)
         if options.processes == -1:
             options.processes = os.cpu_count()
-            assert options.processes, "couldnt detect number of cpus!?"
+            if not options.processes:
+                sys.stderr.write("--processes failed to detect number of cpus!?\n")
+                sys.exit(1)
         elif options.processes < -1:
-            raise Exception(f"invalid processes count {options.processes}")
+            sys.stderr.write(f"Invalid --processes count {options.processes}\n")
+            sys.exit(1)
+        elif options.master:
+            sys.stderr.write(
+                "--master cannot be combined with --processes. Remove --master, as it is implicit as long as --worker is not set.\n"
+            )
+            sys.exit(1)
         for _ in range(options.processes):
             child_pid = gevent.fork()
             if child_pid:
