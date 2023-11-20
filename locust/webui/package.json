@@ -42,6 +42,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-unused-imports": "^3.0.0",
     "jsdom": "^22.1.0",
+    "msw": "^2.0.8",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2",
     "vitest": "^0.34.6"
