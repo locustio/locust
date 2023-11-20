@@ -10,6 +10,8 @@ But if your test plan is complex or you want to run even more load, you'll need 
 
 To do this, you start one instance of Locust in master mode using the ``--master`` flag and multiple worker instances using the ``--worker`` flag. If the workers are not on the same machine as the master you use ``--master-host`` to point them to the IP/hostname of the machine running the master.
 
+You can use the ``--processes`` flag to launch multiple instances at the same time. It will launch a master process and the specified number of worker processes. Used in combination with ``--worker`` it will only launch workers (appropriate if you need multiple machines to generate your load).
+
 The master instance runs Locust's web interface, and tells the workers when to spawn/stop Users. The workers run your Users and send back statistics to the master. The master instance doesn't run any Users itself.
 
 Both the master and worker machines must have a copy of the locustfile when running Locust distributed.
@@ -21,34 +23,37 @@ Both the master and worker machines must have a copy of the locustfile when runn
     There is almost no limit to how many *Users* you can run per worker. Locust/gevent can run thousands or even tens of thousands of Users per process just fine, as long as their total request rate/RPS is not too high.
 
 .. note::
-    If Locust is getting close to running out of CPU resources, it will log a warning.
+    If Locust is getting close to running out of CPU resources, it will log a warning. If there is no warning, you can be pretty sure your test is not limited by load generator CPU.
 
-Example
-=======
+.. note::
+    ``--processes`` was introduced in locust 2.19.
 
-To start locust in master mode::
+Example 1: Everything on one machine
+====================================
+
+It is really simple to launch a master and 4 worker processes::
+
+    locust --processes 4
+
+You can even auto-detect the number of cores in your machine and launch one worker for each of them::
+
+    locust --processes -1
+
+Example 2: Multiple machines
+============================
+
+Start locust in master mode::
 
     locust -f my_locustfile.py --master
 
-And then on each worker (replace ``192.168.0.14`` with the IP of the master machine, or leave out the parameter altogether if your workers are on the same machine as the master)::
+And then on each worker machine (replace ``192.168.0.14`` with the IP of the master machine)::
 
-    locust -f my_locustfile.py --worker --master-host=192.168.0.14
+    locust -f my_locustfile.py --worker --master-host=192.168.0.14 --processes 4
 
+Note that both master and worker nodes need access to the locustfile, it is not sent from master to worker automatically. But you can use `locust-swarm <https://github.com/SvenskaSpel/locust-swarm>`_ for that.
 
 Options
 =======
-
-``--master``
-------------
-
-Sets locust in master mode. The web interface will run on this node.
-
-
-``--worker``
-------------
-
-Sets locust in worker mode.
-
 
 ``--master-host=X.X.X.X``
 -------------------------
