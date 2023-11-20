@@ -1153,7 +1153,7 @@ class WorkerRunner(DistributedRunner):
         super().__init__(environment)
         self.retry = 0
         self.connected = False
-        self.last_heartbeat_timestamp = None
+        self.last_heartbeat_timestamp: Optional[float] = None
         self.connection_event = Event()
         self.worker_state = STATE_INIT
         self.client_id = socket.gethostname() + "_" + uuid4().hex
