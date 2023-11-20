@@ -10,14 +10,14 @@ But if your test plan is complex or you want to run even more load, you'll need 
 
 To do this, you start one instance of Locust in master mode using the ``--master`` flag and multiple worker instances using the ``--worker`` flag. If the workers are not on the same machine as the master you use ``--master-host`` to point them to the IP/hostname of the machine running the master.
 
-You can use the ``--processes`` flag to launch multiple instances at the same time. It will launch a master process and the specified number of worker processes. Used in combination with ``--worker`` it will only launch workers (appropriate if you need multiple machines to generate your load).
+To make this easier, you can use the ``--processes`` flag to launch multiple instances. It will launch a master process and the specified number of worker processes. Used in combination with ``--worker`` it will only launch workers (appropriate if you need multiple machines to generate your load).
 
-The master instance runs Locust's web interface, and tells the workers when to spawn/stop Users. The workers run your Users and send back statistics to the master. The master instance doesn't run any Users itself.
+The master instance runs Locust's web interface, and tells the workers when to spawn/stop Users. The workers run your Users and send statistics back to the master. The master instance doesn't run any Users itself.
 
 Both the master and worker machines must have a copy of the locustfile when running Locust distributed.
 
 .. note::
-    Because Python cannot fully utilize more than one core per process (see `GIL <https://realpython.com/python-gil/>`_), you should typically run **one worker instance per processor core** on the worker machines in order to utilize all their computing power.
+    Because Python cannot fully utilize more than one core per process (see `GIL <https://realpython.com/python-gil/>`_), you will need to run **one worker instance per processor core** in order to have access to all your computing power.
 
 .. note::
     There is almost no limit to how many *Users* you can run per worker. Locust/gevent can run thousands or even tens of thousands of Users per process just fine, as long as their total request rate/RPS is not too high.
