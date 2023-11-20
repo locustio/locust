@@ -7,7 +7,7 @@ import { FailuresTable } from 'components/FailuresTable/FailuresTable';
 import ResponseTimeTable from 'components/ResponseTimeTable/ResponseTimeTable';
 import { StatsTable } from 'components/StatsTable/StatsTable';
 import { SwarmCharts } from 'components/SwarmCharts/SwarmCharts';
-import { SwarmRatios } from 'components/SwarnRatios/SwarmRatios';
+import { SwarmRatios } from 'components/SwarmRatios/SwarmRatios';
 import { INITIAL_THEME } from 'constants/theme';
 import createTheme from 'styles/theme';
 import { IReport } from 'types/swarm.types';

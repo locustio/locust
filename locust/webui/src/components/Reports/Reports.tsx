@@ -39,8 +39,8 @@ function Reports({
         </Link>
       </ListItem>
       {extendedCsvFiles &&
-        extendedCsvFiles.map(({ href, title }) => (
-          <ListItem>
+        extendedCsvFiles.map(({ href, title }, index) => (
+          <ListItem key={`extended-csv-${index}`}>
             <Link href={href}>{title}</Link>
           </ListItem>
         ))}

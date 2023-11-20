@@ -23,6 +23,7 @@ export default function Select({
       </InputLabel>
       <MuiSelect
         defaultValue={defaultValue || (multiple && options) || options[0]}
+        id={name}
         label={label}
         multiple={multiple}
         name={name}
