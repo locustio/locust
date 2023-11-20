@@ -10,7 +10,7 @@ But if your test plan is complex or you want to run even more load, you'll need 
 
 To do this, you start one instance of Locust in master mode using the ``--master`` flag and multiple worker instances using the ``--worker`` flag. If the workers are not on the same machine as the master you use ``--master-host`` to point them to the IP/hostname of the machine running the master.
 
-To make this easier, you can use the ``--processes`` flag to launch multiple instances. It will launch a master process and the specified number of worker processes. Used in combination with ``--worker`` it will only launch workers (appropriate if you need multiple machines to generate your load).
+To make this easier, you can use the ``--processes`` flag to launch multiple instances. It will launch a master process and the specified number of worker processes. Used in combination with ``--worker`` it will only launch the workers.
 
 The master instance runs Locust's web interface, and tells the workers when to spawn/stop Users. The workers run your Users and send statistics back to the master. The master instance doesn't run any Users itself.
 
@@ -26,7 +26,7 @@ Both the master and worker machines must have a copy of the locustfile when runn
     If Locust is getting close to running out of CPU resources, it will log a warning. If there is no warning, you can be pretty sure your test is not limited by load generator CPU.
 
 .. note::
-    ``--processes`` was introduced in locust 2.19.
+    ``--processes`` was introduced in Locust 2.19.
 
 Example 1: Everything on one machine
 ====================================
