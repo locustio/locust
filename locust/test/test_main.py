@@ -6,6 +6,7 @@ import sys
 import platform
 import unittest
 import socket
+import psutil
 import pty
 import signal
 import subprocess
@@ -1833,7 +1834,7 @@ class AnyUser(HttpUser):
 
     def test_processes_ctrl_c(self):
         with mock_locustfile() as mocked:
-            proc = subprocess.Popen(
+            proc = psutil.Popen(  # use psutil.Popen instead of subprocess.Popen to use extra features
                 [
                     "locust",
                     "-f",
@@ -1849,13 +1850,22 @@ class AnyUser(HttpUser):
                 text=True,
             )
             gevent.sleep(3)
+            children = proc.children(recursive=True)
+            self.assertEqual(len(children), 4, "unexpected number of child worker processes")
+
             proc.send_signal(signal.SIGINT)
+            gevent.sleep(2)
+
+            for child in children:
+                self.assertFalse(child.is_running(), "child processes failed to terminate")
+
             try:
-                _, stderr = proc.communicate(timeout=3)
+                _, stderr = proc.communicate(timeout=1)
             except Exception:
                 proc.kill()
                 _, stderr = proc.communicate()
                 assert False, f"locust process never finished: {stderr}"
+
             self.assertNotIn("Traceback", stderr)
             self.assertIn("(index 3) reported as ready", stderr)
             self.assertIn("The last worker quit, stopping test", stderr)
