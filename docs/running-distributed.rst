@@ -26,7 +26,7 @@ Both the master and worker machines must have a copy of the locustfile when runn
     If Locust is getting close to running out of CPU resources, it will log a warning. If there is no warning, you can be pretty sure your test is not limited by load generator CPU.
 
 .. note::
-    ``--processes`` was introduced in Locust 2.19.
+    ``--processes`` was introduced in Locust 2.19. Child processes are launched using fork which is not available in Windows.
 
 Example 1: Everything on one machine
 ====================================
