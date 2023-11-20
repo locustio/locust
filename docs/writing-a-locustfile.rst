@@ -238,12 +238,10 @@ of request count independently of total user count.
 host attribute
 --------------
 
-The host attribute is a URL prefix (i.e. "http://google.com") to the host that is to be loaded.
-Usually, this is specified in Locust's web UI or on the command line, using the
-:code:`--host` option, when locust is started.
+The host attribute is a URL prefix (e.g. ``https://google.com``) to the host you want ot test. It is automatically added to requests, so you can do ``self.client.get("/")`` for example.
 
-If one declares a host attribute in the user class, it will be used in the case when no :code:`--host`
-is specified on the command line or in the web request.
+You can overwrite this value in Locust's web UI or on the command line, using the
+:code:`--host` option.
 
 tasks attribute
 ---------------
