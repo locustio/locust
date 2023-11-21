@@ -67,7 +67,7 @@ Example:
 
 .. code-block:: console
 
-    $ locust --config=master.conf
+    $ locust --config master.conf
 
 .. note::
 

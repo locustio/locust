@@ -42,43 +42,43 @@ You can even auto-detect the number of cores in your machine and launch one work
 Example 2: Multiple machines
 ============================
 
-Start locust in master mode::
+Start locust in master mode on one machine::
 
     locust -f my_locustfile.py --master
 
-And then on each worker machine (replace ``192.168.0.14`` with the IP of the master machine)::
+And then on each worker machine::
 
-    locust -f my_locustfile.py --worker --master-host=192.168.0.14 --processes 4
+    locust -f my_locustfile.py --worker --master-host <your master's address> --processes 4
 
-Note that both master and worker nodes need access to the locustfile, it is not sent from master to worker automatically. But you can use `locust-swarm <https://github.com/SvenskaSpel/locust-swarm>`_ for that.
+Note that both master and worker nodes need access to the locustfile, it is not sent from master to worker automatically. But you can use `locust-swarm <https://github.com/SvenskaSpel/locust-swarm>`_ to automate that.
 
 Options
 =======
 
-``--master-host=X.X.X.X``
+``--master-host <hostname or ip>``
 -------------------------
 
 Optionally used together with ``--worker`` to set the hostname/IP of the master node (defaults
-to 127.0.0.1)
+to localhost)
 
-``--master-port=5557``
+``--master-port <port number>``
 ----------------------
 
 Optionally used together with ``--worker`` to set the port number of the master node (defaults to 5557).
 
-``--master-bind-host=X.X.X.X``
+``--master-bind-host <ip>``
 ------------------------------
 
 Optionally used together with ``--master``. Determines which network interface the master node
 will bind to. Defaults to * (all available interfaces).
 
-``--master-bind-port=5557``
+``--master-bind-port <port number>``
 ------------------------------
 
 Optionally used together with ``--master``. Determines what network ports that the master node will
 listen to. Defaults to 5557.
 
-``--expect-workers=X``
+``--expect-workers <number of workers>``
 ----------------------
 
 Used when starting the master node with ``--headless``. The master node will then wait until X worker

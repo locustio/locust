@@ -146,22 +146,32 @@ def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG
         usage=configargparse.SUPPRESS,
         description=textwrap.dedent(
             """
-            Usage: locust [OPTIONS] [UserClass ...]
-
+Usage: locust [options] [UserClass ...]
         """
         ),
-        # epilog="",
+        epilog="""Examples:
+
+    locust -f my_test.py -H https://www.example.com
+
+    locust -u 100 -t 20m --headless --process 4 MyHttpUser AnotherUser
+
+See documentation for more details, including how to set options using a file or environment variables: https://docs.locust.io/en/stable/configuration.html""",
     )
     parser.add_argument(
         "-f",
         "--locustfile",
+        metavar="<filename>",
         default="locustfile",
-        help="Python module to import, e.g. '../other_test.py'. Either a .py file, multiple comma-separated .py files or a package "
-        "directory. Defaults to 'locustfile'.",
+        help="The Python file or module that contains your test, e.g. 'my_test.py'. Also accepts multiple comma-separated .py files or a package name/directory. Defaults to 'locustfile'.",
         env_var="LOCUST_LOCUSTFILE",
     )
 
-    parser.add_argument("--config", is_config_file_arg=True, help="Config file path")
+    parser.add_argument(
+        "--config",
+        is_config_file_arg=True,
+        help="File to read additional configuration from. See https://docs.locust.io/en/stable/configuration.html#configuration-file",
+        metavar="<filename>",
+    )
 
     return parser
 
@@ -251,13 +261,15 @@ def setup_parser_arguments(parser):
     parser.add_argument(
         "-H",
         "--host",
-        help="Host to load test in the following format: http://10.21.32.33",
+        metavar="<base url>",
+        help="Host to load test, in the following format: https://www.example.com",
         env_var="LOCUST_HOST",
     )
     parser.add_argument(
         "-u",
         "--users",
         type=int,
+        metavar="<int>",
         dest="num_users",
         help="Peak number of concurrent Locust users. Primarily used together with --headless or --autostart. Can be changed during a test by keyboard inputs w, W (spawn 1, 10 users) and s, S (stop 1, 10 users)",
         env_var="LOCUST_USERS",
@@ -266,12 +278,14 @@ def setup_parser_arguments(parser):
         "-r",
         "--spawn-rate",
         type=float,
+        metavar="<float>",
         help="Rate to spawn users at (users per second). Primarily used together with --headless or --autostart",
         env_var="LOCUST_SPAWN_RATE",
     )
     parser.add_argument(
         "--hatch-rate",
         env_var="LOCUST_HATCH_RATE",
+        metavar="<float>",
         type=float,
         default=0,
         help=configargparse.SUPPRESS,
@@ -279,6 +293,7 @@ def setup_parser_arguments(parser):
     parser.add_argument(
         "-t",
         "--run-time",
+        metavar="<time string>",
         help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --headless or --autostart. Defaults to run forever.",
         env_var="LOCUST_RUN_TIME",
     )
@@ -294,6 +309,7 @@ def setup_parser_arguments(parser):
     web_ui_group.add_argument(
         "--web-host",
         default="",
+        metavar="<ip>",
         help="Host to bind the web interface to. Defaults to '*' (all interfaces)",
         env_var="LOCUST_WEB_HOST",
     )
@@ -301,6 +317,7 @@ def setup_parser_arguments(parser):
         "--web-port",
         "-P",
         type=int,
+        metavar="<port number>",
         default=8089,
         help="Port on which to run web host",
         env_var="LOCUST_WEB_PORT",
@@ -320,6 +337,7 @@ def setup_parser_arguments(parser):
     web_ui_group.add_argument(
         "--autoquit",
         type=int,
+        metavar="<seconds>",
         default=-1,
         help="Quits Locust entirely, X seconds after the run is finished. Only used together with --autostart. The default is to keep Locust running until you shut it down using CTRL+C",
         env_var="LOCUST_AUTOQUIT",
@@ -335,19 +353,22 @@ def setup_parser_arguments(parser):
         "--web-auth",
         type=str,
         dest="web_auth",
+        metavar="<username:password>",
         default=None,
-        help="Turn on Basic Auth for the web interface. Should be supplied in the following format: username:password",
+        help="DEPRECATED Turn on Basic Auth for the web interface. Should be supplied in the following format: username:password",
         env_var="LOCUST_WEB_AUTH",
     )
     web_ui_group.add_argument(
         "--tls-cert",
         default="",
+        metavar="<filename>",
         help="Optional path to TLS certificate to use to serve over HTTPS",
         env_var="LOCUST_TLS_CERT",
     )
     web_ui_group.add_argument(
         "--tls-key",
         default="",
+        metavar="<filename>",
         help="Optional path to TLS private key to use to serve over HTTPS",
         env_var="LOCUST_TLS_KEY",
     )
@@ -374,37 +395,40 @@ def setup_parser_arguments(parser):
     master_group.add_argument(
         "--master",
         action="store_true",
-        help="Set locust to run in distributed mode with this process as master",
+        help="Launch locust as a master node, to which worker nodes connect.",
         env_var="LOCUST_MODE_MASTER",
     )
     master_group.add_argument(
         "--master-bind-host",
         default="*",
-        help="Interfaces (hostname, ip) that locust master should bind to. Only used when running with --master. Defaults to * (all available interfaces).",
+        metavar="<ip>",
+        help="IP address for the master to listen on, e.g '192.168.1.1'. Defaults to * (all available interfaces).",
         env_var="LOCUST_MASTER_BIND_HOST",
     )
     master_group.add_argument(
         "--master-bind-port",
         type=int,
+        metavar="<port number>",
         default=5557,
-        help="Port that locust master should bind to. Only used when running with --master. Defaults to 5557.",
+        help="Port for the master to listen on. Defaults to 5557.",
         env_var="LOCUST_MASTER_BIND_PORT",
     )
     master_group.add_argument(
         "--expect-workers",
         type=int,
+        metavar="<int>",
         default=1,
-        help="How many workers master should expect to connect before starting the test (only when --headless/autostart is used).",
+        help="Delay starting the test until this number of workers have connected (only used in combination with --headless/--autostart).",
         env_var="LOCUST_EXPECT_WORKERS",
     )
     master_group.add_argument(
         "--expect-workers-max-wait",
         type=int,
+        metavar="<int>",
         default=0,
         help="How long should the master wait for workers to connect before giving up. Defaults to wait forever",
         env_var="LOCUST_EXPECT_WORKERS_MAX_WAIT",
     )
-
     master_group.add_argument(
         "--expect-slaves",
         action="store_true",
@@ -414,9 +438,8 @@ def setup_parser_arguments(parser):
     worker_group = parser.add_argument_group(
         "Worker options",
         """Options for running a Locust Worker node when running Locust distributed.
-Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, since other options such as -u, -r, -t are specified on the Master node.""",
+Typically ONLY these options (and --locustfile) need to be specified on workers, since other options (-u, -r, -t, ...) are controlled by the master node.""",
     )
-    # if locust should be run in distributed mode as worker
     worker_group.add_argument(
         "--worker",
         action="store_true",
@@ -426,7 +449,8 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
     worker_group.add_argument(
         "--processes",
         type=int,
-        help="Number of worker processes to launch. Automatically sets --master and --worker, but can be combined with --worker to only launch workers. Use -1 to launch one process per CPU core in your system. Default is 0 (standalone). Not supported on Windows, because it uses fork.",
+        metavar="<int>",
+        help="Number of times to fork the locust process, to enable using system. Combine with --worker flag or let it automatically set --worker and --master flags for an all-in-one-solution. Not available on Windows. Experimental.",
         env_var="LOCUST_PROCESSES",
     )
     worker_group.add_argument(
@@ -434,21 +458,20 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         action="store_true",
         help=configargparse.SUPPRESS,
     )
-    # master host options
     worker_group.add_argument(
         "--master-host",
         default="127.0.0.1",
-        help="Host or IP address of locust master for distributed load testing. Only used when running with --worker. Defaults to 127.0.0.1.",
+        help="Hostname of locust master node to connect to. Defaults to 127.0.0.1.",
         env_var="LOCUST_MASTER_NODE_HOST",
-        metavar="MASTER_NODE_HOST",
+        metavar="<hostname>",
     )
     worker_group.add_argument(
         "--master-port",
         type=int,
+        metavar="<port number>",
         default=5557,
-        help="The port to connect to that is used by the locust master for distributed load testing. Only used when running with --worker. Defaults to 5557.",
+        help="Port to connect to on master node. Defaults to 5557.",
         env_var="LOCUST_MASTER_NODE_PORT",
-        metavar="MASTER_NODE_PORT",
     )
 
     tag_group = parser.add_argument_group(
@@ -459,7 +482,7 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         "-T",
         "--tags",
         nargs="*",
-        metavar="TAG",
+        metavar="<tag>",
         env_var="LOCUST_TAGS",
         help="List of tags to include in the test, so only tasks with any matching tags will be executed",
     )
@@ -467,7 +490,7 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         "-E",
         "--exclude-tags",
         nargs="*",
-        metavar="TAG",
+        metavar="<tag>",
         env_var="LOCUST_EXCLUDE_TAGS",
         help="List of tags to exclude from the test, so only tasks with no matching tags will be executed",
     )
@@ -476,6 +499,7 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
     stats_group.add_argument(
         "--csv",  # Name repeated in 'parse_options'
         dest="csv_prefix",
+        metavar="<string>",
         help="Store current request stats to files in CSV format. Setting this option will generate three files: [CSV_PREFIX]_stats.csv, [CSV_PREFIX]_stats_history.csv and [CSV_PREFIX]_failures.csv",
         env_var="LOCUST_CSV",
     )
@@ -507,6 +531,7 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
     )
     stats_group.add_argument(
         "--html",
+        metavar="<filename>",
         dest="html_file",
         help="Store HTML report to file path specified",
         env_var="LOCUST_HTML",
@@ -532,11 +557,13 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         "-L",
         default="INFO",
         help="Choose between DEBUG/INFO/WARNING/ERROR/CRITICAL. Default is INFO.",
+        metavar="<level>",
         env_var="LOCUST_LOGLEVEL",
     )
     log_group.add_argument(
         "--logfile",
         help="Path to log file. If not set, log will go to stderr",
+        metavar="<filename>",
         env_var="LOCUST_LOGFILE",
     )
 
@@ -562,8 +589,9 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
     other_group.add_argument(
         "--exit-code-on-error",
         type=int,
+        metavar="<int>",
         default=1,
-        help="Sets the process exit code to use when a test result contain any failure or error",
+        help="Sets the process exit code to use when a test result contain any failure or error. Defaults to 1.",
         env_var="LOCUST_EXIT_CODE_ON_ERROR",
     )
     other_group.add_argument(
@@ -571,6 +599,7 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
         "--stop-timeout",
         action="store",
         dest="stop_timeout",
+        metavar="<number>",
         default="0",
         help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. This parameter only needs to be specified for the master process when running Locust distributed.",
         env_var="LOCUST_STOP_TIMEOUT",
@@ -594,8 +623,8 @@ Only the LOCUSTFILE (-f option) needs to be specified when starting a Worker, si
     user_classes_group.add_argument(
         "user_classes",
         nargs="*",
-        metavar="UserClass",
-        help="Optionally specify which User classes that should be used (available User classes can be listed with -l or --list). LOCUST_USER_CLASSES environment variable can also be used to specify User classes",
+        metavar="<UserClass1 UserClass2>",
+        help="At the end of the command line, you can list User classes to be used (available User classes can be listed with --list). LOCUST_USER_CLASSES environment variable can also be used to specify User classes. Default is to use all available User classes",
         default=os.environ.get("LOCUST_USER_CLASSES", "").split(),
     )
 

@@ -11,10 +11,10 @@ if you plan on running Locust in an automated way with the ``--headless`` flag:
 
 .. code-block:: console
 
-    $ locust -f examples/basic.py --csv=example --headless -t10m
+    $ locust -f examples/basic.py --csv example --headless -t10m
 
 The files will be named ``example_stats.csv``, ``example_failures.csv``, ``example_exceptions.csv`` and ``example_stats_history.csv``
-(when using ``--csv=example``). The first two files will contain the stats and failures for the whole 
+(when using ``--csv example``). The first two files will contain the stats and failures for the whole 
 test run, with a row for every stats entry (URL endpoint) and an aggregated row. The ``example_stats_history.csv`` 
 will get new rows with the *current* (10 seconds sliding window) stats appended during the whole test run. 
 By default only the Aggregate row is appended regularly to the history stats, but if Locust is started with 
