@@ -150,9 +150,9 @@ Usage: locust [options] [UserClass ...]
         """
         ),
         epilog="""Examples:
-        
+
     locust -f my_test.py -H https://www.example.com 
-    
+
     locust -u 100 -t 20m --headless --process 4 MyHttpUser AnotherUser
 
 See documentation for more details, including how to set options using a file or environment variables: https://docs.locust.io/en/stable/configuration.html""",
