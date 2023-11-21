@@ -72,7 +72,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             timeout=5,
             text=True,
         ).strip()
-        self.assertTrue(output.startswith("Usage: locust [OPTIONS] [UserClass ...]"))
+        self.assertTrue(output.startswith("Usage: locust [options] [UserClass"))
         self.assertIn("Common options:", output)
         self.assertIn("-f LOCUSTFILE, --locustfile LOCUSTFILE", output)
         self.assertIn("Logging options:", output)

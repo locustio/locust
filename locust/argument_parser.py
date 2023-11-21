@@ -146,11 +146,14 @@ def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG
         usage=configargparse.SUPPRESS,
         description=textwrap.dedent(
             """
-Usage: locust [OPTIONS] [UserClass]
+Usage: locust [options] [UserClass ...]
         """
         ),
-        epilog="""Example:
-    locust -f my_test.py -u 100 -t 20m --headless -H https://www.example.com SomeUser
+        epilog="""Examples:
+        
+    locust -f my_test.py -H https://www.example.com 
+    
+    locust -u 100 -t 20m --headless --process 4 MyHttpUser AnotherUser
 
 See documentation for more details, including how to set options using a file or environment variables: https://docs.locust.io/en/stable/configuration.html""",
     )
@@ -620,8 +623,8 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
     user_classes_group.add_argument(
         "user_classes",
         nargs="*",
-        metavar="UserClass",
-        help="Optionally specify which User classes that should be used (available User classes can be listed with -l or --list). LOCUST_USER_CLASSES environment variable can also be used to specify User classes",
+        metavar="<UserClass1 UserClass2>",
+        help="At the end of the command line, you can list User classes to be used (available User classes can be listed with --list). LOCUST_USER_CLASSES environment variable can also be used to specify User classes. Default is to use all available User classes",
         default=os.environ.get("LOCUST_USER_CLASSES", "").split(),
     )
 
