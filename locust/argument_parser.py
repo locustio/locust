@@ -153,7 +153,7 @@ Usage: locust [options] [UserClass ...]
 
     locust -f my_test.py -H https://www.example.com
 
-    locust --headless -u 100 -t 20m --process 4 MyHttpUser AnotherUser
+    locust --headless -u 100 -t 20m --processes 4 MyHttpUser AnotherUser
 
 See documentation for more details, including how to set options using a file or environment variables: https://docs.locust.io/en/stable/configuration.html""",
     )
