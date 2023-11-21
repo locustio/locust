@@ -13,7 +13,7 @@ To do this, you start one instance of Locust in master mode using the ``--master
 To make this easier, you can use the ``--processes`` flag to launch multiple instances. By default it will launch a master process and the specified number of worker processes. Used in combination with ``--worker`` it will only launch the workers.
 
 .. note::
-    ``--processes`` was introduced in Locust 2.19. Child processes are launched using fork which is not available in Windows.
+    ``--processes`` was introduced in Locust 2.19 and is somewhat experimental. Child processes are launched using fork, which is not available in Windows.
 
 The master instance runs Locust's web interface, and tells the workers when to spawn/stop Users. The worker instances run your Users and send statistics back to the master. The master instance doesn't run any Users itself.
 
