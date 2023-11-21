@@ -1925,3 +1925,26 @@ class AnyUser(HttpUser):
 
             self.assertNotIn("Traceback", worker_stderr)
             self.assertIn("Didn't get heartbeat from master in over ", worker_stderr)
+
+    def test_processes_error_doesnt_blow_up_completely(self):
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--processes",
+                    "4",
+                    "-L",
+                    "DEBUG",
+                    "UserThatDoesntExist",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            _, stderr = proc.communicate()
+            self.assertIn("Unknown User(s): UserThatDoesntExist", stderr)
+            # the error message should repeat 4 times for the workers and once for the master
+            self.assertEqual(stderr.count("Unknown User(s): UserThatDoesntExist"), 5)
+            self.assertNotIn("Traceback", stderr)
