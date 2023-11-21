@@ -1,6 +1,19 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.19.0](https://github.com/locustio/locust/tree/2.19.0) (2023-11-21)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.18.4...2.19.0)
+
+**Merged pull requests:**
+
+- Fix issue with --processes: Stop parent process from trying to kill children too fast [\#2478](https://github.com/locustio/locust/pull/2478) ([cyberw](https://github.com/cyberw))
+- Update command line argument descriptions and docs [\#2477](https://github.com/locustio/locust/pull/2477) ([cyberw](https://github.com/cyberw))
+- Update minimum version of various dependencies [\#2476](https://github.com/locustio/locust/pull/2476) ([cyberw](https://github.com/cyberw))
+- Stop worker from automatically quitting if connected to an older version master that doesnt send heartbeats [\#2475](https://github.com/locustio/locust/pull/2475) ([cyberw](https://github.com/cyberw))
+- Shut down workers if master goes missing for too long [\#2474](https://github.com/locustio/locust/pull/2474) ([cyberw](https://github.com/cyberw))
+- Add --processes parameter to automatically fork subprocesses [\#2472](https://github.com/locustio/locust/pull/2472) ([cyberw](https://github.com/cyberw))
+
 ## [2.18.4](https://github.com/locustio/locust/tree/2.18.4) (2023-11-19)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.18.3...2.18.4)
