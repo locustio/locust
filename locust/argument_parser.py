@@ -499,8 +499,8 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
     stats_group.add_argument(
         "--csv",  # Name repeated in 'parse_options'
         dest="csv_prefix",
-        metavar="<string>",
-        help="Store current request stats to files in CSV format. Setting this option will generate three files: [CSV_PREFIX]_stats.csv, [CSV_PREFIX]_stats_history.csv and [CSV_PREFIX]_failures.csv",
+        metavar="<filename>",
+        help="Store request stats to files in CSV format. Setting this option will generate three files: <filename>_stats.csv, <filename>_stats_history.csv and <filename>_failures.csv",
         env_var="LOCUST_CSV",
     )
     stats_group.add_argument(
