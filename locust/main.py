@@ -1,3 +1,4 @@
+import errno
 import logging
 import os
 import signal
@@ -229,13 +230,32 @@ def main():
 
                 def kill_workers(children):
                     exit_code = 0
-                    logging.debug("Sending SIGINT to children")
+                    start_time = time.time()
+                    # give children some time to finish up (in case they had an error parsing arguments etc)
+                    for child_pid in children[:]:
+                        while time.time() < start_time + 3:
+                            try:
+                                _, child_status = os.waitpid(child_pid, os.WNOHANG)
+                                children.remove(child_pid)
+                                try:
+                                    if sys.version_info > (3, 8):
+                                        child_exit_code = os.waitstatus_to_exitcode(child_status)
+                                        exit_code = max(exit_code, child_exit_code)
+                                except AttributeError:
+                                    pass  # dammit python 3.8...
+                            except OSError as e:
+                                if e.errno == errno.EINTR:
+                                    time.sleep(0.1)
+                                else:
+                                    logging.error(traceback.format_exc())
+                            else:
+                                break
                     for child_pid in children:
                         try:
+                            logging.debug(f"Sending SIGINT to child with pid {child_pid}")
                             os.kill(child_pid, signal.SIGINT)
                         except ProcessLookupError:
                             pass  # never mind, process was already dead
-                    logging.debug("waiting for children to terminate")
                     for child_pid in children:
                         _, child_status = os.waitpid(child_pid, 0)
                         try:
@@ -245,7 +265,10 @@ def main():
                         except AttributeError:
                             pass  # dammit python 3.8...
                     if exit_code > 1:
-                        logging.error(f"bad response code from worker children: {exit_code}")
+                        logging.error(f"Bad response code from worker children: {exit_code}")
+                    # ensure master doesnt finish until output from workers has arrived
+                    # otherwise the terminal might look weird.
+                    time.sleep(0.1)
 
                 atexit.register(kill_workers, children)
 
@@ -398,6 +421,8 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                     "Starting web interface at %s://0.0.0.0:%s (accepting connections from all network interfaces)"
                     % (protocol, options.web_port)
                 )
+            if options.web_auth:
+                logging.info("BasicAuth support is deprecated, it will be removed in a future release.")
             web_ui = environment.create_web_ui(
                 host=web_host,
                 port=options.web_port,
