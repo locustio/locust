@@ -64,7 +64,7 @@ Controlling the exit code of the Locust process
 -----------------------------------------------
 
 By default the locust process will give an exit code of 1 if there were any failed samples 
-(use the ``--exit-code-on-error``to change that behaviour).
+(use the ``--exit-code-on-error`` to change that behaviour).
 
 You can also manually control the exit code in your test scripts by setting the :py:attr:`process_exit_code <locust.env.Environment.process_exit_code>` of the 
 :py:class:`Environment <locust.env.Environment>` instance. This is particularly useful when running Locust as an automated/scheduled test, for example as part of a CI pipeline.
