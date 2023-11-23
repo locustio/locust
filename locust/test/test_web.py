@@ -1113,7 +1113,9 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
         self.remove_files_if_exists()
 
         parser = get_parser(default_config_files=[])
-        self.environment.parsed_options = parser.parse_args(["--csv", os.path.join(self.STATS_BASE_DIR, self.STATS_BASE_NAME), "--csv-full-history"])
+        self.environment.parsed_options = parser.parse_args(
+            ["--csv", os.path.join(self.STATS_BASE_DIR, self.STATS_BASE_NAME), "--csv-full-history"]
+        )
         self.stats = self.environment.stats
         self.stats.CSV_STATS_INTERVAL_SEC = 0.02
 
