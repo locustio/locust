@@ -399,7 +399,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
     if options.csv_prefix:
         base_csv_file = os.path.basename(options.csv_prefix)
-        base_csv_dir = options.csv_prefix[:-len(base_csv_file)]
+        base_csv_dir = options.csv_prefix[: -len(base_csv_file)]
         if not os.path.exists(base_csv_dir):
             os.makedirs(base_csv_dir)
         stats_csv_writer = StatsCSVFileWriter(

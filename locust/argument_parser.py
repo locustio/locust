@@ -500,7 +500,7 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         "--csv",  # Name repeated in 'parse_options'
         dest="csv_prefix",
         metavar="<filename>",
-        help="Store request stats to files in CSV format. Setting this option will generate three files: <filename>_stats.csv, <filename>_stats_history.csv and <filename>_failures.csv",
+        help="Store request stats to files in CSV format. Setting this option will generate three files: <filename>_stats.csv, <filename>_stats_history.csv and <filename>_failures.csv. Any folders part of the prefix will be automatically created",
         env_var="LOCUST_CSV",
     )
     stats_group.add_argument(
