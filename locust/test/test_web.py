@@ -1102,6 +1102,7 @@ class TestWebUIWithTLS(LocustTestCase):
 
 
 class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
+    STATS_BASE_DIR = "csv_output"
     STATS_BASE_NAME = "web_test"
     STATS_FILENAME = f"{STATS_BASE_NAME}_stats.csv"
     STATS_HISTORY_FILENAME = f"{STATS_BASE_NAME}_stats_history.csv"
@@ -1112,7 +1113,7 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
         self.remove_files_if_exists()
 
         parser = get_parser(default_config_files=[])
-        self.environment.parsed_options = parser.parse_args(["--csv", self.STATS_BASE_NAME, "--csv-full-history"])
+        self.environment.parsed_options = parser.parse_args(["--csv", os.path.join(self.STATS_BASE_DIR, self.STATS_BASE_NAME), "--csv-full-history"])
         self.stats = self.environment.stats
         self.stats.CSV_STATS_INTERVAL_SEC = 0.02
 
@@ -1139,6 +1140,7 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
         self.remove_file_if_exists(self.STATS_FILENAME)
         self.remove_file_if_exists(self.STATS_HISTORY_FILENAME)
         self.remove_file_if_exists(self.STATS_FAILURES_FILENAME)
+        self.remove_file_if_exists(self.STATS_BASE_DIR)
 
     def test_request_stats_full_history_csv(self):
         self.stats.log_request("GET", "/test", 1.39764125, 2)
