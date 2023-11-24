@@ -24,6 +24,7 @@ from geventhttpclient.header import Headers
 
 # borrow requests's content-type header parsing
 from requests.utils import get_encoding_from_headers
+from charset_normalizer import detect
 
 from locust.user import User
 from locust.exception import LocustError, CatchResponseError, ResponseError
@@ -461,9 +462,14 @@ class FastResponse(CompatResponse):
             return None
         if self.encoding is None:
             if self.headers is None:
+                # No information, try to detect
                 self.encoding = "utf-8"
             else:
-                self.encoding = get_encoding_from_headers(self.headers) or ""
+                self.encoding = get_encoding_from_headers(self.headers)
+                # No information, try to detect
+                if not self.encoding:
+                    self.encoding = detect(self.content)['encoding']
+
         return str(self.content, self.encoding, errors="replace")
 
     @property
