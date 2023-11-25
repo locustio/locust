@@ -1,5 +1,6 @@
 from collections import defaultdict
 from unittest import TestCase
+from typing import DefaultDict
 
 from locust import SequentialTaskSet, User, constant, task
 from locust.env import Environment
@@ -7,7 +8,7 @@ from locust.exception import StopUser
 
 
 class InterruptableTaskSet(SequentialTaskSet):
-    counter: defaultdict[str, int] = defaultdict(int)
+    counter: DefaultDict[str, int] = defaultdict(int)
 
     def on_start(self):
         super().on_start()
