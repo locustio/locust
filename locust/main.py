@@ -218,7 +218,7 @@ def main():
                 for child_pid in children:
                     _, child_status = os.waitpid(child_pid, 0)
                     try:
-                        if sys.version_info > (3, 8):
+                        if sys.version_info >= (3, 9):
                             child_exit_code = os.waitstatus_to_exitcode(child_status)
                             exit_code = max(exit_code, child_exit_code)
                     except AttributeError:
@@ -238,7 +238,7 @@ def main():
                                 _, child_status = os.waitpid(child_pid, os.WNOHANG)
                                 children.remove(child_pid)
                                 try:
-                                    if sys.version_info > (3, 8):
+                                    if sys.version_info >= (3, 9):
                                         child_exit_code = os.waitstatus_to_exitcode(child_status)
                                         exit_code = max(exit_code, child_exit_code)
                                 except AttributeError:
@@ -259,7 +259,7 @@ def main():
                     for child_pid in children:
                         _, child_status = os.waitpid(child_pid, 0)
                         try:
-                            if sys.version_info > (3, 8):
+                            if sys.version_info >= (3, 9):
                                 child_exit_code = os.waitstatus_to_exitcode(child_status)
                                 exit_code = max(exit_code, child_exit_code)
                         except AttributeError:
@@ -323,7 +323,7 @@ It's not high enough for load testing, and the OS didn't allow locust to increas
 See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."""
             )
 
-    if sys.version_info <= (3, 9):
+    if sys.version_info < (3, 9):
         logger.info("Python 3.8 support is deprecated and will be removed soon")
 
     # create locust Environment
