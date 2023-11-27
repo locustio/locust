@@ -13,7 +13,7 @@ import { connect } from 'react-redux';
 
 import Form from 'components/Form/Form';
 import Select from 'components/Form/Select';
-import CustomParameters from 'components/SwarmForm/SwarmCustomParmeters';
+import CustomParameters from 'components/SwarmForm/SwarmCustomParameters';
 import { SWARM_STATE } from 'constants/swarm';
 import { useStartSwarmMutation } from 'redux/api/swarm';
 import { swarmActions, ISwarmState } from 'redux/slice/swarm.slice';

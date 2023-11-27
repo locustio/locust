@@ -43,11 +43,11 @@ function CustomInput({ label, defaultValue, choices, helpText, isSecret }: ICust
 
   return (
     <TextField
+      defaultValue={defaultValue}
       label={labelWithOptionalHelpText}
       name={label}
       sx={{ width: '100%' }}
       type={isSecret ? 'password' : 'text'}
-      value={defaultValue}
     />
   );
 }
