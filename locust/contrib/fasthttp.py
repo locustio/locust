@@ -463,12 +463,12 @@ class FastResponse(CompatResponse):
         if self.encoding is None:
             if self.headers is None:
                 # No information, try to detect
-                self.encoding = detect(self.content)["encoding"]
+                self.encoding = str(detect(self.content)["encoding"])
             else:
                 self.encoding = get_encoding_from_headers(self.headers)
                 # No information, try to detect
                 if not self.encoding:
-                    self.encoding = detect(self.content)["encoding"]
+                    self.encoding = str(detect(self.content)["encoding"])
 
         return str(self.content, self.encoding, errors="replace")
 
