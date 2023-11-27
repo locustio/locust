@@ -1,6 +1,23 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.19.1](https://github.com/locustio/locust/tree/2.19.1) (2023-11-27)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.19.0...2.19.1)
+
+**Closed issues:**
+
+- SocketIOUser not support send BINARY data [\#2457](https://github.com/locustio/locust/issues/2457)
+
+**Merged pull requests:**
+
+- Change logging of call to sys.exit\(\) to info level [\#2490](https://github.com/locustio/locust/pull/2490) ([cyberw](https://github.com/cyberw))
+- fix\(typing\): typing.DefaultDict in test\_interruptable\_task.py [\#2488](https://github.com/locustio/locust/pull/2488) ([tdadela](https://github.com/tdadela))
+- Dont suppress StopUser or GreenletExit in on\_stop [\#2486](https://github.com/locustio/locust/pull/2486) ([ALagierski](https://github.com/ALagierski))
+- FastResponse: Detect response text encoding when no information is present on the response headers. [\#2485](https://github.com/locustio/locust/pull/2485) ([MiltiadisKoutsokeras](https://github.com/MiltiadisKoutsokeras))
+- Fix an edge case when no directory is part of csv-prefix [\#2483](https://github.com/locustio/locust/pull/2483) ([sillydan1](https://github.com/sillydan1))
+- Create any directories as part of the CSV Prefix [\#2481](https://github.com/locustio/locust/pull/2481) ([sillydan1](https://github.com/sillydan1))
+
 ## [2.19.0](https://github.com/locustio/locust/tree/2.19.0) (2023-11-21)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.18.4...2.19.0)
