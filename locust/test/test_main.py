@@ -1948,3 +1948,47 @@ class AnyUser(HttpUser):
             # the error message should repeat 4 times for the workers and once for the master
             self.assertEqual(stderr.count("Unknown User(s): UserThatDoesntExist"), 5)
             self.assertNotIn("Traceback", stderr)
+
+    def test_processes_workers_quit_unexpected(self):
+        content = """
+from locust import runners, events, User
+import sys
+
+@events.test_start.add_listener
+def on_test_start(environment, **_kwargs):
+    if isinstance(environment.runner, runners.WorkerRunner):
+        sys.exit(42)
+
+class AnyUser(User):
+    pass
+"""
+        with mock_locustfile(content=content) as mocked:
+            worker_proc = subprocess.Popen(
+                ["locust", "-f", mocked.file_path, "--processes", "2", "--worker"],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            master_proc = subprocess.Popen(
+                ["locust", "-f", mocked.file_path, "--master", "--headless", "-t", "5"],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            try:
+                _, stderr = worker_proc.communicate(timeout=3)
+                status_code = worker_proc.wait()
+            except Exception:
+                worker_proc.kill()
+                _, stderr = worker_proc.communicate()
+                assert False, f"worker process never finished: {stderr}"
+            finally:
+                gevent.sleep(4)
+                master_proc.kill()
+                _, master_stderr = master_proc.communicate()
+
+            self.assertNotIn("Traceback", stderr)
+            self.assertIn("INFO/locust.runners: sys.exit(42) called", stderr)
+            self.assertEqual(status_code, 42)
+            self.assertNotIn("Traceback", master_stderr)
+            self.assertIn("failed to send heartbeat, setting state to missing", master_stderr)
