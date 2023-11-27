@@ -83,7 +83,7 @@ def greenlet_exception_logger(logger, level=logging.CRITICAL):
     def exception_handler(greenlet):
         if greenlet.exc_info[0] == SystemExit:
             logger.log(
-                level,
+                min(logging.INFO, level),  # dont use higher than INFO for this, because it sounds way to urgent
                 "sys.exit(%s) called (exception callstack suppressed, use log level DEBUG for more info)"
                 % greenlet.exc_info[1],
             )
