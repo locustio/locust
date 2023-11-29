@@ -338,8 +338,6 @@ class FastHttpUser(User):
             raise LocustError(
                 "You must specify the base host. Either in the host attribute in the User class, or on the command line using the --host option."
             )
-        if not re.match(r"^https?://[^/]+", self.host, re.I):
-            raise LocustError(f"Invalid host (`{self.host}`), must be a valid base URL. E.g. http://example.com")
 
         self.client: FastHttpSession = FastHttpSession(
             self.environment,
