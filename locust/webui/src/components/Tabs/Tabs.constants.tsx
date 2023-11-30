@@ -4,7 +4,7 @@ import LogViewer from 'components/LogViewer/LogViewer';
 import Reports from 'components/Reports/Reports';
 import StatsTable from 'components/StatsTable/StatsTable';
 import SwarmCharts from 'components/SwarmCharts/SwarmCharts';
-import SwarmRatios from 'components/SwarnRatios/SwarmRatios';
+import SwarmRatios from 'components/SwarmRatios/SwarmRatios';
 import WorkersTable from 'components/WorkersTable/WorkersTable';
 import { IRootState } from 'redux/store';
 

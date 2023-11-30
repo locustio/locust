@@ -9,14 +9,15 @@
     "build": "tsc && vite build",
     "lint": "eslint './src/**/*.{ts,tsx}'",
     "format": "prettier --write '**/**/*.{ts,tsx}'",
-    "type-check": "tsc"
+    "type-check": "tsc",
+    "test": "vitest --silent=false"
   },
   "dependencies": {
-    "@reduxjs/toolkit": "^1.9.3",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.14.9",
     "@mui/material": "^5.14.10",
+    "@reduxjs/toolkit": "^1.9.3",
     "@vitejs/plugin-react-swc": "^3.3.2",
     "echarts": "^5.4.1",
     "react": "^18.2.0",
@@ -28,6 +29,7 @@
     "vite-tsconfig-paths": "^4.2.1"
   },
   "devDependencies": {
+    "@testing-library/react": "^14.1.0",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
     "@types/react-redux": "^7.1.25",
@@ -39,8 +41,12 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-unused-imports": "^3.0.0",
+    "jsdom": "^22.1.0",
+    "msw": "^2.0.8",
     "prettier": "^3.0.3",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "vitest": "^0.34.6",
+    "vitest-canvas-mock": "^0.3.3"
   },
   "engines": {
     "node": ">=18.0.0"

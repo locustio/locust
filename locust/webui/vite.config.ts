@@ -9,6 +9,7 @@ export default defineConfig((config: UserConfig) => ({
     reactSwcPlugin(),
     tsconfigPaths(),
     config.mode !== 'production' &&
+      config.mode !== 'test' &&
       checkerPlugin({
         typescript: true,
         eslint: {

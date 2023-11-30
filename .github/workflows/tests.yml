@@ -61,6 +61,9 @@ jobs:
           cmd: webui:install
       - uses: borales/actions-yarn@v3
         with:
+          cmd: webui:test
+      - uses: borales/actions-yarn@v3
+        with:
           cmd: webui:lint
       - uses: borales/actions-yarn@v3
         with:
