@@ -46,7 +46,7 @@
     "prettier": "^3.0.3",
     "typescript": "^5.2.2",
     "vitest": "^0.34.6",
-    "vitest-canvas-mock": "^0.3.3"
+    "vitest-webgl-canvas-mock": "^1.1.0"
   },
   "engines": {
     "node": ">=18.0.0"
