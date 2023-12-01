@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:watch": "vite build --watch",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "lint": "eslint './src/**/*.{ts,tsx}'",
     "format": "prettier --write '**/**/*.{ts,tsx}'",
     "type-check": "tsc",
