@@ -455,7 +455,9 @@ class LocalRunner(Runner):
 
         self.environment.events.user_error.add_listener(on_user_error)
 
-    def _start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: list = None) -> None:
+    def _start(
+        self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[list] = None
+    ) -> None:
         """
         Start running a load test
 
