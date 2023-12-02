@@ -316,6 +316,10 @@ class Runner:
     ) -> None:
         ...
 
+    @abstractmethod
+    def send_message(self, msg_type: str, data: Optional[Any] = None, client_id: Optional[str] = None) -> None:
+        ...
+
     def start_shape(self) -> None:
         """
         Start running a load test with a custom LoadTestShape specified in the :meth:`Environment.shape_class <locust.env.Environment.shape_class>` parameter.
@@ -431,15 +435,15 @@ class LocalRunner(Runner):
     Runner for running single process load test
     """
 
-    # always set to 0 for LocalRunner
-    worker_index = 0
-
     def __init__(self, environment) -> None:
         """
         :param environment: Environment instance
         """
         super().__init__(environment)
-
+        # These attributes dont make a lot of sense for LocalRunner
+        # but it makes it easier to write tests that work for both local and distributed runs
+        self.worker_index = 0
+        self.client_id = socket.gethostname() + "_" + uuid4().hex
         # Only when running in standalone mode (non-distributed)
         self._local_worker_node = WorkerNode(id="local")
         self._local_worker_node.user_classes_count = self.user_classes_count
@@ -451,7 +455,9 @@ class LocalRunner(Runner):
 
         self.environment.events.user_error.add_listener(on_user_error)
 
-    def _start(self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: list = None) -> None:
+    def _start(
+        self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[list] = None
+    ) -> None:
         """
         Start running a load test
 
@@ -553,7 +559,7 @@ class LocalRunner(Runner):
             return
         super().stop()
 
-    def send_message(self, msg_type: str, data: Optional[Any] = None) -> None:
+    def send_message(self, msg_type: str, data: Optional[Any] = None, client_id: Optional[str] = None) -> None:
         """
         Emulates internodal messaging by calling registered listeners
 
@@ -1357,12 +1363,15 @@ class WorkerRunner(DistributedRunner):
                 logger.error(f"Temporary connection lost to master server: {e}, will retry later.")
             gevent.sleep(WORKER_REPORT_INTERVAL)
 
-    def send_message(self, msg_type: str, data: Optional[Dict[str, Any]] = None) -> None:
+    def send_message(
+        self, msg_type: str, data: Optional[Dict[str, Any]] = None, client_id: Optional[str] = None
+    ) -> None:
         """
         Sends a message to master node
 
         :param msg_type: The type of the message to send
         :param data: Optional data to send
+        :param client_id: (unused)
         """
         logger.debug("Sending %s message to master" % msg_type)
         self.client.send(Message(msg_type, data, self.client_id))
