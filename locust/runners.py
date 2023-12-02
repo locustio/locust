@@ -316,6 +316,10 @@ class Runner:
     ) -> None:
         ...
 
+    @abstractmethod
+    def send_message(self, msg_type: str, data: Optional[Any] = None, client_id: Optional[str] = None) -> None:
+        ...
+
     def start_shape(self) -> None:
         """
         Start running a load test with a custom LoadTestShape specified in the :meth:`Environment.shape_class <locust.env.Environment.shape_class>` parameter.
@@ -553,7 +557,7 @@ class LocalRunner(Runner):
             return
         super().stop()
 
-    def send_message(self, msg_type: str, data: Optional[Any] = None) -> None:
+    def send_message(self, msg_type: str, data: Optional[Any] = None, client_id: Optional[str] = None) -> None:
         """
         Emulates internodal messaging by calling registered listeners
 
@@ -1357,12 +1361,15 @@ class WorkerRunner(DistributedRunner):
                 logger.error(f"Temporary connection lost to master server: {e}, will retry later.")
             gevent.sleep(WORKER_REPORT_INTERVAL)
 
-    def send_message(self, msg_type: str, data: Optional[Dict[str, Any]] = None) -> None:
+    def send_message(
+        self, msg_type: str, data: Optional[Dict[str, Any]] = None, client_id: Optional[str] = None
+    ) -> None:
         """
         Sends a message to master node
 
         :param msg_type: The type of the message to send
         :param data: Optional data to send
+        :param client_id: (unused)
         """
         logger.debug("Sending %s message to master" % msg_type)
         self.client.send(Message(msg_type, data, self.client_id))
