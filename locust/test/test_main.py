@@ -157,6 +157,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertIn("Starting Locust", stderr)
         self.assertIn("config_file_value", stdout)
 
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is super strange.")
     def test_custom_exit_code(self):
         with temporary_file(
             content=textwrap.dedent(
