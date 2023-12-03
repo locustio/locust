@@ -1,4 +1,4 @@
-import { fireEvent, waitFor } from '@testing-library/react';
+import { act, fireEvent } from '@testing-library/react';
 import { beforeAll, afterAll, describe, test, expect, vi } from 'vitest';
 
 import ResetButton from 'components/StateButtons/ResetButton';
@@ -18,11 +18,11 @@ describe('ResetButton', () => {
   test('should call resetStats on ResetButton click', async () => {
     const { getByText } = renderWithProvider(<ResetButton />);
 
-    fireEvent.click(getByText('Reset'));
-
-    await waitFor(() => {
-      expect(resetStats).toHaveBeenCalled();
-      expect(resetStats).toBeCalledWith('stats/reset');
+    act(() => {
+      fireEvent.click(getByText('Reset'));
     });
+
+    expect(resetStats).toHaveBeenCalled();
+    expect(resetStats).toBeCalledWith('stats/reset');
   });
 });

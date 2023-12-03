@@ -1,4 +1,4 @@
-import { fireEvent, waitFor } from '@testing-library/react';
+import { act, fireEvent, waitFor } from '@testing-library/react';
 import { http } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterEach, afterAll, beforeAll, describe, test, expect, vi } from 'vitest';
@@ -25,12 +25,16 @@ describe('SwarmEditForm', () => {
     const onSubmit = vi.fn();
     const { getByText, getByLabelText } = renderWithProvider(<SwarmEditForm onSubmit={onSubmit} />);
 
-    fireEvent.change(getByLabelText('Number of users (peak concurrency)'), {
-      target: { value: '5' },
-    });
-    fireEvent.change(getByLabelText('Ramp Up (users started/second)'), { target: { value: '10' } });
+    act(() => {
+      fireEvent.change(getByLabelText('Number of users (peak concurrency)'), {
+        target: { value: '5' },
+      });
+      fireEvent.change(getByLabelText('Ramp Up (users started/second)'), {
+        target: { value: '10' },
+      });
 
-    fireEvent.click(getByText('Update Swarm'));
+      fireEvent.click(getByText('Update Swarm'));
+    });
 
     await waitFor(async () => {
       expect(onSubmit).toHaveBeenCalled();

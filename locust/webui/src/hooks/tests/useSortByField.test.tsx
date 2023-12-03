@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 import useSortByField from 'hooks/useSortByField';
@@ -79,19 +79,19 @@ describe('useSortByField', () => {
   });
 
   test('should update the currentSortField and sort the stats by specified sortKey', () => {
-    const { getByTestId, rerender } = render(<MockHook />);
+    const { getByTestId } = render(<MockHook />);
 
-    getByTestId('sortedByNumRequests').click();
-
-    rerender(<MockHook />);
+    act(() => {
+      getByTestId('sortedByNumRequests').click();
+    });
 
     expect(getByTestId('sortedStats').textContent).toBe(
       JSON.stringify([mockStats[0], mockStats[1], mockStats[2]]),
     );
 
-    getByTestId('sortedByNumFailures').click();
-
-    rerender(<MockHook />);
+    act(() => {
+      getByTestId('sortedByNumFailures').click();
+    });
 
     expect(getByTestId('sortedStats').textContent).toBe(
       JSON.stringify([mockStats[2], mockStats[0], mockStats[1]]),
@@ -99,12 +99,12 @@ describe('useSortByField', () => {
   });
 
   test('should sort the stats in reverse on 2nd click', () => {
-    const { getByTestId, rerender } = render(<MockHook />);
+    const { getByTestId } = render(<MockHook />);
 
-    getByTestId('sortedByNumRequests').click();
-    getByTestId('sortedByNumRequests').click();
-
-    rerender(<MockHook />);
+    act(() => {
+      getByTestId('sortedByNumRequests').click();
+      getByTestId('sortedByNumRequests').click();
+    });
 
     expect(getByTestId('sortedStats').textContent).toBe(
       JSON.stringify([mockStats[2], mockStats[1], mockStats[0]]),
@@ -113,16 +113,16 @@ describe('useSortByField', () => {
   });
 
   test('should clear the currentSortField and sort the stats by defaultSortKey on 3rd click', () => {
-    const { getByTestId, rerender } = render(<MockHook />);
+    const { getByTestId } = render(<MockHook />);
 
-    getByTestId('sortedByNumRequests').click();
-    getByTestId('sortedByNumRequests').click();
+    act(() => {
+      getByTestId('sortedByNumRequests').click();
+      getByTestId('sortedByNumRequests').click();
+    });
 
-    rerender(<MockHook />);
-
-    getByTestId('sortedByNumRequests').click();
-
-    rerender(<MockHook />);
+    act(() => {
+      getByTestId('sortedByNumRequests').click();
+    });
 
     expect(getByTestId('sortedStats').textContent).toBe(JSON.stringify(mockStats));
     expect(getByTestId('currentSortField').textContent).toBe('');

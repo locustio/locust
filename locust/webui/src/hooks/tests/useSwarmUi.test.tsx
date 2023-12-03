@@ -1,4 +1,4 @@
-import { waitFor } from '@testing-library/react';
+import { act, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { beforeAll, afterEach, afterAll, describe, expect, test, vi } from 'vitest';
@@ -54,13 +54,21 @@ describe('useSwarmUi', () => {
       },
     });
 
-    store.dispatch(swarmActions.setSwarm({ state: SWARM_STATE.RUNNING }));
+    act(() => {
+      store.dispatch(swarmActions.setSwarm({ state: SWARM_STATE.RUNNING }));
+    });
 
-    await vi.advanceTimersByTimeAsync(2000);
-    const testStartTime = new Date().toLocaleTimeString();
+    vi.advanceTimersByTime(2000);
 
-    expect((store.getState().ui.charts as ICharts).markers).toEqual([testStopTime, testStartTime]);
+    waitFor(() => {
+      const testStartTime = new Date().toLocaleTimeString();
 
-    vi.useRealTimers();
+      expect((store.getState().ui.charts as ICharts).markers).toEqual([
+        testStopTime,
+        testStartTime,
+      ]);
+
+      vi.useRealTimers();
+    });
   });
 });
