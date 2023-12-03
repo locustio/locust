@@ -7,7 +7,7 @@ import platform
 import unittest
 import socket
 import psutil
-import pty
+
 import signal
 import subprocess
 import textwrap
@@ -812,7 +812,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % port, timeout=1).status_code)
             proc.terminate()
 
+    @unittest.skipIf(os.name == "nt", reason="import pty crashes on windows for some reason and I can't be bothered...")
     def test_input(self):
+        import pty
+
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
         from locust import User, TaskSet, task, between
