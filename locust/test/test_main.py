@@ -1896,6 +1896,7 @@ class AnyUser(HttpUser):
             self.assertIn("The last worker quit, stopping test", stderr)
             self.assertIn("Shutting down (exit code 0)", stderr)
 
+    @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_workers_shut_down_if_master_is_gone(self):
         content = """
 from locust import HttpUser, task, constant, runners
