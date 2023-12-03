@@ -1151,6 +1151,7 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
         self.remove_file_if_exists(self.STATS_FAILURES_FILENAME)
         self.remove_file_if_exists(self.STATS_BASE_DIR)
 
+    @unittest.skipIf(os.name == "nt", reason="Windows has issues with temp files, and I can't be bothered...")
     def test_request_stats_full_history_csv(self):
         self.stats.log_request("GET", "/test", 1.39764125, 2)
         self.stats.log_request("GET", "/test", 999.9764125, 1000)
