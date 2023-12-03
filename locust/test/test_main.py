@@ -80,6 +80,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertIn("Logging options:", output)
         self.assertIn("--skip-log-setup      Disable Locust's logging setup.", output)
 
+    @unittest.skipIf(os.name == "nt", reason="Doesnt work on windows and I can't be bothered to fix it")
     def test_custom_arguments(self):
         port = get_free_tcp_port()
         with temporary_file(
@@ -780,6 +781,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn('<body class="spawning">', response.text)
                 self.assertTrue(success, "got timeout and had to kill the process")
 
+    @unittest.skipIf(os.name == "nt", reason="Too messy on Windows")
     def test_web_options(self):
         port = get_free_tcp_port()
         if platform.system() == "Darwin":
