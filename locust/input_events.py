@@ -16,6 +16,7 @@ if os.name == "nt":
         KEY_EVENT,
         GetStdHandle,
     )
+    import pywintypes
 else:
     import select
     import termios
@@ -48,11 +49,14 @@ class UnixKeyPoller:
 class WindowsKeyPoller:
     def __init__(self):
         if sys.stdin.isatty():
-            self.read_handle = GetStdHandle(STD_INPUT_HANDLE)
-            self.read_handle.SetConsoleMode(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT)
-            self.cur_event_length = 0
-            self.cur_keys_length = 0
-            self.captured_chars = []
+            try:
+                self.read_handle = GetStdHandle(STD_INPUT_HANDLE)
+                self.read_handle.SetConsoleMode(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT)
+                self.cur_event_length = 0
+                self.cur_keys_length = 0
+                self.captured_chars = []
+            except pywintypes.error:
+                raise InitError("Terminal says its a tty but we couldnt enable line input. Keyboard input disabled.")
         else:
             raise InitError("Terminal was not a tty. Keyboard input disabled")
 
