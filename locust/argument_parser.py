@@ -120,7 +120,7 @@ def find_locustfiles(locustfiles: List[str], is_directory: bool) -> List[str]:
         for root, dirs, files in os.walk(locustdir):
             for file in files:
                 if not file.startswith("_") and file.lower() != "locust.py" and file.endswith(".py"):
-                    file_path = f"{root}/{file}"
+                    file_path = os.path.join(root, file)
                     file_paths.append(file_path)
     else:
         for file_path in locustfiles:
