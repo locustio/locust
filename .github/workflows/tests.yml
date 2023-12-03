@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          #- {name: Windows, python: '3.9', os: windows-latest, tox: py39}
+          - {name: Windows, python: '3.9', os: windows-latest, tox: py39}
           #- {name: Mac, python: '3.9', os: macos-latest, tox: py39}
           - { name: "flake8", python: "3.11", os: ubuntu-latest, tox: "flake8" }
           - { name: "black", python: "3.11", os: ubuntu-latest, tox: "black" }
