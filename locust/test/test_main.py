@@ -20,6 +20,8 @@ import requests
 from .mock_locustfile import mock_locustfile, MOCK_LOCUSTFILE_CONTENT
 from .util import temporary_file, get_free_tcp_port, patch_env
 
+localhost_hostname = "localhost" if os.name == "nt" else "0.0.0.0"
+
 
 def is_port_in_use(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -570,7 +572,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
             gevent.sleep(1.9)
             try:
-                response = requests.get(f"http://0.0.0.0:{port}/")
+                response = requests.get(f"http://{localhost_hostname}:{port}/")
             except Exception:
                 pass
             self.assertEqual(200, response.status_code)
@@ -606,7 +608,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
             gevent.sleep(1.9)
             try:
-                response = requests.get(f"http://0.0.0.0:{port}/")
+                response = requests.get(f"http://{localhost_hostname}:{port}/")
             except Exception:
                 pass
             _, stderr = proc.communicate(timeout=2)
@@ -692,7 +694,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 text=True,
             )
             gevent.sleep(1.9)
-            response = requests.get(f"http://0.0.0.0:{port}/")
+            response = requests.get(f"http://{localhost_hostname}:{port}/")
             try:
                 success = True
                 _, stderr = proc.communicate(timeout=5)
@@ -759,7 +761,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     text=True,
                 )
                 gevent.sleep(1.9)
-                response = requests.get(f"http://0.0.0.0:{port}/")
+                response = requests.get(f"http://{localhost_hostname}:{port}/")
                 try:
                     success = True
                     _, stderr = proc.communicate(timeout=5)
