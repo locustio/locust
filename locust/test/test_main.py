@@ -122,7 +122,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertNotIn("command_line_value", stdout)
         self.assertIn("web_form_value", stdout)
 
-    @unittest.skipIf(os.name == "nt", reason="Stdout never arrives in windows when the process is killed with sigterm, for some reason")
+    @unittest.skipIf(
+        os.name == "nt",
+        reason="Stdout never arrives in windows when the process is killed with sigterm for some reason",
+    )
     def test_custom_arguments_in_file(self):
         with temporary_file(
             content=textwrap.dedent(
