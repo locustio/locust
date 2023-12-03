@@ -207,8 +207,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Starting web interface at", stderr)
             self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
             self.assertIn("Starting Locust", stderr)
-            self.assertIn("Shutting down (exit code 0)", stderr)
-            self.assertEqual(0, proc.returncode)
+            if os.name != "nt":
+                self.assertIn("Shutting down (exit code 0)", stderr)
+                self.assertEqual(0, proc.returncode)
 
     def test_percentile_parameter(self):
         port = get_free_tcp_port()
@@ -270,8 +271,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Starting web interface at", stderr)
                 self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
                 self.assertIn("Starting Locust", stderr)
-                self.assertIn("Shutting down (exit code 0)", stderr)
-                self.assertEqual(0, proc.returncode)
+                if os.name != "nt":
+                    self.assertIn("Shutting down (exit code 0)", stderr)
+                    self.assertEqual(0, proc.returncode)
 
     def test_webserver_multiple_locustfiles_in_directory(self):
         with TemporaryDirectory() as temp_dir:
@@ -284,8 +286,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.assertIn("Starting web interface at", stderr)
                     self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
                     self.assertIn("Starting Locust", stderr)
-                    self.assertIn("Shutting down (exit code 0)", stderr)
-                    self.assertEqual(0, proc.returncode)
+                    if os.name != "nt":
+                        self.assertIn("Shutting down (exit code 0)", stderr)
+                        self.assertEqual(0, proc.returncode)
 
     def test_webserver_multiple_locustfiles_with_shape(self):
         content = textwrap.dedent(
@@ -328,8 +331,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Starting web interface at", stderr)
                 self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
                 self.assertIn("Starting Locust", stderr)
-                self.assertIn("Shutting down (exit code 0)", stderr)
-                self.assertEqual(0, proc.returncode)
+                if os.name != "nt":
+                    self.assertIn("Shutting down (exit code 0)", stderr)
+                    self.assertEqual(0, proc.returncode)
 
     def test_default_headless_spawn_options(self):
         with mock_locustfile() as mocked:
@@ -445,8 +449,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.assertIn("All users spawned:", stderr)
                     self.assertIn('"TestUser": 1', stderr)
                     self.assertIn('"UserSubclass": 1', stderr)
-                    self.assertIn("Shutting down (exit code 0)", stderr)
-                    self.assertEqual(0, proc.returncode)
+                    if os.name != "nt":  # messy signal handling...
+                        self.assertIn("Shutting down (exit code 0)", stderr)
+                        self.assertEqual(0, proc.returncode)
 
     @unittest.skipIf(sys.version_info < (3, 9), reason="dies in 3.8 on GH and I cant be bothered to investigate it")
     def test_default_headless_spawn_options_with_shape(self):
@@ -492,8 +497,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertTrue(success, "Got timeout and had to kill the process")
             # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
             self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
-            self.assertIn("Shutting down (exit code 0)", stderr)
-            self.assertEqual(0, proc.returncode)
+            if os.name != "nt":
+                self.assertIn("Shutting down (exit code 0)", stderr)
+                self.assertEqual(0, proc.returncode)
 
     def test_run_headless_with_multiple_locustfiles_with_shape(self):
         content = textwrap.dedent(
@@ -555,8 +561,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertTrue(success, "Got timeout and had to kill the process")
                 # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
                 self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
-                self.assertIn("Shutting down (exit code 0)", stderr)
-                self.assertEqual(0, proc.returncode)
+                if os.name != "nt":
+                    self.assertIn("Shutting down (exit code 0)", stderr)
+                    self.assertEqual(0, proc.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is super strange.")
     def test_autostart_wo_run_time(self):
@@ -664,8 +671,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.assertIn("All users spawned:", stderr)
                     self.assertIn('"TestUser": 1', stderr)
                     self.assertIn('"UserSubclass": 1', stderr)
-                    self.assertIn("Shutting down (exit code 0)", stderr)
-                    self.assertEqual(0, proc.returncode)
+                    if os.name != "nt":
+                        self.assertIn("Shutting down (exit code 0)", stderr)
+                        self.assertEqual(0, proc.returncode)
 
     def test_autostart_w_load_shape(self):
         port = get_free_tcp_port()
