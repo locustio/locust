@@ -1227,7 +1227,7 @@ class TestModernWebUI(LocustTestCase, _HeaderCheckMixin):
         web_ui = WebUI(env, "127.0.0.1", 0)
         gevent.sleep(0.01)
         try:
-            response = requests.get("http://{localhost}:{localhost}/" % web_ui.server.server_port)
+            response = requests.get(f"http://{localhost}:{web_ui.server.server_port}/")
             self.assertEqual(500, response.status_code)
             self.assertEqual("Error: Locust Environment does not have any runner", response.text)
         finally:
