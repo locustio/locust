@@ -1,8 +1,9 @@
+import { act } from '@testing-library/react';
 import { test, describe, expect } from 'vitest';
 
 import Tabs from 'components/Tabs/Tabs';
 import { baseTabs, conditionalTabs } from 'components/Tabs/Tabs.constants';
-import { renderWithProvider, rerenderWithProvider } from 'test/testUtils';
+import { renderWithProvider } from 'test/testUtils';
 import { getUrlParams } from 'utils/url';
 
 describe('Tabs', () => {
@@ -45,14 +46,15 @@ describe('Tabs', () => {
   });
 
   test('appends the current tab to url query and url state and changes view on tab click', () => {
-    const { getByText, rerender, store } = renderWithProvider(<Tabs />);
+    const { getByText, store } = renderWithProvider(<Tabs />);
 
     const tabToSelect = baseTabs[2].title;
     const tabState = { tab: baseTabs[2].key };
     const tabElement = getByText(tabToSelect);
 
-    tabElement.click();
-    rerenderWithProvider(rerender, <Tabs />);
+    act(() => {
+      tabElement.click();
+    });
 
     expect(getUrlParams()).toEqual(tabState);
     expect(store.getState().url.query).toEqual(tabState);

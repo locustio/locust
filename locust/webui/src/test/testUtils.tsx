@@ -22,13 +22,3 @@ export const renderWithProvider = (Component: React.ReactElement, initialState =
     store,
   };
 };
-
-export const rerenderWithProvider = (
-  rerender: (ui: React.ReactElement) => void,
-  Component: React.ReactElement,
-  initialState = {},
-) => {
-  const store = createStore(initialState);
-
-  rerender(<Provider store={store}>{Component}</Provider>);
-};

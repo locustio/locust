@@ -39,14 +39,14 @@ const initialState = {
   userCount: 0,
 };
 
-const addSpaceToChartsBetweenTests = (charts: ICharts, time: string) => {
+const addSpaceToChartsBetweenTests = (charts: ICharts) => {
   return updateArraysAtProps(charts, {
     currentRps: { value: null },
     currentFailPerSec: { value: null },
     responseTimePercentile1: { value: null },
     responseTimePercentile2: { value: null },
     userCount: { value: null },
-    time: time,
+    time: '',
   });
 };
 
@@ -63,10 +63,7 @@ const uiSlice = createSlice({
       return {
         ...state,
         charts: {
-          ...addSpaceToChartsBetweenTests(
-            state.charts as ICharts,
-            payload.length ? payload.at(-1) : (state.charts as ICharts).time[0],
-          ),
+          ...addSpaceToChartsBetweenTests(state.charts as ICharts),
           markers: (state.charts as ICharts).markers
             ? [...((state.charts as ICharts).markers as string[]), payload]
             : [(state.charts as ICharts).time[0], payload],
