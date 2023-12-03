@@ -554,6 +554,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Shutting down (exit code 0)", stderr)
                 self.assertEqual(0, proc.returncode)
 
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is super strange.")
     def test_autostart_wo_run_time(self):
         port = get_free_tcp_port()
         with mock_locustfile() as mocked:
@@ -1285,6 +1286,7 @@ class MyUser(HttpUser):
             self.assertIn("No tasks defined on MyUser", stderr)
             self.assertEqual(1, proc.returncode)
 
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is super strange.")
     def test_graceful_exit_when_keyboard_interrupt(self):
         with temporary_file(
             content=textwrap.dedent(
@@ -1837,6 +1839,7 @@ class AnyUser(HttpUser):
             self.assertIn("(index 3) reported as ready", master_stderr)
             self.assertIn("Shutting down (exit code 0)", master_stderr)
 
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is super strange.")
     def test_processes_ctrl_c(self):
         with mock_locustfile() as mocked:
             proc = psutil.Popen(  # use psutil.Popen instead of subprocess.Popen to use extra features
