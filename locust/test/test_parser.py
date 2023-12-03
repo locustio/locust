@@ -38,7 +38,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(opts.skip_log_setup, True)
 
     def test_parameter_parsing(self):
-        with NamedTemporaryFile(mode="w") as file:
+        with NamedTemporaryFile(mode="w", delete=False) as file:  # delete=False because its a mess on windows
             os.environ["LOCUST_LOCUSTFILE"] = "locustfile_from_env"
             file.write("host host_from_config\nweb-host webhost_from_config")
             file.flush()
