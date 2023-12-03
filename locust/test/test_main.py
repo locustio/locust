@@ -712,7 +712,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn('<body class="spawning">', response.text)
             self.assertTrue(success, "got timeout and had to kill the process")
 
-    def test_autostart_mutliple_locustfiles_with_shape(self):
+    def test_autostart_multiple_locustfiles_with_shape(self):
         port = get_free_tcp_port()
         content = textwrap.dedent(
             """
