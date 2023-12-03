@@ -1126,7 +1126,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout, stderr = proc.communicate()
 
                 self.assertIn("running my_task", stdout)
-                self.assertEqual(0, proc.returncode)
+                self.assertIn("Shutting down (exit code 0)", stderr)
 
     def test_error_when_duplicate_shape_class_names(self):
         MOCK_LOCUSTFILE_CONTENT_C = MOCK_LOCUSTFILE_CONTENT_A + textwrap.dedent(
