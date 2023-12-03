@@ -1948,6 +1948,7 @@ class AnyUser(HttpUser):
             self.assertNotIn("Traceback", worker_stderr)
             self.assertIn("Didn't get heartbeat from master in over ", worker_stderr)
 
+    @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes_error_doesnt_blow_up_completely(self):
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
@@ -1971,6 +1972,7 @@ class AnyUser(HttpUser):
             self.assertEqual(stderr.count("Unknown User(s): UserThatDoesntExist"), 5)
             self.assertNotIn("Traceback", stderr)
 
+    @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes_workers_quit_unexpected(self):
         content = """
 from locust import runners, events, User
