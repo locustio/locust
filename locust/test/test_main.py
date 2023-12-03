@@ -1771,6 +1771,7 @@ class AnyUser(HttpUser):
                 if found[i] != i:
                     raise Exception(f"expected index {i} but got", found[i])
 
+    @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes(self):
         with mock_locustfile() as mocked:
             command = f"locust -f {mocked.file_path} --processes 4 --headless --run-time 1 --exit-code-on-error 0"
@@ -1790,6 +1791,7 @@ class AnyUser(HttpUser):
             self.assertIn("(index 3) reported as ready", stderr)
             self.assertIn("Shutting down (exit code 0)", stderr)
 
+    @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes_autodetect(self):
         with mock_locustfile() as mocked:
             command = f"locust -f {mocked.file_path} --processes -1 --headless --run-time 1 --exit-code-on-error 0"
@@ -1809,6 +1811,7 @@ class AnyUser(HttpUser):
             self.assertIn("(index 0) reported as ready", stderr)
             self.assertIn("Shutting down (exit code 0)", stderr)
 
+    @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes_separate_worker(self):
         with mock_locustfile() as mocked:
             master_proc = subprocess.Popen(
@@ -1853,7 +1856,7 @@ class AnyUser(HttpUser):
             self.assertIn("(index 3) reported as ready", master_stderr)
             self.assertIn("Shutting down (exit code 0)", master_stderr)
 
-    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is super strange.")
+    @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes_ctrl_c(self):
         with mock_locustfile() as mocked:
             proc = psutil.Popen(  # use psutil.Popen instead of subprocess.Popen to use extra features
