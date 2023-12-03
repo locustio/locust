@@ -421,10 +421,12 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             if web_host:
                 logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}")
             else:
-                logger.info(
-                    "Starting web interface at %s://0.0.0.0:%s (accepting connections from all network interfaces)"
-                    % (protocol, options.web_port)
-                )
+                if os.name == "nt":
+                    logger.info(
+                        f"Starting web interface at {protocol}://localhost:{options.web_port} (accepting connections from all network interfaces)"
+                    )
+                else:
+                    logger.info(f"Starting web interface at {protocol}://0.0.0.0:{options.web_port}")
             if options.web_auth:
                 logging.info("BasicAuth support is deprecated, it will be removed in a future release.")
             web_ui = environment.create_web_ui(
