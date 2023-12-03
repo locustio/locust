@@ -402,8 +402,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             stdout, stderr = proc.communicate()
             self.assertIn("Starting Locust", stderr)
             self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
-            self.assertIn("Shutting down (exit code 0)", stderr)
-            self.assertEqual(0, proc.returncode)
+            self.assertIn("All users spawned", stderr)
+            if os.name != "nt":  # messy signal handling...
+                self.assertIn("Shutting down (exit code 0)", stderr)
+                self.assertEqual(0, proc.returncode)
 
     def test_run_headless_with_multiple_locustfiles(self):
         with TemporaryDirectory() as temp_dir:
@@ -623,6 +625,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertEqual(200, response.status_code)
             self.assertIn('<body class="running">', response.text)
 
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is super strange.")
     def test_run_autostart_with_multiple_locustfiles(self):
         with TemporaryDirectory() as temp_dir:
             with mock_locustfile(dir=temp_dir):
