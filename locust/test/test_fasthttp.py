@@ -2,6 +2,7 @@ import socket
 import gevent
 import time
 from tempfile import NamedTemporaryFile
+import unittest
 
 from geventhttpclient.client import HTTPClientPool
 
