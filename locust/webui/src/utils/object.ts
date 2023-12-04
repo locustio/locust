@@ -1,4 +1,8 @@
-export const isEmpty = <T extends Record<string, any>>(object: T) => !Object.keys(object).length;
+export const objectLength = <T extends Record<string, any> | any[]>(object: T) =>
+  Array.isArray(object) ? object.length : Object.keys(object).length;
+
+export const isEmpty = <T extends Record<string, any> | any[]>(object: T) =>
+  objectLength(object) === 0;
 
 export function shallowMerge<ObjectA, ObjectB>(objectA: ObjectA, objectB: ObjectB) {
   return {
