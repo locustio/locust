@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import uiSlice, { IUiState, UiAction, uiActions } from 'redux/slice/ui.slice';
-import { ICharts } from 'types/ui.types';
+import { ICharts, ISwarmRatios } from 'types/ui.types';
 
 const initialState = {
   totalRps: 0,
@@ -15,8 +15,9 @@ const initialState = {
     responseTimePercentile1: [],
     responseTimePercentile2: [],
     userCount: [],
+    time: [],
   },
-  ratios: {},
+  ratios: {} as ISwarmRatios,
   userCount: 0,
 };
 
