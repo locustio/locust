@@ -998,6 +998,10 @@ class MasterRunner(DistributedRunner):
                 self.connection_broken = True
                 gevent.sleep(FALLBACK_INTERVAL)
                 continue
+            except KeyboardInterrupt:
+                logging.debug(
+                    "Got KeyboardInterrupt in client_listener. Other greenlets should catch this and shut down."
+                )
             if msg.type == "client_ready":
                 if not msg.data:
                     logger.error(f"An old (pre 2.0) worker tried to connect ({client_id}). That's not going to work.")
