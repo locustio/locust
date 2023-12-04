@@ -41,7 +41,7 @@ export const baseTabs = [
   },
   {
     component: LogViewer,
-    key: 'log_viewer',
+    key: 'logViewer',
     title: 'Logs',
   },
 ];

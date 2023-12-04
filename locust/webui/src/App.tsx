@@ -4,6 +4,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { connect } from 'react-redux';
 
 import Layout from 'components/Layout/Layout';
+import useLogViewer from 'components/LogViewer/useLogViewer';
 import SwarmForm from 'components/SwarmForm/SwarmForm';
 import Tabs from 'components/Tabs/Tabs';
 import { SWARM_STATE } from 'constants/swarm';
@@ -21,6 +22,7 @@ interface IApp {
 
 function App({ isDarkMode, swarmState }: IApp) {
   useSwarmUi();
+  useLogViewer();
 
   const theme = useMemo(
     () => createTheme(isDarkMode ? THEME_MODE.DARK : THEME_MODE.LIGHT),
