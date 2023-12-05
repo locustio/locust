@@ -8,11 +8,13 @@ import { objectLength } from 'utils/object';
 function MockHook({
   data,
   notificaitonKey,
+  shouldNotify,
 }: {
   data: any[] | Record<string, any>;
   notificaitonKey: string;
+  shouldNotify?: () => boolean;
 }) {
-  useNotifications(data, { key: notificaitonKey });
+  useNotifications(data, { key: notificaitonKey, shouldNotify });
 
   return null;
 }
@@ -57,6 +59,28 @@ describe('useNotifications', () => {
     localStorage = temp;
   });
 
+  test('should set notifications when shouldNotify returns true', async () => {
+    const testArrayKey = 'testArray';
+    const testObjectKey = 'testObject';
+
+    const shouldNotify = () => true;
+
+    const { store: firstRender } = renderWithProvider(
+      <MockHook data={[1, 2, 3]} notificaitonKey={testArrayKey} shouldNotify={shouldNotify} />,
+    );
+    const { store } = renderWithProvider(
+      <MockHook
+        data={{ key1: 1, key2: 2 }}
+        notificaitonKey={testObjectKey}
+        shouldNotify={shouldNotify}
+      />,
+      firstRender.getState(),
+    );
+
+    expect((store.getState() as IRootState).notification[testArrayKey]).toBeTruthy();
+    expect((store.getState() as IRootState).notification[testObjectKey]).toBeTruthy();
+  });
+
   test('should not set notifications when data is empty', async () => {
     const testArrayKey = 'testArray';
     const testObjectKey = 'testObject';
@@ -85,5 +109,27 @@ describe('useNotifications', () => {
     });
 
     expect((store.getState() as IRootState).notification[testKey]).toBeFalsy();
+  });
+
+  test('should not set notifications when shouldNotify is false', async () => {
+    const testArrayKey = 'testArray';
+    const testObjectKey = 'testObject';
+
+    const shouldNotify = () => false;
+
+    const { store: firstRender } = renderWithProvider(
+      <MockHook data={[1, 2, 3]} notificaitonKey={testArrayKey} shouldNotify={shouldNotify} />,
+    );
+    const { store } = renderWithProvider(
+      <MockHook
+        data={{ key1: 1, key2: 2 }}
+        notificaitonKey={testObjectKey}
+        shouldNotify={shouldNotify}
+      />,
+      firstRender.getState(),
+    );
+
+    expect((store.getState() as IRootState).notification[testArrayKey]).toBeFalsy();
+    expect((store.getState() as IRootState).notification[testObjectKey]).toBeFalsy();
   });
 });
