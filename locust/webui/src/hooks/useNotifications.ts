@@ -6,7 +6,7 @@ import { objectLength } from 'utils/object';
 
 export default function useNotifications(
   data: any[] | Record<string, any>,
-  { key }: { key: string },
+  { key, shouldNotify }: { key: string; shouldNotify?: () => boolean },
 ) {
   const setNotification = useAction(notificationActions.setNotification);
   const currentPage = useSelector(({ url: { query } }) => query && query.tab);
@@ -22,7 +22,9 @@ export default function useNotifications(
     if (
       objectLength(data) > (localStorage[storageKey] || 0) &&
       /// don't show notifications for current page
-      (!currentPage || currentPage !== key)
+      (!currentPage || currentPage !== key) &&
+      // allows to customize if notification should be shown
+      (!shouldNotify || (shouldNotify && shouldNotify()))
     ) {
       setNotification({ [key]: true });
       localStorage[storageKey] = objectLength(data);
