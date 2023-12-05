@@ -1,6 +1,32 @@
 import { test, describe, expect } from 'vitest';
 
-import { createFormData, isEmpty, shallowMerge, updateArraysAtProps } from 'utils/object';
+import {
+  createFormData,
+  isEmpty,
+  objectLength,
+  shallowMerge,
+  updateArraysAtProps,
+} from 'utils/object';
+
+describe('objectLength', () => {
+  test('should return 0 for an empty object', () => {
+    expect(objectLength({})).toBe(0);
+  });
+
+  test('should return correct length for an object with properties', () => {
+    expect(objectLength({ key: 'value' })).toBe(1);
+    expect(objectLength({ key: 'value', key2: 'value2', key3: 'value3' })).toBe(3);
+  });
+
+  test('should return 0 for an empty array', () => {
+    expect(objectLength([])).toBe(0);
+  });
+
+  test('should return correct length for an array with elements', () => {
+    expect(objectLength([1])).toBe(1);
+    expect(objectLength([1, 2, 3])).toBe(3);
+  });
+});
 
 describe('isEmpty', () => {
   test('should return true for an empty object', () => {
@@ -9,6 +35,14 @@ describe('isEmpty', () => {
 
   test('should return false for an object with properties', () => {
     expect(isEmpty({ key: 'value' })).toBeFalsy();
+  });
+
+  test('should return true for an empty array', () => {
+    expect(isEmpty([])).toBeTruthy();
+  });
+
+  test('should return false for an array with elements', () => {
+    expect(isEmpty([1, 2, 3])).toBeFalsy();
   });
 });
 

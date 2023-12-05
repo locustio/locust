@@ -31,11 +31,11 @@ export type UiAction = PayloadAction<Partial<IUiState>>;
 const initialState = {
   totalRps: 0,
   failRatio: 0,
-  stats: [],
-  errors: [],
-  exceptions: [],
-  charts: camelCaseKeys(window.templateArgs).history.reduce(updateArraysAtProps, {}),
-  ratios: {},
+  stats: [] as ISwarmStat[],
+  errors: [] as ISwarmError[],
+  exceptions: [] as ISwarmException[],
+  charts: camelCaseKeys(window.templateArgs).history.reduce(updateArraysAtProps, {}) as ICharts,
+  ratios: {} as ISwarmRatios,
   userCount: 0,
 };
 
@@ -54,7 +54,7 @@ const uiSlice = createSlice({
   name: 'ui',
   initialState,
   reducers: {
-    setUi: updateStateWithPayload,
+    setUi: updateStateWithPayload<IUiState, UiAction>,
     updateCharts: (state, { payload }) => ({
       ...state,
       charts: updateArraysAtProps<ICharts>(state.charts as ICharts, payload),
