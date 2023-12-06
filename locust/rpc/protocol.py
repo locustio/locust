@@ -3,10 +3,10 @@ import datetime
 from typing import Type
 
 try:
-    from bson import ObjectId
+    from bson import ObjectId  # type: ignore
 except ImportError:
 
-    class ObjectId:
+    class ObjectId:  # type: ignore
         def __init__(self, s):
             raise Exception("You need to install pymongo or at least bson to be able to send/receive ObjectIds")
 
