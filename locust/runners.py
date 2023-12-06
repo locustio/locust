@@ -1109,7 +1109,11 @@ class MasterRunner(DistributedRunner):
                 logger.debug(
                     f"Received {msg.type} message from worker {msg.node_id} (index {self.get_worker_index(msg.node_id)})"
                 )
-                self.custom_messages[msg.type](environment=self.environment, msg=msg)
+                try:
+                    self.custom_messages[msg.type](environment=self.environment, msg=msg)
+                except Exception:
+                    logging.error(f"Uncaught exception in handler for {msg.type}\n{traceback.format_exc()}")
+
             else:
                 logger.warning(
                     f"Unknown message type received from worker {msg.node_id} (index {self.get_worker_index(msg.node_id)}): {msg.type}"
