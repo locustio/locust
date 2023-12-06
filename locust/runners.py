@@ -1111,7 +1111,7 @@ class MasterRunner(DistributedRunner):
                 )
                 try:
                     self.custom_messages[msg.type](environment=self.environment, msg=msg)
-                except:
+                except Exception:
                     logging.error(f"Uncaught exception in handler for {msg.type}\n{traceback.format_exc()}")
 
             else:
