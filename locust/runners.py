@@ -37,6 +37,7 @@ import greenlet
 import psutil
 from gevent.event import Event
 from gevent.pool import Group
+import inspect
 
 from . import User
 from locust import __version__
@@ -380,7 +381,11 @@ class Runner:
         """
         if self.state == STATE_STOPPED:
             return
-        logger.debug("Stopping all users")
+        try:
+            caller = inspect.getframeinfo(inspect.stack()[1][0])
+            logger.debug(f"Stopping all users (called from {caller.filename}:{caller.lineno})")
+        except Exception:
+            logger.debug("Stopping all users (couldnt determine where stop() was called from)")
         self.environment.events.test_stopping.fire(environment=self.environment)
         self.final_user_classes_count = {**self.user_classes_count}
         self.update_state(STATE_CLEANUP)
