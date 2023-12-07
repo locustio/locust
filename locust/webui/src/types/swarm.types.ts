@@ -18,7 +18,15 @@ export interface IExtraOptions {
   [key: string]: IExtraOptionParameter;
 }
 
-export type History = Omit<ICharts, 'markers'>;
+export interface IHistory {
+  currentRps: number;
+  currentFailPerSec: number;
+  userCount: number;
+  time: string;
+  currentResponseTimePercentiles: {
+    [key: `responseTimePercentile${number}`]: number | null;
+  };
+}
 
 export interface IReport {
   locustfile: string;
@@ -35,8 +43,7 @@ export interface IReport {
 }
 
 export interface IReportTemplateArgs extends IReport {
-  history: ICharts[];
+  history: IHistory[];
   isReport?: boolean;
-  percentile1: number;
-  percentile2: number;
+  percentilesToChart: number[];
 }

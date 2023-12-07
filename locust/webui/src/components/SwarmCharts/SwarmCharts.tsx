@@ -1,6 +1,7 @@
 import { connect } from 'react-redux';
 
 import LineChart, { ILineChartProps } from 'components/LineChart/LineChart';
+import { swarmTemplateArgs } from 'constants/swarm';
 import { IRootState } from 'redux/store';
 import { ICharts } from 'types/ui.types';
 
@@ -15,16 +16,10 @@ const availableSwarmCharts: ILineChartProps[] = [
   },
   {
     title: 'Response Times (ms)',
-    lines: [
-      {
-        name: `${window.templateArgs.percentile1 * 100}th percentile`,
-        key: 'responseTimePercentile1',
-      },
-      {
-        name: `${window.templateArgs.percentile2 * 100}th percentile`,
-        key: 'responseTimePercentile2',
-      },
-    ],
+    lines: swarmTemplateArgs.percentilesToChart.map(percentile => ({
+      name: `${percentile * 100}th percentile`,
+      key: `responseTimePercentile${percentile}`,
+    })),
   },
   {
     title: 'Number of Users',

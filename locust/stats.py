@@ -917,6 +917,12 @@ def stats_history(runner: "Runner") -> None:
         if not stats.total.use_response_times_cache:
             break
         if runner.state != "stopped":
+            current_response_time_percentiles = {
+                f"response_time_percentile_{percentile}": stats.total.get_current_response_time_percentile(percentile)
+                or 0
+                for percentile in PERCENTILES_TO_CHART
+            }
+
             r = {
                 "time": datetime.datetime.now(tz=datetime.timezone.utc).strftime("%H:%M:%S"),
                 "current_rps": stats.total.current_rps or 0,
@@ -925,6 +931,7 @@ def stats_history(runner: "Runner") -> None:
                 or 0,
                 "response_time_percentile_2": stats.total.get_current_response_time_percentile(PERCENTILES_TO_CHART[1])
                 or 0,
+                "current_response_time_percentiles": current_response_time_percentiles,
                 "user_count": runner.user_count or 0,
             }
             stats.history.append(r)

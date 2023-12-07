@@ -39,12 +39,20 @@ const initialState = {
   userCount: 0,
 };
 
+const percentileNullValues = swarmTemplateArgs.percentilesToChart.reduce(
+  (percentilesNullValue, percentile) => ({
+    ...percentilesNullValue,
+    [`responseTimePercentile${percentile}`]: { value: null },
+  }),
+  {},
+);
+
 const addSpaceToChartsBetweenTests = (charts: ICharts) => {
   return updateArraysAtProps(charts, {
+    ...percentileNullValues,
     currentRps: { value: null },
     currentFailPerSec: { value: null },
-    responseTimePercentile1: { value: null },
-    responseTimePercentile2: { value: null },
+    totalAvgResponseTime: { value: null },
     userCount: { value: null },
     time: '',
   });

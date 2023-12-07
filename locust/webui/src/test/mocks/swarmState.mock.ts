@@ -1,3 +1,5 @@
+export const percentilesToChart = [0.5, 0.95];
+
 export const swarmStateMock = {
   availableShapeClasses: ['Default'],
   availableUserClasses: ['ExampleUser'],
@@ -14,6 +16,7 @@ export const swarmStateMock = {
   showUserclassPicker: false,
   spawnRate: null,
   state: 'ready',
+  percentilesToChart: percentilesToChart,
   statsHistoryEnabled: false,
   tasks: '{}',
   userCount: 0,

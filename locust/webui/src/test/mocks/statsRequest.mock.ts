@@ -1,6 +1,8 @@
 export const statsResponseMock = {
-  current_response_time_percentile_1: 1,
-  current_response_time_percentile_2: 1,
+  current_response_time_percentiles: {
+    'response_time_percentile_0.5': 2,
+    'response_time_percentile_0.95': 2,
+  },
   errors: [
     {
       error: 'ConnectionRefusedError(111, &#x27;Connection refused&#x27;)',
@@ -142,6 +144,8 @@ export const getStatsResponseTransformed = () => ({
   exceptions: exceptionsResponseMock.exceptions,
   extendedStats: undefined,
   charts: {
+    'responseTimePercentile0.5': [2],
+    'responseTimePercentile0.95': [2],
     currentRps: [1932.5],
     currentFailPerSec: [1932.5],
     responseTimePercentile1: [1],
