@@ -22,7 +22,8 @@ export default function Modal({ open, onClose, children }: IModal) {
           rowGap: 2,
           bgcolor: 'background.paper',
           boxShadow: 24,
-          borderRadius: 2,
+          borderRadius: 4,
+          border: '3px solid black',
           p: 4,
         }}
       >

@@ -25,6 +25,10 @@ const authors = [
     name: 'Hugo Heyman',
     social: { handle: '@hugoheyman', link: 'https://twitter.com/hugoheyman/' },
   },
+  {
+    name: 'Lars Holmberg',
+    social: { handle: '@cyberw', link: 'https://github.com/cyberw' },
+  },
 ];
 
 export default function About() {
@@ -40,7 +44,7 @@ export default function About() {
       </Box>
       <Modal onClose={() => setOpen(false)} open={open}>
         <div>
-          <Typography component='h2' variant='h4'>
+          <Typography component='h2' mb={1} variant='h4'>
             About
           </Typography>
           <Typography component='p' variant='subtitle1'>
@@ -49,13 +53,21 @@ export default function About() {
             concept of Locust classes and made it work distributed across multiple machines.
           </Typography>
           <Typography component='p' sx={{ mt: 2 }} variant='subtitle1'>
-            Jonatan, Carl and Joakim Hamrén has continued the development of Locust at their job,
-            ESN Social Software, who have adopted Locust as an inhouse Open Source project.
+            Jonatan, Carl and Joakim Hamrén then continued the development of Locust at their job,
+            ESN Social Software, who adopted Locust as an inhouse Open Source project.
+          </Typography>
+          <Typography component='p' sx={{ mt: 2 }} variant='subtitle1'>
+            In 2019, the project changed ownership and has since been picked up and maintained by
+            Lars Holmberg.
+          </Typography>
+          <Typography component='p' sx={{ mt: 2 }} variant='subtitle1'>
+            Locust is now used by millions of users around the world and hundreds of developers
+            contribute to its development.
           </Typography>
         </div>
 
         <div>
-          <Typography component='h2' variant='h4'>
+          <Typography component='h2' mb={1} variant='h4'>
             Authors and Copyright
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 0.5 }}>
@@ -73,7 +85,7 @@ export default function About() {
         </div>
 
         <div>
-          <Typography component='h2' variant='h4'>
+          <Typography component='h2' mb={1} variant='h4'>
             License
           </Typography>
           <Typography component='p' variant='subtitle1'>
@@ -82,14 +94,14 @@ export default function About() {
         </div>
 
         <div>
-          <Typography component='h2' variant='h4'>
+          <Typography component='h2' mb={1} variant='h4'>
             Version
           </Typography>
           <Link href={`https://github.com/locustio/locust/releases/tag/${version}`}>{version}</Link>
         </div>
 
         <div>
-          <Typography component='h2' variant='h4'>
+          <Typography component='h2' mb={1} variant='h4'>
             Website
           </Typography>
           <Link href='https://locust.io/'>https://locust.io</Link>
