@@ -170,22 +170,22 @@ describe('SwarmCustomParameters', () => {
     expect(selectField).toBeTruthy();
   });
 
-  test('renders null or boolean parameters as invalid', () => {
-    const customFieldNullDefaultValue = 'nullDefaultValue';
+  test('renders a checkbox when a boolean default value is provided', () => {
     const customFieldBooleanDefaultValue = 'booleanDefaultValue';
+    const customFieldFalseBooleanDefaultValue = 'booleanFalseDefaultValue';
 
-    const { getByText } = renderWithProvider(
+    const { getByLabelText } = renderWithProvider(
       <SwarmCustomParameters
         extraOptions={{
-          [customFieldNullDefaultValue]: {
-            choices: null,
-            defaultValue: null,
-            helpText: null,
-            isSecret: false,
-          },
           [customFieldBooleanDefaultValue]: {
             choices: null,
             defaultValue: true,
+            helpText: null,
+            isSecret: false,
+          },
+          [customFieldFalseBooleanDefaultValue]: {
+            choices: null,
+            defaultValue: false,
             helpText: null,
             isSecret: false,
           },
@@ -193,14 +193,86 @@ describe('SwarmCustomParameters', () => {
       />,
     );
 
-    const invalidParametersHeader = getByText(
-      "The following custom parameters can't be set in the Web UI, because it is a boolean or None type:",
-    );
-    const invalidParametersList = invalidParametersHeader.nextSibling;
+    const booleanField = getByLabelText(
+      toTitleCase(customFieldBooleanDefaultValue),
+    ) as HTMLInputElement;
 
-    expect(invalidParametersHeader).toBeTruthy();
-    expect(invalidParametersList instanceof HTMLUListElement).toBeTruthy();
-    expect(invalidParametersList?.textContent).toContain(customFieldNullDefaultValue);
-    expect(invalidParametersList?.textContent).toContain(customFieldBooleanDefaultValue);
+    const uncheckedBooleanField = getByLabelText(
+      toTitleCase(customFieldFalseBooleanDefaultValue),
+    ) as HTMLInputElement;
+
+    expect(booleanField).toBeTruthy();
+    expect(booleanField.getAttribute('name')).toBe(customFieldBooleanDefaultValue);
+    expect(booleanField.getAttribute('type')).toBe('checkbox');
+    expect(booleanField.checked).toBeTruthy();
+    expect(uncheckedBooleanField.checked).toBeFalsy();
+  });
+
+  test('renders a checkbox with help text when a boolean default value and help text is provided', () => {
+    const customFieldBooleanDefaultValue = 'booleanDefaultValue';
+    const booleanFieldHelpText = 'Help Text';
+
+    const { getByLabelText } = renderWithProvider(
+      <SwarmCustomParameters
+        extraOptions={{
+          [customFieldBooleanDefaultValue]: {
+            choices: null,
+            defaultValue: true,
+            helpText: booleanFieldHelpText,
+            isSecret: false,
+          },
+        }}
+      />,
+    );
+
+    const booleanField = getByLabelText(
+      `${toTitleCase(customFieldBooleanDefaultValue)} (${booleanFieldHelpText})`,
+    ) as HTMLInputElement;
+
+    expect(booleanField).toBeTruthy();
+  });
+
+  test('allows defaultValue to be null for text, password, and select fields', () => {
+    const customTextField = 'customTextField';
+    const customPasswordField = 'customPasswordField';
+    const customChoicesField = 'customChoices';
+    const firstCustomChoice = 'Option1';
+    const secondCustomChoice = 'Option2';
+
+    const { getByLabelText } = renderWithProvider(
+      <SwarmCustomParameters
+        extraOptions={{
+          [customTextField]: {
+            choices: null,
+            defaultValue: null,
+            helpText: null,
+            isSecret: false,
+          },
+          [customPasswordField]: {
+            choices: null,
+            defaultValue: null,
+            helpText: null,
+            isSecret: true,
+          },
+          [customChoicesField]: {
+            choices: [firstCustomChoice, secondCustomChoice],
+            defaultValue: firstCustomChoice,
+            helpText: null,
+            isSecret: false,
+          },
+        }}
+      />,
+    );
+
+    const textField = getByLabelText(toTitleCase(customTextField)) as HTMLInputElement;
+    const passwordField = getByLabelText(toTitleCase(customPasswordField)) as HTMLInputElement;
+    const choicesField = getByLabelText(toTitleCase(customChoicesField)) as HTMLInputElement;
+
+    expect(textField).toBeTruthy();
+    expect(passwordField).toBeTruthy();
+    expect(choicesField).toBeTruthy();
+    expect(textField.value).toBe('');
+    expect(passwordField.value).toBe('');
+    expect(choicesField.value).toBe(firstCustomChoice);
   });
 });
