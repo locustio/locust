@@ -47,6 +47,7 @@ export const statsResponseMock = {
       safe_name: 'Aggregated',
     },
   ],
+  total_avg_response_time: 0.41064205516736735,
   total_fail_per_sec: 1932.5,
   total_rps: 1932.5,
   user_count: 1,
@@ -148,9 +149,8 @@ export const getStatsResponseTransformed = () => ({
     'responseTimePercentile0.95': [2],
     currentRps: [1932.5],
     currentFailPerSec: [1932.5],
-    responseTimePercentile1: [1],
-    responseTimePercentile2: [1],
     userCount: [1],
+    totalAvgResponseTime: [0.41],
     time: [new Date().toLocaleTimeString()],
   },
   ratios: {

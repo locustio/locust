@@ -931,6 +931,7 @@ def stats_history(runner: "Runner") -> None:
                 or 0,
                 "response_time_percentile_2": stats.total.get_current_response_time_percentile(PERCENTILES_TO_CHART[1])
                 or 0,
+                "total_avg_response_time": stats.total.avg_response_time,
                 "current_response_time_percentiles": current_response_time_percentiles,
                 "user_count": runner.user_count or 0,
             }

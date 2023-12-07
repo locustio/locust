@@ -5,6 +5,11 @@ import { swarmTemplateArgs } from 'constants/swarm';
 import { IRootState } from 'redux/store';
 import { ICharts } from 'types/ui.types';
 
+const percentilesToChartLines = swarmTemplateArgs.percentilesToChart.map(percentile => ({
+  name: `${percentile * 100}th percentile`,
+  key: `responseTimePercentile${percentile}` as keyof ICharts,
+}));
+
 const availableSwarmCharts: ILineChartProps[] = [
   {
     title: 'Total Requests per Second',
@@ -16,10 +21,10 @@ const availableSwarmCharts: ILineChartProps[] = [
   },
   {
     title: 'Response Times (ms)',
-    lines: swarmTemplateArgs.percentilesToChart.map(percentile => ({
-      name: `${percentile * 100}th percentile`,
-      key: `responseTimePercentile${percentile}`,
-    })),
+    lines: [
+      ...percentilesToChartLines,
+      { name: 'Average Response Time', key: 'totalAvgResponseTime' },
+    ],
   },
   {
     title: 'Number of Users',

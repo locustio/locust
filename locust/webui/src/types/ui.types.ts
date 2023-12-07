@@ -58,6 +58,7 @@ export interface ICharts {
   currentRps: (number | NullChartValue)[];
   currentFailPerSec: (number | NullChartValue)[];
   [key: `responseTimePercentile${number}`]: (number | null | NullChartValue)[];
+  totalAvgResponseTime: (number | NullChartValue)[];
   userCount: (number | NullChartValue)[];
   time: string[];
   markers?: string[];
@@ -94,6 +95,7 @@ export interface IStatsResponse {
   workers: ISwarmWorker[];
   totalRps: number;
   totalFailPerSec: number;
+  totalAvgResponseTime: number;
   currentResponseTimePercentiles: {
     [key: `responseTimePercentile${number}`]: number | null;
   };

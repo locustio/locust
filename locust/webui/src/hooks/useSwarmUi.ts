@@ -42,6 +42,7 @@ export default function useSwarmUi() {
       failRatio,
       workers,
       userCount,
+      totalAvgResponseTime,
     } = statsData;
 
     const time = new Date().toLocaleTimeString();
@@ -59,6 +60,7 @@ export default function useSwarmUi() {
       ...currentResponseTimePercentiles,
       currentRps: totalRpsRounded,
       currentFailPerSec: totalFailPerSecRounded,
+      totalAvgResponseTime: roundToDecimalPlaces(totalAvgResponseTime, 2),
       userCount: userCount,
       time,
     };
