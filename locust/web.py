@@ -227,8 +227,14 @@ class WebUI:
                         return jsonify({"success": False, "message": err_msg, "host": environment.host})
                 elif key in parsed_options_dict:
                     # update the value in environment.parsed_options, but dont change the type.
-                    # This won't work for parameters that are None
-                    parsed_options_dict[key] = type(parsed_options_dict[key])(value)
+                    parsed_options_value = parsed_options_dict[key]
+
+                    if isinstance(parsed_options_value, bool):
+                        parsed_options_dict[key] = value == "true"
+                    elif parsed_options_value is None:
+                        parsed_options_dict[key] = parsed_options_value
+                    else:
+                        parsed_options_dict[key] = type(parsed_options_dict[key])(value)
 
             if environment.shape_class and environment.runner is not None:
                 environment.runner.start_shape()
