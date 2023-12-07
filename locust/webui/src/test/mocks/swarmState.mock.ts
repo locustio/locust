@@ -1,5 +1,3 @@
-import { SWARM_STATE } from 'constants/swarm';
-
 export const swarmStateMock = {
   availableShapeClasses: ['Default'],
   availableUserClasses: ['ExampleUser'],
@@ -15,7 +13,7 @@ export const swarmStateMock = {
   percentile2: 0.99,
   showUserclassPicker: false,
   spawnRate: null,
-  state: SWARM_STATE.READY,
+  state: 'ready',
   statsHistoryEnabled: false,
   tasks: '{}',
   userCount: 0,

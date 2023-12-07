@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+import { swarmTemplateArgs } from 'constants/swarm';
 import { updateStateWithPayload } from 'redux/utils';
 import {
   ICharts,
@@ -11,7 +12,6 @@ import {
   IExtendedStat,
 } from 'types/ui.types';
 import { updateArraysAtProps } from 'utils/object';
-import { camelCaseKeys } from 'utils/string';
 
 export interface IUiState {
   extendedStats?: IExtendedStat[];
@@ -34,7 +34,7 @@ const initialState = {
   stats: [] as ISwarmStat[],
   errors: [] as ISwarmError[],
   exceptions: [] as ISwarmException[],
-  charts: camelCaseKeys(window.templateArgs).history.reduce(updateArraysAtProps, {}) as ICharts,
+  charts: swarmTemplateArgs.history.reduce(updateArraysAtProps, {}) as ICharts,
   ratios: {} as ISwarmRatios,
   userCount: 0,
 };
