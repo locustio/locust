@@ -9,7 +9,7 @@ import {
 
 export interface IExtraOptionParameter {
   choices: string[] | null;
-  defaultValue: string | boolean | null;
+  defaultValue: string | number | boolean | null;
   helpText: string | null;
   isSecret: boolean;
 }
