@@ -4,32 +4,6 @@ import { Box, Button, Link, Typography } from '@mui/material';
 import Modal from 'components/Modal/Modal';
 import { useSelector } from 'redux/hooks';
 
-const authors = [
-  {
-    name: 'Carl Byström',
-    website: 'http://cgbystrom.com/',
-    social: { handle: '@cgbystrom', link: 'https://twitter.com/cgbystrom/' },
-  },
-  {
-    name: 'Jonatan Heyman',
-    website: 'http://heyman.info/',
-    social: { handle: '@jonatanheyman', link: 'https://twitter.com/jonatanheyman/' },
-  },
-  { name: 'Joakim Hamrén', social: { handle: '@jahaaja', link: 'https://twitter.com/Jahaaja/' } },
-  {
-    name: 'ESN Social Software',
-    website: 'http://esn.me/',
-    social: { handle: '@uprise_ea', link: 'https://twitter.com/uprise_ea' },
-  },
-  {
-    name: 'Hugo Heyman',
-    social: { handle: '@hugoheyman', link: 'https://twitter.com/hugoheyman/' },
-  },
-  {
-    name: 'Lars Holmberg',
-    social: { handle: '@cyberw', link: 'https://github.com/cyberw' },
-  },
-];
 
 export default function About() {
   const [open, setOpen] = useState(false);
@@ -48,48 +22,13 @@ export default function About() {
             About
           </Typography>
           <Typography component='p' variant='subtitle1'>
-            The original idea for Locust was Carl Byström's who made a first proof of concept in
-            June 2010. Jonatan Heyman picked up Locust in January 2011, implemented the current
-            concept of Locust classes and made it work distributed across multiple machines.
+            Locust is free and open source software released under the <Link href={`https://github.com/locustio/locust/blob/master/LICENSE`}>MIT License</Link>
           </Typography>
           <Typography component='p' sx={{ mt: 2 }} variant='subtitle1'>
-            Jonatan, Carl and Joakim Hamrén then continued the development of Locust at their job,
-            ESN Social Software, who adopted Locust as an inhouse Open Source project.
+            It was originally developed by Carl Byström and <Link href={`https://twitter.com/jonatanheyman/`}>Jonatan Heyman</Link>. Since 2019, it is primarily maintained by <Link href={`https://github.com/cyberw`}>Lars Holmberg</Link>.
           </Typography>
           <Typography component='p' sx={{ mt: 2 }} variant='subtitle1'>
-            In 2019, the project changed ownership and has since been picked up and maintained by
-            Lars Holmberg.
-          </Typography>
-          <Typography component='p' sx={{ mt: 2 }} variant='subtitle1'>
-            Locust is now used by millions of users around the world and hundreds of developers
-            contribute to its development.
-          </Typography>
-        </div>
-
-        <div>
-          <Typography component='h2' mb={1} variant='h4'>
-            Authors and Copyright
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 0.5 }}>
-            {authors.map(({ name, website, social: { handle, link } }, index) => (
-              <div key={`author-${index}`}>
-                {website ? <Link href={website}>{name}</Link> : name}
-                <Box sx={{ display: 'inline', ml: 0.5 }}>
-                  {'('}
-                  <Link href={link}>{handle}</Link>
-                  {')'}
-                </Box>
-              </div>
-            ))}
-          </Box>
-        </div>
-
-        <div>
-          <Typography component='h2' mb={1} variant='h4'>
-            License
-          </Typography>
-          <Typography component='p' variant='subtitle1'>
-            Open source licensed under the MIT license.
+            Many thanks to all our wonderful <Link href={`https://github.com/locustio/locust/graphs/contributors`}>contributors</Link>!
           </Typography>
         </div>
 
@@ -102,9 +41,14 @@ export default function About() {
 
         <div>
           <Typography component='h2' mb={1} variant='h4'>
-            Website
+            Links
           </Typography>
-          <Link href='https://locust.io/'>https://locust.io</Link>
+          <Typography component='p' variant='subtitle1'>
+            <Link href='https://github.com/locustio/locust'>GitHub</Link>
+          </Typography>
+          <Typography component='p' variant='subtitle1'>      
+            <Link href='https://docs.locust.io/en/stable/'>Documentation</Link>
+          </Typography>
         </div>
       </Modal>
     </>
