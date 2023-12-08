@@ -4,17 +4,6 @@ import { Box, Button, Link, Typography } from '@mui/material';
 import Modal from 'components/Modal/Modal';
 import { useSelector } from 'redux/hooks';
 
-const authors = [
-  {
-    name: 'Jonatan Heyman',
-    website: 'http://heyman.info/',
-    social: { handle: '@jonatanheyman', link: 'https://twitter.com/jonatanheyman/' },
-  },
-  {
-    name: 'Lars Holmberg',
-    social: { handle: '@cyberw', link: 'https://github.com/cyberw' },
-  },
-];
 
 export default function About() {
   const [open, setOpen] = useState(false);
