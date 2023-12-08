@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+import { swarmTemplateArgs } from 'constants/swarm';
 import { updateStateWithPayload } from 'redux/utils';
 import {
   ICharts,
@@ -11,7 +12,6 @@ import {
   IExtendedStat,
 } from 'types/ui.types';
 import { updateArraysAtProps } from 'utils/object';
-import { camelCaseKeys } from 'utils/string';
 
 export interface IUiState {
   extendedStats?: IExtendedStat[];
@@ -34,17 +34,25 @@ const initialState = {
   stats: [] as ISwarmStat[],
   errors: [] as ISwarmError[],
   exceptions: [] as ISwarmException[],
-  charts: camelCaseKeys(window.templateArgs).history.reduce(updateArraysAtProps, {}) as ICharts,
+  charts: swarmTemplateArgs.history.reduce(updateArraysAtProps, {}) as ICharts,
   ratios: {} as ISwarmRatios,
   userCount: 0,
 };
 
+const percentileNullValues = swarmTemplateArgs.percentilesToChart.reduce(
+  (percentilesNullValue, percentile) => ({
+    ...percentilesNullValue,
+    [`responseTimePercentile${percentile}`]: { value: null },
+  }),
+  {},
+);
+
 const addSpaceToChartsBetweenTests = (charts: ICharts) => {
   return updateArraysAtProps(charts, {
+    ...percentileNullValues,
     currentRps: { value: null },
     currentFailPerSec: { value: null },
-    responseTimePercentile1: { value: null },
-    responseTimePercentile2: { value: null },
+    totalAvgResponseTime: { value: null },
     userCount: { value: null },
     time: '',
   });

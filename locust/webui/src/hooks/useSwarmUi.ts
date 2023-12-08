@@ -33,6 +33,7 @@ export default function useSwarmUi() {
     }
 
     const {
+      currentResponseTimePercentiles,
       extendedStats,
       stats,
       errors,
@@ -40,9 +41,8 @@ export default function useSwarmUi() {
       totalFailPerSec,
       failRatio,
       workers,
-      currentResponseTimePercentile1,
-      currentResponseTimePercentile2,
       userCount,
+      totalAvgResponseTime,
     } = statsData;
 
     const time = new Date().toLocaleTimeString();
@@ -57,10 +57,10 @@ export default function useSwarmUi() {
     const totalFailureRatioRounded = roundToDecimalPlaces(failRatio * 100);
 
     const newChartEntry = {
+      ...currentResponseTimePercentiles,
       currentRps: totalRpsRounded,
       currentFailPerSec: totalFailPerSecRounded,
-      responseTimePercentile1: currentResponseTimePercentile1,
-      responseTimePercentile2: currentResponseTimePercentile2,
+      totalAvgResponseTime: roundToDecimalPlaces(totalAvgResponseTime, 2),
       userCount: userCount,
       time,
     };

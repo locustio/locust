@@ -1,3 +1,5 @@
+import { camelCaseKeys } from 'utils/string';
+
 export const SWARM_STATE = {
   READY: 'ready',
   RUNNING: 'running',
@@ -7,3 +9,5 @@ export const SWARM_STATE = {
   STOPPING: 'stopping',
   MISSING: 'missing',
 };
+
+export const swarmTemplateArgs = camelCaseKeys(window.templateArgs);

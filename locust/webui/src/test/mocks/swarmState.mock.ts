@@ -1,4 +1,4 @@
-import { SWARM_STATE } from 'constants/swarm';
+export const percentilesToChart = [0.5, 0.95];
 
 export const swarmStateMock = {
   availableShapeClasses: ['Default'],
@@ -15,7 +15,8 @@ export const swarmStateMock = {
   percentile2: 0.99,
   showUserclassPicker: false,
   spawnRate: null,
-  state: SWARM_STATE.READY,
+  state: 'ready',
+  percentilesToChart: percentilesToChart,
   statsHistoryEnabled: false,
   tasks: '{}',
   userCount: 0,

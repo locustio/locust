@@ -407,17 +407,27 @@ class WebUI:
             if stats:
                 report["total_rps"] = total_stats["current_rps"]
                 report["total_fail_per_sec"] = total_stats["current_fail_per_sec"]
+                report["total_avg_response_time"] = total_stats["avg_response_time"]
                 report["fail_ratio"] = environment.runner.stats.total.fail_ratio
-                report[
-                    "current_response_time_percentile_1"
-                ] = environment.runner.stats.total.get_current_response_time_percentile(
-                    stats_module.PERCENTILES_TO_CHART[0]
-                )
-                report[
-                    "current_response_time_percentile_2"
-                ] = environment.runner.stats.total.get_current_response_time_percentile(
-                    stats_module.PERCENTILES_TO_CHART[1]
-                )
+
+                if self.modern_ui:
+                    report["current_response_time_percentiles"] = {
+                        f"response_time_percentile_{percentile}": environment.runner.stats.total.get_current_response_time_percentile(
+                            percentile
+                        )
+                        for percentile in stats_module.MODERN_UI_PERCENTILES_TO_CHART
+                    }
+                else:
+                    report[
+                        "current_response_time_percentile_1"
+                    ] = environment.runner.stats.total.get_current_response_time_percentile(
+                        stats_module.PERCENTILES_TO_CHART[0]
+                    )
+                    report[
+                        "current_response_time_percentile_2"
+                    ] = environment.runner.stats.total.get_current_response_time_percentile(
+                        stats_module.PERCENTILES_TO_CHART[1]
+                    )
 
             if isinstance(environment.runner, MasterRunner):
                 workers = []
@@ -580,6 +590,16 @@ class WebUI:
         if self.environment.available_shape_classes:
             available_shape_classes += sorted(self.environment.available_shape_classes.keys())
 
+        if self.modern_ui:
+            percentiles = {
+                "percentiles_to_chart": stats_module.MODERN_UI_PERCENTILES_TO_CHART,
+            }
+        else:
+            percentiles = {
+                "percentile1": stats_module.PERCENTILES_TO_CHART[0],
+                "percentile2": stats_module.PERCENTILES_TO_CHART[1],
+            }
+
         self.template_args = {
             "locustfile": self.environment.locustfile,
             "state": self.environment.runner.state,
@@ -603,8 +623,7 @@ class WebUI:
             "show_userclass_picker": self.userclass_picker_is_active,
             "available_user_classes": available_user_classes,
             "available_shape_classes": available_shape_classes,
-            "percentile1": stats_module.PERCENTILES_TO_CHART[0],
-            "percentile2": stats_module.PERCENTILES_TO_CHART[1],
+            **percentiles,
         }
 
     def _update_shape_class(self, shape_class_name):
