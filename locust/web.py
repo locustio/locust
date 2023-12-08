@@ -415,7 +415,7 @@ class WebUI:
                         f"response_time_percentile_{percentile}": environment.runner.stats.total.get_current_response_time_percentile(
                             percentile
                         )
-                        for percentile in stats_module.PERCENTILES_TO_CHART
+                        for percentile in stats_module.MODERN_UI_PERCENTILES_TO_CHART
                     }
                 else:
                     report[
@@ -592,7 +592,7 @@ class WebUI:
 
         if self.modern_ui:
             percentiles = {
-                "percentiles_to_chart": stats_module.PERCENTILES_TO_CHART,
+                "percentiles_to_chart": stats_module.MODERN_UI_PERCENTILES_TO_CHART,
             }
         else:
             percentiles = {

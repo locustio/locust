@@ -125,7 +125,7 @@ def get_html_report(
                 "show_download_link": show_download_link,
                 "locustfile": escape(str(environment.locustfile)),
                 "tasks": task_data,
-                "percentiles_to_chart": stats_module.PERCENTILES_TO_CHART,
+                "percentiles_to_chart": stats_module.MODERN_UI_PERCENTILES_TO_CHART,
             },
             theme=theme,
             static_js="\n".join(static_js),
