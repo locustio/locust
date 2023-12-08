@@ -184,7 +184,7 @@ The frontend can additionally be built using make:
 Linting
 -------
 
-Run ``yarn lint`` to detect lint failures in the frontend project. Running ``yarn lint --fix`` will resolve any issues that are automatically resolvable. Your IDE can aditionally be configured with ESLint to resolve these issues on save.
+Run ``yarn lint`` to detect lint failures in the frontend project. Running ``yarn lint --fix`` will resolve any issues that are automatically resolvable. Your IDE can additionally be configured with ESLint to resolve these issues on save.
 
 Formatting
 ----------
