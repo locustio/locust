@@ -1,6 +1,9 @@
 import logging
 from . import log
 import traceback
+from contextlib import contextmanager
+from typing import Generator, Any, Dict
+import time
 from .exception import StopUser, RescheduleTask, RescheduleTaskImmediately, InterruptTaskSet
 
 
@@ -45,6 +48,34 @@ class EventHook:
             except Exception:
                 logging.error("Uncaught exception in event handler: \n%s", traceback.format_exc())
                 log.unhandled_greenlet_exception = True
+
+    @contextmanager
+    def measure(
+        self, request_type: str, name: str, response_length: int = 0, context=None
+    ) -> Generator[Dict[str, Any], None, None]:
+        """Convenience method for firing the event with automatically calculated response time and automatically marking the request as failed if an exception is raised (this is really only useful for the *request* event)
+
+        Other attributes in the event can be added/updated inside your with block if you use the "with ... as request_meta:" syntax.
+
+        Experimental.
+        """
+        start_time = time.time()
+        start_perf_counter = time.perf_counter()
+        request_meta = {
+            "request_type": request_type,
+            "name": name,
+            "response_length": response_length,
+            "context": context or {},
+            "exception": None,
+            "start_time": start_time,
+        }
+        try:
+            yield request_meta
+        except Exception as e:
+            request_meta["exception"] = e
+        finally:
+            request_meta["response_time"] = (time.perf_counter() - start_perf_counter) * 1000
+            self.fire(**request_meta)
 
 
 class DeprecatedEventHook(EventHook):
