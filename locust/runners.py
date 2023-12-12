@@ -432,6 +432,8 @@ class Runner:
         :param msg_type: The type of the message to listen for
         :param listener: The function to execute when the message is received
         """
+        if msg_type in self.custom_messages:
+            raise Exception(f"Tried to register listener method for {msg_type}, but it already had a listener!")
         self.custom_messages[msg_type] = listener
 
 
