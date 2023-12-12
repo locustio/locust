@@ -378,7 +378,7 @@ class FastHttpUser(User):
         with self.client.request(method, url, catch_response=True, headers=headers, **kwargs) as r:
             resp = cast(RestResponseContextManager, r)
             resp.js = None  # type: ignore
-            if resp.text is None:
+            if resp.content is None:
                 resp.failure(str(resp.error))
             elif resp.text:
                 try:
@@ -461,14 +461,15 @@ class FastResponse(CompatResponse):
         if self.encoding is None:
             if self.headers is None:
                 # No information, try to detect
-                self.encoding = str(detect(self.content)["encoding"])
+                self.encoding = detect(self.content)["encoding"]
             else:
                 self.encoding = get_encoding_from_headers(self.headers)
                 # No information, try to detect
                 if not self.encoding:
-                    self.encoding = str(detect(self.content)["encoding"])
-
-        return str(self.content, self.encoding, errors="replace")
+                    self.encoding = detect(self.content)["encoding"]
+        if self.encoding is None:
+            return None
+        return str(self.content, str(self.encoding), errors="replace")
 
     @property
     def url(self) -> Optional[str]:
