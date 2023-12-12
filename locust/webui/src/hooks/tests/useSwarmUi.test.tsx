@@ -9,9 +9,10 @@ import { swarmActions } from 'redux/slice/swarm.slice';
 import { TEST_BASE_API } from 'test/constants';
 import {
   ratiosResponseMock,
-  getStatsResponseTransformed,
+  statsResponseTransformed,
   statsResponseMock,
   exceptionsResponseMock,
+  mockDate,
 } from 'test/mocks/statsRequest.mock';
 import { swarmStateMock } from 'test/mocks/swarmState.mock';
 import { renderWithProvider } from 'test/testUtils';
@@ -35,10 +36,18 @@ describe('useSwarmUi', () => {
   afterAll(() => server.close());
 
   test('should fetch request stats, ratios, and exceptions and update UI accordingly', async () => {
-    const { store } = renderWithProvider(<MockHook />);
+    act(async () => {
+      vi.useFakeTimers();
 
-    await waitFor(() => {
-      expect(store.getState().ui).toEqual(getStatsResponseTransformed());
+      vi.setSystemTime(mockDate);
+
+      const { store } = renderWithProvider(<MockHook />);
+
+      await vi.runAllTimersAsync();
+
+      expect(store.getState().ui).toEqual(statsResponseTransformed);
+
+      vi.useRealTimers();
     });
   });
 
