@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest';
 
 import LineChart from 'components/LineChart/LineChart';
-import { getStatsResponseTransformed } from 'test/mocks/statsRequest.mock';
+import { statsResponseTransformed } from 'test/mocks/statsRequest.mock';
 import { renderWithProvider } from 'test/testUtils';
 import { ICharts } from 'types/ui.types';
 
@@ -18,7 +18,7 @@ describe('LineChart', () => {
   test('renders LineChart with charts and lines', () => {
     const { container } = renderWithProvider(
       <LineChart
-        charts={getStatsResponseTransformed().charts}
+        charts={statsResponseTransformed.charts}
         colors={mockChart.colors}
         lines={mockChart.lines}
         title={mockChart.title}

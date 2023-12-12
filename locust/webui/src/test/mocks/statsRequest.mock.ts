@@ -97,7 +97,9 @@ export const exceptionsResponseMock = {
   ],
 };
 
-export const getStatsResponseTransformed = () => ({
+export const mockDate = new Date(1970, 1);
+
+export const statsResponseTransformed = {
   totalRps: 1932.5,
   failRatio: 100,
   stats: [
@@ -151,7 +153,7 @@ export const getStatsResponseTransformed = () => ({
     currentFailPerSec: [1932.5],
     userCount: [1],
     totalAvgResponseTime: [0.41],
-    time: [new Date().toLocaleTimeString()],
+    time: [mockDate.toLocaleTimeString()],
   },
   ratios: {
     perClass: {
@@ -169,4 +171,4 @@ export const getStatsResponseTransformed = () => ({
   },
   userCount: 1,
   workers: undefined,
-});
+};
