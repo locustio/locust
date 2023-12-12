@@ -626,6 +626,20 @@ class TestLocustRunner(LocustRunnerTestCase):
         msg = self.mocked_log.warning[0]
         self.assertIn("Unknown message type received", msg)
 
+    def test_duplicate_message_handler_registration(self):
+        class MyUser(User):
+            @task
+            def my_task(self):
+                pass
+
+        def on_custom_msg(msg, **kw):
+            pass
+
+        environment = Environment(user_classes=[MyUser])
+        runner = LocalRunner(environment)
+        runner.register_message("test_custom_msg", on_custom_msg)
+        self.assertRaises(Exception, runner.register_message, "test_custom_msg", on_custom_msg)
+
     def test_swarm_endpoint_is_non_blocking(self):
         class TestUser1(User):
             @task
