@@ -1,6 +1,40 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.20.0](https://github.com/locustio/locust/tree/2.20.0) (2023-12-13)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.19.1...2.20.0)
+
+**Fixed bugs:**
+
+- har2locust KeyError: '\_resourceType' [\#2503](https://github.com/locustio/locust/issues/2503)
+- FastHTTPUser determines StatusCode 304 as Failed [\#2500](https://github.com/locustio/locust/issues/2500)
+- FastHttpUser is stricter than HttpUser about the host attribute [\#2492](https://github.com/locustio/locust/issues/2492)
+- Unable to modify custom parameters from UI using modern UI [\#2489](https://github.com/locustio/locust/issues/2489)
+- Exception 'LookupError: unknown encoding:' when response contains `content-type` not handled by requests.utils.get\_encoding\_from\_headers [\#2482](https://github.com/locustio/locust/issues/2482)
+
+**Merged pull requests:**
+
+- Fix useSwarmUi Test with Mock Timers [\#2514](https://github.com/locustio/locust/pull/2514) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Custom messages: Throw an exception if someone tries to register twice for the same event [\#2513](https://github.com/locustio/locust/pull/2513) ([cyberw](https://github.com/cyberw))
+- Fixed response failure for unsupported encoding [\#2512](https://github.com/locustio/locust/pull/2512) ([prince-melvin](https://github.com/prince-melvin))
+- Add event.measure context manager for simpler firing of request event [\#2511](https://github.com/locustio/locust/pull/2511) ([cyberw](https://github.com/cyberw))
+- Update Web UI About box [\#2510](https://github.com/locustio/locust/pull/2510) ([cyberw](https://github.com/cyberw))
+- Chart Average Response Time in Modern UI [\#2509](https://github.com/locustio/locust/pull/2509) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Update the About Section [\#2508](https://github.com/locustio/locust/pull/2508) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Allow Boolean and Null Values to be Set from the Web UI [\#2507](https://github.com/locustio/locust/pull/2507) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- custom messages: Support sending datetimes and bson.ObjectId [\#2504](https://github.com/locustio/locust/pull/2504) ([cyberw](https://github.com/cyberw))
+- Add Notifications for Log Viewer [\#2502](https://github.com/locustio/locust/pull/2502) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- FastHttpUser: Treat response code 304 as OK [\#2501](https://github.com/locustio/locust/pull/2501) ([cyberw](https://github.com/cyberw))
+- Fix Warnings from the Web UI Tests [\#2499](https://github.com/locustio/locust/pull/2499) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Adjust "Starting web interface at"-output [\#2498](https://github.com/locustio/locust/pull/2498) ([cyberw](https://github.com/cyberw))
+- Update mypy, some type hints, and some tiny updates to Runner classes [\#2497](https://github.com/locustio/locust/pull/2497) ([cyberw](https://github.com/cyberw))
+- Remove Typecheck from Web UI Build Process and Update Github Actions [\#2496](https://github.com/locustio/locust/pull/2496) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Replace Vitest canvas mock library [\#2495](https://github.com/locustio/locust/pull/2495) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Implement Modern Web UI Tests [\#2494](https://github.com/locustio/locust/pull/2494) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Further relax FastHttpUser's host checking to match HttpUser's [\#2493](https://github.com/locustio/locust/pull/2493) ([pjenvey](https://github.com/pjenvey))
+- Unable to modify custom parameters from the modern UI [\#2491](https://github.com/locustio/locust/pull/2491) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
 ## [2.19.1](https://github.com/locustio/locust/tree/2.19.1) (2023-11-27)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.19.0...2.19.1)
