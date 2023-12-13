@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.20.0
+======
+* Add event.measure context manager for simpler firing of request event (experimental) https://github.com/locustio/locust/pull/2511
+* Various improvements to modern UI https://github.com/locustio/locust/pull/2491
+* Various tiny fixes
+
 2.19.1
 ======
 * Create any directories as part of the CSV Prefix https://github.com/locustio/locust/pull/2481
