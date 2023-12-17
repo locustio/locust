@@ -2,11 +2,11 @@
 What is Locust?
 ===============================
 
-Locust is an easy to use, scriptable and scalable performance testing tool.
+Locust is an open source performance/load testing tool for HTTP and other protocols. Its developer friendly approach lets you to define your tests in regular Python code.
 
-You define the behaviour of your users in regular Python code, instead of being stuck in a UI or restrictive domain specific language.
+Locust tests can be run from command line or using its web-based UI. Throughput, response times and errors can be viewed in real time and/or exported for later analysis.
 
-This makes Locust infinitely expandable and very developer friendly.
+You can import regular Python libraries into your tests, and with Locust's pluggable architecture it is infinitely expandable. Unlike when using most other tools, your test design will never be limited by a GUI or domain-specific language.
 
 To start using Locust, go to :ref:`installation`
 
