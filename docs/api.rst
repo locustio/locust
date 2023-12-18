@@ -120,6 +120,7 @@ EventHook class
 The event hooks are instances of the **locust.events.EventHook** class:
 
 .. autoclass:: locust.event.EventHook
+    :members:
 
 .. note::
 

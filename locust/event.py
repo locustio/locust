@@ -55,7 +55,12 @@ class EventHook:
     ) -> Generator[Dict[str, Any], None, None]:
         """Convenience method for firing the event with automatically calculated response time and automatically marking the request as failed if an exception is raised (this is really only useful for the *request* event)
 
-        Other attributes in the event can be added/updated inside your with block if you use the "with ... as request_meta:" syntax.
+        Example usage (in a task):
+
+            with self.environment.events.request.measure("myrequestType", "myRequestName") as request_meta:
+                # do the stuff you want to measure
+
+        You can optionally add/overwrite entries in the request_meta dict and they will be passed to the request event.
 
         Experimental.
         """
@@ -91,7 +96,7 @@ class DeprecatedEventHook(EventHook):
 class Events:
     request: EventHook
     """
-    Fired when a request in completed, successful or unsuccessful. This event is typically used to report requests when writing custom clients for locust.
+    Fired when a request in completed.
 
     Event arguments:
 
@@ -102,6 +107,8 @@ class Events:
     :param response: Response object (e.g. a :py:class:`requests.Response`)
     :param context: :ref:`User/request context <request_context>`
     :param exception: Exception instance that was thrown. None if request was successful.
+
+    If you want to simplify a custom client, you can have Locust measure the time for you by using :meth:`measure() <locust.event.EventHook.measure>`
     """
 
     user_error: EventHook
