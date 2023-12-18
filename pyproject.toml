@@ -22,6 +22,7 @@ dependencies = [
     "Flask-Cors >=3.0.10",
     "roundrobin >=0.0.2",
     "pywin32;platform_system=='Windows'",
+    "charset_normalizer >=3.3.0"
 ]
 classifiers = [
     "Topic :: Software Development :: Testing :: Traffic Generation",
