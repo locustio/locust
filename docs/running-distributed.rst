@@ -53,30 +53,30 @@ Options
 =======
 
 ``--master-host <hostname or ip>``
--------------------------
+----------------------------------
 
 Optionally used together with ``--worker`` to set the hostname/IP of the master node (defaults
 to localhost)
 
 ``--master-port <port number>``
-----------------------
+-------------------------------
 
 Optionally used together with ``--worker`` to set the port number of the master node (defaults to 5557).
 
 ``--master-bind-host <ip>``
-------------------------------
+---------------------------
 
 Optionally used together with ``--master``. Determines which network interface the master node
 will bind to. Defaults to * (all available interfaces).
 
 ``--master-bind-port <port number>``
-------------------------------
+------------------------------------
 
 Optionally used together with ``--master``. Determines what network ports that the master node will
 listen to. Defaults to 5557.
 
 ``--expect-workers <number of workers>``
-----------------------
+----------------------------------------
 
 Used when starting the master node with ``--headless``. The master node will then wait until X worker
 nodes has connected before the test is started.
