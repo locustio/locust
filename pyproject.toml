@@ -12,7 +12,7 @@ dependencies = [
     "gevent >=22.10.2",
     "flask >=2.0.0",
     "Werkzeug >=2.0.0",
-    "requests >=2.23.0",
+    "requests >=2.26.0",
     "msgpack >=1.0.0",
     "pyzmq >=25.0.0",
     "geventhttpclient >=2.0.11",
@@ -22,7 +22,6 @@ dependencies = [
     "Flask-Cors >=3.0.10",
     "roundrobin >=0.0.2",
     "pywin32;platform_system=='Windows'",
-    "charset_normalizer >=3.3.0"
 ]
 classifiers = [
     "Topic :: Software Development :: Testing :: Traffic Generation",
