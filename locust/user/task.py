@@ -88,7 +88,7 @@ def task(weight: TaskT | int = 1) -> TaskT | Callable[[TaskT], TaskT]:
     Check if task was used without parentheses (not called), like this::
 
         @task
-        def my_task()
+        def my_task(self)
             pass
     """
     if callable(weight):
