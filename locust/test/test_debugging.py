@@ -23,7 +23,7 @@ class TestDebugging(DebugTestCase):
 
         class MyUser1(HttpUser):
             @task
-            def my_task():
+            def my_task(self):
                 pass
 
         def _stop_user():
