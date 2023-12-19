@@ -34,4 +34,7 @@ class TestDebugging(DebugTestCase):
         t = Timer(1, _stop_user)
         t.start()
 
-        debug.run_single_user(MyUser1)
+        debug.run_single_user(
+            MyUser1,
+            loglevel=None,  # another log setup might mess with other tests...
+        )
