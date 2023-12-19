@@ -23,7 +23,7 @@ class TestDebugging(DebugTestCase):
 
         class MyUser1(HttpUser):
             @task
-            def my_task():
+            def my_task(self):
                 pass
 
         def _stop_user():
@@ -34,4 +34,7 @@ class TestDebugging(DebugTestCase):
         t = Timer(1, _stop_user)
         t.start()
 
-        debug.run_single_user(MyUser1)
+        debug.run_single_user(
+            MyUser1,
+            loglevel=None,  # another log setup might mess with other tests...
+        )
