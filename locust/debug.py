@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 import os
 import inspect
 import locust
+import locust.log
 from locust import User, argument_parser
 from typing import Type, Optional
 from locust.env import Environment
@@ -102,7 +103,7 @@ def run_single_user(
     include_time=False,
     include_context=False,
     include_payload=False,
-    loglevel=None,
+    loglevel: Optional[str] = "WARNING",
 ):
     """
     Runs a single User. Useful when you want to run a debugger.
@@ -113,8 +114,8 @@ def run_single_user(
 
     It prints some info about every request to stdout, and you can get additional info using the `include_*` flags
 
-    By default, it does not set up locusts logging system (because it could interfere with the printing of requests),
-    but you can change that by passing a log level (e.g. *loglevel="INFO"*)
+    It also initiates logging on WARNING level (not INFO, because it could interfere with the printing of requests),
+    but you can change that by passing a log level (or disabling logging entirely by passing None)
     """
     global _env
 
