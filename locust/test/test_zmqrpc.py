@@ -8,7 +8,7 @@ from locust.exception import RPCError, RPCSendError, RPCReceiveError
 class ZMQRPC_tests(LocustTestCase):
     def setUp(self):
         super().setUp()
-        self.server = zmqrpc.Server("127.0.0.1", 0)
+        self.server = zmqrpc.Server("*", 0)
         self.client = zmqrpc.Client("localhost", self.server.port, "identity")
 
     def tearDown(self):
@@ -19,8 +19,10 @@ class ZMQRPC_tests(LocustTestCase):
     def test_constructor(self):
         self.assertEqual(self.server.socket.getsockopt(zmq.TCP_KEEPALIVE), 1)
         self.assertEqual(self.server.socket.getsockopt(zmq.TCP_KEEPALIVE_IDLE), 30)
+        self.assertEqual(self.server.socket.getsockopt(zmq.IPV6), 1)
         self.assertEqual(self.client.socket.getsockopt(zmq.TCP_KEEPALIVE), 1)
         self.assertEqual(self.client.socket.getsockopt(zmq.TCP_KEEPALIVE_IDLE), 30)
+        self.assertEqual(self.client.socket.getsockopt(zmq.IPV6), 1)
 
     def test_client_send(self):
         self.client.send(Message("test", "message", "identity"))
@@ -40,15 +42,15 @@ class ZMQRPC_tests(LocustTestCase):
         self.assertEqual(msg.node_id, "identity")
 
     def test_client_retry(self):
-        server = zmqrpc.Server("127.0.0.1", 0)
+        server = zmqrpc.Server("*", 0)
         server.socket.close()
         with self.assertRaises(RPCError):
             server.recv_from_client()
 
     def test_rpc_error(self):
-        server = zmqrpc.Server("127.0.0.1", 0)
+        server = zmqrpc.Server("*", 0)
         with self.assertRaises(RPCError):
-            server = zmqrpc.Server("127.0.0.1", server.port)
+            server = zmqrpc.Server("*", server.port)
         server.close()
         with self.assertRaises(RPCSendError):
             server.send_to_client(Message("test", "message", "identity"))
