@@ -1,12 +1,13 @@
 import time
 import unittest
+import itertools
 from operator import attrgetter
 from typing import Dict, List, Tuple, Type
 
 from locust import User
-from locust.dispatch import UsersDispatcher
+from locust.dispatch import WeightedUsersDispatcher, FixedUsersDispatcher
 from locust.runners import WorkerNode
-from locust.test.util import clear_all_functools_lru_cache
+from locust.test.util import clear_all_functools_lru_cache, ANY
 
 _TOLERANCE = 0.025
 
@@ -30,7 +31,7 @@ class TestRampUpUsersFromZero(unittest.TestCase):
 
         sleep_time = 0.2  # Speed-up test
 
-        users_dispatcher = UsersDispatcher(
+        users_dispatcher = WeightedUsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=0.5)
@@ -167,7 +168,7 @@ class TestRampUpUsersFromZero(unittest.TestCase):
 
         sleep_time = 0.2  # Speed-up test
 
-        users_dispatcher = UsersDispatcher(
+        users_dispatcher = WeightedUsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=1)
@@ -305,7 +306,7 @@ class TestRampUpUsersFromZero(unittest.TestCase):
 
         sleep_time = 0.2  # Speed-up test
 
-        users_dispatcher = UsersDispatcher(
+        users_dispatcher = WeightedUsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3, worker_node4], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=1)
@@ -451,7 +452,7 @@ class TestRampUpUsersFromZero(unittest.TestCase):
 
         sleep_time = 0.2  # Speed-up test
 
-        users_dispatcher = UsersDispatcher(
+        users_dispatcher = WeightedUsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=2)
@@ -540,7 +541,7 @@ class TestRampUpUsersFromZero(unittest.TestCase):
 
         sleep_time = 0.2  # Speed-up test
 
-        users_dispatcher = UsersDispatcher(
+        users_dispatcher = WeightedUsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=2.4)
@@ -629,7 +630,7 @@ class TestRampUpUsersFromZero(unittest.TestCase):
 
         sleep_time = 0.2  # Speed-up test
 
-        users_dispatcher = UsersDispatcher(
+        users_dispatcher = WeightedUsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
@@ -694,7 +695,7 @@ class TestRampUpUsersFromZero(unittest.TestCase):
 
         sleep_time = 0.2  # Speed-up test
 
-        users_dispatcher = UsersDispatcher(
+        users_dispatcher = WeightedUsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=4)
@@ -759,7 +760,7 @@ class TestRampUpUsersFromZero(unittest.TestCase):
 
         sleep_time = 0.2  # Speed-up test
 
-        users_dispatcher = UsersDispatcher(
+        users_dispatcher = WeightedUsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=9)
@@ -799,7 +800,7 @@ class TestRampUpUsersFromZero(unittest.TestCase):
 
         sleep_time = 0.2  # Speed-up test
 
-        users_dispatcher = UsersDispatcher(
+        users_dispatcher = WeightedUsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3, worker_node4], user_classes=[User1, User2, User3]
         )
         users_dispatcher.new_dispatch(target_user_count=6, spawn_rate=2)
@@ -864,7 +865,7 @@ class TestWaitBetweenDispatch(unittest.TestCase):
             (4, 1),
             (9, 1),
         ]:
-            users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+            users_dispatcher = WeightedUsersDispatcher(worker_nodes=workers, user_classes=user_classes)
             users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=spawn_rate)
             self.assertEqual(users_dispatcher._wait_between_dispatch, expected_wait_between_dispatch)
 
@@ -886,7 +887,7 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
         initial_user_count = 9
 
-        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=workers, user_classes=user_classes)
         users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
@@ -1068,7 +1069,7 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
         initial_user_count = 9
 
-        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=workers, user_classes=user_classes)
         users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
@@ -1207,7 +1208,7 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
         initial_user_count = 9
 
-        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=workers, user_classes=user_classes)
         users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
@@ -1355,7 +1356,7 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
         initial_user_count = 9
 
-        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=workers, user_classes=user_classes)
         users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
@@ -1446,7 +1447,7 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
         initial_user_count = 9
 
-        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=workers, user_classes=user_classes)
         users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
@@ -1537,7 +1538,7 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
         initial_user_count = 9
 
-        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=workers, user_classes=user_classes)
         users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
@@ -1604,7 +1605,7 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
         initial_user_count = 9
 
-        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=workers, user_classes=user_classes)
         users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
@@ -1671,7 +1672,7 @@ class TestRampDownUsersToZero(unittest.TestCase):
 
         initial_user_count = 9
 
-        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=workers, user_classes=user_classes)
         users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
         users_dispatcher._wait_between_dispatch = 0
         list(users_dispatcher)
@@ -1732,7 +1733,7 @@ class TestRampUpThenDownThenUp(unittest.TestCase):
                     for worker_count in [1, 3, 5, 9]:
                         workers = [WorkerNode(str(i + 1)) for i in range(worker_count)]
 
-                        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+                        users_dispatcher = WeightedUsersDispatcher(worker_nodes=workers, user_classes=user_classes)
 
                         # Ramp-up to go to `min_user_count` #########
 
@@ -1783,7 +1784,7 @@ class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(unittest.TestCase)
         for spawn_rate in [0.15, 0.5, 1, 2, 2.4, 3, 4, 9]:
             workers = [WorkerNode(str(i + 1)) for i in range(3)]
 
-            users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+            users_dispatcher = WeightedUsersDispatcher(worker_nodes=workers, user_classes=user_classes)
             users_dispatcher.new_dispatch(target_user_count=user_count, spawn_rate=user_count)
             users_dispatcher._wait_between_dispatch = 0
             list(users_dispatcher)
@@ -1835,7 +1836,7 @@ class TestDistributionIsRespectedDuringDispatch(unittest.TestCase):
         worker_node3 = WorkerNode("3")
         worker_node4 = WorkerNode("4")
 
-        users_dispatcher = UsersDispatcher(
+        users_dispatcher = WeightedUsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3, worker_node4], user_classes=[User1, User2]
         )
         users_dispatcher.new_dispatch(target_user_count=75, spawn_rate=5)
@@ -2059,10 +2060,10 @@ class TestLargeScale(unittest.TestCase):
 
             target_user_count = 1_000_000
 
-            users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+            users_dispatcher = WeightedUsersDispatcher(worker_nodes=workers, user_classes=user_classes)
 
             ts = time.perf_counter()
-            users_on_workers, user_gen, worker_gen, active_users = users_dispatcher._distribute_users(
+            users_on_workers, user_gen, worker_gen, active_users = users_dispatcher.distribute_users(
                 target_user_count=target_user_count
             )
             delta = time.perf_counter() - ts
@@ -2085,7 +2086,7 @@ class TestLargeScale(unittest.TestCase):
 
             target_user_count = 100_000
 
-            users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+            users_dispatcher = WeightedUsersDispatcher(worker_nodes=workers, user_classes=user_classes)
             users_dispatcher.new_dispatch(target_user_count=target_user_count, spawn_rate=5_000)
             users_dispatcher._wait_between_dispatch = 0
 
@@ -2149,7 +2150,7 @@ class TestLargeScale(unittest.TestCase):
             workers = [WorkerNode(str(i)) for i in range(1000)]
 
             # Ramp-up
-            users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+            users_dispatcher = WeightedUsersDispatcher(worker_nodes=workers, user_classes=user_classes)
             users_dispatcher.new_dispatch(target_user_count=initial_user_count, spawn_rate=initial_user_count)
             users_dispatcher._wait_between_dispatch = 0
             list(users_dispatcher)
@@ -2218,7 +2219,7 @@ class TestSmallConsecutiveRamping(unittest.TestCase):
 
         worker_nodes = [worker_node1, worker_node2]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
 
         # user count = 1
         users_dispatcher.new_dispatch(target_user_count=1, spawn_rate=1)
@@ -2302,7 +2303,7 @@ class TestRampingMiscellaneous(unittest.TestCase):
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(1)]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
 
         users_dispatcher.new_dispatch(target_user_count=1, spawn_rate=100)
         users_dispatcher._wait_between_dispatch = 0
@@ -2340,7 +2341,7 @@ class TestRemoveWorker(unittest.TestCase):
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
 
         sleep_time = 0.2  # Speed-up test
 
@@ -2407,7 +2408,7 @@ class TestRemoveWorker(unittest.TestCase):
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
 
         sleep_time = 0.2  # Speed-up test
 
@@ -2473,7 +2474,7 @@ class TestRemoveWorker(unittest.TestCase):
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
 
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
         users_dispatcher._wait_between_dispatch = 0
@@ -2545,7 +2546,7 @@ class TestRemoveWorker(unittest.TestCase):
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
 
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
         users_dispatcher._wait_between_dispatch = 0
@@ -2614,7 +2615,7 @@ class TestRemoveWorker(unittest.TestCase):
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
 
         users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
         users_dispatcher._wait_between_dispatch = 0
@@ -2685,7 +2686,7 @@ class TestRemoveWorker(unittest.TestCase):
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
 
         users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
         users_dispatcher._wait_between_dispatch = 0
@@ -2755,7 +2756,7 @@ class TestRemoveWorker(unittest.TestCase):
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(1)]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
 
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
         users_dispatcher._wait_between_dispatch = 0
@@ -2790,7 +2791,7 @@ class TestRemoveWorker(unittest.TestCase):
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
 
         sleep_time = 0.2  # Speed-up test
 
@@ -2863,7 +2864,9 @@ class TestAddWorker(unittest.TestCase):
             WorkerNode("hostname2_worker1"),
         ]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(
+            worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes
+        )
 
         sleep_time = 0.2  # Speed-up test
 
@@ -2941,7 +2944,7 @@ class TestAddWorker(unittest.TestCase):
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=[worker_nodes[0]], user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=[worker_nodes[0]], user_classes=user_classes)
 
         sleep_time = 0.2  # Speed-up test
 
@@ -3007,7 +3010,9 @@ class TestAddWorker(unittest.TestCase):
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(
+            worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes
+        )
 
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
         users_dispatcher._wait_between_dispatch = 0
@@ -3083,7 +3088,7 @@ class TestAddWorker(unittest.TestCase):
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=[worker_nodes[0]], user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=[worker_nodes[0]], user_classes=user_classes)
 
         users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=3)
         users_dispatcher._wait_between_dispatch = 0
@@ -3160,7 +3165,9 @@ class TestAddWorker(unittest.TestCase):
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(
+            worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes
+        )
 
         users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
         users_dispatcher._wait_between_dispatch = 0
@@ -3231,7 +3238,7 @@ class TestAddWorker(unittest.TestCase):
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=[worker_nodes[0]], user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=[worker_nodes[0]], user_classes=user_classes)
 
         users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=3)
         users_dispatcher._wait_between_dispatch = 0
@@ -3305,7 +3312,9 @@ class TestAddWorker(unittest.TestCase):
             WorkerNode("hostname2_worker1"),
         ]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(
+            worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes
+        )
 
         sleep_time = 0.2  # Speed-up test
 
@@ -3408,7 +3417,7 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
 
             worker_node1 = WorkerNode("1")
 
-            users_dispatcher = UsersDispatcher(worker_nodes=[worker_node1], user_classes=user_classes)
+            users_dispatcher = WeightedUsersDispatcher(worker_nodes=[worker_node1], user_classes=user_classes)
             users_dispatcher.new_dispatch(target_user_count=case.target_user_count, spawn_rate=0.5)
             users_dispatcher._wait_between_dispatch = 0
 
@@ -3530,7 +3539,7 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
 
         target_count = User1.fixed_count + User2.fixed_count
 
-        users_dispatcher = UsersDispatcher(worker_nodes=[WorkerNode("1")], user_classes=[User1, User2])
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=[WorkerNode("1")], user_classes=[User1, User2])
         users_dispatcher.new_dispatch(target_user_count=30, spawn_rate=0.5)
         users_dispatcher._wait_between_dispatch = 0
         iterations = list(users_dispatcher)
@@ -3559,7 +3568,7 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
         user_classes = [User1, User3, User2]
         workers = [WorkerNode("1")]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=workers, user_classes=user_classes)
 
         users_dispatcher.new_dispatch(target_user_count=5, spawn_rate=1)
         users_dispatcher._wait_between_dispatch = 0
@@ -3614,7 +3623,7 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
 
             for worker_count in [3, 5, 9]:
                 workers = [WorkerNode(str(i + 1)) for i in range(worker_count)]
-                users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
+                users_dispatcher = WeightedUsersDispatcher(worker_nodes=workers, user_classes=user_classes)
 
                 for down_to_count in down_counts:
                     for target_user_count in target_user_counts:
@@ -3628,7 +3637,7 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
                         for user_class in user_classes:
                             if user_class.fixed_count:
                                 self.assertEqual(
-                                    users_dispatcher._get_user_current_count(user_class.__name__),
+                                    users_dispatcher.get_current_user_count(user_class.__name__),
                                     user_class.fixed_count,
                                     msg=f"{user_class.__name__}, {target_user_count}",
                                 )
@@ -3644,7 +3653,7 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
                         for user_class in user_classes:
                             if user_class.fixed_count:
                                 self.assertNotEqual(
-                                    users_dispatcher._get_user_current_count(user_class.__name__),
+                                    users_dispatcher.get_current_user_count(user_class.__name__),
                                     user_class.fixed_count,
                                 )
 
@@ -3659,7 +3668,7 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
                         for user_class in user_classes:
                             if user_class.fixed_count:
                                 self.assertEqual(
-                                    users_dispatcher._get_user_current_count(user_class.__name__),
+                                    users_dispatcher.get_current_user_count(user_class.__name__),
                                     user_class.fixed_count,
                                 )
 
@@ -3679,7 +3688,7 @@ class TestRampUpDifferentUsers(unittest.TestCase):
 
         sleep_time = 0.2
 
-        user_dispatcher = UsersDispatcher(worker_nodes=[worker_node1], user_classes=[User1, User2, User3])
+        user_dispatcher = WeightedUsersDispatcher(worker_nodes=[worker_node1], user_classes=[User1, User2, User3])
 
         user_dispatcher.new_dispatch(target_user_count=3, spawn_rate=3)
         self.assertDictEqual(next(user_dispatcher), {"1": {"User1": 1, "User2": 1, "User3": 1}})
@@ -3706,7 +3715,7 @@ class TestRampUpDifferentUsers(unittest.TestCase):
 
         sleep_time = 0.2
 
-        user_dispatcher = UsersDispatcher(worker_nodes=[worker_node1], user_classes=[User1, User2, User3])
+        user_dispatcher = WeightedUsersDispatcher(worker_nodes=[worker_node1], user_classes=[User1, User2, User3])
 
         user_dispatcher.new_dispatch(target_user_count=10, spawn_rate=10, user_classes=[User2])
         self.assertDictEqual(next(user_dispatcher), {"1": {"User1": 0, "User2": 10, "User3": 0}})
@@ -3725,7 +3734,7 @@ class TestRampUpDifferentUsers(unittest.TestCase):
 
         sleep_time = 0.2
 
-        user_dispatcher = UsersDispatcher(worker_nodes=[worker_node1], user_classes=[User1, User2, User3])
+        user_dispatcher = WeightedUsersDispatcher(worker_nodes=[worker_node1], user_classes=[User1, User2, User3])
 
         user_dispatcher.new_dispatch(target_user_count=10, spawn_rate=10, user_classes=[User2])
         self.assertDictEqual(next(user_dispatcher), {"1": {"User1": 0, "User2": 10, "User3": 0}})
@@ -3747,7 +3756,7 @@ class TestRampUpDifferentUsers(unittest.TestCase):
 
         sleep_time = 0.2
 
-        user_dispatcher = UsersDispatcher(worker_nodes=[worker_node1], user_classes=[User1, User2, User3])
+        user_dispatcher = WeightedUsersDispatcher(worker_nodes=[worker_node1], user_classes=[User1, User2, User3])
 
         user_dispatcher.new_dispatch(target_user_count=10, spawn_rate=10, user_classes=[User2])
         self.assertDictEqual(next(user_dispatcher), {"1": {"User1": 0, "User2": 10, "User3": 0}})
@@ -3771,7 +3780,7 @@ class TestRampUpDifferentUsers(unittest.TestCase):
 
         sleep_time = 0.2
 
-        user_dispatcher = UsersDispatcher(
+        user_dispatcher = WeightedUsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
 
@@ -3831,7 +3840,7 @@ class TestRampUpDifferentUsers(unittest.TestCase):
 
         sleep_time = 0.2
 
-        user_dispatcher = UsersDispatcher(
+        user_dispatcher = WeightedUsersDispatcher(
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
 
@@ -3856,7 +3865,7 @@ class TestRampUpDifferentUsers(unittest.TestCase):
             weight = 1
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
-        user_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=[User1, User2, User3])
+        user_dispatcher = WeightedUsersDispatcher(worker_nodes=worker_nodes, user_classes=[User1, User2, User3])
 
         user_dispatcher.new_dispatch(target_user_count=20, spawn_rate=20, user_classes=[User3])
         dispatched_users = next(user_dispatcher)
@@ -3893,7 +3902,6 @@ class TestRampUpDifferentUsers(unittest.TestCase):
 
         user_dispatcher.new_dispatch(target_user_count=21, spawn_rate=21, user_classes=[User1, User2, User3])
         dispatched_users = next(user_dispatcher)
-        print(dispatched_users)
         self.assertDictEqual(
             dispatched_users,
             {
@@ -3931,7 +3939,7 @@ class TestRampUpDifferentUsers(unittest.TestCase):
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(worker_nodes=worker_nodes, user_classes=user_classes)
 
         sleep_time = 0.2  # Speed-up test
 
@@ -4019,7 +4027,9 @@ class TestRampUpDifferentUsers(unittest.TestCase):
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
 
-        users_dispatcher = UsersDispatcher(worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes)
+        users_dispatcher = WeightedUsersDispatcher(
+            worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes
+        )
 
         sleep_time = 0.2  # Speed-up test
 
@@ -4103,3 +4113,144 @@ def _user_count(d: Dict[str, Dict[str, int]]) -> int:
 
 def _user_count_on_worker(d: Dict[str, Dict[str, int]], worker_node_id: str) -> int:
     return sum(d[worker_node_id].values())
+
+
+class TestFixedUsersDispatcher(unittest.TestCase):
+    def test__user_gen(self) -> None:
+        class User1(User):
+            fixed_count = 2
+            sticky_tag = "foo"
+
+        class User2(User):
+            fixed_count = 1
+            sticky_tag = "foo"
+
+        class User3(User):
+            fixed_count = 2
+            sticky_tag = "bar"
+
+        class User4(User):
+            pass
+
+        worker_nodes = [WorkerNode(str(i + 1)) for i in range(4)]
+        user_classes = [User3, User4, User2, User1]
+
+        user_dispatcher = FixedUsersDispatcher(worker_nodes, user_classes)
+        user_gen = user_dispatcher.create_user_generator()
+
+        for _ in range(2):
+            self.assertEqual(next(user_gen), "User1")
+            self.assertEqual(next(user_gen), "User3")
+            self.assertEqual(next(user_gen), "User2")
+            self.assertEqual(next(user_gen), "User4")
+            self.assertEqual(next(user_gen), "User1")
+            self.assertEqual(next(user_gen), "User3")
+
+        class User5(User):
+            fixed_count = 10
+
+        User4.fixed_count = 4
+
+        user_dispatcher = FixedUsersDispatcher(worker_nodes, [User5, User4])
+        user_gen = user_dispatcher.create_user_generator()
+
+        for c in range(2):
+            self.assertEqual(next(user_gen), "User5", msg=c)
+            self.assertEqual(next(user_gen), "User4", msg=c)
+            self.assertEqual(next(user_gen), "User5", msg=c)
+            self.assertEqual(next(user_gen), "User5", msg=c)
+            self.assertEqual(next(user_gen), "User5", msg=c)
+            self.assertEqual(next(user_gen), "User4", msg=c)
+            self.assertEqual(next(user_gen), "User5", msg=c)
+
+    def test_spread_sticky_tags_on_workers(self):
+        class User1(User):
+            fixed_count = 2
+            sticky_tag = "foo"
+
+        class User2(User):
+            fixed_count = 1
+            sticky_tag = "foo"
+
+        class User3(User):
+            fixed_count = 2
+            sticky_tag = "bar"
+
+        class User4(User):
+            pass
+
+        worker_nodes = [WorkerNode(str(i + 1)) for i in range(2)]
+        user_classes = [User3, User4, User2, User1]
+
+        with self.assertRaises(AssertionError):
+            FixedUsersDispatcher(worker_nodes, user_classes)._spread_sticky_tags_on_workers()
+
+        worker_nodes = [WorkerNode(str(i + 1)) for i in range(4)]
+
+        user_dispatcher = FixedUsersDispatcher(worker_nodes, user_classes)
+        user_dispatcher._spread_sticky_tags_on_workers()
+
+        self.assertDictEqual(
+            user_dispatcher._workers_to_sticky_tag,
+            {
+                worker_nodes[0]: "foo",
+                worker_nodes[1]: "bar",
+                worker_nodes[2]: "__orphan__",
+                worker_nodes[3]: "foo",
+            },
+        )
+
+        self.assertDictEqual(
+            user_dispatcher._sticky_tag_to_workers,
+            {
+                "foo": ANY(itertools.cycle),
+                "bar": ANY(itertools.cycle),
+                "__orphan__": ANY(itertools.cycle),
+            },
+        )
+
+        self.assertAlmostEqual(next(user_dispatcher._sticky_tag_to_workers.get("foo", [])).id, "1")
+        self.assertAlmostEqual(next(user_dispatcher._sticky_tag_to_workers.get("foo", [])).id, "4")
+        self.assertAlmostEqual(next(user_dispatcher._sticky_tag_to_workers.get("foo", [])).id, "1")
+
+        self.assertAlmostEqual(next(user_dispatcher._sticky_tag_to_workers.get("bar", [])).id, "2")
+        self.assertAlmostEqual(next(user_dispatcher._sticky_tag_to_workers.get("bar", [])).id, "2")
+
+        self.assertAlmostEqual(next(user_dispatcher._sticky_tag_to_workers.get("__orphan__", [])).id, "3")
+        self.assertAlmostEqual(next(user_dispatcher._sticky_tag_to_workers.get("__orphan__", [])).id, "3")
+
+        worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
+
+        user_dispatcher = FixedUsersDispatcher(worker_nodes, user_classes)
+        user_dispatcher._spread_sticky_tags_on_workers()
+
+        self.assertDictEqual(
+            user_dispatcher._workers_to_sticky_tag,
+            {
+                worker_nodes[0]: "foo",
+                worker_nodes[1]: "bar",
+                worker_nodes[2]: "__orphan__",
+            },
+        )
+
+        self.assertDictEqual(
+            user_dispatcher._sticky_tag_to_workers,
+            {
+                "foo": ANY(itertools.cycle),
+                "bar": ANY(itertools.cycle),
+                "__orphan__": ANY(itertools.cycle),
+            },
+        )
+
+        self.assertAlmostEqual(next(user_dispatcher._sticky_tag_to_workers.get("foo", [])).id, "1")
+        self.assertAlmostEqual(next(user_dispatcher._sticky_tag_to_workers.get("foo", [])).id, "1")
+
+        self.assertAlmostEqual(next(user_dispatcher._sticky_tag_to_workers.get("bar", [])).id, "2")
+        self.assertAlmostEqual(next(user_dispatcher._sticky_tag_to_workers.get("bar", [])).id, "2")
+
+        self.assertAlmostEqual(next(user_dispatcher._sticky_tag_to_workers.get("__orphan__", [])).id, "3")
+        self.assertAlmostEqual(next(user_dispatcher._sticky_tag_to_workers.get("__orphan__", [])).id, "3")
+
+
+if __name__ == "__main__":
+    unittest.main()

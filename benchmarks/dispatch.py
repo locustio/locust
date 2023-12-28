@@ -12,7 +12,7 @@ import time
 from prettytable import PrettyTable
 
 from locust import User
-from locust.dispatch import UsersDispatcher
+from locust.dispatch import WeightedUsersDispatcher
 from locust.runners import WorkerNode
 
 
@@ -545,7 +545,9 @@ if __name__ == "__main__":
             workers = [WorkerNode(str(i + 1)) for i in range(worker_count)]
 
             ts = time.perf_counter()
-            users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=USER_CLASSES[:number_of_user_classes])
+            users_dispatcher = WeightedUsersDispatcher(
+                worker_nodes=workers, user_classes=USER_CLASSES[:number_of_user_classes]
+            )
             instantiate_duration = time.perf_counter() - ts
 
             # Ramp-up

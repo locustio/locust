@@ -1,3 +1,4 @@
+from __future__ import annotations
 import functools
 import json
 import logging
@@ -23,13 +24,13 @@ from typing import (
     NoReturn,
     ValuesView,
     Set,
-    Optional,
     Tuple,
     Type,
     Any,
     cast,
     Callable,
     TypedDict,
+    Optional,
 )
 from uuid import uuid4
 import gevent
@@ -39,9 +40,9 @@ from gevent.event import Event
 from gevent.pool import Group
 import inspect
 
-from . import User
 from locust import __version__
-from .dispatch import UsersDispatcher
+
+from .dispatch import WeightedUsersDispatcher
 from .exception import RPCError, RPCReceiveError, RPCSendError
 from .log import greenlet_exception_logger
 from .rpc import (
@@ -56,7 +57,9 @@ from .stats import (
 from . import argument_parser
 
 if TYPE_CHECKING:
+    from . import User
     from .env import Environment
+    from .dispatch import UsersDispatcher
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +104,7 @@ class Runner:
     desired type.
     """
 
-    def __init__(self, environment: "Environment") -> None:
+    def __init__(self, environment: Environment) -> None:
         self.environment = environment
         self.user_greenlets = Group()
         self.greenlet = Group()
@@ -271,7 +274,7 @@ class Runner:
                 continue
 
             while True:
-                user_to_stop: User = to_stop.pop()
+                user_to_stop = to_stop.pop()
                 logger.debug("Stopping %s" % user_to_stop.greenlet.name)
                 if user_to_stop.greenlet is greenlet.getcurrent():
                     # User called runner.quit(), so don't block waiting for killing to finish
@@ -318,7 +321,9 @@ class Runner:
         ...
 
     @abstractmethod
-    def send_message(self, msg_type: str, data: Optional[Any] = None, client_id: Optional[str] = None) -> None:
+    def send_message(
+        self, msg_type: str, data: Optional[Dict[str, Any]] = None, client_id: Optional[str] = None
+    ) -> None:
         ...
 
     def start_shape(self) -> None:
@@ -463,7 +468,7 @@ class LocalRunner(Runner):
         self.environment.events.user_error.add_listener(on_user_error)
 
     def _start(
-        self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[list] = None
+        self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[List[Type[User]]] = None
     ) -> None:
         """
         Start running a load test
@@ -497,13 +502,13 @@ class LocalRunner(Runner):
             self.update_state(STATE_SPAWNING)
 
         if self._users_dispatcher is None:
-            self._users_dispatcher = UsersDispatcher(
+            self._users_dispatcher = WeightedUsersDispatcher(
                 worker_nodes=[self._local_worker_node], user_classes=self.user_classes
             )
 
         logger.info("Ramping to %d users at a rate of %.2f per second" % (user_count, spawn_rate))
 
-        cast(UsersDispatcher, self._users_dispatcher).new_dispatch(user_count, spawn_rate, user_classes)
+        self._users_dispatcher.new_dispatch(user_count, spawn_rate, user_classes)
 
         try:
             for dispatched_users in self._users_dispatcher:
@@ -566,7 +571,9 @@ class LocalRunner(Runner):
             return
         super().stop()
 
-    def send_message(self, msg_type: str, data: Optional[Any] = None, client_id: Optional[str] = None) -> None:
+    def send_message(
+        self, msg_type: str, data: Optional[Dict[str, Any]] = None, client_id: Optional[str] = None
+    ) -> None:
         """
         Emulates internodal messaging by calling registered listeners
 
@@ -605,10 +612,10 @@ class WorkerNode:
 
 
 class WorkerNodes(MutableMapping):
-    def __init__(self):
+    def __init__(self) -> None:
         self._worker_nodes: Dict[str, WorkerNode] = {}
 
-    def get_by_state(self, state) -> List[WorkerNode]:
+    def get_by_state(self, state: str) -> List[WorkerNode]:
         return [c for c in self.values() if c.state == state]
 
     @property
@@ -657,7 +664,7 @@ class MasterRunner(DistributedRunner):
     :class:`WorkerRunners <WorkerRunner>` will aggregated.
     """
 
-    def __init__(self, environment, master_bind_host, master_bind_port):
+    def __init__(self, environment: Environment, master_bind_host: str, master_bind_port: int) -> None:
         """
         :param environment: Environment instance
         :param master_bind_host: Host/interface to use for incoming worker connections
@@ -702,7 +709,7 @@ class MasterRunner(DistributedRunner):
         self.environment.events.worker_report.add_listener(on_worker_report)
 
         # register listener that sends quit message to worker nodes
-        def on_quitting(environment: "Environment", **kw):
+        def on_quitting(environment: Environment, **kw):
             self.quit()
 
         self.environment.events.quitting.add_listener(on_quitting)
@@ -755,7 +762,7 @@ class MasterRunner(DistributedRunner):
         self.spawn_rate = spawn_rate
 
         if self._users_dispatcher is None:
-            self._users_dispatcher = UsersDispatcher(
+            self._users_dispatcher = WeightedUsersDispatcher(
                 worker_nodes=list(self.clients.values()), user_classes=self.user_classes
             )
 
@@ -1165,7 +1172,7 @@ class WorkerRunner(DistributedRunner):
     # the worker index is set on ACK, if master provided it (masters <= 2.10.2 do not provide it)
     worker_index = -1
 
-    def __init__(self, environment: "Environment", master_host: str, master_port: int) -> None:
+    def __init__(self, environment: Environment, master_host: str, master_port: int) -> None:
         """
         :param environment: Environment instance
         :param master_host: Host/IP to use for connection to the master
@@ -1211,7 +1218,7 @@ class WorkerRunner(DistributedRunner):
         self.environment.events.report_to_master.add_listener(on_report_to_master)
 
         # register listener that sends quit message to master
-        def on_quitting(environment: "Environment", **kw) -> None:
+        def on_quitting(environment: Environment, **kw: Any) -> None:
             self.client.send(Message("quit", None, self.client_id))
 
         self.environment.events.quitting.add_listener(on_quitting)

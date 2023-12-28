@@ -12,6 +12,8 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 from contextlib import contextmanager
 from tempfile import NamedTemporaryFile
+from abc import ABCMeta
+from typing import List, Type, Optional
 
 
 @contextmanager
@@ -84,3 +86,34 @@ def clear_all_functools_lru_cache() -> None:
     assert len(wrappers) > 0
     for wrapper in wrappers:
         wrapper.cache_clear()
+
+
+def ANY(*cls: Type, message: Optional[str] = None) -> object:
+    """Compare equal to everything, as long as it is of the same type."""
+
+    class WrappedAny(metaclass=ABCMeta):
+        def __eq__(self, other: object) -> bool:
+            if len(cls) < 1:
+                return True
+
+            return isinstance(other, cls) and (message is None or (message is not None and message in str(other)))
+
+        def __ne__(self, other: object) -> bool:
+            return not self.__eq__(other)
+
+        def __neq__(self, other: object) -> bool:
+            return self.__ne__(other)
+
+        def __repr__(self) -> str:
+            c = cls[0] if len(cls) == 1 else cls
+            representation: List[str] = [f"<ANY({c})", ">"]
+
+            if message is not None:
+                representation.insert(-1, f", message='{message}'")
+
+            return "".join(representation)
+
+    for c in cls:
+        WrappedAny.register(c)
+
+    return WrappedAny()

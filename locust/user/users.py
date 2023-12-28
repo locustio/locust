@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable, Dict, List, Optional, final
+from typing import TYPE_CHECKING, Callable, Dict, List, final
 
 import time
 from gevent import GreenletExit, greenlet
@@ -24,6 +24,9 @@ from .task import (
 )
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from locust.env import Environment
 
 
 class UserMeta(type):
@@ -59,13 +62,13 @@ class User(metaclass=UserMeta):
     :py:class:`HttpUser <locust.HttpUser>` class.
     """
 
-    host: Optional[str] = None
+    host: str | None = None
     """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
 
-    min_wait = None
+    min_wait: float | None = None
     """Deprecated: Use wait_time instead. Minimum waiting time between the execution of locust tasks"""
 
-    max_wait = None
+    max_wait: float | None = None
     """Deprecated: Use wait_time instead. Maximum waiting time between the execution of locust tasks"""
 
     wait_time = constant(0)
@@ -80,7 +83,7 @@ class User(metaclass=UserMeta):
             wait_time = between(3, 25)
     """
 
-    wait_function = None
+    wait_function: Callable | None = None
     """
     .. warning::
 
@@ -117,14 +120,17 @@ class User(metaclass=UserMeta):
     abstract = True
     """If abstract is True, the class is meant to be subclassed, and locust will not spawn users of this class during a test."""
 
-    def __init__(self, environment):
+    sticky_tag: str | None = None
+    """Unique value used to tag a user type to one or more workers. Used to make a worker only spawn users with the same tag."""
+
+    def __init__(self, environment: Environment) -> None:
         super().__init__()
         self.environment = environment
         """A reference to the :py:class:`Environment <locust.env.Environment>` in which this user is running"""
         self._state = None
-        self._greenlet: greenlet.Greenlet = None
+        self._greenlet: greenlet.Greenlet
         self._group: Group
-        self._taskset_instance: TaskSet = None
+        self._taskset_instance: TaskSet
         self._cp_last_run = time.time()  # used by constant_pacing wait_time
 
     def on_start(self):
@@ -244,7 +250,7 @@ class HttpUser(User):
     abstract = True
     """If abstract is True, the class is meant to be subclassed, and users will not choose this locust during a test"""
 
-    pool_manager: Optional[PoolManager] = None
+    pool_manager: PoolManager | None = None
     """Connection pool manager to use. If not given, a new manager is created per single user."""
 
     def __init__(self, *args, **kwargs):

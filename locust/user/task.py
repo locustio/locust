@@ -269,7 +269,7 @@ class TaskSet(metaclass=TaskSetMeta):
     TaskSet.
     """
 
-    wait_function = None
+    wait_function: Optional[Callable] = None
     """
     Deprecated: Use wait_time instead.
     Function used to calculate waiting time between the execution of user tasks in milliseconds.
