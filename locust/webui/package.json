@@ -24,7 +24,7 @@
     "react-dom": "^18.2.0",
     "react-markdown": "^9.0.0",
     "react-redux": "^8.0.5",
-    "vite": "^4.4.9",
+    "vite": "^4.4.12",
     "vite-plugin-checker": "^0.6.2",
     "vite-tsconfig-paths": "^4.2.1"
   },
