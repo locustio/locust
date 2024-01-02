@@ -176,7 +176,7 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
         gevent.sleep(sleep_duration)
 
     @staticmethod
-    def infinite_cycle_gen(users: List[Tuple[Type[User], int]]) -> itertools.cycle:
+    def infinite_cycle_gen(users: List[Tuple[Type[User], int]]) -> itertools.cycle[Optional[str]]:
         if not users:
             return itertools.cycle([None])
 
@@ -186,11 +186,15 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
         target_min_weight = 2
 
         # 'Value' here means weight or fixed count
-        min_value = min(u[1] for u in users)
+        try:
+            min_value = min(u[1] for u in users if u[1] > 0)
+        except ValueError:
+            min_value = 0
+
         normalized_values = [
             (
                 user.__name__,
-                round(target_min_weight * value / min_value),
+                round(target_min_weight * value / min_value) if min_value > 0 else 0,
             )
             for user, value in users
         ]
@@ -580,15 +584,6 @@ class FixedUsersDispatcher(UsersDispatcher):
         self.target_user_count = {user_class.__name__: user_class.fixed_count for user_class in self._user_classes}
 
         self._current_user_count: Dict[str, int] = {user_class.__name__: 0 for user_class in self._user_classes}
-        self._cycle_length: int = 0
-        self._cycle_count: int = 0
-
-    def __next__(self) -> DistributedUsers:
-        self._cycle_count += 1
-        if self._cycle_count == self._cycle_length - 1:
-            self._cycle_count = 0
-
-        return super().__next__()
 
     def get_target_user_count(self) -> int:
         if self.__target_user_count_length__ is None:
@@ -619,20 +614,34 @@ class FixedUsersDispatcher(UsersDispatcher):
 
         if user_classes is not None and self._user_classes != sorted(user_classes, key=attrgetter("__name__")):
             self._user_classes = sorted(user_classes, key=attrgetter("__name__"))
+
+            # map original user classes (supplied when users dispatcher was created), with additional new ones (might be duplicates)
             self._users_to_sticky_tag = {
-                user_class.__name__: user_class.sticky_tag or "__orphan__" for user_class in self._user_classes
+                user_class.__name__: user_class.sticky_tag or "__orphan__"
+                for user_class in self._original_user_classes + user_classes
             }
-            self._user_class_name_to_type = {user_class.__name__: user_class for user_class in self._user_classes}
-            self._cycle_count = 0
+
+            self._user_class_name_to_type = {
+                user_class.__name__: user_class for user_class in self._original_user_classes + user_classes
+            }
+
+            user_class_names = [user_class.__name__ for user_class in user_classes]
+
+            # only merge target user count for classes that has been specified in user classes
+            target_user_count = {
+                user_class_name: count
+                for user_class_name, count in target_user_count.items()
+                if user_class_name in user_class_names
+            }
+
+        if target_user_count != {}:
+            self.target_user_count = {**self.target_user_count, **target_user_count}
 
         self._spawn_rate = spawn_rate
 
         self._user_count_per_dispatch_iteration = max(1, math.floor(self._spawn_rate))
 
         self._wait_between_dispatch = self._user_count_per_dispatch_iteration / self._spawn_rate
-
-        if target_user_count != {}:
-            self.target_user_count = {**self.target_user_count, **target_user_count}
 
         self._spread_sticky_tags_on_workers()
 
@@ -646,26 +655,34 @@ class FixedUsersDispatcher(UsersDispatcher):
 
         self._user_generator = self.create_user_generator()
 
-        self._cycle_count = 0
-
     def add_users_on_workers(self) -> DistributedUsers:
         current_user_count_actual = self._active_users.__optimized_length__
         current_user_count_target = min(
             current_user_count_actual + self._user_count_per_dispatch_iteration, self.get_target_user_count()
         )
 
+        current_user_count: Dict[str, int] = {}
+        for user_counts in self._users_on_workers.values():
+            for user_class_name, count in user_counts.items():
+                current_user_count.update({user_class_name: current_user_count.get(user_class_name, 0) + count})
+
         for user_class_name in self._user_generator:
             if not user_class_name:
                 self._no_user_to_spawn = True
                 break
 
+            if current_user_count[user_class_name] + 1 > self.target_user_count[user_class_name]:
+                continue
+
             sticky_tag = self._users_to_sticky_tag[user_class_name]
             worker_node = next(self._sticky_tag_to_workers[sticky_tag])
             self._users_on_workers[worker_node.id][user_class_name] += 1
             current_user_count_actual += 1
+            current_user_count[user_class_name] += 1
             self._active_users.append((worker_node, user_class_name))
 
             if current_user_count_actual >= current_user_count_target:
+                self._current_user_count = current_user_count
                 break
 
         return self._users_on_workers
@@ -685,6 +702,12 @@ class FixedUsersDispatcher(UsersDispatcher):
             self._users_on_workers[worker_node.id][user] -= 1
             current_user_count_actual -= 1
             if current_user_count_actual == 0 or current_user_count_actual <= current_user_count_target:
+                self._current_user_count.clear()
+                for user_counts in self._users_on_workers.values():
+                    for user_class_name, count in user_counts.items():
+                        self._current_user_count.update(
+                            {user_class_name: self._current_user_count.get(user_class_name, 0) + count}
+                        )
                 return self._users_on_workers
 
     def _spread_sticky_tags_on_workers(self) -> None:
@@ -745,28 +768,25 @@ class FixedUsersDispatcher(UsersDispatcher):
         user_cycle = [
             (self._user_class_name_to_type.get(user_class_name), fixed_count)
             for user_class_name, fixed_count in self.target_user_count.items()
-            if fixed_count > 0
         ]
-        self._cycle_length = len(user_cycle)
+        user_generator: itertools.cycle[Optional[str]] = self.infinite_cycle_gen(user_cycle)
 
-        if self._cycle_count > 0:
-            user_cycle = user_cycle[self._cycle_count :] + user_cycle[: self._cycle_count]
-            assert len(user_cycle) == self._cycle_length
+        while user_class_name := next(user_generator):
+            if not user_class_name:
+                break
 
-        cycle_gen = self.infinite_cycle_gen(user_cycle)
-
-        while user_class_name := next(cycle_gen):
             yield user_class_name
 
     def distribute_users(
         self, target_user_count: int | Dict[str, int]
     ) -> Tuple[DistributedUsers, UserGenerator, None, LengthOptimizedList[Tuple[WorkerNode, str]]]:
         assert isinstance(target_user_count, dict)
-        if target_user_count != {}:
-            self.target_user_count = {**self.target_user_count, **target_user_count}
 
-        if self._sticky_tag_to_workers == {}:
-            self._spread_sticky_tags_on_workers()
+        # used target as setup based on user class values
+        if target_user_count == {}:
+            target_user_count = {**self.target_user_count}
+
+        self._spread_sticky_tags_on_workers()
 
         user_gen = self.create_user_generator()
 
@@ -777,16 +797,30 @@ class FixedUsersDispatcher(UsersDispatcher):
 
         active_users: LengthOptimizedList[Tuple[WorkerNode, str]] = LengthOptimizedList()
 
-        total_target_user_count = self.get_target_user_count()
-        user_count = 0
+        user_count_target = sum(target_user_count.values())
+        current_user_count: Dict[str, int] = {}
+        for user_counts in users_on_workers.values():
+            for user_class_name, count in user_counts.items():
+                current_user_count.update({user_class_name: current_user_count.get(user_class_name, 0) + count})
 
-        while user_count < total_target_user_count:
-            user_class_name = next(user_gen)
+        user_count_total = 0
+
+        for user_class_name in user_gen:
+            if not user_class_name:
+                break
+
+            if current_user_count[user_class_name] + 1 > target_user_count[user_class_name]:
+                continue
+
             sticky_tag = self._users_to_sticky_tag[user_class_name]
-
             worker_node = next(self._sticky_tag_to_workers[sticky_tag])
             users_on_workers[worker_node.id][user_class_name] += 1
-            user_count += 1
+            user_count_total += 1
+            current_user_count[user_class_name] += 1
             active_users.append((worker_node, user_class_name))
+
+            if user_count_total >= user_count_target:
+                self._current_user_count = current_user_count
+                break
 
         return users_on_workers, user_gen, None, active_users
