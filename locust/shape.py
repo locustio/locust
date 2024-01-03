@@ -1,6 +1,6 @@
 from __future__ import annotations
 import time
-from typing import ClassVar, Optional, Tuple, List, Type
+from typing import ClassVar, Dict, Optional, Tuple, List, Type
 from abc import ABCMeta, abstractmethod
 
 from . import User
@@ -52,7 +52,9 @@ class LoadTestShape(metaclass=LoadTestShapeMeta):
         return self.runner.user_count
 
     @abstractmethod
-    def tick(self) -> Tuple[int, float] | Tuple[int, float, Optional[List[Type[User]]]] | None:
+    def tick(
+        self,
+    ) -> Tuple[int | Dict[str, int], float] | Tuple[int | Dict[str, int], float, Optional[List[Type[User]]]] | None:
         """
         Returns a tuple with 2 elements to control the running load test:
 

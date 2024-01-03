@@ -42,7 +42,6 @@ import inspect
 
 from locust import __version__
 
-from .dispatch import WeightedUsersDispatcher
 from .exception import RPCError, RPCReceiveError, RPCSendError
 from .log import greenlet_exception_logger
 from .rpc import (
@@ -111,7 +110,9 @@ class Runner:
         self.state = STATE_INIT
         self.spawning_greenlet: Optional[gevent.Greenlet] = None
         self.shape_greenlet: Optional[gevent.Greenlet] = None
-        self.shape_last_tick: Tuple[int, float] | Tuple[int, float, Optional[List[Type[User]]]] | None = None
+        self.shape_last_tick: Tuple[int | Dict[str, int], float] | Tuple[
+            int | Dict[str, int], float, Optional[List[Type[User]]]
+        ] | None = None
         self.current_cpu_usage: int = 0
         self.cpu_warning_emitted: bool = False
         self.worker_cpu_warning_emitted: bool = False
@@ -123,7 +124,7 @@ class Runner:
         # See https://github.com/locustio/locust/issues/1883#issuecomment-919239824 for context.
         self.target_user_classes_count: Dict[str, int] = {}
         # target_user_count is set before the ramp-up/ramp-down occurs.
-        self.target_user_count: int = 0
+        self.target_user_count: int | Dict[str, int]
         self.custom_messages: Dict[str, Callable] = {}
 
         self._users_dispatcher: Optional[UsersDispatcher] = None
@@ -140,7 +141,7 @@ class Runner:
         self.final_user_classes_count: Dict[str, int] = {}  # just for the ratio report, fills before runner stops
 
         # register listener that resets stats when spawning is complete
-        def on_spawning_complete(user_count: int) -> None:
+        def on_spawning_complete(*_args: Any, **_kwargs: Any) -> None:
             self.update_state(STATE_RUNNING)
             if environment.reset_stats:
                 logger.info("Resetting stats\n")
@@ -316,7 +317,11 @@ class Runner:
 
     @abstractmethod
     def start(
-        self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[List[Type[User]]] = None
+        self,
+        user_count: int | Dict[str, int],
+        spawn_rate: float,
+        wait: bool = False,
+        user_classes: Optional[List[Type[User]]] = None,
     ) -> None:
         ...
 
@@ -361,7 +366,10 @@ class Runner:
                     user_classes = None
                 else:
                     user_count, spawn_rate, user_classes = current_tick  # type: ignore
-                logger.info("Shape test updating to %d users at %.2f spawn rate" % (user_count, spawn_rate))
+
+                _user_count = sum(user_count.values()) if isinstance(user_count, dict) else user_count
+
+                logger.info("Shape test updating to %d users at %.2f spawn rate" % (_user_count, spawn_rate))
                 # TODO: This `self.start()` call is blocking until the ramp-up is completed. This can leads
                 #       to unexpected behaviours such as the one in the following example:
                 #       A load test shape has the following stages:
@@ -468,12 +476,16 @@ class LocalRunner(Runner):
         self.environment.events.user_error.add_listener(on_user_error)
 
     def _start(
-        self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[List[Type[User]]] = None
+        self,
+        user_count: int | Dict[str, int],
+        spawn_rate: float,
+        wait: bool = False,
+        user_classes: Optional[List[Type[User]]] = None,
     ) -> None:
         """
         Start running a load test
 
-        :param user_count: Total number of users to start
+        :param user_count: `WeightedUsersDispatcher`: Total number of users to start, `FixedUsersDispatcher`: number of users per type
         :param spawn_rate: Number of users to spawn per second
         :param wait: If True calls to this method will block until all users are spawned.
                      If False (the default), a greenlet that spawns the users will be
@@ -491,7 +503,9 @@ class LocalRunner(Runner):
             self.environment._filter_tasks_by_tags()
             self.environment.events.test_start.fire(environment=self.environment)
 
-        if wait and user_count - self.user_count > spawn_rate:
+        _user_count = sum(user_count.values()) if isinstance(user_count, dict) else user_count
+
+        if wait and _user_count - self.user_count > spawn_rate:
             raise ValueError("wait is True but the amount of users to add is greater than the spawn rate")
 
         for user_class in self.user_classes:
@@ -502,11 +516,11 @@ class LocalRunner(Runner):
             self.update_state(STATE_SPAWNING)
 
         if self._users_dispatcher is None:
-            self._users_dispatcher = WeightedUsersDispatcher(
+            self._users_dispatcher = self.environment.dispatcher_class(
                 worker_nodes=[self._local_worker_node], user_classes=self.user_classes
             )
 
-        logger.info("Ramping to %d users at a rate of %.2f per second" % (user_count, spawn_rate))
+        logger.info("Ramping to %d users at a rate of %.2f per second" % (_user_count, spawn_rate))
 
         self._users_dispatcher.new_dispatch(user_count, spawn_rate, user_classes)
 
@@ -551,7 +565,11 @@ class LocalRunner(Runner):
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
 
     def start(
-        self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[List[Type[User]]] = None
+        self,
+        user_count: int | Dict[str, int],
+        spawn_rate: float,
+        wait: bool = False,
+        user_classes: Optional[List[Type[User]]] = None,
     ) -> None:
         if spawn_rate > 100:
             logger.warning(
@@ -744,7 +762,11 @@ class MasterRunner(DistributedRunner):
         return warning_emitted
 
     def start(
-        self, user_count: int, spawn_rate: float, wait=False, user_classes: Optional[List[Type[User]]] = None
+        self,
+        user_count: int | Dict[str, int],
+        spawn_rate: float,
+        wait=False,
+        user_classes: Optional[List[Type[User]]] = None,
     ) -> None:
         self.spawning_completed = False
 
@@ -762,13 +784,15 @@ class MasterRunner(DistributedRunner):
         self.spawn_rate = spawn_rate
 
         if self._users_dispatcher is None:
-            self._users_dispatcher = WeightedUsersDispatcher(
+            self._users_dispatcher = self.environment.dispatcher_class(
                 worker_nodes=list(self.clients.values()), user_classes=self.user_classes
             )
 
+        _user_count = sum(user_count.values()) if isinstance(user_count, dict) else user_count
+
         logger.info(
             "Sending spawn jobs of %d users at %.2f spawn rate to %d ready workers"
-            % (user_count, spawn_rate, num_workers)
+            % (_user_count, spawn_rate, num_workers)
         )
 
         worker_spawn_rate = float(spawn_rate) / (num_workers or 1)
@@ -1231,7 +1255,11 @@ class WorkerRunner(DistributedRunner):
         self.environment.events.user_error.add_listener(on_user_error)
 
     def start(
-        self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[List[Type[User]]] = None
+        self,
+        user_count: int | Dict[str, int],
+        spawn_rate: float,
+        wait: bool = False,
+        user_classes: Optional[List[Type[User]]] = None,
     ) -> None:
         raise NotImplementedError("use start_worker")
 

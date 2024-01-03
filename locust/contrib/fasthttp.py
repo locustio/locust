@@ -10,7 +10,7 @@ from urllib.parse import urlparse, urlunparse
 from ssl import SSLError
 import time
 import traceback
-from typing import Callable, Optional, Tuple, Dict, Any, Generator, cast
+from typing import ClassVar, Callable, Optional, Dict, Generator, Literal, cast
 
 from http.cookiejar import CookieJar
 
@@ -73,8 +73,6 @@ def insecure_ssl_context_factory():
 
 
 class FastHttpSession:
-    auth_header = None
-
     def __init__(
         self,
         environment: Environment,
@@ -104,6 +102,7 @@ class FastHttpSession:
 
         # Check for basic authentication
         parsed_url = urlparse(self.base_url)
+        self.auth_header: Optional[str] = None
         if parsed_url.username and parsed_url.password:
             netloc = parsed_url.hostname or ""
             if parsed_url.port:
@@ -332,14 +331,14 @@ class FastHttpUser(User):
 
     _callstack_regex = re.compile(r'  File "(\/.[^"]*)", line (\d*),(.*)')
 
-    def __init__(self, environment):
+    def __init__(self, environment: Environment) -> None:
         super().__init__(environment)
         if self.host is None:
             raise LocustError(
                 "You must specify the base host. Either in the host attribute in the User class, or on the command line using the --host option."
             )
 
-        self.client: FastHttpSession = FastHttpSession(
+        self.client = FastHttpSession(
             self.environment,
             base_url=self.host,
             network_timeout=self.network_timeout,
@@ -461,12 +460,12 @@ class FastResponse(CompatResponse):
         if self.encoding is None:
             if self.headers is None:
                 # No information, try to detect
-                self.encoding = detect(self.content)["encoding"]
+                self.encoding = cast(Dict[str, Optional[str]], detect(self.content))["encoding"]
             else:
                 self.encoding = get_encoding_from_headers(self.headers)
                 # No information, try to detect
                 if not self.encoding:
-                    self.encoding = detect(self.content)["encoding"]
+                    self.encoding = cast(Dict[str, Optional[str]], detect(self.content))["encoding"]
         if self.encoding is None:
             return None
         return str(self.content, str(self.encoding), errors="replace")
@@ -523,7 +522,7 @@ class ErrorResponse:
     """
 
     headers: Optional[Headers] = None
-    content = None
+    content: ClassVar[Literal[None]] = None
     status_code = 0
     error: Optional[Exception] = None
     text: Optional[str] = None

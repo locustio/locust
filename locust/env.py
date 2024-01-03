@@ -18,6 +18,7 @@ from .web import WebUI
 from .user import User
 from .user.task import filter_tasks_by_tags, TaskSet, TaskHolder
 from .shape import LoadTestShape
+from .dispatch import UsersDispatcher, WeightedUsersDispatcher
 
 
 RunnerType = TypeVar("RunnerType", bound=Runner)
@@ -40,6 +41,7 @@ class Environment:
         parsed_options: Optional[Namespace] = None,
         available_user_classes: Optional[Dict[str, User]] = None,
         available_shape_classes: Optional[Dict[str, LoadTestShape]] = None,
+        dispatcher_class: Type[UsersDispatcher] = WeightedUsersDispatcher,
     ):
         self.runner: Optional[Runner] = None
         """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
@@ -98,6 +100,8 @@ class Environment:
         """List of the available User Classes to pick from in the UserClass Picker"""
         self.available_shape_classes = available_shape_classes
         """List of the available Shape Classes to pick from in the ShapeClass Picker"""
+        self.dispatcher_class = dispatcher_class
+        """Default `WeightedUsersDispatcher`, possible to select other dispatcher implementations based on `UsersDispatcher`, e.g. `FixedUsersDispatcher`"""
 
         self._remove_user_classes_with_weight_zero()
         self._validate_user_class_name_uniqueness()
