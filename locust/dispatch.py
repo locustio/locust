@@ -39,9 +39,9 @@ T = TypeVar("T")
 # place `@profile` on the functions/methods you wish to profile. Then, in the unit test you are
 # running, use `from locust.dispatch import profile; profile.print_stats()` at the end of the unit test.
 # Placing it in a `finally` block is recommended.
-import line_profiler
-
-profile = line_profiler.LineProfiler()
+# import line_profiler
+#
+# profile = line_profiler.LineProfiler()
 
 UserGenerator = Generator[Optional[str], None, None]
 DistributedUsers = Dict[str, Dict[str, int]]
@@ -49,6 +49,8 @@ DispatcherGenerator = Generator[DistributedUsers, None, None]
 
 
 class LengthOptimizedList(List[T]):
+    """Simple implementation of a list that keeps track of its length for speed optimizations."""
+
     __optimized_length__: int
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -74,6 +76,27 @@ class LengthOptimizedList(List[T]):
 
 
 class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
+    """Base class for user dispatcher implementations.
+
+    A dispatcher waits an appropriate amount of time between each iteration
+    in order for the spawn rate to be respected whether running in
+    local or distributed mode.
+
+    The terminology used in the users dispatcher is:
+      - Dispatch cycle
+            A dispatch cycle corresponds to a ramp-up from start to finish. So,
+            going from 10 to 100 users with a spawn rate of 1/s corresponds to one
+            dispatch cycle. An instance of the `UsersDispatcher` class "lives" for
+            one dispatch cycle only.
+      - Dispatch iteration
+            A dispatch cycle contains one or more dispatch iterations. In the previous example
+            of going from 10 to 100 users with a spawn rate of 1/s, there are 100 dispatch iterations.
+            That is, from 10 to 11 users is a dispatch iteration, from 12 to 13 is another, and so on.
+            If the spawn rate were to be 2/s, then there would be 50 dispatch iterations for this dispatch cycle.
+            For a more extreme case with a spawn rate of 120/s, there would be only a single dispatch iteration
+            from 10 to 100.
+    """
+
     def __init__(self, worker_nodes: List[WorkerNode], user_classes: List[Type[User]]):
         self._worker_nodes = worker_nodes
         self._sort_workers()
@@ -312,18 +335,6 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
 
         self._rebalance = True
 
-    @overload
-    def new_dispatch(
-        self, target_user_count: int, spawn_rate: float, user_classes: Optional[List[Type[User]]] = None
-    ) -> None:
-        ...
-
-    @overload
-    def new_dispatch(
-        self, target_user_count: Dict[str, int], spawn_rate: float, user_classes: Optional[List[Type[User]]] = None
-    ) -> None:
-        ...
-
     @abstractmethod
     def new_dispatch(
         self,
@@ -366,25 +377,11 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
 
 class WeightedUsersDispatcher(UsersDispatcher):
     """
-    Iterator that dispatches the users to the workers.
+    Weight based iterator that dispatches users to the workers.
 
-    The dispatcher waits an appropriate amount of time between each iteration
-    in order for the spawn rate to be respected whether running in
-    local or distributed mode.
+    Distribution of users are based on weights (`User.weight`), which will determine the amount of users of that type that will spawn.
 
-    The terminology used in the users dispatcher is:
-      - Dispatch cycle
-            A dispatch cycle corresponds to a ramp-up from start to finish. So,
-            going from 10 to 100 users with a spawn rate of 1/s corresponds to one
-            dispatch cycle. An instance of the `UsersDispatcher` class "lives" for
-            one dispatch cycle only.
-      - Dispatch iteration
-            A dispatch cycle contains one or more dispatch iterations. In the previous example
-            of going from 10 to 100 users with a spawn rate of 1/s, there are 100 dispatch iterations.
-            That is, from 10 to 11 users is a dispatch iteration, from 12 to 13 is another, and so on.
-            If the spawn rate were to be 2/s, then there would be 50 dispatch iterations for this dispatch cycle.
-            For a more extreme case with a spawn rate of 120/s, there would be only a single dispatch iteration
-            from 10 to 100.
+    Its also possible to use `User.fixed_count` to spawn a fixed number of users of that type, in this case `User.weight` is ignored.
     """
 
     def __init__(self, worker_nodes: List[WorkerNode], user_classes: List[Type[User]]):
@@ -563,7 +560,20 @@ class WeightedUsersDispatcher(UsersDispatcher):
 
 
 class FixedUsersDispatcher(UsersDispatcher):
+    """Fixed count (only) based iterator that dispatches users to the workers.
+
+    Distribution is based on fixed count (`User.fixed_count`), it is also possible to group certain user types to the same
+    workers by using `User.sticky_tag`. Available workers will then be assigned to one of the tags, and only spawn users with
+    the same tag value.
+
+    `User.weight`, if set on the user type, will be ignored with this dispatcher.
+    """
+
     def __init__(self, worker_nodes: List[WorkerNode], user_classes: List[Type[User]]) -> None:
+        """
+        :param worker_nodes: List of worker nodes
+        :param user_classes: The user classes
+        """
         super().__init__(worker_nodes, user_classes)
 
         self._users_to_sticky_tag = {
@@ -610,6 +620,13 @@ class FixedUsersDispatcher(UsersDispatcher):
         spawn_rate: float,
         user_classes: Optional[List[Type[User]]] = None,
     ) -> None:
+        """
+        Initialize a new dispatch cycle.
+
+        :param target_user_count: The desired user count, per user, at the end of the dispatch cycle
+        :param spawn_rate: The spawn rate
+        :param user_classes: The user classes to be used for the new dispatch
+        """
         assert isinstance(target_user_count, dict)
 
         if user_classes is not None and self._user_classes != sorted(user_classes, key=attrgetter("__name__")):
@@ -656,6 +673,10 @@ class FixedUsersDispatcher(UsersDispatcher):
         self._user_generator = self.create_user_generator()
 
     def add_users_on_workers(self) -> DistributedUsers:
+        """Add users on the workers until the target number of users is reached for the current dispatch iteration
+
+        :return: The users that we want to run on the workers
+        """
         current_user_count_actual = self._active_users.__optimized_length__
         current_user_count_target = min(
             current_user_count_actual + self._user_count_per_dispatch_iteration, self.get_target_user_count()
@@ -688,6 +709,10 @@ class FixedUsersDispatcher(UsersDispatcher):
         return self._users_on_workers
 
     def remove_users_from_workers(self) -> DistributedUsers:
+        """Remove users from the workers until the target number of users is reached for the current dispatch iteration
+
+        :return: The users that we want to run on the workers
+        """
         current_user_count_actual = self._active_users.__optimized_length__
         current_user_count_target = max(
             current_user_count_actual - self._user_count_per_dispatch_iteration, self.get_target_user_count()
@@ -723,7 +748,7 @@ class FixedUsersDispatcher(UsersDispatcher):
             sticky_tag_user_count.update({sticky_tag: user_count})
 
         worker_node_count = len(self._worker_nodes)
-        # sort sticky tags based on number of users (more should have more workers)
+        # sort sticky tags based on number of users (more user types should have more workers)
         sticky_tags: Iterator[str] = iter(
             dict(sorted(sticky_tag_user_count.items(), key=operator.itemgetter(1), reverse=True)).keys()
         )
@@ -742,10 +767,9 @@ class FixedUsersDispatcher(UsersDispatcher):
         orig__sticky_tag_to_workers = self.__sticky_tag_to_workers.copy()
         self.__sticky_tag_to_workers.clear()
         for worker, sticky_tag in self._workers_to_sticky_tag.items():
-            if sticky_tag not in self.__sticky_tag_to_workers:
-                self.__sticky_tag_to_workers.update({sticky_tag: []})
-
-            self.__sticky_tag_to_workers[sticky_tag].append(worker)
+            self.__sticky_tag_to_workers.update(
+                {sticky_tag: self.__sticky_tag_to_workers.get(sticky_tag, []) + [worker]}
+            )
 
         # check if workers has changed since last time
         # do not reset worker cycles if only target user count has changed
@@ -756,10 +780,12 @@ class FixedUsersDispatcher(UsersDispatcher):
                 changes_for_sticky_tag.update({sticky_tag: workers})
             elif workers is None:
                 changes_for_sticky_tag.update({sticky_tag: None})
+            else:  # nothing has changed, keep the worker cycle as it was
+                pass
 
-        # make worker list cycle
+        # apply changes
         for sticky_tag, change in changes_for_sticky_tag.items():
-            if change != None:
+            if change is not None:
                 self._sticky_tag_to_workers.update({sticky_tag: itertools.cycle(change)})
             else:
                 del self._sticky_tag_to_workers[sticky_tag]
@@ -780,9 +806,11 @@ class FixedUsersDispatcher(UsersDispatcher):
     def distribute_users(
         self, target_user_count: int | Dict[str, int]
     ) -> Tuple[DistributedUsers, UserGenerator, None, LengthOptimizedList[Tuple[WorkerNode, str]]]:
+        """Distribute users on available workers, and continue user cycle from there."""
+
         assert isinstance(target_user_count, dict)
 
-        # used target as setup based on user class values
+        # used target as setup based on user class values, without changing the original value
         if target_user_count == {}:
             target_user_count = {**self.target_user_count}
 
