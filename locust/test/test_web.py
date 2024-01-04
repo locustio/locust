@@ -14,7 +14,7 @@ import gevent
 import requests
 from pyquery import PyQuery as pq
 import locust
-from locust import User, constant, LoadTestShape
+from locust import constant, LoadTestShape
 from locust.argument_parser import get_parser, parse_options
 from locust.user import User, task
 from locust.env import Environment
