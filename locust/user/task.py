@@ -298,6 +298,7 @@ class TaskSet(metaclass=TaskSetMeta):
             self.max_wait = self.user.max_wait
         if not self.wait_function:
             self.wait_function = self.user.wait_function
+        self._cp_last_run = time()  # used by constant_pacing wait_time
 
     @property
     def user(self) -> "User":
