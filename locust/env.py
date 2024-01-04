@@ -103,6 +103,10 @@ class Environment:
         self._validate_user_class_name_uniqueness()
         self._validate_shape_class_instance()
 
+    def update_shape_class_runner(self, runner: Optional[Runner] = None) -> None:
+        if self.shape_class:
+            self.shape_class.runner = runner or self.runner
+
     def _create_runner(
         self,
         runner_class: Type[RunnerType],
@@ -114,8 +118,7 @@ class Environment:
         self.runner = runner_class(self, *args, **kwargs)
 
         # Attach the runner to the shape class so that the shape class can access user count state
-        if self.shape_class:
-            self.shape_class.runner = self.runner
+        self.update_shape_class_runner()
 
         return self.runner
 
