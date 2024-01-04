@@ -8,12 +8,13 @@ import traceback
 import logging
 from io import StringIO
 from tempfile import NamedTemporaryFile, TemporaryDirectory
+from typing import List, Optional, Tuple, Type
 
 import gevent
 import requests
 from pyquery import PyQuery as pq
 import locust
-from locust import constant, LoadTestShape
+from locust import User, constant, LoadTestShape
 from locust.argument_parser import get_parser, parse_options
 from locust.user import User, task
 from locust.env import Environment
@@ -650,6 +651,41 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual("https://localhost", response.json()["host"])
         self.assertEqual(self.environment.host, "https://localhost")
         self.assertIsNone(self.environment.shape_class)
+
+        # stop
+        gevent.sleep(1)
+        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        self.assertEqual(response.json()["message"], "Test stopped")
+
+    def test_swarm_shape_class_is_updated_when_userclass_picker_is_active(self):
+        class User1(User):
+            pass
+
+        class TestShape(LoadTestShape):
+            def tick(self):
+                pass
+
+        test_shape_instance = TestShape()
+
+        self.environment.web_ui.userclass_picker_is_active = True
+        self.environment.available_user_classes = {"User1": User1}
+        self.environment.available_shape_classes = {"TestShape": test_shape_instance}
+        self.environment.shape_class = None
+
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={
+                "user_count": 5,
+                "spawn_rate": 5,
+                "host": "https://localhost",
+                "user_classes": "User1",
+                "shape_class": "TestShape",
+            },
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(test_shape_instance, self.environment.shape_class)
+        self.assertIsNotNone(test_shape_instance.runner)
 
         # stop
         gevent.sleep(1)
