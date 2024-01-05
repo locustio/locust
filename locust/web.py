@@ -629,6 +629,7 @@ class WebUI:
     def _update_shape_class(self, shape_class_name):
         if shape_class_name:
             shape_class = self.environment.available_shape_classes[shape_class_name]
+            shape_class.runner = self.environment.runner
         else:
             shape_class = None
 
