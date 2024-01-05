@@ -634,7 +634,7 @@ class WebUI:
 
         # Validating ShapeClass
         self.environment.shape_class = shape_class
-        self.environment.update_shape_class_runner()
+        self.environment.shape_class.runner = self.environment.runner
         self.environment._validate_shape_class_instance()
 
     def _update_user_classes(self, user_classes):
