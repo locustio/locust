@@ -430,6 +430,13 @@ def setup_parser_arguments(parser):
         env_var="LOCUST_EXPECT_WORKERS_MAX_WAIT",
     )
     master_group.add_argument(
+        "--enable-rebalancing",
+        action="store_true",
+        default=False,
+        dest="enable_rebalancing",
+        help="Re-distribute users if new workers are added or removed during a test run. Experimental.",
+    )
+    master_group.add_argument(
         "--expect-slaves",
         action="store_true",
         help=configargparse.SUPPRESS,
@@ -610,13 +617,6 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         default=False,
         dest="equal_weights",
         help="Use equally distributed task weights, overriding the weights specified in the locustfile.",
-    )
-    other_group.add_argument(
-        "--enable-rebalancing",
-        action="store_true",
-        default=False,
-        dest="enable_rebalancing",
-        help="Allow to automatically rebalance users if new workers are added or removed during a test run.",
     )
 
     user_classes_group = parser.add_argument_group("User classes")
