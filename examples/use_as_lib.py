@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import gevent
 from locust import HttpUser, task, events
 from locust.env import Environment
