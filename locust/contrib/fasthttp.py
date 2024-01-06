@@ -500,6 +500,11 @@ class FastResponse(CompatResponse):
         """
         return self._response.get_code() if self._response is not None else 0
 
+    @property
+    def ok(self):
+        """Returns True if :attr:`status_code` is less than 400, False if not."""
+        return self.status_code < 400
+
     def _content(self):
         if self.headers is None:
             return None
