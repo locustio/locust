@@ -253,7 +253,6 @@ class WebUI:
                 self._swarm_greenlet = None
 
             if environment.runner is not None:
-                print(environment.parsed_options)
                 self._swarm_greenlet = gevent.spawn(environment.runner.start, user_count, spawn_rate, tasks_rate)
                 self._swarm_greenlet.link_exception(greenlet_exception_handler)
                 response_data = {
