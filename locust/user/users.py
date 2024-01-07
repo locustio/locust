@@ -127,6 +127,12 @@ class User(metaclass=UserMeta):
         self._taskset_instance: TaskSet = None
         self._cp_last_run = time.time()  # used by constant_pacing wait_time
 
+    def setup(self):
+        """
+        Called before User starts running.
+        """
+        pass
+
     def on_start(self):
         """
         Called when a User starts running.
