@@ -223,23 +223,31 @@ class Runner:
             % (json.dumps(user_classes_spawn_count), json.dumps(self.user_classes_count))
         )
 
-        def spawn(user_class: str, spawn_count: int) -> List[User]:
-            n = 0
+        def create_users(user_class: str, spawn_count: int) -> List[User]:
             new_users: List[User] = []
-            while n < spawn_count:
-                new_user = self.user_classes_by_name[user_class](self.environment)
-                new_user.start(self.user_greenlets)
-                new_users.append(new_user)
+            for i in range(spawn_count):
+                new_users.append(self.user_classes_by_name[user_class](self.environment))
+            return new_users
+        
+        def setup_users(users: List[User]):
+            for user in users:
+                user.setup()
+
+
+        def spawn(users: List[User], spawn_count: int) -> List[User]:
+            n = 0
+            for user in users:
+                user.start(self.user_greenlets)
                 n += 1
                 if n % 10 == 0 or n == spawn_count:
                     logger.debug("%i users spawned" % self.user_count)
-            logger.debug("All users of class %s spawned" % user_class)
-            return new_users
+            logger.debug("All users spawned")
 
         new_users: List[User] = []
         for user_class, spawn_count in user_classes_spawn_count.items():
-            new_users += spawn(user_class, spawn_count)
-
+            new_users += create_users(user_class, spawn_count)
+        setup_users(new_users)
+        spawn(new_users, len(new_users))      
         if wait:
             self.user_greenlets.join()
             logger.info("All users stopped\n")
