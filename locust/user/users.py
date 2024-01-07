@@ -117,6 +117,11 @@ class User(metaclass=UserMeta):
     abstract = True
     """If abstract is True, the class is meant to be subclassed, and locust will not spawn users of this class during a test."""
 
+    tasks_rate = 0
+    """
+    Tasks rate is property to set how much concurrent thread you want to run per user.
+    """
+
     def __init__(self, environment):
         super().__init__()
         self.environment = environment
@@ -145,23 +150,35 @@ class User(metaclass=UserMeta):
         """
         pass
 
-    @final
-    def run(self):
-        self._state = LOCUST_STATE_RUNNING
-        self._taskset_instance = DefaultTaskSet(self)
+    def run_single_taskset_instance(self):
         try:
-            # run the TaskSet on_start method, if it has one
-            try:
-                self.on_start()
-            except Exception as e:
-                # unhandled exceptions inside tasks are logged in TaskSet.run, but since we're not yet there...
-                logger.error("%s\n%s", e, traceback.format_exc())
-                raise
-
             self._taskset_instance.run()
         except (GreenletExit, StopUser):
-            # run the on_stop method, if it has one
-            self.on_stop()
+            pass
+
+    @final
+    def run(self):
+        if self.tasks_rate < 1:
+            self.tasks_rate = 1
+        self._state = LOCUST_STATE_RUNNING
+        self._taskset_instance = DefaultTaskSet(self)
+        # run the TaskSet on_start method, if it has one
+        try:
+            self.on_start()
+        except Exception as e:
+            # unhandled exceptions inside tasks are logged in TaskSet.run, but since we're not yet there...
+            logger.error("%s\n%s", e, traceback.format_exc())
+            raise
+
+        from threading import Thread
+        threads = []
+        for i in range(self.tasks_rate):
+            thread = Thread(target=self.run_single_taskset_instance)
+            thread.start()
+            threads.append(thread)
+        for thread in threads:
+            thread.join()
+        self.on_stop()
 
     def wait(self):
         """
