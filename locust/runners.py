@@ -214,7 +214,7 @@ class Runner:
             )
         return self.cpu_warning_emitted
 
-    def spawn_users(self, user_classes_spawn_count: Dict[str, int], wait: bool = False):
+    def spawn_users(self, user_classes_spawn_count: Dict[str, int], wait: bool = False, tasks_rate: int = 0):
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
             self.update_state(STATE_SPAWNING)
 
@@ -226,7 +226,9 @@ class Runner:
         def create_users(user_class: str, spawn_count: int) -> List[User]:
             new_users: List[User] = []
             for i in range(spawn_count):
-                new_users.append(self.user_classes_by_name[user_class](self.environment))
+                user = self.user_classes_by_name[user_class](self.environment)
+                user.tasks_rate = tasks_rate
+                new_users.append(user)
             return new_users
         
         def setup_users(users: List[User]):
@@ -321,7 +323,7 @@ class Runner:
 
     @abstractmethod
     def start(
-        self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[List[Type[User]]] = None
+        self, user_count: int, spawn_rate: float, tasks_rate: int, wait: bool = False, user_classes: Optional[List[Type[User]]] = None
     ) -> None:
         ...
 
@@ -554,7 +556,7 @@ class LocalRunner(Runner):
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
 
     def start(
-        self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: Optional[List[Type[User]]] = None
+        self, user_count: int, spawn_rate: float, tasks_rate: int, wait: bool = False, user_classes: Optional[List[Type[User]]] = None
     ) -> None:
         if spawn_rate > 100:
             logger.warning(
@@ -745,7 +747,7 @@ class MasterRunner(DistributedRunner):
         return warning_emitted
 
     def start(
-        self, user_count: int, spawn_rate: float, wait=False, user_classes: Optional[List[Type[User]]] = None
+        self, user_count: int, spawn_rate: float, tasks_rate: int, wait=False, user_classes: Optional[List[Type[User]]] = None
     ) -> None:
         self.spawning_completed = False
 
@@ -799,6 +801,7 @@ class MasterRunner(DistributedRunner):
                     data = {
                         "timestamp": time.time(),
                         "user_classes_count": worker_user_classes_count,
+                        "tasks_rate": tasks_rate,
                         "host": self.environment.host,
                         "stop_timeout": self.environment.stop_timeout,
                         "parsed_options": vars(self.environment.parsed_options)
@@ -1236,7 +1239,7 @@ class WorkerRunner(DistributedRunner):
     ) -> None:
         raise NotImplementedError("use start_worker")
 
-    def start_worker(self, user_classes_count: Dict[str, int], **kwargs) -> None:
+    def start_worker(self, user_classes_count: Dict[str, int], tasks_rate: int, **kwargs) -> None:
         """
         Start running a load test as a worker
 
@@ -1260,7 +1263,7 @@ class WorkerRunner(DistributedRunner):
 
         # call spawn_users before stopping the users since stop_users
         # can be blocking because of the stop_timeout
-        self.spawn_users(user_classes_spawn_count)
+        self.spawn_users(user_classes_spawn_count, tasks_rate=tasks_rate)
         self.stop_users(user_classes_stop_count)
 
         self.environment.events.spawning_complete.fire(user_count=sum(self.user_classes_count.values()))
@@ -1350,7 +1353,7 @@ class WorkerRunner(DistributedRunner):
                 if self.spawning_greenlet:
                     # kill existing spawning greenlet before we launch new one
                     self.spawning_greenlet.kill(block=True)
-                self.spawning_greenlet = self.greenlet.spawn(lambda: self.start_worker(job["user_classes_count"]))
+                self.spawning_greenlet = self.greenlet.spawn(lambda: self.start_worker(job["user_classes_count"], job["tasks_rate"]))
                 self.spawning_greenlet.link_exception(greenlet_exception_handler)
                 last_received_spawn_timestamp = job["timestamp"]
             elif msg.type == "stop":
