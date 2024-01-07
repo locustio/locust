@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Locust for {{ locustfile }}</title>
     <link rel="stylesheet" type="text/css" href="./static/css/application.css?v={{ version }}" media="screen">
-    <link rel="shortcut icon" href="./static/img/favicon.ico" type="image/x-icon"/>
+    <link rel="shortcut icon" href="./static/img/favicon.ico" type="image/x-icon" />
     {% block extended_head %}
     {% endblock extended_head %}
 </head>
+
 <body class="{{state}}">
     <div class="top">
         <div class="top-content container">
@@ -15,7 +17,7 @@
                 <div class="top_box box_url">
                     <div class="label">HOST</div>
                     <div class="value" id="host_url">
-						<a id="host_url_link" href="" target="_blank"><span id="host_url_link_value">{{host}}</span></a>
+                        <a id="host_url_link" href="" target="_blank"><span id="host_url_link_value">{{host}}</span></a>
                     </div>
                 </div>
                 <div class="top_box box_status">
@@ -30,10 +32,10 @@
                     <a href="#" class="edit-test" id="edit-test">Edit</a>
                 </div>
                 {% if is_distributed %}
-                    <div class="top_box box_workers" id="box_workers">
-                        <div class="label">WORKERS</div>
-                        <div class="value" id="workerCount">{{worker_count}}</div>
-                    </div>
+                <div class="top_box box_workers" id="box_workers">
+                    <div class="label">WORKERS</div>
+                    <div class="value" id="workerCount">{{worker_count}}</div>
+                </div>
                 {% endif %}
                 <div class="top_box box_rps box_running" id="box_rps">
                     <div class="label">RPS</div>
@@ -60,76 +62,94 @@
                 <h2>Start new load test</h2>
                 <form action="./swarm" method="POST" id="swarm_form">
                     {% if show_userclass_picker %}
-                        <label for="available_user_classes">UserClasses </label>
-                        <select multiple name="user_classes" id="user-classes" class="userClass">
+                    <label for="available_user_classes">UserClasses </label>
+                    <select multiple name="user_classes" id="user-classes" class="userClass">
                         {% for user in available_user_classes %}
-                            <option value="{{user}}" selected>{{user}}</option>
+                        <option value="{{user}}" selected>{{user}}</option>
                         {% endfor %}
-                        </select><br>
-                        <label for="available_shape_classes">ShapeClass </label>
-                        <select name="shape_class" id="shape-classes" class="shapeClass">
+                    </select><br>
+                    <label for="available_shape_classes">ShapeClass </label>
+                    <select name="shape_class" id="shape-classes" class="shapeClass">
                         {% for shape_class in available_shape_classes %}
-                            <option value="{{shape_class}}">{{shape_class}}</option>
+                        <option value="{{shape_class}}">{{shape_class}}</option>
                         {% endfor %}
-                        </select><br>
+                    </select><br>
                     {% endif %}
                     {% if hide_common_options %}
-                        <label for="user_count">Number of users <span style="color:#8a8a8a;">(peak concurrency)</span></label>
-                        <input type="text" name="user_count" id="user_count" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
-                        <input type="hidden" name="user_count" id="user_count" value="0"/><br>
-                        <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users started/second)</span></label>
-                        <input type="text" name="spawn_rate" id="spawn_rate" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
-                        <input type="hidden" name="spawn_rate" id="spawn_rate" value="0"/><br>
+                    <label for="user_count">Number of users <span style="color:#8a8a8a;">(peak
+                            concurrency)</span></label>
+                    <input type="text" name="user_count" id="user_count" class="val_disabled" value="-"
+                        disabled="disabled" title="Disabled for tests using LoadTestShape class" /><br>
+                    <input type="hidden" name="user_count" id="user_count" value="0" /><br>
+                    <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users
+                            started/second)</span></label>
+                    <input type="text" name="spawn_rate" id="spawn_rate" class="val_disabled" value="-"
+                        disabled="disabled" title="Disabled for tests using LoadTestShape class" /><br>
+                    <input type="hidden" name="spawn_rate" id="spawn_rate" value="0" /><br>
                     {% else %}
-                        <label for="user_count">Number of users <span style="color:#8a8a8a;">(peak concurrency)</span></label>
-                        <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "1" }}" onfocus="this.select()"/><br>
-                        <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users started/second)</span></label>
-                        <input type="text" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "1" }}" onfocus="this.select()"/><br>
+                    <label for="user_count">Number of users <span style="color:#8a8a8a;">(peak
+                            concurrency)</span></label>
+                    <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or " 1" }}"
+                        onfocus="this.select()" /><br>
+                    <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users
+                            started/second)</span></label>
+                    <input type="text" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or " 1" }}"
+                        onfocus="this.select()" /><br>
+                    <label for="tasks_rate">Tasks rate <span style="color:#8a8a8a;">(concurrent tasks started per
+                            user)</span></label>
+                    <input type="text" name="tasks_rate" id="tasks_rate" class="val" value="{{ tasks_rate or " 1" }}"
+                        onfocus="this.select()" /><br>
                     {% endif %}
                     <label for="host">
                         Host <span style="color:#8a8a8a;">(e.g. http://www.example.com)</span>
                         {% if override_host_warning %}
-                            <span style="color:#8a8a8a; font-size:12px;">(setting this will override the host on all User classes)</span>
+                        <span style="color:#8a8a8a; font-size:12px;">(setting this will override the host on all User
+                            classes)</span>
                         {% endif %}
                     </label>
-                    <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off" value="{{ host  or "" }}" onfocus="this.select()"/><br>
+                    <input type="text" name="host" id="host" class="val" autocapitalize="off" autocorrect="off"
+                        value="{{ host  or "" }}" onfocus="this.select()" /><br>
                     <a href="#" onclick="$('.advancedOptions').toggle();">Advanced options</a>
                     <div class="advancedOptions" style="display:none">
                         <label for="run_time">
                             Run time
                             <span style="color:#8a8a8a;">(e.g. 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.)</span>
                         </label>
-                        <input type="text" name="run_time" id="run_time" class="val" value="{{ run_time  or "" }}" onfocus="this.select()"/><br>
+                        <input type="text" name="run_time" id="run_time" class="val" value="{{ run_time  or "" }}"
+                            onfocus="this.select()" /><br>
                     </div>
                     {% if extra_options %}<label>Custom parameters:</label>{% endif %}
                     {% for key, value in extra_options.items() %}
-                        {% if not ((value.default_value is none) or (value.default_value is boolean)) %}
-                            <label for="{{key}}">
-                                {{key.replace('_', ' ').capitalize()}}
-                                {% if value.help_text %}
-                                    <span style="color:#8a8a8a;">({{value.help_text}})</span>
-                                {% endif %}
-                            </label>
-                            {% if value.choices %}
-                                <select name="{{key}}" id="{{key}}" class="val">
-                                    {% for choice in value.choices %}
-                                        <option value="{{choice}}" {% if choice == value.default_value %}selected{% endif %}>{{choice}}</option>
-                                    {% endfor %}
-                                </select><br>
-                            {% else %}
-                                <input type="{{'password' if value.is_secret else 'text'}}" name="{{key}}" id="{{key}}" class="val" value="{{value.default_value}}" /><br>
-                            {% endif %}
+                    {% if not ((value.default_value is none) or (value.default_value is boolean)) %}
+                    <label for="{{key}}">
+                        {{key.replace('_', ' ').capitalize()}}
+                        {% if value.help_text %}
+                        <span style="color:#8a8a8a;">({{value.help_text}})</span>
                         {% endif %}
+                    </label>
+                    {% if value.choices %}
+                    <select name="{{key}}" id="{{key}}" class="val">
+                        {% for choice in value.choices %}
+                        <option value="{{choice}}" {% if choice==value.default_value %}selected{% endif %}>{{choice}}
+                        </option>
+                        {% endfor %}
+                    </select><br>
+                    {% else %}
+                    <input type="{{'password' if value.is_secret else 'text'}}" name="{{key}}" id="{{key}}" class="val"
+                        value="{{value.default_value}}" /><br>
+                    {% endif %}
+                    {% endif %}
                     {% endfor %}
                     {% set glob={'header_printed': False} %}
                     {% for key, value in extra_options.items() %}
-                        {% if (value.default_value is none) or (value.default_value is boolean) %}
-                            {% if not glob.header_printed %}
-                                The following custom parameters can't be set in the Web UI, because it is a boolean or None type:<br>
-                                {% set _ = glob.update({'header_printed':True}) %}
-                            {% endif %}
-                            {{key}}<br>
-                        {% endif %}
+                    {% if (value.default_value is none) or (value.default_value is boolean) %}
+                    {% if not glob.header_printed %}
+                    The following custom parameters can't be set in the Web UI, because it is a boolean or None
+                    type:<br>
+                    {% set _ = glob.update({'header_printed':True}) %}
+                    {% endif %}
+                    {{key}}<br>
+                    {% endif %}
                     {% endfor %}
                     <button type="submit">Start swarming</button>
                 </form>
@@ -145,20 +165,26 @@
                 <h2>Edit running load test</h2>
                 <form action="./swarm" method="POST" id="edit_form">
                     {% if hide_common_options %}
-                        <label for="new_user_count">Number of users (peak concurrency)</label>
-                        <input type="text" name="user_count" id="new_user_count" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
-                        <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users added/stopped per second)</span></label>
-                        <input type="text" name="spawn_rate" id="new_spawn_rate" class="val_disabled"  value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
+                    <label for="new_user_count">Number of users (peak concurrency)</label>
+                    <input type="text" name="user_count" id="new_user_count" class="val_disabled" value="-"
+                        disabled="disabled" title="Disabled for tests using LoadTestShape class" /><br>
+                    <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users added/stopped per
+                            second)</span></label>
+                    <input type="text" name="spawn_rate" id="new_spawn_rate" class="val_disabled" value="-"
+                        disabled="disabled" title="Disabled for tests using LoadTestShape class" /><br>
                     {% else %}
-                        <label for="new_user_count">Number of users (peak concurrency)</label>
-                        <input type="text" name="user_count" id="new_user_count" class="val"  value="{{ num_users or "1" }}" onfocus="this.select()"/><br>
-                        <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users added/stopped per second)</span></label>
-                        <input type="text" name="spawn_rate" id="new_spawn_rate" class="val"  value="{{ spawn_rate or "1" }}" onfocus="this.select()"/><br>
+                    <label for="new_user_count">Number of users (peak concurrency)</label>
+                    <input type="text" name="user_count" id="new_user_count" class="val" value="{{ num_users or " 1" }}"
+                        onfocus="this.select()" /><br>
+                    <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users added/stopped per
+                            second)</span></label>
+                    <input type="text" name="spawn_rate" id="new_spawn_rate" class="val" value="{{ spawn_rate or " 1"
+                        }}" onfocus="this.select()" /><br>
                     {% endif %}
                     {% if hide_common_options %}
-                        <button type="submit" disabled>Start swarming</button>
+                    <button type="submit" disabled>Start swarming</button>
                     {% else %}
-                        <button type="submit">Start swarming</button>
+                    <button type="submit">Start swarming</button>
                     {% endif %}
                 </form>
                 <div style="clear:right;"></div>
@@ -176,7 +202,7 @@
                 <li><a href="#">Current ratio</a></li>
                 <li><a href="#">Download Data</a></li>
                 {% if is_distributed %}
-                    <li><a href="#">Workers</a></li>
+                <li><a href="#">Workers</a></li>
                 {% endif %}
                 {% block extended_tabs %}{% endblock extended_tabs %}
             </ul>
@@ -188,19 +214,30 @@
                         <tr>
                             <th class="stats_label" href="#" data-sortkey="method">Type</th>
                             <th class="stats_label" href="#" data-sortkey="name">Name</th>
-                            <th class="stats_label numeric nowrap" href="#" data-sortkey="num_requests" title="Number of requests"># Requests</th>
-                            <th class="stats_label numeric nowrap" href="#" data-sortkey="num_failures" title="Number of failures"># Fails</th>
-                            <th class="stats_label numeric" href="#" data-sortkey="median_response_time" title="Median response time">Median (ms)</th>
-                            <th class="stats_label numeric" href="#" data-sortkey="ninetieth_response_time" title="Ninetieth percentile response time, because the response time greater than 100ms is rounded, you may see it greater than the max response time">90%ile (ms)</th>
+                            <th class="stats_label numeric nowrap" href="#" data-sortkey="num_requests"
+                                title="Number of requests"># Requests</th>
+                            <th class="stats_label numeric nowrap" href="#" data-sortkey="num_failures"
+                                title="Number of failures"># Fails</th>
+                            <th class="stats_label numeric" href="#" data-sortkey="median_response_time"
+                                title="Median response time">Median (ms)</th>
+                            <th class="stats_label numeric" href="#" data-sortkey="ninetieth_response_time"
+                                title="Ninetieth percentile response time, because the response time greater than 100ms is rounded, you may see it greater than the max response time">
+                                90%ile (ms)</th>
                             <th class="stats_label numeric" href="#" data-sortkey="ninety_ninth_response_time"
                                 title="Ninety-ninth percentile response time, because the response time greater than 100ms is rounded, you may see it greater than the max response time">
                                 99%ile (ms)</th>
-                            <th class="stats_label numeric" href="#" data-sortkey="avg_response_time" title="Average response time">Average (ms)</th>
-                            <th class="stats_label numeric" href="#" data-sortkey="min_response_time" title="Min response time">Min (ms)</th>
-                            <th class="stats_label numeric" href="#" data-sortkey="max_response_time" title="Max response time">Max (ms)</th>
-                            <th class="stats_label numeric" href="#" data-sortkey="avg_content_length" title="Average response size">Average size (bytes)</th>
-                            <th class="stats_label numeric" href="#" data-sortkey="current_rps" title="Current number of requests per second">Current RPS</th>
-                            <th class="stats_label numeric" href="#" data-sortkey="current_fail_per_sec" title="Current number of failures per second">Current Failures/s</th>
+                            <th class="stats_label numeric" href="#" data-sortkey="avg_response_time"
+                                title="Average response time">Average (ms)</th>
+                            <th class="stats_label numeric" href="#" data-sortkey="min_response_time"
+                                title="Min response time">Min (ms)</th>
+                            <th class="stats_label numeric" href="#" data-sortkey="max_response_time"
+                                title="Max response time">Max (ms)</th>
+                            <th class="stats_label numeric" href="#" data-sortkey="avg_content_length"
+                                title="Average response size">Average size (bytes)</th>
+                            <th class="stats_label numeric" href="#" data-sortkey="current_rps"
+                                title="Current number of requests per second">Current RPS</th>
+                            <th class="stats_label numeric" href="#" data-sortkey="current_fail_per_sec"
+                                title="Current number of failures per second">Current Failures/s</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -240,7 +277,7 @@
                 <div style="margin-top:20px;">
                     <a href="./stats/requests/csv">Download request statistics CSV</a><br>
                     {% if stats_history_enabled %}
-                        <a href="./stats/requests_full_history/csv">Download full request statistics history CSV</a><br>
+                    <a href="./stats/requests_full_history/csv">Download full request statistics history CSV</a><br>
                     {% endif %}
                     <a href="./stats/failures/csv">Download failures CSV</a><br>
                     <a href="./exceptions/csv">Download exceptions CSV</a><br>
@@ -248,21 +285,24 @@
                 </div>
             </div>
             {% if is_distributed %}
-                <div style="display:none;">
-                    <table class="stats" id="workers">
-                        <thead>
-                            <tr>
-                                <th class="stats_label" href="#" data-sortkey="id">Worker</th>
-                                <th class="stats_label" href="#" data-sortkey="state">State</th>
-                                <th class="stats_label numeric" href="#" data-sortkey="user_count" title="Number of users on this worker"># users</th>
-                                <th class="stats_label numeric" href="#" data-sortkey="cpu_usage" title="CPU usage of process">CPU usage</th>
-                                <th class="stats_label numeric" href="#" data-sortkey="memory_usage" title="Memory usage of process">Memory usage</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
+            <div style="display:none;">
+                <table class="stats" id="workers">
+                    <thead>
+                        <tr>
+                            <th class="stats_label" href="#" data-sortkey="id">Worker</th>
+                            <th class="stats_label" href="#" data-sortkey="state">State</th>
+                            <th class="stats_label numeric" href="#" data-sortkey="user_count"
+                                title="Number of users on this worker"># users</th>
+                            <th class="stats_label numeric" href="#" data-sortkey="cpu_usage"
+                                title="CPU usage of process">CPU usage</th>
+                            <th class="stats_label numeric" href="#" data-sortkey="memory_usage"
+                                title="Memory usage of process">Memory usage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
             {% endif %}
             {% block extended_panes %}{% endblock extended_panes %}
         </div>
@@ -284,10 +324,13 @@
             </p>
 
             <h1>Authors and Copyright</h1>
-            <a href="http://cgbystrom.com/">Carl Byström</a> (<a href="https://twitter.com/cgbystrom/">@cgbystrom</a>)<br>
-            <a href="http://heyman.info/">Jonatan Heyman</a> (<a href="https://twitter.com/jonatanheyman/">@jonatanheyman</a>)<br>
+            <a href="http://cgbystrom.com/">Carl Byström</a> (<a
+                href="https://twitter.com/cgbystrom/">@cgbystrom</a>)<br>
+            <a href="http://heyman.info/">Jonatan Heyman</a> (<a
+                href="https://twitter.com/jonatanheyman/">@jonatanheyman</a>)<br>
             Joakim Hamrén (<a href="https://twitter.com/Jahaaja/">@jahaaja</a>)<br>
-            <a href="http://esn.me/">ESN Social Software</a> (<a href="https://twitter.com/uprise_ea/">@uprise_ea</a>)<br>
+            <a href="http://esn.me/">ESN Social Software</a> (<a
+                href="https://twitter.com/uprise_ea/">@uprise_ea</a>)<br>
             Hugo Heyman (<a href="https://twitter.com/hugoheyman/">@hugoheyman</a>)
 
 
@@ -365,8 +408,8 @@
         ]]>
     </script>
     <script type="text/javascript">
-        var percentile1 = {{ percentile1|tojson }};
-        var percentile2 = {{ percentile2|tojson }};
+        var percentile1 = {{ percentile1| tojson }};
+        var percentile2 = {{ percentile2| tojson }};
         {% include 'stats_data.html' %}
     </script>
     <script type="text/javascript" src="./static/chart.js?v={{ version }}"></script>
@@ -382,4 +425,5 @@
     {% block extended_script %}
     {% endblock extended_script %}
 </body>
+
 </html>
