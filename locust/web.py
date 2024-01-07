@@ -210,6 +210,8 @@ class WebUI:
                     user_count = int(value)
                 elif key == "spawn_rate":
                     spawn_rate = float(value)
+                elif key == "tasks_rate":
+                    tasks_rate = int(value)
                 elif key == "host":
                     # Replace < > to guard against XSS
                     environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
@@ -251,7 +253,8 @@ class WebUI:
                 self._swarm_greenlet = None
 
             if environment.runner is not None:
-                self._swarm_greenlet = gevent.spawn(environment.runner.start, user_count, spawn_rate)
+                print(environment.parsed_options)
+                self._swarm_greenlet = gevent.spawn(environment.runner.start, user_count, spawn_rate, tasks_rate)
                 self._swarm_greenlet.link_exception(greenlet_exception_handler)
                 response_data = {
                     "success": True,
