@@ -62,7 +62,13 @@ function SwarmForm({
   const [startSwarm] = useStartSwarmMutation();
 
   const onStartSwarm = (inputData: ISwarmFormInput) => {
-    setSwarm({ state: SWARM_STATE.RUNNING, host: inputData.host || host });
+    setSwarm({
+      state: SWARM_STATE.RUNNING,
+      host: inputData.host || host,
+      runTime: inputData.runTime,
+      spawnRate: Number(inputData.spawnRate) || null,
+      numUsers: Number(inputData.userCount) || null,
+    });
 
     startSwarm(inputData);
   };
@@ -85,7 +91,6 @@ function SwarmForm({
               <Select label='Shape Class' name='shapeClass' options={availableShapeClasses} />
             </>
           )}
-
           <TextField
             defaultValue={(isShape && '-') || numUsers || 1}
             disabled={!!isShape}
