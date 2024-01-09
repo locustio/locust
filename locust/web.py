@@ -508,6 +508,21 @@ class WebUI:
 
             return jsonify({"logs": logs})
 
+        @app.route("/login")
+        def login():
+            if not self.use_auth:
+                return redirect(url_for("index"))
+
+            if self.modern_ui:
+                self.set_static_modern_ui()
+
+                return render_template(
+                    "auth.html",
+                    auth_args=self.auth_args,
+                )
+            else:
+                return "Web Auth is only available on the modern web ui. Enable it with the --modern-ui flag"
+
     def start(self):
         self.greenlet = gevent.spawn(self.start_server)
         self.greenlet.link_exception(greenlet_exception_handler)
