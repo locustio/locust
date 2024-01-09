@@ -25,7 +25,6 @@ from .stats import (
 from .stats import StatsCSV, StatsCSVFileWriter
 from .user.inspectuser import print_task_ratio, print_task_ratio_json
 from .util.timespan import parse_timespan
-from .exception import AuthCredentialsError
 from .input_events import input_listener
 from .html import get_html_report
 from .util.load_locustfile import load_locustfile
@@ -145,6 +144,12 @@ def main():
 
     if options.slave or options.expect_slaves:
         sys.stderr.write("The --slave/--expect-slaves parameters have been renamed --worker/--expect-workers\n")
+        sys.exit(1)
+
+    if options.web_auth:
+        sys.stderr.write(
+            "The --web-auth parameters has been replaced with --web-login. See https://docs.locust.io/en/stable/extending-locust.html#authentication for details\n"
+        )
         sys.exit(1)
 
     if options.autoquit != -1 and not options.autostart:
@@ -412,39 +417,33 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     if not options.headless and not options.worker:
         # spawn web greenlet
         protocol = "https" if options.tls_cert and options.tls_key else "http"
-        try:
-            if options.web_host == "*":
-                # special check for "*" so that we're consistent with --master-bind-host
-                web_host = ""
-            else:
-                web_host = options.web_host
-            if web_host:
-                logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}")
-            else:
-                if os.name == "nt":
-                    logger.info(
-                        f"Starting web interface at {protocol}://localhost:{options.web_port} (accepting connections from all network interfaces)"
-                    )
-                else:
-                    logger.info(f"Starting web interface at {protocol}://0.0.0.0:{options.web_port}")
-            if options.web_auth:
-                logging.warning(
-                    "BasicAuth support is deprecated, it will be removed in a future release, unless someone reimplements it in a more modern way! See https://github.com/locustio/locust/issues/2517"
+
+        if options.web_host == "*":
+            # special check for "*" so that we're consistent with --master-bind-host
+            web_host = ""
+        else:
+            web_host = options.web_host
+        if web_host:
+            logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}")
+        else:
+            if os.name == "nt":
+                logger.info(
+                    f"Starting web interface at {protocol}://localhost:{options.web_port} (accepting connections from all network interfaces)"
                 )
-            web_ui = environment.create_web_ui(
-                host=web_host,
-                port=options.web_port,
-                auth_credentials=options.web_auth,
-                tls_cert=options.tls_cert,
-                tls_key=options.tls_key,
-                stats_csv_writer=stats_csv_writer,
-                delayed_start=True,
-                userclass_picker_is_active=options.class_picker,
-                modern_ui=options.modern_ui,
-            )
-        except AuthCredentialsError:
-            logger.error("Credentials supplied with --web-auth should have the format: username:password")
-            sys.exit(1)
+            else:
+                logger.info(f"Starting web interface at {protocol}://0.0.0.0:{options.web_port}")
+
+        web_ui = environment.create_web_ui(
+            host=web_host,
+            port=options.web_port,
+            web_login=options.web_login,
+            tls_cert=options.tls_cert,
+            tls_key=options.tls_key,
+            stats_csv_writer=stats_csv_writer,
+            delayed_start=True,
+            userclass_picker_is_active=options.class_picker,
+            modern_ui=options.modern_ui,
+        )
     else:
         web_ui = None
 

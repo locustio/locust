@@ -159,7 +159,7 @@ class Environment:
         self,
         host="",
         port=8089,
-        auth_credentials: Optional[str] = None,
+        web_login: bool = False,
         tls_cert: Optional[str] = None,
         tls_key: Optional[str] = None,
         stats_csv_writer: Optional[StatsCSV] = None,
@@ -173,7 +173,7 @@ class Environment:
         :param host: Host/interface that the web server should accept connections to. Defaults to ""
                      which means all interfaces
         :param port: Port that the web server should listen to
-        :param auth_credentials: If provided (in format "username:password") basic auth will be enabled
+        :param web_login: If provided, an authentication page will protect the app
         :param tls_cert: An optional path (str) to a TLS cert. If this is provided the web UI will be
                          served over HTTPS
         :param tls_key: An optional path (str) to a TLS private key. If this is provided the web UI will be
@@ -186,7 +186,7 @@ class Environment:
             self,
             host,
             port,
-            auth_credentials=auth_credentials,
+            web_login=web_login,
             tls_cert=tls_cert,
             tls_key=tls_key,
             stats_csv_writer=stats_csv_writer,

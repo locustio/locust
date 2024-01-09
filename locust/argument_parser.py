@@ -355,8 +355,15 @@ def setup_parser_arguments(parser):
         dest="web_auth",
         metavar="<username:password>",
         default=None,
-        help="DEPRECATED. See https://github.com/locustio/locust/issues/2517 Turn on Basic Auth for the web interface. Should be supplied in the following format: username:password ",
+        help=configargparse.SUPPRESS,
         env_var="LOCUST_WEB_AUTH",
+    )
+    web_ui_group.add_argument(
+        "--web-login",
+        default=False,
+        action="store_true",
+        help="Protects the web interface with a login page. See https://docs.locust.io/en/stable/extending-locust.html#authentication",
+        env_var="LOCUST_WEB_LOGIN",
     )
     web_ui_group.add_argument(
         "--tls-cert",
