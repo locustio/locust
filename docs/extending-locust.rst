@@ -128,6 +128,29 @@ source code.
 
 
 
+Adding Authentication to the Web UI
+===================================
+
+Locust uses `Flask-Login <https://pypi.org/project/Flask-Login/>`_ to handle authentication. The ``login_manager`` is
+exposed on ``environment.web_ui.app``, allowing the flexibility for you to implement any kind of auth that you would like!
+
+To use username / password authentication, simply provide a ``username_password_callback`` to the ``environment.web_ui.auth_args``.
+You are responsible for defining the route for the callback and implementing the authentication.
+
+Authentication providers can additionally be configured to allow authentication from 3rd parties such as GitHub or an SSO.
+Simply provide a list of desired ``auth_providers``. You may specify the ``label`` and ``icon`` for display on the button.
+The ``callback_url`` will be the url that the button directs to. You will be responsible for defining the callback route as
+well as the authentication with the 3rd party.
+
+Whether you are using username / password authentication, an auth provider, or both, a ``user_loader`` needs to be proivded
+to the ``login_manager``. The ``user_loader`` should return ``None`` to deny authentication or return a User object when
+authentication to the app should be granted.
+
+A full example can be seen `in the auth example <https://github.com/locustio/locust/tree/master/examples/web_ui_auth.py>`_.
+
+
+
+
 Run a background greenlet
 =========================
 
