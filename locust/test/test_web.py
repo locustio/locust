@@ -14,6 +14,7 @@ import gevent
 import requests
 from pyquery import PyQuery as pq
 import locust
+from flask_login import UserMixin
 from locust import constant, LoadTestShape
 from locust.argument_parser import get_parser, parse_options
 from locust.user import User, task
@@ -1062,6 +1063,56 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         response = requests.get("http://127.0.0.1:%i/logs" % self.web_port)
 
         self.assertIn(log_line, response.json().get("logs"))
+
+
+class TestWebUIAuth(LocustTestCase):
+    def setUp(self):
+        super().setUp()
+
+        parser = get_parser(default_config_files=[])
+        self.environment.parsed_options = parser.parse_args(["--modern-ui", "--web-login"])
+
+        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, modern_ui=True, web_login=True)
+
+        self.web_ui.app.secret_key = "secret!"
+        gevent.sleep(0.01)
+        self.web_port = self.web_ui.server.server_port
+
+    def tearDown(self):
+        super().tearDown()
+        self.web_ui.stop()
+        self.runner.quit()
+
+    def test_index_with_web_login_enabled_valid_user(self):
+        class User(UserMixin):
+            def __init__(self):
+                self.username = "test_user"
+
+            def get_id(self):
+                return self.username
+
+        def load_user(id):
+            return User()
+
+        self.web_ui.login_manager.request_loader(load_user)
+
+        response = requests.get("http://127.0.0.1:%i" % self.web_port)
+        d = pq(response.content.decode("utf-8"))
+
+        self.assertNotIn("authArgs", str(d))
+        self.assertIn("templateArgs", str(d))
+
+    def test_index_with_web_login_enabled_no_user(self):
+        def load_user():
+            return None
+
+        self.web_ui.login_manager.user_loader(load_user)
+
+        response = requests.get("http://127.0.0.1:%i" % self.web_port)
+        d = pq(response.content.decode("utf-8"))
+
+        # asserts auth page is returned
+        self.assertIn("authArgs", str(d))
 
 
 class TestWebUIWithTLS(LocustTestCase):
