@@ -14,11 +14,7 @@ const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 if ((swarmTemplateArgs as IReportTemplateArgs).isReport) {
   const reportProps = {
     ...(swarmTemplateArgs as IReportTemplateArgs),
-    charts: swarmTemplateArgs.history.reduce(
-      (charts, { currentResponseTimePercentiles, ...history }) =>
-        updateArraysAtProps(charts, { ...currentResponseTimePercentiles, ...history }),
-      {} as ICharts,
-    ) as ICharts,
+    charts: swarmTemplateArgs.history?.reduce(updateArraysAtProps, {}) as ICharts,
   };
   root.render(<Report {...reportProps} />);
 } else {
