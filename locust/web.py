@@ -12,11 +12,21 @@ from time import time
 from typing import TYPE_CHECKING, Optional, Any, Dict, List
 
 import gevent
-from flask import Flask, make_response, jsonify, render_template, request, send_file, Response, send_from_directory
-from flask_basicauth import BasicAuth
+from flask import (
+    Flask,
+    make_response,
+    jsonify,
+    render_template,
+    request,
+    send_file,
+    Response,
+    send_from_directory,
+    redirect,
+    url_for,
+)
+from flask_login import LoginManager, login_required
 from gevent import pywsgi
 
-from .exception import AuthCredentialsError
 from .runners import MasterRunner, STATE_RUNNING, STATE_MISSING
 from .log import greenlet_exception_logger
 from .stats import StatsCSVFileWriter, StatsErrorDict, sort_stats
@@ -69,12 +79,15 @@ class WebUI:
     """Arguments used to render index.html for the web UI. Must be used with custom templates
     extending index.html."""
 
+    auth_args: Dict[str, Any]
+    """Arguments used to render auth.html for the web UI auth page. Must be used when configuring auth"""
+
     def __init__(
         self,
         environment: "Environment",
         host: str,
         port: int,
-        auth_credentials: Optional[str] = None,
+        web_login: bool = False,
         tls_cert: Optional[str] = None,
         tls_key: Optional[str] = None,
         stats_csv_writer: Optional[StatsCSV] = None,
@@ -89,8 +102,7 @@ class WebUI:
         environment: Reference to the current Locust Environment
         host: Host/interface that the web server should accept connections to
         port: Port that the web server should listen to
-        auth_credentials:  If provided, it will enable basic auth with all the routes protected by default.
-                           Should be supplied in the format: "user:pass".
+        web_login:  Enables a login page for the modern UI
         tls_cert: A path to a TLS certificate
         tls_key: A path to a TLS private key
         delayed_start: Whether or not to delay starting web UI until `start()` is called. Delaying web UI start
@@ -105,6 +117,7 @@ class WebUI:
         self.tls_key = tls_key
         self.userclass_picker_is_active = userclass_picker_is_active
         self.modern_ui = modern_ui
+        self.web_login = web_login
         app = Flask(__name__)
         CORS(app)
         self.app = app
@@ -113,24 +126,16 @@ class WebUI:
         root_path = os.path.dirname(os.path.abspath(__file__))
         app.root_path = root_path
         self.webui_build_path = os.path.join(root_path, "webui", "dist")
-        self.app.config["BASIC_AUTH_ENABLED"] = False
-        self.auth: Optional[BasicAuth] = None
         self.greenlet: Optional[gevent.Greenlet] = None
         self._swarm_greenlet: Optional[gevent.Greenlet] = None
         self.template_args = {}
+        self.auth_args = {}
 
-        if auth_credentials is not None:
-            credentials = auth_credentials.split(":")
-            if len(credentials) == 2:
-                self.app.config["BASIC_AUTH_USERNAME"] = credentials[0]
-                self.app.config["BASIC_AUTH_PASSWORD"] = credentials[1]
-                self.app.config["BASIC_AUTH_ENABLED"] = True
-                self.auth = BasicAuth()
-                self.auth.init_app(self.app)
-            else:
-                raise AuthCredentialsError(
-                    "Invalid auth_credentials. It should be a string in the following format: 'user:pass'"
-                )
+        if self.web_login:
+            self.login_manager = LoginManager()
+            self.login_manager.init_app(app)
+            self.login_manager.login_view = "login"
+
         if environment.runner:
             self.update_template_args()
         if not delayed_start:
@@ -508,6 +513,21 @@ class WebUI:
 
             return jsonify({"logs": logs})
 
+        @app.route("/login")
+        def login():
+            if not self.web_login:
+                return redirect(url_for("index"))
+
+            if self.modern_ui:
+                self.set_static_modern_ui()
+
+                return render_template(
+                    "auth.html",
+                    auth_args=self.auth_args,
+                )
+            else:
+                return "Web Auth is only available on the modern web ui. Enable it with the --modern-ui flag"
+
     def start(self):
         self.greenlet = gevent.spawn(self.start_server)
         self.greenlet.link_exception(greenlet_exception_handler)
@@ -529,8 +549,8 @@ class WebUI:
 
     def auth_required_if_enabled(self, view_func):
         """
-        Decorator that can be used on custom route methods that will turn on Basic Auth
-        authentication if the ``--web-auth`` flag is used. Example::
+        Decorator that can be used on custom route methods that will turn on Flask Login
+        authentication if the ``--web-login`` flag is used. Example::
 
             @web_ui.app.route("/my_custom_route")
             @web_ui.auth_required_if_enabled
@@ -540,11 +560,11 @@ class WebUI:
 
         @wraps(view_func)
         def wrapper(*args, **kwargs):
-            if self.app.config["BASIC_AUTH_ENABLED"]:
-                if self.auth.authenticate():
-                    return view_func(*args, **kwargs)
-                else:
-                    return self.auth.challenge()
+            if self.web_login:
+                try:
+                    return login_required(view_func)(*args, **kwargs)
+                except Exception as e:
+                    return f"Locust auth exception: {e} See https://docs.locust.io/en/stable/extending-locust.html#authentication for configuring authentication."
             else:
                 return view_func(*args, **kwargs)
 

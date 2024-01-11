@@ -34,12 +34,12 @@ const initialState = {
   stats: [] as ISwarmStat[],
   errors: [] as ISwarmError[],
   exceptions: [] as ISwarmException[],
-  charts: swarmTemplateArgs.history.reduce(updateArraysAtProps, {}) as ICharts,
+  charts: swarmTemplateArgs.history?.reduce(updateArraysAtProps, {}) as ICharts,
   ratios: {} as ISwarmRatios,
   userCount: 0,
 };
 
-const percentileNullValues = swarmTemplateArgs.percentilesToChart.reduce(
+const percentileNullValues = swarmTemplateArgs.percentilesToChart?.reduce(
   (percentilesNullValue, percentile) => ({
     ...percentilesNullValue,
     [`responseTimePercentile${percentile}`]: { value: null },

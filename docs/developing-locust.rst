@@ -34,7 +34,7 @@ We use `tox <https://tox.readthedocs.io/en/stable/>`_ to automate tests across m
     py37 create: /home/myuser/git/locust/.tox/py37
     py37 installdeps: mock, retry, pyquery, cryptography
     ...
-    Successfully installed ConfigArgParse-1.5.3 Flask-BasicAuth-0.2.0 Flask-Cors-3.0.10 Jinja2-3.1.2 MarkupSafe-2.1.1 Six-1.16.0 Werkzeug-2.2.2 brotli-1.0.9 click-8.1.3 flask-2.2.2 gevent-22.10.1 geventhttpclient-2.0.8 greenlet-1.1.3.post0 itsdangerous-2.1.2 locust-2.12.2 msgpack-1.0.4 psutil-5.9.2 pyzmq-24.0.1 roundrobin-0.0.4 typing-extensions-4.4.0 zope.event-4.5.0 zope.interface-5.5.0
+    Successfully installed ConfigArgParse-1.5.3 Flask-Login-0.6.3 Flask-Cors-3.0.10 Jinja2-3.1.2 MarkupSafe-2.1.1 Six-1.16.0 Werkzeug-2.2.2 brotli-1.0.9 click-8.1.3 flask-2.2.2 gevent-22.10.1 geventhttpclient-2.0.8 greenlet-1.1.3.post0 itsdangerous-2.1.2 locust-2.12.2 msgpack-1.0.4 psutil-5.9.2 pyzmq-24.0.1 roundrobin-0.0.4 typing-extensions-4.4.0 zope.event-4.5.0 zope.interface-5.5.0
     py37 run-test: commands[1] | python3 -m coverage run -m unittest discover
     ...
 

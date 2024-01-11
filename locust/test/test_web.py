@@ -14,6 +14,7 @@ import gevent
 import requests
 from pyquery import PyQuery as pq
 import locust
+from flask_login import UserMixin
 from locust import constant, LoadTestShape
 from locust.argument_parser import get_parser, parse_options
 from locust.user import User, task
@@ -1069,11 +1070,11 @@ class TestWebUIAuth(LocustTestCase):
         super().setUp()
 
         parser = get_parser(default_config_files=[])
-        options = parser.parse_args(["--web-auth", "john:doe"])
-        self.runner = Runner(self.environment)
-        self.stats = self.runner.stats
-        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, auth_credentials=options.web_auth)
-        self.web_ui.app.view_functions["request_stats"].clear_cache()
+        self.environment.parsed_options = parser.parse_args(["--modern-ui", "--web-login"])
+
+        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, modern_ui=True, web_login=True)
+
+        self.web_ui.app.secret_key = "secret!"
         gevent.sleep(0.01)
         self.web_port = self.web_ui.server.server_port
 
@@ -1082,18 +1083,36 @@ class TestWebUIAuth(LocustTestCase):
         self.web_ui.stop()
         self.runner.quit()
 
-    def test_index_with_basic_auth_enabled_correct_credentials(self):
-        self.assertEqual(
-            200, requests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port, auth=("john", "doe")).status_code
-        )
+    def test_index_with_web_login_enabled_valid_user(self):
+        class User(UserMixin):
+            def __init__(self):
+                self.username = "test_user"
 
-    def test_index_with_basic_auth_enabled_incorrect_credentials(self):
-        self.assertEqual(
-            401, requests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port, auth=("john", "invalid")).status_code
-        )
+            def get_id(self):
+                return self.username
 
-    def test_index_with_basic_auth_enabled_blank_credentials(self):
-        self.assertEqual(401, requests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port).status_code)
+        def load_user(id):
+            return User()
+
+        self.web_ui.login_manager.request_loader(load_user)
+
+        response = requests.get("http://127.0.0.1:%i" % self.web_port)
+        d = pq(response.content.decode("utf-8"))
+
+        self.assertNotIn("authArgs", str(d))
+        self.assertIn("templateArgs", str(d))
+
+    def test_index_with_web_login_enabled_no_user(self):
+        def load_user():
+            return None
+
+        self.web_ui.login_manager.user_loader(load_user)
+
+        response = requests.get("http://127.0.0.1:%i" % self.web_port)
+        d = pq(response.content.decode("utf-8"))
+
+        # asserts auth page is returned
+        self.assertIn("authArgs", str(d))
 
 
 class TestWebUIWithTLS(LocustTestCase):

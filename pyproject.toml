@@ -18,7 +18,7 @@ dependencies = [
     "geventhttpclient >=2.0.11",
     "ConfigArgParse >=1.5.5",
     "psutil >=5.9.1",
-    "Flask-BasicAuth >=0.2.0",
+    "Flask-Login >=0.6.3",
     "Flask-Cors >=3.0.10",
     "roundrobin >=0.0.2",
     "pywin32;platform_system=='Windows'",
