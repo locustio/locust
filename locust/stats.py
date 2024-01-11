@@ -925,6 +925,7 @@ def stats_history(runner: "Runner") -> None:
             }
 
             r = {
+                **current_response_time_percentiles,
                 "time": datetime.datetime.now(tz=datetime.timezone.utc).strftime("%H:%M:%S"),
                 "current_rps": stats.total.current_rps or 0,
                 "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
@@ -933,7 +934,6 @@ def stats_history(runner: "Runner") -> None:
                 "response_time_percentile_2": stats.total.get_current_response_time_percentile(PERCENTILES_TO_CHART[1])
                 or 0,
                 "total_avg_response_time": stats.total.avg_response_time,
-                "current_response_time_percentiles": current_response_time_percentiles,
                 "user_count": runner.user_count or 0,
             }
             stats.history.append(r)
