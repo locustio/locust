@@ -482,6 +482,8 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             else:
                 logger.info("--autoquit not specified, leaving web ui running indefinitely")
         else:  # --headless run
+            if options.html_file:
+                save_html_report(options.modern_ui)
             logger.info("--run-time limit reached, shutting down")
             runner.quit()
 
