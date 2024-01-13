@@ -9,7 +9,7 @@ from io import StringIO
 from json import dumps
 from itertools import chain
 from time import time
-from typing import TYPE_CHECKING, Optional, Any, Dict, List
+from typing import TYPE_CHECKING, Optional, Any, Dict, List, Union
 
 import gevent
 from flask import (
@@ -153,7 +153,7 @@ class WebUI:
 
         @app.route("/")
         @self.auth_required_if_enabled
-        def index() -> str | Response:
+        def index() -> Union[str, Response]:
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             self.update_template_args()

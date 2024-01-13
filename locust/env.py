@@ -6,6 +6,7 @@ from typing import (
     Type,
     TypeVar,
     Optional,
+    Union,
 )
 
 from configargparse import Namespace
@@ -244,7 +245,7 @@ class Environment:
         """
         for u in self.user_classes:
             u.weight = 1
-            user_tasks: List[TaskSet | Callable] = []
+            user_tasks: List[Union[TaskSet, Callable]] = []
             tasks_frontier = u.tasks
             while len(tasks_frontier) != 0:
                 t = tasks_frontier.pop()

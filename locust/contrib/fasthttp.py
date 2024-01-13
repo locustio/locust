@@ -10,7 +10,7 @@ from urllib.parse import urlparse, urlunparse
 from ssl import SSLError
 import time
 import traceback
-from typing import Callable, Optional, Tuple, Dict, Any, Generator, cast
+from typing import Callable, Optional, Tuple, Dict, Any, Generator, cast, Union
 
 from http.cookiejar import CookieJar
 
@@ -149,17 +149,17 @@ class FastHttpSession:
         self,
         method: str,
         url: str,
-        name: str | None = None,
-        data: str | dict | None = None,
+        name: Optional[str] = None,
+        data: Union[str, dict, None] = None,
         catch_response: bool = False,
         stream: bool = False,
-        headers: dict | None = None,
+        headers: Optional[dict] = None,
         auth=None,
-        json: dict | None = None,
+        json: Optional[dict] = None,
         allow_redirects=True,
         context: dict = {},
         **kwargs,
-    ) -> ResponseContextManager | FastResponse:
+    ) -> Union[ResponseContextManager, FastResponse]:
         """
         Send and HTTP request
         Returns :py:class:`locust.contrib.fasthttp.FastResponse` object.

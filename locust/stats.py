@@ -30,6 +30,7 @@ from typing import (
     cast,
     Protocol,
     TypedDict,
+    Union,
 )
 
 from types import FrameType
@@ -56,7 +57,7 @@ STATS_AUTORESIZE = True  # overwrite this if you dont want auto resize while run
 
 class CSVWriter(Protocol):
     @abstractmethod
-    def writerow(self, columns: Iterable[str | int | float]) -> None:
+    def writerow(self, columns: Iterable[Union[str, int, float]]) -> None:
         ...
 
 
@@ -241,7 +242,7 @@ class RequestStats:
         self.total.log(response_time, content_length)
         self.entries[(name, method)].log(response_time, content_length)
 
-    def log_error(self, method: str, name: str, error: Exception | str | None) -> None:
+    def log_error(self, method: str, name: str, error: Optional[Union[Exception, str]]) -> None:
         self.total.log_error(error)
         self.entries[(name, method)].log_error(error)
 
@@ -456,7 +457,7 @@ class StatsEntry:
             return 0
         slice_start_time = max(int(self.stats.last_request_timestamp) - 12, int(self.stats.start_time or 0))
 
-        reqs: List[int | float] = [
+        reqs: List[Union[int, float]] = [
             self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, int(self.stats.last_request_timestamp) - 2)
         ]
         return avg(reqs)
@@ -704,14 +705,14 @@ class StatsEntry:
 
 
 class StatsError:
-    def __init__(self, method: str, name: str, error: Exception | str | None, occurrences: int = 0):
+    def __init__(self, method: str, name: str, error: Optional[Union[Exception, str]], occurrences: int = 0):
         self.method = method
         self.name = name
         self.error = error
         self.occurrences = occurrences
 
     @classmethod
-    def parse_error(cls, error: Exception | str | None) -> str:
+    def parse_error(cls, error: Optional[Union[Exception, str]]) -> str:
         string_error = repr(error)
         target = "object at 0x"
         target_index = string_error.find(target)
@@ -725,7 +726,7 @@ class StatsError:
         return string_error.replace(hex_address, "0x....")
 
     @classmethod
-    def create_key(cls, method: str, name: str, error: Exception | str | None) -> str:
+    def create_key(cls, method: str, name: str, error: Optional[Union[Exception, str]]) -> str:
         key = f"{method}.{name}.{StatsError.parse_error(error)!r}"
         return hashlib.sha256(key.encode("utf-8")).hexdigest()
 
@@ -771,7 +772,7 @@ class StatsError:
         }
 
 
-def avg(values: List[float | int]) -> float:
+def avg(values: List[Union[float, int]]) -> float:
     return sum(values, 0.0) / max(len(values), 1)
 
 
@@ -977,7 +978,7 @@ class StatsCSV:
             "Nodes",
         ]
 
-    def _percentile_fields(self, stats_entry: StatsEntry, use_current: bool = False) -> List[str] | List[int]:
+    def _percentile_fields(self, stats_entry: StatsEntry, use_current: bool = False) -> Union[List[str], List[int]]:
         if not stats_entry.num_requests:
             return self.percentiles_na
         elif use_current:
