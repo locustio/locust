@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import errno
 import logging
 import os
@@ -8,7 +10,6 @@ import atexit
 import inspect
 import gevent
 import locust
-from typing import Dict
 from . import log
 from .argument_parser import parse_locustfile_option, parse_options
 from .env import Environment
@@ -83,7 +84,7 @@ def main():
     locustfile = locustfiles[0] if locustfiles_length == 1 else None
 
     # Importing Locustfile(s) - setting available UserClasses and ShapeClasses to choose from in UI
-    user_classes: Dict[str, locust.User] = {}
+    user_classes: dict[str, locust.User] = {}
     available_user_classes = {}
     available_shape_classes = {}
     shape_class = None

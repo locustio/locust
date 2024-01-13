@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable, Dict, List, Optional, final
+from typing import Callable, final
 
 import time
 from gevent import GreenletExit, greenlet
@@ -59,7 +59,7 @@ class User(metaclass=UserMeta):
     :py:class:`HttpUser <locust.HttpUser>` class.
     """
 
-    host: Optional[str] = None
+    host: str | None = None
     """Base hostname to swarm. i.e: http://127.0.0.1:1234"""
 
     min_wait = None
@@ -89,7 +89,7 @@ class User(metaclass=UserMeta):
     Method that returns the time between the execution of locust tasks in milliseconds
     """
 
-    tasks: List[TaskSet | Callable] = []
+    tasks: list[TaskSet | Callable] = []
     """
     Collection of python callables and/or TaskSet classes that the Locust user(s) will run.
 
@@ -216,7 +216,7 @@ class User(metaclass=UserMeta):
     def greenlet(self):
         return self._greenlet
 
-    def context(self) -> Dict:
+    def context(self) -> dict:
         """
         Adds the returned value (a dict) to the context for :ref:`request event <request_context>`.
         Override this in your User class to customize the context.
@@ -244,7 +244,7 @@ class HttpUser(User):
     abstract = True
     """If abstract is True, the class is meant to be subclassed, and users will not choose this locust during a test"""
 
-    pool_manager: Optional[PoolManager] = None
+    pool_manager: PoolManager | None = None
     """Connection pool manager to use. If not given, a new manager is created per single user."""
 
     def __init__(self, *args, **kwargs):

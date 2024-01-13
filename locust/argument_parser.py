@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import os
 import platform
 import sys
 import textwrap
-from typing import Dict, List, NamedTuple, Optional, Any
+from typing import NamedTuple, Any
 import configargparse
 
 import locust
@@ -38,11 +40,11 @@ class LocustArgumentParser(configargparse.ArgumentParser):
         return action
 
     @property
-    def args_included_in_web_ui(self) -> Dict[str, configargparse.Action]:
+    def args_included_in_web_ui(self) -> dict[str, configargparse.Action]:
         return {a.dest: a for a in self._actions if hasattr(a, "include_in_web_ui") and a.include_in_web_ui}
 
     @property
-    def secret_args_included_in_web_ui(self) -> Dict[str, configargparse.Action]:
+    def secret_args_included_in_web_ui(self) -> dict[str, configargparse.Action]:
         return {
             a.dest: a
             for a in self._actions
@@ -91,7 +93,7 @@ def find_locustfile(locustfile):
     # Implicit 'return None' if nothing was found
 
 
-def find_locustfiles(locustfiles: List[str], is_directory: bool) -> List[str]:
+def find_locustfiles(locustfiles: list[str], is_directory: bool) -> list[str]:
     """
     Returns a list of relative file paths for the Locustfile Picker. If is_directory is True,
     locustfiles is expected to have a single index which is a directory that will be searched for
@@ -176,7 +178,7 @@ See documentation for more details, including how to set options using a file or
     return parser
 
 
-def parse_locustfile_option(args=None) -> List[str]:
+def parse_locustfile_option(args=None) -> list[str]:
     """
     Construct a command line parser that is only used to parse the -f argument so that we can
     import the test scripts in case any of them adds additional command line arguments to the
@@ -667,10 +669,10 @@ class UIExtraArgOptions(NamedTuple):
     default_value: str
     is_secret: bool
     help_text: str
-    choices: Optional[List[str]] = None
+    choices: list[str] | None = None
 
 
-def ui_extra_args_dict(args=None) -> Dict[str, Dict[str, Any]]:
+def ui_extra_args_dict(args=None) -> dict[str, dict[str, Any]]:
     """Get all the UI visible arguments"""
     locust_args = default_args_dict()
 
@@ -691,7 +693,7 @@ def ui_extra_args_dict(args=None) -> Dict[str, Dict[str, Any]]:
     return extra_args
 
 
-def locustfile_is_directory(locustfiles: List[str]) -> bool:
+def locustfile_is_directory(locustfiles: list[str]) -> bool:
     """
     If a user passes in a locustfile without a file extension and there is a directory with the same name,
     this function defaults to using the file and will raise a warning.

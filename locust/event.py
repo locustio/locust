@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import logging
 from . import log
 import traceback
 from contextlib import contextmanager
-from typing import Generator, Any, Dict
+from typing import Generator, Any
 import time
 from .exception import StopUser, RescheduleTask, RescheduleTaskImmediately, InterruptTaskSet
 
@@ -52,7 +54,7 @@ class EventHook:
     @contextmanager
     def measure(
         self, request_type: str, name: str, response_length: int = 0, context=None
-    ) -> Generator[Dict[str, Any], None, None]:
+    ) -> Generator[dict[str, Any], None, None]:
         """Convenience method for firing the event with automatically calculated response time and automatically marking the request as failed if an exception is raised (this is really only useful for the *request* event)
 
         Example usage (in a task):

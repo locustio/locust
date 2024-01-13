@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import csv
 import json
@@ -8,7 +10,6 @@ import traceback
 import logging
 from io import StringIO
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from typing import List, Optional, Tuple, Type
 
 import gevent
 import requests
