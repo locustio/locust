@@ -323,5 +323,5 @@ def _failure(self):
     )
 
 
-Response.success = _success
-Response.failure = _failure
+Response.success = _success  # type: ignore[attr-defined]
+Response.failure = _failure  # type: ignore[attr-defined]
