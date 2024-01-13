@@ -5,3 +5,5 @@
 6ec972f4dbb880bf0c7a11809e6c1ba194c9784c
 # upgrade code style to use f-strings using flynt
 313b80f27f525441c449593a3aeaf38389f63c13
+# upgrade typing annotations using fix-future-annotations
+b5324820b299b1fe7da0608f0cc8ec47f58b1e40
