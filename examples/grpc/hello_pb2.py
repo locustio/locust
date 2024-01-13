@@ -111,7 +111,7 @@ HelloRequest = _reflection.GeneratedProtocolMessageType(
     (_message.Message,),
     {
         "DESCRIPTOR": _HELLOREQUEST,
-        "__module__": "hello_pb2"
+        "__module__": "hello_pb2",
         # @@protoc_insertion_point(class_scope:locust.hello.HelloRequest)
     },
 )
@@ -122,7 +122,7 @@ HelloResponse = _reflection.GeneratedProtocolMessageType(
     (_message.Message,),
     {
         "DESCRIPTOR": _HELLORESPONSE,
-        "__module__": "hello_pb2"
+        "__module__": "hello_pb2",
         # @@protoc_insertion_point(class_scope:locust.hello.HelloResponse)
     },
 )
