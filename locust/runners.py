@@ -215,8 +215,7 @@ class Runner:
             self.update_state(STATE_SPAWNING)
 
         logger.debug(
-            "Spawning additional %s (%s already running)..."
-            % (json.dumps(user_classes_spawn_count), json.dumps(self.user_classes_count))
+            f"Spawning additional {json.dumps(user_classes_spawn_count)} ({json.dumps(self.user_classes_count)} already running)..."
         )
 
         def spawn(user_class: str, spawn_count: int) -> list[User]:
@@ -902,7 +901,7 @@ class MasterRunner(DistributedRunner):
         self.stop(send_stop_to_client=False)
         logger.debug("Quitting...")
         for client in self.clients.all:
-            logger.debug("Sending quit message to worker %s (index %s)" % (client.id, self.get_worker_index(client.id)))
+            logger.debug(f"Sending quit message to worker {client.id} (index {self.get_worker_index(client.id)})")
             self.server.send_to_client(Message("quit", None, client.id))
         gevent.sleep(0.5)  # wait for final stats report from all workers
         self.greenlet.kill(block=True)
@@ -1123,7 +1122,7 @@ class MasterRunner(DistributedRunner):
 
     @property
     def reported_user_classes_count(self) -> dict[str, int]:
-        reported_user_classes_count: dict[str, int] = defaultdict(lambda: 0)
+        reported_user_classes_count: dict[str, int] = defaultdict(int)
         for client in self.clients.ready + self.clients.spawning + self.clients.running:
             for name, count in client.user_classes_count.items():
                 reported_user_classes_count[name] += count
@@ -1139,11 +1138,11 @@ class MasterRunner(DistributedRunner):
                             If None, will send to all attached workers
         """
         if client_id:
-            logger.debug("Sending %s message to worker %s" % (msg_type, client_id))
+            logger.debug(f"Sending {msg_type} message to worker {client_id}")
             self.server.send_to_client(Message(msg_type, data, client_id))
         else:
             for client in self.clients.all:
-                logger.debug("Sending %s message to worker %s" % (msg_type, client.id))
+                logger.debug(f"Sending {msg_type} message to worker {client.id}")
                 self.server.send_to_client(Message(msg_type, data, client.id))
 
 
