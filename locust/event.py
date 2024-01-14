@@ -3,7 +3,7 @@ import logging
 from . import log
 import traceback
 from contextlib import contextmanager
-from typing import Generator, Any 
+from typing import Generator, Any
 import time
 from .exception import StopUser, RescheduleTask, RescheduleTaskImmediately, InterruptTaskSet
 
@@ -239,4 +239,3 @@ class Events:
         for name, value in self.__annotations__.items():
             if value == "EventHook":
                 setattr(self, name, EventHook())
-
