@@ -27,3 +27,4 @@ __pycache__
 .sass-cache/
 .env
 yarn-error.log
+.venv
