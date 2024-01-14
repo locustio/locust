@@ -53,6 +53,7 @@ Example 2.1: Multiple machines, using locust-swarm
 Both worker and master need access to the locustfile, and when you make changes to it you'll need to restart all Locust processes. `locust-swarm <https://github.com/SvenskaSpel/locust-swarm>`_ automates this for you. It also solves the issue of firewall/network access from workers to master using SSH tunnels (this is often a problem if master is running on your workstation and workers are running in some datacenter).
 
 .. code-block:: bash
+    
     pip install locust-swarm
 
     swarm -f my_locustfile.py --loadgen-list loadgen1.domain.com,loadgen2.domain.com <any other regular locust parameters>
