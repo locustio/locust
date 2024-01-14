@@ -1,10 +1,9 @@
 from __future__ import annotations
-
 import logging
 from . import log
 import traceback
 from contextlib import contextmanager
-from typing import Generator, Any
+from typing import Generator, Any 
 import time
 from .exception import StopUser, RescheduleTask, RescheduleTaskImmediately, InterruptTaskSet
 
@@ -232,11 +231,12 @@ class Events:
     """
 
     def __init__(self):
-        # For backwarde compatibility use also values of class attributes
+        # For backward compatibility use also values of class attributes
         for name, value in vars(type(self)).items():
-            if value == EventHook:
-                setattr(self, name, value())
+            if value == "EventHook":
+                setattr(self, name, EventHook())
 
         for name, value in self.__annotations__.items():
-            if value == EventHook:
-                setattr(self, name, value())
+            if value == "EventHook":
+                setattr(self, name, EventHook())
+
