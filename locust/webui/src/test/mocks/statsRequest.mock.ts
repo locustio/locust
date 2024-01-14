@@ -115,7 +115,6 @@ export const statsResponseTransformed = {
       "responseTimePercentile0.5": 0.35867700034941663,
       "responseTimePercentile0.9": 0,
       "responseTimePercentile0.99": 1,
-      ninetyNinthResponseTime: 1,
       numFailures: 12652,
       numRequests: 12652,
       safeName: '/',
