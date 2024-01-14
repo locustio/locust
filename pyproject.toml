@@ -68,7 +68,7 @@ extend-exclude = [
     "src/readthedocs-sphinx-search/",
 ]
 ignore = ["E402", "E501", "E713", "E731", "E741", "F401"]
-select = ["E", "F", "W"]
+select = ["E", "F", "W", "UP", "FA102"]
 
 [tool.ruff.per-file-ignores]
 "examples/*" = ["F841"]
