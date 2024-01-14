@@ -131,6 +131,7 @@ CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_
 
 PERCENTILES_TO_REPORT = [0.50, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 0.999, 0.9999, 1.0]
 
+PERCENTILES_TO_STATICS = [0.50, 0.95, 0.99]
 PERCENTILES_TO_CHART = [0.50, 0.95]
 MODERN_UI_PERCENTILES_TO_CHART = [0.95]
 
@@ -685,6 +686,11 @@ class StatsEntry:
                 self.response_times_cache.popitem(last=False)
 
     def to_dict(self, escape_string_values=False):
+        response_time_percentiles = {
+            f"response_time_percentile_{percentile}": self.get_response_time_percentile(percentile)
+            for percentile in PERCENTILES_TO_STATICS
+        }
+
         return {
             "method": escape(self.method or "") if escape_string_values else self.method,
             "name": escape(self.name) if escape_string_values else self.name,
@@ -696,9 +702,7 @@ class StatsEntry:
             "max_response_time": proper_round(self.max_response_time),
             "current_rps": self.current_rps,
             "current_fail_per_sec": self.current_fail_per_sec,
-            "median_response_time": self.median_response_time,
-            "ninetieth_response_time": self.get_response_time_percentile(0.9),
-            "ninety_ninth_response_time": self.get_response_time_percentile(0.99),
+            **response_time_percentiles,
             "avg_content_length": self.avg_content_length,
         }
 

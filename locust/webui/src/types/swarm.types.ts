@@ -47,4 +47,5 @@ export interface IReportTemplateArgs extends IReport {
   history: IHistory[];
   isReport?: boolean;
   percentilesToChart: number[];
+  percentilesToStatics: number[];
 }

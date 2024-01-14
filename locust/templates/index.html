@@ -190,11 +190,9 @@
                             <th class="stats_label" href="#" data-sortkey="name">Name</th>
                             <th class="stats_label numeric nowrap" href="#" data-sortkey="num_requests" title="Number of requests"># Requests</th>
                             <th class="stats_label numeric nowrap" href="#" data-sortkey="num_failures" title="Number of failures"># Fails</th>
-                            <th class="stats_label numeric" href="#" data-sortkey="median_response_time" title="Median response time">Median (ms)</th>
-                            <th class="stats_label numeric" href="#" data-sortkey="ninetieth_response_time" title="Ninetieth percentile response time, because the response time greater than 100ms is rounded, you may see it greater than the max response time">90%ile (ms)</th>
-                            <th class="stats_label numeric" href="#" data-sortkey="ninety_ninth_response_time"
-                                title="Ninety-ninth percentile response time, because the response time greater than 100ms is rounded, you may see it greater than the max response time">
-                                99%ile (ms)</th>
+                            {% for percentile in percentiles_to_statics %}
+                                <th class="stats_label numeric" href="#" data-sortkey="{{percentile}}_response_time" title="{{percentile}} percentile response time, because the response time greater than 100ms is rounded, you may see it greater than the max response time">{{percentile}}%ile (ms)</th>
+                            {% endfor %}
                             <th class="stats_label numeric" href="#" data-sortkey="avg_response_time" title="Average response time">Average (ms)</th>
                             <th class="stats_label numeric" href="#" data-sortkey="min_response_time" title="Min response time">Min (ms)</th>
                             <th class="stats_label numeric" href="#" data-sortkey="max_response_time" title="Max response time">Max (ms)</th>
@@ -318,9 +316,11 @@
             <td class="name" title="<%= this.name %>"><%= this.safe_name %></td>
             <td class="numeric"><%= this.num_requests %></td>
             <td class="numeric"><%= this.num_failures %></td>
-            <td class="numeric"><%= Math.round(this.median_response_time) %></td>
-            <td class="numeric"><%= Math.round(this.ninetieth_response_time) %></td>
-            <td class="numeric"><%= Math.round(this.ninety_ninth_response_time) %></td>
+            <% for (const [key, value] of Object.entries(this)) { %>
+                <% if (key.startsWith("response_time_percentile")) { %>
+                    <td class="numeric"><%= Math.round(value) %></td>
+                <% } %>
+            <% } %>
             <td class="numeric"><%= Math.round(this.avg_response_time) %></td>
             <td class="numeric"><%= this.min_response_time %></td>
             <td class="numeric"><%= this.max_response_time %></td>

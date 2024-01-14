@@ -37,6 +37,7 @@ from .util.cache import memoize
 from .util.timespan import parse_timespan
 from .html import get_html_report
 from flask_cors import CORS
+from .util.rounding import normalize_decimal
 
 if TYPE_CHECKING:
     from .env import Environment
@@ -613,11 +614,14 @@ class WebUI:
         if self.modern_ui:
             percentiles = {
                 "percentiles_to_chart": stats_module.MODERN_UI_PERCENTILES_TO_CHART,
+                "percentiles_to_statics": stats_module.PERCENTILES_TO_STATICS,
             }
         else:
             percentiles = {
                 "percentile1": stats_module.PERCENTILES_TO_CHART[0],
                 "percentile2": stats_module.PERCENTILES_TO_CHART[1],
+                # Convert percentiles to percent notation for use in templates
+                "percentiles_to_statics": [normalize_decimal(percentile * 100) for percentile in stats_module.PERCENTILES_TO_STATICS],
             }
 
         self.template_args = {
