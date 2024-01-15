@@ -12,9 +12,9 @@ from typing import TYPE_CHECKING, Generator
 import gevent
 from roundrobin import smooth
 
-from locust import User
 
 if TYPE_CHECKING:
+    from locust import User
     from locust.runners import WorkerNode
 
 

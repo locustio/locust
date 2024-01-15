@@ -38,7 +38,7 @@ from gevent.pool import Group
 
 from locust import __version__
 
-from . import User, argument_parser
+from . import argument_parser
 from .dispatch import UsersDispatcher
 from .exception import RPCError, RPCReceiveError, RPCSendError
 from .log import greenlet_exception_logger
@@ -53,6 +53,7 @@ from .stats import (
 )
 
 if TYPE_CHECKING:
+    from . import User
     from .env import Environment
 
 logger = logging.getLogger(__name__)
