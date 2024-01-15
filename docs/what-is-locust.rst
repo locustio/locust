@@ -52,9 +52,7 @@ load against a dynamic website where most pages had different content for differ
 verbose configuration files to declare the tests. In Locust we took a different approach. Instead of configuration formats or UIs 
 you'd get a python framework that would let you define the behaviour of your users using Python code. 
 
-`Locust <https://en.wikipedia.org/wiki/Locust>`_ takes its name from the grasshopper species, known for their swarming behaviour. 
-
-Previous versions of Locust used terminology borrowed from nature (swarming, hatching, attacking etc), but now employs more industry standard naming.
+Locust takes its name from the `grasshopper species <https://en.wikipedia.org/wiki/Locust>`_, known for their swarming behaviour. 
 
 :ref:`history`
 

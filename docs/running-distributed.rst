@@ -8,25 +8,20 @@ A single process running Locust can simulate a reasonably high throughput. For a
 
 But if your test plan is complex or you want to run even more load, you'll need to scale out to multiple processes, maybe even multiple machines. Because Python cannot fully utilize more than one core per process (see `GIL <https://realpython.com/python-gil/>`_), you may need to run **one worker instance per processor core** in order to have access to all your computing power.
 
-To do this, you start one instance of Locust in master mode using the ``--master`` flag and multiple worker instances using the ``--worker`` flag. If the workers are not on the same machine as the master you use ``--master-host`` to point them to the IP/hostname of the machine running the master.
-
-To make this easier, you can use the ``--processes`` flag to launch multiple instances. By default it will launch a master process and the specified number of worker processes. Used in combination with ``--worker`` it will only launch the workers.
-
-.. note::
-    ``--processes`` was introduced in Locust 2.19 and is somewhat experimental. Child processes are launched using fork, which is not available in Windows.
+To do this, you start one instance of Locust in master mode using the ``--master`` flag and multiple worker instances using the ``--worker`` flag.
 
 The master instance runs Locust's web interface, and tells the workers when to spawn/stop Users. The worker instances run your Users and send statistics back to the master. The master instance doesn't run any Users itself.
 
-Both the master and worker machines must have a copy of the locustfile when running Locust distributed.
+To simplify startup, you can use the ``--processes`` flag. It will launch a master process and the specified number of worker processes. Used in combination with ``--worker`` it will only launch workers. ``--processes`` relies on `fork() <https://linux.die.net/man/3/fork>`_ so it doesn't work on Windows.
 
 .. note::
     There is almost no limit to how many *Users* you can run per worker. Locust/gevent can run thousands or even tens of thousands of Users per process just fine, as long as their total request rate (RPS) is not too high.
 
 .. note::
-    If Locust is getting close to running out of CPU resources, it will log a warning. If there is no warning, you can be pretty sure your test is not limited by load generator CPU.
+    If Locust is getting close to running out of CPU resources, it will log a warning.
 
-Example 1: Everything on one machine
-====================================
+Single machine
+==============
 
 It is really simple to launch a master and 4 worker processes::
 
@@ -36,23 +31,23 @@ You can even auto-detect the number of cores in your machine and launch one work
 
     locust --processes -1
 
-Example 2: Multiple machines
-============================
+Multiple machines
+=================
 
 Start locust in master mode on one machine::
 
     locust -f my_locustfile.py --master
 
-And then on each worker machine:
+And then on each worker machine (make sure they also have a copy of the locustfile)::
 
 .. code-block:: bash
 
     locust -f my_locustfile.py --worker --master-host <your master's address> --processes 4
 
-Example 2.1: Multiple machines, using locust-swarm
-==================================================
+Multiple machines, using locust-swarm
+=====================================
 
-Both worker and master need access to the locustfile, and when you make changes to it you'll need to restart all Locust processes. `locust-swarm <https://github.com/SvenskaSpel/locust-swarm>`_ automates this for you. It also solves the issue of firewall/network access from workers to master using SSH tunnels (this is often a problem if master is running on your workstation and workers are running in some datacenter).
+Both worker and master need access to the locustfile, and when you make changes to it you'll need to restart all Locust processes. `locust-swarm <https://github.com/SvenskaSpel/locust-swarm>`_ automates this for you. It also solves the issue of firewall/network access from workers to master using SSH tunnels (this is often a problem if the master is running on your workstation and workers are running in some datacenter).
 
 .. code-block:: bash
 
