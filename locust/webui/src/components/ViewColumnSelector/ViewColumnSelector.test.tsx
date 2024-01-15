@@ -45,8 +45,6 @@ describe('ViewColumnSelector', () => {
     // Initial state check: 'column1' should be on and 'column2' should be off
     const switch1 = screen.getByLabelText('Column 1');
     const switch2 = screen.getByLabelText('Column 2');
-    // expect(switch1).toBeChecked();
-    // expect(switch2).not.toBeChecked();
 
     // Click on 'column2' switch to add the column
     fireEvent.click(switch2);
