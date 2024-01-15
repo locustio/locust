@@ -621,7 +621,9 @@ class WebUI:
                 "percentile1": stats_module.PERCENTILES_TO_CHART[0],
                 "percentile2": stats_module.PERCENTILES_TO_CHART[1],
                 # Convert percentiles to percent notation for use in templates
-                "percentiles_to_statistics": [normalize_decimal(percentile * 100) for percentile in stats_module.PERCENTILES_TO_STATISTICS],
+                "percentiles_to_statistics": [
+                    normalize_decimal(percentile * 100) for percentile in stats_module.PERCENTILES_TO_STATISTICS
+                ],
             }
 
         self.template_args = {
