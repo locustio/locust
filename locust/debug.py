@@ -14,6 +14,7 @@ from locust.exception import CatchResponseError, RescheduleTask
 if TYPE_CHECKING:
     from . import User
 
+
 def _print_t(s):
     """
     Print something with a tab instead of newline at the end
