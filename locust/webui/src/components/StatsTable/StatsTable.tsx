@@ -15,7 +15,7 @@ const percentilesToStatisticsRows = swarmTemplateArgs.percentilesToStatistics
     }))
   : [];
 
-export const tableStructure = [
+const tableStructure = [
   { key: 'method', title: 'Type' },
   { key: 'name', title: 'Name' },
   { key: 'numRequests', title: '# Requests' },
