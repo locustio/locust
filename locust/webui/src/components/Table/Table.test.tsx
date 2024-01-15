@@ -100,4 +100,20 @@ describe('Table', () => {
 
     expect(onTableHeadClickMock).toHaveBeenCalled();
   });
+
+  test('only display selected columns when selectedColumns is given', () => {
+    const onTableHeadClickMock = vi.fn();
+    const { getByText, queryByText } = render(
+      <Table
+        onTableHeadClick={onTableHeadClickMock}
+        rows={mockRows}
+        selectedColumns={['name']}
+        structure={mockStructure}
+      />,
+    );
+
+    expect(getByText('Name')).toBeTruthy();
+    expect(queryByText('Method')).toBeFalsy();
+    expect(queryByText('# Requests')).toBeFalsy();
+  });
 });

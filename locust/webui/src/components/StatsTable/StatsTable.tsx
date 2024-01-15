@@ -1,19 +1,21 @@
 import { connect } from 'react-redux';
 
 import Table from 'components/Table/Table';
-import { swarmTemplateArgs } from "constants/swarm";
+import ViewColumnSelector from 'components/ViewColumnSelector/ViewColumnSelector';
+import { swarmTemplateArgs } from 'constants/swarm';
+import useSelectViewColumns from 'hooks/useSelectViewColumns';
 import useSortByField from 'hooks/useSortByField';
 import { IRootState } from 'redux/store';
 import { ISwarmStat } from 'types/ui.types';
 
 const percentilesToStatisticsRows = swarmTemplateArgs.percentilesToStatistics
-    ? swarmTemplateArgs.percentilesToStatistics.map(percentile => ({
+  ? swarmTemplateArgs.percentilesToStatistics.map(percentile => ({
       title: `${percentile * 100}%ile (ms)`,
       key: `responseTimePercentile${percentile}` as keyof ISwarmStat,
     }))
-    : [];
+  : [];
 
-const tableStructure = [
+export const tableStructure = [
   { key: 'method', title: 'Type' },
   { key: 'name', title: 'Name' },
   { key: 'numRequests', title: '# Requests' },
@@ -33,13 +35,26 @@ export function StatsTable({ stats }: { stats: ISwarmStat[] }) {
     hasTotalRow: true,
   });
 
+  const { selectedColumns, addColumn, removeColumn } = useSelectViewColumns(
+    tableStructure.map(column => column.key),
+  );
+
   return (
-    <Table<ISwarmStat>
-      currentSortField={currentSortField}
-      onTableHeadClick={onTableHeadClick}
-      rows={sortedStats}
-      structure={tableStructure}
-    />
+    <>
+      <ViewColumnSelector
+        addColumn={addColumn}
+        removeColumn={removeColumn}
+        selectedColumns={selectedColumns}
+        structure={tableStructure}
+      />
+      <Table<ISwarmStat>
+        currentSortField={currentSortField}
+        onTableHeadClick={onTableHeadClick}
+        rows={sortedStats}
+        selectedColumns={selectedColumns}
+        structure={tableStructure}
+      />
+    </>
   );
 }
 
