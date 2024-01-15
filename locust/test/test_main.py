@@ -236,8 +236,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_percentiles_to_statistics(self):
         port = get_free_tcp_port()
         with temporary_file(
-                content=textwrap.dedent(
-                    """
+            content=textwrap.dedent(
+                """
                 from locust import User, task, constant, events
                 from locust.stats import PERCENTILES_TO_STATISTICS
                 PERCENTILES_TO_STATISTICS = [0.9, 0.99]
@@ -247,7 +247,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     def my_task(self):
                         print("running my_task()")
             """
-                )
+            )
         ) as file_path:
             proc = subprocess.Popen(
                 ["locust", "-f", file_path, "--web-port", str(port), "--autostart"], stdout=PIPE, stderr=PIPE, text=True
