@@ -35,7 +35,7 @@ export function StatsTable({ stats }: { stats: ISwarmStat[] }) {
     hasTotalRow: true,
   });
 
-  const { selectedColumns, addColumn, removeColumn } = useSelectViewColumns(
+  const { selectedColumns, addColumn, removeColumn, filterStructure } = useSelectViewColumns(
     tableStructure.map(column => column.key),
   );
 
@@ -51,8 +51,7 @@ export function StatsTable({ stats }: { stats: ISwarmStat[] }) {
         currentSortField={currentSortField}
         onTableHeadClick={onTableHeadClick}
         rows={sortedStats}
-        selectedColumns={selectedColumns}
-        structure={tableStructure}
+        structure={filterStructure(tableStructure)}
       />
     </>
   );
