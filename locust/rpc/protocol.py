@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import msgpack
 import datetime
+
+import msgpack
 
 try:
     from bson import ObjectId  # type: ignore

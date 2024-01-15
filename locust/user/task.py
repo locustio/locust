@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import logging
 import random
 import traceback
@@ -6,17 +7,18 @@ from time import time
 from typing import (
     TYPE_CHECKING,
     Callable,
-    TypeVar,
-    Type,
-    overload,
     Protocol,
+    Type,
+    TypeVar,
     final,
+    overload,
     runtime_checkable,
 )
+
 import gevent
 from gevent import GreenletExit
 
-from locust.exception import InterruptTaskSet, RescheduleTask, RescheduleTaskImmediately, StopUser, MissingWaitTimeError
+from locust.exception import InterruptTaskSet, MissingWaitTimeError, RescheduleTask, RescheduleTaskImmediately, StopUser
 
 if TYPE_CHECKING:
     from locust import User

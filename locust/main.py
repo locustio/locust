@@ -1,35 +1,38 @@
 from __future__ import annotations
 
+import atexit
 import errno
+import inspect
 import logging
 import os
 import signal
 import sys
 import time
-import atexit
-import inspect
+import traceback
+
 import gevent
+
 import locust
-from . import log
+
+from . import log, stats
 from .argument_parser import parse_locustfile_option, parse_options
 from .env import Environment
-from .log import setup_logging, greenlet_exception_logger
-from . import stats
+from .html import get_html_report
+from .input_events import input_listener
+from .log import greenlet_exception_logger, setup_logging
 from .stats import (
+    StatsCSV,
+    StatsCSVFileWriter,
     print_error_report,
     print_percentile_stats,
     print_stats,
     print_stats_json,
-    stats_printer,
     stats_history,
+    stats_printer,
 )
-from .stats import StatsCSV, StatsCSVFileWriter
 from .user.inspectuser import print_task_ratio, print_task_ratio_json
-from .util.timespan import parse_timespan
-from .input_events import input_listener
-from .html import get_html_report
 from .util.load_locustfile import load_locustfile
-import traceback
+from .util.timespan import parse_timespan
 
 try:
     # import locust_plugins if it is installed, to allow it to register custom arguments etc

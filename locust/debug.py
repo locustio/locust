@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-import os
 import inspect
+import os
+from datetime import datetime, timezone
+
 import locust
 import locust.log
 from locust import User, argument_parser

@@ -4,7 +4,8 @@ import os
 import platform
 import sys
 import textwrap
-from typing import NamedTuple, Any
+from typing import Any, NamedTuple
+
 import configargparse
 
 import locust

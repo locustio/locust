@@ -1,7 +1,8 @@
 from __future__ import annotations
+
 import time
-from typing import ClassVar
 from abc import ABCMeta, abstractmethod
+from typing import ClassVar
 
 from . import User
 from .runners import Runner

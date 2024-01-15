@@ -9,6 +9,7 @@
 
 import os
 import subprocess
+
 import sphinx_rtd_theme
 
 from locust.argument_parser import get_empty_argument_parser, setup_parser_arguments

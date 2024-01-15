@@ -1,42 +1,43 @@
 from __future__ import annotations
+
 import csv
 import logging
 import os.path
 from functools import wraps
-
 from html import escape
 from io import StringIO
-from json import dumps
 from itertools import chain
+from json import dumps
 from time import time
 from typing import TYPE_CHECKING, Any
 
 import gevent
 from flask import (
     Flask,
-    make_response,
+    Response,
     jsonify,
+    make_response,
+    redirect,
     render_template,
     request,
     send_file,
-    Response,
     send_from_directory,
-    redirect,
     url_for,
 )
+from flask_cors import CORS
 from flask_login import LoginManager, login_required
 from gevent import pywsgi
 
-from .runners import MasterRunner, STATE_RUNNING, STATE_MISSING
+from . import __version__ as version
+from . import argument_parser
+from . import stats as stats_module
+from .html import get_html_report
 from .log import greenlet_exception_logger
-from .stats import StatsCSVFileWriter, StatsErrorDict, sort_stats
-from . import stats as stats_module, __version__ as version, argument_parser
-from .stats import StatsCSV
+from .runners import STATE_MISSING, STATE_RUNNING, MasterRunner
+from .stats import StatsCSV, StatsCSVFileWriter, StatsErrorDict, sort_stats
 from .user.inspectuser import get_ratio
 from .util.cache import memoize
 from .util.timespan import parse_timespan
-from .html import get_html_report
-from flask_cors import CORS
 
 if TYPE_CHECKING:
     from .env import Environment
