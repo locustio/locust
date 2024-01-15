@@ -1,6 +1,6 @@
 import unittest
 from locust.util.timespan import parse_timespan
-from locust.util.rounding import proper_round
+from locust.util.rounding import proper_round, normalize_decimal
 
 
 class TestParseTimespan(unittest.TestCase):
@@ -30,3 +30,8 @@ class TestRounding(unittest.TestCase):
         self.assertEqual(4, proper_round(3.5))
         self.assertEqual(5, proper_round(4.5))
         self.assertEqual(6, proper_round(5.5))
+
+    def test_normalize_decimal(self):
+        self.assertEqual(1, normalize_decimal(1))
+        self.assertEqual(0.99, normalize_decimal(0.99))
+        self.assertEqual("a", normalize_decimal("a"))
