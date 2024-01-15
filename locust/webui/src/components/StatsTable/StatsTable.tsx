@@ -18,6 +18,7 @@ const tableStructure = [
   { key: 'name', title: 'Name' },
   { key: 'numRequests', title: '# Requests' },
   { key: 'numFailures', title: '# Fails' },
+  { key: 'medianResponseTime', title: 'Median (ms)', round: 2 },
   ...percentilesToStatisticsRows,
   { key: 'avgResponseTime', title: 'Average (ms)', round: 2 },
   { key: 'minResponseTime', title: 'Min (ms)' },
