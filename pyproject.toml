@@ -59,8 +59,20 @@ zip-safe = false
 license-files = ["LICENSE"]
 include-package-data = false
 
-[tool.black]
+[tool.ruff]
 line-length = 120
+extend-exclude = [
+    "build",
+    "examples/issue_*.py",
+    "src/readthedocs-sphinx-search/",
+]
+ignore = ["E402", "E501", "E713", "E731", "E741", "F401"]
+select = ["E", "F", "W"]
+
+[tool.ruff.per-file-ignores]
+"examples/*" = ["F841"]
+"locust/test/*" = ["F841"]
+
 
 [tool.setuptools_scm]
 write_to = "locust/_version.py"
@@ -83,10 +95,7 @@ locust = "locust.main:main"
 [tool.mypy]
 # missing type stubs
 ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = ["requests.*"]
-ignore_missing_imports = true
+python_version = "3.8"
 
 [[tool.mypy.overrides]]
 module = ["locust.dispatch"]

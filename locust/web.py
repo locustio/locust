@@ -9,7 +9,7 @@ from io import StringIO
 from json import dumps
 from itertools import chain
 from time import time
-from typing import TYPE_CHECKING, Optional, Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 import gevent
 from flask import (
@@ -56,7 +56,7 @@ class WebUI:
     in :attr:`environment.stats <locust.env.Environment.stats>`
     """
 
-    app: Optional[Flask] = None
+    app: Flask | None = None
     """
     Reference to the :class:`flask.Flask` app. Can be used to add additional web routes and customize
     the Flask app in other various ways. Example::
@@ -68,30 +68,30 @@ class WebUI:
             return "your IP is: %s" % request.remote_addr
     """
 
-    greenlet: Optional[gevent.Greenlet] = None
+    greenlet: gevent.Greenlet | None = None
     """
     Greenlet of the running web server
     """
 
-    server: Optional[pywsgi.WSGIServer] = None
+    server: pywsgi.WSGIServer | None = None
     """Reference to the :class:`pyqsgi.WSGIServer` instance"""
 
-    template_args: Dict[str, Any]
+    template_args: dict[str, Any]
     """Arguments used to render index.html for the web UI. Must be used with custom templates
     extending index.html."""
 
-    auth_args: Dict[str, Any]
+    auth_args: dict[str, Any]
     """Arguments used to render auth.html for the web UI auth page. Must be used when configuring auth"""
 
     def __init__(
         self,
-        environment: "Environment",
+        environment: Environment,
         host: str,
         port: int,
         web_login: bool = False,
-        tls_cert: Optional[str] = None,
-        tls_key: Optional[str] = None,
-        stats_csv_writer: Optional[StatsCSV] = None,
+        tls_cert: str | None = None,
+        tls_key: str | None = None,
+        stats_csv_writer: StatsCSV | None = None,
         delayed_start=False,
         userclass_picker_is_active=False,
         modern_ui=False,
@@ -127,8 +127,8 @@ class WebUI:
         root_path = os.path.dirname(os.path.abspath(__file__))
         app.root_path = root_path
         self.webui_build_path = os.path.join(root_path, "webui", "dist")
-        self.greenlet: Optional[gevent.Greenlet] = None
-        self._swarm_greenlet: Optional[gevent.Greenlet] = None
+        self.greenlet: gevent.Greenlet | None = None
+        self._swarm_greenlet: gevent.Greenlet | None = None
         self.template_args = {}
         self.auth_args = {}
 
@@ -371,8 +371,8 @@ class WebUI:
         @self.auth_required_if_enabled
         @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
         def request_stats() -> Response:
-            stats: List[Dict[str, Any]] = []
-            errors: List[StatsErrorDict] = []
+            stats: list[dict[str, Any]] = []
+            errors: list[StatsErrorDict] = []
 
             if environment.runner is None:
                 report = {
@@ -482,9 +482,9 @@ class WebUI:
 
         @app.route("/tasks")
         @self.auth_required_if_enabled
-        def tasks() -> Dict[str, Dict[str, Dict[str, float]]]:
+        def tasks() -> dict[str, dict[str, dict[str, float]]]:
             runner = self.environment.runner
-            user_spawned: Dict[str, int]
+            user_spawned: dict[str, int]
             if runner is None:
                 user_spawned = {}
             else:

@@ -18,12 +18,8 @@ from .util.rounding import proper_round
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
     Iterable,
     NoReturn,
-    Tuple,
-    List,
-    Optional,
     OrderedDict as OrderedDictType,
     Callable,
     TypeVar,
@@ -66,18 +62,18 @@ class StatsBaseDict(TypedDict):
 
 
 class StatsEntryDict(StatsBaseDict):
-    last_request_timestamp: Optional[float]
+    last_request_timestamp: float | None
     start_time: float
     num_requests: int
     num_none_requests: int
     num_failures: int
     total_response_time: int
     max_response_time: int
-    min_response_time: Optional[int]
+    min_response_time: int | None
     total_content_length: int
-    response_times: Dict[int, int]
-    num_reqs_per_sec: Dict[int, int]
-    num_fail_per_sec: Dict[int, int]
+    response_times: dict[int, int]
+    num_reqs_per_sec: dict[int, int]
+    num_fail_per_sec: dict[int, int]
 
 
 class StatsErrorDict(StatsBaseDict):
@@ -93,7 +89,7 @@ class StatsHolder(Protocol):
 S = TypeVar("S", bound=StatsHolder)
 
 
-def resize_handler(signum: int, frame: Optional[FrameType]):
+def resize_handler(signum: int, frame: FrameType | None):
     global STATS_NAME_WIDTH
     if STATS_AUTORESIZE:
         try:
@@ -140,7 +136,7 @@ class RequestStatsAdditionError(Exception):
     pass
 
 
-def get_readable_percentiles(percentile_list: List[float]) -> List[str]:
+def get_readable_percentiles(percentile_list: list[float]) -> list[str]:
     """
     Converts a list of percentiles from 0-1 fraction to 0%-100% view for using in console & csv reporting
     :param percentile_list: The list of percentiles in range 0-1
@@ -152,7 +148,7 @@ def get_readable_percentiles(percentile_list: List[float]) -> List[str]:
     ]
 
 
-def calculate_response_time_percentile(response_times: Dict[int, int], num_requests: int, percent: float) -> int:
+def calculate_response_time_percentile(response_times: dict[int, int], num_requests: int, percent: float) -> int:
     """
     Get the response time that a certain number of percent of the requests
     finished within. Arguments:
@@ -173,7 +169,7 @@ def calculate_response_time_percentile(response_times: Dict[int, int], num_reque
     return 0
 
 
-def diff_response_time_dicts(latest: Dict[int, int], old: Dict[int, int]) -> Dict[int, int]:
+def diff_response_time_dicts(latest: dict[int, int], old: dict[int, int]) -> dict[int, int]:
     """
     Returns the delta between two {response_times:request_count} dicts.
 
@@ -213,8 +209,8 @@ class RequestStats:
                                          is not needed.
         """
         self.use_response_times_cache = use_response_times_cache
-        self.entries: Dict[Tuple[str, str], StatsEntry] = EntriesDict(self)
-        self.errors: Dict[str, StatsError] = {}
+        self.entries: dict[tuple[str, str], StatsEntry] = EntriesDict(self)
+        self.errors: dict[str, StatsError] = {}
         self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
         self.history = []
 
@@ -254,7 +250,7 @@ class RequestStats:
             self.errors[key] = entry
         entry.occurred()
 
-    def get(self, name: str, method: str) -> "StatsEntry":
+    def get(self, name: str, method: str) -> StatsEntry:
         """
         Retrieve a StatsEntry instance by name and method
         """
@@ -279,12 +275,12 @@ class RequestStats:
         self.errors = {}
         self.history = []
 
-    def serialize_stats(self) -> List["StatsEntryDict"]:
+    def serialize_stats(self) -> list[StatsEntryDict]:
         return [
             e.get_stripped_report() for e in self.entries.values() if not (e.num_requests == 0 and e.num_failures == 0)
         ]
 
-    def serialize_errors(self) -> Dict[str, "StatsErrorDict"]:
+    def serialize_errors(self) -> dict[str, StatsErrorDict]:
         return {k: e.serialize() for k, e in self.errors.items()}
 
 
@@ -293,7 +289,7 @@ class StatsEntry:
     Represents a single stats entry (name and method)
     """
 
-    def __init__(self, stats: Optional[RequestStats], name: str, method: str, use_response_times_cache: bool = False):
+    def __init__(self, stats: RequestStats | None, name: str, method: str, use_response_times_cache: bool = False):
         self.stats = stats
         self.name = name
         """ Name (URL) of this stats entry """
@@ -314,15 +310,15 @@ class StatsEntry:
         """ Number of failed request """
         self.total_response_time: int = 0
         """ Total sum of the response times """
-        self.min_response_time: Optional[int] = None
+        self.min_response_time: int | None = None
         """ Minimum response time """
         self.max_response_time: int = 0
         """ Maximum response time """
-        self.num_reqs_per_sec: Dict[int, int] = {}
+        self.num_reqs_per_sec: dict[int, int] = {}
         """ A {second => request_count} dict that holds the number of requests made per second """
-        self.num_fail_per_sec: Dict[int, int] = {}
+        self.num_fail_per_sec: dict[int, int] = {}
         """ A (second => failure_count) dict that hold the number of failures per second """
-        self.response_times: Dict[int, int] = {}
+        self.response_times: dict[int, int] = {}
         """
         A {response_time => count} dict that holds the response time distribution of all
         the requests.
@@ -332,7 +328,7 @@ class StatsEntry:
 
         This dict is used to calculate the median and percentile response times.
         """
-        self.response_times_cache: Optional[OrderedDictType[int, CachedResponseTimes]] = None
+        self.response_times_cache: OrderedDictType[int, CachedResponseTimes] | None = None
         """
         If use_response_times_cache is set to True, this will be a {timestamp => CachedResponseTimes()}
         OrderedDict that holds a copy of the response_times dict for each of the last 20 seconds.
@@ -341,7 +337,7 @@ class StatsEntry:
         """ The sum of the content length of all the responses for this entry """
         self.start_time: float = 0.0
         """ Time of the first request for this entry """
-        self.last_request_timestamp: Optional[float] = None
+        self.last_request_timestamp: float | None = None
         """ Time of the last request for this entry """
         self.reset()
 
@@ -457,7 +453,7 @@ class StatsEntry:
             return 0
         slice_start_time = max(int(self.stats.last_request_timestamp) - 12, int(self.stats.start_time or 0))
 
-        reqs: List[int | float] = [
+        reqs: list[int | float] = [
             self.num_reqs_per_sec.get(t, 0) for t in range(slice_start_time, int(self.stats.last_request_timestamp) - 2)
         ]
         return avg(reqs)
@@ -498,7 +494,7 @@ class StatsEntry:
         except ZeroDivisionError:
             return 0
 
-    def extend(self, other: "StatsEntry") -> None:
+    def extend(self, other: StatsEntry) -> None:
         """
         Extend the data from the current StatsEntry with the stats from another
         StatsEntry instance.
@@ -546,7 +542,7 @@ class StatsEntry:
         return cast(StatsEntryDict, {key: getattr(self, key, None) for key in StatsEntryDict.__annotations__.keys()})
 
     @classmethod
-    def unserialize(cls, data: StatsEntryDict) -> "StatsEntry":
+    def unserialize(cls, data: StatsEntryDict) -> StatsEntry:
         """Return the unserialzed version of the specified dict"""
         obj = cls(None, data["name"], data["method"])
         valid_keys = StatsEntryDict.__annotations__.keys()
@@ -609,7 +605,7 @@ class StatsEntry:
         """
         return calculate_response_time_percentile(self.response_times, self.num_requests, percent)
 
-    def get_current_response_time_percentile(self, percent: float) -> Optional[int]:
+    def get_current_response_time_percentile(self, percent: float) -> int | None:
         """
         Calculate the *current* response time for a certain percentile. We use a sliding
         window of (approximately) the last 10 seconds (specified by CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW)
@@ -627,13 +623,13 @@ class StatsEntry:
         # when trying to fetch the cached response_times. We construct this list in such a way
         # that it's ordered by preference by starting to add t-10, then t-11, t-9, t-12, t-8,
         # and so on
-        acceptable_timestamps: List[int] = []
+        acceptable_timestamps: list[int] = []
         acceptable_timestamps.append(t - CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW)
         for i in range(1, 9):
             acceptable_timestamps.append(t - CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW - i)
             acceptable_timestamps.append(t - CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW + i)
 
-        cached: Optional[CachedResponseTimes] = None
+        cached: CachedResponseTimes | None = None
         if self.response_times_cache is not None:
             for ts in acceptable_timestamps:
                 if ts in self.response_times_cache:
@@ -752,7 +748,7 @@ class StatsError:
         return f"{self.method} {self.name}: {unwrapped_error}"
 
     def serialize(self) -> StatsErrorDict:
-        def _getattr(obj: "StatsError", key: str, default: Optional[Any]) -> Optional[Any]:
+        def _getattr(obj: StatsError, key: str, default: Any | None) -> Any | None:
             value = getattr(obj, key, default)
 
             if key in ["error"]:
@@ -763,7 +759,7 @@ class StatsError:
         return cast(StatsErrorDict, {key: _getattr(self, key, None) for key in StatsErrorDict.__annotations__.keys()})
 
     @classmethod
-    def unserialize(cls, data: StatsErrorDict) -> "StatsError":
+    def unserialize(cls, data: StatsErrorDict) -> StatsError:
         return cls(data["method"], data["name"], data["error"], data["occurrences"])
 
     def to_dict(self, escape_string_values=False):
@@ -775,11 +771,11 @@ class StatsError:
         }
 
 
-def avg(values: List[float | int]) -> float:
+def avg(values: list[float | int]) -> float:
     return sum(values, 0.0) / max(len(values), 1)
 
 
-def median_from_dict(total: int, count: Dict[int, int]) -> int:
+def median_from_dict(total: int, count: dict[int, int]) -> int:
     """
     total is the number of requests made
     count is a dict {response_time: count}
@@ -794,13 +790,13 @@ def median_from_dict(total: int, count: Dict[int, int]) -> int:
 
 
 def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats) -> None:
-    def on_report_to_master(client_id: str, data: Dict[str, Any]) -> None:
+    def on_report_to_master(client_id: str, data: dict[str, Any]) -> None:
         data["stats"] = stats.serialize_stats()
         data["stats_total"] = stats.total.get_stripped_report()
         data["errors"] = stats.serialize_errors()
         stats.errors = {}
 
-    def on_worker_report(client_id: str, data: Dict[str, Any]) -> None:
+    def on_worker_report(client_id: str, data: dict[str, Any]) -> None:
         for stats_data in data["stats"]:
             entry = StatsEntry.unserialize(stats_data)
             request_key = (entry.name, entry.method)
@@ -830,7 +826,7 @@ def print_stats_json(stats: RequestStats) -> None:
     print(json.dumps(stats.serialize_stats(), indent=4))
 
 
-def get_stats_summary(stats: RequestStats, current=True) -> List[str]:
+def get_stats_summary(stats: RequestStats, current=True) -> list[str]:
     """
     stats summary will be returned as list of string
     """
@@ -856,7 +852,7 @@ def print_percentile_stats(stats: RequestStats) -> None:
     console_logger.info("")
 
 
-def get_percentile_stats_summary(stats: RequestStats) -> List[str]:
+def get_percentile_stats_summary(stats: RequestStats) -> list[str]:
     """
     Percentile stats summary will be returned as list of string
     """
@@ -890,7 +886,7 @@ def print_error_report(stats: RequestStats) -> None:
             console_logger.info(line)
 
 
-def get_error_report_summary(stats) -> List[str]:
+def get_error_report_summary(stats) -> list[str]:
     summary = ["Error report"]
     summary.append("%-18s %-100s" % ("# occurrences", "Error"))
     separator = f'{"-" * 18}|{"-" * ((80 + STATS_NAME_WIDTH) - 19)}'
@@ -911,11 +907,11 @@ def stats_printer(stats: RequestStats) -> Callable[[], None]:
     return stats_printer_func
 
 
-def sort_stats(stats: Dict[Any, S]) -> List[S]:
+def sort_stats(stats: dict[Any, S]) -> list[S]:
     return [stats[key] for key in sorted(stats.keys())]
 
 
-def stats_history(runner: "Runner") -> None:
+def stats_history(runner: Runner) -> None:
     """Save current stats info to history for charts of report."""
     while True:
         stats = runner.stats
@@ -947,7 +943,7 @@ def stats_history(runner: "Runner") -> None:
 class StatsCSV:
     """Write statistics to csv_writer stream."""
 
-    def __init__(self, environment: "Environment", percentiles_to_report: List[float]) -> None:
+    def __init__(self, environment: Environment, percentiles_to_report: list[float]) -> None:
         self.environment = environment
         self.percentiles_to_report = percentiles_to_report
 
@@ -981,7 +977,7 @@ class StatsCSV:
             "Nodes",
         ]
 
-    def _percentile_fields(self, stats_entry: StatsEntry, use_current: bool = False) -> List[str] | List[int]:
+    def _percentile_fields(self, stats_entry: StatsEntry, use_current: bool = False) -> list[str] | list[int]:
         if not stats_entry.num_requests:
             return self.percentiles_na
         elif use_current:
@@ -1049,8 +1045,8 @@ class StatsCSVFileWriter(StatsCSV):
 
     def __init__(
         self,
-        environment: "Environment",
-        percentiles_to_report: List[float],
+        environment: Environment,
+        percentiles_to_report: list[float],
         base_filepath: str,
         full_history: bool = False,
     ):
@@ -1146,7 +1142,7 @@ class StatsCSVFileWriter(StatsCSV):
 
         stats = self.environment.stats
         timestamp = int(now)
-        stats_entries: List[StatsEntry] = []
+        stats_entries: list[StatsEntry] = []
         if self.full_history:
             stats_entries = sort_stats(stats.entries)
 

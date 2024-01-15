@@ -1,8 +1,9 @@
+from __future__ import annotations
 import logging
 from . import log
 import traceback
 from contextlib import contextmanager
-from typing import Generator, Any, Dict
+from typing import Generator, Any
 import time
 from .exception import StopUser, RescheduleTask, RescheduleTaskImmediately, InterruptTaskSet
 
@@ -52,7 +53,7 @@ class EventHook:
     @contextmanager
     def measure(
         self, request_type: str, name: str, response_length: int = 0, context=None
-    ) -> Generator[Dict[str, Any], None, None]:
+    ) -> Generator[dict[str, Any], None, None]:
         """Convenience method for firing the event with automatically calculated response time and automatically marking the request as failed if an exception is raised (this is really only useful for the *request* event)
 
         Example usage (in a task):
@@ -230,11 +231,11 @@ class Events:
     """
 
     def __init__(self):
-        # For backwarde compatibility use also values of class attributes
+        # For backward compatibility use also values of class attributes
         for name, value in vars(type(self)).items():
-            if value == EventHook:
-                setattr(self, name, value())
+            if value == "EventHook":
+                setattr(self, name, EventHook())
 
         for name, value in self.__annotations__.items():
-            if value == EventHook:
-                setattr(self, name, value())
+            if value == "EventHook":
+                setattr(self, name, EventHook())
