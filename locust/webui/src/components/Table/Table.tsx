@@ -18,7 +18,6 @@ interface ITable<Row> {
   children?: React.ReactElement;
   onTableHeadClick?: (event: React.MouseEvent<HTMLElement>) => void;
   currentSortField?: string;
-  selectedColumns?: string[];
 }
 
 export interface ITableRowProps {
@@ -50,57 +49,40 @@ function TableRowContent({ content, formatter, round, markdown }: ITableRowConte
   return content;
 }
 
-function isViewColumn(selectedColumns: string[] | undefined, key: string) {
-  // If selectedColumns is undefined, it means that all columns are selected
-  if (selectedColumns === undefined) {
-    return true;
-  }
-
-  // If selectedColumns is defined, it means that only selected columns are selected
-  return selectedColumns && selectedColumns.includes(key);
-}
-
 export default function Table<Row extends Record<string, any> = Record<string, string | number>>({
   rows,
   structure,
   onTableHeadClick,
   currentSortField,
-  selectedColumns,
 }: ITable<Row>) {
   return (
     <TableContainer component={Paper}>
       <MuiTable>
         <TableHead>
           <TableRow>
-            {structure.map(
-              ({ title, key }) =>
-                isViewColumn(selectedColumns, key) && (
-                  <TableCell
-                    data-sortkey={key}
-                    key={`table-head-${key}`}
-                    onClick={onTableHeadClick}
-                    sx={{
-                      cursor: onTableHeadClick ? 'pointer' : 'default',
-                      color: currentSortField === key ? 'primary.main' : 'text.primary',
-                    }}
-                  >
-                    {title}
-                  </TableCell>
-                ),
-            )}
+            {structure.map(({ title, key }) => (
+              <TableCell
+                data-sortkey={key}
+                key={`table-head-${key}`}
+                onClick={onTableHeadClick}
+                sx={{
+                  cursor: onTableHeadClick ? 'pointer' : 'default',
+                  color: currentSortField === key ? 'primary.main' : 'text.primary',
+                }}
+              >
+                {title}
+              </TableCell>
+            ))}
           </TableRow>
         </TableHead>
         <TableBody>
           {rows.map((row, index) => (
             <TableRow key={`${row.name}-${index}`}>
-              {structure.map(
-                ({ key, ...tableRowProps }, index) =>
-                  isViewColumn(selectedColumns, key) && (
-                    <TableCell key={`table-row=${index}`}>
-                      <TableRowContent content={row[key]} {...tableRowProps} />
-                    </TableCell>
-                  ),
-              )}
+              {structure.map(({ key, ...tableRowProps }, index) => (
+                <TableCell key={`table-row=${index}`}>
+                  <TableRowContent content={row[key]} {...tableRowProps} />
+                </TableCell>
+              ))}
             </TableRow>
           ))}
         </TableBody>
