@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 from abc import ABCMeta, abstractmethod
-from typing import ClassVar, TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from .runners import Runner
 

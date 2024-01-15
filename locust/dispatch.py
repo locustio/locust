@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING, Generator
 import gevent
 from roundrobin import smooth
 
-
 if TYPE_CHECKING:
     from locust import User
     from locust.runners import WorkerNode
