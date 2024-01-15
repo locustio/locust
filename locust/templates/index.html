@@ -190,7 +190,7 @@
                             <th class="stats_label" href="#" data-sortkey="name">Name</th>
                             <th class="stats_label numeric nowrap" href="#" data-sortkey="num_requests" title="Number of requests"># Requests</th>
                             <th class="stats_label numeric nowrap" href="#" data-sortkey="num_failures" title="Number of failures"># Fails</th>
-                            {% for percentile in percentiles_to_statics %}
+                            {% for percentile in percentiles_to_statistics %}
                                 <th class="stats_label numeric" href="#" data-sortkey="{{percentile}}_response_time" title="{{percentile}} percentile response time, because the response time greater than 100ms is rounded, you may see it greater than the max response time">{{percentile}}%ile (ms)</th>
                             {% endfor %}
                             <th class="stats_label numeric" href="#" data-sortkey="avg_response_time" title="Average response time">Average (ms)</th>

@@ -1,5 +1,5 @@
 export const percentilesToChart = [0.5, 0.95];
-export const percentilesToStatics = [0.5, 0.95, 0.99];
+export const percentilesToStatistics = [0.5, 0.95, 0.99];
 
 export const swarmStateMock = {
   availableShapeClasses: ['Default'],
@@ -14,7 +14,7 @@ export const swarmStateMock = {
   overrideHostWarning: false,
   percentile1: 0.95,
   percentile2: 0.99,
-  percentiles_to_statics: percentilesToStatics,
+  percentilesToStatistics: percentilesToStatistics,
   showUserclassPicker: false,
   spawnRate: null,
   state: 'ready',

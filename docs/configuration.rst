@@ -203,6 +203,6 @@ The list of statistics parameters that can be modified is:
 +-------------------------------------------+--------------------------------------------------------------------------------------+
 | PERCENTILES_TO_CHART                      | The list of response time percentiles for response time chart                        |
 +-------------------------------------------+--------------------------------------------------------------------------------------+
-| PERCENTILES_TO_STATICS                    | The list of response time percentiles for response time statics                      |
+| PERCENTILES_TO_STATISTICS                 | The list of response time percentiles for response time statistics                   |
 +-------------------------------------------+--------------------------------------------------------------------------------------+
 

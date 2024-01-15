@@ -6,8 +6,8 @@ import useSortByField from 'hooks/useSortByField';
 import { IRootState } from 'redux/store';
 import { ISwarmStat } from 'types/ui.types';
 
-const percentilesToStaticsRows = swarmTemplateArgs.percentilesToStatics
-    ? swarmTemplateArgs.percentilesToStatics.map(percentile => ({
+const percentilesToStatisticsRows = swarmTemplateArgs.percentilesToStatistics
+    ? swarmTemplateArgs.percentilesToStatistics.map(percentile => ({
       title: `${percentile * 100}%ile (ms)`,
       key: `responseTimePercentile${percentile}` as keyof ISwarmStat,
     }))
@@ -18,7 +18,7 @@ const tableStructure = [
   { key: 'name', title: 'Name' },
   { key: 'numRequests', title: '# Requests' },
   { key: 'numFailures', title: '# Fails' },
-  ...percentilesToStaticsRows,
+  ...percentilesToStatisticsRows,
   { key: 'avgResponseTime', title: 'Average (ms)', round: 2 },
   { key: 'minResponseTime', title: 'Min (ms)' },
   { key: 'maxResponseTime', title: 'Max (ms)' },
