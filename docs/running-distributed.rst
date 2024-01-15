@@ -4,21 +4,22 @@
 Distributed load generation
 ===========================
 
-A single process running Locust can simulate a reasonably high throughput. For a simple test plan it should be able to make many hundreds of requests per second, thousands if you use :ref:`FastHttpUser <increase-performance>`.
+A single process running Locust can simulate a reasonably high throughput. For a simple test plan and small payloads it can make more than a thousand requests per second, possibly over ten thousand if you use :ref:`FastHttpUser <increase-performance>`.
 
-But if your test plan is complex or you want to run even more load, you'll need to scale out to multiple processes, maybe even multiple machines. Because Python cannot fully utilize more than one core per process (see `GIL <https://realpython.com/python-gil/>`_), you may need to run **one worker instance per processor core** in order to have access to all your computing power.
+But if your test plan is complex or you want to run even more load, you'll need to scale out to multiple processes, maybe even multiple machines. Fortunately, Locust supports distributed runs out of the box.
 
-To do this, you start one instance of Locust in master mode using the ``--master`` flag and multiple worker instances using the ``--worker`` flag.
-
-The master instance runs Locust's web interface, and tells the workers when to spawn/stop Users. The worker instances run your Users and send statistics back to the master. The master instance doesn't run any Users itself.
+To do this, you start one instance of Locust with the ``--master`` flag and one or more using the ``--worker`` flag. The master instance runs Locust's web interface, and tells the workers when to spawn/stop Users. The worker instances run your Users and send statistics back to the master. The master instance doesn't run any Users itself.
 
 To simplify startup, you can use the ``--processes`` flag. It will launch a master process and the specified number of worker processes. Used in combination with ``--worker`` it will only launch workers. ``--processes`` relies on `fork() <https://linux.die.net/man/3/fork>`_ so it doesn't work on Windows.
 
 .. note::
-    There is almost no limit to how many *Users* you can run per worker. Locust/gevent can run thousands or even tens of thousands of Users per process just fine, as long as their total request rate (RPS) is not too high.
+    Because Python cannot fully utilize more than one core per process (see `GIL <https://realpython.com/python-gil/>`_), you need to run one worker instance per processor core in order to have access to all your computing power.
 
 .. note::
-    If Locust is getting close to running out of CPU resources, it will log a warning.
+    There is almost no limit to how many Users you can run per worker. Locust/gevent can run thousands or even tens of thousands of Users per process just fine, as long as their total request rate (RPS) is not too high.
+
+.. note::
+    If Locust is getting close to running out of CPU resources, it will log a warning. If there is no warning but you are still unable to generate the expected load, then the problem must be `something else <https://github.com/locustio/locust/wiki/FAQ#increase-my-request-raterps>`_.
 
 Single machine
 ==============
@@ -93,7 +94,7 @@ Communicating across nodes
 =============================================
 
 When running Locust in distributed mode, you may want to communicate between master and worker nodes in 
-order to coordinate data. This can be easily accomplished with custom messages using the built in messaging hooks:
+order to coordinate the test. This can be easily accomplished with custom messages using the built in messaging hooks:
 
 .. code-block:: python
 
