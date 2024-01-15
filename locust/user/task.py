@@ -423,11 +423,7 @@ class TaskSet(metaclass=TaskSetMeta):
             return random.randint(self.min_wait, self.max_wait) / 1000.0
         else:
             raise MissingWaitTimeError(
-                "You must define a wait_time method on either the %s or %s class"
-                % (
-                    type(self.user).__name__,
-                    type(self).__name__,
-                )
+                "You must define a wait_time method on either the {type(self.user).__name__} or {type(self).__name__} class"
             )
 
     def wait(self):

@@ -124,7 +124,7 @@ class UsersDispatcher(Iterator):
         worker_nodes_by_id = sorted(self._worker_nodes, key=lambda w: w.id)
 
         # Give every worker an index indicating how many workers came before it on that host
-        workers_per_host = defaultdict(lambda: 0)
+        workers_per_host = defaultdict(int)
         for worker_node in worker_nodes_by_id:
             host = worker_node.id.split("_")[0]
             worker_node._index_within_host = workers_per_host[host]
