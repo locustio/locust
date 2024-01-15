@@ -137,6 +137,14 @@ def main():
                 "stats.PERCENTILES_TO_CHART parameter need to be float and value between. 0 < percentile < 1 Eg 0.95\n"
             )
             sys.exit(1)
+
+    for percentile in stats.PERCENTILES_TO_STATISTICS:
+        if not is_valid_percentile(percentile):
+            logging.error(
+                "stats.PERCENTILES_TO_STATISTICS parameter need to be float and value between. 0 < percentile < 1 Eg 0.95\n"
+            )
+            sys.exit(1)
+
     # parse all command line options
     options = parse_options()
 
