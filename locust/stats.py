@@ -115,13 +115,11 @@ HISTORY_STATS_INTERVAL_SEC = 5
 CSV_STATS_INTERVAL_SEC = 1
 CSV_STATS_FLUSH_INTERVAL_SEC = 10
 
-
 """
 Default window size/resolution - in seconds - when calculating the current
 response time percentile
 """
 CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW = 10
-
 
 CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_requests"])
 
@@ -699,7 +697,9 @@ class StatsEntry:
             "current_rps": self.current_rps,
             "current_fail_per_sec": self.current_fail_per_sec,
             "median_response_time": self.median_response_time,
-            **response_time_percentiles,
+            "ninetieth_response_time": self.get_response_time_percentile(0.9),  # for legacy ui
+            "ninety_ninth_response_time": self.get_response_time_percentile(0.99),  # for legacy ui
+            **response_time_percentiles,  # for modern ui
             "avg_content_length": self.avg_content_length,
         }
 

@@ -250,7 +250,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
         ) as file_path:
             proc = subprocess.Popen(
-                ["locust", "-f", file_path, "--web-port", str(port), "--autostart"], stdout=PIPE, stderr=PIPE, text=True
+                ["locust", "-f", file_path, "--web-port", str(port), "--autostart", "--modern-ui"],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
             )
             gevent.sleep(1)
             response = requests.get(f"http://localhost:{port}/")
