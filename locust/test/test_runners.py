@@ -844,7 +844,7 @@ class TestLocustRunner(LocustRunnerTestCase):
 
 
 class TestMasterWorkerRunners(LocustTestCase):
-    def test_distributed_integration_run(self):
+    def test_distributed_integration_run(self) -> None:
         """
         Full integration test that starts both a MasterRunner and three WorkerRunner instances
         and makes sure that their stats is sent to the Master. Also validates worker_connect event

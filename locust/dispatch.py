@@ -10,14 +10,8 @@ from operator import attrgetter
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
     Generator,
-    List,
-    Tuple,
-    Type,
     TypeVar,
-    Set,
-    Optional,
     Iterator,
     final,
     overload,
@@ -44,12 +38,12 @@ T = TypeVar("T")
 #
 # profile = line_profiler.LineProfiler()
 
-UserGenerator = Generator[Optional[str], None, None]
-DistributedUsers = Dict[str, Dict[str, int]]
+UserGenerator = Generator[str | None, None, None]
+DistributedUsers = dict[str, dict[str, int]]
 DispatcherGenerator = Generator[DistributedUsers, None, None]
 
 
-class LengthOptimizedList(List[T]):
+class LengthOptimizedList(list[T]):
     """Simple implementation of a list that keeps track of its length for speed optimizations."""
 
     __optimized_length__: int
@@ -98,7 +92,7 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
             from 10 to 100.
     """
 
-    def __init__(self, worker_nodes: List[WorkerNode], user_classes: List[Type[User]]):
+    def __init__(self, worker_nodes: list[WorkerNode], user_classes: list[type[User]]):
         self._worker_nodes = worker_nodes
         self._sort_workers()
         self._user_classes = sorted(user_classes, key=attrgetter("__name__"))
@@ -114,7 +108,7 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
 
         self._users_on_workers = self._fast_users_on_workers_copy(self._initial_users_on_workers)
 
-        self._current_user_count: int | Dict[str, int]
+        self._current_user_count: int | dict[str, int]
 
         # To keep track of how long it takes for each dispatch iteration to compute
         self._dispatch_iteration_durations: list[float] = []
@@ -127,7 +121,7 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
 
         self._user_count_per_dispatch_iteration: int
 
-        self._active_users: LengthOptimizedList[Tuple[WorkerNode, str]] = LengthOptimizedList()
+        self._active_users: LengthOptimizedList[tuple[WorkerNode, str]] = LengthOptimizedList()
 
         self._spawn_rate: float
 
@@ -140,12 +134,6 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
     @property
     def dispatch_iteration_durations(self) -> list[float]:
         return self._dispatch_iteration_durations
-
-    def __next__(self) -> dict[str, dict[str, int]]:
-        users_on_workers = next(self._dispatcher_generator)
-        # TODO: Is this necessary to copy the users_on_workers if we know
-        #       it won't be mutated by external code?
-        return self._fast_users_on_workers_copy(users_on_workers)
 
     def _sort_workers(self):
         # Sorting workers ensures repeatable behaviour
@@ -206,7 +194,7 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
         gevent.sleep(sleep_duration)
 
     @staticmethod
-    def infinite_cycle_gen(users: List[Tuple[Type[User], int]]) -> itertools.cycle[Optional[str]]:
+    def infinite_cycle_gen(users: list[tuple[type[User], int]]) -> itertools.cycle[str | None]:
         if not users:
             return itertools.cycle([None])
             
@@ -345,9 +333,9 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
     @abstractmethod
     def new_dispatch(
         self,
-        target_user_count: int | Dict[str, int],
+        target_user_count: int | dict[str, int],
         spawn_rate: float,
-        user_classes: Optional[List[Type[User]]] = None,
+        user_classes: list[type[User]] | None = None,
     ) -> None:
         ...
 
@@ -366,19 +354,19 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
     @overload
     def distribute_users(
         self, target_user_count: int
-    ) -> Tuple[DistributedUsers, UserGenerator, itertools.cycle, LengthOptimizedList[Tuple[WorkerNode, str]]]:
+    ) -> tuple[DistributedUsers, UserGenerator, itertools.cycle, LengthOptimizedList[tuple[WorkerNode, str]]]:
         ...
 
     @overload
     def distribute_users(
-        self, target_user_count: Dict[str, int]
-    ) -> Tuple[DistributedUsers, UserGenerator, Optional[itertools.cycle], LengthOptimizedList[Tuple[WorkerNode, str]]]:
+        self, target_user_count: dict[str, int]
+    ) -> tuple[DistributedUsers, UserGenerator, itertools.cycle | None, LengthOptimizedList[tuple[WorkerNode, str]]]:
         ...
 
     @abstractmethod
     def distribute_users(
-        self, target_user_count: int | Dict[str, int]
-    ) -> Tuple[DistributedUsers, UserGenerator, Optional[itertools.cycle], LengthOptimizedList[Tuple[WorkerNode, str]]]:
+        self, target_user_count: int | dict[str, int]
+    ) -> tuple[DistributedUsers, UserGenerator, itertools.cycle | None, LengthOptimizedList[tuple[WorkerNode, str]]]:
         ...
 
 
@@ -391,7 +379,7 @@ class WeightedUsersDispatcher(UsersDispatcher):
     Its also possible to use `User.fixed_count` to spawn a fixed number of users of that type, in this case `User.weight` is ignored.
     """
 
-    def __init__(self, worker_nodes: List[WorkerNode], user_classes: List[Type[User]]):
+    def __init__(self, worker_nodes: list[WorkerNode], user_classes: list[type[User]]):
         """
         :param worker_nodes: List of worker nodes
         :param user_classes: The user classes
@@ -415,9 +403,9 @@ class WeightedUsersDispatcher(UsersDispatcher):
 
     def new_dispatch(
         self,
-        target_user_count: int | Dict[str, int],
+        target_user_count: int | dict[str, int],
         spawn_rate: float,
-        user_classes: Optional[List[Type[User]]] = None,
+        user_classes: list[type[User]] | None = None,
     ) -> None:
         """
         Initialize a new dispatch cycle.
@@ -492,8 +480,8 @@ class WeightedUsersDispatcher(UsersDispatcher):
                 return self._users_on_workers
 
     def distribute_users(
-        self, target_user_count: int | Dict[str, int]
-    ) -> Tuple[DistributedUsers, UserGenerator, Optional[itertools.cycle], LengthOptimizedList[Tuple[WorkerNode, str]]]:
+        self, target_user_count: int | dict[str, int]
+    ) -> tuple[DistributedUsers, UserGenerator, itertools.cycle | None, LengthOptimizedList[tuple[WorkerNode, str]]]:
         """
         This function might take some time to complete if the `target_user_count` is a big number. A big number
         is typically > 50 000. However, this function is only called if a worker is added or removed while a test
@@ -510,7 +498,7 @@ class WeightedUsersDispatcher(UsersDispatcher):
             for worker_node in self._worker_nodes
         }
 
-        active_users: LengthOptimizedList[Tuple[WorkerNode, str]] = LengthOptimizedList()
+        active_users: LengthOptimizedList[tuple[WorkerNode, str]] = LengthOptimizedList()
 
         user_count = 0
         while user_count < target_user_count:
@@ -545,9 +533,9 @@ class WeightedUsersDispatcher(UsersDispatcher):
             if self._try_dispatch_fixed:
                 self._try_dispatch_fixed = False
                 current_fixed_users_count = {u: self.get_current_user_count(u) for u in fixed_users}
-                spawned_classes: Set[str] = set()
+                spawned_classes: set[str] = set()
                 while len(spawned_classes) != len(fixed_users):
-                    user_class_name: Optional[str] = next(cycle_fixed_gen)
+                    user_class_name: str | None = next(cycle_fixed_gen)
                     if not user_class_name:
                         break
 
@@ -576,7 +564,7 @@ class FixedUsersDispatcher(UsersDispatcher):
     `User.weight`, if set on the user type, will be ignored with this dispatcher.
     """
 
-    def __init__(self, worker_nodes: List[WorkerNode], user_classes: List[Type[User]]) -> None:
+    def __init__(self, worker_nodes: list[WorkerNode], user_classes: list[type[User]]) -> None:
         """
         :param worker_nodes: List of worker nodes
         :param user_classes: The user classes
@@ -589,18 +577,18 @@ class FixedUsersDispatcher(UsersDispatcher):
 
         self._user_class_name_to_type = {user_class.__name__: user_class for user_class in user_classes}
 
-        self._workers_to_sticky_tag: Dict[WorkerNode, str] = {}
+        self._workers_to_sticky_tag: dict[WorkerNode, str] = {}
 
-        self._sticky_tag_to_workers: Dict[str, itertools.cycle[WorkerNode]] = {}
-        self.__sticky_tag_to_workers: Dict[str, List[WorkerNode]] = {}
+        self._sticky_tag_to_workers: dict[str, itertools.cycle[WorkerNode]] = {}
+        self.__sticky_tag_to_workers: dict[str, list[WorkerNode]] = {}
 
         # make sure there are not more sticky tags than worker nodes
         assert len(set(self._users_to_sticky_tag.values())) <= len(worker_nodes)
 
-        self.__target_user_count_length__: Optional[int] = None
+        self.__target_user_count_length__: int | None = None
         self.target_user_count = {user_class.__name__: user_class.fixed_count for user_class in self._user_classes}
 
-        self._current_user_count: Dict[str, int] = {user_class.__name__: 0 for user_class in self._user_classes}
+        self._current_user_count: dict[str, int] = {user_class.__name__: 0 for user_class in self._user_classes}
 
     def get_target_user_count(self) -> int:
         if self.__target_user_count_length__ is None:
@@ -609,11 +597,11 @@ class FixedUsersDispatcher(UsersDispatcher):
         return self.__target_user_count_length__
 
     @property
-    def target_user_count(self) -> Dict[str, int]:
+    def target_user_count(self) -> dict[str, int]:
         return self._target_user_count
 
     @target_user_count.setter
-    def target_user_count(self, value: Dict[str, int]) -> None:
+    def target_user_count(self, value: dict[str, int]) -> None:
         self.__target_user_count_length__ = None
         self._target_user_count = dict(sorted(value.items(), key=operator.itemgetter(1), reverse=True))
 
@@ -623,9 +611,9 @@ class FixedUsersDispatcher(UsersDispatcher):
 
     def new_dispatch(
         self,
-        target_user_count: int | Dict[str, int],
+        target_user_count: int | dict[str, int],
         spawn_rate: float,
-        user_classes: Optional[List[Type[User]]] = None,
+        user_classes: list[type[User]] | None = None,
     ) -> None:
         """
         Initialize a new dispatch cycle.
@@ -689,7 +677,7 @@ class FixedUsersDispatcher(UsersDispatcher):
             current_user_count_actual + self._user_count_per_dispatch_iteration, self.get_target_user_count()
         )
 
-        current_user_count: Dict[str, int] = {}
+        current_user_count: dict[str, int] = {}
         for user_counts in self._users_on_workers.values():
             for user_class_name, count in user_counts.items():
                 current_user_count.update({user_class_name: current_user_count.get(user_class_name, 0) + count})
@@ -743,7 +731,7 @@ class FixedUsersDispatcher(UsersDispatcher):
                 return self._users_on_workers
 
     def _spread_sticky_tags_on_workers(self) -> None:
-        sticky_tag_user_count: Dict[str, int] = {}
+        sticky_tag_user_count: dict[str, int] = {}
 
         # summarize target user count per sticky tag
         for user_class_name, sticky_tag in self._users_to_sticky_tag.items():
@@ -780,7 +768,7 @@ class FixedUsersDispatcher(UsersDispatcher):
 
         # check if workers has changed since last time
         # do not reset worker cycles if only target user count has changed
-        changes_for_sticky_tag: Dict[str, Optional[List[WorkerNode]]] = {}
+        changes_for_sticky_tag: dict[str, list[WorkerNode] | None] = {}
         for sticky_tag in self.__sticky_tag_to_workers:
             workers = self.__sticky_tag_to_workers.get(sticky_tag, None)
             if workers is not None and orig__sticky_tag_to_workers.get(sticky_tag, []) != workers:
@@ -802,7 +790,7 @@ class FixedUsersDispatcher(UsersDispatcher):
             (self._user_class_name_to_type.get(user_class_name), fixed_count)
             for user_class_name, fixed_count in self.target_user_count.items()
         ]
-        user_generator: itertools.cycle[Optional[str]] = self.infinite_cycle_gen(user_cycle)
+        user_generator: itertools.cycle[str | None] = self.infinite_cycle_gen(user_cycle)
 
         while user_class_name := next(user_generator):
             if not user_class_name:
@@ -811,8 +799,8 @@ class FixedUsersDispatcher(UsersDispatcher):
             yield user_class_name
 
     def distribute_users(
-        self, target_user_count: int | Dict[str, int]
-    ) -> Tuple[DistributedUsers, UserGenerator, None, LengthOptimizedList[Tuple[WorkerNode, str]]]:
+        self, target_user_count: int | dict[str, int]
+    ) -> tuple[DistributedUsers, UserGenerator, None, LengthOptimizedList[tuple[WorkerNode, str]]]:
         """Distribute users on available workers, and continue user cycle from there."""
 
         assert isinstance(target_user_count, dict)
@@ -830,10 +818,10 @@ class FixedUsersDispatcher(UsersDispatcher):
             for worker_node in self._worker_nodes
         }
 
-        active_users: LengthOptimizedList[Tuple[WorkerNode, str]] = LengthOptimizedList()
+        active_users: LengthOptimizedList[tuple[WorkerNode, str]] = LengthOptimizedList()
 
         user_count_target = sum(target_user_count.values())
-        current_user_count: Dict[str, int] = {}
+        current_user_count: dict[str, int] = {}
         for user_counts in users_on_workers.values():
             for user_class_name, count in user_counts.items():
                 current_user_count.update({user_class_name: current_user_count.get(user_class_name, 0) + count})

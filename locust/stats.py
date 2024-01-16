@@ -199,7 +199,7 @@ class RequestStats:
     Class that holds the request statistics. Accessible in a User from self.environment.stats
     """
 
-    def __init__(self, use_response_times_cache=True):
+    def __init__(self, use_response_times_cache: bool = True) -> None:
         """
         :param use_response_times_cache: The value of use_response_times_cache will be set for each StatsEntry()
                                          when they are created. Settings it to False saves some memory and CPU

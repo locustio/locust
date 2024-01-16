@@ -73,7 +73,7 @@ def create_environment(
     )
 
 
-def main():
+def main() -> None:
     # find specified locustfile(s) and make sure it exists, using a very simplified
     # command line parser that is only used to parse the -f option.
     locustfiles = parse_locustfile_option()

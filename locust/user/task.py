@@ -7,7 +7,6 @@ from typing import (
     TYPE_CHECKING,
     Callable,
     TypeVar,
-    Type,
     overload,
     Protocol,
     final,
@@ -23,7 +22,7 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
-TaskT = TypeVar("TaskT", Callable[..., None], Type["TaskSet"])
+TaskT = TypeVar("TaskT", Callable[..., None], type["TaskSet"])
 
 LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING = ["running", "waiting", "stopping"]
 
@@ -265,7 +264,7 @@ class TaskSet(metaclass=TaskSetMeta):
     TaskSet.
     """
 
-    wait_function: Optional[Callable] = None
+    wait_function: Callable | None = None
     """
     Deprecated: Use wait_time instead.
     Function used to calculate waiting time between the execution of user tasks in milliseconds.

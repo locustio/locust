@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from operator import methodcaller
-from typing import Callable, TypeVar, Type
+from typing import Callable, TypeVar
 
 from configargparse import Namespace
 
@@ -36,7 +36,7 @@ class Environment:
         parsed_options: Namespace | None = None,
         available_user_classes: dict[str, User] | None = None,
         available_shape_classes: dict[str, LoadTestShape] | None = None,
-        dispatcher_class: Type[UsersDispatcher] = WeightedUsersDispatcher,
+        dispatcher_class: type[UsersDispatcher] = WeightedUsersDispatcher,
     ):
         self.runner: Runner | None = None
         """Reference to the :class:`Runner <locust.runners.Runner>` instance"""

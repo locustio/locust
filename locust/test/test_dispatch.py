@@ -3,7 +3,7 @@ import time
 import unittest
 import itertools
 from operator import attrgetter
-from typing import Type, Iterator
+from typing import Iterator
 
 from locust import User
 from locust.dispatch import UsersDispatcher, WeightedUsersDispatcher, FixedUsersDispatcher
@@ -20,7 +20,7 @@ PARAMETER_DISPATCHERS = [
 
 
 class TargetUserCount:
-    def __init__(self, user_dispatcher_class: Type[UsersDispatcher], user_classes: list[Type[User]]) -> None:
+    def __init__(self, user_dispatcher_class: type[UsersDispatcher], user_classes: list[type[User]]) -> None:
         self.user_dispatcher_class = user_dispatcher_class
         self.user_classes = user_classes
         self.reset()
@@ -44,7 +44,7 @@ class TargetUserCount:
 
 
 class UsersDispatcherTestCase(unittest.TestCase):
-    user_dispatcher_class: Type[UsersDispatcher]
+    user_dispatcher_class: type[UsersDispatcher]
     sleep_time: float = 0.2
 
 
@@ -914,7 +914,7 @@ class TestRampUpUsersFromZero(UsersDispatcherTestCase):
 
 @parameterized_class(PARAMETER_DISPATCHERS)
 class TestWaitBetweenDispatch(unittest.TestCase):
-    user_dispatcher_class: Type[UsersDispatcher]
+    user_dispatcher_class: type[UsersDispatcher]
     target_user_count: int | dict[str, int]
     user_fixed_count: int
 
@@ -932,7 +932,7 @@ class TestWaitBetweenDispatch(unittest.TestCase):
             weight = 1
             fixed_count = self.user_fixed_count
 
-        user_classes: list[Type[User]] = [User1]
+        user_classes: list[type[User]] = [User1]
 
         workers = [WorkerNode("1")]
 
@@ -2121,10 +2121,10 @@ class TestDistributionIsRespectedDuringDispatch(UsersDispatcherTestCase):
 class TestLargeScale(UsersDispatcherTestCase):
     weights: list[int]
     numerated_weights: dict[int, int]
-    weighted_user_classes: list[Type[User]]
-    fixed_user_classes_10k: list[Type[User]]
-    fixed_user_classes_1M: list[Type[User]]
-    mixed_users: list[Type[User]]
+    weighted_user_classes: list[type[User]]
+    fixed_user_classes_10k: list[type[User]]
+    fixed_user_classes_1M: list[type[User]]
+    mixed_users: list[type[User]]
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -2421,7 +2421,7 @@ class TestRampingMiscellaneous(UsersDispatcherTestCase):
         class User1(User):
             weight = 1
 
-        user_classes: list[Type[User]] = [User1]
+        user_classes: list[type[User]] = [User1]
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(1)]
 
