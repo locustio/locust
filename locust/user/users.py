@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Callable, Dict, List, final
+from typing import TYPE_CHECKING, Callable, final
 
 import time
 from gevent import GreenletExit, greenlet
@@ -92,7 +92,7 @@ class User(metaclass=UserMeta):
     Method that returns the time between the execution of locust tasks in milliseconds
     """
 
-    tasks: List[TaskSet | Callable] = []
+    tasks: list[TaskSet | Callable] = []
     """
     Collection of python callables and/or TaskSet classes that the Locust user(s) will run.
 
@@ -222,7 +222,7 @@ class User(metaclass=UserMeta):
     def greenlet(self):
         return self._greenlet
 
-    def context(self) -> Dict:
+    def context(self) -> dict:
         """
         Adds the returned value (a dict) to the context for :ref:`request event <request_context>`.
         Override this in your User class to customize the context.

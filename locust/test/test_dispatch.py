@@ -3,7 +3,7 @@ import time
 import unittest
 import itertools
 from operator import attrgetter
-from typing import Dict, List, Tuple, Type, Iterator
+from typing import Type, Iterator
 
 from locust import User
 from locust.dispatch import UsersDispatcher, WeightedUsersDispatcher, FixedUsersDispatcher
@@ -20,7 +20,7 @@ PARAMETER_DISPATCHERS = [
 
 
 class TargetUserCount:
-    def __init__(self, user_dispatcher_class: Type[UsersDispatcher], user_classes: List[Type[User]]) -> None:
+    def __init__(self, user_dispatcher_class: Type[UsersDispatcher], user_classes: list[Type[User]]) -> None:
         self.user_dispatcher_class = user_dispatcher_class
         self.user_classes = user_classes
         self.reset()
@@ -29,7 +29,7 @@ class TargetUserCount:
         self.user_classes_cycle = itertools.cycle(self.user_classes)
         self.target_user_count = {user_class.__name__: 0 for user_class in self.user_classes}
 
-    def __call__(self, user_count: int) -> int | Dict[str, int]:
+    def __call__(self, user_count: int) -> int | dict[str, int]:
         if self.user_dispatcher_class == WeightedUsersDispatcher:
             return user_count
         else:
@@ -52,7 +52,7 @@ class UsersDispatcherTestCase(unittest.TestCase):
 class TestRampUpUsersFromZero(UsersDispatcherTestCase):
     user_fixed_count: int
     user_weight: int = 1
-    target_user_count: int | Dict[str, int]
+    target_user_count: int | dict[str, int]
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -915,7 +915,7 @@ class TestRampUpUsersFromZero(UsersDispatcherTestCase):
 @parameterized_class(PARAMETER_DISPATCHERS)
 class TestWaitBetweenDispatch(unittest.TestCase):
     user_dispatcher_class: Type[UsersDispatcher]
-    target_user_count: int | Dict[str, int]
+    target_user_count: int | dict[str, int]
     user_fixed_count: int
 
     @classmethod
@@ -932,7 +932,7 @@ class TestWaitBetweenDispatch(unittest.TestCase):
             weight = 1
             fixed_count = self.user_fixed_count
 
-        user_classes: List[Type[User]] = [User1]
+        user_classes: list[Type[User]] = [User1]
 
         workers = [WorkerNode("1")]
 
@@ -951,8 +951,8 @@ class TestWaitBetweenDispatch(unittest.TestCase):
 
 @parameterized_class(PARAMETER_DISPATCHERS)
 class TestRampDownUsersToZero(UsersDispatcherTestCase):
-    initial_user_count: int | Dict[str, int]
-    ramped_down_user_count: int | Dict[str, int]
+    initial_user_count: int | dict[str, int]
+    ramped_down_user_count: int | dict[str, int]
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -1826,7 +1826,7 @@ class TestRampUpThenDownThenUp(unittest.TestCase):
 
 @parameterized_class(PARAMETER_DISPATCHERS)
 class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(UsersDispatcherTestCase):
-    user_count: int | Dict[str, int]
+    user_count: int | dict[str, int]
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -1882,7 +1882,7 @@ class TestDispatchUsersToWorkersHavingTheSameUsersAsTheTarget(UsersDispatcherTes
 
 @parameterized_class(PARAMETER_DISPATCHERS)
 class TestDistributionIsRespectedDuringDispatch(UsersDispatcherTestCase):
-    target_user_count: int | Dict[str, int]
+    target_user_count: int | dict[str, int]
     heavy_user_weight: int
 
     @classmethod
@@ -2119,12 +2119,12 @@ class TestDistributionIsRespectedDuringDispatch(UsersDispatcherTestCase):
 
 @parameterized_class(PARAMETER_DISPATCHERS)
 class TestLargeScale(UsersDispatcherTestCase):
-    weights: List[int]
-    numerated_weights: Dict[int, int]
-    weighted_user_classes: List[Type[User]]
-    fixed_user_classes_10k: List[Type[User]]
-    fixed_user_classes_1M: List[Type[User]]
-    mixed_users: List[Type[User]]
+    weights: list[int]
+    numerated_weights: dict[int, int]
+    weighted_user_classes: list[Type[User]]
+    fixed_user_classes_10k: list[Type[User]]
+    fixed_user_classes_1M: list[Type[User]]
+    mixed_users: list[Type[User]]
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -2143,7 +2143,7 @@ class TestLargeScale(UsersDispatcherTestCase):
         cls.mixed_users = cls.weighted_user_classes[:25] + cls.fixed_user_classes_10k[25:]
 
     def test_distribute_users(self) -> None:
-        target_user_count_1M: int | Dict[str, int]
+        target_user_count_1M: int | dict[str, int]
         if self.user_dispatcher_class == WeightedUsersDispatcher:
             target_user_count_1M = 1_000_000
             user_classes_categories = [self.weighted_user_classes, self.fixed_user_classes_1M, self.mixed_users]
@@ -2168,7 +2168,7 @@ class TestLargeScale(UsersDispatcherTestCase):
             self.assertEqual(_user_count(users_on_workers), 1_000_000)
 
     def test_ramp_up_from_0_to_100_000_users_with_50_user_classes_and_1000_workers_and_5000_spawn_rate(self) -> None:
-        target_user_count: int | Dict[str, int]
+        target_user_count: int | dict[str, int]
 
         if self.user_dispatcher_class == WeightedUsersDispatcher:
             user_classes_categories = [
@@ -2242,8 +2242,8 @@ class TestLargeScale(UsersDispatcherTestCase):
                         )
 
     def test_ramp_down_from_100_000_to_0_users_with_50_user_classes_and_1000_workers_and_5000_spawn_rate(self) -> None:
-        initial_user_count: int | Dict[str, int]
-        ramp_down_user_count: int | Dict[str, int]
+        initial_user_count: int | dict[str, int]
+        ramp_down_user_count: int | dict[str, int]
 
         if self.user_dispatcher_class == WeightedUsersDispatcher:
             user_classes_categories = [
@@ -2421,7 +2421,7 @@ class TestRampingMiscellaneous(UsersDispatcherTestCase):
         class User1(User):
             weight = 1
 
-        user_classes: List[Type[User]] = [User1]
+        user_classes: list[Type[User]] = [User1]
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(1)]
 
@@ -3521,7 +3521,7 @@ class TestAddWorker(UsersDispatcherTestCase):
 @parameterized_class(PARAMETER_DISPATCHERS)
 class TestRampUpUsersFromZeroWithFixed(UsersDispatcherTestCase):
     class RampUpCase:
-        def __init__(self, fixed_counts: Tuple[int, ...], weights: Tuple[int, ...], target_user_count: int) -> None:
+        def __init__(self, fixed_counts: tuple[int, ...], weights: tuple[int, ...], target_user_count: int):
             self.fixed_counts = fixed_counts
             self.weights = weights
             self.target_user_count = target_user_count
@@ -3531,9 +3531,7 @@ class TestRampUpUsersFromZeroWithFixed(UsersDispatcherTestCase):
                 self.fixed_counts, self.weights, self.target_user_count
             )
 
-    def case_handler(
-        self, cases: List[RampUpCase], expected: List[Dict[str, int]], user_classes: List[Type[User]]
-    ) -> None:
+    def case_handler(self, cases: list[RampUpCase], expected: list[dict[str, int]], user_classes: list[type[User]]):
         self.assertEqual(len(cases), len(expected))
 
         for case_num in range(len(cases)):
@@ -3548,7 +3546,7 @@ class TestRampUpUsersFromZeroWithFixed(UsersDispatcherTestCase):
                 msg="Invalid test case or user list.",
             )
 
-            target_user_count: int | Dict[str, int]
+            target_user_count: int | dict[str, int]
             if self.user_dispatcher_class == WeightedUsersDispatcher:
                 target_user_count = case.target_user_count
             else:
@@ -3781,7 +3779,7 @@ class TestRampUpUsersFromZeroWithFixed(UsersDispatcherTestCase):
             target_user_counts = [sum(fixed_counts), sum(fixed_counts) + 100]
             down_counts = [0, max(min(fixed_counts) - 1, 0)]
             user_classes = [User1, User2, User3, User4, User5]
-            target: int | Dict[str, int]
+            target: int | dict[str, int]
 
             for worker_count in [3, 5, 9]:
                 workers = [WorkerNode(str(i + 1)) for i in range(worker_count)]
@@ -3894,7 +3892,7 @@ class TestRampUpDifferentUsers(UsersDispatcherTestCase):
         class User3(User):
             weight = 1
 
-        target_user_count: int | Dict[str, int]
+        target_user_count: int | dict[str, int]
         if self.user_dispatcher_class != FixedUsersDispatcher:
             target_user_count = 10
         else:
@@ -3923,7 +3921,7 @@ class TestRampUpDifferentUsers(UsersDispatcherTestCase):
 
         user_dispatcher = self.user_dispatcher_class(worker_nodes=[worker_node1], user_classes=[User1, User2, User3])
 
-        target: int | Dict[str, int] = (
+        target: int | dict[str, int] = (
             {"User2": 10, "User3": 30} if self.user_dispatcher_class == FixedUsersDispatcher else 10
         )
 
@@ -3948,7 +3946,7 @@ class TestRampUpDifferentUsers(UsersDispatcherTestCase):
 
         worker_node1 = WorkerNode("1")
 
-        target: int | Dict[str, int] = (
+        target: int | dict[str, int] = (
             {"User1": 10, "User2": 20, "User3": 10} if self.user_dispatcher_class == FixedUsersDispatcher else 10
         )
 
@@ -4060,7 +4058,7 @@ class TestRampUpDifferentUsers(UsersDispatcherTestCase):
             worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
         )
 
-        target: int | Dict[str, int]
+        target: int | dict[str, int]
         if self.user_dispatcher_class == FixedUsersDispatcher:
             target = {"User2": 60}
         else:
@@ -4162,7 +4160,7 @@ class TestRampUpDifferentUsers(UsersDispatcherTestCase):
 
         user_classes = [User1, User2, User3]
 
-        target: int | Dict[str, int]
+        target: int | dict[str, int]
         if self.user_dispatcher_class == FixedUsersDispatcher:
             target = {"Users": 1, "User2": 9, "User3": 7}
         else:
@@ -4262,7 +4260,7 @@ class TestRampUpDifferentUsers(UsersDispatcherTestCase):
             worker_nodes=[worker_nodes[0], worker_nodes[2]], user_classes=user_classes
         )
 
-        target: int | Dict[str, int]
+        target: int | dict[str, int]
 
         if self.user_dispatcher_class == FixedUsersDispatcher:
             target = {"User1": 11, "User3": 7}
@@ -4341,16 +4339,16 @@ class TestRampUpDifferentUsers(UsersDispatcherTestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 6)
 
 
-def _aggregate_dispatched_users(d: Dict[str, Dict[str, int]]) -> Dict[str, int]:
+def _aggregate_dispatched_users(d: dict[str, dict[str, int]]) -> dict[str, int]:
     user_classes = list(next(iter(d.values())).keys())
     return {u: sum(d[u] for d in d.values()) for u in user_classes}
 
 
-def _user_count(d: Dict[str, Dict[str, int]]) -> int:
+def _user_count(d: dict[str, dict[str, int]]) -> int:
     return sum(map(sum, map(dict.values, d.values())))  # type: ignore
 
 
-def _user_count_on_worker(d: Dict[str, Dict[str, int]], worker_node_id: str) -> int:
+def _user_count_on_worker(d: dict[str, dict[str, int]], worker_node_id: str) -> int:
     return sum(d[worker_node_id].values())
 
 

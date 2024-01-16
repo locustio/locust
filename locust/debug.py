@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 from datetime import datetime, timezone
 import os
 import inspect
 import locust
 import locust.log
 from locust import User, argument_parser
-from typing import Type, Optional
 from locust.env import Environment
 from locust.exception import CatchResponseError, RescheduleTask
 
@@ -94,16 +95,16 @@ class PrintListener:
         print()
 
 
-_env: Optional[Environment] = None  # minimal Environment for debugging
+_env: Environment | None = None  # minimal Environment for debugging
 
 
 def run_single_user(
-    user_class: Type[User],
+    user_class: type[User],
     include_length=False,
     include_time=False,
     include_context=False,
     include_payload=False,
-    loglevel: Optional[str] = "WARNING",
+    loglevel: str | None = "WARNING",
 ):
     """
     Runs a single User. Useful when you want to run a debugger.

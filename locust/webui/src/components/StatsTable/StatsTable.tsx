@@ -1,9 +1,19 @@
 import { connect } from 'react-redux';
 
 import Table from 'components/Table/Table';
+import ViewColumnSelector from 'components/ViewColumnSelector/ViewColumnSelector';
+import { swarmTemplateArgs } from 'constants/swarm';
+import useSelectViewColumns from 'hooks/useSelectViewColumns';
 import useSortByField from 'hooks/useSortByField';
 import { IRootState } from 'redux/store';
 import { ISwarmStat } from 'types/ui.types';
+
+const percentilesToStatisticsRows = swarmTemplateArgs.percentilesToStatistics
+  ? swarmTemplateArgs.percentilesToStatistics.map(percentile => ({
+      title: `${percentile * 100}%ile (ms)`,
+      key: `responseTimePercentile${percentile}` as keyof ISwarmStat,
+    }))
+  : [];
 
 const tableStructure = [
   { key: 'method', title: 'Type' },
@@ -11,8 +21,7 @@ const tableStructure = [
   { key: 'numRequests', title: '# Requests' },
   { key: 'numFailures', title: '# Fails' },
   { key: 'medianResponseTime', title: 'Median (ms)', round: 2 },
-  { key: 'ninetiethResponseTime', title: '90%ile (ms)' },
-  { key: 'ninetyNinthResponseTime', title: '99%ile (ms)' },
+  ...percentilesToStatisticsRows,
   { key: 'avgResponseTime', title: 'Average (ms)', round: 2 },
   { key: 'minResponseTime', title: 'Min (ms)' },
   { key: 'maxResponseTime', title: 'Max (ms)' },
@@ -26,13 +35,24 @@ export function StatsTable({ stats }: { stats: ISwarmStat[] }) {
     hasTotalRow: true,
   });
 
+  const { selectedColumns, addColumn, removeColumn, filteredStructure } =
+    useSelectViewColumns(tableStructure);
+
   return (
-    <Table<ISwarmStat>
-      currentSortField={currentSortField}
-      onTableHeadClick={onTableHeadClick}
-      rows={sortedStats}
-      structure={tableStructure}
-    />
+    <>
+      <ViewColumnSelector
+        addColumn={addColumn}
+        removeColumn={removeColumn}
+        selectedColumns={selectedColumns}
+        structure={tableStructure}
+      />
+      <Table<ISwarmStat>
+        currentSortField={currentSortField}
+        onTableHeadClick={onTableHeadClick}
+        rows={sortedStats}
+        structure={filteredStructure}
+      />
+    </>
   );
 }
 

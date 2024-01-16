@@ -1,6 +1,6 @@
 from __future__ import annotations
 import time
-from typing import ClassVar, Dict, Optional, Tuple, List, Type
+from typing import ClassVar
 from abc import ABCMeta, abstractmethod
 
 from . import User
@@ -23,7 +23,7 @@ class LoadTestShape(metaclass=LoadTestShapeMeta):
     Base class for custom load shapes.
     """
 
-    runner: Optional[Runner] = None
+    runner: Runner | None = None
     """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
 
     abstract: ClassVar[bool] = True
@@ -52,9 +52,7 @@ class LoadTestShape(metaclass=LoadTestShapeMeta):
         return self.runner.user_count
 
     @abstractmethod
-    def tick(
-        self,
-    ) -> Tuple[int | Dict[str, int], float] | Tuple[int | Dict[str, int], float, Optional[List[Type[User]]]] | None:
+    def tick(self) -> tuple[int | dict[str, int], float] | tuple[int | dict[str, int], float, list[type[User]] | None] | None:
         """
         Returns a tuple with 2 elements to control the running load test:
 

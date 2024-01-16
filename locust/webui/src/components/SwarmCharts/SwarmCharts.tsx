@@ -5,10 +5,12 @@ import { swarmTemplateArgs } from 'constants/swarm';
 import { IRootState } from 'redux/store';
 import { ICharts } from 'types/ui.types';
 
-const percentilesToChartLines = swarmTemplateArgs.percentilesToChart.map(percentile => ({
-  name: `${percentile * 100}th percentile`,
-  key: `responseTimePercentile${percentile}` as keyof ICharts,
-}));
+const percentilesToChartLines = swarmTemplateArgs.percentilesToChart
+  ? swarmTemplateArgs.percentilesToChart.map(percentile => ({
+      name: `${percentile * 100}th percentile`,
+      key: `responseTimePercentile${percentile}` as keyof ICharts,
+    }))
+  : [];
 
 const availableSwarmCharts: ILineChartProps[] = [
   {

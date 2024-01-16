@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from collections import defaultdict
 import contextlib
 import itertools
@@ -116,7 +117,7 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
         self._current_user_count: int | Dict[str, int]
 
         # To keep track of how long it takes for each dispatch iteration to compute
-        self._dispatch_iteration_durations: List[float] = []
+        self._dispatch_iteration_durations: list[float] = []
 
         self._dispatch_in_progress: bool = False
 
@@ -136,12 +137,22 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
 
         self._no_user_to_spawn: bool = False
 
+    @property
+    def dispatch_iteration_durations(self) -> list[float]:
+        return self._dispatch_iteration_durations
+
+    def __next__(self) -> dict[str, dict[str, int]]:
+        users_on_workers = next(self._dispatcher_generator)
+        # TODO: Is this necessary to copy the users_on_workers if we know
+        #       it won't be mutated by external code?
+        return self._fast_users_on_workers_copy(users_on_workers)
+
     def _sort_workers(self):
         # Sorting workers ensures repeatable behaviour
         worker_nodes_by_id = sorted(self._worker_nodes, key=lambda w: w.id)
 
         # Give every worker an index indicating how many workers came before it on that host
-        workers_per_host = defaultdict(lambda: 0)
+        workers_per_host = defaultdict(int)
         for worker_node in worker_nodes_by_id:
             host = worker_node.id.split("_")[0]
             worker_node._index_within_host = workers_per_host[host]
@@ -153,10 +164,6 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
     @property
     def dispatch_in_progress(self):
         return self._dispatch_in_progress
-
-    @property
-    def dispatch_iteration_durations(self) -> List[float]:
-        return self._dispatch_iteration_durations
 
     def get_current_user_count_total(self) -> int:
         return self._active_users.__optimized_length__
@@ -202,7 +209,7 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
     def infinite_cycle_gen(users: List[Tuple[Type[User], int]]) -> itertools.cycle[Optional[str]]:
         if not users:
             return itertools.cycle([None])
-
+            
         # Normalize the weights so that the smallest weight will be equal to "target_min_weight".
         # The value "2" was experimentally determined because it gave a better distribution especially
         # when dealing with weights which are close to each others, e.g. 1.5, 2, 2.4, etc.
@@ -233,7 +240,7 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
         return itertools.cycle(gen() for _ in range(generation_length_to_get_proper_distribution))
 
     @staticmethod
-    def _fast_users_on_workers_copy(users_on_workers: Dict[str, Dict[str, int]]) -> Dict[str, Dict[str, int]]:
+    def _fast_users_on_workers_copy(users_on_workers: dict[str, dict[str, int]]) -> dict[str, dict[str, int]]:
         """deepcopy is too slow, so we use this custom copy function.
 
         The implementation was profiled and compared to other implementations such as dict-comprehensions

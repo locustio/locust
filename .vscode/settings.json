@@ -36,6 +36,7 @@
     },
     "restructuredtext.confPath": "${workspaceFolder}/docs",
     "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter"
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff"
     },
 }

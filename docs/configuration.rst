@@ -199,8 +199,11 @@ The list of statistics parameters that can be modified is:
 | CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW   | Window size/resolution - in seconds - when calculating the current response          |
 |                                           | time percentile                                                                      |
 +-------------------------------------------+--------------------------------------------------------------------------------------+
-| PERCENTILES_TO_REPORT                     | The list of response time percentiles to be calculated & reported                    |
+| PERCENTILES_TO_REPORT                     | List of response time percentiles to be calculated & reported                        |
 +-------------------------------------------+--------------------------------------------------------------------------------------+
-| PERCENTILES_TO_CHART                      | The list of response time percentiles for response time chart                        |
+| PERCENTILES_TO_CHART                      | List of response time percentiles in the screen of chart for Web UI                  |
++-------------------------------------------+--------------------------------------------------------------------------------------+
+| PERCENTILES_TO_STATISTICS                 | List of response time percentiles in the screen of statistics for Web UI             |
+|                                           | This parameter supports only modern UI                                               |
 +-------------------------------------------+--------------------------------------------------------------------------------------+
 

@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.20.1
+======
+* run_single_user improvements https://github.com/locustio/locust/pull/2519
+* Support IPv6 for zmq connection between master and worker https://github.com/locustio/locust/pull/2521
+* Modern UI: Update Vite to 4.5.1 https://github.com/locustio/locust/pull/2530
+* Other tiny fixes
+
 2.20.0
 ======
 * Add event.measure context manager for simpler firing of request event (experimental) https://github.com/locustio/locust/pull/2511

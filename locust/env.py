@@ -1,12 +1,7 @@
+from __future__ import annotations
+
 from operator import methodcaller
-from typing import (
-    Callable,
-    Dict,
-    List,
-    Type,
-    TypeVar,
-    Optional,
-)
+from typing import Callable, TypeVar, Type
 
 from configargparse import Namespace
 
@@ -28,28 +23,28 @@ class Environment:
     def __init__(
         self,
         *,
-        user_classes: Optional[List[Type[User]]] = None,
-        shape_class: Optional[LoadTestShape] = None,
-        tags: Optional[List[str]] = None,
-        locustfile: Optional[str] = None,
-        exclude_tags: Optional[List[str]] = None,
-        events: Optional[Events] = None,
-        host: Optional[str] = None,
+        user_classes: list[type[User]] | None = None,
+        shape_class: LoadTestShape | None = None,
+        tags: list[str] | None = None,
+        locustfile: str | None = None,
+        exclude_tags: list[str] | None = None,
+        events: Events | None = None,
+        host: str | None = None,
         reset_stats=False,
-        stop_timeout: Optional[float] = None,
+        stop_timeout: float | None = None,
         catch_exceptions=True,
-        parsed_options: Optional[Namespace] = None,
-        available_user_classes: Optional[Dict[str, User]] = None,
-        available_shape_classes: Optional[Dict[str, LoadTestShape]] = None,
+        parsed_options: Namespace | None = None,
+        available_user_classes: dict[str, User] | None = None,
+        available_shape_classes: dict[str, LoadTestShape] | None = None,
         dispatcher_class: Type[UsersDispatcher] = WeightedUsersDispatcher,
     ):
-        self.runner: Optional[Runner] = None
+        self.runner: Runner | None = None
         """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
 
-        self.web_ui: Optional[WebUI] = None
+        self.web_ui: WebUI | None = None
         """Reference to the WebUI instance"""
 
-        self.process_exit_code: Optional[int] = None
+        self.process_exit_code: int | None = None
         """
         If set it'll be the exit code of the Locust process
         """
@@ -65,7 +60,7 @@ class Environment:
 
         self.locustfile = locustfile
         """Filename (not path) of locustfile"""
-        self.user_classes: List[Type[User]] = user_classes or []
+        self.user_classes: list[type[User]] = user_classes or []
         """User classes that the runner will run"""
         self.shape_class = shape_class
         """A shape class to control the shape of the load test"""
@@ -109,7 +104,7 @@ class Environment:
 
     def _create_runner(
         self,
-        runner_class: Type[RunnerType],
+        runner_class: type[RunnerType],
         *args,
         **kwargs,
     ) -> RunnerType:
@@ -163,10 +158,10 @@ class Environment:
         self,
         host="",
         port=8089,
-        auth_credentials: Optional[str] = None,
-        tls_cert: Optional[str] = None,
-        tls_key: Optional[str] = None,
-        stats_csv_writer: Optional[StatsCSV] = None,
+        web_login: bool = False,
+        tls_cert: str | None = None,
+        tls_key: str | None = None,
+        stats_csv_writer: StatsCSV | None = None,
         delayed_start=False,
         userclass_picker_is_active=False,
         modern_ui=False,
@@ -177,7 +172,7 @@ class Environment:
         :param host: Host/interface that the web server should accept connections to. Defaults to ""
                      which means all interfaces
         :param port: Port that the web server should listen to
-        :param auth_credentials: If provided (in format "username:password") basic auth will be enabled
+        :param web_login: If provided, an authentication page will protect the app
         :param tls_cert: An optional path (str) to a TLS cert. If this is provided the web UI will be
                          served over HTTPS
         :param tls_key: An optional path (str) to a TLS private key. If this is provided the web UI will be
@@ -190,7 +185,7 @@ class Environment:
             self,
             host,
             port,
-            auth_credentials=auth_credentials,
+            web_login=web_login,
             tls_cert=tls_cert,
             tls_key=tls_key,
             stats_csv_writer=stats_csv_writer,
@@ -248,7 +243,7 @@ class Environment:
         """
         for u in self.user_classes:
             u.weight = 1
-            user_tasks: List[TaskSet | Callable] = []
+            user_tasks: list[TaskSet | Callable] = []
             tasks_frontier = u.tasks
             while len(tasks_frontier) != 0:
                 t = tasks_frontier.pop()
@@ -278,5 +273,5 @@ class Environment:
             )
 
     @property
-    def user_classes_by_name(self) -> Dict[str, Type[User]]:
+    def user_classes_by_name(self) -> dict[str, type[User]]:
         return {u.__name__: u for u in self.user_classes}

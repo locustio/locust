@@ -21,7 +21,8 @@ export interface ISwarmState {
   numUsers: number | null;
   overrideHostWarning: boolean;
   percentilesToChart: number[];
-  runTime?: number;
+  percentilesToStatistics: number[];
+  runTime?: string | number;
   showUserclassPicker: boolean;
   spawnRate: number | null;
   state: string;

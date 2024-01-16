@@ -1,6 +1,24 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.20.1](https://github.com/locustio/locust/tree/2.20.1) (2024-01-03)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.20.0...2.20.1)
+
+**Fixed bugs:**
+
+- Vite-version needs to be updated [\#2528](https://github.com/locustio/locust/issues/2528)
+- Issue of 100% CPU usage when closing WebSocket connections. [\#2516](https://github.com/locustio/locust/issues/2516)
+
+**Merged pull requests:**
+
+- Update Vite to 4.5.1 [\#2530](https://github.com/locustio/locust/pull/2530) ([cyberw](https://github.com/cyberw))
+- Bump vite from 4.4.9 to 4.4.12 in /locust/webui [\#2527](https://github.com/locustio/locust/pull/2527) ([dependabot[bot]](https://github.com/apps/dependabot))
+- update docker actions to get rid of node12 deprecation warnings [\#2524](https://github.com/locustio/locust/pull/2524) ([mgor](https://github.com/mgor))
+- Support IPv6 for zmq connection between master and worker [\#2521](https://github.com/locustio/locust/pull/2521) ([simonwu-sn](https://github.com/simonwu-sn))
+- run\_single\_user improvements [\#2519](https://github.com/locustio/locust/pull/2519) ([cyberw](https://github.com/cyberw))
+- Bump Requests to 2.26.0, remove explicit dependency on charset\_normalizer [\#2518](https://github.com/locustio/locust/pull/2518) ([cyberw](https://github.com/cyberw))
+
 ## [2.20.0](https://github.com/locustio/locust/tree/2.20.0) (2023-12-13)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.19.1...2.20.0)

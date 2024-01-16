@@ -10,7 +10,7 @@ from urllib.parse import urlparse, urlunparse
 from ssl import SSLError
 import time
 import traceback
-from typing import ClassVar, Callable, Optional, Dict, Generator, Literal, cast
+from typing import Callable, ClassVar, Generator, Literal, cast
 
 from http.cookiejar import CookieJar
 
@@ -77,10 +77,10 @@ class FastHttpSession:
         self,
         environment: Environment,
         base_url: str,
-        user: Optional[User],
+        user: User | None,
         insecure=True,
-        client_pool: Optional[HTTPClientPool] = None,
-        ssl_context_factory: Optional[Callable] = None,
+        client_pool: HTTPClientPool | None = None,
+        ssl_context_factory: Callable | None = None,
         **kwargs,
     ):
         self.environment = environment
@@ -102,7 +102,7 @@ class FastHttpSession:
 
         # Check for basic authentication
         parsed_url = urlparse(self.base_url)
-        self.auth_header: Optional[str] = None
+        self.auth_header: str | None = None
         if parsed_url.username and parsed_url.password:
             netloc = parsed_url.hostname or ""
             if parsed_url.port:
@@ -312,7 +312,7 @@ class FastHttpUser(User):
     insecure: bool = True
     """Parameter passed to FastHttpSession. Default True, meaning no SSL verification."""
 
-    default_headers: Optional[dict] = None
+    default_headers: dict | None = None
     """Parameter passed to FastHttpSession. Adds the listed headers to every request."""
 
     concurrency: int = 10
@@ -320,10 +320,10 @@ class FastHttpUser(User):
     Note that setting this value has no effect when custom client_pool was given, and you need to spawn a your own gevent pool
     to use it (as Users only have one greenlet). See test_fasthttp.py / test_client_pool_concurrency for an example."""
 
-    client_pool: Optional[HTTPClientPool] = None
+    client_pool: HTTPClientPool | None = None
     """HTTP client pool to use. If not given, a new pool is created per single user."""
 
-    ssl_context_factory: Optional[Callable] = None
+    ssl_context_factory: Callable | None = None
     """A callable that return a SSLContext for overriding the default context created by the FastHttpSession."""
 
     abstract = True
@@ -359,7 +359,7 @@ class FastHttpUser(User):
 
     @contextmanager
     def rest(
-        self, method, url, headers: Optional[dict] = None, **kwargs
+        self, method, url, headers: dict | None = None, **kwargs
     ) -> Generator[RestResponseContextManager, None, None]:
         """
         A wrapper for self.client.request that:
@@ -422,36 +422,36 @@ class FastHttpUser(User):
 
 
 class FastRequest(CompatRequest):
-    payload: Optional[str] = None
+    payload: str | None = None
 
     @property
-    def body(self) -> Optional[str]:
+    def body(self) -> str | None:
         return self.payload
 
 
 class FastResponse(CompatResponse):
-    headers: Optional[Headers] = None
+    headers: Headers | None = None
     """Dict like object containing the response headers"""
 
-    _response: Optional[HTTPSocketPoolResponse] = None
+    _response: HTTPSocketPoolResponse | None = None
 
-    encoding: Optional[str] = None
+    encoding: str | None = None
     """In some cases setting the encoding explicitly is needed. If so, do it before calling .text"""
 
-    request: Optional[FastRequest] = None
+    request: FastRequest | None = None
 
     def __init__(
         self,
         ghc_response: HTTPSocketPoolResponse,
-        request: Optional[FastRequest] = None,
-        sent_request: Optional[str] = None,
+        request: FastRequest | None = None,
+        sent_request: str | None = None,
     ):
         super().__init__(ghc_response, request, sent_request)
 
         self.request = request
 
     @property
-    def text(self) -> Optional[str]:
+    def text(self) -> str | None:
         """
         Returns the text content of the response as a decoded string
         """
@@ -460,18 +460,18 @@ class FastResponse(CompatResponse):
         if self.encoding is None:
             if self.headers is None:
                 # No information, try to detect
-                self.encoding = cast(Dict[str, Optional[str]], detect(self.content))["encoding"]
+                self.encoding = cast(dict[str, str | None], detect(self.content))["encoding"]
             else:
                 self.encoding = get_encoding_from_headers(self.headers)
                 # No information, try to detect
                 if not self.encoding:
-                    self.encoding = cast(Dict[str, Optional[str]], detect(self.content))["encoding"]
+                    self.encoding = cast(dict[str, str | None], detect(self.content))["encoding"]
         if self.encoding is None:
             return None
         return str(self.content, str(self.encoding), errors="replace")
 
     @property
-    def url(self) -> Optional[str]:
+    def url(self) -> str | None:
         """
         Get "response" URL, which is the same as the request URL. This is a small deviation from HttpSession, which gets the final (possibly redirected) URL.
         """
@@ -499,6 +499,11 @@ class FastResponse(CompatResponse):
         """
         return self._response.get_code() if self._response is not None else 0
 
+    @property
+    def ok(self):
+        """Returns True if :attr:`status_code` is less than 400, False if not."""
+        return self.status_code < 400
+
     def _content(self):
         if self.headers is None:
             return None
@@ -521,11 +526,11 @@ class ErrorResponse:
     that doesn't have a real Response object attached. E.g. a socket error or similar
     """
 
-    headers: Optional[Headers] = None
+    headers: Headers | None = None
     content: ClassVar[Literal[None]] = None
     status_code = 0
-    error: Optional[Exception] = None
-    text: Optional[str] = None
+    error: Exception | None = None
+    text: str | None = None
     request: CompatRequest
 
     def __init__(self, url: str, request: CompatRequest):
@@ -541,7 +546,7 @@ class LocustUserAgent(UserAgent):
     request_type = FastRequest
     valid_response_codes = frozenset([200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 301, 302, 303, 304, 307])
 
-    def __init__(self, client_pool: Optional[HTTPClientPool] = None, **kwargs):
+    def __init__(self, client_pool: HTTPClientPool | None = None, **kwargs):
         super().__init__(**kwargs)
 
         if client_pool is not None:

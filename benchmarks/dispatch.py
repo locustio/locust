@@ -634,8 +634,8 @@ if __name__ == "__main__":
         print()
         print(table)
 
-        with open(f"results-dispatch-benchmarks-{int(now)}.txt", "wt") as file:
+        with open(f"results-dispatch-benchmarks-{int(now)}.txt", "w") as file:
             file.write(table.get_string())
 
-        with open(f"results-dispatch-benchmarks-{int(now)}.json", "wt") as file:
+        with open(f"results-dispatch-benchmarks-{int(now)}.json", "w") as file:
             file.write(table.get_json_string())
