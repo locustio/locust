@@ -777,7 +777,7 @@ class MasterRunner(DistributedRunner):
                 worker_nodes=list(self.clients.values()), user_classes=self.user_classes
             )
 
-        _user_count = sum(user_count.values()) if isinstance(user_count, dict) else user_count
+        _user_count = self._users_dispatcher.get_target_user_count() if isinstance(user_count, dict) else user_count
 
         logger.info(
             "Sending spawn jobs of %d users at %.2f spawn rate to %d ready workers"

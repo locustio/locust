@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from collections import defaultdict
 import contextlib
 import itertools
 import math
 import time
-import operator
-from operator import attrgetter
+import logging
+from operator import attrgetter, itemgetter
+from collections import defaultdict
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -44,6 +44,9 @@ T = TypeVar("T")
 UserGenerator = Generator[Optional[str], None, None]
 DistributedUsers = Dict[str, Dict[str, int]]
 DispatcherGenerator = Generator[DistributedUsers, None, None]
+
+
+logger = logging.getLogger(__name__)
 
 
 class LengthOptimizedList(List[T]):
@@ -606,7 +609,7 @@ class FixedUsersDispatcher(UsersDispatcher):
     @target_user_count.setter
     def target_user_count(self, value: dict[str, int]) -> None:
         self.__target_user_count_length__ = None
-        self._target_user_count = dict(sorted(value.items(), key=operator.itemgetter(1), reverse=True))
+        self._target_user_count = dict(sorted(value.items(), key=itemgetter(1), reverse=True))
 
     def prepare_rebalance(self) -> None:
         self._spread_sticky_tags_on_workers()
@@ -744,11 +747,13 @@ class FixedUsersDispatcher(UsersDispatcher):
 
             user_count = sticky_tag_user_count.get(sticky_tag, 0) + user_count
             sticky_tag_user_count.update({sticky_tag: user_count})
+            
+        logger.info('user count per sticky tag: %r', sticky_tag_user_count)
 
         worker_node_count = len(self._worker_nodes)
         # sort sticky tags based on number of users (more user types should have more workers)
         sticky_tags: Iterator[str] = iter(
-            dict(sorted(sticky_tag_user_count.items(), key=operator.itemgetter(1), reverse=True)).keys()
+            dict(sorted(sticky_tag_user_count.items(), key=itemgetter(1), reverse=True)).keys()
         )
         sticky_tag_count = len(sticky_tag_user_count)
 
@@ -768,6 +773,8 @@ class FixedUsersDispatcher(UsersDispatcher):
             self.__sticky_tag_to_workers.update(
                 {sticky_tag: self.__sticky_tag_to_workers.get(sticky_tag, []) + [worker]}
             )
+            
+        logger.info('workers per sticky tag: %r', self.__sticky_tag_to_workers)
 
         # check if workers has changed since last time
         # do not reset worker cycles if only target user count has changed
