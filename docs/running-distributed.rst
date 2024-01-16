@@ -10,7 +10,7 @@ But if your test plan is complex or you want to run even more load, you'll need 
 
 To do this, you start one instance of Locust with the ``--master`` flag and one or more using the ``--worker`` flag. The master instance runs Locust's web interface, and tells the workers when to spawn/stop Users. The worker instances run your Users and send statistics back to the master. The master instance doesn't run any Users itself.
 
-To simplify startup, you can use the ``--processes`` flag. It will launch a master process and the specified number of worker processes. It can also be used in combination with ``--worker``, then it will only launch workers. ``--processes`` relies on `fork() <https://linux.die.net/man/3/fork>`_ so it doesn't work on Windows.
+To simplify startup, you can use the ``--processes`` flag. It will launch a master process and the specified number of worker processes. It can also be used in combination with ``--worker``, then it will only launch workers. This feature relies on `fork() <https://linux.die.net/man/3/fork>`_ so it doesn't work on Windows.
 
 .. note::
     Because Python cannot fully utilize more than one core per process (see `GIL <https://realpython.com/python-gil/>`_), you need to run one worker instance per processor core in order to have access to all your computing power.
