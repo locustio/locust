@@ -52,7 +52,9 @@ class LoadTestShape(metaclass=LoadTestShapeMeta):
         return self.runner.user_count
 
     @abstractmethod
-    def tick(self) -> tuple[int | dict[str, int], float] | tuple[int | dict[str, int], float, list[type[User]] | None] | None:
+    def tick(
+        self,
+    ) -> tuple[int | dict[str, int], float] | tuple[int | dict[str, int], float, list[type[User]] | None] | None:
         """
         Returns a tuple with 2 elements to control the running load test:
 

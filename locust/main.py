@@ -84,9 +84,9 @@ def main() -> None:
     locustfile = locustfiles[0] if locustfiles_length == 1 else None
 
     # Importing Locustfile(s) - setting available UserClasses and ShapeClasses to choose from in UI
-    user_classes: dict[str, locust.User] = {}
-    available_user_classes = {}
-    available_shape_classes = {}
+    user_classes: dict[str, type[locust.User]] = {}
+    available_user_classes: dict[str, type[locust.User]] = {}
+    available_shape_classes: dict[str, locust.LoadTestShape] = {}
     shape_class = None
     for _locustfile in locustfiles:
         docstring, _user_classes, shape_classes = load_locustfile(_locustfile)
@@ -314,10 +314,10 @@ def main() -> None:
             sys.exit(1)
         else:
             names = set(options.user_classes) & set(user_classes.keys())
-            user_classes = [user_classes[n] for n in names]
+            selected_user_classes = [user_classes[n] for n in names]
     else:
         # list() call is needed to consume the dict_view object in Python 3
-        user_classes = list(user_classes.values())
+        selected_user_classes = list(user_classes.values())
 
     if os.name != "nt" and not options.master:
         try:
@@ -329,7 +329,7 @@ def main() -> None:
             if soft_limit < minimum_open_file_limit:
                 # Increasing the limit to 10000 within a running process should work on at least MacOS.
                 # It does not work on all OS:es, but we should be no worse off for trying.
-                resource.setrlimit(resource.RLIMIT_NOFILE, [minimum_open_file_limit, hard_limit])
+                resource.setrlimit(resource.RLIMIT_NOFILE, (minimum_open_file_limit, hard_limit))
         except BaseException:
             logger.warning(
                 f"""System open file limit '{soft_limit} is below minimum setting '{minimum_open_file_limit}'.
@@ -344,7 +344,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     locustfile_path = None if not locustfile else os.path.basename(locustfile)
 
     environment = create_environment(
-        user_classes,
+        selected_user_classes,
         options,
         events=locust.events,
         shape_class=shape_class,
@@ -368,13 +368,13 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     if options.show_task_ratio:
         print("\n Task ratio per User class")
         print("-" * 80)
-        print_task_ratio(user_classes, options.num_users, False)
+        print_task_ratio(selected_user_classes, options.num_users, False)
         print("\n Total task ratio")
         print("-" * 80)
-        print_task_ratio(user_classes, options.num_users, True)
+        print_task_ratio(selected_user_classes, options.num_users, True)
         sys.exit(0)
     if options.show_task_ratio_json:
-        print_task_ratio_json(user_classes, options.num_users)
+        print_task_ratio_json(selected_user_classes, options.num_users)
         sys.exit(0)
 
     if options.master:
@@ -411,6 +411,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             logger.error("Valid --run-time formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
             sys.exit(1)
 
+    stats_csv_writer: StatsCSV | StatsCSVFileWriter
     if options.csv_prefix:
         base_csv_file = os.path.basename(options.csv_prefix)
         base_csv_dir = options.csv_prefix[: -len(base_csv_file)]
@@ -549,7 +550,8 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         elif not options.worker and not environment.shape_class:
             logger.info("No run time limit set, use CTRL+C to interrupt")
 
-    if options.csv_prefix:
+    # `stats_csv_writer` is initialized with a StatsCSVFileWriter object if options.csv_prefix is "True"
+    if isinstance(stats_csv_writer, StatsCSVFileWriter):
         gevent.spawn(stats_csv_writer.stats_writer).link_exception(greenlet_exception_handler)
 
     if options.headless:

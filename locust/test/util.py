@@ -3,6 +3,7 @@ import gc
 import os
 import socket
 import datetime
+import warnings
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes
@@ -81,7 +82,10 @@ def create_tls_cert(hostname):
 def clear_all_functools_lru_cache() -> None:
     # Clear all `functools.lru_cache` to ensure that no state are persisted from one test to another.
     # Taken from https://stackoverflow.com/a/50699209.
-    gc.collect()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        gc.collect()
+
     wrappers = [a for a in gc.get_objects() if isinstance(a, functools._lru_cache_wrapper)]
     assert len(wrappers) > 0
     for wrapper in wrappers:

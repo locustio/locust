@@ -52,7 +52,7 @@ STATS_AUTORESIZE = True  # overwrite this if you dont want auto resize while run
 
 class CSVWriter(Protocol):
     @abstractmethod
-    def writerow(self, columns: Iterable[str | int | float]) -> None:
+    def writerow(self, columns: Iterable[str | int | float | None]) -> None:
         ...
 
 
@@ -83,7 +83,7 @@ class StatsErrorDict(StatsBaseDict):
 
 class StatsHolder(Protocol):
     name: str
-    method: str
+    method: str | None
 
 
 S = TypeVar("S", bound=StatsHolder)
@@ -207,10 +207,10 @@ class RequestStats:
                                          is not needed.
         """
         self.use_response_times_cache = use_response_times_cache
-        self.entries: dict[tuple[str, str], StatsEntry] = EntriesDict(self)
+        self.entries: dict[tuple[str, str | None], StatsEntry] = EntriesDict(self)
         self.errors: dict[str, StatsError] = {}
         self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
-        self.history = []
+        self.history: list[dict[str, Any]] = []
 
     @property
     def num_requests(self):
@@ -287,7 +287,9 @@ class StatsEntry:
     Represents a single stats entry (name and method)
     """
 
-    def __init__(self, stats: RequestStats | None, name: str, method: str, use_response_times_cache: bool = False):
+    def __init__(
+        self, stats: RequestStats | None, name: str, method: str | None, use_response_times_cache: bool = False
+    ):
         self.stats = stats
         self.name = name
         """ Name (URL) of this stats entry """
@@ -705,7 +707,7 @@ class StatsEntry:
 
 
 class StatsError:
-    def __init__(self, method: str, name: str, error: Exception | str | None, occurrences: int = 0):
+    def __init__(self, method: str | None, name: str, error: Exception | str | None, occurrences: int = 0):
         self.method = method
         self.name = name
         self.error = error

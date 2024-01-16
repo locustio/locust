@@ -4,6 +4,7 @@ import time
 import unittest
 from collections import defaultdict
 from operator import itemgetter
+from typing import cast
 
 import gevent
 from unittest import mock
@@ -34,6 +35,7 @@ from locust.runners import (
     STATE_STOPPED,
     WorkerNode,
     WorkerRunner,
+    MasterRunner,
 )
 from locust.stats import RequestStats
 from .testcases import LocustTestCase
@@ -902,7 +904,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
         # check that stats are present in master
         self.assertGreater(
-            master_env.runner.stats.total.num_requests,
+            cast(MasterRunner, master_env.runner).stats.total.num_requests,
             20,
             "For some reason the master node's stats has not come in",
         )

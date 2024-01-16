@@ -4509,7 +4509,11 @@ class TestFixedUsersDispatcher(unittest.TestCase):
         dispatched_users = next(users_dispatcher)
         self.assertDictEqual(_aggregate_dispatched_users(dispatched_users), {"User1": 2, "User2": 3})
         self.assertEqual(
-            [worker_node.id for worker_node in users_dispatcher._FixedUsersDispatcher__sticky_tag_to_workers.get("foo", [])], ["2", "4"]  # type: ignore
+            [
+                worker_node.id
+                for worker_node in users_dispatcher._FixedUsersDispatcher__sticky_tag_to_workers.get("foo", [])  # type: ignore
+            ],
+            ["2", "4"],
         )
         self.assertEqual(
             [
@@ -4742,7 +4746,11 @@ class TestFixedUsersDispatcher(unittest.TestCase):
         users_dispatcher._wait_between_dispatch = sleep_time
 
         self.assertEqual(
-            [worker_node.id for worker_node in users_dispatcher._FixedUsersDispatcher__sticky_tag_to_workers.get("foo", [])], ["hostname1_worker1"]  # type: ignore
+            [
+                worker_node.id
+                for worker_node in users_dispatcher._FixedUsersDispatcher__sticky_tag_to_workers.get("foo", [])  # type: ignore
+            ],
+            ["hostname1_worker1"],
         )
         self.assertEqual(
             [
@@ -4776,7 +4784,11 @@ class TestFixedUsersDispatcher(unittest.TestCase):
 
         self.assertTrue(users_dispatcher._rebalance)
         self.assertEqual(
-            [worker_node.id for worker_node in users_dispatcher._FixedUsersDispatcher__sticky_tag_to_workers.get("foo", [])], ["hostname1_worker1", "hostname1_worker2"]  # type: ignore
+            [
+                worker_node.id
+                for worker_node in users_dispatcher._FixedUsersDispatcher__sticky_tag_to_workers.get("foo", [])  # type: ignore
+            ],
+            ["hostname1_worker1", "hostname1_worker2"],
         )
         self.assertEqual(
             [
@@ -4844,7 +4856,11 @@ class TestFixedUsersDispatcher(unittest.TestCase):
         users_dispatcher._wait_between_dispatch = sleep_time
 
         self.assertEqual(
-            [worker_node.id for worker_node in users_dispatcher._FixedUsersDispatcher__sticky_tag_to_workers.get("foo", [])], ["1", "3"]  # type: ignore
+            [
+                worker_node.id
+                for worker_node in users_dispatcher._FixedUsersDispatcher__sticky_tag_to_workers.get("foo", [])  # type: ignore
+            ],
+            ["1", "3"],
         )
         self.assertEqual(
             [
@@ -4880,7 +4896,11 @@ class TestFixedUsersDispatcher(unittest.TestCase):
 
         self.assertTrue(users_dispatcher._rebalance)
         self.assertEqual(
-            [worker_node.id for worker_node in users_dispatcher._FixedUsersDispatcher__sticky_tag_to_workers.get("foo", [])], ["1"]  # type: ignore
+            [
+                worker_node.id
+                for worker_node in users_dispatcher._FixedUsersDispatcher__sticky_tag_to_workers.get("foo", [])  # type: ignore
+            ],
+            ["1"],
         )
         self.assertEqual(
             [

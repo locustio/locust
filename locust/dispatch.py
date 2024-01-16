@@ -10,9 +10,12 @@ from operator import attrgetter
 from typing import (
     TYPE_CHECKING,
     Any,
+    Dict,
     Generator,
+    List,
     TypeVar,
     Iterator,
+    Optional,
     final,
     overload,
     SupportsIndex,
@@ -38,12 +41,12 @@ T = TypeVar("T")
 #
 # profile = line_profiler.LineProfiler()
 
-UserGenerator = Generator[str | None, None, None]
-DistributedUsers = dict[str, dict[str, int]]
+UserGenerator = Generator[Optional[str], None, None]
+DistributedUsers = Dict[str, Dict[str, int]]
 DispatcherGenerator = Generator[DistributedUsers, None, None]
 
 
-class LengthOptimizedList(list[T]):
+class LengthOptimizedList(List[T]):
     """Simple implementation of a list that keeps track of its length for speed optimizations."""
 
     __optimized_length__: int
@@ -197,7 +200,7 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
     def infinite_cycle_gen(users: list[tuple[type[User], int]]) -> itertools.cycle[str | None]:
         if not users:
             return itertools.cycle([None])
-            
+
         # Normalize the weights so that the smallest weight will be equal to "target_min_weight".
         # The value "2" was experimentally determined because it gave a better distribution especially
         # when dealing with weights which are close to each others, e.g. 1.5, 2, 2.4, etc.

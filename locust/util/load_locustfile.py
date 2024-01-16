@@ -22,7 +22,7 @@ def is_shape_class(item):
     return bool(inspect.isclass(item) and issubclass(item, LoadTestShape) and not getattr(item, "abstract", True))
 
 
-def load_locustfile(path) -> tuple[str | None, dict[str, User], list[LoadTestShape]]:
+def load_locustfile(path) -> tuple[str | None, dict[str, type[User]], list[LoadTestShape]]:
     """
     Import given locustfile path and return (docstring, callables).
 

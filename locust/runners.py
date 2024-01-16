@@ -108,7 +108,9 @@ class Runner:
         self.state = STATE_INIT
         self.spawning_greenlet: gevent.Greenlet | None = None
         self.shape_greenlet: gevent.Greenlet | None = None
-        self.shape_last_tick: tuple[int | dict[str, int], float] | tuple[int | dict[str, int], float, list[type[User]] | None] | None = None
+        self.shape_last_tick: tuple[int | dict[str, int], float] | tuple[
+            int | dict[str, int], float, list[type[User]] | None
+        ] | None = None
         self.current_cpu_usage: int = 0
         self.cpu_warning_emitted: bool = False
         self.worker_cpu_warning_emitted: bool = False
@@ -312,7 +314,11 @@ class Runner:
 
     @abstractmethod
     def start(
-        self, user_count: int | dict[str, int], spawn_rate: float, wait: bool = False, user_classes: list[type[User]] | None = None
+        self,
+        user_count: int | dict[str, int],
+        spawn_rate: float,
+        wait: bool = False,
+        user_classes: list[type[User]] | None = None,
     ) -> None:
         ...
 
@@ -464,7 +470,9 @@ class LocalRunner(Runner):
 
         self.environment.events.user_error.add_listener(on_user_error)
 
-    def _start(self, user_count: int | dict[str, int], spawn_rate: float, wait: bool = False, user_classes: list | None = None) -> None:
+    def _start(
+        self, user_count: int | dict[str, int], spawn_rate: float, wait: bool = False, user_classes: list | None = None
+    ) -> None:
         """
         Start running a load test
 
@@ -548,7 +556,11 @@ class LocalRunner(Runner):
         self.environment.events.spawning_complete.fire(user_count=sum(self.target_user_classes_count.values()))
 
     def start(
-        self, user_count: int | dict[str, int], spawn_rate: float, wait: bool = False, user_classes: list[type[User]] | None = None
+        self,
+        user_count: int | dict[str, int],
+        spawn_rate: float,
+        wait: bool = False,
+        user_classes: list[type[User]] | None = None,
     ) -> None:
         if spawn_rate > 100:
             logger.warning(
@@ -739,7 +751,11 @@ class MasterRunner(DistributedRunner):
         return warning_emitted
 
     def start(
-        self, user_count: int | dict[str, int], spawn_rate: float, wait=False, user_classes: list[type[User]] | None = None
+        self,
+        user_count: int | dict[str, int],
+        spawn_rate: float,
+        wait=False,
+        user_classes: list[type[User]] | None = None,
     ) -> None:
         self.spawning_completed = False
 
@@ -1228,7 +1244,11 @@ class WorkerRunner(DistributedRunner):
         self.environment.events.user_error.add_listener(on_user_error)
 
     def start(
-        self, user_count: int | dict[str, int], spawn_rate: float, wait: bool = False, user_classes: list[type[User]] | None = None
+        self,
+        user_count: int | dict[str, int],
+        spawn_rate: float,
+        wait: bool = False,
+        user_classes: list[type[User]] | None = None,
     ) -> None:
         raise NotImplementedError("use start_worker")
 
