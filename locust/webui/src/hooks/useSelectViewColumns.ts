@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import { ITableStructure } from 'types/table.types';
 
 export default function useSelectViewColumns(defaultColumns: string[]) {
