@@ -1,11 +1,11 @@
-import os
-from threading import Timer
-from unittest import mock
-
 from locust import debug, task
 from locust.test.testcases import LocustTestCase
 from locust.user.task import LOCUST_STATE_STOPPING
 from locust.user.users import HttpUser
+
+import os
+from threading import Timer
+from unittest import mock
 
 
 class DebugTestCase(LocustTestCase):

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from collections import defaultdict
 import inspect
+from collections import defaultdict
 from json import dumps
 
 from .task import TaskSet

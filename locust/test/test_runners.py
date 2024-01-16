@@ -1,48 +1,49 @@
+import locust
+from locust import (
+    LoadTestShape,
+    __version__,
+    constant,
+    runners,
+)
+from locust.argument_parser import parse_options
+from locust.env import Environment
+from locust.exception import RPCError, RPCReceiveError, StopUser
+from locust.main import create_environment
+from locust.rpc import Message
+from locust.runners import (
+    STATE_INIT,
+    STATE_MISSING,
+    STATE_RUNNING,
+    STATE_SPAWNING,
+    STATE_STOPPED,
+    STATE_STOPPING,
+    LocalRunner,
+    WorkerNode,
+    WorkerRunner,
+)
+from locust.stats import RequestStats
+from locust.user import (
+    TaskSet,
+    User,
+    task,
+)
+
 import json
 import random
 import time
 import unittest
 from collections import defaultdict
 from operator import itemgetter
+from unittest import mock
 
 import gevent
-from unittest import mock
 import requests
 from gevent import sleep
 from gevent.pool import Group
 from gevent.queue import Queue
-
-import locust
-from locust import (
-    LoadTestShape,
-    constant,
-    runners,
-    __version__,
-)
-from locust.argument_parser import parse_options
-from locust.env import Environment
-from locust.exception import RPCError, StopUser, RPCReceiveError
-from locust.main import create_environment
-from locust.rpc import Message
-from locust.runners import (
-    LocalRunner,
-    STATE_INIT,
-    STATE_SPAWNING,
-    STATE_RUNNING,
-    STATE_MISSING,
-    STATE_STOPPING,
-    STATE_STOPPED,
-    WorkerNode,
-    WorkerRunner,
-)
-from locust.stats import RequestStats
-from .testcases import LocustTestCase
-from locust.user import (
-    TaskSet,
-    User,
-    task,
-)
 from retry import retry  # type: ignore
+
+from .testcases import LocustTestCase
 from .util import patch_env
 
 NETWORK_BROKEN = "network broken"

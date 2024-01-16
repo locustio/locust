@@ -1,6 +1,7 @@
-import unittest
-from locust.util.timespan import parse_timespan
 from locust.util.rounding import proper_round
+from locust.util.timespan import parse_timespan
+
+import unittest
 
 
 class TestParseTimespan(unittest.TestCase):

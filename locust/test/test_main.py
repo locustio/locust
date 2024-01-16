@@ -2,23 +2,24 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 import platform
-import unittest
-import socket
-import psutil
 import pty
 import signal
+import socket
 import subprocess
+import sys
 import textwrap
+import unittest
+from subprocess import DEVNULL, PIPE, STDOUT
 from tempfile import TemporaryDirectory
 from unittest import TestCase
-from subprocess import PIPE, STDOUT, DEVNULL
+
 import gevent
+import psutil
 import requests
 
-from .mock_locustfile import mock_locustfile, MOCK_LOCUSTFILE_CONTENT
-from .util import temporary_file, get_free_tcp_port, patch_env
+from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
+from .util import get_free_tcp_port, patch_env, temporary_file
 
 
 def is_port_in_use(port: int) -> bool:

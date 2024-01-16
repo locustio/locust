@@ -1,8 +1,10 @@
 # This locust test script example will simulate a user
 # browsing the Locust documentation on https://docs.locust.io/
 
+from locust import HttpUser, TaskSet, between, task
+
 import random
-from locust import HttpUser, TaskSet, task, between
+
 from pyquery import PyQuery
 
 

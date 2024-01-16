@@ -17,11 +17,11 @@ Usage as a decorator:
        # If an Exception is raised, it'll be reported as a failure
 """
 
-import random
-from contextlib import contextmanager, ContextDecorator
-from time import time, sleep
+from locust import User, constant, events, task
 
-from locust import User, task, constant, events
+import random
+from contextlib import ContextDecorator, contextmanager
+from time import sleep, time
 
 
 @contextmanager

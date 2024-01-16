@@ -1,10 +1,9 @@
-from collections import namedtuple
-import math
-import time
-import random
+from locust import HttpUser, LoadTestShape, TaskSet, constant, task
 
-from locust import HttpUser, TaskSet, task, constant
-from locust import LoadTestShape
+import math
+import random
+import time
+from collections import namedtuple
 
 
 class UserTasks(TaskSet):

@@ -1,9 +1,10 @@
+from locust import events, task
+
 import gevent
 import grpc_user
 import hello_pb2
 import hello_pb2_grpc
 from hello_server import start_server
-from locust import events, task
 
 
 # Start the dummy server. This is not something you would do in a real test.

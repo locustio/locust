@@ -1,6 +1,7 @@
-from locust import TaskSet, User, task, tag
-from locust.user.task import filter_tasks_by_tags
+from locust import TaskSet, User, tag, task
 from locust.env import Environment
+from locust.user.task import filter_tasks_by_tags
+
 from .testcases import LocustTestCase
 
 

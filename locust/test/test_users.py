@@ -1,9 +1,9 @@
+from locust import HttpUser, User
+from locust.test.testcases import WebserverTestCase
+
 import unittest
 
 from urllib3 import PoolManager
-
-from locust import User, HttpUser
-from locust.test.testcases import WebserverTestCase
 
 
 class TestUserClass(unittest.TestCase):

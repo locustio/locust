@@ -4,11 +4,13 @@ UI extension hooks to track the sum of the content-length header in all
 successful HTTP responses and display them in the web UI.
 """
 
+from locust import HttpUser, TaskSet, between, events, task, web
+
 import os
-from time import time
 from html import escape
-from locust import HttpUser, TaskSet, task, web, between, events
-from flask import Blueprint, render_template, jsonify, make_response
+from time import time
+
+from flask import Blueprint, jsonify, make_response, render_template
 
 
 class MyTaskSet(TaskSet):

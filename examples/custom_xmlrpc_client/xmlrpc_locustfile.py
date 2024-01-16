@@ -1,7 +1,7 @@
-import time
-from xmlrpc.client import ServerProxy, Fault
-
 from locust import User, task
+
+import time
+from xmlrpc.client import Fault, ServerProxy
 
 
 class XmlRpcClient(ServerProxy):

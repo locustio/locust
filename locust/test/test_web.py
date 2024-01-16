@@ -1,35 +1,35 @@
 from __future__ import annotations
 
+import locust
+from locust import LoadTestShape, constant, stats
+from locust.argument_parser import get_parser, parse_options
+from locust.env import Environment
+from locust.log import LogReader
+from locust.runners import Runner
+from locust.stats import StatsCSVFileWriter
+from locust.user import User, task
+from locust.web import WebUI
+
 import copy
 import csv
 import json
+import logging
 import os
 import re
 import textwrap
 import traceback
-import logging
 from io import StringIO
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 import gevent
 import requests
-from pyquery import PyQuery as pq
-import locust
 from flask_login import UserMixin
-from locust import constant, LoadTestShape
-from locust.argument_parser import get_parser, parse_options
-from locust.user import User, task
-from locust.env import Environment
-from locust.runners import Runner
-from locust import stats
-from locust.stats import StatsCSVFileWriter
-from locust.web import WebUI
-from locust.log import LogReader
+from pyquery import PyQuery as pq
 
+from ..util.load_locustfile import load_locustfile
 from .mock_locustfile import mock_locustfile
 from .testcases import LocustTestCase
 from .util import create_tls_cert
-from ..util.load_locustfile import load_locustfile
 
 
 class _HeaderCheckMixin:

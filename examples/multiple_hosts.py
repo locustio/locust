@@ -1,7 +1,7 @@
-import os
-
-from locust import HttpUser, TaskSet, task, between
+from locust import HttpUser, TaskSet, between, task
 from locust.clients import HttpSession
+
+import os
 
 
 class MultipleHostsUser(HttpUser):

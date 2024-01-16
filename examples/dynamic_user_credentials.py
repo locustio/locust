@@ -1,6 +1,6 @@
 # locustfile.py
 
-from locust import HttpUser, TaskSet, task, between
+from locust import HttpUser, TaskSet, between, task
 
 USER_CREDENTIALS = [
     ("user1", "password"),

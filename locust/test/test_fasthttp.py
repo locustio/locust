@@ -1,17 +1,18 @@
+from locust import FastHttpUser
+from locust.argument_parser import parse_options
+from locust.contrib.fasthttp import FastHttpSession
+from locust.exception import CatchResponseError, InterruptTaskSet, LocustError, ResponseError
+from locust.user import TaskSet, task
+from locust.util.load_locustfile import is_user_class
+
 import socket
-import gevent
 import time
 from tempfile import NamedTemporaryFile
 
+import gevent
 from geventhttpclient.client import HTTPClientPool
 
-from locust.argument_parser import parse_options
-from locust.user import task, TaskSet
-from locust.contrib.fasthttp import FastHttpSession
-from locust import FastHttpUser
-from locust.exception import CatchResponseError, InterruptTaskSet, LocustError, ResponseError
-from locust.util.load_locustfile import is_user_class
-from .testcases import WebserverTestCase, LocustTestCase
+from .testcases import LocustTestCase, WebserverTestCase
 from .util import create_tls_cert
 
 

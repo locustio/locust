@@ -1,5 +1,7 @@
-import logging
 from locust.exception import LocustError
+
+import logging
+
 from .task import TaskSet, TaskSetMeta
 
 

@@ -1,8 +1,10 @@
-from time import sleep
-import zmq
-from locust.rpc import zmqrpc, Message
+from locust.exception import RPCError, RPCReceiveError, RPCSendError
+from locust.rpc import Message, zmqrpc
 from locust.test.testcases import LocustTestCase
-from locust.exception import RPCError, RPCSendError, RPCReceiveError
+
+from time import sleep
+
+import zmq
 
 
 class ZMQRPC_tests(LocustTestCase):

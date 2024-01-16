@@ -1,6 +1,7 @@
 # How to use worker_index to read from a pre-partitioned CSV file (mythings_0.csv, mythings_1.csv, ...)
 # so that each worker uses their own file
-from locust import events, task, User, runners
+from locust import User, events, runners, task
+
 from locust_plugins import csvreader  # install locust-plugins first
 
 

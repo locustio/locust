@@ -1,16 +1,17 @@
-from unittest import mock
+from locust import log
+from locust.log import greenlet_exception_logger
+
 import socket
 import subprocess
 import textwrap
 from logging import getLogger
+from unittest import mock
 
 import gevent
 
-from locust import log
-from locust.log import greenlet_exception_logger
+from . import changed_rlimit
 from .testcases import LocustTestCase
 from .util import temporary_file
-from . import changed_rlimit
 
 
 class TestGreenletExceptionLogger(LocustTestCase):

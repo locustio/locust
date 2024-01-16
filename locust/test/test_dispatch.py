@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import time
-import unittest
-from operator import attrgetter
-
 from locust import User
 from locust.dispatch import UsersDispatcher
 from locust.runners import WorkerNode
 from locust.test.util import clear_all_functools_lru_cache
+
+import time
+import unittest
+from operator import attrgetter
 
 _TOLERANCE = 0.025
 
