@@ -11,45 +11,40 @@ const mockStructure = [
 
 describe('useSelectViewColumns hook', () => {
   test('should initialize with default columns', () => {
-    const defaultColumns = ['column1', 'column2'];
-    const { result } = renderHook(() => useSelectViewColumns(defaultColumns));
+    const { result } = renderHook(() => useSelectViewColumns(mockStructure));
 
-    expect(result.current.selectedColumns).toEqual(defaultColumns);
+    expect(result.current.selectedColumns).toEqual(mockStructure.map(s => s.key));
   });
 
   test('should add a new column', () => {
-    const defaultColumns = ['column1', 'column2'];
-    const { result } = renderHook(() => useSelectViewColumns(defaultColumns));
+    const { result } = renderHook(() => useSelectViewColumns(mockStructure));
 
     act(() => {
       result.current.addColumn('column3');
     });
 
-    expect(result.current.selectedColumns).toEqual([...defaultColumns, 'column3']);
+    expect(result.current.selectedColumns).toEqual([...mockStructure.map(s => s.key), 'column3']);
   });
 
   test('should remove an existing column', () => {
-    const defaultColumns = ['column1', 'column2'];
-    const { result } = renderHook(() => useSelectViewColumns(defaultColumns));
+    const { result } = renderHook(() => useSelectViewColumns(mockStructure));
 
     act(() => {
-      result.current.removeColumn('column1');
+      result.current.removeColumn('method');
     });
 
-    expect(result.current.selectedColumns).toEqual(['column2']);
+    expect(result.current.selectedColumns).toEqual(['name', 'numRequests']);
   });
 
   test('filterStructure should filter out unselected columns', () => {
-    const defaultColumns = mockStructure.map(({ key }) => key);
-
-    const { result } = renderHook(() => useSelectViewColumns(defaultColumns));
+    const { result } = renderHook(() => useSelectViewColumns(mockStructure));
 
     act(() => {
       // remove column with key 'method'
       result.current.removeColumn('method');
     });
 
-    const filteredStructure = result.current.filterStructure(mockStructure);
+    const filteredStructure = result.current.filteredStructure;
 
     // expect only columns with keys 'name' and 'numRequests' to be returned
     expect(filteredStructure.length).toBe(2);
