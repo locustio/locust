@@ -12,8 +12,7 @@ export interface ISwarmStat {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   minResponseTime: number;
   name: string;
-  ninetiethResponseTime: number;
-  ninetyNinthResponseTime: number;
+  [key: `responseTimePercentile${number}`]: number;
   numFailures: number;
   numRequests: number;
   safeName: string;

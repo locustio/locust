@@ -613,6 +613,7 @@ class WebUI:
         if self.modern_ui:
             percentiles = {
                 "percentiles_to_chart": stats_module.MODERN_UI_PERCENTILES_TO_CHART,
+                "percentiles_to_statistics": stats_module.PERCENTILES_TO_STATISTICS,
             }
         else:
             percentiles = {
