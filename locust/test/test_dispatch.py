@@ -4402,19 +4402,19 @@ class TestFixedUsersDispatcher(unittest.TestCase):
 
     def test__spread_sticky_tags_on_workers(self) -> None:
         class User1(User):
-            fixed_count = 2
+            fixed_count = 15
             sticky_tag = "foo"
 
         class User2(User):
-            fixed_count = 1
+            fixed_count = 10
             sticky_tag = "foo"
 
         class User3(User):
-            fixed_count = 2
+            fixed_count = 14
             sticky_tag = "bar"
 
         class User4(User):
-            pass
+            fixed_count = 1
 
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(2)]
         user_classes = [User3, User4, User2, User1]
@@ -4458,7 +4458,34 @@ class TestFixedUsersDispatcher(unittest.TestCase):
         self.assertEqual(next(user_dispatcher._sticky_tag_to_workers.get("__orphan__", default)).id, "3")
         self.assertEqual(next(user_dispatcher._sticky_tag_to_workers.get("__orphan__", default)).id, "3")
 
+        user_classes = [User3, User2, User1]
+        worker_nodes = [WorkerNode(str(i + 1)) for i in range(7)]
+        user_dispatcher = FixedUsersDispatcher(worker_nodes, user_classes)
+        user_dispatcher._spread_sticky_tags_on_workers()
+
+        self.assertDictEqual(
+            user_dispatcher._workers_to_sticky_tag,
+            {
+                worker_nodes[0]: "foo",
+                worker_nodes[1]: "bar",
+                worker_nodes[2]: "foo",
+                worker_nodes[3]: "bar",
+                worker_nodes[4]: "foo",
+                worker_nodes[5]: "foo",
+                worker_nodes[6]: "bar",
+            },
+        )
+
+        self.assertDictEqual(
+            user_dispatcher._sticky_tag_to_workers,
+            {
+                "foo": ANY(itertools.cycle),
+                "bar": ANY(itertools.cycle),
+            },
+        )
+
         worker_nodes = [WorkerNode(str(i + 1)) for i in range(3)]
+        user_classes = [User3, User4, User2, User1]
 
         user_dispatcher = FixedUsersDispatcher(worker_nodes, user_classes)
         user_dispatcher._spread_sticky_tags_on_workers()

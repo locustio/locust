@@ -200,8 +200,8 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
         gevent.sleep(sleep_duration)
 
     @staticmethod
-    def infinite_cycle_gen(users: list[tuple[type[User], int]]) -> itertools.cycle[str | None]:
-        if not users:
+    def infinite_cycle_gen(value_weights: list[tuple[type[User] | str, int]]) -> itertools.cycle[str | None]:
+        if not value_weights:
             return itertools.cycle([None])
 
         # Normalize the weights so that the smallest weight will be equal to "target_min_weight".
@@ -211,19 +211,21 @@ class UsersDispatcher(Iterator[DistributedUsers], metaclass=ABCMeta):
 
         # 'Value' here means weight or fixed count
         try:
-            min_value = min(u[1] for u in users if u[1] > 0)
+            min_value = min(weight for _, weight in value_weights if weight > 0)
         except ValueError:
             min_value = 0
 
-        normalized_values = [
+        normalized_value_weights = [
             (
-                user.__name__,
-                round(target_min_weight * value / min_value) if min_value > 0 else 0,
+                getattr(value, "__name__", value),
+                round(target_min_weight * weight / min_value) if min_value > 0 else 0,
             )
-            for user, value in users
+            for value, weight in value_weights
         ]
-        generation_length_to_get_proper_distribution = sum(normalized_val[1] for normalized_val in normalized_values)
-        gen = smooth(normalized_values)
+        generation_length_to_get_proper_distribution = sum(
+            normalized_weight for _, normalized_weight in normalized_value_weights
+        )
+        gen = smooth(normalized_value_weights)
 
         # Instead of calling `gen()` for each user, we cycle through a generator of fixed-length
         # `generation_length_to_get_proper_distribution`. Doing so greatly improves performance because
@@ -747,23 +749,28 @@ class FixedUsersDispatcher(UsersDispatcher):
 
             user_count = sticky_tag_user_count.get(sticky_tag, 0) + user_count
             sticky_tag_user_count.update({sticky_tag: user_count})
-            
-        logger.info('user count per sticky tag: %r', sticky_tag_user_count)
+
+        logger.debug("user count per sticky tag: %r", sticky_tag_user_count)
 
         worker_node_count = len(self._worker_nodes)
         # sort sticky tags based on number of users (more user types should have more workers)
-        sticky_tags: Iterator[str] = iter(
-            dict(sorted(sticky_tag_user_count.items(), key=itemgetter(1), reverse=True)).keys()
-        )
+        sticky_tags: dict[str, int] = dict(sorted(sticky_tag_user_count.items(), key=itemgetter(1), reverse=True))
         sticky_tag_count = len(sticky_tag_user_count)
 
         # not enough sticky tags per worker, so cycle sticky tags so all workers gets a tag
+        sticky_tags_f: Iterator[str]
         if worker_node_count > sticky_tag_count:
-            sticky_tags = itertools.cycle(sticky_tags)
+            # make sure each tag get at least one worker, then spread the remaining based on how many users that sticky tag has been assigned
+            sticky_tags_f = itertools.chain(
+                sticky_tags.keys(),
+                self.infinite_cycle_gen([(sticky_tag, user_count) for sticky_tag, user_count in sticky_tags.items()]),
+            )
+        else:
+            sticky_tags_f = iter(sticky_tags.keys())
 
         # map worker to sticky tag
         self._workers_to_sticky_tag.clear()
-        for worker, sticky_tag in zip(self._worker_nodes, sticky_tags):
+        for worker, sticky_tag in zip(self._worker_nodes, sticky_tags_f):
             self._workers_to_sticky_tag.update({worker: sticky_tag})
 
         # map sticky tag to workers
@@ -773,8 +780,14 @@ class FixedUsersDispatcher(UsersDispatcher):
             self.__sticky_tag_to_workers.update(
                 {sticky_tag: self.__sticky_tag_to_workers.get(sticky_tag, []) + [worker]}
             )
-            
-        logger.info('workers per sticky tag: %r', self.__sticky_tag_to_workers)
+
+        logger.debug(
+            "workers per sticky tag: %r",
+            {
+                sticky_tag: [worker.id for worker in workers]
+                for sticky_tag, workers in self.__sticky_tag_to_workers.items()
+            },
+        )
 
         # check if workers has changed since last time
         # do not reset worker cycles if only target user count has changed
@@ -796,7 +809,7 @@ class FixedUsersDispatcher(UsersDispatcher):
                 del self._sticky_tag_to_workers[sticky_tag]
 
     def create_user_generator(self) -> UserGenerator:
-        user_cycle = [
+        user_cycle: list[tuple[type[User] | str, int]] = [
             (self._user_class_name_to_type.get(user_class_name), fixed_count)
             for user_class_name, fixed_count in self.target_user_count.items()
         ]
