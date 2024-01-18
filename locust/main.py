@@ -3,6 +3,7 @@ from __future__ import annotations
 import errno
 import logging
 import os
+import json
 import signal
 import sys
 import time
@@ -357,6 +358,33 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         available_shape_classes=available_shape_classes,
         available_user_tasks=available_user_tasks,
     )
+
+    if options.config_users:
+        for json_user_config in options.config_users:
+            try:
+                if json_user_config.endswith(".json"):
+                    with open(json_user_config) as file:
+                        user_config = json.load(file)
+                else:
+                    user_config = json.loads(json_user_config)
+
+                def ensure_user_class_name(config):
+                    if "user_class_name" not in config:
+                        logger.error("The user config must specify a user_class_name")
+                        sys.exit(-1)
+
+                if isinstance(user_config, list):
+                    for config in user_config:
+                        ensure_user_class_name(config)
+
+                        environment.update_user_class(config)
+                else:
+                    ensure_user_class_name(user_config)
+
+                    environment.update_user_class(user_config)
+            except Exception as e:
+                logger.error(f"The --config-users arugment must be in valid JSON string or file: {e}")
+                sys.exit(-1)
 
     if (
         shape_class
