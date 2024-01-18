@@ -194,6 +194,17 @@ class Environment:
         )
         return self.web_ui
 
+    def update_user_class(self, user_settings):
+        user_class_name = user_settings.get("user_class_name")
+        user_class = self.available_user_classes[user_class_name]
+        user_tasks = self.available_user_tasks[user_class_name]
+
+        for key, value in user_settings.items():
+            if key not in ["user_class_name", "tasks"]:
+                setattr(user_class, key, value)
+            if key == "tasks":
+                user_class.tasks = [task for task in user_tasks if task.__name__ in value]
+
     def _filter_tasks_by_tags(self) -> None:
         """
         Filter the tasks on all the user_classes recursively, according to the tags and

@@ -1,6 +1,7 @@
 from __future__ import annotations
 import csv
 import logging
+import json
 import os.path
 from functools import wraps
 
@@ -527,6 +528,15 @@ class WebUI:
                 )
             else:
                 return "Web Auth is only available on the modern web ui. Enable it with the --modern-ui flag"
+
+        @app.route("/user", methods=["POST"])
+        def update_user():
+            assert request.method == "POST"
+
+            user_settings = json.loads(request.data)
+            self.environment.update_user_class(user_settings)
+
+            return {}, 201
 
     def start(self):
         self.greenlet = gevent.spawn(self.start_server)
