@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Accordion,
@@ -14,6 +15,7 @@ import { connect } from 'react-redux';
 import Form from 'components/Form/Form';
 import Select from 'components/Form/Select';
 import CustomParameters from 'components/SwarmForm/SwarmCustomParameters';
+import SwarmUserClassPicker from 'components/SwarmForm/SwarmUserClassPicker';
 import { SWARM_STATE } from 'constants/swarm';
 import { useStartSwarmMutation } from 'redux/api/swarm';
 import { swarmActions, ISwarmState } from 'redux/slice/swarm.slice';
@@ -60,6 +62,7 @@ function SwarmForm({
   spawnRate,
 }: ISwarmForm) {
   const [startSwarm] = useStartSwarmMutation();
+  const [selectedUserClasses, setSelectedUserClasses] = useState(availableUserClasses);
 
   const onStartSwarm = (inputData: ISwarmFormInput) => {
     setSwarm({
@@ -70,7 +73,10 @@ function SwarmForm({
       numUsers: Number(inputData.userCount) || null,
     });
 
-    startSwarm(inputData);
+    startSwarm({
+      ...inputData,
+      ...(showUserclassPicker && selectedUserClasses ? { userClasses: selectedUserClasses } : {}),
+    });
   };
 
   return (
@@ -78,18 +84,26 @@ function SwarmForm({
       <Typography component='h2' noWrap variant='h6'>
         Start new load test
       </Typography>
+      {showUserclassPicker && (
+        <Box marginBottom={2} marginTop={2}>
+          <SwarmUserClassPicker
+            selectedUserClasses={selectedUserClasses}
+            setSelectedUserClasses={setSelectedUserClasses}
+          />
+        </Box>
+      )}
       <Form<ISwarmFormInput> onSubmit={onStartSwarm}>
-        <Box sx={{ my: 2, display: 'flex', flexDirection: 'column', rowGap: 4 }}>
+        <Box
+          sx={{
+            marginBottom: 2,
+            marginTop: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            rowGap: 4,
+          }}
+        >
           {showUserclassPicker && (
-            <>
-              <Select
-                label='User Classes'
-                multiple
-                name='userClasses'
-                options={availableUserClasses}
-              />
-              <Select label='Shape Class' name='shapeClass' options={availableShapeClasses} />
-            </>
+            <Select label='Shape Class' name='shapeClass' options={availableShapeClasses} />
           )}
           <TextField
             defaultValue={(isShape && '-') || numUsers || 1}

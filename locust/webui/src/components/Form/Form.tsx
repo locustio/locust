@@ -11,6 +11,13 @@ interface IForm<IInputData extends BaseInputData> {
 const FORM_INPUT_ELEMENTS = 'input, select, textarea';
 
 const getInputValue = (inputElement: HTMLInputElement | HTMLSelectElement) => {
+  if (
+    inputElement instanceof HTMLInputElement &&
+    inputElement.getAttribute('data-type') === 'number'
+  ) {
+    return Number(inputElement.value);
+  }
+
   if (inputElement instanceof HTMLInputElement && inputElement.type === 'checkbox') {
     return inputElement.checked;
   }

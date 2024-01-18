@@ -50,16 +50,14 @@ describe('SwarmForm', () => {
     const { getByText, getByLabelText } = renderWithProvider(<SwarmForm />, {
       swarm: {
         showUserclassPicker: true,
-        availableUserClasses: ['Class1', 'Class2'],
+        availableUserClasses: ['Class1'],
         availableShapeClasses: ['Shape1', 'Shape2'],
         extraOptions: {},
+        users: {},
       },
     });
 
     act(() => {
-      fireEvent.change(getByLabelText('User Classes'), {
-        target: { value: 'Class1' },
-      });
       fireEvent.change(getByLabelText('Shape Class'), {
         target: { value: 'Shape1' },
       });
