@@ -602,13 +602,27 @@ class WebUI:
         stats = self.environment.runner.stats
         extra_options = argument_parser.ui_extra_args_dict()
 
-        available_user_classes = (
-            None if not self.environment.available_user_classes else sorted(self.environment.available_user_classes)
-        )
+        available_user_classes = None
+        users = None
+        if self.environment.available_user_classes:
+            available_user_classes = sorted(self.environment.available_user_classes)
+            users = {
+                user_class_name: user_class.json()
+                for (user_class_name, user_class) in self.environment.available_user_classes.items()
+            }
 
         available_shape_classes = ["Default"]
         if self.environment.available_shape_classes:
             available_shape_classes += sorted(self.environment.available_shape_classes.keys())
+
+        available_user_tasks = (
+            {
+                user_class_name: [task.__name__ for task in user_class]
+                for (user_class_name, user_class) in self.environment.available_user_tasks.items()
+            }
+            if self.environment.available_user_tasks
+            else None
+        )
 
         if self.modern_ui:
             percentiles = {
@@ -644,6 +658,8 @@ class WebUI:
             "show_userclass_picker": self.userclass_picker_is_active,
             "available_user_classes": available_user_classes,
             "available_shape_classes": available_shape_classes,
+            "available_user_tasks": available_user_tasks,
+            "users": users,
             **percentiles,
         }
 
