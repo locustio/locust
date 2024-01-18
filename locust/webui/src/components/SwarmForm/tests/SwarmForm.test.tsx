@@ -93,6 +93,53 @@ describe('SwarmForm', () => {
     });
   });
 
+  test('should allow selected user classes to be modified', async () => {
+    const { getByText, getAllByRole } = renderWithProvider(<SwarmForm />, {
+      swarm: {
+        showUserclassPicker: true,
+        availableUserClasses: ['Class1', 'Class2'],
+        availableShapeClasses: ['Shape1', 'Shape2'],
+        extraOptions: {},
+        users: {
+          Class1: {
+            host: 'http://localhost',
+            fixedCount: 0,
+            weight: 0,
+            tasks: ['ExampleTask'],
+          },
+          Class2: {
+            host: 'http://localhost',
+            fixedCount: 0,
+            weight: 0,
+            tasks: ['ExampleTask'],
+          },
+        },
+      },
+    });
+
+    act(() => {
+      fireEvent.click(getAllByRole('checkbox')[1]);
+    });
+    act(() => {
+      fireEvent.click(getByText('Start Swarm'));
+    });
+
+    await waitFor(async () => {
+      const submittedData = startSwarm.mock.calls[0][0];
+
+      if (submittedData) {
+        expect(submittedData).toEqual({
+          host: '',
+          runTime: '',
+          spawnRate: '1',
+          userCount: '1',
+          shapeClass: 'Shape1',
+          userClasses: 'Class1',
+        });
+      }
+    });
+  });
+
   test('should submit provided extraOptions with default values', async () => {
     const customFieldName = 'textField';
     const customFieldValue = 'Text value';
