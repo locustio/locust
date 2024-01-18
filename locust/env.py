@@ -35,6 +35,7 @@ class Environment:
         parsed_options: Namespace | None = None,
         available_user_classes: dict[str, User] | None = None,
         available_shape_classes: dict[str, LoadTestShape] | None = None,
+        available_user_tasks: dict[str, list[TaskSet | Callable]] | None = None,
     ):
         self.runner: Runner | None = None
         """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
@@ -93,6 +94,8 @@ class Environment:
         """List of the available User Classes to pick from in the UserClass Picker"""
         self.available_shape_classes = available_shape_classes
         """List of the available Shape Classes to pick from in the ShapeClass Picker"""
+        self.available_user_tasks = available_user_tasks
+        """List of the available Tasks per User Classes to pick from in the Task Picker"""
 
         self._remove_user_classes_with_weight_zero()
         self._validate_user_class_name_uniqueness()

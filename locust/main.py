@@ -56,6 +56,7 @@ def create_environment(
     locustfile=None,
     available_user_classes=None,
     available_shape_classes=None,
+    available_user_tasks=None,
 ):
     """
     Create an Environment instance from options
@@ -70,6 +71,7 @@ def create_environment(
         parsed_options=options,
         available_user_classes=available_user_classes,
         available_shape_classes=available_shape_classes,
+        available_user_tasks=available_user_tasks,
     )
 
 
@@ -87,6 +89,7 @@ def main():
     user_classes: dict[str, locust.User] = {}
     available_user_classes = {}
     available_shape_classes = {}
+    available_user_tasks = {}
     shape_class = None
     for _locustfile in locustfiles:
         docstring, _user_classes, shape_classes = load_locustfile(_locustfile)
@@ -118,6 +121,7 @@ def main():
 
             user_classes[key] = value
             available_user_classes[key] = value
+            available_user_tasks[key] = value.tasks or None
 
     if len(stats.PERCENTILES_TO_CHART) != 2:
         logging.error("stats.PERCENTILES_TO_CHART parameter should be 2 parameters \n")
@@ -351,6 +355,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         locustfile=locustfile_path,
         available_user_classes=available_user_classes,
         available_shape_classes=available_shape_classes,
+        available_user_tasks=available_user_tasks,
     )
 
     if (
