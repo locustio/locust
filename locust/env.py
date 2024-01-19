@@ -35,6 +35,7 @@ class Environment:
         parsed_options: Namespace | None = None,
         available_user_classes: dict[str, User] | None = None,
         available_shape_classes: dict[str, LoadTestShape] | None = None,
+        available_user_tasks: dict[str, list[TaskSet | Callable]] | None = None,
     ):
         self.runner: Runner | None = None
         """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
@@ -93,6 +94,8 @@ class Environment:
         """List of the available User Classes to pick from in the UserClass Picker"""
         self.available_shape_classes = available_shape_classes
         """List of the available Shape Classes to pick from in the ShapeClass Picker"""
+        self.available_user_tasks = available_user_tasks
+        """List of the available Tasks per User Classes to pick from in the Task Picker"""
 
         self._remove_user_classes_with_weight_zero()
         self._validate_user_class_name_uniqueness()
@@ -190,6 +193,17 @@ class Environment:
             modern_ui=modern_ui,
         )
         return self.web_ui
+
+    def update_user_class(self, user_settings):
+        user_class_name = user_settings.get("user_class_name")
+        user_class = self.available_user_classes[user_class_name]
+        user_tasks = self.available_user_tasks[user_class_name]
+
+        for key, value in user_settings.items():
+            if key not in ["user_class_name", "tasks"]:
+                setattr(user_class, key, value)
+            if key == "tasks":
+                user_class.tasks = [task for task in user_tasks if task.__name__ in value]
 
     def _filter_tasks_by_tags(self) -> None:
         """

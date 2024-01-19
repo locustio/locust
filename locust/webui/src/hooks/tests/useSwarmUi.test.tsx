@@ -36,19 +36,19 @@ describe('useSwarmUi', () => {
   afterAll(() => server.close());
 
   test('should fetch request stats, ratios, and exceptions and update UI accordingly', async () => {
-    act(async () => {
-      vi.useFakeTimers();
+    vi.useFakeTimers();
 
-      vi.setSystemTime(mockDate);
+    vi.setSystemTime(mockDate);
 
-      const { store } = renderWithProvider(<MockHook />);
+    const { store } = renderWithProvider(<MockHook />);
 
+    await act(async () => {
       await vi.runAllTimersAsync();
-
-      expect(store.getState().ui).toEqual(statsResponseTransformed);
-
-      vi.useRealTimers();
     });
+
+    expect(store.getState().ui).toEqual(statsResponseTransformed);
+
+    vi.useRealTimers();
   });
 
   test('should add markers to charts between tests', async () => {

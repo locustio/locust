@@ -1065,6 +1065,65 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         self.assertIn(log_line, response.json().get("logs"))
 
+    def test_template_args(self):
+        class MyUser(User):
+            @task
+            def do_something(self):
+                self.client.get("/")
+
+            host = "http://example.com"
+
+        class MyUser2(User):
+            host = "http://example.com"
+
+        self.environment.user_classes = [MyUser, MyUser2]
+        self.environment.available_user_classes = {"User1": MyUser, "User2": MyUser2}
+        self.environment.available_user_tasks = {"User1": MyUser.tasks, "User2": MyUser2.tasks}
+
+        users = {"User1": MyUser.json(), "User2": MyUser2.json()}
+        available_user_tasks = {"User1": ["do_something"], "User2": []}
+
+        self.web_ui.update_template_args()
+
+        self.assertEqual(self.web_ui.template_args.get("users"), users)
+        self.assertEqual(
+            self.web_ui.template_args.get("available_user_classes"), sorted(self.environment.available_user_classes)
+        )
+        self.assertEqual(self.web_ui.template_args.get("available_user_tasks"), available_user_tasks)
+
+    def test_update_user_endpoint(self):
+        class MyUser(User):
+            @task
+            def my_task(self):
+                pass
+
+            @task
+            def my_task_2(self):
+                pass
+
+            host = "http://example.com"
+
+        class MyUser2(User):
+            host = "http://example.com"
+
+        self.environment.user_classes = [MyUser, MyUser2]
+        self.environment.available_user_classes = {"User1": MyUser, "User2": MyUser2}
+        self.environment.available_user_tasks = {"User1": MyUser.tasks, "User2": MyUser2.tasks}
+
+        users = {"User1": MyUser.json(), "User2": MyUser2.json()}
+        available_user_tasks = {"User1": ["my_task", "my_task_2"], "User2": []}
+
+        # environment.update_user_class({"user_class_name": "User1", "host": "http://localhost", "tasks": ["my_task_2"]})
+        response = requests.post(
+            "http://127.0.0.1:%i/user" % self.web_port,
+            json={"user_class_name": "User1", "host": "http://localhost", "tasks": ["my_task_2"]},
+        )
+
+        self.assertEqual(
+            self.environment.available_user_classes["User1"].json(),
+            {"host": "http://localhost", "tasks": ["my_task_2"], "fixed_count": 0, "weight": 1},
+        )
+
 
 class TestWebUIAuth(LocustTestCase):
     def setUp(self):

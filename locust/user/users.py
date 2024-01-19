@@ -224,6 +224,15 @@ class User(metaclass=UserMeta):
         return {}
 
     @classmethod
+    def json(cls):
+        return {
+            "host": cls.host,
+            "weight": cls.weight,
+            "fixed_count": cls.fixed_count,
+            "tasks": [task.__name__ for task in cls.tasks],
+        }
+
+    @classmethod
     def fullname(cls) -> str:
         """Fully qualified name of the user class, e.g. my_package.my_module.MyUserClass"""
         return ".".join(filter(lambda x: x != "<locals>", (cls.__module__ + "." + cls.__qualname__).split(".")))
