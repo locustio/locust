@@ -47,7 +47,7 @@ jobs:
       - run: python -m pip install tox
       - run: python -m tox -e ${{ matrix.tox }}
 
-  lint_typecheck_webui:
+  lint_typecheck_test_webui:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

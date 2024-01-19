@@ -1,5 +1,5 @@
 import { cleanup } from '@testing-library/react';
-import { afterEach, vi } from 'vitest';
+import { afterAll, afterEach, vi } from 'vitest';
 
 import { TEST_BASE_API } from 'test/constants';
 import { swarmStateMock } from 'test/mocks/swarmState.mock';
@@ -24,4 +24,8 @@ vi.mock('echarts', async () => {
   const actual = (await vi.importActual('echarts')) as { [key: string]: any };
 
   return { ...actual, init: (...args: any[]) => actual.init(...args, { width: 100, height: 100 }) };
+});
+
+afterAll(() => {
+  vi.clearAllMocks();
 });

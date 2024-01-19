@@ -1,4 +1,4 @@
-import { act, fireEvent, waitFor } from '@testing-library/react';
+import { act, fireEvent } from '@testing-library/react';
 import { http } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterEach, afterAll, beforeAll, describe, test, expect, vi } from 'vitest';
@@ -47,7 +47,7 @@ const defaultProps = {
   setSwarm: updateSwarm,
 };
 
-describe('SwarmForm', () => {
+describe('SwarmUserClassPicker', () => {
   beforeAll(() => server.listen());
   afterEach(() => {
     server.resetHandlers();
@@ -95,6 +95,8 @@ describe('SwarmForm', () => {
       },
     );
 
+    vi.useFakeTimers();
+
     act(() => {
       // Open modal
       fireEvent.click(getAllByRole('button')[0]);
@@ -104,12 +106,15 @@ describe('SwarmForm', () => {
       fireEvent.click(getByRole('button', { name: 'Save' }));
     });
 
-    await waitFor(async () => {
-      const submittedData = updateUserSettings.mock.calls[0][0];
-      if (submittedData) {
-        expect(submittedData).toEqual({ ...mockUsers.Example, userClassName: 'Example' });
-      }
+    await act(async () => {
+      await vi.runAllTimersAsync();
     });
+
+    expect(updateUserSettings).toHaveBeenCalled();
+
+    const submittedData = updateUserSettings.mock.calls[0][0];
+
+    expect(submittedData).toEqual({ ...mockUsers.Example, userClassName: 'Example' });
   });
 
   test('should allow for configuring tasks, host, fixed_count, and weight to be modified', async () => {
@@ -129,6 +134,8 @@ describe('SwarmForm', () => {
         },
       },
     );
+
+    vi.useFakeTimers();
 
     act(() => {
       // Open modal
@@ -152,12 +159,15 @@ describe('SwarmForm', () => {
       fireEvent.click(getByRole('button', { name: 'Save' }));
     });
 
-    await waitFor(async () => {
-      const submittedData = updateUserSettings.mock.calls[0][0];
-      if (submittedData) {
-        expect(submittedData).toEqual({ ...updatedUser, userClassName: 'Example' });
-        expect(store.getState().swarm.users.Example).toEqual(updatedUser);
-      }
+    await act(async () => {
+      await vi.runAllTimersAsync();
     });
+
+    expect(updateUserSettings).toHaveBeenCalled();
+
+    const submittedData = updateUserSettings.mock.calls[0][0];
+
+    expect(submittedData).toEqual({ ...updatedUser, userClassName: 'Example' });
+    expect(store.getState().swarm.users.Example).toEqual(updatedUser);
   });
 });
