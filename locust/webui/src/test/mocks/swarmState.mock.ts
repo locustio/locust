@@ -3,7 +3,8 @@ export const percentilesToStatistics = [0.5, 0.95, 0.99];
 
 export const swarmStateMock = {
   availableShapeClasses: ['Default'],
-  availableUserClasses: ['ExampleUser'],
+  availableUserClasses: ['ExampleClass'],
+  availableUserTasks: { ExampleClass: ['ExampleTask'] },
   extraOptions: {},
   history: [],
   host: 'https://localhost',
@@ -24,4 +25,5 @@ export const swarmStateMock = {
   userCount: 0,
   version: '2.15.0',
   workerCount: 0,
+  users: {},
 };

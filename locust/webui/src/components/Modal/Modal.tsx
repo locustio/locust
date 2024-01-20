@@ -4,7 +4,7 @@ import { Box, IconButton, Modal as MuiModal } from '@mui/material';
 interface IModal {
   open: boolean;
   onClose: () => void;
-  children: React.ReactElement | React.ReactElement[];
+  children?: React.ReactElement | React.ReactElement[];
 }
 
 export default function Modal({ open, onClose, children }: IModal) {

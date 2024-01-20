@@ -11,6 +11,13 @@ describe('Form component', () => {
     component = render(
       <Form onSubmit={onSubmitMock}>
         <input data-testid='textInput' defaultValue='Text' name='textInput' type='text' />
+        <input
+          data-testid='numberInput'
+          data-type='number'
+          defaultValue='4'
+          name='numberInput'
+          type='text'
+        />
         <textarea data-testid='textArea' defaultValue='Text Area' name='textArea' />
         <input
           data-testid='checkboxInput'
@@ -49,6 +56,7 @@ describe('Form component', () => {
 
     expect(onSubmitMock).toHaveBeenCalledWith({
       textInput: 'Text',
+      numberInput: 4,
       textArea: 'Text Area',
       checkboxInput: true,
       selectInput: 'option1',
@@ -62,6 +70,9 @@ describe('Form component', () => {
     act(() => {
       fireEvent.change(getByTestId('textInput'), {
         target: { value: 'Changed Text' },
+      });
+      fireEvent.change(getByTestId('numberInput'), {
+        target: { value: '6' },
       });
       fireEvent.change(getByTestId('textArea'), {
         target: { value: 'Changed Text Area' },
@@ -77,6 +88,7 @@ describe('Form component', () => {
 
     expect(onSubmitMock).toHaveBeenCalledWith({
       textInput: 'Changed Text',
+      numberInput: 6,
       textArea: 'Changed Text Area',
       checkboxInput: false,
       selectInput: 'option2',
