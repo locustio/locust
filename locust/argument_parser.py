@@ -20,6 +20,11 @@ class LocustArgumentParser(configargparse.ArgumentParser):
     optionally exclude arguments from the UI.
     """
 
+    def add_argument_group(self, *args, **kwargs):
+        group = super().add_argument_group(*args, **kwargs)
+        group.add_argument = self.add_argument
+        return group
+
     def add_argument(self, *args, **kwargs) -> configargparse.Action:
         """
         This method supports the same args as ArgumentParser.add_argument(..)
