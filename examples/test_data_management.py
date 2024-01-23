@@ -16,12 +16,13 @@
 #
 # try it out by running:
 #  locust -f test_data_management.py --headless -u 2 -t 5
-from locust.user.wait_time import constant
-from locust import HttpUser, task
-from locust import events
+from locust import HttpUser, events, task
 from locust.runners import MasterRunner
-import requests
+from locust.user.wait_time import constant
+
 import datetime
+
+import requests
 
 
 def timestring():

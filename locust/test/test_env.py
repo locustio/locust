@@ -7,9 +7,10 @@ from locust.user import (
     task,
 )
 from locust.user.task import TaskSet
-from .testcases import LocustTestCase
+
 from .fake_module1_for_env_test import MyUserWithSameName as MyUserWithSameName1
 from .fake_module2_for_env_test import MyUserWithSameName as MyUserWithSameName2
+from .testcases import LocustTestCase
 
 
 class TestEnvironment(LocustTestCase):

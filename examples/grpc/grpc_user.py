@@ -1,10 +1,12 @@
+from locust import User
+from locust.exception import LocustError
+
 import time
 from typing import Any, Callable
+
 import grpc
 import grpc.experimental.gevent as grpc_gevent
 from grpc_interceptor import ClientInterceptor
-from locust import User
-from locust.exception import LocustError
 
 # patch grpc so that it uses gevent instead of asyncio
 grpc_gevent.init_gevent()

@@ -1,13 +1,18 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-import os
-import inspect
 import locust
 import locust.log
-from locust import User, argument_parser
+from locust import argument_parser
 from locust.env import Environment
 from locust.exception import CatchResponseError, RescheduleTask
+
+import inspect
+import os
+from datetime import datetime, timezone
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from locust import User
 
 
 def _print_t(s):

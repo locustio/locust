@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from locust import __version__
+
 import functools
+import inspect
 import json
 import logging
 import os
@@ -19,24 +22,23 @@ from operator import (
 from types import TracebackType
 from typing import (
     TYPE_CHECKING,
+    Any,
+    Callable,
     Iterator,
     NoReturn,
-    ValuesView,
-    Any,
-    cast,
-    Callable,
     TypedDict,
+    ValuesView,
+    cast,
 )
 from uuid import uuid4
+
 import gevent
 import greenlet
 import psutil
 from gevent.event import Event
 from gevent.pool import Group
-import inspect
 
-from . import User
-from locust import __version__
+from . import argument_parser
 from .dispatch import UsersDispatcher
 from .exception import RPCError, RPCReceiveError, RPCSendError
 from .log import greenlet_exception_logger
@@ -49,9 +51,9 @@ from .stats import (
     StatsError,
     setup_distributed_stats_event_listeners,
 )
-from . import argument_parser
 
 if TYPE_CHECKING:
+    from . import User
     from .env import Environment
 
 logger = logging.getLogger(__name__)

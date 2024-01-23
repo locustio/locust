@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-import gevent
-from locust import HttpUser, task, events
+from locust import HttpUser, events, task
 from locust.env import Environment
-from locust.stats import stats_printer, stats_history
 from locust.log import setup_logging
+from locust.stats import stats_history, stats_printer
+
+import gevent
 
 setup_logging("INFO", None)
 

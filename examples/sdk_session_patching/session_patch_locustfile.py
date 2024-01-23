@@ -1,5 +1,6 @@
 import locust
 from locust.user import task
+
 from archivist.archivist import Archivist  # Example library under test
 
 
