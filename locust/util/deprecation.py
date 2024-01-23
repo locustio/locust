@@ -1,6 +1,5 @@
 import warnings
 
-
 # Show deprecation warnings
 warnings.filterwarnings("always", category=DeprecationWarning, module="locust")
 

@@ -1,11 +1,17 @@
+from locust import HttpUser, TaskSet, User, constant, task
+from locust.env import Environment
+from locust.exception import (
+    CatchResponseError,
+    InterruptTaskSet,
+    RescheduleTask,
+    RescheduleTaskImmediately,
+    ResponseError,
+    StopUser,
+)
+
 import gevent
 from gevent import sleep
 from gevent.pool import Group
-
-from locust.exception import InterruptTaskSet, ResponseError
-from locust import HttpUser, User, TaskSet, task, constant
-from locust.env import Environment
-from locust.exception import CatchResponseError, RescheduleTask, RescheduleTaskImmediately, StopUser
 
 from .testcases import LocustTestCase, WebserverTestCase
 

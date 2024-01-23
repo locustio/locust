@@ -1,4 +1,4 @@
-from locust import HttpUser, TaskSet, task, events, between
+from locust import HttpUser, TaskSet, between, events, task
 
 from gevent.lock import Semaphore
 

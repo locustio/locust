@@ -1,4 +1,4 @@
-from locust import HttpUser, task, events, between
+from locust import HttpUser, between, events, task
 from locust.runners import MasterRunner, WorkerRunner
 
 usernames = []

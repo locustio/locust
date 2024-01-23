@@ -1,10 +1,10 @@
-from collections import defaultdict
-from unittest import TestCase
-from typing import DefaultDict
-
 from locust import SequentialTaskSet, User, constant, task
 from locust.env import Environment
 from locust.exception import StopUser
+
+from collections import defaultdict
+from typing import DefaultDict
+from unittest import TestCase
 
 
 class InterruptableTaskSet(SequentialTaskSet):

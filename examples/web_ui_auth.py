@@ -6,10 +6,12 @@ according to your projects specifications.
 
 For more information, see https://docs.locust.io/en/stable/extending-locust.html#authentication
 """
-import os
-import json
 from locust import HttpUser, events
-from flask import url_for, Blueprint, request, make_response, redirect, session
+
+import json
+import os
+
+from flask import Blueprint, make_response, redirect, request, session, url_for
 from flask_login import UserMixin, login_user
 
 

@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import locust
+
 import os
 import platform
 import sys
 import textwrap
-from typing import NamedTuple, Any
-import configargparse
+from typing import Any, NamedTuple
 
-import locust
+import configargparse
 
 version = locust.__version__
 

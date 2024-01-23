@@ -1,7 +1,9 @@
 # An example of how to stop locust if a threshold (in this case the fail ratio) is exceeded
-from locust import task, HttpUser, events
-from locust.runners import STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP, WorkerRunner
+from locust import HttpUser, events, task
+from locust.runners import STATE_CLEANUP, STATE_STOPPED, STATE_STOPPING, WorkerRunner
+
 import time
+
 import gevent
 
 

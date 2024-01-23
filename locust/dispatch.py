@@ -1,21 +1,19 @@
 from __future__ import annotations
 
-from collections import defaultdict
 import contextlib
 import itertools
 import math
 import time
+from collections import defaultdict
 from collections.abc import Iterator
 from operator import attrgetter
-from typing import Generator, TYPE_CHECKING
+from typing import TYPE_CHECKING, Generator
 
 import gevent
-
 from roundrobin import smooth
 
-from locust import User
-
 if TYPE_CHECKING:
+    from locust import User
     from locust.runners import WorkerNode
 
 

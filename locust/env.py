@@ -7,13 +7,12 @@ from configargparse import Namespace
 
 from .event import Events
 from .exception import RunnerAlreadyExistsError
-from .stats import RequestStats, StatsCSV
-from .runners import Runner, LocalRunner, MasterRunner, WorkerRunner
-from .web import WebUI
-from .user import User
-from .user.task import filter_tasks_by_tags, TaskSet, TaskHolder
+from .runners import LocalRunner, MasterRunner, Runner, WorkerRunner
 from .shape import LoadTestShape
-
+from .stats import RequestStats, StatsCSV
+from .user import User
+from .user.task import TaskHolder, TaskSet, filter_tasks_by_tags
+from .web import WebUI
 
 RunnerType = TypeVar("RunnerType", bound=Runner)
 

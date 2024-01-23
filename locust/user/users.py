@@ -1,12 +1,13 @@
 from __future__ import annotations
+
+import logging
+import time
+import traceback
 from typing import Callable, final
 
-import time
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
 from urllib3 import PoolManager
-import logging
-import traceback
 
 logger = logging.getLogger(__name__)
 from locust.clients import HttpSession

@@ -1,19 +1,20 @@
-import unittest
-import os
-from tempfile import NamedTemporaryFile, TemporaryDirectory
-from random import randint
-from unittest import mock
-from io import StringIO
-
 import locust
 from locust.argument_parser import (
-    locustfile_is_directory,
-    parse_options,
-    get_parser,
-    parse_locustfile_option,
-    ui_extra_args_dict,
     find_locustfiles,
+    get_parser,
+    locustfile_is_directory,
+    parse_locustfile_option,
+    parse_options,
+    ui_extra_args_dict,
 )
+
+import os
+import unittest
+from io import StringIO
+from random import randint
+from tempfile import NamedTemporaryFile, TemporaryDirectory
+from unittest import mock
+
 from .mock_locustfile import mock_locustfile
 from .testcases import LocustTestCase
 
