@@ -5,9 +5,9 @@ import locust
 import atexit
 import errno
 import inspect
+import json
 import logging
 import os
-import json
 import signal
 import sys
 import time
