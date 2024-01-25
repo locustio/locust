@@ -4,6 +4,7 @@ import locust
 
 import atexit
 import errno
+import gc
 import inspect
 import json
 import logging
@@ -204,6 +205,9 @@ def main():
                 "--master cannot be combined with --processes. Remove --master, as it is implicit as long as --worker is not set.\n"
             )
             sys.exit(1)
+        # Optimize copy-on-write-behavior to save some memory (aprx 26MB -> 15MB rss) in child processes
+        gc.collect()  # avoid freezing garbage
+        gc.freeze()  # move all objects to perm gen so ref counts dont get updated
         for _ in range(options.processes):
             child_pid = gevent.fork()
             if child_pid:
