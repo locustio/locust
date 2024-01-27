@@ -4,6 +4,15 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.21.0
+======
+* Switch from flake8 + black to ruff for linting and formatting of code
+* Update shape class' runner when Web UI picker is used by https://github.com/locustio/locust/pull/2534
+* Web UI Modern Auth https://github.com/locustio/locust/pull/2538
+* Customization Feature for Percentile Display on Statistics Page https://github.com/locustio/locust/pull/2550
+* Allow User weight adjustment (and task selection) in UI when running with --class-picker, or on command line with --config-users argument https://github.com/locustio/locust/pull/2559
+* Optimize memory usage when using --processes by @cyberw in https://github.com/locustio/locust/pull/2564
+
 2.20.1
 ======
 * run_single_user improvements https://github.com/locustio/locust/pull/2519
