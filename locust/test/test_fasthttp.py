@@ -17,12 +17,10 @@ from geventhttpclient.client import HTTPClientPool
 from .testcases import LocustTestCase, WebserverTestCase
 from .util import create_tls_cert
 
-localhost = "localhost" if os.name == "nt" else "127.0.0.1"
-
 
 class TestFastHttpSession(WebserverTestCase):
     def get_client(self):
-        return FastHttpSession(self.environment, base_url=f"http://{localhost}:{self.port}", user=None)
+        return FastHttpSession(self.environment, base_url=f"http://localhost:{self.port}", user=None)
 
     def test_get(self):
         s = self.get_client()
@@ -53,7 +51,7 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(204, r.status_code)
         self.assertEqual(1, self.runner.stats.get("/status/204", "GET").num_requests)
         self.assertEqual(0, self.runner.stats.get("/status/204", "GET").num_failures)
-        self.assertEqual(r.url, f"http://{localhost}:{self.port}/status/204")
+        self.assertEqual(r.url, f"http://localhost:{self.port}/status/204")
         self.assertEqual(r.request.url, r.url)
 
     def test_streaming_response(self):

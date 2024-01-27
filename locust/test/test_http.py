@@ -12,7 +12,7 @@ from .testcases import WebserverTestCase
 class TestHttpSession(WebserverTestCase):
     def get_client(self, base_url=None):
         if base_url is None:
-            base_url = "http://127.0.0.1:%i" % self.port
+            base_url = f"http://localhost:{self.port}"
         return HttpSession(
             base_url=base_url,
             request_event=self.environment.events.request,
@@ -34,8 +34,8 @@ class TestHttpSession(WebserverTestCase):
     def test_wrong_url(self):
         for url, exception in (
             ("http://\x94", InvalidURL),
-            ("telnet://127.0.0.1", InvalidSchema),
-            ("127.0.0.1", MissingSchema),
+            ("telnet://localhost", InvalidSchema),
+            ("localhost", MissingSchema),
         ):
             s = self.get_client(base_url=url)
             try:
@@ -304,7 +304,7 @@ class TestHttpSession(WebserverTestCase):
 
     def test_user_context(self):
         class TestUser(HttpUser):
-            host = f"http://127.0.0.1:{self.port}"
+            host = f"http://localhost:{self.port}"
 
             def context(self):
                 return {"user": self.username}
