@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import os
 import platform
-import pty
 import signal
 import socket
 import subprocess

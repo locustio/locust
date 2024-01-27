@@ -29,6 +29,7 @@ from locust.user import (
 )
 
 import json
+import os
 import random
 import time
 import unittest

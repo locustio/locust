@@ -18,6 +18,7 @@ import os
 import re
 import textwrap
 import traceback
+import unittest
 from io import StringIO
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 

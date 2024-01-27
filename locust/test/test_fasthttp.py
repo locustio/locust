@@ -5,11 +5,11 @@ from locust.exception import CatchResponseError, InterruptTaskSet, LocustError, 
 from locust.user import TaskSet, task
 from locust.util.load_locustfile import is_user_class
 
+import os
 import socket
 import time
-from tempfile import NamedTemporaryFile
 import unittest
-import os
+from tempfile import NamedTemporaryFile
 
 import gevent
 from geventhttpclient.client import HTTPClientPool
