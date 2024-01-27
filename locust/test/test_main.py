@@ -2,23 +2,24 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 import platform
-import unittest
-import socket
-import psutil
-
+import pty
 import signal
+import socket
 import subprocess
+import sys
 import textwrap
+import unittest
+from subprocess import DEVNULL, PIPE, STDOUT
 from tempfile import TemporaryDirectory
 from unittest import TestCase
-from subprocess import PIPE, STDOUT, DEVNULL
+
 import gevent
+import psutil
 import requests
 
-from .mock_locustfile import mock_locustfile, MOCK_LOCUSTFILE_CONTENT
-from .util import temporary_file, get_free_tcp_port, patch_env
+from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
+from .util import get_free_tcp_port, patch_env, temporary_file
 
 localhost_hostname = "localhost" if os.name == "nt" else "0.0.0.0"
 
@@ -234,6 +235,35 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         ) as file_path:
             proc = subprocess.Popen(
                 ["locust", "-f", file_path, "--web-port", str(port), "--autostart"], stdout=PIPE, stderr=PIPE, text=True
+            )
+            gevent.sleep(1)
+            response = requests.get(f"http://localhost:{port}/")
+            self.assertEqual(200, response.status_code)
+            proc.send_signal(signal.SIGTERM)
+            stdout, stderr = proc.communicate()
+            self.assertIn("Starting web interface at", stderr)
+
+    def test_percentiles_to_statistics(self):
+        port = get_free_tcp_port()
+        with temporary_file(
+            content=textwrap.dedent(
+                """
+                from locust import User, task, constant, events
+                from locust.stats import PERCENTILES_TO_STATISTICS
+                PERCENTILES_TO_STATISTICS = [0.9, 0.99]
+                class TestUser(User):
+                    wait_time = constant(3)
+                    @task
+                    def my_task(self):
+                        print("running my_task()")
+            """
+            )
+        ) as file_path:
+            proc = subprocess.Popen(
+                ["locust", "-f", file_path, "--web-port", str(port), "--autostart", "--modern-ui"],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
             )
             gevent.sleep(1)
             response = requests.get(f"http://localhost:{port}/")

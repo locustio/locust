@@ -1,10 +1,11 @@
-import time
-
-from locust.user.users import HttpUser
-from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
-
 from locust.clients import HttpSession
 from locust.exception import LocustError, ResponseError
+from locust.user.users import HttpUser
+
+import time
+
+from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
+
 from .testcases import WebserverTestCase
 
 
@@ -277,6 +278,29 @@ class TestHttpSession(WebserverTestCase):
         # incorrect usage, missing catch_response=True
         with s.get("/fail") as resp:
             self.assertRaises(LocustError, resp.success)
+
+    def test_event_measure(self):
+        kwargs = {}
+
+        def on_request(**kw):
+            kwargs.update(**kw)
+
+        self.environment.events.request.add_listener(on_request)
+
+        with self.environment.events.request.measure("GET", "/test") as request_meta:
+            time.sleep(0.001)
+
+        self.assertTrue(1 <= kwargs["response_time"] <= 1.5, kwargs["response_time"])
+        self.assertEqual(kwargs["name"], "/test")
+        self.assertIsNone(kwargs["exception"])
+
+        with self.environment.events.request.measure("GET", "/test") as request_meta:
+            request_meta["foo"] = "bar"
+            raise Exception("nooo")
+
+        self.assertEqual(kwargs["name"], "/test")
+        self.assertEqual(kwargs["foo"], "bar")
+        self.assertEqual(str(kwargs["exception"]), "nooo")
 
     def test_user_context(self):
         class TestUser(HttpUser):

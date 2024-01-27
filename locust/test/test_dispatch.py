@@ -1,12 +1,13 @@
-import time
-import unittest
-from operator import attrgetter
-from typing import Dict, List, Tuple, Type
+from __future__ import annotations
 
 from locust import User
 from locust.dispatch import UsersDispatcher
 from locust.runners import WorkerNode
 from locust.test.util import clear_all_functools_lru_cache
+
+import time
+import unittest
+from operator import attrgetter
 
 _TOLERANCE = 0.025
 
@@ -3372,7 +3373,7 @@ class TestAddWorker(unittest.TestCase):
 
 class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
     class RampUpCase:
-        def __init__(self, fixed_counts: Tuple[int], weights: Tuple[int], target_user_count: int):
+        def __init__(self, fixed_counts: tuple[int], weights: tuple[int], target_user_count: int):
             self.fixed_counts = fixed_counts
             self.weights = weights
             self.target_user_count = target_user_count
@@ -3382,7 +3383,7 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
                 self.fixed_counts, self.weights, self.target_user_count
             )
 
-    def case_handler(self, cases: List[RampUpCase], expected: List[Dict[str, int]], user_classes: List[Type[User]]):
+    def case_handler(self, cases: list[RampUpCase], expected: list[dict[str, int]], user_classes: list[type[User]]):
         self.assertEqual(len(cases), len(expected))
 
         for case_num in range(len(cases)):
@@ -4092,14 +4093,14 @@ class TestRampUpDifferentUsers(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 6)
 
 
-def _aggregate_dispatched_users(d: Dict[str, Dict[str, int]]) -> Dict[str, int]:
+def _aggregate_dispatched_users(d: dict[str, dict[str, int]]) -> dict[str, int]:
     user_classes = list(next(iter(d.values())).keys())
     return {u: sum(d[u] for d in d.values()) for u in user_classes}
 
 
-def _user_count(d: Dict[str, Dict[str, int]]) -> int:
+def _user_count(d: dict[str, dict[str, int]]) -> int:
     return sum(map(sum, map(dict.values, d.values())))  # type: ignore
 
 
-def _user_count_on_worker(d: Dict[str, Dict[str, int]], worker_node_id: str) -> int:
+def _user_count_on_worker(d: dict[str, dict[str, int]], worker_node_id: str) -> int:
     return sum(d[worker_node_id].values())

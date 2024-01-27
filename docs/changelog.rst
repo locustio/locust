@@ -4,6 +4,28 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.21.0
+======
+* Switch from flake8 + black to ruff for linting and formatting of code
+* Update shape class' runner when Web UI picker is used by https://github.com/locustio/locust/pull/2534
+* Web UI Modern Auth https://github.com/locustio/locust/pull/2538
+* Customization Feature for Percentile Display on Statistics Page https://github.com/locustio/locust/pull/2550
+* Allow User weight adjustment (and task selection) in UI when running with --class-picker, or on command line with --config-users argument https://github.com/locustio/locust/pull/2559
+* Optimize memory usage when using --processes by @cyberw in https://github.com/locustio/locust/pull/2564
+
+2.20.1
+======
+* run_single_user improvements https://github.com/locustio/locust/pull/2519
+* Support IPv6 for zmq connection between master and worker https://github.com/locustio/locust/pull/2521
+* Modern UI: Update Vite to 4.5.1 https://github.com/locustio/locust/pull/2530
+* Other tiny fixes
+
+2.20.0
+======
+* Add event.measure context manager for simpler firing of request event (experimental) https://github.com/locustio/locust/pull/2511
+* Various improvements to modern UI https://github.com/locustio/locust/pull/2491
+* Various tiny fixes
+
 2.19.1
 ======
 * Create any directories as part of the CSV Prefix https://github.com/locustio/locust/pull/2481

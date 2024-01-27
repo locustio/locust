@@ -5,7 +5,7 @@ interface ISelect extends SelectProps {
   name: string;
   options: string[];
   multiple?: boolean;
-  defaultValue?: string;
+  defaultValue?: string | string[];
 }
 
 export default function Select({

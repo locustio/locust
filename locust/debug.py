@@ -1,11 +1,18 @@
-from datetime import datetime, timezone
-import os
-import inspect
+from __future__ import annotations
+
 import locust
-from locust import User, argument_parser
-from typing import Type, Optional
+import locust.log
+from locust import argument_parser
 from locust.env import Environment
 from locust.exception import CatchResponseError, RescheduleTask
+
+import inspect
+import os
+from datetime import datetime, timezone
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from locust import User
 
 
 def _print_t(s):
@@ -93,16 +100,16 @@ class PrintListener:
         print()
 
 
-_env: Optional[Environment] = None  # minimal Environment for debugging
+_env: Environment | None = None  # minimal Environment for debugging
 
 
 def run_single_user(
-    user_class: Type[User],
+    user_class: type[User],
     include_length=False,
     include_time=False,
     include_context=False,
     include_payload=False,
-    loglevel=None,
+    loglevel: str | None = "WARNING",
 ):
     """
     Runs a single User. Useful when you want to run a debugger.
@@ -113,8 +120,8 @@ def run_single_user(
 
     It prints some info about every request to stdout, and you can get additional info using the `include_*` flags
 
-    By default, it does not set up locusts logging system (because it could interfere with the printing of requests),
-    but you can change that by passing a log level (e.g. *loglevel="INFO"*)
+    It also initiates logging on WARNING level (not INFO, because it could interfere with the printing of requests),
+    but you can change that by passing a log level (or disabling logging entirely by passing None)
     """
     global _env
 
@@ -141,6 +148,9 @@ def run_single_user(
         )
         # fire various events (quit and test_stop will never get called, sorry about that)
         _env.events.init.fire(environment=_env, runner=None, web_ui=None)
+        # uncaught events will be suppressed, so check if that happened
+        if locust.log.unhandled_greenlet_exception:
+            raise Exception("Unhandled exception in init")
 
     # do the things that the Runner usually does
     _env.user_classes = [user_class]

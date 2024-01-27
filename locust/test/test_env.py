@@ -7,9 +7,10 @@ from locust.user import (
     task,
 )
 from locust.user.task import TaskSet
-from .testcases import LocustTestCase
+
 from .fake_module1_for_env_test import MyUserWithSameName as MyUserWithSameName1
 from .fake_module2_for_env_test import MyUserWithSameName as MyUserWithSameName2
+from .testcases import LocustTestCase
 
 
 class TestEnvironment(LocustTestCase):
@@ -199,3 +200,31 @@ class TestEnvironment(LocustTestCase):
             ValueError, r"instance of LoadTestShape or subclass LoadTestShape", msg="exception message is mismatching"
         ):
             Environment(user_classes=[MyUserWithSameName1], shape_class=SubLoadTestShape)
+
+    def test_update_user_class(self):
+        class MyUser1(User):
+            @task
+            def my_task(self):
+                pass
+
+            @task
+            def my_task_2(self):
+                pass
+
+        class MyUser2(User):
+            @task
+            def my_task(self):
+                pass
+
+        environment = Environment(
+            user_classes=[MyUser1, MyUser2],
+            available_user_classes={"User1": MyUser1, "User2": MyUser2},
+            available_user_tasks={"User1": MyUser1.tasks, "User2": MyUser2.tasks},
+        )
+
+        environment.update_user_class({"user_class_name": "User1", "host": "http://localhost", "tasks": ["my_task_2"]})
+
+        self.assertEqual(
+            environment.available_user_classes["User1"].json(),
+            {"host": "http://localhost", "tasks": ["my_task_2"], "fixed_count": 0, "weight": 1},
+        )

@@ -1,6 +1,8 @@
 export const statsResponseMock = {
-  current_response_time_percentile_1: 1,
-  current_response_time_percentile_2: 1,
+  current_response_time_percentiles: {
+    'response_time_percentile_0.5': 2,
+    'response_time_percentile_0.95': 2,
+  },
   errors: [
     {
       error: 'ConnectionRefusedError(111, &#x27;Connection refused&#x27;)',
@@ -22,8 +24,8 @@ export const statsResponseMock = {
       method: 'GET',
       min_response_time: 0.0,
       name: '/',
-      ninetieth_response_time: 0,
-      ninety_ninth_response_time: 1,
+      "response_time_percentile_0.9": 0,
+      "response_time_percentile_0.99": 1,
       num_failures: 12652,
       num_requests: 12652,
       safe_name: '/',
@@ -38,13 +40,14 @@ export const statsResponseMock = {
       method: '',
       min_response_time: 0.0,
       name: 'Aggregated',
-      ninetieth_response_time: 0,
-      ninety_ninth_response_time: 1,
+      "response_time_percentile_0.9": 0,
+      "response_time_percentile_0.99": 1,
       num_failures: 12652,
       num_requests: 12652,
       safe_name: 'Aggregated',
     },
   ],
+  total_avg_response_time: 0.41064205516736735,
   total_fail_per_sec: 1932.5,
   total_rps: 1932.5,
   user_count: 1,
@@ -94,7 +97,9 @@ export const exceptionsResponseMock = {
   ],
 };
 
-export const getStatsResponseTransformed = () => ({
+export const mockDate = new Date(1970, 1);
+
+export const statsResponseTransformed = {
   totalRps: 1932.5,
   failRatio: 100,
   stats: [
@@ -108,8 +113,8 @@ export const getStatsResponseTransformed = () => ({
       method: 'GET',
       minResponseTime: 0,
       name: '/',
-      ninetiethResponseTime: 0,
-      ninetyNinthResponseTime: 1,
+      "responseTimePercentile0.9": 0,
+      "responseTimePercentile0.99": 1,
       numFailures: 12652,
       numRequests: 12652,
       safeName: '/',
@@ -124,8 +129,8 @@ export const getStatsResponseTransformed = () => ({
       method: '',
       minResponseTime: 0,
       name: 'Aggregated',
-      ninetiethResponseTime: 0,
-      ninetyNinthResponseTime: 1,
+      "responseTimePercentile0.9": 0,
+      "responseTimePercentile0.99": 1,
       numFailures: 12652,
       numRequests: 12652,
       safeName: 'Aggregated',
@@ -142,12 +147,13 @@ export const getStatsResponseTransformed = () => ({
   exceptions: exceptionsResponseMock.exceptions,
   extendedStats: undefined,
   charts: {
+    'responseTimePercentile0.5': [2],
+    'responseTimePercentile0.95': [2],
     currentRps: [1932.5],
     currentFailPerSec: [1932.5],
-    responseTimePercentile1: [1],
-    responseTimePercentile2: [1],
     userCount: [1],
-    time: [new Date().toLocaleTimeString()],
+    totalAvgResponseTime: [0.41],
+    time: [mockDate.toLocaleTimeString()],
   },
   ratios: {
     perClass: {
@@ -165,4 +171,4 @@ export const getStatsResponseTransformed = () => ({
   },
   userCount: 1,
   workers: undefined,
-});
+};

@@ -26,3 +26,5 @@ __pycache__
 .pytest_cache
 .sass-cache/
 .env
+yarn-error.log
+.venv

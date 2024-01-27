@@ -1,7 +1,13 @@
 import { describe, expect, test } from 'vitest';
 
 import uiSlice, { IUiState, UiAction, uiActions } from 'redux/slice/ui.slice';
-import { ICharts } from 'types/ui.types';
+import { percentilesToChart } from 'test/mocks/swarmState.mock';
+import { ICharts, ISwarmRatios } from 'types/ui.types';
+
+const responseTimePercentileKey1 =
+  `responseTimePercentile${percentilesToChart[0]}` as `responseTimePercentile${number}`;
+const responseTimePercentileKey2 =
+  `responseTimePercentile${percentilesToChart[1]}` as `responseTimePercentile${number}`;
 
 const initialState = {
   totalRps: 0,
@@ -10,13 +16,15 @@ const initialState = {
   errors: [],
   exceptions: [],
   charts: {
+    [responseTimePercentileKey1]: [],
+    [responseTimePercentileKey1]: [],
     currentRps: [],
     currentFailPerSec: [],
-    responseTimePercentile1: [],
-    responseTimePercentile2: [],
+    totalAvgResponseTime: [],
     userCount: [],
+    time: [],
   },
-  ratios: {},
+  ratios: {} as ISwarmRatios,
   userCount: 0,
 };
 
@@ -38,8 +46,8 @@ describe('uiSlice', () => {
     const action = uiActions.updateCharts({
       currentRps: 5,
       currentFailPerSec: 1,
-      responseTimePercentile1: 0.4,
-      responseTimePercentile2: 0.2,
+      [responseTimePercentileKey1]: 0.4,
+      [responseTimePercentileKey2]: 0.2,
       userCount: 2,
       time: '10:10:10',
     });
@@ -49,8 +57,8 @@ describe('uiSlice', () => {
 
     expect(charts.currentRps[0]).toBe(5);
     expect(charts.currentFailPerSec[0]).toBe(1);
-    expect(charts.responseTimePercentile1[0]).toBe(0.4);
-    expect(charts.responseTimePercentile2[0]).toBe(0.2);
+    expect(charts[responseTimePercentileKey1][0]).toBe(0.4);
+    expect(charts[responseTimePercentileKey2][0]).toBe(0.2);
     expect(charts.userCount[0]).toBe(2);
     expect(charts.time[0]).toBe('10:10:10');
   });
@@ -59,8 +67,8 @@ describe('uiSlice', () => {
     const action = uiActions.updateCharts({
       currentRps: 5,
       currentFailPerSec: 1,
-      responseTimePercentile1: 0.4,
-      responseTimePercentile2: 0.2,
+      [responseTimePercentileKey1]: 0.4,
+      [responseTimePercentileKey2]: 0.2,
       userCount: 2,
       time: '10:10:10',
     });
@@ -72,8 +80,8 @@ describe('uiSlice', () => {
 
     expect(charts.currentRps).toEqual([5, 5]);
     expect(charts.currentFailPerSec).toEqual([1, 1]);
-    expect(charts.responseTimePercentile1).toEqual([0.4, 0.4]);
-    expect(charts.responseTimePercentile2).toEqual([0.2, 0.2]);
+    expect(charts[responseTimePercentileKey1]).toEqual([0.4, 0.4]);
+    expect(charts[responseTimePercentileKey2]).toEqual([0.2, 0.2]);
     expect(charts.userCount).toEqual([2, 2]);
     expect(charts.time).toEqual(['10:10:10', '10:10:10']);
   });
@@ -98,8 +106,8 @@ describe('uiSlice', () => {
     // Add space between runs
     expect(charts.currentRps[0]).toEqual({ value: null });
     expect(charts.currentFailPerSec[0]).toEqual({ value: null });
-    expect(charts.responseTimePercentile1[0]).toEqual({ value: null });
-    expect(charts.responseTimePercentile2[0]).toEqual({ value: null });
+    expect(charts[responseTimePercentileKey1][0]).toEqual({ value: null });
+    expect(charts[responseTimePercentileKey2][0]).toEqual({ value: null });
     expect(charts.userCount[0]).toEqual({ value: null });
   });
 });

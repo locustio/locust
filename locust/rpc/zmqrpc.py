@@ -1,9 +1,11 @@
-import zmq.green as zmq
-from .protocol import Message
+from locust.exception import RPCError, RPCReceiveError, RPCSendError
 from locust.util.exception_handler import retry
-from locust.exception import RPCError, RPCSendError, RPCReceiveError
-import zmq.error as zmqerr
+
 import msgpack.exceptions as msgerr
+import zmq.error as zmqerr
+import zmq.green as zmq
+
+from .protocol import Message
 
 
 class BaseSocket:
@@ -13,6 +15,7 @@ class BaseSocket:
 
         self.socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
         self.socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 30)
+        self.socket.setsockopt(zmq.IPV6, 1)
 
     @retry()
     def send(self, msg):

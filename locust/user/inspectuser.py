@@ -1,7 +1,8 @@
-from collections import defaultdict
+from __future__ import annotations
+
 import inspect
+from collections import defaultdict
 from json import dumps
-from typing import List, Type, Dict
 
 from .task import TaskSet
 from .users import User
@@ -49,11 +50,11 @@ def _print_task_ratio(x, level=0):
             _print_task_ratio(v["tasks"], level + 1)
 
 
-def get_ratio(user_classes: List[Type[User]], user_spawned: Dict[str, int], total: bool) -> Dict[str, Dict[str, float]]:
+def get_ratio(user_classes: list[type[User]], user_spawned: dict[str, int], total: bool) -> dict[str, dict[str, float]]:
     user_count = sum(user_spawned.values()) or 1
-    ratio_percent: Dict[Type[User], float] = {u: user_spawned.get(u.__name__, 0) / user_count for u in user_classes}
+    ratio_percent: dict[type[User], float] = {u: user_spawned.get(u.__name__, 0) / user_count for u in user_classes}
 
-    task_dict: Dict[str, Dict[str, float]] = {}
+    task_dict: dict[str, dict[str, float]] = {}
     for u, r in ratio_percent.items():
         d = {"ratio": r}
         d["tasks"] = _get_task_ratio(u.tasks, total, r)

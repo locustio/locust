@@ -1,7 +1,8 @@
-from contextlib import contextmanager
-from locust import task, run_single_user, FastHttpUser
+from locust import FastHttpUser, run_single_user, task
 from locust.contrib.fasthttp import RestResponseContextManager
 from locust.user.wait_time import constant
+
+from contextlib import contextmanager
 from typing import Generator
 
 

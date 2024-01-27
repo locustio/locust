@@ -1,16 +1,17 @@
-from jinja2 import Environment, FileSystemLoader
-import os
-import glob
-import pathlib
 import datetime
-from itertools import chain
-from .stats import sort_stats
-from . import stats as stats_module
-from .user.inspectuser import get_ratio
+import glob
+import os
+import pathlib
 from html import escape
+from itertools import chain
 from json import dumps
-from .runners import MasterRunner, STATE_STOPPED, STATE_STOPPING
 
+from jinja2 import Environment, FileSystemLoader
+
+from . import stats as stats_module
+from .runners import STATE_STOPPED, STATE_STOPPING, MasterRunner
+from .stats import sort_stats
+from .user.inspectuser import get_ratio
 
 PERCENTILES_FOR_HTML_REPORT = [0.50, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1.0]
 
@@ -125,8 +126,7 @@ def get_html_report(
                 "show_download_link": show_download_link,
                 "locustfile": escape(str(environment.locustfile)),
                 "tasks": task_data,
-                "percentile1": stats_module.PERCENTILES_TO_CHART[0],
-                "percentile2": stats_module.PERCENTILES_TO_CHART[1],
+                "percentiles_to_chart": stats_module.MODERN_UI_PERCENTILES_TO_CHART,
             },
             theme=theme,
             static_js="\n".join(static_js),

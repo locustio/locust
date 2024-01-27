@@ -1,5 +1,6 @@
+from locust import HttpUser, between, task
+
 import time
-from locust import HttpUser, task, between
 
 
 class QuickstartUser(HttpUser):

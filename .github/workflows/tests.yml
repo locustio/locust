@@ -16,8 +16,7 @@ jobs:
         include:
           - {name: Windows, python: '3.12', os: windows-latest, tox: py312}
           #- {name: Mac, python: '3.9', os: macos-latest, tox: py39}
-          - { name: "flake8", python: "3.11", os: ubuntu-latest, tox: "flake8" }
-          - { name: "black", python: "3.11", os: ubuntu-latest, tox: "black" }
+          - { name: "ruff", python: "3.11", os: ubuntu-latest, tox: "ruff" }
           - { name: "mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
           # run some integration tests and abort immediately if they fail, for faster feedback
           - { name: "fail_fast_test_main", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main }
@@ -48,7 +47,7 @@ jobs:
       - run: python -m pip install tox
       - run: python -m tox -e ${{ matrix.tox }}
 
-  lint_typecheck_webui:
+  lint_typecheck_test_webui:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -86,12 +85,12 @@ jobs:
           username: locustbuild
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
       - name: build and publish image
         id: docker_build
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           build-args: |
             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
@@ -117,12 +116,12 @@ jobs:
           username: locustbuild
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
       - name: build and publish image
         id: docker_build
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           build-args: |
             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1

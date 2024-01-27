@@ -1,19 +1,20 @@
-import unittest
-import os
-from tempfile import NamedTemporaryFile, TemporaryDirectory
-from random import randint
-from unittest import mock
-from io import StringIO
-
 import locust
 from locust.argument_parser import (
-    locustfile_is_directory,
-    parse_options,
-    get_parser,
-    parse_locustfile_option,
-    ui_extra_args_dict,
     find_locustfiles,
+    get_parser,
+    locustfile_is_directory,
+    parse_locustfile_option,
+    parse_options,
+    ui_extra_args_dict,
 )
+
+import os
+import unittest
+from io import StringIO
+from random import randint
+from tempfile import NamedTemporaryFile, TemporaryDirectory
+from unittest import mock
+
 from .mock_locustfile import mock_locustfile
 from .testcases import LocustTestCase
 
@@ -48,11 +49,6 @@ class TestParser(unittest.TestCase):
         self.assertEqual(options.web_host, "webhost_from_config")
         self.assertEqual(options.locustfile, "locustfile_from_env")
         self.assertEqual(options.host, "host_from_args")  # overridden
-
-    def test_web_auth(self):
-        args = ["--web-auth", "hello:bye"]
-        opts = self.parser.parse_args(args)
-        self.assertEqual(opts.web_auth, "hello:bye")
 
 
 class TestArgumentParser(LocustTestCase):

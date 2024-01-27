@@ -1,32 +1,44 @@
 from __future__ import annotations
+
 import csv
+import json
 import logging
 import os.path
 from functools import wraps
-
 from html import escape
 from io import StringIO
-from json import dumps
 from itertools import chain
+from json import dumps
 from time import time
-from typing import TYPE_CHECKING, Optional, Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 import gevent
-from flask import Flask, make_response, jsonify, render_template, request, send_file, Response, send_from_directory
-from flask_basicauth import BasicAuth
+from flask import (
+    Flask,
+    Response,
+    jsonify,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    send_from_directory,
+    url_for,
+)
+from flask_cors import CORS
+from flask_login import LoginManager, login_required
 from gevent import pywsgi
 
-from .exception import AuthCredentialsError
-from .runners import MasterRunner, STATE_RUNNING, STATE_MISSING
+from . import __version__ as version
+from . import argument_parser
+from . import stats as stats_module
+from .html import get_html_report
 from .log import greenlet_exception_logger
-from .stats import StatsCSVFileWriter, StatsErrorDict, sort_stats
-from . import stats as stats_module, __version__ as version, argument_parser
-from .stats import StatsCSV
+from .runners import STATE_MISSING, STATE_RUNNING, MasterRunner
+from .stats import StatsCSV, StatsCSVFileWriter, StatsErrorDict, sort_stats
 from .user.inspectuser import get_ratio
 from .util.cache import memoize
 from .util.timespan import parse_timespan
-from .html import get_html_report
-from flask_cors import CORS
 
 if TYPE_CHECKING:
     from .env import Environment
@@ -45,7 +57,7 @@ class WebUI:
     in :attr:`environment.stats <locust.env.Environment.stats>`
     """
 
-    app: Optional[Flask] = None
+    app: Flask | None = None
     """
     Reference to the :class:`flask.Flask` app. Can be used to add additional web routes and customize
     the Flask app in other various ways. Example::
@@ -57,27 +69,30 @@ class WebUI:
             return "your IP is: %s" % request.remote_addr
     """
 
-    greenlet: Optional[gevent.Greenlet] = None
+    greenlet: gevent.Greenlet | None = None
     """
     Greenlet of the running web server
     """
 
-    server: Optional[pywsgi.WSGIServer] = None
+    server: pywsgi.WSGIServer | None = None
     """Reference to the :class:`pyqsgi.WSGIServer` instance"""
 
-    template_args: Dict[str, Any]
+    template_args: dict[str, Any]
     """Arguments used to render index.html for the web UI. Must be used with custom templates
     extending index.html."""
 
+    auth_args: dict[str, Any]
+    """Arguments used to render auth.html for the web UI auth page. Must be used when configuring auth"""
+
     def __init__(
         self,
-        environment: "Environment",
+        environment: Environment,
         host: str,
         port: int,
-        auth_credentials: Optional[str] = None,
-        tls_cert: Optional[str] = None,
-        tls_key: Optional[str] = None,
-        stats_csv_writer: Optional[StatsCSV] = None,
+        web_login: bool = False,
+        tls_cert: str | None = None,
+        tls_key: str | None = None,
+        stats_csv_writer: StatsCSV | None = None,
         delayed_start=False,
         userclass_picker_is_active=False,
         modern_ui=False,
@@ -89,8 +104,7 @@ class WebUI:
         environment: Reference to the current Locust Environment
         host: Host/interface that the web server should accept connections to
         port: Port that the web server should listen to
-        auth_credentials:  If provided, it will enable basic auth with all the routes protected by default.
-                           Should be supplied in the format: "user:pass".
+        web_login:  Enables a login page for the modern UI
         tls_cert: A path to a TLS certificate
         tls_key: A path to a TLS private key
         delayed_start: Whether or not to delay starting web UI until `start()` is called. Delaying web UI start
@@ -105,6 +119,7 @@ class WebUI:
         self.tls_key = tls_key
         self.userclass_picker_is_active = userclass_picker_is_active
         self.modern_ui = modern_ui
+        self.web_login = web_login
         app = Flask(__name__)
         CORS(app)
         self.app = app
@@ -113,24 +128,16 @@ class WebUI:
         root_path = os.path.dirname(os.path.abspath(__file__))
         app.root_path = root_path
         self.webui_build_path = os.path.join(root_path, "webui", "dist")
-        self.app.config["BASIC_AUTH_ENABLED"] = False
-        self.auth: Optional[BasicAuth] = None
-        self.greenlet: Optional[gevent.Greenlet] = None
-        self._swarm_greenlet: Optional[gevent.Greenlet] = None
+        self.greenlet: gevent.Greenlet | None = None
+        self._swarm_greenlet: gevent.Greenlet | None = None
         self.template_args = {}
+        self.auth_args = {}
 
-        if auth_credentials is not None:
-            credentials = auth_credentials.split(":")
-            if len(credentials) == 2:
-                self.app.config["BASIC_AUTH_USERNAME"] = credentials[0]
-                self.app.config["BASIC_AUTH_PASSWORD"] = credentials[1]
-                self.app.config["BASIC_AUTH_ENABLED"] = True
-                self.auth = BasicAuth()
-                self.auth.init_app(self.app)
-            else:
-                raise AuthCredentialsError(
-                    "Invalid auth_credentials. It should be a string in the following format: 'user:pass'"
-                )
+        if self.web_login:
+            self.login_manager = LoginManager()
+            self.login_manager.init_app(app)
+            self.login_manager.login_view = "login"
+
         if environment.runner:
             self.update_template_args()
         if not delayed_start:
@@ -227,8 +234,14 @@ class WebUI:
                         return jsonify({"success": False, "message": err_msg, "host": environment.host})
                 elif key in parsed_options_dict:
                     # update the value in environment.parsed_options, but dont change the type.
-                    # This won't work for parameters that are None
-                    parsed_options_dict[key] = type(parsed_options_dict[key])(value)
+                    parsed_options_value = parsed_options_dict[key]
+
+                    if isinstance(parsed_options_value, bool):
+                        parsed_options_dict[key] = value == "true"
+                    elif parsed_options_value is None:
+                        parsed_options_dict[key] = parsed_options_value
+                    else:
+                        parsed_options_dict[key] = type(parsed_options_dict[key])(value)
 
             if environment.shape_class and environment.runner is not None:
                 environment.runner.start_shape()
@@ -359,8 +372,8 @@ class WebUI:
         @self.auth_required_if_enabled
         @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
         def request_stats() -> Response:
-            stats: List[Dict[str, Any]] = []
-            errors: List[StatsErrorDict] = []
+            stats: list[dict[str, Any]] = []
+            errors: list[StatsErrorDict] = []
 
             if environment.runner is None:
                 report = {
@@ -401,17 +414,27 @@ class WebUI:
             if stats:
                 report["total_rps"] = total_stats["current_rps"]
                 report["total_fail_per_sec"] = total_stats["current_fail_per_sec"]
+                report["total_avg_response_time"] = total_stats["avg_response_time"]
                 report["fail_ratio"] = environment.runner.stats.total.fail_ratio
-                report[
-                    "current_response_time_percentile_1"
-                ] = environment.runner.stats.total.get_current_response_time_percentile(
-                    stats_module.PERCENTILES_TO_CHART[0]
-                )
-                report[
-                    "current_response_time_percentile_2"
-                ] = environment.runner.stats.total.get_current_response_time_percentile(
-                    stats_module.PERCENTILES_TO_CHART[1]
-                )
+
+                if self.modern_ui:
+                    report["current_response_time_percentiles"] = {
+                        f"response_time_percentile_{percentile}": environment.runner.stats.total.get_current_response_time_percentile(
+                            percentile
+                        )
+                        for percentile in stats_module.MODERN_UI_PERCENTILES_TO_CHART
+                    }
+                else:
+                    report[
+                        "current_response_time_percentile_1"
+                    ] = environment.runner.stats.total.get_current_response_time_percentile(
+                        stats_module.PERCENTILES_TO_CHART[0]
+                    )
+                    report[
+                        "current_response_time_percentile_2"
+                    ] = environment.runner.stats.total.get_current_response_time_percentile(
+                        stats_module.PERCENTILES_TO_CHART[1]
+                    )
 
             if isinstance(environment.runner, MasterRunner):
                 workers = []
@@ -460,9 +483,9 @@ class WebUI:
 
         @app.route("/tasks")
         @self.auth_required_if_enabled
-        def tasks() -> Dict[str, Dict[str, Dict[str, float]]]:
+        def tasks() -> dict[str, dict[str, dict[str, float]]]:
             runner = self.environment.runner
-            user_spawned: Dict[str, int]
+            user_spawned: dict[str, int]
             if runner is None:
                 user_spawned = {}
             else:
@@ -492,6 +515,30 @@ class WebUI:
 
             return jsonify({"logs": logs})
 
+        @app.route("/login")
+        def login():
+            if not self.web_login:
+                return redirect(url_for("index"))
+
+            if self.modern_ui:
+                self.set_static_modern_ui()
+
+                return render_template(
+                    "auth.html",
+                    auth_args=self.auth_args,
+                )
+            else:
+                return "Web Auth is only available on the modern web ui. Enable it with the --modern-ui flag"
+
+        @app.route("/user", methods=["POST"])
+        def update_user():
+            assert request.method == "POST"
+
+            user_settings = json.loads(request.data)
+            self.environment.update_user_class(user_settings)
+
+            return {}, 201
+
     def start(self):
         self.greenlet = gevent.spawn(self.start_server)
         self.greenlet.link_exception(greenlet_exception_handler)
@@ -513,8 +560,8 @@ class WebUI:
 
     def auth_required_if_enabled(self, view_func):
         """
-        Decorator that can be used on custom route methods that will turn on Basic Auth
-        authentication if the ``--web-auth`` flag is used. Example::
+        Decorator that can be used on custom route methods that will turn on Flask Login
+        authentication if the ``--web-login`` flag is used. Example::
 
             @web_ui.app.route("/my_custom_route")
             @web_ui.auth_required_if_enabled
@@ -524,11 +571,11 @@ class WebUI:
 
         @wraps(view_func)
         def wrapper(*args, **kwargs):
-            if self.app.config["BASIC_AUTH_ENABLED"]:
-                if self.auth.authenticate():
-                    return view_func(*args, **kwargs)
-                else:
-                    return self.auth.challenge()
+            if self.web_login:
+                try:
+                    return login_required(view_func)(*args, **kwargs)
+                except Exception as e:
+                    return f"Locust auth exception: {e} See https://docs.locust.io/en/stable/extending-locust.html#authentication for configuring authentication."
             else:
                 return view_func(*args, **kwargs)
 
@@ -566,13 +613,38 @@ class WebUI:
         stats = self.environment.runner.stats
         extra_options = argument_parser.ui_extra_args_dict()
 
-        available_user_classes = (
-            None if not self.environment.available_user_classes else sorted(self.environment.available_user_classes)
-        )
+        available_user_classes = None
+        users = None
+        if self.environment.available_user_classes:
+            available_user_classes = sorted(self.environment.available_user_classes)
+            users = {
+                user_class_name: user_class.json()
+                for (user_class_name, user_class) in self.environment.available_user_classes.items()
+            }
 
         available_shape_classes = ["Default"]
         if self.environment.available_shape_classes:
             available_shape_classes += sorted(self.environment.available_shape_classes.keys())
+
+        available_user_tasks = (
+            {
+                user_class_name: [task.__name__ for task in user_class]
+                for (user_class_name, user_class) in self.environment.available_user_tasks.items()
+            }
+            if self.environment.available_user_tasks
+            else None
+        )
+
+        if self.modern_ui:
+            percentiles = {
+                "percentiles_to_chart": stats_module.MODERN_UI_PERCENTILES_TO_CHART,
+                "percentiles_to_statistics": stats_module.PERCENTILES_TO_STATISTICS,
+            }
+        else:
+            percentiles = {
+                "percentile1": stats_module.PERCENTILES_TO_CHART[0],
+                "percentile2": stats_module.PERCENTILES_TO_CHART[1],
+            }
 
         self.template_args = {
             "locustfile": self.environment.locustfile,
@@ -597,13 +669,15 @@ class WebUI:
             "show_userclass_picker": self.userclass_picker_is_active,
             "available_user_classes": available_user_classes,
             "available_shape_classes": available_shape_classes,
-            "percentile1": stats_module.PERCENTILES_TO_CHART[0],
-            "percentile2": stats_module.PERCENTILES_TO_CHART[1],
+            "available_user_tasks": available_user_tasks,
+            "users": users,
+            **percentiles,
         }
 
     def _update_shape_class(self, shape_class_name):
         if shape_class_name:
             shape_class = self.environment.available_shape_classes[shape_class_name]
+            shape_class.runner = self.environment.runner
         else:
             shape_class = None
 

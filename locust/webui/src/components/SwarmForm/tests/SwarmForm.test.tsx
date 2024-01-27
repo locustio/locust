@@ -1,4 +1,4 @@
-import { fireEvent, waitFor } from '@testing-library/react';
+import { act, fireEvent, waitFor } from '@testing-library/react';
 import { http } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterEach, afterAll, beforeAll, describe, test, expect, vi } from 'vitest';
@@ -28,7 +28,9 @@ describe('SwarmForm', () => {
   test('should submit form data with default values on button click', async () => {
     const { getByText } = renderWithProvider(<SwarmForm />);
 
-    fireEvent.click(getByText('Start Swarm'));
+    act(() => {
+      fireEvent.click(getByText('Start Swarm'));
+    });
 
     await waitFor(async () => {
       const submittedData = startSwarm.mock.calls[0][0];
@@ -48,31 +50,32 @@ describe('SwarmForm', () => {
     const { getByText, getByLabelText } = renderWithProvider(<SwarmForm />, {
       swarm: {
         showUserclassPicker: true,
-        availableUserClasses: ['Class1', 'Class2'],
+        availableUserClasses: ['Class1'],
         availableShapeClasses: ['Shape1', 'Shape2'],
         extraOptions: {},
+        users: {},
       },
     });
 
-    fireEvent.change(getByLabelText('User Classes'), {
-      target: { value: 'Class1' },
+    act(() => {
+      fireEvent.change(getByLabelText('Shape Class'), {
+        target: { value: 'Shape1' },
+      });
+      fireEvent.change(getByLabelText('Number of users (peak concurrency)'), {
+        target: { value: '15' },
+      });
+      fireEvent.change(getByLabelText('Ramp Up (users started/second)'), {
+        target: { value: '20' },
+      });
+      fireEvent.change(getByLabelText('Run time (e.g. 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.)'), {
+        target: { value: '2h' },
+      });
+      fireEvent.change(getByLabelText('Host'), {
+        target: { value: 'https://localhost:5000' },
+      });
+
+      fireEvent.click(getByText('Start Swarm'));
     });
-    fireEvent.change(getByLabelText('Shape Class'), {
-      target: { value: 'Shape1' },
-    });
-    fireEvent.change(getByLabelText('Number of users (peak concurrency)'), {
-      target: { value: '15' },
-    });
-    fireEvent.change(getByLabelText('Ramp Up (users started/second)'), {
-      target: { value: '20' },
-    });
-    fireEvent.change(getByLabelText('Run time (e.g. 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.)'), {
-      target: { value: '2h' },
-    });
-    fireEvent.change(getByLabelText('Host'), {
-      target: { value: 'https://localhost:5000' },
-    });
-    fireEvent.click(getByText('Start Swarm'));
 
     await waitFor(async () => {
       const submittedData = startSwarm.mock.calls[0][0];
@@ -83,6 +86,53 @@ describe('SwarmForm', () => {
           runTime: '2h',
           spawnRate: '20',
           userCount: '15',
+          shapeClass: 'Shape1',
+          userClasses: 'Class1',
+        });
+      }
+    });
+  });
+
+  test('should allow selected user classes to be modified', async () => {
+    const { getByText, getAllByRole } = renderWithProvider(<SwarmForm />, {
+      swarm: {
+        showUserclassPicker: true,
+        availableUserClasses: ['Class1', 'Class2'],
+        availableShapeClasses: ['Shape1', 'Shape2'],
+        extraOptions: {},
+        users: {
+          Class1: {
+            host: 'http://localhost',
+            fixedCount: 0,
+            weight: 0,
+            tasks: ['ExampleTask'],
+          },
+          Class2: {
+            host: 'http://localhost',
+            fixedCount: 0,
+            weight: 0,
+            tasks: ['ExampleTask'],
+          },
+        },
+      },
+    });
+
+    act(() => {
+      fireEvent.click(getAllByRole('checkbox')[1]);
+    });
+    act(() => {
+      fireEvent.click(getByText('Start Swarm'));
+    });
+
+    await waitFor(async () => {
+      const submittedData = startSwarm.mock.calls[0][0];
+
+      if (submittedData) {
+        expect(submittedData).toEqual({
+          host: '',
+          runTime: '',
+          spawnRate: '1',
+          userCount: '1',
           shapeClass: 'Shape1',
           userClasses: 'Class1',
         });
@@ -117,9 +167,11 @@ describe('SwarmForm', () => {
       },
     });
 
-    fireEvent.click(getByText('Start Swarm'));
+    act(() => {
+      fireEvent.click(getByText('Start Swarm'));
+    });
 
-    await waitFor(async () => {
+    await waitFor(() => {
       const submittedData = startSwarm.mock.calls[0][0];
 
       if (submittedData) {
@@ -165,14 +217,16 @@ describe('SwarmForm', () => {
     const textField = getByLabelText(toTitleCase(customFieldName));
     const selectField = getByLabelText(toTitleCase(customChoiceFieldName));
 
-    fireEvent.change(textField, {
-      target: { value: 'Changed text value' },
-    });
-    fireEvent.change(selectField, {
-      target: { value: 'Option2' },
-    });
+    act(() => {
+      fireEvent.change(textField, {
+        target: { value: 'Changed text value' },
+      });
+      fireEvent.change(selectField, {
+        target: { value: 'Option2' },
+      });
 
-    fireEvent.click(getByText('Start Swarm'));
+      fireEvent.click(getByText('Start Swarm'));
+    });
 
     await waitFor(async () => {
       const submittedData = startSwarm.mock.calls[0][0];

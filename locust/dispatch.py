@@ -1,19 +1,19 @@
-from collections import defaultdict
+from __future__ import annotations
+
 import contextlib
 import itertools
 import math
 import time
+from collections import defaultdict
 from collections.abc import Iterator
 from operator import attrgetter
-from typing import Dict, Generator, List, TYPE_CHECKING, Optional, Tuple, Type, Set
+from typing import TYPE_CHECKING, Generator
 
 import gevent
-
 from roundrobin import smooth
 
-from locust import User
-
 if TYPE_CHECKING:
+    from locust import User
     from locust.runners import WorkerNode
 
 
@@ -49,7 +49,7 @@ class UsersDispatcher(Iterator):
             from 10 to 100.
     """
 
-    def __init__(self, worker_nodes: List["WorkerNode"], user_classes: List[Type[User]]):
+    def __init__(self, worker_nodes: list[WorkerNode], user_classes: list[type[User]]):
         """
         :param worker_nodes: List of worker nodes
         :param user_classes: The user classes
@@ -79,16 +79,16 @@ class UsersDispatcher(Iterator):
 
         self._current_user_count = self.get_current_user_count()
 
-        self._dispatcher_generator: Generator[Dict[str, Dict[str, int]], None, None] = None
+        self._dispatcher_generator: Generator[dict[str, dict[str, int]], None, None] = None
 
         self._user_generator = self._user_gen()
 
         self._worker_node_generator = itertools.cycle(self._worker_nodes)
 
         # To keep track of how long it takes for each dispatch iteration to compute
-        self._dispatch_iteration_durations: List[float] = []
+        self._dispatch_iteration_durations: list[float] = []
 
-        self._active_users: List[Tuple[WorkerNode, str]] = []
+        self._active_users: list[tuple[WorkerNode, str]] = []
 
         # TODO: Test that attribute is set when dispatching and unset when done dispatching
         self._dispatch_in_progress = False
@@ -108,10 +108,10 @@ class UsersDispatcher(Iterator):
         return self._dispatch_in_progress
 
     @property
-    def dispatch_iteration_durations(self) -> List[float]:
+    def dispatch_iteration_durations(self) -> list[float]:
         return self._dispatch_iteration_durations
 
-    def __next__(self) -> Dict[str, Dict[str, int]]:
+    def __next__(self) -> dict[str, dict[str, int]]:
         users_on_workers = next(self._dispatcher_generator)
         # TODO: Is this necessary to copy the users_on_workers if we know
         #       it won't be mutated by external code?
@@ -122,7 +122,7 @@ class UsersDispatcher(Iterator):
         worker_nodes_by_id = sorted(self._worker_nodes, key=lambda w: w.id)
 
         # Give every worker an index indicating how many workers came before it on that host
-        workers_per_host = defaultdict(lambda: 0)
+        workers_per_host = defaultdict(int)
         for worker_node in worker_nodes_by_id:
             host = worker_node.id.split("_")[0]
             worker_node._index_within_host = workers_per_host[host]
@@ -131,7 +131,7 @@ class UsersDispatcher(Iterator):
         # Sort again, first by index within host, to ensure Users get started evenly across hosts
         self._worker_nodes = sorted(self._worker_nodes, key=lambda worker: (worker._index_within_host, worker.id))
 
-    def _dispatcher(self) -> Generator[Dict[str, Dict[str, int]], None, None]:
+    def _dispatcher(self) -> Generator[dict[str, dict[str, int]], None, None]:
         self._dispatch_in_progress = True
 
         if self._rebalance:
@@ -164,7 +164,7 @@ class UsersDispatcher(Iterator):
 
         self._dispatch_in_progress = False
 
-    def new_dispatch(self, target_user_count: int, spawn_rate: float, user_classes: Optional[List] = None) -> None:
+    def new_dispatch(self, target_user_count: int, spawn_rate: float, user_classes: list | None = None) -> None:
         """
         Initialize a new dispatch cycle.
 
@@ -194,7 +194,7 @@ class UsersDispatcher(Iterator):
 
         self._dispatch_iteration_durations.clear()
 
-    def add_worker(self, worker_node: "WorkerNode") -> None:
+    def add_worker(self, worker_node: WorkerNode) -> None:
         """
         This method is to be called when a new worker connects to the master. When
         a new worker is added, the users dispatcher will flag that a rebalance is required
@@ -207,7 +207,7 @@ class UsersDispatcher(Iterator):
         self._sort_workers()
         self._prepare_rebalance()
 
-    def remove_worker(self, worker_node: "WorkerNode") -> None:
+    def remove_worker(self, worker_node: WorkerNode) -> None:
         """
         This method is similar to the above `add_worker`. When a worker disconnects
         (because of e.g. network failure, worker failure, etc.), this method will ensure that the next
@@ -268,7 +268,7 @@ class UsersDispatcher(Iterator):
         sleep_duration = max(0.0, self._wait_between_dispatch - delta)
         gevent.sleep(sleep_duration)
 
-    def _add_users_on_workers(self) -> Dict[str, Dict[str, int]]:
+    def _add_users_on_workers(self) -> dict[str, dict[str, int]]:
         """Add users on the workers until the target number of users is reached for the current dispatch iteration
 
         :return: The users that we want to run on the workers
@@ -290,7 +290,7 @@ class UsersDispatcher(Iterator):
 
         return self._users_on_workers
 
-    def _remove_users_from_workers(self) -> Dict[str, Dict[str, int]]:
+    def _remove_users_from_workers(self) -> dict[str, dict[str, int]]:
         """Remove users from the workers until the target number of users is reached for the current dispatch iteration
 
         :return: The users that we want to run on the workers
@@ -318,8 +318,8 @@ class UsersDispatcher(Iterator):
 
     def _distribute_users(
         self, target_user_count: int
-    ) -> Tuple[
-        Dict[str, Dict[str, int]], Generator[Optional[str], None, None], itertools.cycle, List[Tuple["WorkerNode", str]]
+    ) -> tuple[
+        dict[str, dict[str, int]], Generator[str | None, None, None], itertools.cycle, list[tuple[WorkerNode, str]]
     ]:
         """
         This function might take some time to complete if the `target_user_count` is a big number. A big number
@@ -349,7 +349,7 @@ class UsersDispatcher(Iterator):
 
         return users_on_workers, user_gen, worker_gen, active_users
 
-    def _user_gen(self) -> Generator[Optional[str], None, None]:
+    def _user_gen(self) -> Generator[str | None, None, None]:
         """
         This method generates users according to their weights using
         a smooth weighted round-robin algorithm implemented by https://github.com/linnik/roundrobin.
@@ -361,7 +361,7 @@ class UsersDispatcher(Iterator):
         less accurate during ramp-up/down.
         """
 
-        def infinite_cycle_gen(users: List[Tuple[Type[User], int]]) -> itertools.cycle:
+        def infinite_cycle_gen(users: list[tuple[type[User], int]]) -> itertools.cycle:
             if not users:
                 return itertools.cycle([None])
 
@@ -401,9 +401,9 @@ class UsersDispatcher(Iterator):
             if self._try_dispatch_fixed:
                 self._try_dispatch_fixed = False
                 current_fixed_users_count = {u: self._get_user_current_count(u) for u in fixed_users}
-                spawned_classes: Set[str] = set()
+                spawned_classes: set[str] = set()
                 while len(spawned_classes) != len(fixed_users):
-                    user_name: Optional[str] = next(cycle_fixed_gen)
+                    user_name: str | None = next(cycle_fixed_gen)
                     if not user_name:
                         break
 
@@ -422,7 +422,7 @@ class UsersDispatcher(Iterator):
             yield next(cycle_weighted_gen)
 
     @staticmethod
-    def _fast_users_on_workers_copy(users_on_workers: Dict[str, Dict[str, int]]) -> Dict[str, Dict[str, int]]:
+    def _fast_users_on_workers_copy(users_on_workers: dict[str, dict[str, int]]) -> dict[str, dict[str, int]]:
         """deepcopy is too slow, so we use this custom copy function.
 
         The implementation was profiled and compared to other implementations such as dict-comprehensions

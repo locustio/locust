@@ -1,8 +1,10 @@
-import { SWARM_STATE } from 'constants/swarm';
+export const percentilesToChart = [0.5, 0.95];
+export const percentilesToStatistics = [0.5, 0.95, 0.99];
 
 export const swarmStateMock = {
   availableShapeClasses: ['Default'],
-  availableUserClasses: ['ExampleUser'],
+  availableUserClasses: ['ExampleClass'],
+  availableUserTasks: { ExampleClass: ['ExampleTask'] },
   extraOptions: {},
   history: [],
   host: 'https://localhost',
@@ -13,12 +15,15 @@ export const swarmStateMock = {
   overrideHostWarning: false,
   percentile1: 0.95,
   percentile2: 0.99,
+  percentilesToStatistics: percentilesToStatistics,
   showUserclassPicker: false,
   spawnRate: null,
-  state: SWARM_STATE.READY,
+  state: 'ready',
+  percentilesToChart: percentilesToChart,
   statsHistoryEnabled: false,
   tasks: '{}',
   userCount: 0,
   version: '2.15.0',
   workerCount: 0,
+  users: {},
 };

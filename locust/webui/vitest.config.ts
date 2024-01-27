@@ -7,6 +7,7 @@ export default defineConfig(configEnv =>
     viteConfig(configEnv),
     defineConfig({
       test: {
+        globals: true,
         environment: 'jsdom',
         setupFiles: './src/test/setup.ts',
       },

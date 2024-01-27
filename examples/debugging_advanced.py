@@ -1,4 +1,4 @@
-from locust import HttpUser, task, run_single_user
+from locust import HttpUser, run_single_user, task
 from locust.exception import StopUser
 
 

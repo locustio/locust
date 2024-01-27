@@ -1,8 +1,9 @@
 from __future__ import annotations
+
 import re
 import time
 from contextlib import contextmanager
-from typing import Generator, Optional
+from typing import Generator
 from urllib.parse import urlparse, urlunparse
 
 import requests
@@ -48,7 +49,7 @@ class HttpSession(requests.Session):
                            and then mark it as successful even if the response code was not (i.e 500 or 404).
     """
 
-    def __init__(self, base_url, request_event, user, *args, pool_manager: Optional[PoolManager] = None, **kwargs):
+    def __init__(self, base_url, request_event, user, *args, pool_manager: PoolManager | None = None, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.base_url = base_url
@@ -57,7 +58,7 @@ class HttpSession(requests.Session):
 
         # User can group name, or use the group context manager to gather performance statistics under a specific name
         # This is an alternative to passing in the "name" parameter to the requests function
-        self.request_name: Optional[str] = None
+        self.request_name: str | None = None
 
         # Check for basic authentication
         parsed_url = urlparse(self.base_url)
@@ -301,7 +302,7 @@ class ResponseContextManager(LocustResponse):
 
 
 class LocustHttpAdapter(HTTPAdapter):
-    def __init__(self, pool_manager: Optional[PoolManager], *args, **kwargs):
+    def __init__(self, pool_manager: PoolManager | None, *args, **kwargs):
         self.poolmanager = pool_manager
         super().__init__(*args, **kwargs)
 
@@ -323,5 +324,5 @@ def _failure(self):
     )
 
 
-Response.success = _success
-Response.failure = _failure
+Response.success = _success  # type: ignore[attr-defined]
+Response.failure = _failure  # type: ignore[attr-defined]

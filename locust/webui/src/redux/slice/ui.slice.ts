@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+import { swarmTemplateArgs } from 'constants/swarm';
 import { updateStateWithPayload } from 'redux/utils';
 import {
   ICharts,
@@ -11,7 +12,6 @@ import {
   IExtendedStat,
 } from 'types/ui.types';
 import { updateArraysAtProps } from 'utils/object';
-import { camelCaseKeys } from 'utils/string';
 
 export interface IUiState {
   extendedStats?: IExtendedStat[];
@@ -31,22 +31,30 @@ export type UiAction = PayloadAction<Partial<IUiState>>;
 const initialState = {
   totalRps: 0,
   failRatio: 0,
-  stats: [],
-  errors: [],
-  exceptions: [],
-  charts: camelCaseKeys(window.templateArgs).history.reduce(updateArraysAtProps, {}),
-  ratios: {},
+  stats: [] as ISwarmStat[],
+  errors: [] as ISwarmError[],
+  exceptions: [] as ISwarmException[],
+  charts: swarmTemplateArgs.history?.reduce(updateArraysAtProps, {}) as ICharts,
+  ratios: {} as ISwarmRatios,
   userCount: 0,
 };
 
-const addSpaceToChartsBetweenTests = (charts: ICharts, time: string) => {
+const percentileNullValues = swarmTemplateArgs.percentilesToChart?.reduce(
+  (percentilesNullValue, percentile) => ({
+    ...percentilesNullValue,
+    [`responseTimePercentile${percentile}`]: { value: null },
+  }),
+  {},
+);
+
+const addSpaceToChartsBetweenTests = (charts: ICharts) => {
   return updateArraysAtProps(charts, {
+    ...percentileNullValues,
     currentRps: { value: null },
     currentFailPerSec: { value: null },
-    responseTimePercentile1: { value: null },
-    responseTimePercentile2: { value: null },
+    totalAvgResponseTime: { value: null },
     userCount: { value: null },
-    time: time,
+    time: '',
   });
 };
 
@@ -54,7 +62,7 @@ const uiSlice = createSlice({
   name: 'ui',
   initialState,
   reducers: {
-    setUi: updateStateWithPayload,
+    setUi: updateStateWithPayload<IUiState, UiAction>,
     updateCharts: (state, { payload }) => ({
       ...state,
       charts: updateArraysAtProps<ICharts>(state.charts as ICharts, payload),
@@ -63,10 +71,7 @@ const uiSlice = createSlice({
       return {
         ...state,
         charts: {
-          ...addSpaceToChartsBetweenTests(
-            state.charts as ICharts,
-            payload.length ? payload.at(-1) : (state.charts as ICharts).time[0],
-          ),
+          ...addSpaceToChartsBetweenTests(state.charts as ICharts),
           markers: (state.charts as ICharts).markers
             ? [...((state.charts as ICharts).markers as string[]), payload]
             : [(state.charts as ICharts).time[0], payload],

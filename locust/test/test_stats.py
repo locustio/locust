@@ -1,33 +1,31 @@
-import csv
-import time
-import unittest
-import re
-import os
-import json
-
-import gevent
-from unittest import mock
 import locust
-from locust import HttpUser, TaskSet, task, User, constant, __version__
+from locust import HttpUser, TaskSet, User, __version__, constant, task
 from locust.env import Environment
 from locust.rpc.protocol import Message
 from locust.stats import (
-    CachedResponseTimes,
-    RequestStats,
-    StatsEntry,
-    diff_response_time_dicts,
     PERCENTILES_TO_REPORT,
     STATS_NAME_WIDTH,
     STATS_TYPE_WIDTH,
+    CachedResponseTimes,
+    RequestStats,
+    StatsCSVFileWriter,
+    StatsEntry,
+    diff_response_time_dicts,
+    stats_history,
 )
-from locust.stats import StatsCSVFileWriter
-from locust.stats import stats_history
-from locust.test.testcases import LocustTestCase
+from locust.test.test_runners import mocked_rpc
+from locust.test.testcases import LocustTestCase, WebserverTestCase
 from locust.user.inspectuser import _get_task_ratio
 
-from locust.test.testcases import WebserverTestCase
-from locust.test.test_runners import mocked_rpc
+import csv
+import json
+import os
+import re
+import time
+import unittest
+from unittest import mock
 
+import gevent
 
 _TEST_CSV_STATS_INTERVAL_SEC = 0.2
 _TEST_CSV_STATS_INTERVAL_WAIT_SEC = _TEST_CSV_STATS_INTERVAL_SEC + 0.1

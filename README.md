@@ -2,12 +2,16 @@
 
 [![PyPI](https://img.shields.io/pypi/v/locust.svg)](https://pypi.org/project/locust/)
 [![PyPI](https://img.shields.io/pypi/pyversions/locust.svg)](https://pypi.org/project/locust/)
+[![Downloads](https://pepy.tech/badge/locust/week)](https://pepy.tech/project/locust)
 [![Build Status](https://github.com/locustio/locust/workflows/Tests/badge.svg)](https://github.com/locustio/locust/actions?query=workflow%3ATests)
-[![license](https://img.shields.io/github/license/locustio/locust.svg)](https://github.com/locustio/locust/blob/master/LICENSE)
 [![GitHub contributors](https://img.shields.io/github/contributors/locustio/locust.svg)](https://github.com/locustio/locust/graphs/contributors)
 [![Support Ukraine Badge](https://bit.ly/support-ukraine-now)](https://github.com/support-ukraine/support-ukraine)
 
-Locust is an easy to use, scriptable and scalable performance testing tool. You define your load test in regular Python code, instead of being constrained by a UI or domain specific language that only pretends to be real code. This makes Locust infinitely expandable and very developer friendly.
+Locust is an open source performance/load testing tool for HTTP and other protocols. Its developer friendly approach lets you to define your tests in regular Python code.
+
+Locust tests can be run from command line or using its web-based UI. Throughput, response times and errors can be viewed in real time and/or exported for later analysis.
+
+You can import regular Python libraries into your tests, and with Locust's pluggable architecture it is infinitely expandable. Unlike when using most other tools, your test design will never be limited by a GUI or domain-specific language.
 
 To get started right away, head over to the [documentation](http://docs.locust.io/en/stable/installation.html).
 

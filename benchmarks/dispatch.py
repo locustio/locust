@@ -5,15 +5,15 @@ for calculating the distribution of users on each workers. This benchmark is to 
 by people working on Locust's development.
 """
 
+from locust import User
+from locust.dispatch import UsersDispatcher
+from locust.runners import WorkerNode
+
 import itertools
 import statistics
 import time
 
 from prettytable import PrettyTable
-
-from locust import User
-from locust.dispatch import UsersDispatcher
-from locust.runners import WorkerNode
 
 
 class User1(User):
@@ -632,8 +632,8 @@ if __name__ == "__main__":
         print()
         print(table)
 
-        with open(f"results-dispatch-benchmarks-{int(now)}.txt", "wt") as file:
+        with open(f"results-dispatch-benchmarks-{int(now)}.txt", "w") as file:
             file.write(table.get_string())
 
-        with open(f"results-dispatch-benchmarks-{int(now)}.json", "wt") as file:
+        with open(f"results-dispatch-benchmarks-{int(now)}.json", "w") as file:
             file.write(table.get_json_string())

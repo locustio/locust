@@ -1,4 +1,4 @@
-import { fireEvent, waitFor } from '@testing-library/react';
+import { act, fireEvent } from '@testing-library/react';
 import { beforeAll, afterAll, describe, test, expect, vi } from 'vitest';
 
 import StopButton from 'components/StateButtons/StopButton';
@@ -18,14 +18,15 @@ describe('StopButton', () => {
   test('should stop run on StopButton click', async () => {
     const { getByText, queryByText, rerender } = renderWithProvider(<StopButton />);
 
-    fireEvent.click(getByText('Stop'));
+    act(() => {
+      fireEvent.click(getByText('Stop'));
+    });
+
     expect(getByText('Loading')).toBeTruthy();
 
-    await waitFor(() => {
-      expect(resetStats).toHaveBeenCalled();
-      expect(resetStats).toBeCalledWith('stop');
-      rerender(<StopButton />);
-      expect(queryByText('Loading')).toBeFalsy();
-    });
+    expect(resetStats).toHaveBeenCalled();
+    expect(resetStats).toBeCalledWith('stop');
+    rerender(<StopButton />);
+    expect(queryByText('Loading')).toBeFalsy();
   });
 });

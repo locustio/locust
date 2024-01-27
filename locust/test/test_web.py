@@ -1,33 +1,35 @@
+from __future__ import annotations
+
+import locust
+from locust import LoadTestShape, constant, stats
+from locust.argument_parser import get_parser, parse_options
+from locust.env import Environment
+from locust.log import LogReader
+from locust.runners import Runner
+from locust.stats import StatsCSVFileWriter
+from locust.user import User, task
+from locust.web import WebUI
+
 import copy
 import csv
 import json
+import logging
 import os
 import re
 import textwrap
 import traceback
-import logging
-import unittest
 from io import StringIO
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 import gevent
 import requests
+from flask_login import UserMixin
 from pyquery import PyQuery as pq
-import locust
-from locust import constant, LoadTestShape
-from locust.argument_parser import get_parser, parse_options
-from locust.user import User, task
-from locust.env import Environment
-from locust.runners import Runner
-from locust import stats
-from locust.stats import StatsCSVFileWriter
-from locust.web import WebUI
-from locust.log import LogReader
 
+from ..util.load_locustfile import load_locustfile
 from .mock_locustfile import mock_locustfile
 from .testcases import LocustTestCase
 from .util import create_tls_cert
-from ..util.load_locustfile import load_locustfile
 
 localhost = "localhost" if os.name == "nt" else "127.0.0.1"
 
@@ -662,6 +664,41 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
+    def test_swarm_shape_class_is_updated_when_userclass_picker_is_active(self):
+        class User1(User):
+            pass
+
+        class TestShape(LoadTestShape):
+            def tick(self):
+                pass
+
+        test_shape_instance = TestShape()
+
+        self.environment.web_ui.userclass_picker_is_active = True
+        self.environment.available_user_classes = {"User1": User1}
+        self.environment.available_shape_classes = {"TestShape": test_shape_instance}
+        self.environment.shape_class = None
+
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={
+                "user_count": 5,
+                "spawn_rate": 5,
+                "host": "https://localhost",
+                "user_classes": "User1",
+                "shape_class": "TestShape",
+            },
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(test_shape_instance, self.environment.shape_class)
+        self.assertIsNotNone(test_shape_instance.runner)
+
+        # stop
+        gevent.sleep(1)
+        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        self.assertEqual(response.json()["message"], "Test stopped")
+
     def test_swarm_userclass_shapeclass_ignored_when_userclass_picker_is_inactive(self):
         class User1(User):
             wait_time = constant(1)
@@ -1033,17 +1070,76 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         self.assertIn(log_line, response.json().get("logs"))
 
+    def test_template_args(self):
+        class MyUser(User):
+            @task
+            def do_something(self):
+                self.client.get("/")
+
+            host = "http://example.com"
+
+        class MyUser2(User):
+            host = "http://example.com"
+
+        self.environment.user_classes = [MyUser, MyUser2]
+        self.environment.available_user_classes = {"User1": MyUser, "User2": MyUser2}
+        self.environment.available_user_tasks = {"User1": MyUser.tasks, "User2": MyUser2.tasks}
+
+        users = {"User1": MyUser.json(), "User2": MyUser2.json()}
+        available_user_tasks = {"User1": ["do_something"], "User2": []}
+
+        self.web_ui.update_template_args()
+
+        self.assertEqual(self.web_ui.template_args.get("users"), users)
+        self.assertEqual(
+            self.web_ui.template_args.get("available_user_classes"), sorted(self.environment.available_user_classes)
+        )
+        self.assertEqual(self.web_ui.template_args.get("available_user_tasks"), available_user_tasks)
+
+    def test_update_user_endpoint(self):
+        class MyUser(User):
+            @task
+            def my_task(self):
+                pass
+
+            @task
+            def my_task_2(self):
+                pass
+
+            host = "http://example.com"
+
+        class MyUser2(User):
+            host = "http://example.com"
+
+        self.environment.user_classes = [MyUser, MyUser2]
+        self.environment.available_user_classes = {"User1": MyUser, "User2": MyUser2}
+        self.environment.available_user_tasks = {"User1": MyUser.tasks, "User2": MyUser2.tasks}
+
+        users = {"User1": MyUser.json(), "User2": MyUser2.json()}
+        available_user_tasks = {"User1": ["my_task", "my_task_2"], "User2": []}
+
+        # environment.update_user_class({"user_class_name": "User1", "host": "http://localhost", "tasks": ["my_task_2"]})
+        response = requests.post(
+            "http://127.0.0.1:%i/user" % self.web_port,
+            json={"user_class_name": "User1", "host": "http://localhost", "tasks": ["my_task_2"]},
+        )
+
+        self.assertEqual(
+            self.environment.available_user_classes["User1"].json(),
+            {"host": "http://localhost", "tasks": ["my_task_2"], "fixed_count": 0, "weight": 1},
+        )
+
 
 class TestWebUIAuth(LocustTestCase):
     def setUp(self):
         super().setUp()
 
         parser = get_parser(default_config_files=[])
-        options = parser.parse_args(["--web-auth", "john:doe"])
-        self.runner = Runner(self.environment)
-        self.stats = self.runner.stats
-        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, auth_credentials=options.web_auth)
-        self.web_ui.app.view_functions["request_stats"].clear_cache()
+        self.environment.parsed_options = parser.parse_args(["--modern-ui", "--web-login"])
+
+        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, modern_ui=True, web_login=True)
+
+        self.web_ui.app.secret_key = "secret!"
         gevent.sleep(0.01)
         self.web_port = self.web_ui.server.server_port
 
@@ -1052,18 +1148,36 @@ class TestWebUIAuth(LocustTestCase):
         self.web_ui.stop()
         self.runner.quit()
 
-    def test_index_with_basic_auth_enabled_correct_credentials(self):
-        self.assertEqual(
-            200, requests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port, auth=("john", "doe")).status_code
-        )
+    def test_index_with_web_login_enabled_valid_user(self):
+        class User(UserMixin):
+            def __init__(self):
+                self.username = "test_user"
 
-    def test_index_with_basic_auth_enabled_incorrect_credentials(self):
-        self.assertEqual(
-            401, requests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port, auth=("john", "invalid")).status_code
-        )
+            def get_id(self):
+                return self.username
 
-    def test_index_with_basic_auth_enabled_blank_credentials(self):
-        self.assertEqual(401, requests.get("http://127.0.0.1:%i/?ele=phino" % self.web_port).status_code)
+        def load_user(id):
+            return User()
+
+        self.web_ui.login_manager.request_loader(load_user)
+
+        response = requests.get("http://127.0.0.1:%i" % self.web_port)
+        d = pq(response.content.decode("utf-8"))
+
+        self.assertNotIn("authArgs", str(d))
+        self.assertIn("templateArgs", str(d))
+
+    def test_index_with_web_login_enabled_no_user(self):
+        def load_user():
+            return None
+
+        self.web_ui.login_manager.user_loader(load_user)
+
+        response = requests.get("http://127.0.0.1:%i" % self.web_port)
+        d = pq(response.content.decode("utf-8"))
+
+        # asserts auth page is returned
+        self.assertIn("authArgs", str(d))
 
 
 class TestWebUIWithTLS(LocustTestCase):

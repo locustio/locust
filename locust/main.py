@@ -1,35 +1,40 @@
+from __future__ import annotations
+
+import locust
+
+import atexit
 import errno
+import gc
+import inspect
+import json
 import logging
 import os
 import signal
 import sys
 import time
-import atexit
-import inspect
+import traceback
+
 import gevent
-import locust
-from typing import Dict
-from . import log
+
+from . import log, stats
 from .argument_parser import parse_locustfile_option, parse_options
 from .env import Environment
-from .log import setup_logging, greenlet_exception_logger
-from . import stats
+from .html import get_html_report
+from .input_events import input_listener
+from .log import greenlet_exception_logger, setup_logging
 from .stats import (
+    StatsCSV,
+    StatsCSVFileWriter,
     print_error_report,
     print_percentile_stats,
     print_stats,
     print_stats_json,
-    stats_printer,
     stats_history,
+    stats_printer,
 )
-from .stats import StatsCSV, StatsCSVFileWriter
 from .user.inspectuser import print_task_ratio, print_task_ratio_json
-from .util.timespan import parse_timespan
-from .exception import AuthCredentialsError
-from .input_events import input_listener
-from .html import get_html_report
 from .util.load_locustfile import load_locustfile
-import traceback
+from .util.timespan import parse_timespan
 
 try:
     # import locust_plugins if it is installed, to allow it to register custom arguments etc
@@ -56,6 +61,7 @@ def create_environment(
     locustfile=None,
     available_user_classes=None,
     available_shape_classes=None,
+    available_user_tasks=None,
 ):
     """
     Create an Environment instance from options
@@ -70,6 +76,7 @@ def create_environment(
         parsed_options=options,
         available_user_classes=available_user_classes,
         available_shape_classes=available_shape_classes,
+        available_user_tasks=available_user_tasks,
     )
 
 
@@ -84,9 +91,10 @@ def main():
     locustfile = locustfiles[0] if locustfiles_length == 1 else None
 
     # Importing Locustfile(s) - setting available UserClasses and ShapeClasses to choose from in UI
-    user_classes: Dict[str, locust.User] = {}
+    user_classes: dict[str, locust.User] = {}
     available_user_classes = {}
     available_shape_classes = {}
+    available_user_tasks = {}
     shape_class = None
     for _locustfile in locustfiles:
         docstring, _user_classes, shape_classes = load_locustfile(_locustfile)
@@ -118,6 +126,7 @@ def main():
 
             user_classes[key] = value
             available_user_classes[key] = value
+            available_user_tasks[key] = value.tasks or None
 
     if len(stats.PERCENTILES_TO_CHART) != 2:
         logging.error("stats.PERCENTILES_TO_CHART parameter should be 2 parameters \n")
@@ -137,6 +146,14 @@ def main():
                 "stats.PERCENTILES_TO_CHART parameter need to be float and value between. 0 < percentile < 1 Eg 0.95\n"
             )
             sys.exit(1)
+
+    for percentile in stats.PERCENTILES_TO_STATISTICS:
+        if not is_valid_percentile(percentile):
+            logging.error(
+                "stats.PERCENTILES_TO_STATISTICS parameter need to be float and value between. 0 < percentile < 1 Eg 0.95\n"
+            )
+            sys.exit(1)
+
     # parse all command line options
     options = parse_options()
 
@@ -145,6 +162,12 @@ def main():
 
     if options.slave or options.expect_slaves:
         sys.stderr.write("The --slave/--expect-slaves parameters have been renamed --worker/--expect-workers\n")
+        sys.exit(1)
+
+    if options.web_auth:
+        sys.stderr.write(
+            "The --web-auth parameters has been replaced with --web-login. See https://docs.locust.io/en/stable/extending-locust.html#authentication for details\n"
+        )
         sys.exit(1)
 
     if options.autoquit != -1 and not options.autostart:
@@ -182,6 +205,9 @@ def main():
                 "--master cannot be combined with --processes. Remove --master, as it is implicit as long as --worker is not set.\n"
             )
             sys.exit(1)
+        # Optimize copy-on-write-behavior to save some memory (aprx 26MB -> 15MB rss) in child processes
+        gc.collect()  # avoid freezing garbage
+        gc.freeze()  # move all objects to perm gen so ref counts dont get updated
         for _ in range(options.processes):
             child_pid = gevent.fork()
             if child_pid:
@@ -337,7 +363,35 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         locustfile=locustfile_path,
         available_user_classes=available_user_classes,
         available_shape_classes=available_shape_classes,
+        available_user_tasks=available_user_tasks,
     )
+
+    if options.config_users:
+        for json_user_config in options.config_users:
+            try:
+                if json_user_config.endswith(".json"):
+                    with open(json_user_config) as file:
+                        user_config = json.load(file)
+                else:
+                    user_config = json.loads(json_user_config)
+
+                def ensure_user_class_name(config):
+                    if "user_class_name" not in config:
+                        logger.error("The user config must specify a user_class_name")
+                        sys.exit(-1)
+
+                if isinstance(user_config, list):
+                    for config in user_config:
+                        ensure_user_class_name(config)
+
+                        environment.update_user_class(config)
+                else:
+                    ensure_user_class_name(user_config)
+
+                    environment.update_user_class(user_config)
+            except Exception as e:
+                logger.error(f"The --config-users arugment must be in valid JSON string or file: {e}")
+                sys.exit(-1)
 
     if (
         shape_class
@@ -412,37 +466,33 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     if not options.headless and not options.worker:
         # spawn web greenlet
         protocol = "https" if options.tls_cert and options.tls_key else "http"
-        try:
-            if options.web_host == "*":
-                # special check for "*" so that we're consistent with --master-bind-host
-                web_host = ""
+
+        if options.web_host == "*":
+            # special check for "*" so that we're consistent with --master-bind-host
+            web_host = ""
+        else:
+            web_host = options.web_host
+        if web_host:
+            logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}")
+        else:
+            if os.name == "nt":
+                logger.info(
+                    f"Starting web interface at {protocol}://localhost:{options.web_port} (accepting connections from all network interfaces)"
+                )
             else:
-                web_host = options.web_host
-            if web_host:
-                logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}")
-            else:
-                if os.name == "nt":
-                    logger.info(
-                        f"Starting web interface at {protocol}://localhost:{options.web_port} (accepting connections from all network interfaces)"
-                    )
-                else:
-                    logger.info(f"Starting web interface at {protocol}://0.0.0.0:{options.web_port}")
-            if options.web_auth:
-                logging.info("BasicAuth support is deprecated, it will be removed in a future release.")
-            web_ui = environment.create_web_ui(
-                host=web_host,
-                port=options.web_port,
-                auth_credentials=options.web_auth,
-                tls_cert=options.tls_cert,
-                tls_key=options.tls_key,
-                stats_csv_writer=stats_csv_writer,
-                delayed_start=True,
-                userclass_picker_is_active=options.class_picker,
-                modern_ui=options.modern_ui,
-            )
-        except AuthCredentialsError:
-            logger.error("Credentials supplied with --web-auth should have the format: username:password")
-            sys.exit(1)
+                logger.info(f"Starting web interface at {protocol}://0.0.0.0:{options.web_port}")
+
+        web_ui = environment.create_web_ui(
+            host=web_host,
+            port=options.web_port,
+            web_login=options.web_login,
+            tls_cert=options.tls_cert,
+            tls_key=options.tls_key,
+            stats_csv_writer=stats_csv_writer,
+            delayed_start=True,
+            userclass_picker_is_active=options.class_picker,
+            modern_ui=options.modern_ui,
+        )
     else:
         web_ui = None
 

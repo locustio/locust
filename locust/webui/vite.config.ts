@@ -17,6 +17,20 @@ export default defineConfig((config: UserConfig) => ({
         },
       }),
   ],
+  build: {
+    chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      input: {
+        index: './index.html',
+        auth: './auth.html',
+      },
+      output: {
+        // disable code-splitting so we can load the build in script tags
+        manualChunks: () => 'app',
+      },
+    },
+    sourcemap: true,
+  },
   server: {
     port: 4000,
     open: './dev.html',

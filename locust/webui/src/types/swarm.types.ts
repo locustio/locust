@@ -9,7 +9,7 @@ import {
 
 export interface IExtraOptionParameter {
   choices: string[] | null;
-  defaultValue: string | boolean | null;
+  defaultValue: string | number | boolean | null;
   helpText: string | null;
   isSecret: boolean;
 }
@@ -18,7 +18,16 @@ export interface IExtraOptions {
   [key: string]: IExtraOptionParameter;
 }
 
-export type History = Omit<ICharts, 'markers'>;
+export interface IHistory {
+  currentRps: number;
+  currentFailPerSec: number;
+  userCount: number;
+  time: string;
+  currentResponseTimePercentiles: {
+    [key: `responseTimePercentile${number}`]: number | null;
+  };
+  totalAvgResponseTime: number;
+}
 
 export interface IReport {
   locustfile: string;
@@ -35,8 +44,15 @@ export interface IReport {
 }
 
 export interface IReportTemplateArgs extends IReport {
-  history: ICharts[];
-  is_report?: boolean;
-  percentile1: number;
-  percentile2: number;
+  history: IHistory[];
+  isReport?: boolean;
+  percentilesToChart: number[];
+  percentilesToStatistics: number[];
+}
+
+export interface ISwarmUser {
+  fixedCount: number;
+  host: string;
+  weight: number;
+  tasks: string[];
 }

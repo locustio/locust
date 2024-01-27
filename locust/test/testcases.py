@@ -1,3 +1,10 @@
+import locust
+from locust import log
+from locust.env import Environment
+from locust.event import Events
+from locust.test.mock_logging import MockedLoggingHandler
+from locust.test.util import clear_all_functools_lru_cache
+
 import base64
 import logging
 import random
@@ -9,13 +16,6 @@ from io import BytesIO
 import gevent
 import gevent.pywsgi
 from flask import Flask, Response, make_response, redirect, request, send_file, stream_with_context
-
-import locust
-from locust import log
-from locust.event import Events
-from locust.env import Environment
-from locust.test.mock_logging import MockedLoggingHandler
-from locust.test.util import clear_all_functools_lru_cache
 
 app = Flask(__name__)
 app.jinja_env.add_extension("jinja2.ext.do")
