@@ -20,9 +20,6 @@ import requests
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
 from .util import get_free_tcp_port, patch_env, temporary_file
 
-if os.name == "nt":
-    signal.SIGTERM = getattr(signal, "CTRL_BREAK_EVENT")
-
 
 def is_port_in_use(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
