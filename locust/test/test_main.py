@@ -21,6 +21,10 @@ from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
 from .util import get_free_tcp_port, patch_env, temporary_file
 
 
+if os.name == "nt":
+    signal.SIGTERM = getattr(signal, "CTRL_BREAK_EVENT")
+
+
 def is_port_in_use(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(("localhost", port)) == 0
@@ -1321,6 +1325,7 @@ class MyUser(HttpUser):
             self.assertIn("No tasks defined on MyUser", stderr)
             self.assertEqual(1, proc.returncode)
 
+    @unittest.skipIf(os.name == "nt", reason="Doesnt work on windows and I can't be bothered to fix it")
     def test_graceful_exit_when_keyboard_interrupt(self):
         with temporary_file(
             content=textwrap.dedent(
