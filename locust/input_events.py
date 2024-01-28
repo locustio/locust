@@ -8,6 +8,7 @@ from typing import Callable
 import gevent
 
 if os.name == "nt":
+    import pywintypes
     from win32api import STD_INPUT_HANDLE
     from win32console import (
         ENABLE_ECHO_INPUT,
@@ -16,7 +17,6 @@ if os.name == "nt":
         KEY_EVENT,
         GetStdHandle,
     )
-    import pywintypes
 else:
     import select
     import termios
