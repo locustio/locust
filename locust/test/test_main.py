@@ -81,7 +81,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertIn("Logging options:", output)
         self.assertIn("--skip-log-setup      Disable Locust's logging setup.", output)
 
-    @unittest.skipIf(os.name == "nt", reason="Doesnt work on windows and I can't be bothered to fix it")
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_custom_arguments(self):
         port = get_free_tcp_port()
         with temporary_file(
@@ -195,6 +195,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Exit code in quit event 42", stdout)
             self.assertEqual(42, proc.returncode)
 
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_webserver(self):
         with temporary_file(
             content=textwrap.dedent(
@@ -295,6 +296,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("parameter need to be float and value between. 0 < percentile < 1 Eg 0.95", stderr)
             self.assertEqual(1, proc.returncode)
 
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_webserver_multiple_locustfiles(self):
         with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1:
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B) as mocked2:
@@ -310,6 +312,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Shutting down (exit code 0)", stderr)
                 self.assertEqual(0, proc.returncode)
 
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_webserver_multiple_locustfiles_in_directory(self):
         with TemporaryDirectory() as temp_dir:
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A, dir=temp_dir):
@@ -324,6 +327,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.assertIn("Shutting down (exit code 0)", stderr)
                     self.assertEqual(0, proc.returncode)
 
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_webserver_multiple_locustfiles_with_shape(self):
         content = textwrap.dedent(
             """
@@ -417,7 +421,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("ERROR/locust.main: Valid --stop-timeout formats are", stderr)
             self.assertEqual(1, proc.returncode)
 
-    @unittest.skipIf(os.name == "nt", reason="Doesnt work on windows and I can't be bothered to fix it")
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_headless_spawn_options_wo_run_time(self):
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
@@ -443,7 +447,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Shutting down (exit code 0)", stderr)
             self.assertEqual(0, proc.returncode)
 
-    @unittest.skipIf(os.name == "nt", reason="Doesnt work on windows and I can't be bothered to fix it")
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_run_headless_with_multiple_locustfiles(self):
         with TemporaryDirectory() as temp_dir:
             with mock_locustfile(dir=temp_dir):
@@ -595,7 +599,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Shutting down (exit code 0)", stderr)
                 self.assertEqual(0, proc.returncode)
 
-    @unittest.skipIf(os.name == "nt", reason="Doesnt work on windows and I can't be bothered to fix it")
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_autostart_wo_run_time(self):
         port = get_free_tcp_port()
         with mock_locustfile() as mocked:
@@ -662,6 +666,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertEqual(200, response.status_code)
             self.assertIn('<body class="running">', response.text)
 
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_run_autostart_with_multiple_locustfiles(self):
         with TemporaryDirectory() as temp_dir:
             with mock_locustfile(dir=temp_dir):
@@ -821,6 +826,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn('<body class="spawning">', response.text)
                 self.assertTrue(success, "got timeout and had to kill the process")
 
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_web_options(self):
         port = get_free_tcp_port()
         if platform.system() == "Darwin":
@@ -1327,7 +1333,7 @@ class MyUser(HttpUser):
             self.assertIn("No tasks defined on MyUser", stderr)
             self.assertEqual(1, proc.returncode)
 
-    @unittest.skipIf(os.name == "nt", reason="Doesnt work on windows and I can't be bothered to fix it")
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_graceful_exit_when_keyboard_interrupt(self):
         with temporary_file(
             content=textwrap.dedent(
