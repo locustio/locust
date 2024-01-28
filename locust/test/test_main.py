@@ -20,7 +20,6 @@ import requests
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
 from .util import get_free_tcp_port, patch_env, temporary_file
 
-
 if os.name == "nt":
     signal.SIGTERM = getattr(signal, "CTRL_BREAK_EVENT")
 
