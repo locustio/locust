@@ -120,10 +120,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertNotIn("command_line_value", stdout)
         self.assertIn("web_form_value", stdout)
 
-    @unittest.skipIf(
-        os.name == "nt",
-        reason="Stdout never arrives in windows when the process is killed with sigterm for some reason",
-    )
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_custom_arguments_in_file(self):
         with temporary_file(
             content=textwrap.dedent(
@@ -159,10 +156,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertIn("Starting Locust", stderr)
         self.assertIn("config_file_value", stdout)
 
-    @unittest.skipIf(
-        os.name == "nt",
-        reason="Stdout never arrives in windows when the process is killed with sigterm for some reason",
-    )
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_custom_exit_code(self):
         with temporary_file(
             content=textwrap.dedent(
