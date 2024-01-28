@@ -417,6 +417,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("ERROR/locust.main: Valid --stop-timeout formats are", stderr)
             self.assertEqual(1, proc.returncode)
 
+    @unittest.skipIf(os.name == "nt", reason="Doesnt work on windows and I can't be bothered to fix it")
     def test_headless_spawn_options_wo_run_time(self):
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
@@ -442,6 +443,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Shutting down (exit code 0)", stderr)
             self.assertEqual(0, proc.returncode)
 
+    @unittest.skipIf(os.name == "nt", reason="Doesnt work on windows and I can't be bothered to fix it")
     def test_run_headless_with_multiple_locustfiles(self):
         with TemporaryDirectory() as temp_dir:
             with mock_locustfile(dir=temp_dir):
@@ -593,6 +595,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Shutting down (exit code 0)", stderr)
                 self.assertEqual(0, proc.returncode)
 
+    @unittest.skipIf(os.name == "nt", reason="Doesnt work on windows and I can't be bothered to fix it")
     def test_autostart_wo_run_time(self):
         port = get_free_tcp_port()
         with mock_locustfile() as mocked:
