@@ -1,7 +1,6 @@
-import math
+from locust import HttpUser, LoadTestShape, constant, task
 
-from locust import HttpUser, task, constant
-from locust import LoadTestShape
+import math
 
 
 class UserA(HttpUser):

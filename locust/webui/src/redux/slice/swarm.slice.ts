@@ -2,13 +2,14 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import { swarmTemplateArgs } from 'constants/swarm';
 import { updateStateWithPayload } from 'redux/utils';
-import { IExtraOptions, IHistory } from 'types/swarm.types';
+import { IExtraOptions, IHistory, ISwarmUser } from 'types/swarm.types';
 import { ITab } from 'types/tab.types';
 import { ITableStructure } from 'types/table.types';
 
 export interface ISwarmState {
   availableShapeClasses: string[];
   availableUserClasses: string[];
+  availableUserTasks: { [key: string]: string[] };
   extraOptions: IExtraOptions;
   extendedTabs?: ITab[];
   extendedTables?: { key: string; structure: ITableStructure[] }[];
@@ -29,6 +30,7 @@ export interface ISwarmState {
   statsHistoryEnabled: boolean;
   tasks: string;
   userCount: number | string;
+  users: { [key: string]: ISwarmUser };
   version: string;
   workerCount: number;
 }

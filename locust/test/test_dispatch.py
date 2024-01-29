@@ -1,14 +1,16 @@
 from __future__ import annotations
+
+from locust import User
+from locust.dispatch import FixedUsersDispatcher, UsersDispatcher, WeightedUsersDispatcher
+from locust.runners import WorkerNode
+from locust.test.util import ANY, clear_all_functools_lru_cache
+
+import itertools
 import time
 import unittest
-import itertools
 from operator import attrgetter
 from typing import Iterator
 
-from locust import User
-from locust.dispatch import UsersDispatcher, WeightedUsersDispatcher, FixedUsersDispatcher
-from locust.runners import WorkerNode
-from locust.test.util import clear_all_functools_lru_cache, ANY
 from parameterized import parameterized_class
 
 _TOLERANCE = 0.025

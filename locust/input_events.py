@@ -1,20 +1,20 @@
 from __future__ import annotations
 
-from typing import Callable
-
-import gevent
 import logging
 import os
 import sys
+from typing import Callable
+
+import gevent
 
 if os.name == "nt":
     from win32api import STD_INPUT_HANDLE
     from win32console import (
-        GetStdHandle,
-        KEY_EVENT,
         ENABLE_ECHO_INPUT,
         ENABLE_LINE_INPUT,
         ENABLE_PROCESSED_INPUT,
+        KEY_EVENT,
+        GetStdHandle,
     )
 else:
     import select

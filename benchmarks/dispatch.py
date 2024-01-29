@@ -5,15 +5,15 @@ for calculating the distribution of users on each workers. This benchmark is to 
 by people working on Locust's development.
 """
 
+from locust import User
+from locust.dispatch import UsersDispatcher, WeightedUsersDispatcher
+from locust.runners import WorkerNode
+
 import itertools
 import statistics
 import time
 
 from prettytable import PrettyTable
-
-from locust import User
-from locust.dispatch import WeightedUsersDispatcher
-from locust.runners import WorkerNode
 
 
 class User1(User):

@@ -1,35 +1,35 @@
 from __future__ import annotations
 
+import locust
+from locust import LoadTestShape, constant, stats
+from locust.argument_parser import get_parser, parse_options
+from locust.env import Environment
+from locust.log import LogReader
+from locust.runners import Runner
+from locust.stats import StatsCSVFileWriter
+from locust.user import User, task
+from locust.web import WebUI
+
 import copy
 import csv
 import json
+import logging
 import os
 import re
 import textwrap
 import traceback
-import logging
 from io import StringIO
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 import gevent
 import requests
-from pyquery import PyQuery as pq
-import locust
 from flask_login import UserMixin
-from locust import constant, LoadTestShape
-from locust.argument_parser import get_parser, parse_options
-from locust.user import User, task
-from locust.env import Environment
-from locust.runners import Runner
-from locust import stats
-from locust.stats import StatsCSVFileWriter
-from locust.web import WebUI
-from locust.log import LogReader
+from pyquery import PyQuery as pq
 
+from ..util.load_locustfile import load_locustfile
 from .mock_locustfile import mock_locustfile
 from .testcases import LocustTestCase
 from .util import create_tls_cert
-from ..util.load_locustfile import load_locustfile
 
 
 class _HeaderCheckMixin:
@@ -1064,6 +1064,65 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         response = requests.get("http://127.0.0.1:%i/logs" % self.web_port)
 
         self.assertIn(log_line, response.json().get("logs"))
+
+    def test_template_args(self):
+        class MyUser(User):
+            @task
+            def do_something(self):
+                self.client.get("/")
+
+            host = "http://example.com"
+
+        class MyUser2(User):
+            host = "http://example.com"
+
+        self.environment.user_classes = [MyUser, MyUser2]
+        self.environment.available_user_classes = {"User1": MyUser, "User2": MyUser2}
+        self.environment.available_user_tasks = {"User1": MyUser.tasks, "User2": MyUser2.tasks}
+
+        users = {"User1": MyUser.json(), "User2": MyUser2.json()}
+        available_user_tasks = {"User1": ["do_something"], "User2": []}
+
+        self.web_ui.update_template_args()
+
+        self.assertEqual(self.web_ui.template_args.get("users"), users)
+        self.assertEqual(
+            self.web_ui.template_args.get("available_user_classes"), sorted(self.environment.available_user_classes)
+        )
+        self.assertEqual(self.web_ui.template_args.get("available_user_tasks"), available_user_tasks)
+
+    def test_update_user_endpoint(self):
+        class MyUser(User):
+            @task
+            def my_task(self):
+                pass
+
+            @task
+            def my_task_2(self):
+                pass
+
+            host = "http://example.com"
+
+        class MyUser2(User):
+            host = "http://example.com"
+
+        self.environment.user_classes = [MyUser, MyUser2]
+        self.environment.available_user_classes = {"User1": MyUser, "User2": MyUser2}
+        self.environment.available_user_tasks = {"User1": MyUser.tasks, "User2": MyUser2.tasks}
+
+        users = {"User1": MyUser.json(), "User2": MyUser2.json()}
+        available_user_tasks = {"User1": ["my_task", "my_task_2"], "User2": []}
+
+        # environment.update_user_class({"user_class_name": "User1", "host": "http://localhost", "tasks": ["my_task_2"]})
+        response = requests.post(
+            "http://127.0.0.1:%i/user" % self.web_port,
+            json={"user_class_name": "User1", "host": "http://localhost", "tasks": ["my_task_2"]},
+        )
+
+        self.assertEqual(
+            self.environment.available_user_classes["User1"].json(),
+            {"host": "http://localhost", "tasks": ["my_task_2"], "fixed_count": 0, "weight": 1},
+        )
 
 
 class TestWebUIAuth(LocustTestCase):

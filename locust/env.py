@@ -5,16 +5,15 @@ from typing import Callable, TypeVar
 
 from configargparse import Namespace
 
+from .dispatch import UsersDispatcher, WeightedUsersDispatcher
 from .event import Events
 from .exception import RunnerAlreadyExistsError
-from .stats import RequestStats, StatsCSV
-from .runners import Runner, LocalRunner, MasterRunner, WorkerRunner
-from .web import WebUI
-from .user import User
-from .user.task import filter_tasks_by_tags, TaskSet, TaskHolder
+from .runners import LocalRunner, MasterRunner, Runner, WorkerRunner
 from .shape import LoadTestShape
-from .dispatch import UsersDispatcher, WeightedUsersDispatcher
-
+from .stats import RequestStats, StatsCSV
+from .user import User
+from .user.task import TaskHolder, TaskSet, filter_tasks_by_tags
+from .web import WebUI
 
 RunnerType = TypeVar("RunnerType", bound=Runner)
 
@@ -36,6 +35,7 @@ class Environment:
         parsed_options: Namespace | None = None,
         available_user_classes: dict[str, User] | None = None,
         available_shape_classes: dict[str, LoadTestShape] | None = None,
+        available_user_tasks: dict[str, list[TaskSet | Callable]] | None = None,
         dispatcher_class: type[UsersDispatcher] = WeightedUsersDispatcher,
     ):
         self.runner: Runner | None = None
@@ -95,6 +95,8 @@ class Environment:
         """List of the available User Classes to pick from in the UserClass Picker"""
         self.available_shape_classes = available_shape_classes
         """List of the available Shape Classes to pick from in the ShapeClass Picker"""
+        self.available_user_tasks = available_user_tasks
+        """List of the available Tasks per User Classes to pick from in the Task Picker"""
         self.dispatcher_class = dispatcher_class
         """Default `WeightedUsersDispatcher`, possible to select other dispatcher implementations based on `UsersDispatcher`, e.g. `FixedUsersDispatcher`"""
 
@@ -194,6 +196,17 @@ class Environment:
             modern_ui=modern_ui,
         )
         return self.web_ui
+
+    def update_user_class(self, user_settings):
+        user_class_name = user_settings.get("user_class_name")
+        user_class = self.available_user_classes[user_class_name]
+        user_tasks = self.available_user_tasks[user_class_name]
+
+        for key, value in user_settings.items():
+            if key not in ["user_class_name", "tasks"]:
+                setattr(user_class, key, value)
+            if key == "tasks":
+                user_class.tasks = [task for task in user_tasks if task.__name__ in value]
 
     def _filter_tasks_by_tags(self) -> None:
         """

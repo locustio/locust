@@ -1,35 +1,35 @@
 from __future__ import annotations
-import re
-import socket
+
+from locust.env import Environment
+from locust.exception import CatchResponseError, LocustError, ResponseError
+from locust.user import User
+from locust.util.deprecation import DeprecatedFastHttpLocustClass as FastHttpLocust
+
 import json
 import json as unshadowed_json  # some methods take a named parameter called json
-from base64 import b64encode
-from contextlib import contextmanager
-from json.decoder import JSONDecodeError
-from urllib.parse import urlparse, urlunparse
-from ssl import SSLError
+import re
+import socket
 import time
 import traceback
-from typing import Callable, ClassVar, Generator, Literal, cast
-
+from base64 import b64encode
+from contextlib import contextmanager
 from http.cookiejar import CookieJar
+from json.decoder import JSONDecodeError
+from ssl import SSLError
+from typing import Callable, ClassVar, Generator, Literal, cast
+from urllib.parse import urlparse, urlunparse
 
 import gevent
+from charset_normalizer import detect
 from gevent.timeout import Timeout
 from geventhttpclient._parser import HTTPParseError
 from geventhttpclient.client import HTTPClientPool
-from geventhttpclient.useragent import UserAgent, CompatRequest, CompatResponse, ConnectionError
-from geventhttpclient.response import HTTPConnectionClosed, HTTPSocketPoolResponse
 from geventhttpclient.header import Headers
+from geventhttpclient.response import HTTPConnectionClosed, HTTPSocketPoolResponse
+from geventhttpclient.useragent import CompatRequest, CompatResponse, ConnectionError, UserAgent
 
 # borrow requests's content-type header parsing
 from requests.utils import get_encoding_from_headers
-from charset_normalizer import detect
-
-from locust.user import User
-from locust.exception import LocustError, CatchResponseError, ResponseError
-from locust.env import Environment
-from locust.util.deprecation import DeprecatedFastHttpLocustClass as FastHttpLocust
 
 # Monkey patch geventhttpclient.useragent.CompatRequest so that Cookiejar works with Python >= 3.3
 # More info: https://github.com/requests/requests/pull/871

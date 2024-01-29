@@ -1,43 +1,44 @@
 from __future__ import annotations
-from abc import abstractmethod
+
+import csv
 import datetime
 import hashlib
 import json
-from tempfile import NamedTemporaryFile
-import time
-from collections import namedtuple, OrderedDict
-from copy import copy
-from itertools import chain
+import logging
 import os
-import csv
 import signal
-import gevent
+import time
+from abc import abstractmethod
+from collections import OrderedDict, namedtuple
+from copy import copy
 from html import escape
-from .util.rounding import proper_round
-
+from itertools import chain
+from tempfile import NamedTemporaryFile
+from types import FrameType
 from typing import (
     TYPE_CHECKING,
     Any,
+    Callable,
     Iterable,
     NoReturn,
-    OrderedDict as OrderedDictType,
-    Callable,
-    TypeVar,
-    cast,
     Protocol,
     TypedDict,
+    TypeVar,
+    cast,
+)
+from typing import (
+    OrderedDict as OrderedDictType,
 )
 
-from types import FrameType
+import gevent
 
-from .exception import CatchResponseError
 from .event import Events
-
-import logging
+from .exception import CatchResponseError
+from .util.rounding import proper_round
 
 if TYPE_CHECKING:
-    from .runners import Runner
     from .env import Environment
+    from .runners import Runner
 
 console_logger = logging.getLogger("locust.stats_logger")
 

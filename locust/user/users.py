@@ -1,12 +1,13 @@
 from __future__ import annotations
+
+import logging
+import time
+import traceback
 from typing import TYPE_CHECKING, Callable, final
 
-import time
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
 from urllib3 import PoolManager
-import logging
-import traceback
 
 logger = logging.getLogger(__name__)
 from locust.clients import HttpSession
@@ -228,6 +229,15 @@ class User(metaclass=UserMeta):
         Override this in your User class to customize the context.
         """
         return {}
+
+    @classmethod
+    def json(cls):
+        return {
+            "host": cls.host,
+            "weight": cls.weight,
+            "fixed_count": cls.fixed_count,
+            "tasks": [task.__name__ for task in cls.tasks],
+        }
 
     @classmethod
     def fullname(cls) -> str:

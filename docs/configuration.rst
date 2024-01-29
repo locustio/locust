@@ -164,6 +164,44 @@ The Web UI will display:
 
 |
 
+With the new ``--modern-ui``, the class picker will addtionally allow for configuring any settings for each selected user.
+This includes selecting tasks, configuring the weight or fixed count, and configuring the host.
+
+It is even possible to add custom arguments that you wish to be configurable for each user. Simply add a ``json`` classethod
+to your user:
+
+.. code-block:: python
+    class Example(HttpUser):
+        @task
+        def example_task(self):
+            self.client.get(f"/example/{self.some_custom_arg}")
+
+        @classmethod
+        def json(self):
+            return {
+                "host": self.host,
+                "some_custom_arg": "example"
+            }
+
+Configuration for the User classes
+==================================
+
+You can configure any settings you may wish for each user on the command line, the same as you may in the modern UI.
+Using the ``--config-users`` argument, you may pass a JSON string or file with your user configuration. To configure
+multiple users you pass multiple arguments to ``--config-users`` or use a JSON Array.
+
+Each user settings object must contain a key ``user_class_name``. This key corresponds to the class that you wish
+to configure.
+
+Example:
+
+.. code-block:: console
+
+    $ locust --config-users '{"user_class_name": "Example", "fixed_count": 1}'
+    $ locust --config-users '[{"user_class_name": "Example", "fixed_count": 1}, {"user_class_name": "ExampleTwo", "fixed_count": 2}]'
+    $ locust --config-users '{"user_class_name": "Example", "fixed_count": 1}' '{"user_class_name": "ExampleTwo", "fixed_count": 2}'
+    $ locust --config-users config_users.json
+
 Custom arguments
 ================
 

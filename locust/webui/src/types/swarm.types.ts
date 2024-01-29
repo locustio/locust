@@ -49,3 +49,10 @@ export interface IReportTemplateArgs extends IReport {
   percentilesToChart: number[];
   percentilesToStatistics: number[];
 }
+
+export interface ISwarmUser {
+  fixedCount: number;
+  host: string;
+  weight: number;
+  tasks: string[];
+}

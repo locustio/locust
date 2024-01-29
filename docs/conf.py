@@ -7,11 +7,12 @@
 # All configuration values have a default value; values that are commented out
 # serve to show the default value.
 
+from locust.argument_parser import get_empty_argument_parser, setup_parser_arguments
+
 import os
 import subprocess
-import sphinx_rtd_theme
 
-from locust.argument_parser import get_empty_argument_parser, setup_parser_arguments
+import sphinx_rtd_theme
 
 
 # Run command `locust --help` and store output in cli-help-output.txt which is included in the docs

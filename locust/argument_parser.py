@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import locust
+
 import os
 import platform
 import sys
 import textwrap
-from typing import NamedTuple, Any
-import configargparse
+from typing import Any, NamedTuple
 
-import locust
+import configargparse
 
 version = locust.__version__
 
@@ -305,6 +306,13 @@ def setup_parser_arguments(parser):
         action="store_true",
         dest="list_commands",
         help="Show list of possible User classes and exit",
+    )
+    parser.add_argument(
+        "--config-users",
+        type=str,
+        nargs="*",
+        help="User configuration as a JSON string or file. A list of arguments or an Array of JSON configuration may be provided",
+        env_var="LOCUST_CONFIG_USERS",
     )
 
     web_ui_group = parser.add_argument_group("Web UI options")

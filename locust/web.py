@@ -1,42 +1,44 @@
 from __future__ import annotations
+
 import csv
+import json
 import logging
 import os.path
 from functools import wraps
-
 from html import escape
 from io import StringIO
-from json import dumps
 from itertools import chain
+from json import dumps
 from time import time
 from typing import TYPE_CHECKING, Any
 
 import gevent
 from flask import (
     Flask,
-    make_response,
+    Response,
     jsonify,
+    make_response,
+    redirect,
     render_template,
     request,
     send_file,
-    Response,
     send_from_directory,
-    redirect,
     url_for,
 )
+from flask_cors import CORS
 from flask_login import LoginManager, login_required
 from gevent import pywsgi
 
-from .runners import MasterRunner, STATE_RUNNING, STATE_MISSING
+from . import __version__ as version
+from . import argument_parser
+from . import stats as stats_module
+from .html import get_html_report
 from .log import greenlet_exception_logger
-from .stats import StatsCSVFileWriter, StatsErrorDict, sort_stats
-from . import stats as stats_module, __version__ as version, argument_parser
-from .stats import StatsCSV
+from .runners import STATE_MISSING, STATE_RUNNING, MasterRunner
+from .stats import StatsCSV, StatsCSVFileWriter, StatsErrorDict, sort_stats
 from .user.inspectuser import get_ratio
 from .util.cache import memoize
 from .util.timespan import parse_timespan
-from .html import get_html_report
-from flask_cors import CORS
 
 if TYPE_CHECKING:
     from .env import Environment
@@ -528,6 +530,15 @@ class WebUI:
             else:
                 return "Web Auth is only available on the modern web ui. Enable it with the --modern-ui flag"
 
+        @app.route("/user", methods=["POST"])
+        def update_user():
+            assert request.method == "POST"
+
+            user_settings = json.loads(request.data)
+            self.environment.update_user_class(user_settings)
+
+            return {}, 201
+
     def start(self):
         self.greenlet = gevent.spawn(self.start_server)
         self.greenlet.link_exception(greenlet_exception_handler)
@@ -602,13 +613,27 @@ class WebUI:
         stats = self.environment.runner.stats
         extra_options = argument_parser.ui_extra_args_dict()
 
-        available_user_classes = (
-            None if not self.environment.available_user_classes else sorted(self.environment.available_user_classes)
-        )
+        available_user_classes = None
+        users = None
+        if self.environment.available_user_classes:
+            available_user_classes = sorted(self.environment.available_user_classes)
+            users = {
+                user_class_name: user_class.json()
+                for (user_class_name, user_class) in self.environment.available_user_classes.items()
+            }
 
         available_shape_classes = ["Default"]
         if self.environment.available_shape_classes:
             available_shape_classes += sorted(self.environment.available_shape_classes.keys())
+
+        available_user_tasks = (
+            {
+                user_class_name: [task.__name__ for task in user_class]
+                for (user_class_name, user_class) in self.environment.available_user_tasks.items()
+            }
+            if self.environment.available_user_tasks
+            else None
+        )
 
         if self.modern_ui:
             percentiles = {
@@ -644,6 +669,8 @@ class WebUI:
             "show_userclass_picker": self.userclass_picker_is_active,
             "available_user_classes": available_user_classes,
             "available_shape_classes": available_shape_classes,
+            "available_user_tasks": available_user_tasks,
+            "users": users,
             **percentiles,
         }
 

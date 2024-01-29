@@ -31,11 +31,11 @@ We use `tox <https://tox.readthedocs.io/en/stable/>`_ to automate tests across m
 
     $ pip3 install tox
     $ tox
-    py37 create: /home/myuser/git/locust/.tox/py37
-    py37 installdeps: mock, retry, pyquery, cryptography
     ...
-    Successfully installed ConfigArgParse-1.5.3 Flask-Login-0.6.3 Flask-Cors-3.0.10 Jinja2-3.1.2 MarkupSafe-2.1.1 Six-1.16.0 Werkzeug-2.2.2 brotli-1.0.9 click-8.1.3 flask-2.2.2 gevent-22.10.1 geventhttpclient-2.0.8 greenlet-1.1.3.post0 itsdangerous-2.1.2 locust-2.12.2 msgpack-1.0.4 psutil-5.9.2 pyzmq-24.0.1 roundrobin-0.0.4 typing-extensions-4.4.0 zope.event-4.5.0 zope.interface-5.5.0
-    py37 run-test: commands[1] | python3 -m coverage run -m unittest discover
+    py38: install_deps> python -I -m pip install cryptography mock pyquery retry
+    py38: commands[0]> python3 -m pip install .
+    ...
+    py38: commands[1]> python3 -m unittest discover
     ...
 
 To only run a specific suite or specific test you can call `pytest <https://docs.pytest.org/>`_ directly:
@@ -44,38 +44,28 @@ To only run a specific suite or specific test you can call `pytest <https://docs
 
     $ pytest locust/test/test_main.py::DistributedIntegrationTests::test_distributed_tags
 
-Format code
-===========
+Formatting and linting
+======================
 
-Locust follows the `black <https://github.com/psf/black>`_ formatting standard, and the build will fail if code does not adhere to it. If you run vscode it will automatically run every time you save a file, but if your editor doesn't support it you can run it manually:
+Locust uses `ruff <https://github.com/astral-sh/ruff/>`_ for formatting and linting. The build will fail if code does not adhere to it. If you run vscode it will automatically run every time you save a file, but if your editor doesn't support it you can run it manually:
 
 .. code-block:: console
 
-    $ pip3 install black
-    $ python -m black <file_to_be_formatted>
+    $ pip3 install ruff
+    $ python -m ruff --fix <file_or_folder_to_be_formatted>
+    $ python -m ruff format <file_or_folder_to_be_formatted>
 
 You can validate the whole project using tox:
 
 .. code-block:: console
 
-    $ tox -e black
-    black installed: black==22.8.0,click==8.1.3,mypy-extensions==0.4.3,pathspec==0.10.1,platformdirs==2.5.2,tomli==2.0.1,typing_extensions==4.4.0
-    black run-test-pre: PYTHONHASHSEED='3136620079'
-    black run-test: commands[0] | black --check .
-    All done! ✨ 🍰 ✨
-    99 files would be left unchanged.
-
-Linting
-=======
-
-Our code is checked using `flake8 <https://flake8.pycqa.org/en/latest/flake8>`_:
-
-.. code-block:: console
-
-    $ tox -e flake8
-    flake8 installed: flake8==5.0.4,mccabe==0.7.0,pycodestyle==2.9.1,pyflakes==2.5.0
-    flake8 run-test-pre: PYTHONHASHSEED='1517754253'
-    flake8 run-test: commands[0] | flake8 . --count --show-source --statistics
+    $ tox -e ruff
+    ruff: install_deps> python -I -m pip install ruff==0.1.13
+    ruff: commands[0]> ruff check .
+    ruff: commands[1]> ruff format --check
+    104 files already formatted
+      ruff: OK (1.41=setup[1.39]+cmd[0.01,0.01] seconds)
+      congratulations :) (1.47 seconds)
 
 Build documentation
 ===================

@@ -37,6 +37,13 @@ export const api = createApi({
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
       }),
     }),
+    updateUserSettings: builder.mutation({
+      query: body => ({
+        url: 'user',
+        method: 'POST',
+        body: snakeCaseKeys(body),
+      }),
+    }),
   }),
 });
 
@@ -46,4 +53,5 @@ export const {
   useGetExceptionsQuery,
   useGetLogsQuery,
   useStartSwarmMutation,
+  useUpdateUserSettingsMutation,
 } = api;

@@ -1,9 +1,10 @@
-import hello_pb2_grpc
-import hello_pb2
-import grpc
-from concurrent import futures
 import logging
 import time
+from concurrent import futures
+
+import grpc
+import hello_pb2
+import hello_pb2_grpc
 
 logger = logging.getLogger(__name__)
 

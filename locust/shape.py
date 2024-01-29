@@ -1,10 +1,13 @@
 from __future__ import annotations
-import time
-from typing import ClassVar
-from abc import ABCMeta, abstractmethod
 
-from . import User
+import time
+from abc import ABCMeta, abstractmethod
+from typing import TYPE_CHECKING, ClassVar
+
 from .runners import Runner
+
+if TYPE_CHECKING:
+    from . import User
 
 
 class LoadTestShapeMeta(ABCMeta):

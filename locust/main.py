@@ -1,41 +1,50 @@
 from __future__ import annotations
 
+import locust
+
+import atexit
 import errno
+import gc
+import inspect
+import json
 import logging
 import os
 import signal
 import sys
 import time
-import atexit
-import inspect
+import traceback
+from typing import TYPE_CHECKING, Callable
+
 import gevent
-import locust
-from . import log
+
+from . import log, stats
 from .argument_parser import parse_locustfile_option, parse_options
 from .env import Environment
-from .log import setup_logging, greenlet_exception_logger
-from . import stats
+from .html import get_html_report
+from .input_events import input_listener
+from .log import greenlet_exception_logger, setup_logging
 from .stats import (
+    StatsCSV,
+    StatsCSVFileWriter,
     print_error_report,
     print_percentile_stats,
     print_stats,
     print_stats_json,
-    stats_printer,
     stats_history,
+    stats_printer,
 )
-from .stats import StatsCSV, StatsCSVFileWriter
 from .user.inspectuser import print_task_ratio, print_task_ratio_json
-from .util.timespan import parse_timespan
-from .input_events import input_listener
-from .html import get_html_report
 from .util.load_locustfile import load_locustfile
-import traceback
+from .util.timespan import parse_timespan
 
 try:
     # import locust_plugins if it is installed, to allow it to register custom arguments etc
     import locust_plugins  # pyright: ignore[reportMissingImports]
 except ModuleNotFoundError:
     pass
+
+if TYPE_CHECKING:
+    from .user.task import TaskSet
 
 version = locust.__version__
 
@@ -56,6 +65,7 @@ def create_environment(
     locustfile=None,
     available_user_classes=None,
     available_shape_classes=None,
+    available_user_tasks=None,
 ):
     """
     Create an Environment instance from options
@@ -70,6 +80,7 @@ def create_environment(
         parsed_options=options,
         available_user_classes=available_user_classes,
         available_shape_classes=available_shape_classes,
+        available_user_tasks=available_user_tasks,
     )
 
 
@@ -87,6 +98,7 @@ def main() -> None:
     user_classes: dict[str, type[locust.User]] = {}
     available_user_classes: dict[str, type[locust.User]] = {}
     available_shape_classes: dict[str, locust.LoadTestShape] = {}
+    available_user_tasks: dict[str, list[TaskSet | Callable] | None] = {}
     shape_class = None
     for _locustfile in locustfiles:
         docstring, _user_classes, shape_classes = load_locustfile(_locustfile)
@@ -118,6 +130,7 @@ def main() -> None:
 
             user_classes[key] = value
             available_user_classes[key] = value
+            available_user_tasks[key] = value.tasks or None
 
     if len(stats.PERCENTILES_TO_CHART) != 2:
         logging.error("stats.PERCENTILES_TO_CHART parameter should be 2 parameters \n")
@@ -196,6 +209,9 @@ def main() -> None:
                 "--master cannot be combined with --processes. Remove --master, as it is implicit as long as --worker is not set.\n"
             )
             sys.exit(1)
+        # Optimize copy-on-write-behavior to save some memory (aprx 26MB -> 15MB rss) in child processes
+        gc.collect()  # avoid freezing garbage
+        gc.freeze()  # move all objects to perm gen so ref counts dont get updated
         for _ in range(options.processes):
             child_pid = gevent.fork()
             if child_pid:
@@ -351,7 +367,35 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         locustfile=locustfile_path,
         available_user_classes=available_user_classes,
         available_shape_classes=available_shape_classes,
+        available_user_tasks=available_user_tasks,
     )
+
+    if options.config_users:
+        for json_user_config in options.config_users:
+            try:
+                if json_user_config.endswith(".json"):
+                    with open(json_user_config) as file:
+                        user_config = json.load(file)
+                else:
+                    user_config = json.loads(json_user_config)
+
+                def ensure_user_class_name(config):
+                    if "user_class_name" not in config:
+                        logger.error("The user config must specify a user_class_name")
+                        sys.exit(-1)
+
+                if isinstance(user_config, list):
+                    for config in user_config:
+                        ensure_user_class_name(config)
+
+                        environment.update_user_class(config)
+                else:
+                    ensure_user_class_name(user_config)
+
+                    environment.update_user_class(user_config)
+            except Exception as e:
+                logger.error(f"The --config-users arugment must be in valid JSON string or file: {e}")
+                sys.exit(-1)
 
     if (
         shape_class

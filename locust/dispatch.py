@@ -2,28 +2,27 @@ from __future__ import annotations
 
 import contextlib
 import itertools
+import logging
 import math
 import time
-import logging
-from operator import attrgetter, itemgetter
+from abc import ABCMeta, abstractmethod
 from collections import defaultdict
+from operator import attrgetter, itemgetter
 from typing import (
     TYPE_CHECKING,
     Any,
     Dict,
     Generator,
-    List,
-    TypeVar,
     Iterator,
+    List,
     Optional,
+    SupportsIndex,
+    TypeVar,
     final,
     overload,
-    SupportsIndex,
 )
-from abc import ABCMeta, abstractmethod
 
 import gevent
-
 from roundrobin import smooth
 
 if TYPE_CHECKING:

@@ -1,7 +1,7 @@
-import unittest
+from locust.user import TaskSet, User, task
+from locust.user.inspectuser import _get_task_ratio, get_ratio
 
-from locust.user import User, TaskSet, task
-from locust.user.inspectuser import get_ratio, _get_task_ratio
+import unittest
 
 
 class TestTaskRatio(unittest.TestCase):
