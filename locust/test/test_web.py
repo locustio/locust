@@ -1130,7 +1130,7 @@ class TestWebUIAuth(LocustTestCase):
         super().setUp()
 
         parser = get_parser(default_config_files=[])
-        self.environment.parsed_options = parser.parse_args(["--modern-ui", "--web-login"])
+        self.environment.parsed_options = parser.parse_args(["--web-login"])
 
         self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, modern_ui=True, web_login=True)
 
@@ -1291,7 +1291,6 @@ class TestModernWebUI(LocustTestCase, _HeaderCheckMixin):
         super().setUp()
 
         parser = get_parser(default_config_files=[])
-        self.environment.parsed_options = parser.parse_args(["--modern-ui"])
         self.stats = self.environment.stats
 
         self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, modern_ui=True)

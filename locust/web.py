@@ -528,7 +528,7 @@ class WebUI:
                     auth_args=self.auth_args,
                 )
             else:
-                return "Web Auth is only available on the modern web ui. Enable it with the --modern-ui flag"
+                return "Web Auth is only available on the modern web ui."
 
         @app.route("/user", methods=["POST"])
         def update_user():

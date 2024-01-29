@@ -491,7 +491,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             stats_csv_writer=stats_csv_writer,
             delayed_start=True,
             userclass_picker_is_active=options.class_picker,
-            modern_ui=options.modern_ui,
+            modern_ui=not options.legacy_ui,
         )
     else:
         web_ui = None
@@ -682,10 +682,10 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
         main_greenlet.join()
         if options.html_file:
-            save_html_report(options.modern_ui)
+            save_html_report(not options.legacy_ui)
     except KeyboardInterrupt:
         if options.html_file:
-            save_html_report(options.modern_ui)
+            save_html_report(not options.legacy_ui)
     except Exception:
         raise
     shutdown()
