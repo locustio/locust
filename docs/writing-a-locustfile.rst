@@ -635,6 +635,7 @@ However, if you want to share connections among all users, you can use a single 
 
     class MyUser(HttpUser):
         # All users will be limited to 10 concurrent connections at most.
+        # Any new requests will block until a connection is available from the pool.
         pool_manager = PoolManager(maxsize=10, block=True)
 
 For more configuration options, refer to the
