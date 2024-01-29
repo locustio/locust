@@ -16,6 +16,7 @@ from unittest import TestCase
 import gevent
 import psutil
 import requests
+from pyquery import PyQuery as pq
 
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
 from .util import get_free_tcp_port, patch_env, temporary_file
@@ -620,8 +621,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Shutting down ", stderr)
             self.assertNotIn("Traceback", stderr)
             # check response afterwards, because it really isn't as informative as stderr
+            d = pq(response.content.decode("utf-8"))
+
             self.assertEqual(200, response.status_code)
-            self.assertIn('<body class="running">', response.text)
+            self.assertIn('"state": "running"', str(d))
 
     def test_autostart_w_run_time(self):
         port = get_free_tcp_port()
@@ -654,8 +657,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Shutting down ", stderr)
             self.assertNotIn("Traceback", stderr)
             # check response afterwards, because it really isn't as informative as stderr
+            d = pq(response.content.decode("utf-8"))
+
             self.assertEqual(200, response.status_code)
-            self.assertIn('<body class="running">', response.text)
+            self.assertIn('"state": "running"', str(d))
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_run_autostart_with_multiple_locustfiles(self):
@@ -721,6 +726,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "locust",
                     "-f",
                     mocked.file_path,
+                    "--legacy-ui",
                     "--web-port",
                     str(port),
                     "--autostart",
@@ -788,6 +794,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         "locust",
                         "-f",
                         f"{mocked1.file_path},{mocked2}",
+                        "--legacy-ui",
                         "--web-port",
                         str(port),
                         "--autostart",
@@ -1081,6 +1088,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             "locust",
                             "-f",
                             mocked.file_path,
+                            "--legacy-ui",
                             "--host",
                             "https://test.com/",
                             "--run-time",
