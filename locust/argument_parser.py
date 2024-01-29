@@ -397,11 +397,11 @@ def setup_parser_arguments(parser):
         env_var="LOCUST_USERCLASS_PICKER",
     )
     web_ui_group.add_argument(
-        "--modern-ui",
+        "--legacy-ui",
         default=False,
         action="store_true",
-        help="Use the new React-based frontend for the web UI",
-        env_var="LOCUST_MODERN_UI",
+        help="Use the legacy frontend for the web UI",
+        env_var="LOCUST_LEGACY_UI",
     )
 
     master_group = parser.add_argument_group(
