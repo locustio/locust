@@ -30,7 +30,7 @@ function SwarmMonitor({
         <Typography variant='button'>Status</Typography>
         <Typography variant='button'>{state}</Typography>
       </Box>
-      {state === SWARM_STATE.RUNNING && (
+      {(state === SWARM_STATE.RUNNING || state === SWARM_STATE.SPAWNING) && (
         <>
           <Divider flexItem orientation='vertical' />
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
