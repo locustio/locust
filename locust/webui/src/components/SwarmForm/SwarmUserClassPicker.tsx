@@ -117,49 +117,56 @@ function SwarmUserClassPicker({
           borderRadius: 1,
         }}
       >
-        <InputLabel
-          shrink
+        <Box
           sx={{
-            position: 'absolute',
-            backgroundColor: 'background.paper',
-            width: 'fit-content',
-            top: '0',
-            marginTop: '-5px',
-            padding: '0 5px',
+            maxHeight: '30vh',
+            overflow: 'auto',
           }}
         >
-          User Classes
-        </InputLabel>
-        <FormGroup>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableBody>
-                {Object.entries(users).map(([name, userClass]) => (
-                  <TableRow hover key={`user-class-${name}`}>
-                    <TableCell onClick={handleToggleUserSelected(name)} padding='checkbox'>
-                      <Checkbox defaultChecked />
-                    </TableCell>
+          <InputLabel
+            shrink
+            sx={{
+              position: 'absolute',
+              backgroundColor: 'background.paper',
+              width: 'fit-content',
+              top: '0',
+              marginTop: '-5px',
+              padding: '0 5px',
+            }}
+          >
+            User Classes
+          </InputLabel>
+          <FormGroup>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableBody>
+                  {Object.entries(users).map(([name, userClass]) => (
+                    <TableRow hover key={`user-class-${name}`}>
+                      <TableCell onClick={handleToggleUserSelected(name)} padding='checkbox'>
+                        <Checkbox defaultChecked />
+                      </TableCell>
 
-                    <TableCell>{name}</TableCell>
-                    <TableCell>
-                      <Typography variant='subtitle2'>{userClass.host}</Typography>
-                    </TableCell>
-                    <TableCell align='right'>
-                      <IconButton
-                        onClick={() => {
-                          setOpen(!open);
-                          setUserToEdit({ userClass, userClassName: name });
-                        }}
-                      >
-                        <SettingsIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </FormGroup>
+                      <TableCell>{name}</TableCell>
+                      <TableCell>
+                        <Typography variant='subtitle2'>{userClass.host}</Typography>
+                      </TableCell>
+                      <TableCell align='right'>
+                        <IconButton
+                          onClick={() => {
+                            setOpen(!open);
+                            setUserToEdit({ userClass, userClassName: name });
+                          }}
+                        >
+                          <SettingsIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </FormGroup>
+        </Box>
       </Box>
       <Modal onClose={() => setOpen(false)} open={open}>
         {userToEdit && (

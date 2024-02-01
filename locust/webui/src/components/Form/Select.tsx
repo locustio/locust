@@ -1,4 +1,4 @@
-import { FormControl, InputLabel, Select as MuiSelect, SelectProps } from '@mui/material';
+import { SxProps, FormControl, InputLabel, Select as MuiSelect, SelectProps } from '@mui/material';
 
 interface ISelect extends SelectProps {
   label: string;
@@ -6,6 +6,7 @@ interface ISelect extends SelectProps {
   options: string[];
   multiple?: boolean;
   defaultValue?: string | string[];
+  sx?: SxProps;
 }
 
 export default function Select({
