@@ -59,6 +59,10 @@ def load_locustfile(path) -> tuple[str | None, dict[str, User], list[LoadTestSha
     module_name = os.path.splitext(locustfile)[0]
     loader = importlib.machinery.SourceFileLoader(module_name, path)
     spec = importlib.util.spec_from_file_location(module_name, path, loader=loader)
+    if spec is None:
+        sys.stderr.write(f"Unable to get module spec for {module_name} in {path}")
+        sys.exit(1)
+
     imported = importlib.util.module_from_spec(spec)
     sys.modules[imported.__name__] = imported
     loader.exec_module(imported)
