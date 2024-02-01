@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import importlib.util
 import inspect
 import os
 import sys
@@ -53,9 +54,15 @@ def load_locustfile(path) -> tuple[str | None, dict[str, User], list[LoadTestSha
             # Add to front, then remove from original position
             sys.path.insert(0, directory)
             del sys.path[i + 1]
+
     # Perform the import
-    source = importlib.machinery.SourceFileLoader(os.path.splitext(locustfile)[0], path)
-    imported = source.load_module()
+    module_name = os.path.splitext(locustfile)[0]
+    loader = importlib.machinery.SourceFileLoader(module_name, path)
+    spec = importlib.util.spec_from_file_location(module_name, path, loader=loader)
+    imported = importlib.util.module_from_spec(spec)
+    sys.modules[imported.__name__] = imported
+    loader.exec_module(imported)
+
     # Remove directory from path if we added it ourselves (just to be neat)
     if added_to_path:
         del sys.path[0]
@@ -67,6 +74,6 @@ def load_locustfile(path) -> tuple[str | None, dict[str, User], list[LoadTestSha
     user_classes = {name: value for name, value in vars(imported).items() if is_user_class(value)}
 
     # Find shape class, if any, return it
-    shape_classes = [value() for name, value in vars(imported).items() if is_shape_class(value)]
+    shape_classes = [value() for value in vars(imported).values() if is_shape_class(value)]
 
     return imported.__doc__, user_classes, shape_classes
