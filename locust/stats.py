@@ -9,7 +9,7 @@ import os
 import signal
 import time
 from abc import abstractmethod
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict, defaultdict, namedtuple
 from copy import copy
 from html import escape
 from itertools import chain
@@ -313,11 +313,11 @@ class StatsEntry:
         """ Minimum response time """
         self.max_response_time: int = 0
         """ Maximum response time """
-        self.num_reqs_per_sec: dict[int, int] = {}
+        self.num_reqs_per_sec: dict[int, int] = defaultdict(int)
         """ A {second => request_count} dict that holds the number of requests made per second """
-        self.num_fail_per_sec: dict[int, int] = {}
+        self.num_fail_per_sec: dict[int, int] = defaultdict(int)
         """ A (second => failure_count) dict that hold the number of failures per second """
-        self.response_times: dict[int, int] = {}
+        self.response_times: dict[int, int] = defaultdict(int)
         """
         A {response_time => count} dict that holds the response time distribution of all
         the requests.
@@ -346,12 +346,12 @@ class StatsEntry:
         self.num_none_requests = 0
         self.num_failures = 0
         self.total_response_time = 0
-        self.response_times = {}
+        self.response_times = defaultdict(int)
         self.min_response_time = None
         self.max_response_time = 0
         self.last_request_timestamp = None
-        self.num_reqs_per_sec = {}
-        self.num_fail_per_sec = {}
+        self.num_reqs_per_sec = defaultdict(int)
+        self.num_fail_per_sec = defaultdict(int)
         self.total_content_length = 0
         if self.use_response_times_cache:
             self.response_times_cache = OrderedDict()
@@ -375,7 +375,7 @@ class StatsEntry:
 
     def _log_time_of_request(self, current_time: float) -> None:
         t = int(current_time)
-        self.num_reqs_per_sec[t] = self.num_reqs_per_sec.setdefault(t, 0) + 1
+        self.num_reqs_per_sec[t] += 1
         self.last_request_timestamp = current_time
 
     def _log_response_time(self, response_time: int) -> None:
@@ -404,13 +404,12 @@ class StatsEntry:
             rounded_response_time = round(response_time, -3)
 
         # increase request count for the rounded key in response time dict
-        self.response_times.setdefault(rounded_response_time, 0)
         self.response_times[rounded_response_time] += 1
 
     def log_error(self, error: Exception | str | None) -> None:
         self.num_failures += 1
         t = int(time.time())
-        self.num_fail_per_sec[t] = self.num_fail_per_sec.setdefault(t, 0) + 1
+        self.num_fail_per_sec[t] += 1
 
     @property
     def fail_ratio(self) -> float:
