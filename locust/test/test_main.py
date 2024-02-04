@@ -1932,7 +1932,7 @@ class AnyUser(HttpUser):
     def test_workers_shut_down_if_master_is_gone(self):
         content = """
 from locust import HttpUser, task, constant, runners
-runners.MASTER_HEARTBEAT_TIMEOUT = 3
+runners.MASTER_HEARTBEAT_TIMEOUT = 2
 
 class AnyUser(HttpUser):
     host = "http://127.0.0.1:8089"
