@@ -2013,6 +2013,7 @@ class AnyUser(HttpUser):
         content = """
 from locust import runners, events, User, task
 import sys
+runners.HEARTBEAT_INTERVAL = 0.1
 
 @events.test_start.add_listener
 def on_test_start(environment, **_kwargs):
