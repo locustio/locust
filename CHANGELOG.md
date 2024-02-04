@@ -1,6 +1,22 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.22.0](https://github.com/locustio/locust/tree/2.22.0) (2024-02-04)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.21.0...2.22.0)
+
+**Fixed bugs:**
+
+- Modern UI - new test modal not scrollable [\#2574](https://github.com/locustio/locust/issues/2574)
+
+**Merged pull requests:**
+
+- Fix Modern UI - new test modal not scrollable [\#2577](https://github.com/locustio/locust/pull/2577) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Fix Spawning State Never Updates to Running [\#2573](https://github.com/locustio/locust/pull/2573) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Update README.md Screenshots for Modern UI [\#2572](https://github.com/locustio/locust/pull/2572) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Use Modern UI by default [\#2569](https://github.com/locustio/locust/pull/2569) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- GH Actions: Run tests on windows [\#2567](https://github.com/locustio/locust/pull/2567) ([cyberw](https://github.com/cyberw))
+
 ## [2.21.0](https://github.com/locustio/locust/tree/2.21.0) (2024-01-27)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.20.1...2.21.0)
