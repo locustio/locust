@@ -350,7 +350,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             )
 
     if sys.version_info < (3, 9):
-        logger.info("Python 3.8 support is deprecated and will be removed soon")
+        logger.warning("Python 3.8 support is deprecated and will be removed soon")
 
     # create locust Environment
     locustfile_path = None if not locustfile else os.path.basename(locustfile)
