@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.22.0
+======
+* Use Modern UI by default, remove --modern-ui and add --legacy-ui parameters https://github.com/locustio/locust/pull/2569
+
 2.21.0
 ======
 * Switch from flake8 + black to ruff for linting and formatting of code
