@@ -1970,6 +1970,7 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                start_new_session=True,
             )
             gevent.sleep(1)
             master_proc.kill()
@@ -1977,7 +1978,7 @@ class AnyUser(HttpUser):
             try:
                 _, worker_stderr = worker_parent_proc.communicate(timeout=7)
             except Exception:
-                worker_parent_proc.kill()
+                os.killpg(worker_parent_proc.pid, signal.SIGTERM)
                 _, worker_stderr = worker_parent_proc.communicate()
                 assert False, f"worker never finished: {worker_stderr}"
 
