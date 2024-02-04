@@ -2011,7 +2011,7 @@ class AnyUser(HttpUser):
     @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes_workers_quit_unexpected(self):
         content = """
-from locust import runners, events, User
+from locust import runners, events, User, task
 import sys
 
 @events.test_start.add_listener
@@ -2020,7 +2020,9 @@ def on_test_start(environment, **_kwargs):
         sys.exit(42)
 
 class AnyUser(User):
-    pass
+    @task
+    def mytask(self):
+        pass
 """
         with mock_locustfile(content=content) as mocked:
             worker_proc = subprocess.Popen(
