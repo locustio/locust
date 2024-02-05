@@ -2902,8 +2902,8 @@ class TestMasterRunner(LocustRunnerTestCase):
         self.assertEqual(1, len(runner.exceptions))
 
         hash_key, exception = runner.exceptions.popitem()
-        self.assertTrue("traceback" in exception)
-        self.assertTrue("HeyAnException" in exception["traceback"])
+        self.assertIn("traceback", exception)
+        self.assertIn("HeyAnException", exception["traceback"])
         self.assertEqual(2, exception["count"])
 
     def test_exception_is_caught(self):
