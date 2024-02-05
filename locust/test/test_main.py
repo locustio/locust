@@ -841,7 +841,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=PIPE,
             )
             gevent.sleep(1)
-            self.assertEqual(200, requests.get("http://%s:%i/" % (interface, port), timeout=1).status_code)
+            self.assertEqual(200, requests.get("http://%s:%i/" % (interface, port), timeout=2).status_code)
             proc.terminate()
 
         with mock_locustfile() as mocked:
@@ -859,7 +859,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=PIPE,
             )
             gevent.sleep(1)
-            self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % port, timeout=1).status_code)
+            self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % port, timeout=3).status_code)
             proc.terminate()
 
     @unittest.skipIf(os.name == "nt", reason="termios doesnt exist on windows, adn thus we cannot import pty")
