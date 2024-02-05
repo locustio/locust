@@ -657,7 +657,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Shutting down ", stderr)
             if sys.platform != "Darwin":  # macos is weird on GH
                 self.assertNotIn("Traceback", stderr)
-            self.assertNotIn("Traceback", stderr)
             # check response afterwards, because it really isn't as informative as stderr
             d = pq(response.content.decode("utf-8"))
 
