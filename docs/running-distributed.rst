@@ -27,7 +27,7 @@ It is really simple to launch a master and 4 worker processes::
 
     locust --processes 4
 
-You can even auto-detect the number of cores in your machine and launch one worker for each of them::
+You can even auto-detect the number of logical cores in your machine and launch one worker for each of them::
 
     locust --processes -1
 

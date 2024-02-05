@@ -829,20 +829,17 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_web_options(self):
         port = get_free_tcp_port()
-        if platform.system() == "Darwin":
-            # MacOS only sets up the loopback interface for 127.0.0.1 and not for 127.*.*.*
-            interface = "127.0.0.1"
-        else:
-            interface = "127.0.0.2"
-        with mock_locustfile() as mocked:
-            proc = subprocess.Popen(
-                ["locust", "-f", mocked.file_path, "--web-host", interface, "--web-port", str(port)],
-                stdout=PIPE,
-                stderr=PIPE,
-            )
-            gevent.sleep(1)
-            self.assertEqual(200, requests.get("http://%s:%i/" % (interface, port), timeout=1).status_code)
-            proc.terminate()
+        if platform.system() != "Darwin":
+            # MacOS only sets up the loopback interface for 127.0.0.1 and not for 127.*.*.*, so we cant test this
+            with mock_locustfile() as mocked:
+                proc = subprocess.Popen(
+                    ["locust", "-f", mocked.file_path, "--web-host", "127.0.0.2", "--web-port", str(port)],
+                    stdout=PIPE,
+                    stderr=PIPE,
+                )
+                gevent.sleep(1)
+                self.assertEqual(200, requests.get(f"http://127.0.0.2:{port}/", timeout=1).status_code)
+                proc.terminate()
 
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
@@ -859,10 +856,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=PIPE,
             )
             gevent.sleep(1)
-            self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % port, timeout=1).status_code)
+            self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % port, timeout=3).status_code)
             proc.terminate()
 
-    @unittest.skipIf(os.name == "nt", reason="termios doesnt exist on windows, adn thus we cannot import pty")
+    @unittest.skipIf(os.name == "nt", reason="termios doesnt exist on windows, and thus we cannot import pty")
     def test_input(self):
         import pty
 
