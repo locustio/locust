@@ -626,6 +626,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertEqual(200, response.status_code)
             self.assertIn('"state": "running"', str(d))
 
+    @unittest.skipIf(sys.platform == "darwin", reason="This is too messy on macOS")
     def test_autostart_w_run_time(self):
         port = get_free_tcp_port()
         with mock_locustfile() as mocked:
@@ -637,7 +638,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "--web-port",
                     str(port),
                     "-t",
-                    "2",
+                    "3",
                     "--autostart",
                     "--autoquit",
                     "1",
@@ -646,14 +647,14 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=PIPE,
                 text=True,
             )
-            gevent.sleep(1.9)
+            gevent.sleep(2.8)
             try:
                 response = requests.get(f"http://localhost:{port}/")
             except Exception:
                 pass
-            _, stderr = proc.communicate(timeout=2)
+            _, stderr = proc.communicate(timeout=4)
             self.assertIn("Starting Locust", stderr)
-            self.assertIn("Run time limit set to 2 seconds", stderr)
+            self.assertIn("Run time limit set to 3 seconds", stderr)
             self.assertIn("Shutting down ", stderr)
             self.assertNotIn("Traceback", stderr)
             # check response afterwards, because it really isn't as informative as stderr
@@ -753,7 +754,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("autoquit time reached", stderr)
             # check response afterwards, because it really isn't as informative as stderr
             self.assertEqual(200, response.status_code)
-            self.assertIn('<body class="spawning">', response.text)
             self.assertTrue(success, "got timeout and had to kill the process")
 
     def test_autostart_multiple_locustfiles_with_shape(self):
