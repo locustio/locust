@@ -637,7 +637,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "--web-port",
                     str(port),
                     "-t",
-                    "2",
+                    "3",
                     "--autostart",
                     "--autoquit",
                     "1",
@@ -646,7 +646,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=PIPE,
                 text=True,
             )
-            gevent.sleep(1.9)
+            gevent.sleep(2.8)
             try:
                 response = requests.get(f"http://localhost:{port}/")
             except Exception:
