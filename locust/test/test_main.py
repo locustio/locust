@@ -1713,7 +1713,19 @@ class SecondUser(HttpUser):
             self.assertEqual(0, proc_worker.returncode)
 
     def test_locustfile_distribution_with_workers_started_first(self):
-        with mock_locustfile() as mocked:
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import User, task, constant
+
+            class User1(User):
+                wait_time = constant(1)
+
+                @task
+                def t(self):
+                    pass
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             proc_worker = subprocess.Popen(
                 [
                     "locust",
@@ -1746,7 +1758,7 @@ class SecondUser(HttpUser):
             stdout = proc.communicate()[0]
             proc_worker.communicate()
 
-            self.assertIn('All users spawned: {"UserSubclass": ', stdout)
+            self.assertIn('All users spawned: {"User1": ', stdout)
             self.assertIn("Shutting down (exit code 0)", stdout)
 
             self.assertEqual(0, proc.returncode)
