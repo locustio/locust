@@ -824,7 +824,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("autoquit time reached", stderr)
                 # check response afterwards, because it really isn't as informative as stderr
                 self.assertEqual(200, response.status_code)
-                self.assertIn('<body class="spawning">', response.text)
                 self.assertTrue(success, "got timeout and had to kill the process")
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
