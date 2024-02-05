@@ -1,14 +1,20 @@
 from __future__ import annotations
 
 import locust
+from locust import runners
+from locust.rpc import Message, zmqrpc
 
 import os
 import platform
+import socket
 import sys
 import textwrap
 from typing import Any, NamedTuple
+from uuid import uuid4
 
 import configargparse
+import gevent
+from gevent.event import Event
 
 version = locust.__version__
 
@@ -201,8 +207,73 @@ def parse_locustfile_option(args=None) -> list[str]:
         action="store_true",
         default=False,
     )
+    # the following arguments are only used for downloading the locustfile from master
+    parser.add_argument(
+        "--worker",
+        action="store_true",
+        env_var="LOCUST_MODE_WORKER",
+    )
+    parser.add_argument(
+        "--master",  # this is just here to prevent argparse from giving the dreaded "ambiguous option: --master could match --master-host, --master-port"
+        action="store_true",
+        env_var="LOCUST_MODE_MASTER",
+    )
+    parser.add_argument(
+        "--master-host",
+        default="127.0.0.1",
+        env_var="LOCUST_MASTER_NODE_HOST",
+    )
+    parser.add_argument(
+        "--master-port",
+        type=int,
+        default=5557,
+        env_var="LOCUST_MASTER_NODE_PORT",
+    )
 
     options, _ = parser.parse_known_args(args=args)
+
+    if options.locustfile == "-":
+        # having this in argument_parser module is a bit weird, but it needs to happen early on
+        if not options.worker:
+            raise Exception("locustfile '-' is only supported in worker mode")
+
+        client_id = socket.gethostname() + "_" + uuid4().hex
+        tempclient = zmqrpc.Client(options.master_host, options.master_port, client_id)
+        got_reply = False
+
+        def ask_for_locustfile():
+            while not got_reply:
+                tempclient.send(Message("locustfile", None, client_id))
+                gevent.sleep(1)
+
+        def wait_for_reply():
+            return tempclient.recv()
+
+        gevent.spawn(ask_for_locustfile)
+        try:
+            # wait same time as for client_ready ack. not that it is really relevant...
+            msg = gevent.spawn(wait_for_reply).get(timeout=runners.CONNECT_TIMEOUT * runners.CONNECT_RETRY_COUNT)
+            got_reply = True
+        except gevent.Timeout:
+            sys.stderr.write(
+                f"Got no locustfile response from master, gave up after {runners.CONNECT_TIMEOUT * runners.CONNECT_RETRY_COUNT}s\n"
+            )
+            sys.exit(1)
+
+        if msg.type != "locustfile":
+            sys.stderr.write(f"Got wrong message type from master {msg.type}\n")
+            sys.exit(1)
+
+        if "error" in msg.data:
+            sys.stderr.write(f"Got error from master: {msg.data['error']}\n")
+            sys.exit(1)
+
+        filename = msg.data["filename"]
+        with open(filename, "w") as local_file:
+            local_file.write(msg.data["contents"])
+
+        tempclient.close()
+        return [filename]
 
     # Comma separated string to list
     locustfile_as_list = [locustfile.strip() for locustfile in options.locustfile.split(",")]

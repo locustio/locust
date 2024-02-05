@@ -1662,6 +1662,139 @@ class SecondUser(HttpUser):
             self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
 
+    def test_locustfile_distribution(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import User, task, constant
+
+            class User1(User):
+                wait_time = constant(1)
+
+                @task
+                def t(self):
+                    pass
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "--master",
+                    "--expect-workers",
+                    "1",
+                    "-t",
+                    "1s",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+            proc_worker = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    "-",
+                    "--worker",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+            stdout = proc.communicate()[0]
+            proc_worker.communicate()
+
+            self.assertIn('All users spawned: {"User1": 1} (1 total users)', stdout)
+            self.assertIn("Shutting down (exit code 0)", stdout)
+
+            self.assertEqual(0, proc.returncode)
+            self.assertEqual(0, proc_worker.returncode)
+
+    def test_locustfile_distribution_with_workers_started_first(self):
+        with mock_locustfile() as mocked:
+            proc_worker = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    "-",
+                    "--worker",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+            gevent.sleep(2)
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "--master",
+                    "--expect-workers",
+                    "1",
+                    "-t",
+                    "1",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+
+            stdout = proc.communicate()[0]
+            proc_worker.communicate()
+
+            self.assertIn('All users spawned: {"UserSubclass": ', stdout)
+            self.assertIn("Shutting down (exit code 0)", stdout)
+
+            self.assertEqual(0, proc.returncode)
+            self.assertEqual(0, proc_worker.returncode)
+
+    def test_distributed_with_locustfile_distribution_not_plain_filename(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import User, task, constant
+
+            class User1(User):
+                wait_time = constant(1)
+
+                @task
+                def t(self):
+                    pass
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path[:-3],  # remove ".py"
+                    "--headless",
+                    "--master",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+            proc_worker = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    "-",
+                    "--worker",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+            stdout = proc_worker.communicate()[0]
+            self.assertIn("Got error from master: locustfile must be a file for file distribution to work", stdout)
+            proc.kill()
+            master_stdout = proc_worker.communicate()[0]
+            self.assertIn("locustfile must be a file for file distribution to work", master_stdout)
+
     def test_json_schema(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
@@ -2059,3 +2192,49 @@ class AnyUser(User):
                 self.assertEqual(status_code, 42)
             self.assertNotIn("Traceback", master_stderr)
             self.assertIn("failed to send heartbeat, setting state to missing", master_stderr)
+
+
+#     def test_interrupt_in_custom_message_handler(self):
+#         content = """
+# from locust import HttpUser, task, constant, events
+# import time
+
+# def on_custom_msg(msg, **kw):
+#     time.sleep(100)
+
+# @events.init.add_listener
+# def init(environment, **kwargs):
+#     environment.runner.register_message("test_custom_msg", on_custom_msg)
+#     environment.runner.send_message("test_custom_msg", {"test_data": 123})
+
+# class MyUser(HttpUser):
+#     host = "http://127.0.0.1:8089"
+#     wait_time = constant(1)
+
+#     @task
+#     def task1(self):
+#         print("task1")
+#     """
+#         with mock_locustfile(content=content) as mocked:
+#             proc = subprocess.Popen(
+#                 [
+#                     "locust",
+#                     "-f",
+#                     mocked.file_path,
+#                     "--headless",
+#                     "-t",
+#                     "1",
+#                 ],
+#                 stdout=PIPE,
+#                 stderr=PIPE,
+#                 text=True,
+#             )
+#             gevent.sleep(1)
+#             proc.send_signal(signal.SIGINT)
+#             stdout, stderr = proc.communicate()
+#             print(stderr, stdout)
+
+#             self.assertIn("KeyboardInterrupt in custom message handler", stderr)
+#             self.assertNotIn("Traceback", stderr)
+#             self.assertIn("Exiting due to CTRL+C interruption", stderr)
+#             self.assertIn("Test Stopped", stdout)
