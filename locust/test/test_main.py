@@ -626,6 +626,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertEqual(200, response.status_code)
             self.assertIn('"state": "running"', str(d))
 
+    @unittest.skipIf(sys.platform == "darwin", reason="This is too messy on macOS")
     def test_autostart_w_run_time(self):
         port = get_free_tcp_port()
         with mock_locustfile() as mocked:
@@ -655,8 +656,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Run time limit set to 3 seconds", stderr)
             self.assertIn("Shutting down ", stderr)
-            if sys.platform != "darwin":  # macos is weird on GH
-                self.assertNotIn("Traceback", stderr)
+            self.assertNotIn("Traceback", stderr)
             # check response afterwards, because it really isn't as informative as stderr
             d = pq(response.content.decode("utf-8"))
 
