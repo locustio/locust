@@ -1035,6 +1035,7 @@ class MasterRunner(DistributedRunner):
                 #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
             elif msg.type == "locustfile":
                 logging.debug("Worker requested locust file")
+                assert self.environment.parsed_options
                 filename = (
                     "locustfile.py"
                     if self.environment.parsed_options.locustfile == "locustfile"
