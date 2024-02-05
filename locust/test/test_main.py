@@ -799,13 +799,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         str(port),
                         "--autostart",
                         "--autoquit",
-                        "2",
+                        "3",
                     ],
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
                 )
-                gevent.sleep(1.9)
+                gevent.sleep(2.8)
                 success = True
                 try:
                     response = requests.get(f"http://localhost:{port}/")
