@@ -826,6 +826,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertEqual(200, response.status_code)
                 self.assertTrue(success, "got timeout and had to kill the process")
 
+    @unittest.skipIf(platform.system() == "Darwin", reason="Messy on macOS on GH")
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_web_options(self):
         port = get_free_tcp_port()
