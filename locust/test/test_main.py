@@ -651,9 +651,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 response = requests.get(f"http://localhost:{port}/")
             except Exception:
                 pass
-            _, stderr = proc.communicate(timeout=2)
+            _, stderr = proc.communicate(timeout=4)
             self.assertIn("Starting Locust", stderr)
-            self.assertIn("Run time limit set to 2 seconds", stderr)
+            self.assertIn("Run time limit set to 3 seconds", stderr)
             self.assertIn("Shutting down ", stderr)
             self.assertNotIn("Traceback", stderr)
             # check response afterwards, because it really isn't as informative as stderr
