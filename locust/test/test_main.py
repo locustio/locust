@@ -756,7 +756,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn('<body class="spawning">', response.text)
             self.assertTrue(success, "got timeout and had to kill the process")
 
-    def test_autostart_mutliple_locustfiles_with_shape(self):
+    def test_autostart_multiple_locustfiles_with_shape(self):
         port = get_free_tcp_port()
         content = textwrap.dedent(
             """
@@ -806,9 +806,12 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     text=True,
                 )
                 gevent.sleep(1.9)
-                response = requests.get(f"http://localhost:{port}/")
+                success = True
                 try:
-                    success = True
+                    response = requests.get(f"http://localhost:{port}/")
+                except ConnectionError:
+                    succcess = False
+                try:
                     _, stderr = proc.communicate(timeout=5)
                 except subprocess.TimeoutExpired:
                     success = False
@@ -1932,7 +1935,7 @@ class AnyUser(HttpUser):
     def test_workers_shut_down_if_master_is_gone(self):
         content = """
 from locust import HttpUser, task, constant, runners
-runners.MASTER_HEARTBEAT_TIMEOUT = 3
+runners.MASTER_HEARTBEAT_TIMEOUT = 2
 
 class AnyUser(HttpUser):
     host = "http://127.0.0.1:8089"
@@ -1970,6 +1973,7 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                start_new_session=True,
             )
             gevent.sleep(1)
             master_proc.kill()
@@ -1977,7 +1981,7 @@ class AnyUser(HttpUser):
             try:
                 _, worker_stderr = worker_parent_proc.communicate(timeout=7)
             except Exception:
-                worker_parent_proc.kill()
+                os.killpg(worker_parent_proc.pid, signal.SIGTERM)
                 _, worker_stderr = worker_parent_proc.communicate()
                 assert False, f"worker never finished: {worker_stderr}"
 
@@ -2011,8 +2015,9 @@ class AnyUser(HttpUser):
     @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes_workers_quit_unexpected(self):
         content = """
-from locust import runners, events, User
+from locust import runners, events, User, task
 import sys
+runners.HEARTBEAT_INTERVAL = 0.1
 
 @events.test_start.add_listener
 def on_test_start(environment, **_kwargs):
@@ -2020,7 +2025,9 @@ def on_test_start(environment, **_kwargs):
         sys.exit(42)
 
 class AnyUser(User):
-    pass
+    @task
+    def mytask(self):
+        pass
 """
         with mock_locustfile(content=content) as mocked:
             worker_proc = subprocess.Popen(
