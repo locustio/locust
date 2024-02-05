@@ -859,7 +859,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % port, timeout=3).status_code)
             proc.terminate()
 
-    @unittest.skipIf(os.name == "nt", reason="termios doesnt exist on windows, adn thus we cannot import pty")
+    @unittest.skipIf(os.name == "nt", reason="termios doesnt exist on windows, and thus we cannot import pty")
     def test_input(self):
         import pty
 
