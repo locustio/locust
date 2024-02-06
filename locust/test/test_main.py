@@ -2078,7 +2078,7 @@ class AnyUser(HttpUser):
     def test_workers_shut_down_if_master_is_gone(self):
         content = """
 from locust import HttpUser, task, constant, runners
-runners.MASTER_HEARTBEAT_TIMEOUT = 2
+runners.MASTER_HEARTBEAT_TIMEOUT = 1
 
 class AnyUser(HttpUser):
     host = "http://127.0.0.1:8089"
@@ -2118,18 +2118,19 @@ class AnyUser(HttpUser):
                 text=True,
                 start_new_session=True,
             )
-            gevent.sleep(1)
+            gevent.sleep(2)
             master_proc.kill()
             master_proc.wait()
             try:
-                _, worker_stderr = worker_parent_proc.communicate(timeout=7)
+                worker_stdout, worker_stderr = worker_parent_proc.communicate(timeout=7)
             except Exception:
                 os.killpg(worker_parent_proc.pid, signal.SIGTERM)
-                _, worker_stderr = worker_parent_proc.communicate()
-                assert False, f"worker never finished: {worker_stderr}"
+                worker_stdout, worker_stderr = worker_parent_proc.communicate()
+                assert False, f"worker never finished: {worker_stdout} / {worker_stderr}"
 
             self.assertNotIn("Traceback", worker_stderr)
             self.assertIn("Didn't get heartbeat from master in over ", worker_stderr)
+            self.assertIn("worker index:", worker_stdout)
 
     @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes_error_doesnt_blow_up_completely(self):
