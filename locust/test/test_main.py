@@ -1822,10 +1822,10 @@ class SecondUser(HttpUser):
                 text=True,
             )
             stdout = proc_worker.communicate()[0]
-            self.assertIn("Got error from master: locustfile must be a file for file distribution to work", stdout)
+            self.assertIn("Got error from master: locustfile parameter on master must be a plain filename", stdout)
             proc.kill()
-            master_stdout = proc_worker.communicate()[0]
-            self.assertIn("locustfile must be a file for file distribution to work", master_stdout)
+            master_stdout = proc.communicate()[0]
+            self.assertIn("--locustfile must be a plain filename (not a module name) for file distribut", master_stdout)
 
     def test_json_schema(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(

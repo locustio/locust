@@ -1045,11 +1045,15 @@ class MasterRunner(DistributedRunner):
                     with open(filename) as f:
                         file_contents = f.read()
                 except Exception as e:
-                    logger.error(f"locustfile must be a file for file distribution to work {e}")
+                    logger.error(
+                        f"--locustfile must be a plain filename (not a module name) for file distribution to work {e}"
+                    )
                     self.send_message(
                         "locustfile",
                         client_id=client_id,
-                        data={"error": f"locustfile must be a file for file distribution to work (was '{filename}')"},
+                        data={
+                            "error": f"locustfile parameter on master must be a plain filename (not a module name) (was '{filename}')"
+                        },
                     )
                 else:
                     if getattr(self, "_old_file_contents", file_contents) != file_contents:
