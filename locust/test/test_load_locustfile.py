@@ -50,6 +50,16 @@ class TestLoadLocustfile(LocustTestCase):
                 os.path.join(os.path.relpath(mocked.directory, os.getcwd()), mocked.filename)
             )
 
+    def test_load_locust_file_called_locust_dot_py(self):
+        with mock_locustfile() as mocked:
+            new_filename = mocked.file_path.replace(mocked.filename, "locust.py")
+            os.rename(mocked.file_path, new_filename)
+            try:
+                docstring, user_classes, shape_classes = main.load_locustfile(new_filename)
+            finally:
+                # move it back, so it can be deleted
+                os.rename(new_filename, mocked.file_path)
+
     def test_load_locust_file_with_a_dot_in_filename(self):
         with mock_locustfile(filename_prefix="mocked.locust.file") as mocked:
             docstring, user_classes, shape_classes = main.load_locustfile(mocked.file_path)

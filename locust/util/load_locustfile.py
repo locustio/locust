@@ -57,6 +57,8 @@ def load_locustfile(path) -> tuple[str | None, dict[str, User], list[LoadTestSha
 
     # Perform the import
     module_name = os.path.splitext(locustfile)[0]
+    if module_name == "locust":
+        module_name = "locustfile"  # Avoid conflict with locust package
     loader = importlib.machinery.SourceFileLoader(module_name, path)
     spec = importlib.util.spec_from_file_location(module_name, path, loader=loader)
     if spec is None:
