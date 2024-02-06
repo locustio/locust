@@ -1703,12 +1703,12 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 text=True,
             )
-            gevent.sleep(SHORT_SLEEP)
+            gevent.sleep(2)
             # modify the locustfile to trigger warning about file change when the second worker connects
             with open(mocked.file_path, "w") as locustfile:
                 locustfile.write(LOCUSTFILE_CONTENT)
                 locustfile.write("\n# New comment\n")
-            gevent.sleep(SHORT_SLEEP)
+            gevent.sleep(2)
             proc_worker2 = subprocess.Popen(
                 [
                     "locust",
