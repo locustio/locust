@@ -21,6 +21,8 @@ from pyquery import PyQuery as pq
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
 from .util import get_free_tcp_port, patch_env, temporary_file
 
+SHORT_SLEEP = 2 if sys.platform == "darwin" else 1  # macOS is slow on GH, give it some extra time
+
 
 def is_port_in_use(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -202,7 +204,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
         ) as file_path:
             proc = subprocess.Popen(["locust", "-f", file_path], stdout=PIPE, stderr=PIPE, text=True)
-            gevent.sleep(1)
+            gevent.sleep(SHORT_SLEEP)
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
             self.assertIn("Starting web interface at", stderr)
@@ -295,7 +297,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 proc = subprocess.Popen(
                     ["locust", "-f", f"{mocked1.file_path},{mocked2.file_path}"], stdout=PIPE, stderr=PIPE, text=True
                 )
-                gevent.sleep(1)
+                gevent.sleep(SHORT_SLEEP)
                 proc.send_signal(signal.SIGTERM)
                 stdout, stderr = proc.communicate()
                 self.assertIn("Starting web interface at", stderr)
@@ -310,7 +312,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A, dir=temp_dir):
                 with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B, dir=temp_dir):
                     proc = subprocess.Popen(["locust", "-f", temp_dir], stdout=PIPE, stderr=PIPE, text=True)
-                    gevent.sleep(1)
+                    gevent.sleep(SHORT_SLEEP)
                     proc.send_signal(signal.SIGTERM)
                     stdout, stderr = proc.communicate()
                     self.assertIn("Starting web interface at", stderr)
@@ -355,7 +357,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 proc = subprocess.Popen(
                     ["locust", "-f", f"{mocked1.file_path},{mocked2}"], stdout=PIPE, stderr=PIPE, text=True
                 )
-                gevent.sleep(1)
+                gevent.sleep(SHORT_SLEEP)
                 proc.send_signal(signal.SIGTERM)
                 stdout, stderr = proc.communicate()
                 self.assertIn("Starting web interface at", stderr)
