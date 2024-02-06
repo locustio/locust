@@ -1684,7 +1684,7 @@ class SecondUser(HttpUser):
                     "--headless",
                     "--master",
                     "--expect-workers",
-                    "1",
+                    "2",
                     "-t",
                     "1s",
                 ],
@@ -1703,10 +1703,29 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 text=True,
             )
+            gevent.sleep(SHORT_SLEEP)
+            # modify the locustfile to trigger warning about file change when the second worker connects
+            with open(mocked.file_path, "w") as locustfile:
+                locustfile.write(LOCUSTFILE_CONTENT)
+                locustfile.write("\n# New comment\n")
+            gevent.sleep(SHORT_SLEEP)
+            proc_worker2 = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    "-",
+                    "--worker",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
             stdout = proc.communicate()[0]
+            proc_worker2.communicate()
             proc_worker.communicate()
 
             self.assertIn('All users spawned: {"User1": 1} (1 total users)', stdout)
+            self.assertIn("Locustfile contents changed on disk after first worker requested locustfile", stdout)
             self.assertIn("Shutting down (exit code 0)", stdout)
 
             self.assertEqual(0, proc.returncode)

@@ -1052,6 +1052,11 @@ class MasterRunner(DistributedRunner):
                         data={"error": f"locustfile must be a file for file distribution to work (was '{filename}')"},
                     )
                 else:
+                    if getattr(self, "_old_file_contents", file_contents) != file_contents:
+                        logger.warning(
+                            "Locustfile contents changed on disk after first worker requested locustfile, sending new content. If you make any major changes (like changing User class names) you need to restart master."
+                        )
+                    self._old_file_contents = file_contents
                     self.send_message(
                         "locustfile",
                         client_id=client_id,
