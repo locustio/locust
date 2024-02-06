@@ -42,6 +42,7 @@ const availableUserTasks = Object.entries(mockUsers).reduce(
 );
 
 const defaultProps = {
+  availableUserClasses: ['Example', 'ExampleTwo'],
   selectedUserClasses: Object.keys(mockUsers),
   setSelectedUserClasses: updateSelectedClasses,
   setSwarm: updateSwarm,
@@ -78,7 +79,7 @@ describe('SwarmUserClassPicker', () => {
     });
 
     act(() => {
-      fireEvent.click(getAllByRole('checkbox')[0]);
+      fireEvent.click(getAllByRole('checkbox')[1]);
     });
 
     expect(updateSelectedClasses.mock.calls[0][0]).toEqual([Object.keys(mockUsers)[1]]);

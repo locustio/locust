@@ -118,7 +118,7 @@ describe('SwarmForm', () => {
     });
 
     act(() => {
-      fireEvent.click(getAllByRole('checkbox')[1]);
+      fireEvent.click(getAllByRole('checkbox')[2]);
     });
     act(() => {
       fireEvent.click(getByText('Start Swarm'));
