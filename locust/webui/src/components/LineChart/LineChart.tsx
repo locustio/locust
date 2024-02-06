@@ -37,15 +37,9 @@ interface ILineChart extends ILineChartProps {
 
 const CHART_TEXT_COLOR = '#b3c3bc';
 const CHART_AXIS_COLOR = '#5b6f66';
-const CHART_COLOR_PALETTE = ['#00ca5a', '#ffca5a'];
 
 registerTheme('locust', {
-  color: CHART_COLOR_PALETTE,
   backgroundColor: '#27272a',
-  xAxis: { lineColor: '#f00' },
-  graph: {
-    color: CHART_COLOR_PALETTE,
-  },
   textStyle: { color: CHART_TEXT_COLOR },
   title: {
     textStyle: { color: CHART_TEXT_COLOR },

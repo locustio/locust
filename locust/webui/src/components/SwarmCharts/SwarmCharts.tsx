@@ -27,10 +27,12 @@ const availableSwarmCharts: ILineChartProps[] = [
       ...percentilesToChartLines,
       { name: 'Average Response Time', key: 'totalAvgResponseTime' },
     ],
+    colors: ['#00ffee', '#eeff00'],
   },
   {
     title: 'Number of Users',
     lines: [{ name: 'Number of Users', key: 'userCount' }],
+    colors: ['#0099ff'],
   },
 ];
 
