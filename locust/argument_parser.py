@@ -225,6 +225,12 @@ def parse_locustfile_option(args=None) -> list[str]:
         else:
             # Is a single file
             locustfile = find_locustfile(options.locustfile)
+            if locustfile.endswith(os.sep + "locust.py"):
+                sys.stderr.write(
+                    "The locustfile must not be named 'locust.py' (because it clashes with the locust package). Please rename the file and try again.\n"
+                )
+                sys.exit(1)
+
             locustfiles = [locustfile]
 
             if not locustfile:
@@ -241,12 +247,6 @@ def parse_locustfile_option(args=None) -> list[str]:
                     )
                 sys.stderr.write(
                     f"Could not find '{user_friendly_locustfile_name}'. {note_about_file_endings}See --help for available options.\n"
-                )
-                sys.exit(1)
-
-            if locustfile == "locust.py":
-                sys.stderr.write(
-                    "The locustfile must not be named `locust.py`. Please rename the file and try again.\n"
                 )
                 sys.exit(1)
 
