@@ -1720,7 +1720,7 @@ class SecondUser(HttpUser):
 
                 @task
                 def t(self):
-                    pass
+                    print("hello")
             """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
@@ -1754,13 +1754,14 @@ class SecondUser(HttpUser):
             )
 
             stdout = proc.communicate()[0]
-            proc_worker.communicate()
+            worker_stdout = proc_worker.communicate()[0]
 
             self.assertIn('All users spawned: {"User1": ', stdout)
             self.assertIn("Shutting down (exit code 0)", stdout)
 
             self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
+            self.assertIn("hello", worker_stdout)
 
     def test_distributed_with_locustfile_distribution_not_plain_filename(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
