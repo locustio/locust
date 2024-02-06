@@ -238,7 +238,7 @@ of request count independently of total user count.
 host attribute
 --------------
 
-The host attribute is a URL prefix (e.g. ``https://google.com``) to the host you want ot test. It is automatically added to requests, so you can do ``self.client.get("/")`` for example.
+The host attribute is a URL prefix (e.g. ``https://google.com``) to the host you want to test. It is automatically added to requests, so you can do ``self.client.get("/")`` for example.
 
 You can overwrite this value in Locust's web UI or on the command line, using the
 :code:`--host` option.
