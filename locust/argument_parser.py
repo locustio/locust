@@ -185,6 +185,46 @@ See documentation for more details, including how to set options using a file or
     return parser
 
 
+def download_locustfile_from_master(master_host: str, master_port: int) -> str:
+    client_id = socket.gethostname() + "_download_locustfile_" + uuid4().hex
+    tempclient = zmqrpc.Client(master_host, master_port, client_id)
+    got_reply = False
+
+    def ask_for_locustfile():
+        while not got_reply:
+            tempclient.send(Message("locustfile", None, client_id))
+            gevent.sleep(1)
+
+    def wait_for_reply():
+        return tempclient.recv()
+
+    gevent.spawn(ask_for_locustfile)
+    try:
+        # wait same time as for client_ready ack. not that it is really relevant...
+        msg = gevent.spawn(wait_for_reply).get(timeout=runners.CONNECT_TIMEOUT * runners.CONNECT_RETRY_COUNT)
+        got_reply = True
+    except gevent.Timeout:
+        sys.stderr.write(
+            f"Got no locustfile response from master, gave up after {runners.CONNECT_TIMEOUT * runners.CONNECT_RETRY_COUNT}s\n"
+        )
+        sys.exit(1)
+
+    if msg.type != "locustfile":
+        sys.stderr.write(f"Got wrong message type from master {msg.type}\n")
+        sys.exit(1)
+
+    if "error" in msg.data:
+        sys.stderr.write(f"Got error from master: {msg.data['error']}\n")
+        sys.exit(1)
+
+    filename = msg.data["filename"]
+    with open(filename, "w") as local_file:
+        local_file.write(msg.data["contents"])
+
+    tempclient.close()
+    return filename
+
+
 def parse_locustfile_option(args=None) -> list[str]:
     """
     Construct a command line parser that is only used to parse the -f argument so that we can
@@ -233,46 +273,10 @@ def parse_locustfile_option(args=None) -> list[str]:
     options, _ = parser.parse_known_args(args=args)
 
     if options.locustfile == "-":
-        # having this in argument_parser module is a bit weird, but it needs to happen early on
         if not options.worker:
             raise Exception("locustfile '-' is only supported in worker mode")
-
-        client_id = socket.gethostname() + "_" + uuid4().hex
-        tempclient = zmqrpc.Client(options.master_host, options.master_port, client_id)
-        got_reply = False
-
-        def ask_for_locustfile():
-            while not got_reply:
-                tempclient.send(Message("locustfile", None, client_id))
-                gevent.sleep(1)
-
-        def wait_for_reply():
-            return tempclient.recv()
-
-        gevent.spawn(ask_for_locustfile)
-        try:
-            # wait same time as for client_ready ack. not that it is really relevant...
-            msg = gevent.spawn(wait_for_reply).get(timeout=runners.CONNECT_TIMEOUT * runners.CONNECT_RETRY_COUNT)
-            got_reply = True
-        except gevent.Timeout:
-            sys.stderr.write(
-                f"Got no locustfile response from master, gave up after {runners.CONNECT_TIMEOUT * runners.CONNECT_RETRY_COUNT}s\n"
-            )
-            sys.exit(1)
-
-        if msg.type != "locustfile":
-            sys.stderr.write(f"Got wrong message type from master {msg.type}\n")
-            sys.exit(1)
-
-        if "error" in msg.data:
-            sys.stderr.write(f"Got error from master: {msg.data['error']}\n")
-            sys.exit(1)
-
-        filename = msg.data["filename"]
-        with open(filename, "w") as local_file:
-            local_file.write(msg.data["contents"])
-
-        tempclient.close()
+        # having this in argument_parser module is a bit weird, but it needs to be done early
+        filename = download_locustfile_from_master(options.master_host, options.master_port)
         return [filename]
 
     # Comma separated string to list
