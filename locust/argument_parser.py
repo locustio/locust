@@ -542,7 +542,7 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
     worker_group.add_argument(
         "--worker",
         action="store_true",
-        help="Set locust to run in distributed mode with this process as worker",
+        help="Set locust to run in distributed mode with this process as worker. Can be combined with setting --locustfile to '-' to download it from master.",
         env_var="LOCUST_MODE_WORKER",
     )
     worker_group.add_argument(
