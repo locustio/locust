@@ -274,7 +274,10 @@ def parse_locustfile_option(args=None) -> list[str]:
 
     if options.locustfile == "-":
         if not options.worker:
-            raise Exception("locustfile '-' is only supported in worker mode")
+            sys.stderr.write(
+                "locustfile was set to '-' (meaning to download from master) but --worker was not specified.\n"
+            )
+            sys.exit(1)
         # having this in argument_parser module is a bit weird, but it needs to be done early
         filename = download_locustfile_from_master(options.master_host, options.master_port)
         return [filename]
