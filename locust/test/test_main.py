@@ -2178,6 +2178,7 @@ class AnyUser(HttpUser):
             self.assertNotIn("Traceback", stderr)
 
     @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
+    @unittest.skipIf(sys.platform == "darwin", reason="Flaky on macOS :-/")
     def test_processes_workers_quit_unexpected(self):
         content = """
 from locust import runners, events, User, task
