@@ -15,6 +15,7 @@ import {
   TableBody,
   TableContainer,
   Paper,
+  TableHead,
 } from '@mui/material';
 import { connect } from 'react-redux';
 
@@ -33,7 +34,7 @@ interface IDispatchProps {
 
 interface IUserClassPicker
   extends IDispatchProps,
-    Pick<ISwarmState, 'availableUserTasks' | 'users'> {
+    Pick<ISwarmState, 'availableUserClasses' | 'availableUserTasks' | 'users'> {
   selectedUserClasses: string[];
   setSelectedUserClasses: (userClasses: string[]) => void;
 }
@@ -76,6 +77,7 @@ function SwarmUserForm({ availableTasks, userToEdit, handleEditUser }: ISwarmUse
 }
 
 function SwarmUserClassPicker({
+  availableUserClasses,
   availableUserTasks,
   selectedUserClasses,
   setSelectedUserClasses,
@@ -104,6 +106,14 @@ function SwarmUserClassPicker({
     selectedUserClasses.includes(name)
       ? setSelectedUserClasses(selectedUserClasses.filter(n => n !== name))
       : setSelectedUserClasses(selectedUserClasses.concat(name));
+
+  const checkboxesSelected = selectedUserClasses.length;
+  const checkboxesTotal = availableUserClasses.length;
+
+  const onSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) =>
+    event.target.checked
+      ? setSelectedUserClasses(availableUserClasses)
+      : setSelectedUserClasses([]);
 
   return (
     <>
@@ -139,11 +149,24 @@ function SwarmUserClassPicker({
           <FormGroup>
             <TableContainer component={Paper}>
               <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell colSpan={4} padding='checkbox'>
+                      <Checkbox
+                        checked={checkboxesTotal > 0 && checkboxesSelected === checkboxesTotal}
+                        indeterminate={
+                          checkboxesSelected > 0 && checkboxesSelected < checkboxesTotal
+                        }
+                        onChange={onSelectAllClick}
+                      />
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
                 <TableBody>
                   {Object.entries(users).map(([name, userClass]) => (
                     <TableRow hover key={`user-class-${name}`}>
                       <TableCell onClick={handleToggleUserSelected(name)} padding='checkbox'>
-                        <Checkbox defaultChecked />
+                        <Checkbox checked={selectedUserClasses.includes(name)} />
                       </TableCell>
 
                       <TableCell>{name}</TableCell>

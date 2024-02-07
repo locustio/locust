@@ -87,6 +87,7 @@ function SwarmForm({
       {showUserclassPicker && (
         <Box marginBottom={2} marginTop={2}>
           <SwarmUserClassPicker
+            availableUserClasses={availableUserClasses}
             selectedUserClasses={selectedUserClasses}
             setSelectedUserClasses={setSelectedUserClasses}
           />
