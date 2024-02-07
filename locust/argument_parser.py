@@ -101,7 +101,6 @@ def find_locustfiles(locustfiles: list[str], is_directory: bool) -> list[str]:
     locustfiles.
 
     Ignores files that start with _
-    Ignores files named locust.py
     """
     file_paths = []
 
@@ -122,16 +121,13 @@ def find_locustfiles(locustfiles: list[str], is_directory: bool) -> list[str]:
 
         for root, dirs, files in os.walk(locustdir):
             for file in files:
-                if not file.startswith("_") and file.lower() != "locust.py" and file.endswith(".py"):
+                if not file.startswith("_") and file.endswith(".py"):
                     file_path = os.path.join(root, file)
                     file_paths.append(file_path)
     else:
         for file_path in locustfiles:
             if not file_path.endswith(".py"):
                 sys.stderr.write(f"Invalid file '{file_path}'. File should have '.py' extension\n")
-                sys.exit(1)
-            if file_path.endswith("locust.py"):
-                sys.stderr.write("Invalid file 'locust.py'. File name cannot be 'locust.py'\n")
                 sys.exit(1)
 
             file_paths.append(file_path)
@@ -241,12 +237,6 @@ def parse_locustfile_option(args=None) -> list[str]:
                     )
                 sys.stderr.write(
                     f"Could not find '{user_friendly_locustfile_name}'. {note_about_file_endings}See --help for available options.\n"
-                )
-                sys.exit(1)
-
-            if locustfile == "locust.py":
-                sys.stderr.write(
-                    "The locustfile must not be named `locust.py`. Please rename the file and try again.\n"
                 )
                 sys.exit(1)
 
