@@ -93,7 +93,7 @@ Using multiple Locustfiles at once
 ==================================
 
 The ``-f/--locustfile`` option accepts a single directory of locustfiles as an option. Locust will recursively
-search the directory for ``*.py`` files, ignoring files named ``locust.py`` or those that start with "_".
+search the directory for ``*.py`` files, ignoring files that start with "_".
 
 Example:
 
@@ -106,7 +106,6 @@ With the following file structure:
     │   ├── locustfile2.py
     │   └── more_files/
     │       ├── locustfile3.py
-    │       ├── locust.py
     │       ├── _ignoreme.py
 
 .. code-block:: console
@@ -146,7 +145,6 @@ With the following file structure:
     │   ├── locustfile2.py
     │   └── more_files/
     │       ├── locustfile3.py
-    │       ├── locust.py
     │       ├── _ignoreme.py
     │   └── shape_classes/
     │       ├── DoubleWaveShape.py
