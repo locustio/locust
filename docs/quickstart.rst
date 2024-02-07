@@ -60,7 +60,7 @@ The following screenshots show what it might look like when running this test us
 
 .. note::
 
-    Things looking a little different? We've updated the U! If for whatever reason you need to use the old version, you can always revert back to it using the ``--legacy-ui`` flag.
+    Things looking a little different? We've updated the UI! If for whatever reason you need to use the old version, you can always revert back to it using the ``--legacy-ui`` flag.
 
 Direct command line usage / headless
 ====================================
