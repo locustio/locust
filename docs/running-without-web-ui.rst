@@ -23,7 +23,7 @@ You can run locust without the web UI by using the ``--headless`` flag together 
     [2021-07-24 10:44:42,484] .../INFO/locust.runners: All users spawned: {"HelloWorldUser": 100} (100 total users)
     (...)
 
-Even in headless mode you can you can change the user count while the test is running. Press ``w`` to add 1 user or ``W`` to add 10. Press ``s`` to remove 1 or ``S`` to remove 10.
+Even in headless mode you can change the user count while the test is running. Press ``w`` to add 1 user or ``W`` to add 10. Press ``s`` to remove 1 or ``S`` to remove 10.
 
 Setting a time limit for the test
 ---------------------------------
