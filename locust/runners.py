@@ -1033,6 +1033,40 @@ class MasterRunner(DistributedRunner):
                 # emit a warning if the worker's clock seem to be out of sync with our clock
                 # if abs(time() - msg.data["time"]) > 5.0:
                 #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
+            elif msg.type == "locustfile":
+                logging.debug("Worker requested locust file")
+                assert self.environment.parsed_options
+                filename = (
+                    "locustfile.py"
+                    if self.environment.parsed_options.locustfile == "locustfile"
+                    else self.environment.parsed_options.locustfile
+                )
+                try:
+                    with open(filename) as f:
+                        file_contents = f.read()
+                except Exception as e:
+                    logger.error(
+                        f"--locustfile must be a plain filename (not a module name) for file distribution to work {e}"
+                    )
+                    self.send_message(
+                        "locustfile",
+                        client_id=client_id,
+                        data={
+                            "error": f"locustfile parameter on master must be a plain filename (not a module name) (was '{filename}')"
+                        },
+                    )
+                else:
+                    if getattr(self, "_old_file_contents", file_contents) != file_contents:
+                        logger.warning(
+                            "Locustfile contents changed on disk after first worker requested locustfile, sending new content. If you make any major changes (like changing User class names) you need to restart master."
+                        )
+                    self._old_file_contents = file_contents
+                    self.send_message(
+                        "locustfile",
+                        client_id=client_id,
+                        data={"filename": filename, "contents": file_contents},
+                    )
+                continue
             elif msg.type == "client_stopped":
                 if msg.node_id not in self.clients:
                     logger.warning(f"Received {msg.type} message from an unknown worker: {msg.node_id}.")

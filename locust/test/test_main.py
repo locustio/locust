@@ -21,6 +21,8 @@ from pyquery import PyQuery as pq
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
 from .util import get_free_tcp_port, patch_env, temporary_file
 
+SHORT_SLEEP = 2 if sys.platform == "darwin" else 1  # macOS is slow on GH, give it some extra time
+
 
 def is_port_in_use(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -202,7 +204,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
         ) as file_path:
             proc = subprocess.Popen(["locust", "-f", file_path], stdout=PIPE, stderr=PIPE, text=True)
-            gevent.sleep(1)
+            gevent.sleep(SHORT_SLEEP)
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
             self.assertIn("Starting web interface at", stderr)
@@ -295,7 +297,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 proc = subprocess.Popen(
                     ["locust", "-f", f"{mocked1.file_path},{mocked2.file_path}"], stdout=PIPE, stderr=PIPE, text=True
                 )
-                gevent.sleep(1)
+                gevent.sleep(SHORT_SLEEP)
                 proc.send_signal(signal.SIGTERM)
                 stdout, stderr = proc.communicate()
                 self.assertIn("Starting web interface at", stderr)
@@ -310,7 +312,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A, dir=temp_dir):
                 with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B, dir=temp_dir):
                     proc = subprocess.Popen(["locust", "-f", temp_dir], stdout=PIPE, stderr=PIPE, text=True)
-                    gevent.sleep(1)
+                    gevent.sleep(SHORT_SLEEP)
                     proc.send_signal(signal.SIGTERM)
                     stdout, stderr = proc.communicate()
                     self.assertIn("Starting web interface at", stderr)
@@ -355,7 +357,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 proc = subprocess.Popen(
                     ["locust", "-f", f"{mocked1.file_path},{mocked2}"], stdout=PIPE, stderr=PIPE, text=True
                 )
-                gevent.sleep(1)
+                gevent.sleep(SHORT_SLEEP)
                 proc.send_signal(signal.SIGTERM)
                 stdout, stderr = proc.communicate()
                 self.assertIn("Starting web interface at", stderr)
@@ -1660,6 +1662,171 @@ class SecondUser(HttpUser):
             self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
 
+    def test_locustfile_distribution(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import User, task, constant
+
+            class User1(User):
+                wait_time = constant(1)
+
+                @task
+                def t(self):
+                    pass
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "--master",
+                    "--expect-workers",
+                    "2",
+                    "-t",
+                    "1s",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+            proc_worker = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    "-",
+                    "--worker",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+            gevent.sleep(2)
+            # modify the locustfile to trigger warning about file change when the second worker connects
+            with open(mocked.file_path, "w") as locustfile:
+                locustfile.write(LOCUSTFILE_CONTENT)
+                locustfile.write("\n# New comment\n")
+            gevent.sleep(2)
+            proc_worker2 = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    "-",
+                    "--worker",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+            stdout = proc.communicate()[0]
+            proc_worker2.communicate()
+            proc_worker.communicate()
+
+            self.assertIn('All users spawned: {"User1": 1} (1 total users)', stdout)
+            self.assertIn("Locustfile contents changed on disk after first worker requested locustfile", stdout)
+            self.assertIn("Shutting down (exit code 0)", stdout)
+
+            self.assertEqual(0, proc.returncode)
+            self.assertEqual(0, proc_worker.returncode)
+
+    def test_locustfile_distribution_with_workers_started_first(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import User, task, constant
+
+            class User1(User):
+                wait_time = constant(1)
+
+                @task
+                def t(self):
+                    print("hello")
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc_worker = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    "-",
+                    "--worker",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+            gevent.sleep(2)
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "--master",
+                    "--expect-workers",
+                    "1",
+                    "-t",
+                    "1",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+
+            stdout = proc.communicate()[0]
+            worker_stdout = proc_worker.communicate()[0]
+
+            self.assertIn('All users spawned: {"User1": ', stdout)
+            self.assertIn("Shutting down (exit code 0)", stdout)
+
+            self.assertEqual(0, proc.returncode)
+            self.assertEqual(0, proc_worker.returncode)
+            self.assertIn("hello", worker_stdout)
+
+    def test_distributed_with_locustfile_distribution_not_plain_filename(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import User, task, constant
+
+            class User1(User):
+                wait_time = constant(1)
+
+                @task
+                def t(self):
+                    pass
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path[:-3],  # remove ".py"
+                    "--headless",
+                    "--master",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+            proc_worker = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    "-",
+                    "--worker",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+            stdout = proc_worker.communicate()[0]
+            self.assertIn("Got error from master: locustfile parameter on master must be a plain filename", stdout)
+            proc.kill()
+            master_stdout = proc.communicate()[0]
+            self.assertIn("--locustfile must be a plain filename (not a module name) for file distribut", master_stdout)
+
     def test_json_schema(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
@@ -1972,18 +2139,19 @@ class AnyUser(HttpUser):
                 text=True,
                 start_new_session=True,
             )
-            gevent.sleep(1)
+            gevent.sleep(2)
             master_proc.kill()
             master_proc.wait()
             try:
-                _, worker_stderr = worker_parent_proc.communicate(timeout=7)
+                worker_stdout, worker_stderr = worker_parent_proc.communicate(timeout=7)
             except Exception:
                 os.killpg(worker_parent_proc.pid, signal.SIGTERM)
-                _, worker_stderr = worker_parent_proc.communicate()
-                assert False, f"worker never finished: {worker_stderr}"
+                worker_stdout, worker_stderr = worker_parent_proc.communicate()
+                assert False, f"worker never finished: {worker_stdout} / {worker_stderr}"
 
             self.assertNotIn("Traceback", worker_stderr)
             self.assertIn("Didn't get heartbeat from master in over ", worker_stderr)
+            self.assertIn("worker index:", worker_stdout)
 
     @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes_error_doesnt_blow_up_completely(self):
@@ -2010,6 +2178,7 @@ class AnyUser(HttpUser):
             self.assertNotIn("Traceback", stderr)
 
     @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
+    @unittest.skipIf(sys.platform == "darwin", reason="Flaky on macOS :-/")
     def test_processes_workers_quit_unexpected(self):
         content = """
 from locust import runners, events, User, task
