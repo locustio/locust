@@ -21,7 +21,7 @@ function MockHook({
   hasTotalRow?: boolean;
   defaultSortKey?: keyof (typeof mockStats)[0];
 }) {
-  const { onTableHeadClick, sortedStats, currentSortField } = useSortByField(
+  const { onTableHeadClick, sortedRows, currentSortField } = useSortByField(
     hasTotalRow ? mockStatsWithTotalRow : mockStats,
     {
       hasTotalRow,
@@ -45,7 +45,7 @@ function MockHook({
       >
         Sort by numFailures
       </button>
-      <span data-testid='sortedStats'>{JSON.stringify(sortedStats)}</span>
+      <span data-testid='sortedStats'>{JSON.stringify(sortedRows)}</span>
       <span data-testid='currentSortField'>{currentSortField}</span>
     </div>
   );

@@ -21,5 +21,7 @@ export default function ResponseTimeTable({ responseTimes }: IResponseTimeTable)
     [responseTimes],
   );
 
-  return <Table rows={responseTimes} structure={[...tableStructure, ...percentileColumns]} />;
+  return (
+    <Table hasTotalRow rows={responseTimes} structure={[...tableStructure, ...percentileColumns]} />
+  );
 }

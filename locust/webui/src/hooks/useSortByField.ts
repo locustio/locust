@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-function sortByField<IStat>(field: keyof IStat, reverse: boolean) {
+export interface ISortByFieldOptions<Row> {
+  hasTotalRow?: boolean;
+  defaultSortKey?: keyof Row;
+}
+
+function sortByField<Row>(field: keyof Row, reverse: boolean) {
   const reverseModifier = reverse ? -1 : 1;
 
-  return function (a: IStat, b: IStat) {
+  return function (a: Row, b: Row) {
     const valueA = a[field];
     const valueB = b[field];
 
@@ -19,28 +24,25 @@ function sortByField<IStat>(field: keyof IStat, reverse: boolean) {
   };
 }
 
-export default function useSortByField<IStat>(
-  stats: IStat[],
-  {
-    hasTotalRow = false,
-    defaultSortKey = 'name' as keyof IStat,
-  }: { hasTotalRow?: boolean; defaultSortKey?: keyof IStat } = {
+export default function useSortByField<Row>(
+  rows: Row[],
+  { hasTotalRow = false, defaultSortKey = 'name' as keyof Row }: ISortByFieldOptions<Row> = {
     hasTotalRow: false,
-    defaultSortKey: 'name' as keyof IStat,
+    defaultSortKey: 'name' as keyof Row,
   },
 ) {
-  const [sortedStats, setSortedStats] = useState(stats);
+  const [sortedRows, setSortedRows] = useState(rows);
   const [shouldReverse, setShouldReverse] = useState(false);
-  const currentSortField = useRef<keyof IStat>();
+  const currentSortField = useRef<keyof Row>();
 
-  const sortStats = (sortField: keyof IStat) => {
-    const statsToSort = hasTotalRow ? stats.slice(0, -1) : [...stats];
-    const sortedStats = statsToSort.sort(
+  const sortStats = (sortField: keyof Row) => {
+    const rowsToSort = hasTotalRow ? rows.slice(0, -1) : [...rows];
+    const sortedRows = rowsToSort.sort(
       // reverse will only happen when clicking twice on the same field
-      sortByField<IStat>(sortField, sortField === currentSortField.current && !shouldReverse),
+      sortByField<Row>(sortField, sortField === currentSortField.current && !shouldReverse),
     );
 
-    setSortedStats(hasTotalRow ? [...sortedStats, ...stats.slice(-1)] : sortedStats);
+    setSortedRows(hasTotalRow ? [...sortedRows, ...rows.slice(-1)] : sortedRows);
   };
 
   const onTableHeadClick = useCallback(
@@ -49,14 +51,14 @@ export default function useSortByField<IStat>(
         currentSortField.current = defaultSortKey;
       }
 
-      const sortField = (event.target as HTMLElement).getAttribute('data-sortkey') as keyof IStat;
+      const sortField = (event.target as HTMLElement).getAttribute('data-sortkey') as keyof Row;
 
       if (sortField === currentSortField.current) {
         if (shouldReverse) {
           // reset to intial state on 3rd click
           setShouldReverse(false);
           currentSortField.current = undefined;
-          setSortedStats(stats);
+          sortStats(defaultSortKey);
           return;
         } else {
           setShouldReverse(true);
@@ -69,18 +71,18 @@ export default function useSortByField<IStat>(
       sortStats(sortField);
       currentSortField.current = sortField;
     },
-    [currentSortField, stats, shouldReverse],
+    [currentSortField, rows, shouldReverse],
   );
 
   useEffect(() => {
-    if (stats.length) {
+    if (rows.length) {
       sortStats(currentSortField.current || defaultSortKey);
     }
-  }, [stats]);
+  }, [rows]);
 
   return {
     onTableHeadClick,
-    sortedStats,
+    sortedRows,
     currentSortField: currentSortField.current,
   };
 }

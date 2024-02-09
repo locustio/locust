@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import Table from 'components/Table/Table';
 import { roundToDecimalPlaces } from 'utils/number';
@@ -88,16 +88,5 @@ describe('Table', () => {
     );
 
     expect(getByText(rowContentFormatter(rowContent))).toBeTruthy();
-  });
-
-  test('handles sorting when a header is clicked', () => {
-    const onTableHeadClickMock = vi.fn();
-    const { getByText } = render(
-      <Table onTableHeadClick={onTableHeadClickMock} rows={mockRows} structure={mockStructure} />,
-    );
-
-    getByText('Name').click();
-
-    expect(onTableHeadClickMock).toHaveBeenCalled();
   });
 });

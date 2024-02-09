@@ -29,7 +29,7 @@ export default defineConfig((config: UserConfig) => ({
         manualChunks: () => 'app',
       },
     },
-    sourcemap: true,
+    sourcemap: config.mode !== 'production',
   },
   server: {
     port: 4000,
