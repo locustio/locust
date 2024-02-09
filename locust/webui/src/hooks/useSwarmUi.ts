@@ -78,10 +78,7 @@ export default function useSwarmUi() {
   };
 
   useEffect(() => {
-    if (
-      statsData &&
-      (statsData.state === SWARM_STATE.STOPPED || statsData.state === SWARM_STATE.SPAWNING)
-    ) {
+    if (statsData) {
       setSwarm({ state: statsData.state });
     }
   }, [statsData && statsData.state]);

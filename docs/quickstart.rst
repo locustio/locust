@@ -28,7 +28,7 @@ Change ``/hello`` and ``/world`` to some actual paths on the web site/service yo
     [2021-07-24 09:58:46,285] .../INFO/locust.main: Starting Locust |version|
 
 Locust's web interface
-==============================
+======================
 
 Open http://localhost:8089
 
@@ -36,7 +36,7 @@ Open http://localhost:8089
 
 | Provide the host name of your server and try it out!
 
-The following screenshots show what it might look like when running this test using 40 concurrent users, with a ramp up rate of 0.5 users/s, against a server with somewhat poor performance.
+The following screenshots show what it might look like when running this test using 50 concurrent users, with a ramp up rate of 1 users/s
 
 .. image:: images/webui-running-statistics.png
 
@@ -58,13 +58,9 @@ The following screenshots show what it might look like when running this test us
 
     If you need some help digging into server side problems, or you're having trouble generating enough load to saturate your system, have a look at the `Locust FAQ  <https://github.com/locustio/locust/wiki/FAQ#increase-my-request-raterps>`_.
 
-There is now a modern version of the Web UI available! Try it out by setting the ``--modern-ui`` flag.
-
-.. image:: images/modern-webui-splash-screenshot.png
-
 .. note::
 
-    This feature is experimental and you may experience breaking changes.
+    Things looking a little different? We've updated the UI! If for whatever reason you need to use the old version, you can always revert back to it using the ``--legacy-ui`` flag.
 
 Direct command line usage / headless
 ====================================

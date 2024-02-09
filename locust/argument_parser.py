@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import locust
+from locust import runners
+from locust.rpc import Message, zmqrpc
 
 import os
 import platform
+import socket
 import sys
 import textwrap
 from typing import Any, NamedTuple, Optional
@@ -12,8 +15,11 @@ from urllib.request import urlretrieve
 from pathlib import Path
 import atexit
 import tempfile
+from uuid import uuid4
 
 import configargparse
+import gevent
+from gevent.event import Event
 
 version = locust.__version__
 
@@ -107,7 +113,6 @@ def find_locustfiles(locustfiles: list[str], is_directory: bool) -> list[str]:
     locustfiles.
 
     Ignores files that start with _
-    Ignores files named locust.py
     """
     file_paths = []
 
@@ -128,16 +133,13 @@ def find_locustfiles(locustfiles: list[str], is_directory: bool) -> list[str]:
 
         for root, dirs, files in os.walk(locustdir):
             for file in files:
-                if not file.startswith("_") and file.lower() != "locust.py" and file.endswith(".py"):
-                    file_path = f"{root}/{file}"
+                if not file.startswith("_") and file.endswith(".py"):
+                    file_path = os.path.join(root, file)
                     file_paths.append(file_path)
     else:
         for file_path in locustfiles:
             if not file_path.endswith(".py"):
                 sys.stderr.write(f"Invalid file '{file_path}'. File should have '.py' extension\n")
-                sys.exit(1)
-            if file_path.endswith("locust.py"):
-                sys.stderr.write("Invalid file 'locust.py'. File name cannot be 'locust.py'\n")
                 sys.exit(1)
 
             file_paths.append(file_path)
@@ -208,6 +210,46 @@ See documentation for more details, including how to set options using a file or
     return parser
 
 
+def download_locustfile_from_master(master_host: str, master_port: int) -> str:
+    client_id = socket.gethostname() + "_download_locustfile_" + uuid4().hex
+    tempclient = zmqrpc.Client(master_host, master_port, client_id)
+    got_reply = False
+
+    def ask_for_locustfile():
+        while not got_reply:
+            tempclient.send(Message("locustfile", None, client_id))
+            gevent.sleep(1)
+
+    def wait_for_reply():
+        return tempclient.recv()
+
+    gevent.spawn(ask_for_locustfile)
+    try:
+        # wait same time as for client_ready ack. not that it is really relevant...
+        msg = gevent.spawn(wait_for_reply).get(timeout=runners.CONNECT_TIMEOUT * runners.CONNECT_RETRY_COUNT)
+        got_reply = True
+    except gevent.Timeout:
+        sys.stderr.write(
+            f"Got no locustfile response from master, gave up after {runners.CONNECT_TIMEOUT * runners.CONNECT_RETRY_COUNT}s\n"
+        )
+        sys.exit(1)
+
+    if msg.type != "locustfile":
+        sys.stderr.write(f"Got wrong message type from master {msg.type}\n")
+        sys.exit(1)
+
+    if "error" in msg.data:
+        sys.stderr.write(f"Got error from master: {msg.data['error']}\n")
+        sys.exit(1)
+
+    filename = msg.data["filename"]
+    with open(filename, "w") as local_file:
+        local_file.write(msg.data["contents"])
+
+    tempclient.close()
+    return filename
+
+
 def parse_locustfile_option(args=None) -> list[str]:
     """
     Construct a command line parser that is only used to parse the -f argument so that we can
@@ -230,8 +272,40 @@ def parse_locustfile_option(args=None) -> list[str]:
         action="store_true",
         default=False,
     )
+    # the following arguments are only used for downloading the locustfile from master
+    parser.add_argument(
+        "--worker",
+        action="store_true",
+        env_var="LOCUST_MODE_WORKER",
+    )
+    parser.add_argument(
+        "--master",  # this is just here to prevent argparse from giving the dreaded "ambiguous option: --master could match --master-host, --master-port"
+        action="store_true",
+        env_var="LOCUST_MODE_MASTER",
+    )
+    parser.add_argument(
+        "--master-host",
+        default="127.0.0.1",
+        env_var="LOCUST_MASTER_NODE_HOST",
+    )
+    parser.add_argument(
+        "--master-port",
+        type=int,
+        default=5557,
+        env_var="LOCUST_MASTER_NODE_PORT",
+    )
 
     options, _ = parser.parse_known_args(args=args)
+
+    if options.locustfile == "-":
+        if not options.worker:
+            sys.stderr.write(
+                "locustfile was set to '-' (meaning to download from master) but --worker was not specified.\n"
+            )
+            sys.exit(1)
+        # having this in argument_parser module is a bit weird, but it needs to be done early
+        filename = download_locustfile_from_master(options.master_host, options.master_port)
+        return [filename]
 
     # Comma separated string to list
     locustfile_as_list = [locustfile.strip() for locustfile in options.locustfile.split(",")]
@@ -274,12 +348,6 @@ def parse_locustfile_option(args=None) -> list[str]:
                     )
                 sys.stderr.write(
                     f"Could not find '{user_friendly_locustfile_name}'. {note_about_file_endings}See --help for available options.\n"
-                )
-                sys.exit(1)
-
-            if locustfile == "locust.py":
-                sys.stderr.write(
-                    "The locustfile must not be named `locust.py`. Please rename the file and try again.\n"
                 )
                 sys.exit(1)
 
@@ -430,11 +498,11 @@ def setup_parser_arguments(parser):
         env_var="LOCUST_USERCLASS_PICKER",
     )
     web_ui_group.add_argument(
-        "--modern-ui",
+        "--legacy-ui",
         default=False,
         action="store_true",
-        help="Use the new React-based frontend for the web UI",
-        env_var="LOCUST_MODERN_UI",
+        help="Use the legacy frontend for the web UI",
+        env_var="LOCUST_LEGACY_UI",
     )
 
     master_group = parser.add_argument_group(
@@ -500,7 +568,7 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
     worker_group.add_argument(
         "--worker",
         action="store_true",
-        help="Set locust to run in distributed mode with this process as worker",
+        help="Set locust to run in distributed mode with this process as worker. Can be combined with setting --locustfile to '-' to download it from master.",
         env_var="LOCUST_MODE_WORKER",
     )
     worker_group.add_argument(

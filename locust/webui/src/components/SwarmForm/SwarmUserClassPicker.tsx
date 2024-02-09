@@ -15,6 +15,7 @@ import {
   TableBody,
   TableContainer,
   Paper,
+  TableHead,
 } from '@mui/material';
 import { connect } from 'react-redux';
 
@@ -33,7 +34,7 @@ interface IDispatchProps {
 
 interface IUserClassPicker
   extends IDispatchProps,
-    Pick<ISwarmState, 'availableUserTasks' | 'users'> {
+    Pick<ISwarmState, 'availableUserClasses' | 'availableUserTasks' | 'users'> {
   selectedUserClasses: string[];
   setSelectedUserClasses: (userClasses: string[]) => void;
 }
@@ -76,6 +77,7 @@ function SwarmUserForm({ availableTasks, userToEdit, handleEditUser }: ISwarmUse
 }
 
 function SwarmUserClassPicker({
+  availableUserClasses,
   availableUserTasks,
   selectedUserClasses,
   setSelectedUserClasses,
@@ -105,6 +107,14 @@ function SwarmUserClassPicker({
       ? setSelectedUserClasses(selectedUserClasses.filter(n => n !== name))
       : setSelectedUserClasses(selectedUserClasses.concat(name));
 
+  const checkboxesSelected = selectedUserClasses.length;
+  const checkboxesTotal = availableUserClasses.length;
+
+  const onSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) =>
+    event.target.checked
+      ? setSelectedUserClasses(availableUserClasses)
+      : setSelectedUserClasses([]);
+
   return (
     <>
       <Box
@@ -117,49 +127,69 @@ function SwarmUserClassPicker({
           borderRadius: 1,
         }}
       >
-        <InputLabel
-          shrink
+        <Box
           sx={{
-            position: 'absolute',
-            backgroundColor: 'background.paper',
-            width: 'fit-content',
-            top: '0',
-            marginTop: '-5px',
-            padding: '0 5px',
+            maxHeight: '30vh',
+            overflow: 'auto',
           }}
         >
-          User Classes
-        </InputLabel>
-        <FormGroup>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableBody>
-                {Object.entries(users).map(([name, userClass]) => (
-                  <TableRow hover key={`user-class-${name}`}>
-                    <TableCell onClick={handleToggleUserSelected(name)} padding='checkbox'>
-                      <Checkbox defaultChecked />
-                    </TableCell>
-
-                    <TableCell>{name}</TableCell>
-                    <TableCell>
-                      <Typography variant='subtitle2'>{userClass.host}</Typography>
-                    </TableCell>
-                    <TableCell align='right'>
-                      <IconButton
-                        onClick={() => {
-                          setOpen(!open);
-                          setUserToEdit({ userClass, userClassName: name });
-                        }}
-                      >
-                        <SettingsIcon />
-                      </IconButton>
+          <InputLabel
+            shrink
+            sx={{
+              position: 'absolute',
+              backgroundColor: 'background.paper',
+              width: 'fit-content',
+              top: '0',
+              marginTop: '-5px',
+              padding: '0 5px',
+            }}
+          >
+            User Classes
+          </InputLabel>
+          <FormGroup>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell colSpan={4} padding='checkbox'>
+                      <Checkbox
+                        checked={checkboxesTotal > 0 && checkboxesSelected === checkboxesTotal}
+                        indeterminate={
+                          checkboxesSelected > 0 && checkboxesSelected < checkboxesTotal
+                        }
+                        onChange={onSelectAllClick}
+                      />
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </FormGroup>
+                </TableHead>
+                <TableBody>
+                  {Object.entries(users).map(([name, userClass]) => (
+                    <TableRow hover key={`user-class-${name}`}>
+                      <TableCell onClick={handleToggleUserSelected(name)} padding='checkbox'>
+                        <Checkbox checked={selectedUserClasses.includes(name)} />
+                      </TableCell>
+
+                      <TableCell>{name}</TableCell>
+                      <TableCell>
+                        <Typography variant='subtitle2'>{userClass.host}</Typography>
+                      </TableCell>
+                      <TableCell align='right'>
+                        <IconButton
+                          onClick={() => {
+                            setOpen(!open);
+                            setUserToEdit({ userClass, userClassName: name });
+                          }}
+                        >
+                          <SettingsIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </FormGroup>
+        </Box>
       </Box>
       <Modal onClose={() => setOpen(false)} open={open}>
         {userToEdit && (

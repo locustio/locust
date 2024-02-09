@@ -1,6 +1,59 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.22.0](https://github.com/locustio/locust/tree/2.22.0) (2024-02-04)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.21.0...2.22.0)
+
+**Fixed bugs:**
+
+- Modern UI - new test modal not scrollable [\#2574](https://github.com/locustio/locust/issues/2574)
+
+**Merged pull requests:**
+
+- Fix Modern UI - new test modal not scrollable [\#2577](https://github.com/locustio/locust/pull/2577) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Fix Spawning State Never Updates to Running [\#2573](https://github.com/locustio/locust/pull/2573) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Update README.md Screenshots for Modern UI [\#2572](https://github.com/locustio/locust/pull/2572) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Use Modern UI by default [\#2569](https://github.com/locustio/locust/pull/2569) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- GH Actions: Run tests on windows [\#2567](https://github.com/locustio/locust/pull/2567) ([cyberw](https://github.com/cyberw))
+
+## [2.21.0](https://github.com/locustio/locust/tree/2.21.0) (2024-01-27)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.20.1...2.21.0)
+
+**Fixed bugs:**
+
+- 95th percentile line chart does not display correctly on the Response Times \(ms\) graph [\#2540](https://github.com/locustio/locust/issues/2540)
+- ValueError: greenlet.greenlet size changed, may indicate binary incompatibility. Expected 152 from C header, got 40 from PyObject [\#2539](https://github.com/locustio/locust/issues/2539)
+- TaskSet missing \_cp\_last\_run attribute [\#2532](https://github.com/locustio/locust/issues/2532)
+- Modern UI "forgets" the selected user count and ramp up rate when starting a new test or editing a running one [\#2531](https://github.com/locustio/locust/issues/2531)
+- Update dependency or remove support for Basic Auth for the Web UI [\#2517](https://github.com/locustio/locust/issues/2517)
+
+**Closed issues:**
+
+- Unifying percentile displays in Locust's statistics screens [\#2546](https://github.com/locustio/locust/issues/2546)
+- Improve the Class Picker [\#2545](https://github.com/locustio/locust/issues/2545)
+- Add `response.ok` support to `FastHttpUser`'s `FastResponse`, ala `HttpUser`/requests [\#2520](https://github.com/locustio/locust/issues/2520)
+
+**Merged pull requests:**
+
+- Optimize memory usage when using --processes [\#2564](https://github.com/locustio/locust/pull/2564) ([cyberw](https://github.com/cyberw))
+- docs: update developing-locust.rst \(black, flake8\) -\> ruff [\#2562](https://github.com/locustio/locust/pull/2562) ([tdadela](https://github.com/tdadela))
+- Allow User weight adjustment \(and task selection\) in UI when running with --class-picker, or on command line with --config-users argument [\#2559](https://github.com/locustio/locust/pull/2559) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Ruff enable isort \(with custom sections\) [\#2556](https://github.com/locustio/locust/pull/2556) ([tdadela](https://github.com/tdadela))
+- update readthedocs-sphinx-search [\#2553](https://github.com/locustio/locust/pull/2553) ([cyberw](https://github.com/cyberw))
+- Fix pedantic typo in the index.html template [\#2552](https://github.com/locustio/locust/pull/2552) ([marcelofern](https://github.com/marcelofern))
+- Ruff set python version and enable more rules [\#2551](https://github.com/locustio/locust/pull/2551) ([tdadela](https://github.com/tdadela))
+- Customization Feature for Percentile Display on Statistics Page [\#2550](https://github.com/locustio/locust/pull/2550) ([FooQoo](https://github.com/FooQoo))
+- Use ruff instead of flake8 and black for linting and formatting [\#2549](https://github.com/locustio/locust/pull/2549) ([cyberw](https://github.com/cyberw))
+- Fix mypy configuration & upgrade typing [\#2548](https://github.com/locustio/locust/pull/2548) ([tdadela](https://github.com/tdadela))
+- Fix Web UI Chart History [\#2544](https://github.com/locustio/locust/pull/2544) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Web UI Modern Auth [\#2538](https://github.com/locustio/locust/pull/2538) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Modern UI: Fix Default Values for Edit / Start New Test [\#2537](https://github.com/locustio/locust/pull/2537) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Added response.ok support to FastHttpUser's FastResponse class similar to HttpUser's Response [\#2535](https://github.com/locustio/locust/pull/2535) ([PankajKhanwani](https://github.com/PankajKhanwani))
+- Update shape class' runner when Web UI picker is used [\#2534](https://github.com/locustio/locust/pull/2534) ([wiatrak2](https://github.com/wiatrak2))
+- setting initial \_cp\_last\_run on TaskSet in order to allow constant\_pacing wait time strategy [\#2533](https://github.com/locustio/locust/pull/2533) ([ionutab](https://github.com/ionutab))
+
 ## [2.20.1](https://github.com/locustio/locust/tree/2.20.1) (2024-01-03)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.20.0...2.20.1)
@@ -81,7 +134,7 @@ The most important changes can also be found in [the documentation](https://docs
 - Update minimum version of various dependencies [\#2476](https://github.com/locustio/locust/pull/2476) ([cyberw](https://github.com/cyberw))
 - Stop worker from automatically quitting if connected to an older version master that doesnt send heartbeats [\#2475](https://github.com/locustio/locust/pull/2475) ([cyberw](https://github.com/cyberw))
 - Shut down workers if master goes missing for too long [\#2474](https://github.com/locustio/locust/pull/2474) ([cyberw](https://github.com/cyberw))
-- Add --processes parameter to automatically fork subprocesses [\#2472](https://github.com/locustio/locust/pull/2472) ([cyberw](https://github.com/cyberw))
+- Add --processes parameter to automatically fork worker processes [\#2472](https://github.com/locustio/locust/pull/2472) ([cyberw](https://github.com/cyberw))
 
 ## [2.18.4](https://github.com/locustio/locust/tree/2.18.4) (2023-11-19)
 

@@ -27,7 +27,7 @@ It is really simple to launch a master and 4 worker processes::
 
     locust --processes 4
 
-You can even auto-detect the number of cores in your machine and launch one worker for each of them::
+You can even auto-detect the number of logical cores in your machine and launch one worker for each of them::
 
     locust --processes -1
 
@@ -38,16 +38,19 @@ Start locust in master mode on one machine::
 
     locust -f my_locustfile.py --master
 
-And then on each worker machine (make sure they also have a copy of the locustfile):
+And then on each worker machine:
 
 .. code-block:: bash
 
-    locust -f my_locustfile.py --worker --master-host <your master's address> --processes 4
+    locust -f - --worker --master-host <your master's address> --processes 4
+
+.. note::
+    The ``-f -`` argument tells Locust to get the locustfile from master instead of from its local filesystem. This feature was introduced in Locust 2.23.0.
 
 Multiple machines, using locust-swarm
 =====================================
 
-Both worker and master need access to the locustfile, and when you make changes to it you'll need to restart all Locust processes. `locust-swarm <https://github.com/SvenskaSpel/locust-swarm>`_ automates this for you. It also solves the issue of firewall/network access from workers to master using SSH tunnels (this is often a problem if the master is running on your workstation and workers are running in some datacenter).
+When you make changes to the locustfile you'll need to restart all Locust processes. `locust-swarm <https://github.com/SvenskaSpel/locust-swarm>`_ automates this for you. It also solves the issue of firewall/network access from workers to master using SSH tunnels (this is often a problem if the master is running on your workstation and workers are running in some datacenter).
 
 .. code-block:: bash
 
