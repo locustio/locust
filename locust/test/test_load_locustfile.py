@@ -1,13 +1,13 @@
 from locust import main
-from locust.argument_parser import parse_options, parse_locustfile_option
+from locust.argument_parser import parse_locustfile_option, parse_options
 from locust.main import create_environment
 from locust.user import HttpUser, TaskSet, User
 from locust.util.load_locustfile import is_user_class
 
-import os
-import textwrap
 import filecmp
+import os
 import pathlib
+import textwrap
 
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
 from .testcases import LocustTestCase

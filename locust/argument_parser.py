@@ -4,22 +4,20 @@ import locust
 from locust import runners
 from locust.rpc import Message, zmqrpc
 
+import atexit
 import os
 import platform
 import socket
 import sys
+import tempfile
 import textwrap
-from typing import Any, NamedTuple, Optional
+from typing import Any, NamedTuple
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
-from pathlib import Path
-import atexit
-import tempfile
 from uuid import uuid4
 
 import configargparse
 import gevent
-from gevent.event import Event
 
 version = locust.__version__
 
@@ -71,7 +69,7 @@ def _is_package(path):
     return os.path.isdir(path) and os.path.exists(os.path.join(path, "__init__.py"))
 
 
-def find_locustfile(locustfile: str) -> Optional[str]:
+def find_locustfile(locustfile: str) -> str | None:
     """
     Attempt to locate a locustfile, either explicitly or by searching parent dirs.
     """
@@ -150,11 +148,11 @@ def find_locustfiles(locustfiles: list[str], is_directory: bool) -> list[str]:
 def is_url(url: str) -> bool:
     try:
         result = urlparse(url)
-        if result.scheme:
+        if result.scheme == "https" or result.scheme == "http":
             return True
         else:
             return False
-    except:
+    except ValueError:
         return False
 
 
