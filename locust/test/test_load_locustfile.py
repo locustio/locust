@@ -223,6 +223,6 @@ class TestLoadLocustfile(LocustTestCase):
         self.assertTrue(
             filecmp.cmp(
                 locustfiles[0],
-                f"{pathlib.Path(__file__).parent.parent.parent}/examples/basic.py",
+                f"{os.getcwd()}/examples/basic.py",
             )
         )

@@ -13,8 +13,8 @@ import tempfile
 import textwrap
 from typing import Any, NamedTuple
 from urllib.parse import urlparse
-from urllib.request import urlretrieve
 from uuid import uuid4
+import requests
 
 import configargparse
 import gevent
@@ -157,15 +157,21 @@ def is_url(url: str) -> bool:
 
 
 def download_file_from_url(url: str) -> str:
-    # Path(f"{os.getcwd()}/temp").mkdir(parents=True, exist_ok=True)
-    # locustfile, headers = urlretrieve(url, f"{os.getcwd()}/temp/{url.rsplit('/', 1)[-1]}")
-    locustfile, headers = urlretrieve(url, f"{tempfile.gettempdir()}/{url.rsplit('/', 1)[-1]}")
+    try:
+        response = requests.get(url)
+    except requests.exceptions.RequestException as e:
+        sys.stderr.write(f"Failed to get locustfile from: {url}. Exception: {e}")
+        return None
+
+    if response.ok:
+        with open(f"{tempfile.gettempdir()}/{url.rsplit('/', 1)[-1]}", "w") as locustfile:
+            locustfile.write(response.text)
 
     def exit_handler():
-        os.remove(locustfile)
+        os.remove(locustfile.name)
 
     atexit.register(exit_handler)
-    return locustfile
+    return locustfile.name
 
 
 def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG_FILES) -> LocustArgumentParser:
@@ -306,11 +312,9 @@ def parse_locustfile_option(args=None) -> list[str]:
         return [filename]
 
     # Comma separated string to list
-    locustfile_as_list = [locustfile.strip() for locustfile in options.locustfile.split(",")]
-
-    for i in range(len(locustfile_as_list)):
-        if is_url(locustfile_as_list[i]):
-            locustfile_as_list[i] = download_file_from_url(locustfile_as_list[i])
+    locustfile_as_list = [
+        download_file_from_url(f) if is_url(f.strip()) else f.strip() for f in options.locustfile.split(",")
+    ]
 
     # Checking if the locustfile is a single file, multiple files or a directory
     if locustfile_is_directory(locustfile_as_list):
@@ -330,9 +334,9 @@ def parse_locustfile_option(args=None) -> list[str]:
         else:
             # Is a single file
             locustfile = find_locustfile(locustfile_as_list[0])
-            locustfiles = [locustfile]
 
             if not locustfile:
+                locustfiles = []
                 if options.help or options.version:
                     # if --help or --version is specified we'll call parse_options which will print the help/version message
                     parse_options(args=args)
@@ -348,6 +352,8 @@ def parse_locustfile_option(args=None) -> list[str]:
                     f"Could not find '{user_friendly_locustfile_name}'. {note_about_file_endings}See --help for available options.\n"
                 )
                 sys.exit(1)
+            else:
+                locustfiles = [locustfile]
 
     return locustfiles
 
