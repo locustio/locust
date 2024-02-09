@@ -4,7 +4,6 @@ import Table from 'components/Table/Table';
 import ViewColumnSelector from 'components/ViewColumnSelector/ViewColumnSelector';
 import { swarmTemplateArgs } from 'constants/swarm';
 import useSelectViewColumns from 'hooks/useSelectViewColumns';
-import useSortByField from 'hooks/useSortByField';
 import { IRootState } from 'redux/store';
 import { ISwarmStat } from 'types/ui.types';
 
@@ -31,10 +30,6 @@ const tableStructure = [
 ];
 
 export function StatsTable({ stats }: { stats: ISwarmStat[] }) {
-  const { onTableHeadClick, sortedStats, currentSortField } = useSortByField<ISwarmStat>(stats, {
-    hasTotalRow: true,
-  });
-
   const { selectedColumns, addColumn, removeColumn, filteredStructure } =
     useSelectViewColumns(tableStructure);
 
@@ -46,12 +41,7 @@ export function StatsTable({ stats }: { stats: ISwarmStat[] }) {
         selectedColumns={selectedColumns}
         structure={tableStructure}
       />
-      <Table<ISwarmStat>
-        currentSortField={currentSortField}
-        onTableHeadClick={onTableHeadClick}
-        rows={sortedStats}
-        structure={filteredStructure}
-      />
+      <Table<ISwarmStat> hasTotalRow rows={stats} structure={filteredStructure} />
     </>
   );
 }

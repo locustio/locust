@@ -9,10 +9,11 @@ import {
 } from '@mui/material';
 import Markdown from 'react-markdown';
 
+import useSortByField, { ISortByFieldOptions } from 'hooks/useSortByField';
 import { ITableStructure } from 'types/table.types';
 import { roundToDecimalPlaces } from 'utils/number';
 
-interface ITable<Row> {
+interface ITable<Row> extends ISortByFieldOptions<Row> {
   rows: Row[];
   structure: ITableStructure[];
   children?: React.ReactElement;
@@ -52,9 +53,14 @@ function TableRowContent({ content, formatter, round, markdown }: ITableRowConte
 export default function Table<Row extends Record<string, any> = Record<string, string | number>>({
   rows,
   structure,
-  onTableHeadClick,
-  currentSortField,
+  hasTotalRow,
+  defaultSortKey,
 }: ITable<Row>) {
+  const { onTableHeadClick, sortedRows, currentSortField } = useSortByField<Row>(rows, {
+    hasTotalRow,
+    defaultSortKey,
+  });
+
   return (
     <TableContainer component={Paper}>
       <MuiTable>
@@ -66,7 +72,7 @@ export default function Table<Row extends Record<string, any> = Record<string, s
                 key={`table-head-${key}`}
                 onClick={onTableHeadClick}
                 sx={{
-                  cursor: onTableHeadClick ? 'pointer' : 'default',
+                  cursor: 'pointer',
                   color: currentSortField === key ? 'primary.main' : 'text.primary',
                 }}
               >
@@ -76,7 +82,7 @@ export default function Table<Row extends Record<string, any> = Record<string, s
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row, index) => (
+          {sortedRows.map((row, index) => (
             <TableRow key={`${row.name}-${index}`}>
               {structure.map(({ key, ...tableRowProps }, index) => (
                 <TableCell key={`table-row=${index}`}>
