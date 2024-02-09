@@ -124,6 +124,15 @@ Example:
 
 Locust will use ``locustfile1.py``, ``locustfile2.py`` & ``more_files/locustfile3.py``
 
+You can also use ``-f/--locustfile`` for web urls. This will download the file and use it as any normal locustfile.
+
+Example:
+
+.. code-block:: console
+
+    $ locust -f https://raw.githubusercontent.com/locustio/locust/master/examples/basic.py
+
+
 .. _class-picker:
 
 Running Locust with User class UI picker
