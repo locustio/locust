@@ -163,9 +163,8 @@ def download_file_from_url(url: str) -> str:
         sys.stderr.write(f"Failed to get locustfile from: {url}. Exception: {e}")
         sys.exit(1)
 
-    if response.ok:
-        with open(f"{tempfile.gettempdir()}/{url.rsplit('/', 1)[-1]}", "w") as locustfile:
-            locustfile.write(response.text)
+    with open(f"{tempfile.gettempdir()}/{url.rsplit('/', 1)[-1]}", "w") as locustfile:
+        locustfile.write(response.text)
 
     def exit_handler():
         os.remove(locustfile.name)
@@ -334,9 +333,9 @@ def parse_locustfile_option(args=None) -> list[str]:
         else:
             # Is a single file
             locustfile = find_locustfile(locustfile_as_list[0])
+            locustfiles = []
 
             if not locustfile:
-                locustfiles = []
                 if options.help or options.version:
                     # if --help or --version is specified we'll call parse_options which will print the help/version message
                     parse_options(args=args)
@@ -353,7 +352,7 @@ def parse_locustfile_option(args=None) -> list[str]:
                 )
                 sys.exit(1)
             else:
-                locustfiles = [locustfile]
+                locustfiles.append(locustfile)
 
     return locustfiles
 
