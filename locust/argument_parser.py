@@ -14,10 +14,10 @@ import textwrap
 from typing import Any, NamedTuple
 from urllib.parse import urlparse
 from uuid import uuid4
-import requests
 
 import configargparse
 import gevent
+import requests
 
 version = locust.__version__
 
@@ -161,7 +161,7 @@ def download_file_from_url(url: str) -> str:
         response = requests.get(url)
     except requests.exceptions.RequestException as e:
         sys.stderr.write(f"Failed to get locustfile from: {url}. Exception: {e}")
-        return None
+        sys.exit(1)
 
     if response.ok:
         with open(f"{tempfile.gettempdir()}/{url.rsplit('/', 1)[-1]}", "w") as locustfile:
