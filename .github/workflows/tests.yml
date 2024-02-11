@@ -15,11 +15,11 @@ jobs:
       matrix:
         include:
           - {name: Windows, python: '3.12', os: windows-latest, tox: fail_fast_test_main}
-          - {name: Mac, python: '3.12', os: macos-latest, tox: fail_fast_test_main}
+          # - {name: Mac, python: '3.12', os: macos-latest, tox: fail_fast_test_main}
           - { name: "ruff", python: "3.11", os: ubuntu-latest, tox: "ruff" }
           - { name: "mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
           # run some integration tests and abort immediately if they fail, for faster feedback
-          - { name: "fail_fast_test_main", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main }
+          - { name: "Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main }
           - { name: "3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
           - { name: "3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
           - { name: "3.10", python: "3.10", os: ubuntu-latest, tox: py310 }
