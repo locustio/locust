@@ -251,4 +251,3 @@ The list of statistics parameters that can be modified is:
 | PERCENTILES_TO_STATISTICS                 | List of response time percentiles in the screen of statistics for Web UI             |
 |                                           | This parameter supports only modern UI                                               |
 +-------------------------------------------+--------------------------------------------------------------------------------------+
-

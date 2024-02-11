@@ -62,4 +62,3 @@ Other examples
 ==============
 
 See `locust-plugins <https://github.com/SvenskaSpel/locust-plugins#users>`_ it has users for WebSocket/SocketIO, Kafka, Selenium/WebDriver, Playwright and more.
-

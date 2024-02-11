@@ -42,7 +42,7 @@ And then on each worker machine:
 
 .. code-block:: bash
 
-    locust -f - --worker --master-host <your master's address> --processes 4
+    locust -f - --worker --master-host <your master> --processes 4
 
 .. note::
     The ``-f -`` argument tells Locust to get the locustfile from master instead of from its local filesystem. This feature was introduced in Locust 2.23.0.
