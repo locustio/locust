@@ -6,6 +6,7 @@ import { ISwarmException } from 'types/ui.types';
 
 const tableStructure = [
   { key: 'count', title: '# occurrences' },
+  { key: 'msg', title: 'Message' },
   { key: 'traceback', title: 'Traceback' },
 ];
 
