@@ -132,6 +132,10 @@ def main():
         logging.error("stats.PERCENTILES_TO_CHART parameter should be 2 parameters \n")
         sys.exit(1)
 
+    if len(stats.MODERN_UI_PERCENTILES_TO_CHART) > 6:
+        logging.error("stats.MODERN_UI_PERCENTILES_TO_CHART parameter should be a maximum of 6 parameters \n")
+        sys.exit(1)
+
     def is_valid_percentile(parameter):
         try:
             if 0 < float(parameter) < 1:
