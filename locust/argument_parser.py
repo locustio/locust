@@ -246,11 +246,16 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
         sys.exit(1)
 
     filename = msg.data["filename"]
-    with open(filename, "w") as local_file:
-        local_file.write(msg.data["contents"])
+    with open(os.path.join(tempfile.gettempdir(), filename), "w") as locustfile:
+        locustfile.write(msg.data["contents"])
+
+    def exit_handler():
+        os.remove(locustfile.name)
+
+    atexit.register(exit_handler)
 
     tempclient.close()
-    return filename
+    return locustfile.name
 
 
 def parse_locustfile_option(args=None) -> list[str]:
