@@ -1064,7 +1064,7 @@ class MasterRunner(DistributedRunner):
                     self.send_message(
                         "locustfile",
                         client_id=client_id,
-                        data={"filename": filename, "contents": file_contents},
+                        data={"filename": os.path.basename(filename), "contents": file_contents},
                     )
                 continue
             elif msg.type == "client_stopped":

@@ -1721,12 +1721,15 @@ class SecondUser(HttpUser):
                 text=True,
             )
             stdout = proc.communicate()[0]
-            proc_worker2.communicate()
-            proc_worker.communicate()
+            stdout_worker = proc_worker.communicate()[0]
+            stdout_worker2 = proc_worker2.communicate()[0]
 
             self.assertIn('All users spawned: {"User1": 1} (1 total users)', stdout)
             self.assertIn("Locustfile contents changed on disk after first worker requested locustfile", stdout)
             self.assertIn("Shutting down (exit code 0)", stdout)
+            self.assertNotIn("Traceback", stdout)
+            self.assertNotIn("Traceback", stdout_worker)
+            self.assertNotIn("Traceback", stdout_worker2)
 
             self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)

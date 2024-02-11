@@ -156,7 +156,7 @@ def is_url(url: str) -> bool:
         return False
 
 
-def download_file_from_url(url: str) -> str:
+def download_locustfile_from_url(url: str) -> str:
     try:
         response = requests.get(url)
     except requests.exceptions.RequestException as e:
@@ -167,7 +167,10 @@ def download_file_from_url(url: str) -> str:
         locustfile.write(response.text)
 
     def exit_handler():
-        os.remove(locustfile.name)
+        try:
+            os.remove(locustfile.name)
+        except FileNotFoundError:
+            pass  # this is normal when multiple workers are running on the same machine
 
     atexit.register(exit_handler)
     return locustfile.name
@@ -246,11 +249,19 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
         sys.exit(1)
 
     filename = msg.data["filename"]
-    with open(filename, "w") as local_file:
-        local_file.write(msg.data["contents"])
+    with open(os.path.join(tempfile.gettempdir(), filename), "w") as locustfile:
+        locustfile.write(msg.data["contents"])
+
+    def exit_handler():
+        try:
+            os.remove(locustfile.name)
+        except FileNotFoundError:
+            pass  # this is normal when multiple workers are running on the same machine
+
+    atexit.register(exit_handler)
 
     tempclient.close()
-    return filename
+    return locustfile.name
 
 
 def parse_locustfile_option(args=None) -> list[str]:
@@ -312,7 +323,7 @@ def parse_locustfile_option(args=None) -> list[str]:
 
     # Comma separated string to list
     locustfile_as_list = [
-        download_file_from_url(f) if is_url(f.strip()) else f.strip() for f in options.locustfile.split(",")
+        download_locustfile_from_url(f) if is_url(f.strip()) else f.strip() for f in options.locustfile.split(",")
     ]
 
     # Checking if the locustfile is a single file, multiple files or a directory
