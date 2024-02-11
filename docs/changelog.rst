@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.23.0
+======
+* UI updates (https://github.com/locustio/locust/pull/2589, https://github.com/locustio/locust/pull/2590, https://github.com/locustio/locust/pull/2596)
+* Locustfile distribution from master to worker https://github.com/locustio/locust/pull/2583
+* Allow getting locust files from http urls https://github.com/locustio/locust/pull/2595
+* Use exec_module() when loading locustfile instead of the deprecated load_module() https://github.com/locustio/locust/pull/2576
+
 2.22.0
 ======
 * Use Modern UI by default, remove --modern-ui and add --legacy-ui parameters https://github.com/locustio/locust/pull/2569
