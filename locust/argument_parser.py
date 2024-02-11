@@ -167,7 +167,10 @@ def download_locustfile_from_url(url: str) -> str:
         locustfile.write(response.text)
 
     def exit_handler():
-        os.remove(locustfile.name)
+        try:
+            os.remove(locustfile.name)
+        except FileNotFoundError:
+            pass  # this is normal when multiple workers are running on the same machine
 
     atexit.register(exit_handler)
     return locustfile.name
@@ -250,7 +253,10 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
         locustfile.write(msg.data["contents"])
 
     def exit_handler():
-        os.remove(locustfile.name)
+        try:
+            os.remove(locustfile.name)
+        except FileNotFoundError:
+            pass  # this is normal when multiple workers are running on the same machine
 
     atexit.register(exit_handler)
 
