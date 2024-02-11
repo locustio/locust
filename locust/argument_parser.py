@@ -4,17 +4,20 @@ import locust
 from locust import runners
 from locust.rpc import Message, zmqrpc
 
+import atexit
 import os
 import platform
 import socket
 import sys
+import tempfile
 import textwrap
 from typing import Any, NamedTuple
+from urllib.parse import urlparse
 from uuid import uuid4
 
 import configargparse
 import gevent
-from gevent.event import Event
+import requests
 
 version = locust.__version__
 
@@ -66,7 +69,7 @@ def _is_package(path):
     return os.path.isdir(path) and os.path.exists(os.path.join(path, "__init__.py"))
 
 
-def find_locustfile(locustfile):
+def find_locustfile(locustfile: str) -> str | None:
     """
     Attempt to locate a locustfile, either explicitly or by searching parent dirs.
     """
@@ -97,7 +100,8 @@ def find_locustfile(locustfile):
                 # we've reached the root path which has been checked this iteration
                 break
             path = parent_path
-    # Implicit 'return None' if nothing was found
+
+    return None
 
 
 def find_locustfiles(locustfiles: list[str], is_directory: bool) -> list[str]:
@@ -139,6 +143,34 @@ def find_locustfiles(locustfiles: list[str], is_directory: bool) -> list[str]:
             file_paths.append(file_path)
 
     return file_paths
+
+
+def is_url(url: str) -> bool:
+    try:
+        result = urlparse(url)
+        if result.scheme == "https" or result.scheme == "http":
+            return True
+        else:
+            return False
+    except ValueError:
+        return False
+
+
+def download_file_from_url(url: str) -> str:
+    try:
+        response = requests.get(url)
+    except requests.exceptions.RequestException as e:
+        sys.stderr.write(f"Failed to get locustfile from: {url}. Exception: {e}")
+        sys.exit(1)
+
+    with open(f"{tempfile.gettempdir()}/{url.rsplit('/', 1)[-1]}", "w") as locustfile:
+        locustfile.write(response.text)
+
+    def exit_handler():
+        os.remove(locustfile.name)
+
+    atexit.register(exit_handler)
+    return locustfile.name
 
 
 def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG_FILES) -> LocustArgumentParser:
@@ -279,7 +311,9 @@ def parse_locustfile_option(args=None) -> list[str]:
         return [filename]
 
     # Comma separated string to list
-    locustfile_as_list = [locustfile.strip() for locustfile in options.locustfile.split(",")]
+    locustfile_as_list = [
+        download_file_from_url(f) if is_url(f.strip()) else f.strip() for f in options.locustfile.split(",")
+    ]
 
     # Checking if the locustfile is a single file, multiple files or a directory
     if locustfile_is_directory(locustfile_as_list):
@@ -298,8 +332,8 @@ def parse_locustfile_option(args=None) -> list[str]:
             locustfile = None
         else:
             # Is a single file
-            locustfile = find_locustfile(options.locustfile)
-            locustfiles = [locustfile]
+            locustfile = find_locustfile(locustfile_as_list[0])
+            locustfiles = []
 
             if not locustfile:
                 if options.help or options.version:
@@ -317,6 +351,8 @@ def parse_locustfile_option(args=None) -> list[str]:
                     f"Could not find '{user_friendly_locustfile_name}'. {note_about_file_endings}See --help for available options.\n"
                 )
                 sys.exit(1)
+            else:
+                locustfiles.append(locustfile)
 
     return locustfiles
 
