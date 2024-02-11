@@ -1,6 +1,32 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.23.0](https://github.com/locustio/locust/tree/2.23.0) (2024-02-11)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.22.0...2.23.0)
+
+**Closed issues:**
+
+- Modern UI: ability to sort tables by column specific column [\#2593](https://github.com/locustio/locust/issues/2593)
+- Modern UI -  User class picker - add option to enable/disable everything. [\#2585](https://github.com/locustio/locust/issues/2585)
+- \[LocustLineChart\] Implement an option/configuration for users to customize the color of the LocustLineChart. [\#2578](https://github.com/locustio/locust/issues/2578)
+
+**Merged pull requests:**
+
+- Tables are Sortable by Default [\#2596](https://github.com/locustio/locust/pull/2596) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Allow getting locust files from http urls [\#2595](https://github.com/locustio/locust/pull/2595) ([DennisKrone](https://github.com/DennisKrone))
+- Fixed typos in documentation [\#2592](https://github.com/locustio/locust/pull/2592) ([dorin131](https://github.com/dorin131))
+- Remove no longer relevant documentation and \(already not working?\) checks for not loading locustfiles named locust.py [\#2591](https://github.com/locustio/locust/pull/2591) ([cyberw](https://github.com/cyberw))
+- Add Select All / None Checkbox to User Class Picker [\#2590](https://github.com/locustio/locust/pull/2590) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add New Colors for the Locust Charts [\#2589](https://github.com/locustio/locust/pull/2589) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Work around issue with locustfiles named "locust.py" [\#2587](https://github.com/locustio/locust/pull/2587) ([cyberw](https://github.com/cyberw))
+- Update writing-a-locustfile.rst [\#2584](https://github.com/locustio/locust/pull/2584) ([KaushikPathak90](https://github.com/KaushikPathak90))
+- Locustfile distribution from master to worker [\#2583](https://github.com/locustio/locust/pull/2583) ([cyberw](https://github.com/cyberw))
+- Gh actions: Run tests on MacOS [\#2580](https://github.com/locustio/locust/pull/2580) ([cyberw](https://github.com/cyberw))
+- Use defaultdict:s for stats dictionaries instead of setdefault [\#2579](https://github.com/locustio/locust/pull/2579) ([cyberw](https://github.com/cyberw))
+- DeprecationWarning: the load\_module\(\) method is deprecated and slated for removal in Python 3.12; use exec\_module\(\) instead [\#2576](https://github.com/locustio/locust/pull/2576) ([mgor](https://github.com/mgor))
+- docs\(running-distributed\): cores -\> logical cores [\#2570](https://github.com/locustio/locust/pull/2570) ([tdadela](https://github.com/tdadela))
+
 ## [2.22.0](https://github.com/locustio/locust/tree/2.22.0) (2024-02-04)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.21.0...2.22.0)
