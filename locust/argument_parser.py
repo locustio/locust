@@ -156,7 +156,7 @@ def is_url(url: str) -> bool:
         return False
 
 
-def download_file_from_url(url: str) -> str:
+def download_locustfile_from_url(url: str) -> str:
     try:
         response = requests.get(url)
     except requests.exceptions.RequestException as e:
@@ -317,7 +317,7 @@ def parse_locustfile_option(args=None) -> list[str]:
 
     # Comma separated string to list
     locustfile_as_list = [
-        download_file_from_url(f) if is_url(f.strip()) else f.strip() for f in options.locustfile.split(",")
+        download_locustfile_from_url(f) if is_url(f.strip()) else f.strip() for f in options.locustfile.split(",")
     ]
 
     # Checking if the locustfile is a single file, multiple files or a directory
