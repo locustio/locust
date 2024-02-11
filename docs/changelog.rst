@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.23.1
+======
+* Fixes for locustfile download https://github.com/locustio/locust/pull/2599
+* UI fixes https://github.com/locustio/locust/pull/2600 https://github.com/locustio/locust/pull/2601
+
 2.23.0
 ======
 * UI updates (https://github.com/locustio/locust/pull/2589, https://github.com/locustio/locust/pull/2590, https://github.com/locustio/locust/pull/2596)
