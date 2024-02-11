@@ -163,7 +163,7 @@ def download_file_from_url(url: str) -> str:
         sys.stderr.write(f"Failed to get locustfile from: {url}. Exception: {e}")
         sys.exit(1)
 
-    with open(f"{tempfile.gettempdir()}/{url.rsplit('/', 1)[-1]}", "w") as locustfile:
+    with open(os.path.join(tempfile.gettempdir(), url.rsplit("/", 1)[-1]), "w") as locustfile:
         locustfile.write(response.text)
 
     def exit_handler():
