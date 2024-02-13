@@ -3,6 +3,7 @@ import functools
 import gc
 import os
 import socket
+import warnings
 from contextlib import contextmanager
 from tempfile import NamedTemporaryFile
 
@@ -78,7 +79,9 @@ def create_tls_cert(hostname):
 def clear_all_functools_lru_cache() -> None:
     # Clear all `functools.lru_cache` to ensure that no state are persisted from one test to another.
     # Taken from https://stackoverflow.com/a/50699209.
-    gc.collect()
+    with warnings.catch_warnings():
+        warnings.simplefilter(action="ignore", category=ResourceWarning)
+        gc.collect()
     wrappers = [a for a in gc.get_objects() if isinstance(a, functools._lru_cache_wrapper)]
     assert len(wrappers) > 0
     for wrapper in wrappers:

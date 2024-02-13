@@ -1,6 +1,7 @@
 from locust import (
     constant,
 )
+from locust.dispatch import UsersDispatcher, UsersDispatcherType
 from locust.env import Environment, LoadTestShape
 from locust.user import (
     User,
@@ -200,6 +201,18 @@ class TestEnvironment(LocustTestCase):
             ValueError, r"instance of LoadTestShape or subclass LoadTestShape", msg="exception message is mismatching"
         ):
             Environment(user_classes=[MyUserWithSameName1], shape_class=SubLoadTestShape)
+
+    def test_dispatcher_class_attribute(self):
+        environment = Environment(user_classes=[MyUserWithSameName1])
+
+        self.assertEqual(environment.dispatcher_class, UsersDispatcher)
+
+        class MyUsersDispatcher(UsersDispatcherType):
+            pass
+
+        environment = Environment(user_classes=[MyUserWithSameName1], dispatcher_class=MyUsersDispatcher)
+
+        self.assertEqual(environment.dispatcher_class, MyUsersDispatcher)
 
     def test_update_user_class(self):
         class MyUser1(User):

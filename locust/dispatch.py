@@ -4,10 +4,10 @@ import contextlib
 import itertools
 import math
 import time
+from abc import ABCMeta, abstractmethod, abstractproperty
 from collections import defaultdict
-from collections.abc import Iterator
 from operator import attrgetter
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Generator, Iterator, overload
 
 import gevent
 from roundrobin import smooth
@@ -26,7 +26,51 @@ if TYPE_CHECKING:
 # profile = line_profiler.LineProfiler()
 
 
-class UsersDispatcher(Iterator):
+class UsersDispatcherType(Iterator, metaclass=ABCMeta):
+    @abstractmethod
+    def __init__(self, worker_nodes: list[WorkerNode], user_classes: list[type[User]]) -> None:
+        ...
+
+    @abstractmethod
+    def new_dispatch(
+        self, target_user_count: int, spawn_rate: float, user_classes: list[type[User]] | None = None
+    ) -> None:
+        ...
+
+    @abstractmethod
+    def add_worker(self, worker_node: WorkerNode) -> None:
+        ...
+
+    @abstractmethod
+    def remove_worker(self, worker_node: WorkerNode) -> None:
+        ...
+
+    @abstractmethod
+    def get_user_current_count(self, user_class_name: str) -> int:
+        ...
+
+    @abstractproperty
+    def dispatch_in_progress(self) -> bool:
+        ...
+
+    @abstractproperty
+    def dispatch_iteration_durations(self) -> list[float]:
+        ...
+
+    @abstractproperty
+    def wait_between_dispatch(self) -> float:
+        ...
+
+    @wait_between_dispatch.setter
+    def wait_between_dispatch(self, value: float) -> None:
+        ...
+
+    @abstractproperty
+    def should_rebalance(self) -> bool:
+        ...
+
+
+class UsersDispatcher(UsersDispatcherType):
     """
     Iterator that dispatches the users to the workers.
 
@@ -111,6 +155,18 @@ class UsersDispatcher(Iterator):
     def dispatch_iteration_durations(self) -> list[float]:
         return self._dispatch_iteration_durations
 
+    @property
+    def wait_between_dispatch(self) -> float:
+        return self._wait_between_dispatch
+
+    @wait_between_dispatch.setter
+    def wait_between_dispatch(self, value: float) -> None:
+        self._wait_between_dispatch = value
+
+    @property
+    def should_rebalance(self) -> bool:
+        return self._rebalance
+
     def __next__(self) -> dict[str, dict[str, int]]:
         users_on_workers = next(self._dispatcher_generator)
         # TODO: Is this necessary to copy the users_on_workers if we know
@@ -134,7 +190,7 @@ class UsersDispatcher(Iterator):
     def _dispatcher(self) -> Generator[dict[str, dict[str, int]], None, None]:
         self._dispatch_in_progress = True
 
-        if self._rebalance:
+        if self.should_rebalance:
             self._rebalance = False
             yield self._users_on_workers
             if self._current_user_count == self._target_user_count:
@@ -148,7 +204,7 @@ class UsersDispatcher(Iterator):
         while self._current_user_count < self._target_user_count:
             with self._wait_between_dispatch_iteration_context():
                 yield self._add_users_on_workers()
-                if self._rebalance:
+                if self.should_rebalance:
                     self._rebalance = False
                     yield self._users_on_workers
                 if self._no_user_to_spawn:
@@ -158,13 +214,15 @@ class UsersDispatcher(Iterator):
         while self._current_user_count > self._target_user_count:
             with self._wait_between_dispatch_iteration_context():
                 yield self._remove_users_from_workers()
-                if self._rebalance:
+                if self.should_rebalance:
                     self._rebalance = False
                     yield self._users_on_workers
 
         self._dispatch_in_progress = False
 
-    def new_dispatch(self, target_user_count: int, spawn_rate: float, user_classes: list | None = None) -> None:
+    def new_dispatch(
+        self, target_user_count: int, spawn_rate: float, user_classes: list[type[User]] | None = None
+    ) -> None:
         """
         Initialize a new dispatch cycle.
 
@@ -182,7 +240,7 @@ class UsersDispatcher(Iterator):
 
         self._user_count_per_dispatch_iteration = max(1, math.floor(self._spawn_rate))
 
-        self._wait_between_dispatch = self._user_count_per_dispatch_iteration / self._spawn_rate
+        self.wait_between_dispatch = self._user_count_per_dispatch_iteration / self._spawn_rate
 
         self._initial_users_on_workers = self._users_on_workers
 
@@ -265,7 +323,7 @@ class UsersDispatcher(Iterator):
             # No sleep when this is the last dispatch iteration
             return
 
-        sleep_duration = max(0.0, self._wait_between_dispatch - delta)
+        sleep_duration = max(0.0, self.wait_between_dispatch - delta)
         gevent.sleep(sleep_duration)
 
     def _add_users_on_workers(self) -> dict[str, dict[str, int]]:
@@ -309,10 +367,10 @@ class UsersDispatcher(Iterator):
             if self._current_user_count == 0 or self._current_user_count <= current_user_count_target:
                 return self._users_on_workers
 
-    def _get_user_current_count(self, user: str) -> int:
+    def get_user_current_count(self, user_class_name: str) -> int:
         count = 0
         for users_on_node in self._users_on_workers.values():
-            count += users_on_node.get(user, 0)
+            count += users_on_node.get(user_class_name, 0)
 
         return count
 
@@ -400,7 +458,7 @@ class UsersDispatcher(Iterator):
         while True:
             if self._try_dispatch_fixed:
                 self._try_dispatch_fixed = False
-                current_fixed_users_count = {u: self._get_user_current_count(u) for u in fixed_users}
+                current_fixed_users_count = {u: self.get_user_current_count(u) for u in fixed_users}
                 spawned_classes: set[str] = set()
                 while len(spawned_classes) != len(fixed_users):
                     user_name: str | None = next(cycle_fixed_gen)
@@ -413,7 +471,7 @@ class UsersDispatcher(Iterator):
 
                         # 'self._try_dispatch_fixed' was changed outhere,  we have to recalculate current count
                         if self._try_dispatch_fixed:
-                            current_fixed_users_count = {u: self._get_user_current_count(u) for u in fixed_users}
+                            current_fixed_users_count = {u: self.get_user_current_count(u) for u in fixed_users}
                             spawned_classes.clear()
                             self._try_dispatch_fixed = False
                     else:

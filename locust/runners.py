@@ -39,7 +39,7 @@ from gevent.event import Event
 from gevent.pool import Group
 
 from . import argument_parser
-from .dispatch import UsersDispatcher
+from .dispatch import UsersDispatcherType
 from .exception import RPCError, RPCReceiveError, RPCSendError
 from .log import greenlet_exception_logger
 from .rpc import (
@@ -121,7 +121,7 @@ class Runner:
         self.target_user_count: int = 0
         self.custom_messages: dict[str, Callable] = {}
 
-        self._users_dispatcher: UsersDispatcher | None = None
+        self._users_dispatcher: UsersDispatcherType | None = None
 
         # set up event listeners for recording requests
         def on_request(request_type, name, response_time, response_length, exception=None, **_kwargs):
@@ -492,13 +492,13 @@ class LocalRunner(Runner):
             self.update_state(STATE_SPAWNING)
 
         if self._users_dispatcher is None:
-            self._users_dispatcher = UsersDispatcher(
+            self._users_dispatcher = self.environment.dispatcher_class(
                 worker_nodes=[self._local_worker_node], user_classes=self.user_classes
             )
 
         logger.info("Ramping to %d users at a rate of %.2f per second" % (user_count, spawn_rate))
 
-        cast(UsersDispatcher, self._users_dispatcher).new_dispatch(user_count, spawn_rate, user_classes)
+        self._users_dispatcher.new_dispatch(user_count, spawn_rate, user_classes)
 
         try:
             for dispatched_users in self._users_dispatcher:
@@ -682,7 +682,7 @@ class MasterRunner(DistributedRunner):
             else:
                 raise
 
-        self._users_dispatcher: UsersDispatcher | None = None
+        self._users_dispatcher: UsersDispatcherType | None = None
 
         self.greenlet.spawn(self.heartbeat_worker).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.client_listener).link_exception(greenlet_exception_handler)
@@ -750,7 +750,7 @@ class MasterRunner(DistributedRunner):
         self.spawn_rate = spawn_rate
 
         if self._users_dispatcher is None:
-            self._users_dispatcher = UsersDispatcher(
+            self._users_dispatcher = self.environment.dispatcher_class(
                 worker_nodes=list(self.clients.values()), user_classes=self.user_classes
             )
 
@@ -1210,7 +1210,7 @@ class WorkerRunner(DistributedRunner):
         self.master_host = master_host
         self.master_port = master_port
         self.worker_cpu_warning_emitted = False
-        self._users_dispatcher: UsersDispatcher | None = None
+        self._users_dispatcher: UsersDispatcherType | None = None
         self.client = rpc.Client(master_host, master_port, self.client_id)
         self.greenlet.spawn(self.worker).link_exception(greenlet_exception_handler)
         self.connect_to_master()
