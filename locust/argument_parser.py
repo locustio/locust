@@ -4,6 +4,7 @@ import locust
 from locust import runners
 from locust.rpc import Message, zmqrpc
 
+import ast
 import atexit
 import os
 import platform
@@ -14,7 +15,6 @@ import textwrap
 from typing import Any, NamedTuple
 from urllib.parse import urlparse
 from uuid import uuid4
-import ast
 
 import configargparse
 import gevent
@@ -165,7 +165,7 @@ def download_locustfile_from_url(url: str) -> str:
     except requests.exceptions.RequestException as e:
         sys.stderr.write(f"Failed to get locustfile from: {url}. Exception: {e}")
         sys.exit(1)
-    except SyntaxError as e:
+    except SyntaxError:
         sys.stderr.write(f"Failed to get locustfile from: {url}. Response is not valid python code.")
         sys.exit(1)
 
