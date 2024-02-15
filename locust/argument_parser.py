@@ -14,6 +14,7 @@ import textwrap
 from typing import Any, NamedTuple
 from urllib.parse import urlparse
 from uuid import uuid4
+import ast
 
 import configargparse
 import gevent
@@ -159,13 +160,19 @@ def is_url(url: str) -> bool:
 def download_locustfile_from_url(url: str) -> str:
     try:
         response = requests.get(url)
+        # Check if response is valid python code
+        ast.parse(response.text)
     except requests.exceptions.RequestException as e:
         sys.stderr.write(f"Failed to get locustfile from: {url}. Exception: {e}")
+        sys.exit(1)
+    except SyntaxError as e:
+        sys.stderr.write(f"Failed to get locustfile from: {url}. Response is not valid python code.")
         sys.exit(1)
 
     with open(os.path.join(tempfile.gettempdir(), url.rsplit("/", 1)[-1]), "w") as locustfile:
         locustfile.write(response.text)
 
+    # Clean up downloaded files on exit
     def exit_handler():
         try:
             os.remove(locustfile.name)
