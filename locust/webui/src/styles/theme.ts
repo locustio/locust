@@ -11,6 +11,15 @@ const createTheme = (mode: PaletteMode) =>
         main: '#00C853',
       },
     },
+    components: {
+      MuiCssBaseline: {
+        styleOverrides: {
+          ':root': {
+            '--footer-height': '40px',
+          },
+        },
+      },
+    },
   });
 
 export default createTheme;
