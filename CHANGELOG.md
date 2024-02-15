@@ -1,6 +1,24 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.23.1](https://github.com/locustio/locust/tree/2.23.1) (2024-02-11)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.23.0...2.23.1)
+
+**Fixed bugs:**
+
+- Modern UI: Average Response Time and 95th percentile have the same color [\#2598](https://github.com/locustio/locust/issues/2598)
+
+**Closed issues:**
+
+- Modern UI: Add exception message column on the Exception Statistics [\#2597](https://github.com/locustio/locust/issues/2597)
+
+**Merged pull requests:**
+
+- Modern UI: Add exception message column on the Exception Table [\#2601](https://github.com/locustio/locust/pull/2601) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Modern UI: Wrong chart's legend for overridden percentiles values [\#2600](https://github.com/locustio/locust/pull/2600) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Change download-from-master to use temp file dir [\#2599](https://github.com/locustio/locust/pull/2599) ([cyberw](https://github.com/cyberw))
+
 ## [2.23.0](https://github.com/locustio/locust/tree/2.23.0) (2024-02-11)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.22.0...2.23.0)
