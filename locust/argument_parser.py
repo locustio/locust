@@ -4,6 +4,7 @@ import locust
 from locust import runners
 from locust.rpc import Message, zmqrpc
 
+import ast
 import atexit
 import os
 import platform
@@ -159,13 +160,19 @@ def is_url(url: str) -> bool:
 def download_locustfile_from_url(url: str) -> str:
     try:
         response = requests.get(url)
+        # Check if response is valid python code
+        ast.parse(response.text)
     except requests.exceptions.RequestException as e:
         sys.stderr.write(f"Failed to get locustfile from: {url}. Exception: {e}")
+        sys.exit(1)
+    except SyntaxError:
+        sys.stderr.write(f"Failed to get locustfile from: {url}. Response is not valid python code.")
         sys.exit(1)
 
     with open(os.path.join(tempfile.gettempdir(), url.rsplit("/", 1)[-1]), "w") as locustfile:
         locustfile.write(response.text)
 
+    # Clean up downloaded files on exit
     def exit_handler():
         try:
             os.remove(locustfile.name)
@@ -202,7 +209,7 @@ See documentation for more details, including how to set options using a file or
         "--locustfile",
         metavar="<filename>",
         default="locustfile",
-        help="The Python file or module that contains your test, e.g. 'my_test.py'. Also accepts multiple comma-separated .py files or a package name/directory. Defaults to 'locustfile'.",
+        help="The Python file or module that contains your test, e.g. 'my_test.py'. Accepts multiple comma-separated .py files, a package name/directory or a url to a remote locustfile. Defaults to 'locustfile'.",
         env_var="LOCUST_LOCUSTFILE",
     )
 
