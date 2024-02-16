@@ -1,3 +1,4 @@
+## This doesnt seem to work right now for some people. See https://github.com/locustio/locust/issues/2357
 
 ## 1. AWS Authentication
 
