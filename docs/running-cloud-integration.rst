@@ -4,6 +4,10 @@
 Running Locust distributed with Terraform/AWS
 =============================================
 
+.. note::
+
+    This is broken at the moment. See https://github.com/locustio/locust/issues/2357 for a possible workaround.
+
 Here's one way to provision Locust using Infrastructure as Code/IaC.
 
 For this we use a `Terraform <https://www.terraform.io/>`_ module that provisions 1 leader and "n" worker nodes. This implementation uses AWS and EC2, but you may be able to modify it for other cloud providers.
