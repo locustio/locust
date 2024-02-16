@@ -178,6 +178,7 @@ It is even possible to add custom arguments that you wish to be configurable for
 to your user:
 
 .. code-block:: python
+
     class Example(HttpUser):
         @task
         def example_task(self):
