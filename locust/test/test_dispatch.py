@@ -3629,7 +3629,7 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
                         for user_class in user_classes:
                             if user_class.fixed_count:
                                 self.assertEqual(
-                                    users_dispatcher.get_user_current_count(user_class.__name__),
+                                    users_dispatcher._get_user_current_count(user_class.__name__),
                                     user_class.fixed_count,
                                     msg=f"{user_class.__name__}, {target_user_count}",
                                 )
@@ -3645,7 +3645,7 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
                         for user_class in user_classes:
                             if user_class.fixed_count:
                                 self.assertNotEqual(
-                                    users_dispatcher.get_user_current_count(user_class.__name__),
+                                    users_dispatcher._get_user_current_count(user_class.__name__),
                                     user_class.fixed_count,
                                 )
 
@@ -3660,7 +3660,7 @@ class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
                         for user_class in user_classes:
                             if user_class.fixed_count:
                                 self.assertEqual(
-                                    users_dispatcher.get_user_current_count(user_class.__name__),
+                                    users_dispatcher._get_user_current_count(user_class.__name__),
                                     user_class.fixed_count,
                                 )
 

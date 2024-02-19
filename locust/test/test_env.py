@@ -1,7 +1,7 @@
 from locust import (
     constant,
 )
-from locust.dispatch import UsersDispatcher, UsersDispatcherType
+from locust.dispatch import UsersDispatcher
 from locust.env import Environment, LoadTestShape
 from locust.user import (
     User,
@@ -207,7 +207,7 @@ class TestEnvironment(LocustTestCase):
 
         self.assertEqual(environment.dispatcher_class, UsersDispatcher)
 
-        class MyUsersDispatcher(UsersDispatcherType):
+        class MyUsersDispatcher(UsersDispatcher):
             pass
 
         environment = Environment(user_classes=[MyUserWithSameName1], dispatcher_class=MyUsersDispatcher)
