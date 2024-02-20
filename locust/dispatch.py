@@ -5,9 +5,8 @@ import itertools
 import math
 import time
 from collections import defaultdict
-from collections.abc import Iterator
 from operator import attrgetter
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Generator, Iterator
 
 import gevent
 from roundrobin import smooth
@@ -164,7 +163,9 @@ class UsersDispatcher(Iterator):
 
         self._dispatch_in_progress = False
 
-    def new_dispatch(self, target_user_count: int, spawn_rate: float, user_classes: list | None = None) -> None:
+    def new_dispatch(
+        self, target_user_count: int, spawn_rate: float, user_classes: list[type[User]] | None = None
+    ) -> None:
         """
         Initialize a new dispatch cycle.
 

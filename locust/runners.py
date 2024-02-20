@@ -492,13 +492,13 @@ class LocalRunner(Runner):
             self.update_state(STATE_SPAWNING)
 
         if self._users_dispatcher is None:
-            self._users_dispatcher = UsersDispatcher(
+            self._users_dispatcher = self.environment.dispatcher_class(
                 worker_nodes=[self._local_worker_node], user_classes=self.user_classes
             )
 
         logger.info("Ramping to %d users at a rate of %.2f per second" % (user_count, spawn_rate))
 
-        cast(UsersDispatcher, self._users_dispatcher).new_dispatch(user_count, spawn_rate, user_classes)
+        self._users_dispatcher.new_dispatch(user_count, spawn_rate, user_classes)
 
         try:
             for dispatched_users in self._users_dispatcher:
@@ -750,7 +750,7 @@ class MasterRunner(DistributedRunner):
         self.spawn_rate = spawn_rate
 
         if self._users_dispatcher is None:
-            self._users_dispatcher = UsersDispatcher(
+            self._users_dispatcher = self.environment.dispatcher_class(
                 worker_nodes=list(self.clients.values()), user_classes=self.user_classes
             )
 

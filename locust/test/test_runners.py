@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import locust
 from locust import (
     LoadTestShape,
@@ -6,6 +8,7 @@ from locust import (
     runners,
 )
 from locust.argument_parser import parse_options
+from locust.dispatch import UsersDispatcher
 from locust.env import Environment
 from locust.exception import RPCError, RPCReceiveError, StopUser
 from locust.main import create_environment
@@ -842,6 +845,42 @@ class TestLocustRunner(LocustRunnerTestCase):
 
         local_runner.stop()
         web_ui.stop()
+
+    def test_custom_dispatcher_class(self):
+        @mock.create_autospec
+        class MyUsersDispatcher(UsersDispatcher):
+            def __init__(self, worker_nodes: list[WorkerNode], user_classes: list[type[User]]) -> None:
+                super().__init__(worker_nodes, user_classes)
+
+            def add_worker(self, worker_node: WorkerNode) -> None:
+                pass
+
+            def remove_worker(self, worker_node: WorkerNode) -> None:
+                pass
+
+            @property
+            def dispatch_in_progress(self) -> bool:
+                return True
+
+            def new_dispatch(self, target_user_count: int, spawn_rate: float, user_classes: list | None = None) -> None:
+                return super().new_dispatch(target_user_count, spawn_rate, user_classes)
+
+        class MyUser1(User):
+            wait_time = constant(0)
+            fixed_count = 1
+
+            @task
+            def my_task(self):
+                pass
+
+        environment = Environment(user_classes=[MyUser1], dispatcher_class=MyUsersDispatcher)
+        runner = LocalRunner(environment)
+
+        runner.start(user_count=1, spawn_rate=1)
+        sleep(1)
+        runner._users_dispatcher.new_dispatch.assert_called_with(1, 1, None)
+        runner._users_dispatcher.__iter__.assert_called_once()
+        runner.stop()
 
 
 class TestMasterWorkerRunners(LocustTestCase):

@@ -5,6 +5,7 @@ from typing import Callable, TypeVar
 
 from configargparse import Namespace
 
+from .dispatch import UsersDispatcher
 from .event import Events
 from .exception import RunnerAlreadyExistsError
 from .runners import LocalRunner, MasterRunner, Runner, WorkerRunner
@@ -35,6 +36,7 @@ class Environment:
         available_user_classes: dict[str, User] | None = None,
         available_shape_classes: dict[str, LoadTestShape] | None = None,
         available_user_tasks: dict[str, list[TaskSet | Callable]] | None = None,
+        dispatcher_class: type[UsersDispatcher] = UsersDispatcher,
     ):
         self.runner: Runner | None = None
         """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
@@ -95,6 +97,8 @@ class Environment:
         """List of the available Shape Classes to pick from in the ShapeClass Picker"""
         self.available_user_tasks = available_user_tasks
         """List of the available Tasks per User Classes to pick from in the Task Picker"""
+        self.dispatcher_class = dispatcher_class
+        """A user dispatcher class that decides how users are spawned, default :class:`UsersDispatcher <locust.dispatch.UsersDispatcher>`"""
 
         self._remove_user_classes_with_weight_zero()
         self._validate_user_class_name_uniqueness()
