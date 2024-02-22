@@ -6,7 +6,7 @@ according to your projects specifications.
 
 For more information, see https://docs.locust.io/en/stable/extending-locust.html#authentication
 """
-from locust import HttpUser, events
+from locust import HttpUser, events, task
 
 import json
 import os
@@ -16,7 +16,9 @@ from flask_login import UserMixin, login_user
 
 
 class LocustHttpUser(HttpUser):
-    pass
+    @task
+    def example(self):
+        self.client.get("/")
 
 
 class AuthUser(UserMixin):
