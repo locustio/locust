@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import logging
 import re
+import sys
 import time
 from contextlib import contextmanager
 from typing import Generator
@@ -16,6 +18,7 @@ from urllib3 import PoolManager
 from .exception import CatchResponseError, LocustError, ResponseError
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
+logger = logging.getLogger(__name__)
 
 
 class LocustResponse(Response):
@@ -133,7 +136,11 @@ class HttpSession(requests.Session):
 
         start_time = time.time()
         start_perf_counter = time.perf_counter()
-        response = self._send_request_safe_mode(method, url, **kwargs)
+        try:
+            response = self._send_request_safe_mode(method, url, **kwargs)
+        except (MissingSchema, InvalidSchema, InvalidURL):
+            logger.error(f"Invalid URL: {url}", exc_info=True)
+            sys.exit(1)
         response_time = (time.perf_counter() - start_perf_counter) * 1000
 
         request_before_redirect = (response.history and response.history[0] or response).request

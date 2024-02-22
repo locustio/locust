@@ -40,7 +40,7 @@ from gevent.pool import Group
 
 from . import argument_parser
 from .dispatch import UsersDispatcher
-from .exception import RPCError, RPCReceiveError, RPCSendError
+from .exception import LocustError, RPCError, RPCReceiveError, RPCSendError
 from .log import greenlet_exception_logger
 from .rpc import (
     Message,
@@ -224,7 +224,11 @@ class Runner:
             n = 0
             new_users: list[User] = []
             while n < spawn_count:
-                new_user = self.user_classes_by_name[user_class](self.environment)
+                try:
+                    new_user = self.user_classes_by_name[user_class](self.environment)
+                except LocustError:
+                    logger.error(f"LocustError occurred while spawning user of class {user_class}", exc_info=True)
+                    sys.exit(1)
                 new_user.start(self.user_greenlets)
                 new_users.append(new_user)
                 n += 1
