@@ -308,7 +308,7 @@ class TaskSet(metaclass=TaskSetMeta):
         """Parent TaskSet instance of this TaskSet (or :py:class:`User <locust.User>` if this is not a nested TaskSet)"""
         return self._parent
 
-    def on_start(self):
+    def on_start(self) -> None:
         """
         Called when a User starts executing this TaskSet
         """
