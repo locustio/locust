@@ -28,3 +28,4 @@ __pycache__
 .env
 yarn-error.log
 .venv
+.DS_Store
