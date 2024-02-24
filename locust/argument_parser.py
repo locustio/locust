@@ -23,7 +23,7 @@ import requests
 version = locust.__version__
 
 
-DEFAULT_CONFIG_FILES = ["~/.locust.conf", "locust.conf"]
+DEFAULT_CONFIG_FILES = ("pyproject.toml", "~/.locust.conf", "locust.conf")
 
 
 class LocustArgumentParser(configargparse.ArgumentParser):
@@ -186,6 +186,12 @@ def download_locustfile_from_url(url: str) -> str:
 def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG_FILES) -> LocustArgumentParser:
     parser = LocustArgumentParser(
         default_config_files=default_config_files,
+        config_file_parser_class=configargparse.CompositeConfigParser(
+            [
+                configargparse.TomlConfigParser(["tool.locust"]),
+                configargparse.DefaultConfigFileParser,
+            ]
+        ),
         add_env_var_help=False,
         add_config_file_help=False,
         add_help=add_help,
