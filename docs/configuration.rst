@@ -24,7 +24,8 @@ Locust is configured mainly through command line arguments.
 Environment Variables
 =====================
 
-Options can also be set through through environment variables. They are typically the same as the command line argument but capitalized and prefixed with ``LOCUST_``:
+Options can also be set through environment variables. They are typically the same as the command line argument
+but capitalized and prefixed with ``LOCUST_``:
 
 On Linux/macOS:
 
@@ -44,17 +45,23 @@ On Windows:
 Configuration File
 ==================
 
-Options can also be set in a configuration file in the `config file <https://github.com/bw2/ConfigArgParse#config-file-syntax>`_
-format. 
+Options can also be set in a configuration file in the
+`config or TOML file format <https://github.com/bw2/ConfigArgParse#config-file-syntax>`_.
 
-Locust will look for ``~/.locust.conf`` and ``./locust.conf`` by default, and you can specify an 
-additional file using the ``--config`` flag.
+Locust will look for ``~/.locust.conf``, ``./locust.conf`` and ``./pyproject.toml`` by default.
+You can specify an additional file using the ``--config`` flag.
 
-Example:
+.. code-block:: console
 
-.. code-block::
+    $ locust --config custom_config.conf
 
-    # master.conf in current directory
+Here's a quick example of the configuration files supported by Locust:
+
+locust.conf
+--------------
+
+.. code-block:: ini
+
     locustfile = locust_files/my_locust_file.py
     headless = true
     master = true
@@ -63,19 +70,34 @@ Example:
     users = 100
     spawn-rate = 10
     run-time = 10m
-    
+    tags = [Critical, Normal]
 
-.. code-block:: console
+pyproject.toml
+--------------
 
-    $ locust --config master.conf
+When using a TOML file, configuration options should be defined within the ``[tool.locust]`` section.
+
+.. code-block:: toml
+
+    [tool.locust]
+    locustfile = "locust_files/my_locust_file.py"
+    headless = true
+    master = true
+    expect-workers = 5
+    host = "https://target-system"
+    users = 100
+    spawn-rate = 10
+    run-time = "10m"
+    tags = ["Critical", "Normal"]
 
 .. note::
 
-    Configuration values are read (overridden) in the following order:
+    Configuration values are read (and overridden) in the following order:
     
     .. code-block:: console
         
-        ~/locust.conf -> ./locust.conf -> (file specified using --conf) -> env vars -> cmd args
+       ./pyproject.toml -> ~/.locust.conf -> ./locust.conf -> (file specified using --conf) -> env vars -> cmd args
+
 
 All available configuration options
 ===================================
