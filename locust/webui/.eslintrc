@@ -29,7 +29,7 @@
             "group": "internal"
           },
           {
-            "pattern": "{api,components,constants,hooks,redux,styles,test,types,utils}/**",
+            "pattern": "{api,components,constants,hooks,pages,redux,styles,test,types,utils}/**",
             "group": "internal"
           }
         ],
