@@ -43,7 +43,7 @@ export interface IReport {
   tasks: ISwarmRatios;
 }
 
-export interface IReportTemplateArgs extends IReport {
+export interface IReportTemplateArgs extends Omit<IReport, 'charts'> {
   history: IHistory[];
   isReport?: boolean;
   percentilesToChart: number[];

@@ -8,13 +8,8 @@ import DarkLightToggle from 'components/Layout/Navbar/DarkLightToggle';
 import { THEME_MODE } from 'constants/theme';
 import createTheme from 'styles/theme';
 import { IAuthArgs } from 'types/auth.types';
-import { camelCaseKeys } from 'utils/string';
 
-const { authProviders, error, usernamePasswordCallback } = window.authArgs
-  ? camelCaseKeys(window.authArgs)
-  : ({} as IAuthArgs);
-
-export default function Auth() {
+export default function Auth({ authProviders, error, usernamePasswordCallback }: IAuthArgs) {
   const isDarkMode = useSelector(({ theme }) => theme.isDarkMode);
 
   const theme = useMemo(
@@ -60,7 +55,6 @@ export default function Auth() {
             Locust
           </Typography>
         </Box>
-
         {usernamePasswordCallback && (
           <form action={usernamePasswordCallback}>
             <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 2 }}>

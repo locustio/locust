@@ -14,7 +14,7 @@ import { IReport } from 'types/swarm.types';
 
 const theme = createTheme(window.theme || INITIAL_THEME);
 
-export default function Report({
+export default function HtmlReport({
   locustfile,
   showDownloadLink,
   startTime,
@@ -73,12 +73,14 @@ export default function Report({
             </Typography>
             <StatsTable stats={requestsStatistics} />
           </Box>
-          <Box>
-            <Typography component='h2' mb={1} noWrap variant='h4'>
-              Response Time Statistics
-            </Typography>
-            <ResponseTimeTable responseTimes={responseTimeStatistics} />
-          </Box>
+          {!!responseTimeStatistics.length && (
+            <Box>
+              <Typography component='h2' mb={1} noWrap variant='h4'>
+                Response Time Statistics
+              </Typography>
+              <ResponseTimeTable responseTimes={responseTimeStatistics} />
+            </Box>
+          )}
           <Box>
             <Typography component='h2' mb={1} noWrap variant='h4'>
               Failures Statistics
