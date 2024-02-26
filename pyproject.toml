@@ -17,12 +17,12 @@ dependencies = [
     "pyzmq >=25.0.0",
     "geventhttpclient >=2.0.11",
     "ConfigArgParse >=1.5.5",
-    "toml >=0.10.2",
+    "tomli >=1.1.0; python_version<'3.11'",
     "psutil >=5.9.1",
     "Flask-Login >=0.6.3",
     "Flask-Cors >=3.0.10",
     "roundrobin >=0.0.2",
-    "pywin32;platform_system=='Windows'",
+    "pywin32; platform_system=='Windows'",
 ]
 classifiers = [
     "Topic :: Software Development :: Testing :: Traffic Generation",

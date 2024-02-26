@@ -96,7 +96,7 @@ When using a TOML file, configuration options should be defined within the ``[to
     
     .. code-block:: console
         
-       ./pyproject.toml -> ~/.locust.conf -> ./locust.conf -> (file specified using --conf) -> env vars -> cmd args
+       ~/.locust.conf -> ./locust.conf -> ./pyproject.toml -> (file specified using --conf) -> env vars -> cmd args
 
 
 All available configuration options

@@ -15,8 +15,6 @@ from random import randint
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from unittest import mock
 
-import toml
-
 from .mock_locustfile import mock_locustfile
 from .testcases import LocustTestCase
 
@@ -64,19 +62,16 @@ class TestParser(unittest.TestCase):
 
     def test_parse_options_from_toml_file(self):
         with NamedTemporaryFile(mode="w", suffix=".toml") as file:
-            config_data = {
-                "tool": {
-                    "locust": {
-                        "locustfile": "./test_locustfile.py",
-                        "web-host": "127.0.0.1",
-                        "web-port": 45787,
-                        "headless": True,
-                        "tags": ["Critical", "Normal"],
-                    }
-                }
-            }
+            config_data = """\
+            [tool.locust]
+            locustfile = "./test_locustfile.py"
+            web-host = "127.0.0.1"
+            web-port = 45787
+            headless = true
+            tags = ["Critical", "Normal"]
+            """
 
-            file.write(toml.dumps(config_data))
+            file.write(config_data)
             file.flush()
             parser = get_parser(default_config_files=[file.name])
             options = parser.parse_args(["-H", "https://example.com"])
