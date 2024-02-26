@@ -69,9 +69,10 @@ export default function Auth({ authProviders, error, usernamePasswordCallback }:
         )}
         {authProviders && (
           <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 1 }}>
-            {authProviders.map(({ label, callbackUrl, iconUrl }) => (
+            {authProviders.map(({ label, callbackUrl, iconUrl }, index) => (
               <IconButton
                 href={callbackUrl}
+                key={`auth-provider-${index}`}
                 sx={{
                   display: 'flex',
                   justifyContent: 'center',
