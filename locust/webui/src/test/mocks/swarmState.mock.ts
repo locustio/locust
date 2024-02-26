@@ -1,5 +1,5 @@
 import { IReport } from 'types/swarm.types';
-import { ICharts, ISwarmRatios } from 'types/ui.types';
+import { ISwarmRatios } from 'types/ui.types';
 
 export const percentilesToChart = [0.5, 0.95];
 export const percentilesToStatistics = [0.5, 0.95, 0.99];
