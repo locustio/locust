@@ -1,9 +1,15 @@
 import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, vi } from 'vitest';
+import 'vitest-webgl-canvas-mock';
 
+import * as swarmConstants from 'constants/swarm';
 import { TEST_BASE_API } from 'test/constants';
 import { swarmStateMock } from 'test/mocks/swarmState.mock';
-import 'vitest-webgl-canvas-mock';
+
+vi.mock('constants/swarm');
+vi.mock('constants/auth');
+
+vi.mocked(swarmConstants).swarmTemplateArgs = swarmStateMock;
 
 global.window.templateArgs = swarmStateMock;
 window.matchMedia = vi.fn().mockImplementation(() => ({

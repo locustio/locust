@@ -1,45 +1,32 @@
-import { useMemo } from 'react';
-import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider } from '@mui/material/styles';
-import { connect } from 'react-redux';
+import { combineReducers, configureStore } from '@reduxjs/toolkit';
+import { Provider } from 'react-redux';
 
-import Layout from 'components/Layout/Layout';
-import useLogViewer from 'components/LogViewer/useLogViewer';
-import SwarmForm from 'components/SwarmForm/SwarmForm';
-import Tabs from 'components/Tabs/Tabs';
-import { SWARM_STATE } from 'constants/swarm';
-import { THEME_MODE } from 'constants/theme';
-import useSwarmUi from 'hooks/useSwarmUi';
-import { IRootState } from 'redux/store';
-import createTheme from 'styles/theme';
-import { SwarmState } from 'types/ui.types';
+import { authArgs } from 'constants/auth';
+import { htmlReportProps } from 'constants/swarm';
+import Auth from 'pages/Auth';
+import Dashboard from 'pages/Dashboard';
+import HtmlReport from 'pages/HtmlReport';
+import theme from 'redux/slice/theme.slice';
+import { store } from 'redux/store';
 
-interface IApp {
-  isDarkMode: boolean;
-  isModalOpen?: boolean;
-  swarmState: SwarmState;
+export default function App() {
+  if (authArgs) {
+    const authStore = configureStore({
+      reducer: combineReducers({ theme }),
+    });
+
+    return (
+      <Provider store={authStore}>
+        <Auth {...authArgs} />
+      </Provider>
+    );
+  } else if (htmlReportProps) {
+    return <HtmlReport {...htmlReportProps} />;
+  } else {
+    return (
+      <Provider store={store}>
+        <Dashboard />
+      </Provider>
+    );
+  }
 }
-
-function App({ isDarkMode, swarmState }: IApp) {
-  useSwarmUi();
-  useLogViewer();
-
-  const theme = useMemo(
-    () => createTheme(isDarkMode ? THEME_MODE.DARK : THEME_MODE.LIGHT),
-    [isDarkMode],
-  );
-
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Layout>{swarmState === SWARM_STATE.READY ? <SwarmForm /> : <Tabs />}</Layout>
-    </ThemeProvider>
-  );
-}
-
-const storeConnector = ({ swarm: { state }, theme: { isDarkMode } }: IRootState) => ({
-  isDarkMode,
-  swarmState: state,
-});
-
-export default connect(storeConnector)(App);
