@@ -36,8 +36,8 @@ gevent.spawn(stats_history, env.runner)
 # start the test
 runner.start(1, spawn_rate=10)
 
-# in 60 seconds stop the runner
-gevent.spawn_later(60, lambda: runner.quit())
+# in 30 seconds stop the runner
+gevent.spawn_later(30, runner.quit)
 
 # wait for the greenlets
 runner.greenlet.join()
