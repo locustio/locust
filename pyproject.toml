@@ -44,7 +44,7 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://locust.io/"
+Homepage = "https://github.com/locustio/locust"
 Documentation = "https://docs.locust.io/"
 Code = "https://github.com/locustio/locust"
 "Help/Questions" = "https://stackoverflow.com/questions/tagged/locust"

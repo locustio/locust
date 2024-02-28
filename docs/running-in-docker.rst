@@ -14,7 +14,6 @@ On Windows, this command will sometimes cause errors. Windows users should try u
 
     docker run -p 8089:8089 --mount type=bind,source=$pwd,target=/mnt/locust locustio/locust -f /mnt/locust/locustfile.py
 
-
 Docker Compose
 ==============
 
@@ -27,7 +26,6 @@ The above compose configuration could be used to start a master node and 4 worke
 
     docker-compose up --scale worker=4
 
-
 Use docker image as a base image
 ================================
 
@@ -36,7 +34,6 @@ official Locust docker image as a base image::
 
     FROM locustio/locust
     RUN pip3 install some-python-package
-
 
 Running a distributed load test on Kubernetes
 ==============================================
