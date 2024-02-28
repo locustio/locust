@@ -12,9 +12,15 @@ import socket
 import sys
 import tempfile
 import textwrap
+from collections import OrderedDict
 from typing import Any, NamedTuple
 from urllib.parse import urlparse
 from uuid import uuid4
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 import configargparse
 import gevent
@@ -23,7 +29,7 @@ import requests
 version = locust.__version__
 
 
-DEFAULT_CONFIG_FILES = ["~/.locust.conf", "locust.conf"]
+DEFAULT_CONFIG_FILES = ("~/.locust.conf", "locust.conf", "pyproject.toml")
 
 
 class LocustArgumentParser(configargparse.ArgumentParser):
@@ -61,6 +67,31 @@ class LocustArgumentParser(configargparse.ArgumentParser):
             for a in self._actions
             if a.dest in self.args_included_in_web_ui and hasattr(a, "is_secret") and a.is_secret
         }
+
+
+class LocustTomlConfigParser(configargparse.TomlConfigParser):
+    def parse(self, stream):
+        try:
+            config = tomllib.loads(stream.read())
+        except Exception as e:
+            raise configargparse.ConfigFileParserException(f"Couldn't parse TOML file: {e}")
+
+        # convert to dict and filter based on section names
+        result = OrderedDict()
+
+        for section in self.sections:
+            data = configargparse.get_toml_section(config, section)
+            if data:
+                for key, value in data.items():
+                    if isinstance(value, list):
+                        result[key] = value
+                    elif value is None:
+                        pass
+                    else:
+                        result[key] = str(value)
+                break
+
+        return result
 
 
 def _is_package(path):
@@ -186,6 +217,12 @@ def download_locustfile_from_url(url: str) -> str:
 def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG_FILES) -> LocustArgumentParser:
     parser = LocustArgumentParser(
         default_config_files=default_config_files,
+        config_file_parser_class=configargparse.CompositeConfigParser(
+            [
+                LocustTomlConfigParser(["tool.locust"]),
+                configargparse.DefaultConfigFileParser,
+            ]
+        ),
         add_env_var_help=False,
         add_config_file_help=False,
         add_help=add_help,
