@@ -29,3 +29,4 @@ __pycache__
 yarn-error.log
 .venv
 .DS_Store
+.python-version

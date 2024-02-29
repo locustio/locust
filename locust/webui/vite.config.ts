@@ -17,6 +17,7 @@ export default defineConfig((config: UserConfig) => ({
         },
       }),
   ],
+  base: './',
   build: {
     chunkSizeWarningLimit: 2000,
     rollupOptions: {
