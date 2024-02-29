@@ -6,6 +6,7 @@ according to your projects specifications.
 
 For more information, see https://docs.locust.io/en/stable/extending-locust.html#authentication
 """
+
 from locust import HttpUser, events, task
 
 import json
