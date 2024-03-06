@@ -35,7 +35,7 @@ function SwarmEditForm({ onSubmit, numUsers, spawnRate }: ISwarmForm) {
 
           <TextField
             defaultValue={spawnRate || 1}
-            label='Ramp Up (users started/second)'
+            label='Ramp up (users started/second)'
             name='spawnRate'
           />
 
