@@ -64,7 +64,7 @@ describe('SwarmForm', () => {
       fireEvent.change(getByLabelText('Number of users (peak concurrency)'), {
         target: { value: '15' },
       });
-      fireEvent.change(getByLabelText('Ramp Up (users started/second)'), {
+      fireEvent.change(getByLabelText('Ramp up (users started/second)'), {
         target: { value: '20' },
       });
       fireEvent.change(getByLabelText('Run time (e.g. 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.)'), {
