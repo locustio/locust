@@ -33,7 +33,7 @@ describe('SwarmEditForm', () => {
         target: { value: '10' },
       });
 
-      fireEvent.click(getByText('Update Swarm'));
+      fireEvent.click(getByText('Update'));
     });
 
     await waitFor(async () => {

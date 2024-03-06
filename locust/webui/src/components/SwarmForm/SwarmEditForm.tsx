@@ -40,7 +40,7 @@ function SwarmEditForm({ onSubmit, numUsers, spawnRate }: ISwarmForm) {
           />
 
           <Button size='large' type='submit' variant='contained'>
-            Update Swarm
+            Update
           </Button>
         </Box>
       </Form>

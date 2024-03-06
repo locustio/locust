@@ -144,7 +144,7 @@ function SwarmForm({
           </Accordion>
           {!isEmpty(extraOptions) && <CustomParameters extraOptions={extraOptions} />}
           <Button size='large' type='submit' variant='contained'>
-            Start Swarm
+            Start
           </Button>
         </Box>
       </Form>
