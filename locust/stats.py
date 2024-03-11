@@ -1041,7 +1041,7 @@ class StatsCSV:
 
 
 class StatsCSVFileWriter(StatsCSV):
-    """Write statistics to to CSV files"""
+    """Write statistics to CSV files"""
 
     def __init__(
         self,
