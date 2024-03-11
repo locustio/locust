@@ -548,7 +548,7 @@ instance, as one would expect. For tasks defined under a :py:class:`TaskSet <loc
 would refer to the ``TaskSet`` instance.
 
 The ``task_set`` attribute on the ``User`` class (previously ``Locust`` class) has been removed. To declare a 
-``User`` class with a single ``TaskSet`` one would now use the the :py:attr:`tasks <locust.User.tasks>` 
+``User`` class with a single ``TaskSet`` one would now use the :py:attr:`tasks <locust.User.tasks>`
 attribute instead:
 
 .. code-block:: python
