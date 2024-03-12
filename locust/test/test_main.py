@@ -468,6 +468,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             "2",
                             "--exit-code-on-error",
                             "0",
+                            "--host",
+                            "https://test.com/",
                         ],
                         stdout=PIPE,
                         stderr=PIPE,
@@ -894,6 +896,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         "0",
                         "--loglevel",
                         "INFO",
+                        "--host",
+                        "https://test.com",
                     ]
                 ),
                 stderr=STDOUT,
@@ -975,6 +979,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         "10",
                         "--loglevel",
                         "INFO",
+                        "--host",
+                        "https://test.com/",
                     ]
                 ),
                 stderr=STDOUT,
@@ -1010,6 +1016,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             "10",
                             "--loglevel",
                             "INFO",
+                            "--host",
+                            "https://test.com/",
                         ]
                     ),
                     stderr=STDOUT,
@@ -1067,6 +1075,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         "10",
                         "User2",
                         "User3",
+                        "--host",
+                        "https://test.com",
                     ]
                 ),
                 stderr=STDOUT,
@@ -1171,7 +1181,19 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             print(MOCK_LOCUSTFILE_CONTENT_C)
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
                 proc = subprocess.Popen(
-                    ["locust", "-f", f"{file1},{file2}", "-t", "1", "--headless"], stdout=PIPE, stderr=PIPE, text=True
+                    [
+                        "locust",
+                        "-f",
+                        f"{file1},{file2}",
+                        "-t",
+                        "1",
+                        "--headless",
+                        "--host",
+                        "https://test.com",
+                    ],
+                    stdout=PIPE,
+                    stderr=PIPE,
+                    text=True,
                 )
                 gevent.sleep(1)
                 stdout, stderr = proc.communicate()
@@ -1232,6 +1254,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "--headless",
                     "--exit-code-on-error",
                     "0",
+                    "--host",
+                    "https://test.com",
                 ]
             )
 
@@ -1258,6 +1282,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "--exit-code-on-error=0",
                     "--users=1",
                     "--spawn-rate=1",
+                    "--host",
+                    "https://test.com/",
                 ]
             )
             self.assertIn("Shape test starting.", out.stderr)
@@ -1287,6 +1313,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "--spawn-rate=1",
                     "--headless",
                     "--exit-code-on-error=0",
+                    "--host",
+                    "https://test.com/",
                 ]
             )
             self.assertIn("Shape test starting.", out.stderr)
@@ -1324,6 +1352,8 @@ class MyUser(HttpUser):
                     "1",
                     "--tags",
                     "tag2",
+                    "--host",
+                    "https://test.com",
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
@@ -1361,12 +1391,7 @@ class MyUser(HttpUser):
             )
         ) as mocked:
             proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked,
-                    "--headless",
-                ],
+                ["locust", "-f", mocked, "--headless", "--host", "https://test.com"],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
@@ -1380,6 +1405,75 @@ class MyUser(HttpUser):
             self.assertIn("Test Stopped", stdout)
             # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
             self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
+
+    def test_headless_wo_host(self):
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--run-time",
+                    "1s",
+                    "--headless",
+                    "--loglevel",
+                    "DEBUG",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate(timeout=4)
+            self.assertIn('The --host option is required when running in headless mode', stderr)
+            self.assertEqual(1, proc.returncode)
+
+    def test_headless_wo_protocol(self):
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--run-time",
+                    "1s",
+                    "--headless",
+                    "--host",
+                    "test.com",
+                    "--loglevel",
+                    "DEBUG",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate(timeout=4)
+            self.assertIn('Invalid --host option: test.com. Did you mean https://test.com?', stderr)
+            self.assertEqual(1, proc.returncode)
+
+    def test_headless_w_host(self):
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--run-time",
+                    "1s",
+                    "--headless",
+                    "--host",
+                    "https://test.com",
+                    "--loglevel",
+                    "DEBUG",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate(timeout=4)
+            self.assertIn("Ramping to 1 users", stderr)
+            self.assertIn("All users of class UserSubclass spawned", stderr)
+            self.assertIn("Cleaning up runner", stderr)
+            self.assertEqual(0, proc.returncode)
 
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
@@ -1412,6 +1506,8 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
                     "2",
                     "--expect-workers-max-wait",
                     "1",
+                    "--host",
+                    "https://test.com/",
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
@@ -1460,6 +1556,8 @@ def on_test_stop(environment, **kwargs):
                     "0",
                     "-L",
                     "DEBUG",
+                    "--host",
+                    "https://test.com/",
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
@@ -1525,6 +1623,8 @@ class SecondUser(HttpUser):
                     "DEBUG",
                     "--tags",
                     "tag1",
+                    "--host",
+                    "https://test.com/",
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
@@ -1580,6 +1680,8 @@ class SecondUser(HttpUser):
                     "3",
                     "-t",
                     "5s",
+                    "--host",
+                    "https://test.com/",
                 ],
                 stderr=STDOUT,
                 stdout=PIPE,
@@ -1634,6 +1736,8 @@ class SecondUser(HttpUser):
                     "3",
                     "-t",
                     "5s",
+                    "--host",
+                    "https://test.com/",
                 ],
                 stderr=STDOUT,
                 stdout=PIPE,
@@ -1687,6 +1791,8 @@ class SecondUser(HttpUser):
                     "2",
                     "-t",
                     "1s",
+                    "--host",
+                    "https://test.com/",
                 ],
                 stderr=STDOUT,
                 stdout=PIPE,
@@ -1771,6 +1877,8 @@ class SecondUser(HttpUser):
                     "1",
                     "-t",
                     "1",
+                    "--host",
+                    "https://test.com/",
                 ],
                 stderr=STDOUT,
                 stdout=PIPE,
@@ -1808,6 +1916,8 @@ class SecondUser(HttpUser):
                     mocked.file_path[:-3],  # remove ".py"
                     "--headless",
                     "--master",
+                    "--host",
+                    "https://test.com/",
                 ],
                 stderr=STDOUT,
                 stdout=PIPE,
@@ -1912,6 +2022,8 @@ class AnyUser(HttpUser):
                     "2",
                     "-L",
                     "DEBUG",
+                    "--host",
+                    "https://test.com/",
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
@@ -1976,7 +2088,10 @@ class AnyUser(HttpUser):
     @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes(self):
         with mock_locustfile() as mocked:
-            command = f"locust -f {mocked.file_path} --processes 4 --headless --run-time 1 --exit-code-on-error 0"
+            command = (
+                f"locust -f {mocked.file_path} --processes 4 --headless --run-time 1 --exit-code-on-error 0 "
+                f"--host https://test.com/"
+            )
             proc = subprocess.Popen(
                 command,
                 shell=True,
@@ -1996,7 +2111,7 @@ class AnyUser(HttpUser):
     @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes_autodetect(self):
         with mock_locustfile() as mocked:
-            command = f"locust -f {mocked.file_path} --processes -1 --headless --run-time 1 --exit-code-on-error 0"
+            command = f"locust -f {mocked.file_path} --processes -1 --headless --run-time 1 --exit-code-on-error 0 --host https://test.com/"
             proc = subprocess.Popen(
                 command,
                 shell=True,
@@ -2017,7 +2132,7 @@ class AnyUser(HttpUser):
     def test_processes_separate_worker(self):
         with mock_locustfile() as mocked:
             master_proc = subprocess.Popen(
-                f"locust -f {mocked.file_path} --master --headless --run-time 1 --exit-code-on-error 0 --expect-workers-max-wait 2",
+                f"locust -f {mocked.file_path} --master --headless --run-time 1 --exit-code-on-error 0 --expect-workers-max-wait 2 --host https://test.com/",
                 shell=True,
                 stdout=PIPE,
                 stderr=PIPE,
@@ -2071,6 +2186,8 @@ class AnyUser(HttpUser):
                     "--headless",
                     "-L",
                     "DEBUG",
+                    "--host",
+                    "https://test.com/",
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
@@ -2121,6 +2238,8 @@ class AnyUser(HttpUser):
                     "--headless",
                     "--expect-workers",
                     "2",
+                    "--host",
+                    "https://test.com/",
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
@@ -2136,6 +2255,8 @@ class AnyUser(HttpUser):
                     "--processes",
                     "2",
                     "--headless",
+                    "--host",
+                    "https://test.com/",
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
@@ -2206,7 +2327,17 @@ class AnyUser(User):
                 text=True,
             )
             master_proc = subprocess.Popen(
-                ["locust", "-f", mocked.file_path, "--master", "--headless", "-t", "5"],
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--master",
+                    "--headless",
+                    "-t",
+                    "5",
+                    "--host",
+                    "https://test.com/",
+                ],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
