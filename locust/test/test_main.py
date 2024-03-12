@@ -1424,7 +1424,7 @@ class MyUser(HttpUser):
                 text=True,
             )
             stdout, stderr = proc.communicate(timeout=4)
-            self.assertIn('The --host option is required when running in headless mode', stderr)
+            self.assertIn("The --host option is required when running in headless mode", stderr)
             self.assertEqual(1, proc.returncode)
 
     def test_headless_wo_protocol(self):
@@ -1447,7 +1447,7 @@ class MyUser(HttpUser):
                 text=True,
             )
             stdout, stderr = proc.communicate(timeout=4)
-            self.assertIn('Invalid --host option: test.com. Did you mean https://test.com?', stderr)
+            self.assertIn("Invalid --host option: test.com. Did you mean https://test.com?", stderr)
             self.assertEqual(1, proc.returncode)
 
     def test_headless_w_host(self):
