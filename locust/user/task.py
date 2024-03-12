@@ -36,13 +36,11 @@ class TaskHolder(Protocol[TaskT]):
 
 
 @overload
-def task(weight: TaskT) -> TaskT:
-    ...
+def task(weight: TaskT) -> TaskT: ...
 
 
 @overload
-def task(weight: int) -> Callable[[TaskT], TaskT]:
-    ...
+def task(weight: int) -> Callable[[TaskT], TaskT]: ...
 
 
 def task(weight: TaskT | int = 1) -> TaskT | Callable[[TaskT], TaskT]:

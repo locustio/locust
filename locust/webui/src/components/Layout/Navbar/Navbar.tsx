@@ -15,7 +15,7 @@ export default function Navbar() {
             sx={{ display: 'flex', alignItems: 'center', columnGap: 2 }}
             underline='none'
           >
-            <img height='52' src='/assets/logo.png' width='52' />
+            <img height='52' src='./assets/logo.png' width='52' />
             <Typography
               component='h1'
               noWrap

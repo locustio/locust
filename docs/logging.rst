@@ -18,7 +18,6 @@ so using the root logger in your own test scripts will put the message into the 
     import logging
     logging.info("this log message will go wherever the other locust log messages go")
 
-
 It's also possible to control the whole logging configuration in your own test scripts by using the 
 ``--skip-log-setup`` option. You will then have to 
 `configure the logging <https://docs.python.org/3/library/logging.config.html>`_ yourself.

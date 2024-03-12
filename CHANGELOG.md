@@ -1,6 +1,32 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.24.0](https://github.com/locustio/locust/tree/2.24.0) (2024-02-29)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.23.1...2.24.0)
+
+**Fixed bugs:**
+
+- Blank page when accessing Locust Web UI via reverse proxy with subpath [\#2614](https://github.com/locustio/locust/issues/2614)
+- \[Report\]\[Modern-UI\] HTML report is blank [\#2603](https://github.com/locustio/locust/issues/2603)
+
+**Closed issues:**
+
+- SocketIOUser send method supports specific subscribe request [\#2616](https://github.com/locustio/locust/issues/2616)
+- "Sticky" user types on workers [\#2522](https://github.com/locustio/locust/issues/2522)
+
+**Merged pull requests:**
+
+- Modern UI - Fix logo asset [\#2618](https://github.com/locustio/locust/pull/2618) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Bugfix/2614 relative assets and stats links [\#2615](https://github.com/locustio/locust/pull/2615) ([skyanth](https://github.com/skyanth))
+- \[Modern UI\] Refactor and Add Tests for Entrypoints [\#2613](https://github.com/locustio/locust/pull/2613) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Implement pyproject.toml support for Locust configuration [\#2612](https://github.com/locustio/locust/pull/2612) ([alzex3](https://github.com/alzex3))
+- Update Header Logo to Higher Resolution for the Modern UI [\#2611](https://github.com/locustio/locust/pull/2611) ([FooQoo](https://github.com/FooQoo))
+- \[Report\]\[Modern-UI\] HTML report is blank [\#2609](https://github.com/locustio/locust/pull/2609) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- pluggable dispatcher logic [\#2606](https://github.com/locustio/locust/pull/2606) ([mgor](https://github.com/mgor))
+- Modern UI: Change Footer to Static Positioning [\#2605](https://github.com/locustio/locust/pull/2605) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Check that locustfile downloaded from URL is valid Python code [\#2604](https://github.com/locustio/locust/pull/2604) ([DennisKrone](https://github.com/DennisKrone))
+
 ## [2.23.1](https://github.com/locustio/locust/tree/2.23.1) (2024-02-11)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.23.0...2.23.1)

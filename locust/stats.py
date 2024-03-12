@@ -53,8 +53,7 @@ STATS_AUTORESIZE = True  # overwrite this if you dont want auto resize while run
 
 class CSVWriter(Protocol):
     @abstractmethod
-    def writerow(self, columns: Iterable[str | int | float]) -> None:
-        ...
+    def writerow(self, columns: Iterable[str | int | float]) -> None: ...
 
 
 class StatsBaseDict(TypedDict):
@@ -1042,7 +1041,7 @@ class StatsCSV:
 
 
 class StatsCSVFileWriter(StatsCSV):
-    """Write statistics to to CSV files"""
+    """Write statistics to CSV files"""
 
     def __init__(
         self,

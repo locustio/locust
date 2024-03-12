@@ -293,7 +293,7 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
         sys.exit(1)
 
     filename = msg.data["filename"]
-    with open(os.path.join(tempfile.gettempdir(), filename), "w") as locustfile:
+    with open(os.path.join(tempfile.gettempdir(), filename), "w", encoding="utf-8") as locustfile:
         locustfile.write(msg.data["contents"])
 
     def exit_handler():

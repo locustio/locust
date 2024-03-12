@@ -329,9 +329,9 @@ class WebUI:
 
             response = make_response(csv_data)
             response.headers["Content-type"] = "text/csv"
-            response.headers[
-                "Content-disposition"
-            ] = f"attachment;filename={_download_csv_suggest_file_name(filename_prefix)}"
+            response.headers["Content-disposition"] = (
+                f"attachment;filename={_download_csv_suggest_file_name(filename_prefix)}"
+            )
             return response
 
         @app.route("/stats/requests/csv")
@@ -425,15 +425,15 @@ class WebUI:
                         for percentile in stats_module.MODERN_UI_PERCENTILES_TO_CHART
                     }
                 else:
-                    report[
-                        "current_response_time_percentile_1"
-                    ] = environment.runner.stats.total.get_current_response_time_percentile(
-                        stats_module.PERCENTILES_TO_CHART[0]
+                    report["current_response_time_percentile_1"] = (
+                        environment.runner.stats.total.get_current_response_time_percentile(
+                            stats_module.PERCENTILES_TO_CHART[0]
+                        )
                     )
-                    report[
-                        "current_response_time_percentile_2"
-                    ] = environment.runner.stats.total.get_current_response_time_percentile(
-                        stats_module.PERCENTILES_TO_CHART[1]
+                    report["current_response_time_percentile_2"] = (
+                        environment.runner.stats.total.get_current_response_time_percentile(
+                            stats_module.PERCENTILES_TO_CHART[1]
+                        )
                     )
 
             if isinstance(environment.runner, MasterRunner):

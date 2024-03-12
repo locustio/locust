@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.24.0
+======
+* Pluggable dispatcher logic https://github.com/locustio/locust/pull/2606
+* pyproject.toml support for Locust configuration file https://github.com/locustio/locust/pull/2612
+* Minor fixes
+
 2.23.1
 ======
 * Fixes for locustfile download https://github.com/locustio/locust/pull/2599
@@ -542,7 +548,7 @@ instance, as one would expect. For tasks defined under a :py:class:`TaskSet <loc
 would refer to the ``TaskSet`` instance.
 
 The ``task_set`` attribute on the ``User`` class (previously ``Locust`` class) has been removed. To declare a 
-``User`` class with a single ``TaskSet`` one would now use the the :py:attr:`tasks <locust.User.tasks>` 
+``User`` class with a single ``TaskSet`` one would now use the :py:attr:`tasks <locust.User.tasks>`
 attribute instead:
 
 .. code-block:: python

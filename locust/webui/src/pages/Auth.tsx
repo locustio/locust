@@ -41,7 +41,7 @@ export default function Auth({ authProviders, error, usernamePasswordCallback }:
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'center', columnGap: 2 }}>
-          <img height='52' src='/assets/logo.png' width='52' />
+          <img height='52' src='./assets/logo.png' width='52' />
           <Typography
             component='h1'
             noWrap
