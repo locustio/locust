@@ -6,7 +6,7 @@ from locust.stats import stats_history, stats_printer
 
 import gevent
 
-setup_logging("INFO", None)
+setup_logging("INFO")
 
 
 class MyUser(HttpUser):
