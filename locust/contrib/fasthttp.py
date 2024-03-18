@@ -230,16 +230,18 @@ class FastHttpSession:
         if not allow_redirects:
             self.client.redirect_resonse_codes = old_redirect_response_codes
 
+        request_meta["response_length"] = 0  # default value, if length cannot be determined
+
         # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body
         if stream:
-            request_meta["response_length"] = int(response.headers.get("response_length") or 0)
+            if response.headers and "response_length" in response.headers:
+                request_meta["response_length"] = int(response.headers["response_length"])
         else:
             try:
-                request_meta["response_length"] = len(response.content or "")
+                request_meta["response_length"] = len(response.content) if response.content else 0
             except HTTPParseError as e:
                 request_meta["response_time"] = (time.perf_counter() - start_perf_counter) * 1000
-                request_meta["response_length"] = 0
                 request_meta["exception"] = e
                 self.environment.events.request.fire(**request_meta)
                 return response
