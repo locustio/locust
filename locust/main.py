@@ -13,6 +13,7 @@ import signal
 import sys
 import time
 import traceback
+from urllib.parse import urlparse
 
 import gevent
 
@@ -512,11 +513,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     if options.equal_weights:
         environment.events.init.add_listener(assign_equal_weights)
 
-    if options.headless and not options.host:
-        logger.error("The --host option is required when running in headless mode")
-        sys.exit(1)
-
-    if options.host and not (options.host.startswith("http://") or options.host.startswith("https://")):
+    if options.host and not (urlparse(options.host).scheme):
         logger.error(f"Invalid --host option: {options.host}. Did you mean https://{options.host}?")
         sys.exit(1)
 

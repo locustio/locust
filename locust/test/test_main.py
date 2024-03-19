@@ -1381,28 +1381,7 @@ class MyUser(HttpUser):
             # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
             self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
 
-    def test_headless_wo_host(self):
-        with mock_locustfile() as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--run-time",
-                    "1s",
-                    "--headless",
-                    "--loglevel",
-                    "DEBUG",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            stdout, stderr = proc.communicate(timeout=4)
-            self.assertIn("The --host option is required when running in headless mode", stderr)
-            self.assertEqual(1, proc.returncode)
-
-    def test_headless_wo_protocol(self):
+    def test_host_wo_protocol(self):
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
                 [
