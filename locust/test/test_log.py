@@ -67,8 +67,6 @@ class TestLoggingOptions(LocustTestCase):
                     "-t",
                     "1",
                     "--headless",
-                    "--host",
-                    "https://test.com",
                 ],
                 stderr=subprocess.STDOUT,
                 timeout=10,
@@ -128,8 +126,6 @@ class TestLoggingOptions(LocustTestCase):
                     "-t",
                     "1",
                     "--headless",
-                    "--host",
-                    "https://test.com",
                     "--skip-log-setup",
                 ],
                 stderr=subprocess.STDOUT,
@@ -171,8 +167,6 @@ class TestLoggingOptions(LocustTestCase):
                             "-t",
                             "1",
                             "--headless",
-                            "--host",
-                            "https://test.com",
                             "--logfile",
                             log_file_path,
                         ],
@@ -219,28 +213,25 @@ class TestLoggingOptions(LocustTestCase):
             from locust import HttpUser, task
 
             class TestUser(HttpUser):
+                host = "invalidhost"
 
                 def on_start(self):
                     self.client.get("/")
                 """
             )
         ) as file_path:
-            output = ""
-            try:
-                output = subprocess.check_output(
-                    [
-                        "locust",
-                        "-f",
-                        file_path,
-                        "-t",
-                        "1",
-                        "--headless",
-                        "--host",
-                        "invalidhost",
-                    ],
-                    stderr=subprocess.STDOUT,
-                    timeout=10,
-                    text=True,
-                )
-            except subprocess.CalledProcessError as e:
-                self.assertIn("Invalid --host option: invalidhost", e.output)
+            output = subprocess.check_output(
+                [
+                    "locust",
+                    "-f",
+                    file_path,
+                    "-t",
+                    "1",
+                    "--headless",
+                ],
+                stderr=subprocess.STDOUT,
+                timeout=10,
+                text=True,
+            )
+
+        self.assertIn("ERROR/locust.user.users: Invalid URL", output)
