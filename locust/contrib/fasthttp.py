@@ -580,7 +580,10 @@ class ResponseContextManager(FastResponse):
     def __init__(self, response, environment, request_meta):
         # copy data from response to this object
         self.__dict__ = response.__dict__
-        self._cached_content = response.content
+        try:
+            self._cached_content = response._cached_content
+        except AttributeError:
+            pass
         # store reference to locust Environment
         self._environment = environment
         self.request_meta = request_meta

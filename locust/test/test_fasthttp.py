@@ -71,6 +71,28 @@ class TestFastHttpSession(WebserverTestCase):
         # download the content of the streaming response (so we don't get an ugly exception in the log)
         _ = r.content
 
+    def test_streaming_response_catch_response(self):
+        """
+        Test a request to an endpoint that returns a streaming response, and uses catch_response
+        """
+        s = self.get_client()
+
+        with s.get("/streaming/30", stream=True, catch_response=True) as r:
+            # typical usage of r when stream=True is to read the stream as desired,
+            # with the possibility to "fail fast" when some things are read early on
+            response_content = str(r.stream.read())
+            r.failure("some error")
+
+        self.assertRegex(response_content, "streaming response")
+
+        stats = self.runner.stats.get("/streaming/30", "GET")
+        self.assertEqual(1, stats.num_requests)
+        self.assertEqual(1, stats.num_failures)
+
+        # verify that response time does NOT include whole download time, when using stream=True
+        self.assertGreaterEqual(stats.avg_response_time, 0)
+        self.assertLess(stats.avg_response_time, 250)
+
     def test_slow_redirect(self):
         s = self.get_client()
         url = "/redirect?url=/redirect&delay=0.5"
