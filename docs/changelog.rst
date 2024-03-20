@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.24.1
+======
+* Some documentation updates & minor fixes to UI
+* Fixes to FastHttpUser content streaming (https://github.com/locustio/locust/pull/2642, https://github.com/locustio/locust/pull/2643)
+
 2.24.0
 ======
 * Pluggable dispatcher logic https://github.com/locustio/locust/pull/2606
