@@ -1,6 +1,31 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.24.1](https://github.com/locustio/locust/tree/2.24.1) (2024-03-20)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.24.0...2.24.1)
+
+**Fixed bugs:**
+
+- `'NoneType' object has no attribute 'get'` when `stream=True` in `FastHttpSession.request` [\#2640](https://github.com/locustio/locust/issues/2640)
+- Locust --processes argument generating multiple html reports [\#2639](https://github.com/locustio/locust/issues/2639)
+- cannot open dashboard and console error shows 'the server responded with a MIME type of "text/plain".' [\#2632](https://github.com/locustio/locust/issues/2632)
+- extend web ui not working since 2.22.0 [\#2629](https://github.com/locustio/locust/issues/2629)
+- Custom parameters incomplete display [\#2628](https://github.com/locustio/locust/issues/2628)
+
+**Closed issues:**
+
+- pyproject.toml support for locust configuration [\#2298](https://github.com/locustio/locust/issues/2298)
+
+**Merged pull requests:**
+
+- Do not call blocking `content` property and lazily load response [\#2643](https://github.com/locustio/locust/pull/2643) ([neiser](https://github.com/neiser))
+- Dont throw an exception in FastHttpUser if a request is made with stream=True and the connection fails [\#2642](https://github.com/locustio/locust/pull/2642) ([cyberw](https://github.com/cyberw))
+- \[Modern UI\] Modal Can Extend Beyond Screen Limits [\#2631](https://github.com/locustio/locust/pull/2631) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- chore: remove repetitive words [\#2625](https://github.com/locustio/locust/pull/2625) ([tgolang](https://github.com/tgolang))
+- Add documentation about manually closing TCP/HTTP connections [\#2623](https://github.com/locustio/locust/pull/2623) ([DennisKrone](https://github.com/DennisKrone))
+- Update ruff to 0.3.0 [\#2619](https://github.com/locustio/locust/pull/2619) ([cyberw](https://github.com/cyberw))
+
 ## [2.24.0](https://github.com/locustio/locust/tree/2.24.0) (2024-02-29)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.23.1...2.24.0)
