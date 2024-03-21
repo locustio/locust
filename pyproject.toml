@@ -59,6 +59,7 @@ content-type = "text/markdown"
 zip-safe = false
 license-files = ["LICENSE"]
 include-package-data = false
+py-modules = []
 
 [tool.ruff]
 target-version = "py38"
