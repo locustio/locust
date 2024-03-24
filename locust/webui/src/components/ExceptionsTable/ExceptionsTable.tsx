@@ -6,8 +6,8 @@ import { ISwarmException } from 'types/ui.types';
 
 const tableStructure = [
   { key: 'count', title: '# occurrences' },
-  { key: 'msg', title: 'Message' },
-  { key: 'traceback', title: 'Traceback' },
+  { key: 'msg', title: 'Message', markdown: true },
+  { key: 'traceback', title: 'Traceback', markdown: true },
 ];
 
 export function ExceptionsTable({ exceptions }: { exceptions: ISwarmException[] }) {
