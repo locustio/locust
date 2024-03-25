@@ -119,7 +119,7 @@ class Runner:
         self.target_user_classes_count: dict[str, int] = {}
         # target_user_count is set before the ramp-up/ramp-down occurs.
         self.target_user_count: int = 0
-        self.custom_messages: dict[str, tuple[Callable, Boolean]] = {}
+        self.custom_messages: dict[str, tuple[Callable, bool]] = {}
 
         self._users_dispatcher: UsersDispatcher | None = None
 
