@@ -119,7 +119,7 @@ class Runner:
         self.target_user_classes_count: dict[str, int] = {}
         # target_user_count is set before the ramp-up/ramp-down occurs.
         self.target_user_count: int = 0
-        self.custom_messages: dict[str, Callable] = {}
+        self.custom_messages: dict[str, tuple[Callable, Boolean]] = {}
 
         self._users_dispatcher: UsersDispatcher | None = None
 
@@ -420,7 +420,7 @@ class Runner:
         row["nodes"].add(node_id)
         self.exceptions[key] = row
 
-    def register_message(self, msg_type: str, listener: Callable) -> None:
+    def register_message(self, msg_type: str, listener: Callable, concurrent=False) -> None:
         """
         Register a listener for a custom message from another node
 
@@ -429,7 +429,7 @@ class Runner:
         """
         if msg_type in self.custom_messages:
             raise Exception(f"Tried to register listener method for {msg_type}, but it already had a listener!")
-        self.custom_messages[msg_type] = listener
+        self.custom_messages[msg_type] = (listener, concurrent)
 
 
 class LocalRunner(Runner):
@@ -568,7 +568,7 @@ class LocalRunner(Runner):
         """
         logger.debug("Running locally: sending %s message to self" % msg_type)
         if msg_type in self.custom_messages:
-            listener = self.custom_messages[msg_type]
+            listener, concurrent = self.custom_messages[msg_type]
             msg = Message(msg_type, data, "local")
             listener(environment=self.environment, msg=msg)
         else:
@@ -1139,7 +1139,11 @@ class MasterRunner(DistributedRunner):
                     f"Received {msg.type} message from worker {msg.node_id} (index {self.get_worker_index(msg.node_id)})"
                 )
                 try:
-                    self.custom_messages[msg.type](environment=self.environment, msg=msg)
+                    listener, concurrent = self.custom_messages[msg.type]
+                    if not concurrent:
+                        listener(environment=self.environment, msg=msg)
+                    else:
+                        gevent.spawn(listener, self.environment, msg)
                 except Exception:
                     logging.error(f"Uncaught exception in handler for {msg.type}\n{traceback.format_exc()}")
 
@@ -1393,7 +1397,11 @@ class WorkerRunner(DistributedRunner):
                 self.last_heartbeat_timestamp = time.time()
             elif msg.type in self.custom_messages:
                 logger.debug("Received %s message from master" % msg.type)
-                self.custom_messages[msg.type](environment=self.environment, msg=msg)
+                listener, concurrent = self.custom_messages[msg.type]
+                if not concurrent:
+                    listener(environment=self.environment, msg=msg)
+                else:
+                    gevent.spawn(listener, self.environment, msg)
             else:
                 logger.warning(f"Unknown message type received: {msg.type}")
 
