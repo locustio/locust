@@ -606,6 +606,31 @@ class TestLocustRunner(LocustRunnerTestCase):
         self.assertTrue(test_custom_msg[0])
         self.assertEqual(123, test_custom_msg_data[0]["test_data"])
 
+    def test_concurrent_custom_message(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        test_custom_msg = [False]
+        test_custom_msg_data = [{}]
+
+        def on_custom_msg(msg, **kw):
+            test_custom_msg[0] = True
+            test_custom_msg_data[0] = msg.data
+
+        environment = Environment(user_classes=[MyUser])
+        runner = LocalRunner(environment)
+
+        runner.register_message("test_custom_msg", on_custom_msg, concurrent=True)
+        runner.send_message("test_custom_msg", {"test_data": 123})
+
+        gevent.sleep(0.5)
+        self.assertTrue(test_custom_msg[0])
+        self.assertEqual(123, test_custom_msg_data[0]["test_data"])
+
     def test_undefined_custom_message(self):
         class MyUser(User):
             wait_time = constant(1)
