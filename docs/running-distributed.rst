@@ -131,7 +131,20 @@ order to coordinate the test. This can be easily accomplished with custom messag
             environment.runner.send_message('test_users', users)  
 
 Note that when running locally (i.e. non-distributed), this functionality will be preserved; 
-the messages will simply be handled by the runner that sends them.  
+the messages will simply be handled by the runner that sends them.
+
+.. note::
+    Using the default options while registering a message handler will run the listener function
+    in a **blocking** way, resulting in the heartbeat and other messages being delayed for the amount
+    of the execution.
+    If it is known that the listener function will handle time-intensive tasks, it is possible to register the
+    function as **concurrent** (as a separate greenlet).
+
+    .. code-block::
+        environment.runner.register_message('test_users', setup_test_users, concurrent=True)
+
+    Please use this feature with care, as otherwise it could result in greenlets running and influencing
+    the running loadtest.
 
 For more details, see the `complete example <https://github.com/locustio/locust/tree/master/examples/custom_messages.py>`_.
 
