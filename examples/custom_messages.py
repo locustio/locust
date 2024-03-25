@@ -32,10 +32,7 @@ def on_locust_init(environment, **_kwargs):
         environment.runner.register_message("test_users", setup_test_users)
     if not isinstance(environment.runner, WorkerRunner):
         environment.runner.register_message("acknowledge_users", on_acknowledge)
-        environment.runner.register_message("concurrent_message",
-                                            on_concurrent_message,
-                                            concurrent=True)
-
+        environment.runner.register_message("concurrent_message", on_concurrent_message, concurrent=True)
 
 
 @events.test_start.add_listener

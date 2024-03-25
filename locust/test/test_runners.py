@@ -630,6 +630,7 @@ class TestLocustRunner(LocustRunnerTestCase):
         gevent.sleep(0.5)
         self.assertTrue(test_custom_msg[0])
         self.assertEqual(123, test_custom_msg_data[0]["test_data"])
+
     def test_undefined_custom_message(self):
         class MyUser(User):
             wait_time = constant(1)
