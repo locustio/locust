@@ -167,25 +167,17 @@ def filter_tasks_by_tags(
     task_holder: type[TaskHolder],
     tags: set[str] | None = None,
     exclude_tags: set[str] | None = None,
-    checked: dict[TaskT, bool] | None = None,
 ):
     """
     Function used by Environment to recursively remove any tasks/TaskSets from a TaskSet/User that
     shouldn't be executed according to the tag options
     """
 
-    new_tasks = []
-    if checked is None:
-        checked = {}
-    for task in task_holder.tasks:
-        if task in checked:
-            if checked[task]:
-                new_tasks.append(task)
-            continue
-
+    new_tasks = {}
+    for task, weight in task_holder.tasks.items():
         passing = True
-        if hasattr(task, "tasks"):
-            filter_tasks_by_tags(task, tags, exclude_tags, checked)
+        if hasattr(task, "tasks"):  # task is TaskSet
+            filter_tasks_by_tags(task, tags, exclude_tags)
             passing = len(task.tasks) > 0
         else:
             if tags is not None:
@@ -194,8 +186,7 @@ def filter_tasks_by_tags(
                 passing &= "locust_tag_set" not in dir(task) or len(task.locust_tag_set & exclude_tags) == 0
 
         if passing:
-            new_tasks.append(task)
-        checked[task] = passing
+            new_tasks[task] = weight
 
     task_holder.tasks = new_tasks
     if not new_tasks:
