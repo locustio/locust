@@ -134,33 +134,31 @@ def tag(*tags: str) -> Callable[[TaskT], TaskT]:
     return decorator_func
 
 
-def get_tasks_from_base_classes(bases, class_dict):
+def get_tasks_from_base_classes(bases, class_dict) -> dict[Callable | TaskSet, int | float]:
     """
     Function used by both TaskSetMeta and UserMeta for collecting all declared tasks
     on the TaskSet/User class and all its base classes
     """
-    new_tasks = []
+    new_tasks = {}
     for base in bases:
         if hasattr(base, "tasks") and base.tasks:
-            new_tasks += base.tasks
+            new_tasks.update(base.tasks)
 
     if "tasks" in class_dict and class_dict["tasks"] is not None:
         tasks = class_dict["tasks"]
         if isinstance(tasks, dict):
-            tasks = tasks.items()
-
-        for task in tasks:
-            if isinstance(task, tuple):
-                task, count = task
-                for _ in range(count):
-                    new_tasks.append(task)
-            else:
-                new_tasks.append(task)
+            new_tasks.update(tasks)
+        elif isinstance(tasks, list):
+            for task in tasks:
+                if isinstance(task, tuple):
+                    task, count = task
+                    new_tasks[task] = count
+                else:
+                    new_tasks[task] = 1
 
     for item in class_dict.values():
         if "locust_task_weight" in dir(item):
-            for i in range(item.locust_task_weight):
-                new_tasks.append(item)
+            new_tasks[item] = item.locust_task_weight
 
     return new_tasks
 
