@@ -1143,7 +1143,7 @@ class MasterRunner(DistributedRunner):
                     if not concurrent:
                         listener(environment=self.environment, msg=msg)
                     else:
-                        gevent.spawn(listener, self.environment, msg)
+                        gevent.spawn(listener, environment=self.environment, msg=msg)
                 except Exception:
                     logging.error(f"Uncaught exception in handler for {msg.type}\n{traceback.format_exc()}")
 

@@ -9,11 +9,8 @@ usernames = []
 def setup_test_users(environment, msg, **kwargs):
     # Fired when the worker receives a message of type 'test_users'
     usernames.extend(map(lambda u: u["name"], msg.data))
-    # Even though "acknowledge_concurrent_users" was sent first, "acknowledge_users"
-    # will print its statement first, as "acknowledge_concurrent_users" was registered
-    # running concurrently, and therefore not blocking other messages.
-    environment.runner.send_message("concurrent_message", "This is a non blocking message")
     environment.runner.send_message("acknowledge_users", f"Thanks for the {len(msg.data)} users!")
+    environment.runner.send_message("concurrent_message", "Message to concurrent handler")
 
 
 def on_acknowledge(msg, **kwargs):
@@ -22,8 +19,9 @@ def on_acknowledge(msg, **kwargs):
 
 
 def on_concurrent_message(msg, **kwargs):
-    gevent.sleep(10)
-    print(msg.data)
+    print(f"concurrent_message received with data: '{msg.data}'")
+    gevent.sleep(10)  # if this handler was run with concurrent=False it would halt the message handling loop in locust
+    print("finished processing concurrent_message")
 
 
 @events.init.add_listener
