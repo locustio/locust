@@ -228,6 +228,7 @@ class WebUI:
                         continue
                     try:
                         run_time = parse_timespan(value)
+                        parsed_options_dict[key] = run_time
                     except ValueError:
                         err_msg = "Valid run_time formats are : 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc."
                         logger.error(err_msg)
