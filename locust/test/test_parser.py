@@ -1,8 +1,8 @@
 import locust
 from locust.argument_parser import (
-    parse_locustfile_paths,
     get_parser,
     parse_locustfile_option,
+    parse_locustfile_paths,
     parse_options,
     ui_extra_args_dict,
 )
