@@ -13,6 +13,7 @@ import signal
 import sys
 import time
 import traceback
+from urllib.parse import urlparse
 
 import gevent
 
@@ -511,6 +512,10 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
     if options.equal_weights:
         environment.events.init.add_listener(assign_equal_weights)
+
+    if options.host and not (urlparse(options.host).scheme):
+        logger.error(f"Invalid --host option: {options.host}. Did you mean https://{options.host}?")
+        sys.exit(1)
 
     # Fire locust init event which can be used by end-users' code to run setup code that
     # need access to the Environment, Runner or WebUI.

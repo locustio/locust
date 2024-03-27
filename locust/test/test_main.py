@@ -1381,6 +1381,54 @@ class MyUser(HttpUser):
             # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
             self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
 
+    def test_host_wo_protocol(self):
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--run-time",
+                    "1s",
+                    "--headless",
+                    "--host",
+                    "test.com",
+                    "--loglevel",
+                    "DEBUG",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate(timeout=4)
+            self.assertIn("Invalid --host option: test.com. Did you mean https://test.com?", stderr)
+            self.assertEqual(1, proc.returncode)
+
+    def test_headless_w_host(self):
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--run-time",
+                    "1s",
+                    "--headless",
+                    "--host",
+                    "https://test.com",
+                    "--loglevel",
+                    "DEBUG",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate(timeout=4)
+            self.assertIn("Ramping to 1 users", stderr)
+            self.assertIn("All users of class UserSubclass spawned", stderr)
+            self.assertIn("Cleaning up runner", stderr)
+            self.assertEqual(0, proc.returncode)
+
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
     failed_port_check = False
