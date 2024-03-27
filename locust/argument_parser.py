@@ -101,7 +101,7 @@ def _is_package(path):
     return os.path.isdir(path) and os.path.exists(os.path.join(path, "__init__.py"))
 
 
-def find_locustfiles(paths: list[str]) -> list[str]:
+def parse_locustfile_paths(paths: list[str]) -> list[str]:
     """
     Returns a list of relative file paths.
 
@@ -141,6 +141,9 @@ def find_locustfiles(paths: list[str]) -> list[str]:
 
         if files:
             locustfiles.extend(files)
+        else:
+            sys.stderr.write(f"No locustfile found for path: {path}")
+            sys.exit(1)
 
     return locustfiles
 
@@ -341,7 +344,7 @@ def parse_locustfile_option(args=None) -> list[str]:
         return [filename]
 
     locustfile_list = [f.strip() for f in options.locustfile.split(",")]
-    locustfiles = find_locustfiles(locustfile_list)
+    locustfiles = parse_locustfile_paths(locustfile_list)
 
     if not locustfiles:
         if options.help or options.version:
