@@ -1,6 +1,6 @@
 import locust
 from locust.argument_parser import (
-    find_locustfiles,
+    parse_locustfile_paths,
     get_parser,
     parse_locustfile_option,
     parse_options,
@@ -374,7 +374,7 @@ class TestFindLocustfiles(LocustTestCase):
         with mock_locustfile(dir=self.parent_dir1.name) as mocked1:
             with mock_locustfile(dir=self.child_dir.name) as mocked2:
                 with mock_locustfile(dir=self.child_dir.name) as mocked3:
-                    locustfiles = find_locustfiles([self.parent_dir1.name])
+                    locustfiles = parse_locustfile_paths([self.parent_dir1.name])
 
                     self.assertIn(mocked1.file_path, locustfiles)
                     self.assertIn(mocked2.file_path, locustfiles)
@@ -384,14 +384,13 @@ class TestFindLocustfiles(LocustTestCase):
     def test_find_locustfiles_error_if_directory_doesnt_exist(self):
         with mock.patch("sys.stderr", new=StringIO()):
             with self.assertRaises(SystemExit):
-                files = find_locustfiles(["some_directory"])
-                pass
+                parse_locustfile_paths(["some_directory"])
 
     def test_find_locustfiles_ignores_invalid_files_in_directory(self):
         with NamedTemporaryFile(suffix=".py", prefix="_", dir=self.parent_dir1.name) as invalid_file1:
             with NamedTemporaryFile(suffix=".txt", prefix="", dir=self.parent_dir1.name) as invalid_file2:
                 with mock_locustfile(filename_prefix="mock_locustfile1", dir=self.parent_dir1.name) as mock_locustfile1:
-                    locustfiles = find_locustfiles([self.parent_dir1.name])
+                    locustfiles = parse_locustfile_paths([self.parent_dir1.name])
 
                     self.assertIn(mock_locustfile1.file_path, locustfiles)
                     self.assertNotIn(invalid_file1.name, locustfiles)
@@ -402,7 +401,7 @@ class TestFindLocustfiles(LocustTestCase):
         with mock_locustfile() as mocked1:
             with mock_locustfile() as mocked2:
                 with mock_locustfile() as mocked3:
-                    locustfiles = find_locustfiles([mocked1.file_path, mocked2.file_path])
+                    locustfiles = parse_locustfile_paths([mocked1.file_path, mocked2.file_path])
 
                     self.assertIn(mocked1.file_path, locustfiles)
                     self.assertIn(mocked2.file_path, locustfiles)
@@ -414,11 +413,9 @@ class TestFindLocustfiles(LocustTestCase):
             with mock_locustfile() as valid_file:
                 with self.assertRaises(SystemExit):
                     invalid_file = NamedTemporaryFile(suffix=".txt")
-                    files = find_locustfiles([valid_file.file_path, invalid_file.name])
-                    pass
+                    parse_locustfile_paths([valid_file.file_path, invalid_file.name])
 
     def test_find_locustfiles_error_if_multiple_values_for_directory(self):
         with mock.patch("sys.stderr", new=StringIO()):
             with self.assertRaises(SystemExit):
-                files = find_locustfiles([self.parent_dir1.name, self.parent_dir2.name])
-                pass
+                parse_locustfile_paths([self.parent_dir1.name, self.parent_dir2.name])
