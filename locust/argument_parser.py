@@ -132,7 +132,7 @@ def parse_locustfile_paths(paths: list[str]) -> list[str]:
                         ]
                     )
                 if not files:
-                    sys.stderr.write(f"Coould not find any locustfiles in directory '{path}'")
+                    sys.stderr.write(f"Could not find any locustfiles in directory '{path}'")
                     sys.exit(1)
         else:
             # It's not a url or a folder. Add .py if missing
