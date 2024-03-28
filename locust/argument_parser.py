@@ -131,6 +131,9 @@ def parse_locustfile_paths(paths: list[str]) -> list[str]:
                             if os.path.isfile(os.path.join(root, f)) and f.endswith(".py") and not f.startswith("_")
                         ]
                     )
+                if not files:
+                    sys.stderr.write(f"Coould not find any locustfiles in directory '{path}'")
+                    sys.exit(1)
         else:
             # It's not a url or a folder. Add .py if missing
             if not path.endswith(".py"):
