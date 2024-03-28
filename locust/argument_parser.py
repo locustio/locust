@@ -141,12 +141,15 @@ def parse_locustfile_paths(paths: list[str]) -> list[str]:
             # If file exists add the abspath
             if os.path.exists(path):
                 files.append(os.path.abspath(path))
+            else:
+                note_about_file_endings = "Ensure your locustfile ends with '.py' or is a directory with locustfiles. "
+                sys.stderr.write(
+                    f"Could not find '{path}'. {note_about_file_endings}See --help for available options.\n"
+                )
+                sys.exit(1)
 
         if files:
             locustfiles.extend(files)
-        else:
-            sys.stderr.write(f"No locustfile found for path: {path}")
-            sys.exit(1)
 
     return locustfiles
 
@@ -336,6 +339,10 @@ def parse_locustfile_option(args=None) -> list[str]:
 
     options, _ = parser.parse_known_args(args=args)
 
+    if options.help or options.version:
+        # if --help or --version is specified we'll call parse_options which will print the help/version message
+        parse_options(args=args)
+
     if options.locustfile == "-":
         if not options.worker:
             sys.stderr.write(
@@ -350,9 +357,6 @@ def parse_locustfile_option(args=None) -> list[str]:
     locustfiles = parse_locustfile_paths(locustfile_list)
 
     if not locustfiles:
-        if options.help or options.version:
-            # if --help or --version is specified we'll call parse_options which will print the help/version message
-            parse_options(args=args)
         note_about_file_endings = ""
         user_friendly_locustfile_name = options.locustfile
         if options.locustfile == "locustfile":
