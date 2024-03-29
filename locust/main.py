@@ -394,7 +394,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
                     environment.update_user_class(user_config)
             except Exception as e:
-                logger.error(f"The --config-users arugment must be in valid JSON string or file: {e}")
+                logger.error(f"The --config-users argument must be in valid JSON string or file: {e}")
                 sys.exit(-1)
 
     if (

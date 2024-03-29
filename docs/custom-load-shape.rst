@@ -101,7 +101,7 @@ This shape would create create in the first 10 seconds 10 User of ``UserA``. In 
 Reusing command line parameters in custom shapes
 ------------------------------------------------
 
-By default, using a custom shape will disable default run paramaters (in both the CLI and the Web UI):
+By default, using a custom shape will disable default run parameters (in both the CLI and the Web UI):
 - `--run-time` (providing this one with a custom shape will make locust to bail out)
 - `--spawn-rate`
 - `--users`

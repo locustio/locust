@@ -55,7 +55,7 @@ export default function useSortByField<Row>(
 
       if (sortField === currentSortField.current) {
         if (shouldReverse) {
-          // reset to intial state on 3rd click
+          // reset to initial state on 3rd click
           setShouldReverse(false);
           currentSortField.current = undefined;
           sortStats(defaultSortKey);
