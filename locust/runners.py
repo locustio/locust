@@ -1395,6 +1395,8 @@ class WorkerRunner(DistributedRunner):
                 self.reset_connection()
             elif msg.type == "heartbeat":
                 self.last_heartbeat_timestamp = time.time()
+            elif msg.type == "update_user_class":
+                self.environment.update_user_class(msg.data)
             elif msg.type in self.custom_messages:
                 logger.debug("Received %s message from master" % msg.type)
                 listener, concurrent = self.custom_messages[msg.type]
