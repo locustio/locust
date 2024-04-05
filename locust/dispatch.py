@@ -22,7 +22,7 @@ def compatible_math_gcd(*args: int) -> int:
     """
     This function is a workaround for the fact that `math.gcd` in:
         - 3.5 <= Python < 3.9   doesn't accept more than two arguments.
-        - 3.9 <= Python         accept more than two arguments.
+        - 3.9 <= Python         can accept more than two arguments.
     See more at https://docs.python.org/3.9/library/math.html#math.gcd
     """
     if (3, 5) <= sys.version_info < (3, 9):
