@@ -1351,3 +1351,32 @@ class TestModernWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertTrue(d("#root"))
         self.assertIn('"locustfile": "locust.py"', str(d))
         self.assertIn('"host": "http://localhost"', str(d))
+
+    def test_update_user(self):
+        class MyUser1(User):
+            @task
+            def my_task(self):
+                pass
+
+            @task
+            def my_task_2(self):
+                pass
+
+        class MyUser2(User):
+            @task
+            def my_task(self):
+                pass
+
+        self.environment.user_classes = [MyUser1, MyUser2]
+        self.environment.available_user_classes = {"User1": MyUser1, "User2": MyUser2}
+        self.environment.available_user_tasks = {"User1": MyUser1.tasks, "User2": MyUser2.tasks}
+
+        requests.post(
+            "http://127.0.0.1:%i/user" % self.web_port,
+            json={"user_class_name": "User1", "host": "http://localhost", "tasks": ["my_task_2"]},
+        )
+
+        self.assertEqual(
+            self.environment.available_user_classes["User1"].json(),
+            {"host": "http://localhost", "tasks": ["my_task_2"], "fixed_count": 0, "weight": 1},
+        )
