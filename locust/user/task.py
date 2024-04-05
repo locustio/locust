@@ -3,6 +3,7 @@ from __future__ import annotations
 from locust.exception import InterruptTaskSet, MissingWaitTimeError, RescheduleTask, RescheduleTaskImmediately, StopUser
 
 import logging
+from collections import deque
 import random
 import traceback
 from time import time
@@ -277,7 +278,7 @@ class TaskSet(metaclass=TaskSetMeta):
     _parent: User
 
     def __init__(self, parent: User) -> None:
-        self._task_queue: list[Callable] = []
+        self._task_queue: deque = deque()
         self._time_start = time()
 
         if isinstance(parent, TaskSet):
@@ -392,7 +393,7 @@ class TaskSet(metaclass=TaskSetMeta):
         :param first: Optional keyword argument. If True, the task will be put first in the queue.
         """
         if first:
-            self._task_queue.insert(0, task_callable)
+            self._task_queue.appendleft(task_callable)
         else:
             self._task_queue.append(task_callable)
 
