@@ -9,8 +9,15 @@ from locust import HttpUser, TaskSet, between, events, task, web
 import os
 from html import escape
 from time import time
+from warnings import warn
 
 from flask import Blueprint, jsonify, make_response, render_template
+
+warn(
+    "This UI example is deprecated, please downgrade to Locust 2.21.0 or use --legacy-ui flag ; version=2.22.0",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class MyTaskSet(TaskSet):

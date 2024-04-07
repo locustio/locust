@@ -109,7 +109,8 @@ to the Flask app instance and use that to set up a new route::
             return "Another page"
 
 You should now be able to start locust and browse to http://127.0.0.1:8089/added_page
-
+⚠ At the moment Locust does not show the corresponding menu entry on the default root path "/", 
+however the menu entry appears properly if using the newly created path.
 
 
 Extending Web UI
@@ -123,9 +124,21 @@ as it involves also writing and including HTML and Javascript files to be served
 greatly enhance the utility and customizability of the web UI.
 
 A working example of extending the web UI, complete with HTML and Javascript example files, can be found
-in the `examples directory <https://github.com/locustio/locust/tree/master/examples>`_ of the Locust
+in the `examples directory <https://github.com/locustio/locust/tree/master/examples/>`_ of the Locust
 source code.
 
+- `extend_modern_web_ui.py`: Display a table with content-length for each call.
+- `extend_modern_web_ui_cache_stats.py`: Display Varnish Hit/ Miss stats for each call. Could be easly
+extended to other CDN or cache proxies and gather other cache statistics such as cache age, control, ...  
+
+Since 2.22.0, the modern UI is the new default for the web UI, the `extend_web_ui` folder contains a 
+legacy example.
+
+If you want to use the legacy UI, use the `--legacy-ui` flag:
+
+.. code-block:: console
+
+    $ locust -f examples/extend_web_ui/extend.py --legacy-ui
 
 
 Adding Authentication to the Web UI
