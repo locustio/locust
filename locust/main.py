@@ -182,6 +182,9 @@ def main():
         sys.stderr.write("[DEPRECATED] The --hatch-rate parameter has been renamed --spawn-rate\n")
         options.spawn_rate = options.hatch_rate
 
+    if options.legacy_ui:
+        sys.stderr.write("[DEPRECATED] The legacy UI is deprecated and will be removed soon\n")
+
     # setup logging
     if not options.skip_log_setup:
         if options.loglevel.upper() in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
