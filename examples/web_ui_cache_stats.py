@@ -37,7 +37,8 @@ class WebsiteUser(HttpUser):
     tasks = [MyTaskSet]
 
 
-# @see https://docs.acquia.com/acquia-cloud-platform/performance/varnish/headers
+# This example is based on the Varnish hit/miss headers (https://docs.varnish-software.com/tutorials/hit-miss-logging/).
+# It could easly be customised for matching other caching sytems, CDN or custom headers.
 CACHE_HEADER = "X-Cache"
 
 cache_stats = {}
