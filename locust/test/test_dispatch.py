@@ -847,6 +847,75 @@ class TestRampUpUsersFromZero(unittest.TestCase):
         delta = time.perf_counter() - ts
         self.assertTrue(0 <= delta <= _TOLERANCE, delta)
 
+    def test_implementation_of_dispatch_distribution_with_gcd(self):
+        class User1(User):
+            weight = 4
+
+        class User2(User):
+            weight = 5
+
+        user_classes = [User1, User2]
+        worker_node1 = WorkerNode("1")
+
+        sleep_time = 0.2  # Speed-up test
+
+        users_dispatcher = UsersDispatcher(worker_nodes=[worker_node1], user_classes=user_classes)
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=9)
+
+        users_dispatcher._wait_between_dispatch = sleep_time
+
+        ts = time.perf_counter()
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 4, "User2": 5},
+            },
+        )
+        delta = time.perf_counter() - ts
+        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
+
+        ts = time.perf_counter()
+        self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.perf_counter() - ts
+        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
+
+    def test_implementation_of_dispatch_distribution_with_gcd_float_weight(self):
+        class User1(User):
+            weight = 0.8
+
+        class User2(User):
+            weight = 1
+
+        normalized_weights_to_min_int = 5  # User1: 0.8 * 5 = 4; User2: 1 * 5 = 5
+
+        user_classes = [User1, User2]
+        worker_node1 = WorkerNode("1")
+
+        sleep_time = 0.2  # Speed-up test
+
+        users_dispatcher = UsersDispatcher(worker_nodes=[worker_node1], user_classes=user_classes)
+        users_dispatcher.new_dispatch(target_user_count=18, spawn_rate=18)
+
+        users_dispatcher._wait_between_dispatch = sleep_time
+
+        ts = time.perf_counter()
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {
+                    "User1": int(normalized_weights_to_min_int * User1.weight * 2),
+                    "User2": int(normalized_weights_to_min_int * User2.weight * 2),
+                },
+            },
+        )
+        delta = time.perf_counter() - ts
+        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
+
+        ts = time.perf_counter()
+        self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.perf_counter() - ts
+        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
+
 
 class TestWaitBetweenDispatch(unittest.TestCase):
     def test_wait_between_dispatch(self):

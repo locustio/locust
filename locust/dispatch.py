@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import contextlib
+import functools
 import itertools
 import math
+import sys
 import time
 from collections import defaultdict
 from operator import attrgetter
@@ -14,6 +16,20 @@ from roundrobin import smooth
 if TYPE_CHECKING:
     from locust import User
     from locust.runners import WorkerNode
+
+
+def compatible_math_gcd(*args: int) -> int:
+    """
+    This function is a workaround for the fact that `math.gcd` in:
+        - 3.5 <= Python < 3.9   doesn't accept more than two arguments.
+        - 3.9 <= Python         can accept more than two arguments.
+    See more at https://docs.python.org/3.9/library/math.html#math.gcd
+    """
+    if (3, 5) <= sys.version_info < (3, 9):
+        return functools.reduce(math.gcd, args)
+    elif sys.version_info >= (3, 9):
+        return math.gcd(*args)
+    raise NotImplementedError("This function is only implemented for Python from 3.5")
 
 
 # To profile line-by-line, uncomment the code below (i.e. `import line_profiler ...`) and
@@ -366,18 +382,37 @@ class UsersDispatcher(Iterator):
             if not users:
                 return itertools.cycle([None])
 
-            # Normalize the weights so that the smallest weight will be equal to "target_min_weight".
-            # The value "2" was experimentally determined because it gave a better distribution especially
-            # when dealing with weights which are close to each others, e.g. 1.5, 2, 2.4, etc.
-            target_min_weight = 2
+            def _get_order_of_magnitude(n: float) -> int:
+                """Get how many times we need to multiply `n` to get an integer-like number.
+                For example:
+                    0.1 would return 10,
+                    0.04 would return 100,
+                    0.0007 would return 10000.
+                """
+                if n <= 0:
+                    raise ValueError("To get the order of magnitude, the number must be greater than 0.")
 
-            # 'Value' here means weight or fixed count
+                counter = 0
+                while n < 1:
+                    n *= 10
+                    counter += 1
+                return 10**counter
+
+            # Get maximum order of magnitude to "normalize the weights".
+            # "Normalizing the weights" is to multiply all weights by the same number so that
+            # they become integers. Then we can find the largest common divisor of all the
+            # weights, divide them by it and get the smallest possible numbers with the same
+            # ratio as the numbers originally had.
+            max_order_of_magnitude = _get_order_of_magnitude(min(abs(u[1]) for u in users))
+            weights = tuple(int(u[1] * max_order_of_magnitude) for u in users)
+
+            greatest_common_divisor = compatible_math_gcd(*weights)
             normalized_values = [
                 (
-                    user.__name__,
-                    round(target_min_weight * value / min(u[1] for u in users)),
+                    user[0].__name__,
+                    normalized_weight // greatest_common_divisor,
                 )
-                for user, value in users
+                for user, normalized_weight in zip(users, weights)
             ]
             generation_length_to_get_proper_distribution = sum(
                 normalized_val[1] for normalized_val in normalized_values
