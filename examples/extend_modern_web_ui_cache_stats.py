@@ -95,8 +95,11 @@ def locust_init(environment, **kwargs):
             if request.path != "/stats/requests":
                 return response
 
+            # extended_stats contains the data where extended_tables looks for its data: "cache-statistics"
             response.set_data(
-                json.dumps({**response.json, "extended_stats": [{"key": "name", "data": get_cache_stats()}]})
+                json.dumps(
+                    {**response.json, "extended_stats": [{"key": "cache-statistics", "data": get_cache_stats()}]}
+                )
             )
 
             return response
@@ -115,10 +118,11 @@ def locust_init(environment, **kwargs):
                 "index.html",
                 template_args={
                     **environment.web_ui.template_args,
-                    "extended_tabs": [{"title": "Cache statistics", "key": "name"}],
+                    # extended_tabs and extended_tables keys must match.
+                    "extended_tabs": [{"title": "Cache statistics", "key": "cache-statistics"}],
                     "extended_tables": [
                         {
-                            "key": "name",
+                            "key": "cache-statistics",
                             "structure": [
                                 {"key": "name", "title": "Name"},
                                 {"key": "hit", "title": "Hit"},
