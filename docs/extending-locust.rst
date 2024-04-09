@@ -53,6 +53,7 @@ To see a full list of available events see :ref:`events`.
 
 .. _request_context:
 
+
 Request context
 ===============
 
@@ -110,6 +111,10 @@ to the Flask app instance and use that to set up a new route::
 
 You should now be able to start locust and browse to http://127.0.0.1:8089/added_page
 
+.. note::
+
+    Please note that at the moment Locust does not show the extended Web UI under the default root path `"/"`. 
+    To view your extensions, navigate to the newly added web route. In this example, `"/added_page"`.
 
 
 Extending Web UI
@@ -123,9 +128,14 @@ as it involves also writing and including HTML and Javascript files to be served
 greatly enhance the utility and customizability of the web UI.
 
 A working example of extending the web UI, complete with HTML and Javascript example files, can be found
-in the `examples directory <https://github.com/locustio/locust/tree/master/examples>`_ of the Locust
+in the `examples directory <https://github.com/locustio/locust/tree/master/examples/>`_ of the Locust
 source code.
 
+*  ``extend_modern_web_ui.py``: Display a table with content-length for each call.
+
+* ``web_ui_cache_stats.py``: Display Varnish Hit/ Miss stats for each call. Could be easly extended to other CDN or cache proxies and gather other cache statistics such as cache age, control, ...
+
+ .. image:: images/extend_modern_web_ui_cache_stats.png
 
 
 Adding Authentication to the Web UI
@@ -147,8 +157,6 @@ to the ``login_manager``. The ``user_loader`` should return ``None`` to deny aut
 authentication to the app should be granted.
 
 A full example can be seen `in the auth example <https://github.com/locustio/locust/tree/master/examples/web_ui_auth.py>`_.
-
-
 
 
 Run a background greenlet
@@ -181,6 +189,7 @@ For example, you can monitor the fail ratio of your test and stop the run if it 
             gevent.spawn(checker, environment)
 
 .. _parametrizing-locustfiles:
+
 
 Parametrizing locustfiles
 =========================
@@ -224,10 +233,12 @@ You can add your own command line arguments to Locust, using the :py:attr:`init_
 
 When running Locust :ref:`distributed <running-distributed>`, custom arguments are automatically forwarded to workers when the run is started (but not before then, so you cannot rely on forwarded arguments *before* the test has actually started).
 
+
 Test data management
 ====================
 
 There are a number of ways to get test data into your tests (after all, your test is just a Python program and it can do whatever Python can). Locust's events give you fine-grained control over *when* to fetch/release test data. You can find a `detailed example here <https://github.com/locustio/locust/tree/master/examples/test_data_management.py>`_.
+
 
 More examples
 =============
