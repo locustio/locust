@@ -62,28 +62,30 @@ is executed. For more info see :ref:`wait-time`.
 
     @task
     def hello_world(self):
-        ...
+        self.client.get("/hello")
+        self.client.get("/world")
 
-Methods decorated with ``@task`` are the core of your locust file. For every running user,
-Locust creates a greenlet (micro-thread), that will call those methods.
+Methods decorated with ``@task`` are the core of your locust file. For every running User,
+Locust creates a `greenlet <https://greenlet.readthedocs.io/en/stable/greenlet.html>`_ (a coroutine or "micro-thread"), that will call those methods. 
+Code within a task is executed sequentially (it is just regular Python code),
+so ``/world`` wont be called until the response from ``/hello`` has been received.
 
 .. code-block:: python
 
     @task
     def hello_world(self):
-        self.client.get("/hello")
-        self.client.get("/world")
-
+        ...
+    
     @task(3)
     def view_items(self):
-    ...
+        ...
 
 We've declared two tasks by decorating two methods with ``@task``, one of which has been given a higher weight (3).
 When our ``QuickstartUser`` runs it'll pick one of the declared tasks - in this case either ``hello_world`` or
 ``view_items`` - and execute it. Tasks are picked at random, but you can give them different weighting. The above
 configuration will make Locust three times more likely to pick ``view_items`` than ``hello_world``. When a task has
-finished executing, the User will then sleep during its wait time (in this case between 1 and 5 seconds).
-After its wait time it'll pick a new task and keep repeating that.
+finished executing, the User will then sleep for its specified wait time (in this case between 1 and 5 seconds).
+Then it will pick a new task.
 
 Note that only methods decorated with ``@task`` will be picked, so you can define your own internal helper methods any way you like.
 
