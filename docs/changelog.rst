@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.25.0
+======
+* Add functionality to run listener functions for `custom_messages` concurrently (https://github.com/locustio/locust/pull/2650)
+* Update User Classes in Distributed Mode (https://github.com/locustio/locust/pull/2666)
+* Log deprecation warning for --legacy-ui (https://github.com/locustio/locust/pull/2670)
+* Fix UserClasses weight distribution with gcd (https://github.com/locustio/locust/pull/2663)
+
 2.24.1
 ======
 * Some documentation updates & minor fixes to UI
