@@ -1,6 +1,33 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.25.0](https://github.com/locustio/locust/tree/2.25.0) (2024-04-14)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.24.1...2.25.0)
+
+**Fixed bugs:**
+
+- Wrong distribution of virtual users by user classes [\#2662](https://github.com/locustio/locust/issues/2662)
+- Monkey patching error [\#2661](https://github.com/locustio/locust/issues/2661)
+- cannot specify task of UserClass when locust run on distributed mode [\#2657](https://github.com/locustio/locust/issues/2657)
+- \[ModernUI\] HTML entities are incorrectly escaped in generated report [\#2635](https://github.com/locustio/locust/issues/2635)
+- Bug / Feature request: Time intensive `custom_messages` functions trigger heartbeat timeout [\#2608](https://github.com/locustio/locust/issues/2608)
+
+**Closed issues:**
+
+- Add an UI extension exemple that display proxy cache hit/miss [\#2644](https://github.com/locustio/locust/issues/2644)
+
+**Merged pull requests:**
+
+- Log deprecation warning for --legacy-ui [\#2670](https://github.com/locustio/locust/pull/2670) ([cyberw](https://github.com/cyberw))
+- Add an example that displays cache stats using the new UI. [\#2669](https://github.com/locustio/locust/pull/2669) ([obriat](https://github.com/obriat))
+- Update User Classes in Distributed Mode [\#2666](https://github.com/locustio/locust/pull/2666) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- fix\(dispatch\): UserClasses weight distribution with gcd [\#2663](https://github.com/locustio/locust/pull/2663) ([llirrikk](https://github.com/llirrikk))
+- chore: fix some comments [\#2659](https://github.com/locustio/locust/pull/2659) ([JohnEndson](https://github.com/JohnEndson))
+- Fix issue with concurrent custom messages and docs [\#2654](https://github.com/locustio/locust/pull/2654) ([cyberw](https://github.com/cyberw))
+- Add functionality to run listener functions for `custom_messages` concurrently [\#2650](https://github.com/locustio/locust/pull/2650) ([samuelspagl](https://github.com/samuelspagl))
+- \[Modern UI\] Escape HTML Entities correctly in Exceptions Table [\#2648](https://github.com/locustio/locust/pull/2648) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
 ## [2.24.1](https://github.com/locustio/locust/tree/2.24.1) (2024-03-20)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.24.0...2.24.1)
@@ -857,8 +884,8 @@ The most important changes can also be found in [the documentation](https://docs
 **Merged pull requests:**
 
 - Fire requests through Environment.events [\#1982](https://github.com/locustio/locust/pull/1982) ([BonelessPi](https://github.com/BonelessPi))
-- Fix docs with underscore postfix for hyperlink? [\#1979](https://github.com/locustio/locust/pull/1979) ([jeroenhendricksen](https://github.com/jeroenhendricksen))
-- Repair broken hyperlinks in documentation [\#1978](https://github.com/locustio/locust/pull/1978) ([jeroenhendricksen](https://github.com/jeroenhendricksen))
+- Fix docs with underscore postfix for hyperlink? [\#1979](https://github.com/locustio/locust/pull/1979) ([jeroenhe](https://github.com/jeroenhe))
+- Repair broken hyperlinks in documentation [\#1978](https://github.com/locustio/locust/pull/1978) ([jeroenhe](https://github.com/jeroenhe))
 
 ## [2.6.0](https://github.com/locustio/locust/tree/2.6.0) (2022-01-23)
 
