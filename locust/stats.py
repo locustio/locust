@@ -10,6 +10,10 @@ import signal
 import time
 from abc import abstractmethod
 from collections import OrderedDict, defaultdict, namedtuple
+from collections import (
+    OrderedDict as OrderedDictType,
+)
+from collections.abc import Iterable
 from copy import copy
 from html import escape
 from itertools import chain
@@ -24,10 +28,6 @@ from typing import (
     TypedDict,
     TypeVar,
     cast,
-)
-from collections.abc import Iterable
-from collections import (
-    OrderedDict as OrderedDictType,
 )
 
 import gevent

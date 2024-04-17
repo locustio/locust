@@ -14,7 +14,7 @@ import time
 import traceback
 from abc import abstractmethod
 from collections import defaultdict
-from collections.abc import MutableMapping
+from collections.abc import Iterator, MutableMapping, ValuesView
 from operator import (
     itemgetter,
     methodcaller,
@@ -28,7 +28,6 @@ from typing import (
     TypedDict,
     cast,
 )
-from collections.abc import Iterator, ValuesView
 from uuid import uuid4
 
 import gevent
