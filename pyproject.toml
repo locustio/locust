@@ -60,7 +60,7 @@ license-files = ["LICENSE"]
 include-package-data = false
 
 [tool.ruff]
-target-version = "py38"
+target-version = "py39"
 line-length = 120
 extend-exclude = [
     "build",

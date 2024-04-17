@@ -2,8 +2,8 @@ from locust import FastHttpUser, run_single_user, task
 from locust.contrib.fasthttp import RestResponseContextManager
 from locust.user.wait_time import constant
 
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator
 
 
 class MyUser(FastHttpUser):

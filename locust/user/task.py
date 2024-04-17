@@ -10,7 +10,6 @@ from typing import (
     TYPE_CHECKING,
     Callable,
     Protocol,
-    Type,
     TypeVar,
     final,
     overload,
