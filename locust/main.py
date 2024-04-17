@@ -250,12 +250,8 @@ def main():
                 # nothing more to do, just wait for the children to exit
                 for child_pid in children:
                     _, child_status = os.waitpid(child_pid, 0)
-                    try:
-                        if sys.version_info >= (3, 9):
-                            child_exit_code = os.waitstatus_to_exitcode(child_status)
-                            exit_code = max(exit_code, child_exit_code)
-                    except AttributeError:
-                        pass  # dammit python 3.8...
+                    child_exit_code = os.waitstatus_to_exitcode(child_status)
+                    exit_code = max(exit_code, child_exit_code)
                 sys.exit(exit_code)
             else:
                 options.master = True
@@ -270,12 +266,8 @@ def main():
                             try:
                                 _, child_status = os.waitpid(child_pid, os.WNOHANG)
                                 children.remove(child_pid)
-                                try:
-                                    if sys.version_info >= (3, 9):
-                                        child_exit_code = os.waitstatus_to_exitcode(child_status)
-                                        exit_code = max(exit_code, child_exit_code)
-                                except AttributeError:
-                                    pass  # dammit python 3.8...
+                                child_exit_code = os.waitstatus_to_exitcode(child_status)
+                                exit_code = max(exit_code, child_exit_code)
                             except OSError as e:
                                 if e.errno == errno.EINTR:
                                     time.sleep(0.1)
@@ -291,12 +283,8 @@ def main():
                             pass  # never mind, process was already dead
                     for child_pid in children:
                         _, child_status = os.waitpid(child_pid, 0)
-                        try:
-                            if sys.version_info >= (3, 9):
-                                child_exit_code = os.waitstatus_to_exitcode(child_status)
-                                exit_code = max(exit_code, child_exit_code)
-                        except AttributeError:
-                            pass  # dammit python 3.8...
+                        child_exit_code = os.waitstatus_to_exitcode(child_status)
+                        exit_code = max(exit_code, child_exit_code)
                     if exit_code > 1:
                         logging.error(f"Bad response code from worker children: {exit_code}")
                     # ensure master doesnt finish until output from workers has arrived
@@ -355,9 +343,6 @@ def main():
 It's not high enough for load testing, and the OS didn't allow locust to increase it by itself.
 See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."""
             )
-
-    if sys.version_info < (3, 9):
-        logger.warning("Python 3.8 support is deprecated and will be removed soon")
 
     # create locust Environment
     locustfile_path = None if not locustfile else os.path.basename(locustfile)

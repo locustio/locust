@@ -5,7 +5,7 @@ import logging
 from typing import List, Union, Dict
 from types import TracebackType
 
-LogMessage = List[Union[str, Dict[str, TracebackType]]]
+LogMessage = list[Union[str, dict[str, TracebackType]]]
 
 
 class MockedLoggingHandler(logging.Handler):

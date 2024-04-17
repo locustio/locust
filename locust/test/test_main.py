@@ -2225,7 +2225,6 @@ class AnyUser(User):
 
             self.assertNotIn("Traceback", stderr)
             self.assertIn("INFO/locust.runners: sys.exit(42) called", stderr)
-            if sys.version_info >= (3, 9):
-                self.assertEqual(status_code, 42)
+            self.assertEqual(status_code, 42)
             self.assertNotIn("Traceback", master_stderr)
             self.assertIn("failed to send heartbeat, setting state to missing", master_stderr)

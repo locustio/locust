@@ -24,12 +24,11 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Iterator,
     NoReturn,
     TypedDict,
-    ValuesView,
     cast,
 )
+from collections.abc import Iterator, ValuesView
 from uuid import uuid4
 
 import gevent

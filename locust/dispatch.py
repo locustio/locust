@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import contextlib
-import functools
 import itertools
 import math
-import sys
 import time
 from collections import defaultdict
+from collections.abc import Generator, Iterator
 from operator import attrgetter
-from typing import TYPE_CHECKING, Generator, Iterator
+from typing import TYPE_CHECKING
 
 import gevent
 from roundrobin import smooth
@@ -16,20 +15,6 @@ from roundrobin import smooth
 if TYPE_CHECKING:
     from locust import User
     from locust.runners import WorkerNode
-
-
-def compatible_math_gcd(*args: int) -> int:
-    """
-    This function is a workaround for the fact that `math.gcd` in:
-        - 3.5 <= Python < 3.9   doesn't accept more than two arguments.
-        - 3.9 <= Python         can accept more than two arguments.
-    See more at https://docs.python.org/3.9/library/math.html#math.gcd
-    """
-    if (3, 5) <= sys.version_info < (3, 9):
-        return functools.reduce(math.gcd, args)
-    elif sys.version_info >= (3, 9):
-        return math.gcd(*args)
-    raise NotImplementedError("This function is only implemented for Python from 3.5")
 
 
 # To profile line-by-line, uncomment the code below (i.e. `import line_profiler ...`) and
@@ -406,7 +391,7 @@ class UsersDispatcher(Iterator):
             max_order_of_magnitude = _get_order_of_magnitude(min(abs(u[1]) for u in users))
             weights = tuple(int(u[1] * max_order_of_magnitude) for u in users)
 
-            greatest_common_divisor = compatible_math_gcd(*weights)
+            greatest_common_divisor = math.gcd(*weights)
             normalized_values = [
                 (
                     user[0].__name__,

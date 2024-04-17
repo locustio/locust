@@ -4,7 +4,8 @@ import logging
 import time
 import traceback
 from contextlib import contextmanager
-from typing import Any, Generator
+from typing import Any
+from collections.abc import Generator
 
 from . import log
 from .exception import InterruptTaskSet, RescheduleTask, RescheduleTaskImmediately, StopUser

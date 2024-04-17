@@ -19,14 +19,14 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Iterable,
     NoReturn,
     Protocol,
     TypedDict,
     TypeVar,
     cast,
 )
-from typing import (
+from collections.abc import Iterable
+from collections import (
     OrderedDict as OrderedDictType,
 )
 
