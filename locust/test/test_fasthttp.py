@@ -506,7 +506,7 @@ class TestFastHttpUserClass(WebserverTestCase):
 
     def test_max_redirect_setting(self):
         class MyUser(FastHttpUser):
-            max_redirects = 1  # max_redirects and max_retries are funny names, because they are actually max attempts
+            max_redirects = 0
             host = "http://127.0.0.1:%i" % self.port
 
         l = MyUser(self.environment)

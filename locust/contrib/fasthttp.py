@@ -306,11 +306,11 @@ class FastHttpUser(User):
     connection_timeout: float = 60.0
     """Parameter passed to FastHttpSession"""
 
-    max_redirects: int = 5
-    """Parameter passed to FastHttpSession. Default 5, meaning 4 redirects."""
+    max_redirects: int = 30
+    """Parameter passed to FastHttpSession."""
 
-    max_retries: int = 1
-    """Parameter passed to FastHttpSession. Default 1, meaning zero retries."""
+    max_retries: int = 0
+    """Parameter passed to FastHttpSession."""
 
     insecure: bool = True
     """Parameter passed to FastHttpSession. Default True, meaning no SSL verification."""
