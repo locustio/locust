@@ -483,7 +483,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.assertIn("Shutting down (exit code 0)", stderr)
                     self.assertEqual(0, proc.returncode)
 
-    @unittest.skipIf(sys.version_info < (3, 9), reason="dies in 3.8 on GH and I cant be bothered to investigate it")
     def test_default_headless_spawn_options_with_shape(self):
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
             """

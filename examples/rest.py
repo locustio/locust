@@ -40,12 +40,10 @@ class MyUser(FastHttpUser):
             # use a trailing comma to append the response text to the custom message
             assert resp.js["data"]["foo"] == 2, "my custom error message with response text,"
 
-        # this only works in python 3.8 and up, so it is commented out:
-        # if sys.version_info >= (3, 8):
-        #     with self.rest("", "/post", json={"foo": 1}) as resp:
-        #         # assign and assert in one line
-        #         assert (foo := resp.js["foo"])
-        #         print(f"the number {foo} is awesome")
+        with self.rest("", "/post", json={"foo": 1}) as resp:
+            # assign and assert in one line
+            assert (foo := resp.js["foo"])
+            print(f"the number {foo} is awesome")
 
         # rest() catches most exceptions, so any programming mistakes you make automatically marks the request as a failure
         # and stores the callstack in the failure message
