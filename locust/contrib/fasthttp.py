@@ -12,11 +12,12 @@ import socket
 import time
 import traceback
 from base64 import b64encode
+from collections.abc import Generator
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
 from json.decoder import JSONDecodeError
 from ssl import SSLError
-from typing import Any, Callable, Generator, cast
+from typing import Any, Callable, cast
 from urllib.parse import urlparse, urlunparse
 
 import gevent
