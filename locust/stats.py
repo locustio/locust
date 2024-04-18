@@ -177,8 +177,7 @@ def diff_response_time_dicts(latest: dict[int, int], old: dict[int, int]) -> dic
     """
     new = {}
     for t in latest:
-        diff = latest[t] - old.get(t, 0)
-        if diff:
+        if diff := latest[t] - old.get(t, 0):
             new[t] = diff
     return new
 

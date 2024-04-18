@@ -604,8 +604,7 @@ class WebUI:
 
         options = self.environment.parsed_options
 
-        is_distributed = isinstance(self.environment.runner, MasterRunner)
-        if is_distributed:
+        if is_distributed := isinstance(self.environment.runner, MasterRunner):
             worker_count = self.environment.runner.worker_count
         else:
             worker_count = 0

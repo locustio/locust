@@ -27,8 +27,7 @@ class TestDebugging(DebugTestCase):
                 pass
 
         def _stop_user():
-            user = getattr(debug._env, "single_user_instance", None)
-            if user:
+            if user := getattr(debug._env, "single_user_instance", None):
                 user._state = LOCUST_STATE_STOPPING
 
         t = Timer(1, _stop_user)

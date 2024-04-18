@@ -405,8 +405,7 @@ class FastHttpUser(User):
             except Exception as e:
                 error_lines = []
                 for l in traceback.format_exc().split("\n"):
-                    m = self._callstack_regex.match(l)
-                    if m:
+                    if m := self._callstack_regex.match(l):
                         filename = re.sub(r"/(home|Users/\w*)/", "~/", m.group(1))
                         error_lines.append(filename + ":" + m.group(2) + m.group(3))
                     short_resp = resp.text[:200] if resp.text else resp.text

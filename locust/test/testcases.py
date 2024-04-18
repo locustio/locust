@@ -34,8 +34,7 @@ def fast():
 
 @app.route("/slow")
 def slow():
-    delay = request.args.get("delay")
-    if delay:
+    if delay := request.args.get("delay"):
         gevent.sleep(float(delay))
     else:
         gevent.sleep(random.choice([0.5, 1, 1.5]))
@@ -85,8 +84,7 @@ def status_204():
 
 @app.route("/redirect", methods=["GET", "POST"])
 def do_redirect():
-    delay = request.args.get("delay")
-    if delay:
+    if delay := request.args.get("delay"):
         gevent.sleep(float(delay))
     url = request.args.get("url", "/ultra_fast")
     return redirect(url)

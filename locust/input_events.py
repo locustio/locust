@@ -104,8 +104,7 @@ def input_listener(key_to_func_map: dict[str, Callable]):
 
         try:
             while True:
-                input = poller.poll()
-                if input:
+                if input := poller.poll():
                     for key in key_to_func_map:
                         if input == key:
                             key_to_func_map[key]()

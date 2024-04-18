@@ -80,8 +80,7 @@ class LocustTomlConfigParser(configargparse.TomlConfigParser):
         result = OrderedDict()
 
         for section in self.sections:
-            data = configargparse.get_toml_section(config, section)
-            if data:
+            if data := configargparse.get_toml_section(config, section):
                 for key, value in data.items():
                     if isinstance(value, list):
                         result[key] = value

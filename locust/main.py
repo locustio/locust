@@ -216,8 +216,7 @@ def main():
         gc.collect()  # avoid freezing garbage
         gc.freeze()  # move all objects to perm gen so ref counts dont get updated
         for _ in range(options.processes):
-            child_pid = gevent.fork()
-            if child_pid:
+            if child_pid := gevent.fork():
                 children.append(child_pid)
                 logging.debug(f"Started child worker with pid #{child_pid}")
             else:
@@ -315,8 +314,7 @@ def main():
 
     # make sure specified User exists
     if options.user_classes:
-        missing = set(options.user_classes) - set(user_classes.keys())
-        if missing:
+        if missing := set(options.user_classes) - set(user_classes.keys()):
             logger.error(f"Unknown User(s): {', '.join(missing)}\n")
             sys.exit(1)
         else:
