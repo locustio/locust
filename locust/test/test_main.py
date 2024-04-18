@@ -1617,9 +1617,10 @@ class SecondUser(HttpUser):
                     pass
             """
         )
-        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked, patch_env(
-            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.01"
-        ) as _:
+        with (
+            mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked,
+            patch_env("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.01") as _,
+        ):
             proc = subprocess.Popen(
                 [
                     "locust",
