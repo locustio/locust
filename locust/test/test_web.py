@@ -1110,11 +1110,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.environment.available_user_classes = {"User1": MyUser, "User2": MyUser2}
         self.environment.available_user_tasks = {"User1": MyUser.tasks, "User2": MyUser2.tasks}
 
-        users = {"User1": MyUser.json(), "User2": MyUser2.json()}
-        available_user_tasks = {"User1": ["my_task", "my_task_2"], "User2": []}
-
-        # environment.update_user_class({"user_class_name": "User1", "host": "http://localhost", "tasks": ["my_task_2"]})
-        response = requests.post(
+        requests.post(
             "http://127.0.0.1:%i/user" % self.web_port,
             json={"user_class_name": "User1", "host": "http://localhost", "tasks": ["my_task_2"]},
         )
@@ -1290,7 +1286,7 @@ class TestModernWebUI(LocustTestCase, _HeaderCheckMixin):
     def setUp(self):
         super().setUp()
 
-        parser = get_parser(default_config_files=[])
+        get_parser(default_config_files=[])
         self.stats = self.environment.stats
 
         self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, modern_ui=True)

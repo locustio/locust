@@ -3547,7 +3547,6 @@ class TestWorkerRunner(LocustTestCase):
                 pass
 
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc(raise_on_close=False)) as client:
-            client_id = id(client)
             worker = self.get_runner(environment=Environment(), user_classes=[MyUser], client=client)
             client.mocked_send(
                 Message(
