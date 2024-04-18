@@ -1,6 +1,18 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.26.0](https://github.com/locustio/locust/tree/2.26.0) (2024-04-18)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.25.0...2.26.0)
+
+**Merged pull requests:**
+
+- Reformat and lint stuff. And pin gevenhttpclient version [\#2682](https://github.com/locustio/locust/pull/2682) ([cyberw](https://github.com/cyberw))
+- Add ruff pre commit hook [\#2680](https://github.com/locustio/locust/pull/2680) ([cyberw](https://github.com/cyberw))
+- Remove python 3.8 compatibility code [\#2679](https://github.com/locustio/locust/pull/2679) ([cyberw](https://github.com/cyberw))
+- Drop support for Python 3.8 [\#2677](https://github.com/locustio/locust/pull/2677) ([cyberw](https://github.com/cyberw))
+- Update geventhttpclient and adjust FastHttpUser max\_retries / max\_redirects [\#2676](https://github.com/locustio/locust/pull/2676) ([cyberw](https://github.com/cyberw))
+
 ## [2.25.0](https://github.com/locustio/locust/tree/2.25.0) (2024-04-14)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.24.1...2.25.0)
