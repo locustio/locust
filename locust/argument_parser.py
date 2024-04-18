@@ -666,7 +666,7 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         nargs="*",
         metavar="<tag>",
         env_var="LOCUST_TAGS",
-        help="List of tags to include in the test, so only tasks with any matching tags will be executed",
+        help="List of tags to include in the test, so only tasks with at least one matching tag will be executed",
     )
     tag_group.add_argument(
         "-E",

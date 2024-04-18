@@ -811,7 +811,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 try:
                     response = requests.get(f"http://localhost:{port}/")
                 except ConnectionError:
-                    succcess = False
+                    success = False
                 try:
                     _, stderr = proc.communicate(timeout=5)
                 except subprocess.TimeoutExpired:
@@ -1084,7 +1084,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile() as mocked:
             with temporary_file("", suffix=".html") as html_report_file_path:
                 try:
-                    output = subprocess.check_output(
+                    subprocess.check_output(
                         [
                             "locust",
                             "-f",

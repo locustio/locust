@@ -69,6 +69,8 @@ class TestParser(unittest.TestCase):
             web-port = 45787
             headless = true
             tags = ["Critical", "Normal"]
+            [tool.something_else]
+            this = "should be ignored by locust"
             """
 
             file.write(config_data)
@@ -248,7 +250,7 @@ class TestArgumentParser(LocustTestCase):
     def test_parse_locustfile_empty_directory_error(self):
         with mock.patch("sys.stderr", new=StringIO()):
             with self.assertRaises(SystemExit):
-                locustfiles = parse_locustfile_option(
+                parse_locustfile_option(
                     args=[
                         "-f",
                         self.parent_dir.name,
@@ -258,7 +260,7 @@ class TestArgumentParser(LocustTestCase):
     def test_parse_locustfile_invalid_directory_error(self):
         with mock.patch("sys.stderr", new=StringIO()):
             with self.assertRaises(SystemExit):
-                locustfiles = parse_locustfile_option(
+                parse_locustfile_option(
                     args=[
                         "-f",
                         "non_existent_dir",
@@ -401,13 +403,12 @@ class TestFindLocustfiles(LocustTestCase):
     def test_find_locustfiles_with_multiple_locustfiles(self):
         with mock_locustfile() as mocked1:
             with mock_locustfile() as mocked2:
-                with mock_locustfile() as mocked3:
-                    locustfiles = find_locustfiles([mocked1.file_path, mocked2.file_path], False)
+                locustfiles = find_locustfiles([mocked1.file_path, mocked2.file_path], False)
 
-                    self.assertIn(mocked1.file_path, locustfiles)
-                    self.assertIn(mocked2.file_path, locustfiles)
+                self.assertIn(mocked1.file_path, locustfiles)
+                self.assertIn(mocked2.file_path, locustfiles)
 
-                    assert 2 == len(locustfiles)
+                assert 2 == len(locustfiles)
 
     def test_find_locustfiles_error_for_invalid_file_extension(self):
         with mock.patch("sys.stderr", new=StringIO()):
@@ -450,7 +451,7 @@ class TestLocustfileIsDirectory(LocustTestCase):
 
     def test_locustfile_is_directory_single_locustfile_without_file_extension(self):
         prefix_name = "foobar"
-        with NamedTemporaryFile(prefix=prefix_name, suffix=".py") as mocked:
+        with NamedTemporaryFile(prefix=prefix_name, suffix=".py"):
             is_dir = locustfile_is_directory([prefix_name])
             assert not is_dir
 

@@ -36,7 +36,7 @@ class TestEnvironment(LocustTestCase):
 
     def test_user_classes_with_same_name_is_error(self):
         with self.assertRaises(ValueError) as e:
-            environment = Environment(user_classes=[MyUserWithSameName1, MyUserWithSameName2])
+            Environment(user_classes=[MyUserWithSameName1, MyUserWithSameName2])
 
         self.assertEqual(
             e.exception.args[0],
@@ -186,7 +186,7 @@ class TestEnvironment(LocustTestCase):
                 pass
 
         with self.assertRaises(ValueError) as e:
-            environment = Environment(user_classes=[MyUser1, MyUser2])
+            Environment(user_classes=[MyUser1, MyUser2])
 
         self.assertEqual(
             e.exception.args[0],
@@ -269,7 +269,7 @@ class TestEnvironment(LocustTestCase):
             available_user_classes={"User1": MyUser1, "User2": MyUser2},
             available_user_tasks={"User1": MyUser1.tasks, "User2": MyUser2.tasks},
         )
-        worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+        worker_env.create_worker_runner("127.0.0.1", master.server.port)
 
         master_env.update_user_class({"user_class_name": "User1", "host": "http://localhost", "tasks": ["my_task_2"]})
 
