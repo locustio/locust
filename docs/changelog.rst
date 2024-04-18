@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.26.0
+======
+* Drop support for Python 3.8
+* Update geventhttpclient and adjust FastHttpUser max_retries / max_redirects (https://github.com/locustio/locust/pull/2676)
+* Pin gevenhttpclient version (https://github.com/locustio/locust/pull/2682)
+
 2.25.0
 ======
 * Add functionality to run listener functions for `custom_messages` concurrently (https://github.com/locustio/locust/pull/2650)
