@@ -1453,7 +1453,7 @@ class WorkerRunner(DistributedRunner):
 
 
 def _format_user_classes_count_for_log(user_classes_count: dict[str, int]) -> str:
-    return "{} ({} total users)".format(
+    return "{} ({} total users)".format(  # noqa: UP032
         json.dumps(dict(sorted(user_classes_count.items(), key=itemgetter(0)))),
         sum(user_classes_count.values()),
     )

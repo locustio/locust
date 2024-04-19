@@ -566,19 +566,19 @@ if __name__ == "__main__":
             all_dispatched_users_ramp_down = list(users_dispatcher)
             dispatch_iteration_durations_ramp_down = users_dispatcher.dispatch_iteration_durations[:]
 
-            cpu_ramp_up = "{:3.3f}/{:3.3f}/{:3.3f}".format(
+            cpu_ramp_up = "{:3.3f}/{:3.3f}/{:3.3f}".format(  # noqa: UP032
                 1000 * statistics.mean(dispatch_iteration_durations_ramp_up),
                 1000 * min(dispatch_iteration_durations_ramp_up),
                 1000 * max(dispatch_iteration_durations_ramp_up),
-            )
-            cpu_ramp_down = "{:3.3f}/{:3.3f}/{:3.3f}".format(
+            )  # noqa: UP032
+            cpu_ramp_down = "{:3.3f}/{:3.3f}/{:3.3f}".format(  # noqa: UP032
                 1000 * statistics.mean(dispatch_iteration_durations_ramp_down),
                 1000 * min(dispatch_iteration_durations_ramp_down),
                 1000 * max(dispatch_iteration_durations_ramp_down),
             )
 
             print(
-                "{:04.0f}/{:04.0f} - {:,} workers - {:,} users - {} user classes - {:,} users/s - instantiate: {:.3f}ms - new_dispatch (ramp-up/ramp-down): {:.3f}ms/{:.3f}ms - cpu_ramp_up: {}ms - cpu_ramp_down: {}ms".format(
+                "{:04.0f}/{:04.0f} - {:,} workers - {:,} users - {} user classes - {:,} users/s - instantiate: {:.3f}ms - new_dispatch (ramp-up/ramp-down): {:.3f}ms/{:.3f}ms - cpu_ramp_up: {}ms - cpu_ramp_down: {}ms".format(  # noqa: UP032
                     case_index + 1,
                     case_count,
                     worker_count,
