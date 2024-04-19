@@ -4129,7 +4129,7 @@ def _aggregate_dispatched_users(d: dict[str, dict[str, int]]) -> dict[str, int]:
 
 
 def _user_count(d: dict[str, dict[str, int]]) -> int:
-    return sum(map(sum, map(dict.values, d.values())))  # type: ignore
+    return sum(map(sum, map(dict.values, d.values())))
 
 
 def _user_count_on_worker(d: dict[str, dict[str, int]], worker_node_id: str) -> int:
