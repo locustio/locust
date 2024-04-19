@@ -100,8 +100,7 @@ class UsersDispatcher(Iterator):
         self._no_user_to_spawn = False
 
     def get_current_user_count(self) -> int:
-        # need to ignore type due to https://github.com/python/mypy/issues/1507
-        return sum(map(sum, map(dict.values, self._users_on_workers.values())))  # type: ignore
+        return sum(map(sum, map(dict.values, self._users_on_workers.values())))
 
     @property
     def dispatch_in_progress(self):
@@ -449,5 +448,4 @@ class UsersDispatcher(Iterator):
         The implementation was profiled and compared to other implementations such as dict-comprehensions
         and the one below is the most efficient.
         """
-        # type is ignored due to: https://github.com/python/mypy/issues/1507
-        return dict(zip(users_on_workers.keys(), map(dict.copy, users_on_workers.values())))  # type: ignore
+        return dict(zip(users_on_workers.keys(), map(dict.copy, users_on_workers.values())))

@@ -345,10 +345,10 @@ class Runner:
                 return
             elif self.shape_last_tick != current_tick:
                 if len(current_tick) == 2:
-                    user_count, spawn_rate = current_tick  # type: ignore
+                    user_count, spawn_rate = current_tick
                     user_classes = None
                 else:
-                    user_count, spawn_rate, user_classes = current_tick  # type: ignore
+                    user_count, spawn_rate, user_classes = current_tick
                 logger.info("Shape test updating to %d users at %.2f spawn rate" % (user_count, spawn_rate))
                 # TODO: This `self.start()` call is blocking until the ramp-up is completed. This can leads
                 #       to unexpected behaviours such as the one in the following example:
@@ -1453,7 +1453,7 @@ class WorkerRunner(DistributedRunner):
 
 
 def _format_user_classes_count_for_log(user_classes_count: dict[str, int]) -> str:
-    return "{} ({} total users)".format(
+    return "{} ({} total users)".format(  # noqa: UP032
         json.dumps(dict(sorted(user_classes_count.items(), key=itemgetter(0)))),
         sum(user_classes_count.values()),
     )
