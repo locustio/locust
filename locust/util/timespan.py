@@ -2,7 +2,7 @@ import re
 from datetime import timedelta
 
 
-def parse_timespan(time_str):
+def parse_timespan(time_str) -> int:
     """
     Parse a string representing a time span and return the number of seconds.
     Valid formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.
