@@ -342,9 +342,7 @@ class UsersDispatcher(Iterator):
 
     def _distribute_users(
         self, target_user_count: int
-    ) -> tuple[
-        dict[str, dict[str, int]], Generator[str | None, None, None], itertools.cycle, list[tuple[WorkerNode, str]]
-    ]:
+    ) -> tuple[dict[str, dict[str, int]], Iterator[str | None], itertools.cycle, list[tuple[WorkerNode, str]]]:
         """
         This function might take some time to complete if the `target_user_count` is a big number. A big number
         is typically > 50 000. However, this function is only called if a worker is added or removed while a test
