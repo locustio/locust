@@ -133,7 +133,7 @@ source code.
 
 *  ``extend_modern_web_ui.py``: Display a table with content-length for each call.
 
-* ``web_ui_cache_stats.py``: Display Varnish Hit/ Miss stats for each call. Could be easly extended to other CDN or cache proxies and gather other cache statistics such as cache age, control, ...
+* ``web_ui_cache_stats.py``: Display Varnish Hit/Miss stats for each call. This could easily be extended to other CDN or cache proxies and gather other cache statistics such as cache age, control, ...
 
  .. image:: images/extend_modern_web_ui_cache_stats.png
 

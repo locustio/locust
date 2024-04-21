@@ -73,7 +73,7 @@ Locust's code base is intentionally kept small and doesn't solve everything out 
 ## Authors
 
 * Maintainer: [Lars Holmberg](https://github.com/cyberw)
-* Modern UI: [Andrew Baldwin](https://github.com/andrewbaldwin44)
+* UI: [Andrew Baldwin](https://github.com/andrewbaldwin44)
 * Original creator: [Jonatan Heyman](https://github.com/heyman)
 * Massive thanks to [all of our contributors](https://github.com/locustio/locust/graphs/contributors)
 

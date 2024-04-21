@@ -286,7 +286,7 @@ def main():
                         exit_code = max(exit_code, child_exit_code)
                     if exit_code > 1:
                         logging.error(f"Bad response code from worker children: {exit_code}")
-                    # ensure master doesnt finish until output from workers has arrived
+                    # ensure master doesn't finish until output from workers has arrived
                     # otherwise the terminal might look weird.
                     time.sleep(0.1)
 

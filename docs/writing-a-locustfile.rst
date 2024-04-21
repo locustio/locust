@@ -68,7 +68,7 @@ is executed. For more info see :ref:`wait-time`.
 Methods decorated with ``@task`` are the core of your locust file. For every running User,
 Locust creates a `greenlet <https://greenlet.readthedocs.io/en/stable/greenlet.html>`_ (a coroutine or "micro-thread"), that will call those methods. 
 Code within a task is executed sequentially (it is just regular Python code),
-so ``/world`` wont be called until the response from ``/hello`` has been received.
+so ``/world`` won't be called until the response from ``/hello`` has been received.
 
 .. code-block:: python
 

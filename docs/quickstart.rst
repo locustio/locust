@@ -16,7 +16,7 @@ A Locust test is essentially just a Python program making requests to the system
             self.client.get("/hello")
             self.client.get("/world")
 
-This user will make an HTTP request to ``/hello``, and after that to ``/world``, and then repeat. For a full explanation and a more realistic example see :ref:`writing-a-locustfile`.
+This user will make an HTTP request to ``/hello``, then to ``/world``, and then repeat. For a full explanation and a more realistic example see :ref:`writing-a-locustfile`.
 
 Change ``/hello`` and ``/world`` to some actual paths on the web site/service you want to test, put the code in a file named ``locustfile.py`` in your current directory and then run ``locust``:
 

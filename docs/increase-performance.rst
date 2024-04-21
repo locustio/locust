@@ -93,14 +93,14 @@ For a complete example, see `rest.py <https://github.com/locustio/locust/blob/ma
 Connection Handling
 ===================
 
-By default a user will reuse the same TCP/HTTP connection if possible. To more realistically simulate new users connecting to your application this connection can be manually closed.
+By default a User will reuse the same TCP/HTTP connection (unless it breaks somehow). To more realistically simulate new browsers connecting to your application this connection can be manually closed.
 
 .. code-block:: python
 
         @task
         def t(self):
-            self.client.client.clientpool.close()
-            self.client.get("/") # Here a new connection will be created
+            self.client.client.clientpool.close() # self.client.client is not a typo
+            self.client.get("/")                  # Here a new connection will be created
 
 
 API

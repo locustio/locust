@@ -104,7 +104,7 @@ class WebUI:
         environment: Reference to the current Locust Environment
         host: Host/interface that the web server should accept connections to
         port: Port that the web server should listen to
-        web_login:  Enables a login page for the modern UI
+        web_login:  Enables a login page
         tls_cert: A path to a TLS certificate
         tls_key: A path to a TLS private key
         delayed_start: Whether or not to delay starting web UI until `start()` is called. Delaying web UI start
