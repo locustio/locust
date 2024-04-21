@@ -147,7 +147,7 @@ class WebUI:
         def handle_exception(error):
             error_message = str(error)
             logger.log(logging.CRITICAL, error_message)
-            return make_response(error_message, 500)
+            return make_response(error_message, getattr(error, "code", 500))
 
         @app.route("/assets/<path:path>")
         def send_assets(path):
