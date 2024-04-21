@@ -220,7 +220,7 @@ def main():
                 children.append(child_pid)
                 logging.debug(f"Started child worker with pid #{child_pid}")
             else:
-                # child is always a worker, even when it wasnt set on command line
+                # child is always a worker, even when it wasn't set on command line
                 options.worker = True
                 # remove options that dont make sense on worker
                 options.run_time = None
