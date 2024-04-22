@@ -105,27 +105,27 @@ class User(metaclass=UserMeta):
             tasks = {ThreadPage:15, write_post:1}
     """
 
-    weight = 1
+    weight: float = 1
     """Probability of user class being chosen. The higher the weight, the greater the chance of it being chosen."""
 
-    fixed_count = 0
+    fixed_count: int = 0
     """
     If the value > 0, the weight property will be ignored and the 'fixed_count'-instances will be spawned.
     These Users are spawned first. If the total target count (specified by the --users arg) is not enough
     to spawn all instances of each User class with the defined property, the final count of each User is undefined.
     """
 
-    abstract = True
+    abstract: bool = True
     """If abstract is True, the class is meant to be subclassed, and locust will not spawn users of this class during a test."""
 
-    def __init__(self, environment):
+    def __init__(self, environment) -> None:
         super().__init__()
         self.environment = environment
         """A reference to the :py:class:`Environment <locust.env.Environment>` in which this user is running"""
         self._state = None
-        self._greenlet: greenlet.Greenlet = None
+        self._greenlet: greenlet.Greenlet | None = None
         self._group: Group
-        self._taskset_instance: TaskSet = None
+        self._taskset_instance: TaskSet | None = None
         self._cp_last_run = time.time()  # used by constant_pacing wait_time
 
     def on_start(self) -> None:
@@ -191,7 +191,7 @@ class User(metaclass=UserMeta):
         self._group = group
         return self._greenlet
 
-    def stop(self, force=False):
+    def stop(self, force: bool = False):
         """
         Stop the user greenlet.
 
@@ -251,7 +251,7 @@ class HttpUser(User):
     for keeping a user session between requests.
     """
 
-    abstract = True
+    abstract: bool = True
     """If abstract is True, the class is meant to be subclassed, and users will not choose this locust during a test"""
 
     pool_manager: PoolManager | None = None
