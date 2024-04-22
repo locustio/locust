@@ -3924,7 +3924,6 @@ class TestRampUpDifferentUsers(unittest.TestCase):
 
         user_dispatcher.new_dispatch(target_user_count=21, spawn_rate=21, user_classes=[User1, User2, User3])
         dispatched_users = next(user_dispatcher)
-        print(dispatched_users)
         self.assertDictEqual(
             dispatched_users,
             {

@@ -37,7 +37,7 @@ def _kl_generator(users: list[tuple[type[User], float]]) -> Iterator[str | None]
     weights = [u[1] for u in users]
     generated = weights.copy()
 
-    heap = [(weights[i] * log2(x / (x + 1)), i) for i, x in enumerate(generated)]
+    heap = [(x * log2(x / (x + 1.0)), i) for i, x in enumerate(generated)]
     heapify(heap)
 
     while True:
