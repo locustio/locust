@@ -433,8 +433,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
     if options.run_time:
         if options.worker:
-            logger.error("--run-time should be specified on the master node, and not on worker nodes")
-            sys.exit(1)
+            logger.info("--run-time specified for a worker node will be ignored.")
         try:
             options.run_time = parse_timespan(options.run_time)
         except ValueError:
