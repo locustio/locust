@@ -1,5 +1,18 @@
 from __future__ import annotations
 
+from locust.clients import HttpSession
+from locust.exception import LocustError, StopUser
+from locust.user.task import (
+    LOCUST_STATE_RUNNING,
+    LOCUST_STATE_STOPPING,
+    LOCUST_STATE_WAITING,
+    DefaultTaskSet,
+    TaskSet,
+    get_tasks_from_base_classes,
+)
+from locust.user.wait_time import constant
+from locust.util import deprecation
+
 import logging
 import time
 import traceback
@@ -8,21 +21,6 @@ from typing import Callable, final
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
 from urllib3 import PoolManager
-
-logger = logging.getLogger(__name__)
-from locust.clients import HttpSession
-from locust.exception import LocustError, StopUser
-from locust.user.wait_time import constant
-from locust.util import deprecation
-
-from .task import (
-    LOCUST_STATE_RUNNING,
-    LOCUST_STATE_STOPPING,
-    LOCUST_STATE_WAITING,
-    DefaultTaskSet,
-    TaskSet,
-    get_tasks_from_base_classes,
-)
 
 logger = logging.getLogger(__name__)
 
