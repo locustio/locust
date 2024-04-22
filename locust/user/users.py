@@ -120,7 +120,7 @@ class User(metaclass=UserMeta):
         super().__init__()
         self.environment = environment
         """A reference to the :py:class:`Environment <locust.env.Environment>` in which this user is running"""
-        self._state = None
+        self._state: str | None = None
         self._greenlet: greenlet.Greenlet | None = None
         self._group: Group
         self._taskset_instance: TaskSet | None = None
