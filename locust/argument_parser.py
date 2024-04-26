@@ -106,12 +106,12 @@ def parse_locustfile_paths(paths: list[str]) -> list[str]:
     Returns a list of relative file paths.
 
     Args:
-        locustfiles (list[str]): paths taken from the -f command
+        paths (list[str]): paths taken from the -f command
 
     Returns:
         list[str]: Parsed locust file paths
     """
-    locustfiles = []
+    parsed_paths = []
     for path in paths:
         files = []
         if is_url(path):
@@ -135,9 +135,6 @@ def parse_locustfile_paths(paths: list[str]) -> list[str]:
                     sys.stderr.write(f"Could not find any locustfiles in directory '{path}'")
                     sys.exit(1)
         else:
-            # It's not a url or a folder. Add .py if missing
-            if not path.endswith(".py"):
-                path = path + ".py"
             # If file exists add the abspath
             if os.path.exists(path):
                 files.append(os.path.abspath(path))
@@ -149,9 +146,9 @@ def parse_locustfile_paths(paths: list[str]) -> list[str]:
                 sys.exit(1)
 
         if files:
-            locustfiles.extend(files)
+            parsed_paths.extend(files)
 
-    return locustfiles
+    return parsed_paths
 
 
 def is_url(url: str) -> bool:
@@ -171,7 +168,7 @@ def is_url(url: str) -> bool:
 def download_locustfile_from_url(url: str) -> str:
     """
     Attempt to download and save locustfile from url.
-    Returns locustfile
+    Returns path to downloaded file.
     """
     try:
         response = requests.get(url)
@@ -229,7 +226,7 @@ See documentation for more details, including how to set options using a file or
         "-f",
         "--locustfile",
         metavar="<filename>",
-        default="locustfile",
+        default="locustfile.py",
         help="The Python file or module that contains your test, e.g. 'my_test.py'. Accepts multiple comma-separated .py files, a package name/directory or a url to a remote locustfile. Defaults to 'locustfile'.",
         env_var="LOCUST_LOCUSTFILE",
     )
@@ -299,7 +296,7 @@ def parse_locustfile_option(args=None) -> list[str]:
     parser
 
     Returns:
-        Locustfiles (List): List of locustfile paths
+        parsed_paths (List): List of locustfile paths
     """
     parser = get_empty_argument_parser(add_help=False)
     parser.add_argument(
@@ -354,21 +351,21 @@ def parse_locustfile_option(args=None) -> list[str]:
         return [filename]
 
     locustfile_list = [f.strip() for f in options.locustfile.split(",")]
-    locustfiles = parse_locustfile_paths(locustfile_list)
+    parsed_paths = parse_locustfile_paths(locustfile_list)
 
-    if not locustfiles:
+    if not parsed_paths:
         note_about_file_endings = ""
         user_friendly_locustfile_name = options.locustfile
         if options.locustfile == "locustfile":
             user_friendly_locustfile_name = "locustfile.py"
         elif not options.locustfile.endswith(".py"):
-            note_about_file_endings = "Ensure your locustfile ends with '.py' or is a directory with locustfiles. "
+            note_about_file_endings = "Ensure your locustfile ends with '.py' or is a directory with parsed_paths. "
         sys.stderr.write(
             f"Could not find '{user_friendly_locustfile_name}'. {note_about_file_endings}See --help for available options.\n"
         )
         sys.exit(1)
 
-    return locustfiles
+    return parsed_paths
 
 
 def setup_parser_arguments(parser):
