@@ -104,7 +104,7 @@ class WebUI:
         environment: Reference to the current Locust Environment
         host: Host/interface that the web server should accept connections to
         port: Port that the web server should listen to
-        web_login:  Enables a login page for the modern UI
+        web_login:  Enables a login page
         tls_cert: A path to a TLS certificate
         tls_key: A path to a TLS private key
         delayed_start: Whether or not to delay starting web UI until `start()` is called. Delaying web UI start
@@ -147,7 +147,7 @@ class WebUI:
         def handle_exception(error):
             error_message = str(error)
             logger.log(logging.CRITICAL, error_message)
-            return make_response(error_message, 500)
+            return make_response(error_message, getattr(error, "code", 500))
 
         @app.route("/assets/<path:path>")
         def send_assets(path):
@@ -604,8 +604,7 @@ class WebUI:
 
         options = self.environment.parsed_options
 
-        is_distributed = isinstance(self.environment.runner, MasterRunner)
-        if is_distributed:
+        if is_distributed := isinstance(self.environment.runner, MasterRunner):
             worker_count = self.environment.runner.worker_count
         else:
             worker_count = 0

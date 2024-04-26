@@ -198,6 +198,9 @@ class Environment:
         return self.web_ui
 
     def update_user_class(self, user_settings):
+        if isinstance(self.runner, MasterRunner):
+            self.runner.send_message("update_user_class", user_settings)
+
         user_class_name = user_settings.get("user_class_name")
         user_class = self.available_user_classes[user_class_name]
         user_tasks = self.available_user_tasks[user_class_name]

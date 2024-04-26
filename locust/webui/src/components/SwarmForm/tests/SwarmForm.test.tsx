@@ -29,7 +29,7 @@ describe('SwarmForm', () => {
     const { getByText } = renderWithProvider(<SwarmForm />);
 
     act(() => {
-      fireEvent.click(getByText('Start Swarm'));
+      fireEvent.click(getByText('Start'));
     });
 
     await waitFor(async () => {
@@ -64,7 +64,7 @@ describe('SwarmForm', () => {
       fireEvent.change(getByLabelText('Number of users (peak concurrency)'), {
         target: { value: '15' },
       });
-      fireEvent.change(getByLabelText('Ramp Up (users started/second)'), {
+      fireEvent.change(getByLabelText('Ramp up (users started/second)'), {
         target: { value: '20' },
       });
       fireEvent.change(getByLabelText('Run time (e.g. 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.)'), {
@@ -74,7 +74,7 @@ describe('SwarmForm', () => {
         target: { value: 'https://localhost:5000' },
       });
 
-      fireEvent.click(getByText('Start Swarm'));
+      fireEvent.click(getByText('Start'));
     });
 
     await waitFor(async () => {
@@ -121,7 +121,7 @@ describe('SwarmForm', () => {
       fireEvent.click(getAllByRole('checkbox')[2]);
     });
     act(() => {
-      fireEvent.click(getByText('Start Swarm'));
+      fireEvent.click(getByText('Start'));
     });
 
     await waitFor(async () => {
@@ -168,7 +168,7 @@ describe('SwarmForm', () => {
     });
 
     act(() => {
-      fireEvent.click(getByText('Start Swarm'));
+      fireEvent.click(getByText('Start'));
     });
 
     await waitFor(() => {
@@ -225,7 +225,7 @@ describe('SwarmForm', () => {
         target: { value: 'Option2' },
       });
 
-      fireEvent.click(getByText('Start Swarm'));
+      fireEvent.click(getByText('Start'));
     });
 
     await waitFor(async () => {

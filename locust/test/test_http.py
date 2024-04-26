@@ -65,7 +65,7 @@ class TestHttpSession(WebserverTestCase):
     def test_slow_redirect(self):
         s = self.get_client()
         url = "/redirect?url=/redirect&delay=0.5"
-        r = s.get(url)
+        s.get(url)
         stats = self.runner.stats.get(url, method="GET")
         self.assertEqual(1, stats.num_requests)
         self.assertGreater(stats.avg_response_time, 500)
@@ -217,7 +217,7 @@ class TestHttpSession(WebserverTestCase):
             with s.get("/fail", catch_response=True) as r:
                 r.success()
                 raise OtherException("wtf")
-        except OtherException as e:
+        except OtherException:
             pass
         else:
             self.fail("OtherException should have been raised")
@@ -228,9 +228,9 @@ class TestHttpSession(WebserverTestCase):
     def test_catch_response_response_error(self):
         s = self.get_client()
         try:
-            with s.get("/fail", catch_response=True) as r:
+            with s.get("/fail", catch_response=True):
                 raise ResponseError("response error")
-        except ResponseError as e:
+        except ResponseError:
             self.fail("ResponseError should not have been raised")
 
         self.assertEqual(1, self.environment.stats.total.num_requests)
@@ -238,14 +238,14 @@ class TestHttpSession(WebserverTestCase):
 
     def test_catch_response_default_success(self):
         s = self.get_client()
-        with s.get("/ultra_fast", catch_response=True) as r:
+        with s.get("/ultra_fast", catch_response=True):
             pass
         self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_requests)
         self.assertEqual(0, self.environment.stats.get("/ultra_fast", "GET").num_failures)
 
     def test_catch_response_default_fail(self):
         s = self.get_client()
-        with s.get("/fail", catch_response=True) as r:
+        with s.get("/fail", catch_response=True):
             pass
         self.assertEqual(1, self.environment.stats.total.num_requests)
         self.assertEqual(1, self.environment.stats.total.num_failures)
@@ -260,7 +260,7 @@ class TestHttpSession(WebserverTestCase):
 
         self.environment.events.request.add_listener(on_request)
 
-        with s.get("/wrong_url/01", name="replaced_url_name") as r:
+        with s.get("/wrong_url/01", name="replaced_url_name"):
             pass
 
         self.assertIn("for url: replaced_url_name", str(kwargs["exception"]))

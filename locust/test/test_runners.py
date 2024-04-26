@@ -606,6 +606,31 @@ class TestLocustRunner(LocustRunnerTestCase):
         self.assertTrue(test_custom_msg[0])
         self.assertEqual(123, test_custom_msg_data[0]["test_data"])
 
+    def test_concurrent_custom_message(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        test_custom_msg = [False]
+        test_custom_msg_data = [{}]
+
+        def on_custom_msg(msg, **kw):
+            test_custom_msg[0] = True
+            test_custom_msg_data[0] = msg.data
+
+        environment = Environment(user_classes=[MyUser])
+        runner = LocalRunner(environment)
+
+        runner.register_message("test_custom_msg", on_custom_msg, concurrent=True)
+        runner.send_message("test_custom_msg", {"test_data": 123})
+
+        gevent.sleep(0.5)
+        self.assertTrue(test_custom_msg[0])
+        self.assertEqual(123, test_custom_msg_data[0]["test_data"])
+
     def test_undefined_custom_message(self):
         class MyUser(User):
             wait_time = constant(1)
@@ -967,8 +992,9 @@ class TestMasterWorkerRunners(LocustTestCase):
                     context={},
                 )
 
-        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3), patch_env(
-            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"
+        with (
+            mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3),
+            patch_env("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"),
         ):
             # start a Master runner
             options = parse_options(["--enable-rebalancing"])
@@ -1394,9 +1420,12 @@ class TestMasterWorkerRunners(LocustTestCase):
                     return None
 
         locust_worker_additional_wait_before_ready_after_stop = 5
-        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3), patch_env(
-            "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
-            str(locust_worker_additional_wait_before_ready_after_stop),
+        with (
+            mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3),
+            patch_env(
+                "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
+                str(locust_worker_additional_wait_before_ready_after_stop),
+            ),
         ):
             stop_timeout = 5
             master_env = Environment(
@@ -1651,9 +1680,12 @@ class TestMasterWorkerRunners(LocustTestCase):
             user_class.weight = random.uniform(1, 20)
 
         locust_worker_additional_wait_before_ready_after_stop = 5
-        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3), patch_env(
-            "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
-            str(locust_worker_additional_wait_before_ready_after_stop),
+        with (
+            mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3),
+            patch_env(
+                "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
+                str(locust_worker_additional_wait_before_ready_after_stop),
+            ),
         ):
             stop_timeout = 5
             master_env = Environment(
@@ -1681,12 +1713,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             while master.state != STATE_STOPPED:
                 self.assertTrue(time.time() - ts <= master_env.shape_class.stages[-1][0] + 60, master.state)
                 print(
-                    "{:.2f}/{:.2f} | {} | {:.0f} | ".format(
-                        time.time() - ts,
-                        master_env.shape_class.stages[-1][0],
-                        master.state,
-                        sum(master.reported_user_classes_count.values()),
-                    )
+                    f"{time.time() - ts:.2f}/{master_env.shape_class.stages[-1][0]:.2f} | {master.state} | {sum(master.reported_user_classes_count.values()):.0f} | "
                     + json.dumps(dict(sorted(master.reported_user_classes_count.items(), key=itemgetter(0))))
                 )
                 sleep(1)
@@ -1797,9 +1824,12 @@ class TestMasterWorkerRunners(LocustTestCase):
                     return None
 
         locust_worker_additional_wait_before_ready_after_stop = 2
-        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3), patch_env(
-            "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
-            str(locust_worker_additional_wait_before_ready_after_stop),
+        with (
+            mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3),
+            patch_env(
+                "LOCUST_WORKER_ADDITIONAL_WAIT_BEFORE_READY_AFTER_STOP",
+                str(locust_worker_additional_wait_before_ready_after_stop),
+            ),
         ):
             master_env = Environment(user_classes=[TestUser1], shape_class=TestShape())
 
@@ -2167,8 +2197,9 @@ class TestMasterRunner(LocustRunnerTestCase):
             def my_task(self):
                 gevent.sleep(600)
 
-        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server, patch_env(
-            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"
+        with (
+            mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server,
+            patch_env("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"),
         ):
             master = self.get_runner(user_classes=[TestUser])
             server.mocked_send(Message("client_ready", __version__, "fake_client1"))
@@ -2195,8 +2226,9 @@ class TestMasterRunner(LocustRunnerTestCase):
             def my_task(self):
                 gevent.sleep(600)
 
-        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server, patch_env(
-            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"
+        with (
+            mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server,
+            patch_env("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"),
         ):
             master = self.get_runner(user_classes=[TestUser])
             server.mocked_send(Message("client_ready", __version__, "fake_client1"))
@@ -2266,8 +2298,9 @@ class TestMasterRunner(LocustRunnerTestCase):
             def my_task(self):
                 gevent.sleep(600)
 
-        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server, patch_env(
-            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"
+        with (
+            mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server,
+            patch_env("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"),
         ):
             master = self.get_runner(user_classes=[TestUser])
             server.mocked_send(Message("client_ready", __version__, "fake_client1"))
@@ -3129,8 +3162,9 @@ class TestMasterRunner(LocustRunnerTestCase):
             assert_cache_hits()
 
         master._wait_for_workers_report_after_ramp_up.cache_clear()
-        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=1.5), patch_env(
-            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "5.7 * WORKER_REPORT_INTERVAL"
+        with (
+            mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=1.5),
+            patch_env("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "5.7 * WORKER_REPORT_INTERVAL"),
         ):
             self.assertEqual(master._wait_for_workers_report_after_ramp_up(), 5.7 * 1.5)
             assert_cache_hits()
@@ -3180,7 +3214,7 @@ class TestMasterRunner(LocustRunnerTestCase):
 
     def test_worker_sends_unrecognized_message_to_master(self):
         """
-        Validate master ignores message from worker when it cannot parse adddress info.
+        Validate master ignores message from worker when it cannot parse address info.
         """
 
         class TestUser(User):
@@ -3513,7 +3547,6 @@ class TestWorkerRunner(LocustTestCase):
                 pass
 
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc(raise_on_close=False)) as client:
-            client_id = id(client)
             worker = self.get_runner(environment=Environment(), user_classes=[MyUser], client=client)
             client.mocked_send(
                 Message(

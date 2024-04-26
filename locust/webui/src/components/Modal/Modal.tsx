@@ -17,6 +17,8 @@ export default function Modal({ open, onClose, children }: IModal) {
           left: '50%',
           transform: 'translate(-50%, -50%)',
           width: 'md',
+          maxHeight: '90vh',
+          overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
           rowGap: 2,

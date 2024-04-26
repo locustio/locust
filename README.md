@@ -1,7 +1,7 @@
 # Locust
 
 [![PyPI](https://img.shields.io/pypi/v/locust.svg)](https://pypi.org/project/locust/)
-[![PyPI](https://img.shields.io/pypi/pyversions/locust.svg)](https://pypi.org/project/locust/)
+![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Flocustio%2Flocust%2Fmaster%2Fpyproject.toml)
 [![Downloads](https://pepy.tech/badge/locust/week)](https://pepy.tech/project/locust)
 [![Build Status](https://github.com/locustio/locust/workflows/Tests/badge.svg)](https://github.com/locustio/locust/actions?query=workflow%3ATests)
 [![GitHub contributors](https://img.shields.io/github/contributors/locustio/locust.svg)](https://github.com/locustio/locust/graphs/contributors)
@@ -73,7 +73,7 @@ Locust's code base is intentionally kept small and doesn't solve everything out 
 ## Authors
 
 * Maintainer: [Lars Holmberg](https://github.com/cyberw)
-* Modern UI: [Andrew Baldwin](https://github.com/andrewbaldwin44)
+* UI: [Andrew Baldwin](https://github.com/andrewbaldwin44)
 * Original creator: [Jonatan Heyman](https://github.com/heyman)
 * Massive thanks to [all of our contributors](https://github.com/locustio/locust/graphs/contributors)
 

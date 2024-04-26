@@ -3,7 +3,7 @@
 Installation
 ============
 
-0. `Install Python <https://docs.python-guide.org/starting/installation/>`_ (3.8 or later)
+0. `Install Python <https://docs.python-guide.org/starting/installation/>`_ (3.9 or later)
 
 1. Install the package (check `the wiki <https://github.com/locustio/locust/wiki/Installation>`_ if the installation fails)
 

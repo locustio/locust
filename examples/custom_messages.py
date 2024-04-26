@@ -1,6 +1,8 @@
 from locust import HttpUser, between, events, task
 from locust.runners import MasterRunner, WorkerRunner
 
+import gevent
+
 usernames = []
 
 
@@ -8,11 +10,18 @@ def setup_test_users(environment, msg, **kwargs):
     # Fired when the worker receives a message of type 'test_users'
     usernames.extend(map(lambda u: u["name"], msg.data))
     environment.runner.send_message("acknowledge_users", f"Thanks for the {len(msg.data)} users!")
+    environment.runner.send_message("concurrent_message", "Message to concurrent handler")
 
 
 def on_acknowledge(msg, **kwargs):
     # Fired when the master receives a message of type 'acknowledge_users'
     print(msg.data)
+
+
+def on_concurrent_message(msg, **kwargs):
+    print(f"concurrent_message received with data: '{msg.data}'")
+    gevent.sleep(10)  # if this handler was run with concurrent=False it would halt the message handling loop in locust
+    print("finished processing concurrent_message")
 
 
 @events.init.add_listener
@@ -21,6 +30,7 @@ def on_locust_init(environment, **_kwargs):
         environment.runner.register_message("test_users", setup_test_users)
     if not isinstance(environment.runner, WorkerRunner):
         environment.runner.register_message("acknowledge_users", on_acknowledge)
+        environment.runner.register_message("concurrent_message", on_concurrent_message, concurrent=True)
 
 
 @events.test_start.add_listener

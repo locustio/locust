@@ -367,7 +367,7 @@ class TestStatsPrinting(LocustTestCase):
         headlines = info[1].replace("# ", "#").split()
         # check number of columns in headlines vs table ascii separator
         self.assertEqual(len(headlines), len(info[2].split("|")))
-        # table ascii seprators
+        # table ascii separators
         self.assertEqual(info[2], info[-2])
 
 

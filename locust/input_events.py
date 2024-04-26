@@ -56,7 +56,7 @@ class WindowsKeyPoller:
                 self.cur_keys_length = 0
                 self.captured_chars = []
             except pywintypes.error:
-                raise InitError("Terminal says its a tty but we couldnt enable line input. Keyboard input disabled.")
+                raise InitError("Terminal says its a tty but we couldn't enable line input. Keyboard input disabled.")
         else:
             raise InitError("Terminal was not a tty. Keyboard input disabled")
 
@@ -104,8 +104,7 @@ def input_listener(key_to_func_map: dict[str, Callable]):
 
         try:
             while True:
-                input = poller.poll()
-                if input:
+                if input := poller.poll():
                     for key in key_to_func_map:
                         if input == key:
                             key_to_func_map[key]()

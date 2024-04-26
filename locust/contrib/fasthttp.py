@@ -12,11 +12,12 @@ import socket
 import time
 import traceback
 from base64 import b64encode
+from collections.abc import Generator
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
 from json.decoder import JSONDecodeError
 from ssl import SSLError
-from typing import Any, Callable, Generator, cast
+from typing import Any, Callable, cast
 from urllib.parse import urlparse, urlunparse
 
 import gevent
@@ -230,16 +231,18 @@ class FastHttpSession:
         if not allow_redirects:
             self.client.redirect_resonse_codes = old_redirect_response_codes
 
+        request_meta["response_length"] = 0  # default value, if length cannot be determined
+
         # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body
         if stream:
-            request_meta["response_length"] = int(response.headers.get("response_length") or 0)
+            if response.headers and "response_length" in response.headers:
+                request_meta["response_length"] = int(response.headers["response_length"])
         else:
             try:
-                request_meta["response_length"] = len(response.content or "")
+                request_meta["response_length"] = len(response.content) if response.content else 0
             except HTTPParseError as e:
                 request_meta["response_time"] = (time.perf_counter() - start_perf_counter) * 1000
-                request_meta["response_length"] = 0
                 request_meta["exception"] = e
                 self.environment.events.request.fire(**request_meta)
                 return response
@@ -304,11 +307,11 @@ class FastHttpUser(User):
     connection_timeout: float = 60.0
     """Parameter passed to FastHttpSession"""
 
-    max_redirects: int = 5
-    """Parameter passed to FastHttpSession. Default 5, meaning 4 redirects."""
+    max_redirects: int = 30
+    """Parameter passed to FastHttpSession."""
 
-    max_retries: int = 1
-    """Parameter passed to FastHttpSession. Default 1, meaning zero retries."""
+    max_retries: int = 0
+    """Parameter passed to FastHttpSession."""
 
     insecure: bool = True
     """Parameter passed to FastHttpSession. Default True, meaning no SSL verification."""
@@ -402,8 +405,7 @@ class FastHttpUser(User):
             except Exception as e:
                 error_lines = []
                 for l in traceback.format_exc().split("\n"):
-                    m = self._callstack_regex.match(l)
-                    if m:
+                    if m := self._callstack_regex.match(l):
                         filename = re.sub(r"/(home|Users/\w*)/", "~/", m.group(1))
                         error_lines.append(filename + ":" + m.group(2) + m.group(3))
                     short_resp = resp.text[:200] if resp.text else resp.text
@@ -578,7 +580,10 @@ class ResponseContextManager(FastResponse):
     def __init__(self, response, environment, request_meta):
         # copy data from response to this object
         self.__dict__ = response.__dict__
-        self._cached_content = response.content
+        try:
+            self._cached_content = response._cached_content
+        except AttributeError:
+            pass
         # store reference to locust Environment
         self._environment = environment
         self.request_meta = request_meta

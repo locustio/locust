@@ -4,6 +4,24 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.26.0
+======
+* Drop support for Python 3.8
+* Update geventhttpclient and adjust FastHttpUser max_retries / max_redirects (https://github.com/locustio/locust/pull/2676)
+* Pin gevenhttpclient version (https://github.com/locustio/locust/pull/2682)
+
+2.25.0
+======
+* Add functionality to run listener functions for `custom_messages` concurrently (https://github.com/locustio/locust/pull/2650)
+* Update User Classes in Distributed Mode (https://github.com/locustio/locust/pull/2666)
+* Log deprecation warning for --legacy-ui (https://github.com/locustio/locust/pull/2670)
+* Fix UserClasses weight distribution with gcd (https://github.com/locustio/locust/pull/2663)
+
+2.24.1
+======
+* Some documentation updates & minor fixes to UI
+* Fixes to FastHttpUser content streaming (https://github.com/locustio/locust/pull/2642, https://github.com/locustio/locust/pull/2643)
+
 2.24.0
 ======
 * Pluggable dispatcher logic https://github.com/locustio/locust/pull/2606
@@ -256,7 +274,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 =====
 * Pass --tags and --exclude-tags to workers. (https://github.com/locustio/locust/pull/1976)
 * Clean up some logging messages (https://github.com/locustio/locust/pull/1973)
-* Ensure heartbeat\_worker doesnt try to re-establish connection to workers when quit has been called (https://github.com/locustio/locust/pull/1972)
+* Ensure heartbeat\_worker doesn't try to re-establish connection to workers when quit has been called (https://github.com/locustio/locust/pull/1972)
 * fixed\_count: ability to spawn a specific number of users \(as opposed to just using weights\) (https://github.com/locustio/locust/pull/1964)
 
 2.5.1
@@ -548,7 +566,7 @@ instance, as one would expect. For tasks defined under a :py:class:`TaskSet <loc
 would refer to the ``TaskSet`` instance.
 
 The ``task_set`` attribute on the ``User`` class (previously ``Locust`` class) has been removed. To declare a 
-``User`` class with a single ``TaskSet`` one would now use the the :py:attr:`tasks <locust.User.tasks>` 
+``User`` class with a single ``TaskSet`` one would now use the :py:attr:`tasks <locust.User.tasks>`
 attribute instead:
 
 .. code-block:: python
@@ -636,7 +654,7 @@ Other breaking changes
 Web UI improvements
 -------------------
 
-* It's now possible to protect the Web UI with Basic Auth using hte ``--web-auth`` command line argument.
+* It's now possible to protect the Web UI with Basic Auth using the ``--web-auth`` command line argument.
 * The Web UI can now be served over HTTPS by specifying a TLS certificate and key with the ``--tls-cert`` 
   and ``--tls-key`` command line arguments.
 * If the number of users and hatch rate are specified on command line, it's now used to pre-populate the input fields in 
@@ -691,7 +709,7 @@ Identical to previous version, but now built & deployed to Pypi using Travis.
 0.13.2
 ======
 
-* Fixed bug that broke the Web UI's repsonse time graph
+* Fixed bug that broke the Web UI's response time graph
 
 0.13.1
 ======
@@ -768,7 +786,7 @@ Identical to previous version, but now built & deployed to Pypi using Travis.
 * Added sequential task support - https://github.com/locustio/locust/pull/827
 * Added support for user-defined wait_function - https://github.com/locustio/locust/pull/785
 * By default, Locust no longer resets the statistics when the hatching is complete.
-  Therefore :code:`--no-reset-stats` has been deprected (since it's now the default behaviour),
+  Therefore :code:`--no-reset-stats` has been deprecated (since it's now the default behaviour),
   and instead a new :code:`--reset-stats` option has been added.
 * Dropped support for Python 3.3
 * Updated documentation
@@ -785,7 +803,7 @@ Identical to previous version, but now built & deployed to Pypi using Travis.
 
 * Python 3 support
 * Dropped support for Python 2.6
-* Added :code:`--no-reset-stats` option for controling if the statistics should be reset once
+* Added :code:`--no-reset-stats` option for controlling if the statistics should be reset once
   the hatching is complete
 * Added charts to the web UI for requests per second, average response time, and number of
   simulated users.
@@ -833,7 +851,7 @@ Identical to previous version, but now built & deployed to Pypi using Travis.
 * Fixed bug which caused the download time of the request body not to be included in the
   reported response time.
 * Fixed bug that occurred on some linux dists that were tampering with the python-requests
-  system package (removing dependencies which requests is bundling). This bug only occured
+  system package (removing dependencies which requests is bundling). This bug only occurred
   when installing Locust in the python system packages, and not when using virtualenv.
 * Various minor fixes and improvements.
 
@@ -841,7 +859,7 @@ Identical to previous version, but now built & deployed to Pypi using Travis.
 0.7.1
 =====
 
-* Exceptions that occurs within TaskSets are now catched by default.
+* Exceptions that occurs within TaskSets are now caught by default.
 * Fixed bug which caused Min response time to always be 0 after all locusts had been hatched
   and the statistics had been reset.
 * Minor UI improvements in the web interface.
@@ -857,7 +875,7 @@ HTTP client functionality moved to HttpLocust
 ---------------------------------------------
 
 Previously, the Locust class instantiated a :py:class:`HttpSession <locust.clients.HttpSession>`
-under the client attribute that was used to make HTTP requests. This funcionality has
+under the client attribute that was used to make HTTP requests. This functionality has
 now been moved into the :py:class:`HttpLocust <locust.core.HttpLocust>` class, in an
 effort to make it more obvious how one can use Locust to
 :doc:`load test non-HTTP systems <testing-other-systems>`.
@@ -1067,7 +1085,7 @@ Locust now uses Requests
 Locust's own HttpBrowser class (which was typically accessed through *self.client* from within a locust class)
 has been replaced by a thin wrapper around the requests library (http://python-requests.org). This comes with
 a number of advantages. Users can  now take advantage of a well documented, well written, fully fledged
-library for making HTTP requests. However, it also comes with some small API changes wich will require users
+library for making HTTP requests. However, it also comes with some small API changes which will require users
 to update their existing load testing scripts.
 
 Gzip encoding turned on by default
@@ -1174,7 +1192,7 @@ Smaller API Changes
 API changes
 -----------
 
-* Web inteface is now turned on by default. The **--web** command line option has been replaced by --no-web.
+* Web interface is now turned on by default. The **--web** command line option has been replaced by --no-web.
 * :func:`locust.events.request_success`  and :func:`locust.events.request_failure` now gets the HTTP method as the first argument.
 
 Improvements and bug fixes

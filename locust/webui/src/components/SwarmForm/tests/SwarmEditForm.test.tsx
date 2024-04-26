@@ -29,11 +29,11 @@ describe('SwarmEditForm', () => {
       fireEvent.change(getByLabelText('Number of users (peak concurrency)'), {
         target: { value: '5' },
       });
-      fireEvent.change(getByLabelText('Ramp Up (users started/second)'), {
+      fireEvent.change(getByLabelText('Ramp up (users started/second)'), {
         target: { value: '10' },
       });
 
-      fireEvent.click(getByText('Update Swarm'));
+      fireEvent.click(getByText('Update'));
     });
 
     await waitFor(async () => {

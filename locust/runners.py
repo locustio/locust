@@ -14,7 +14,7 @@ import time
 import traceback
 from abc import abstractmethod
 from collections import defaultdict
-from collections.abc import MutableMapping
+from collections.abc import Iterator, MutableMapping, ValuesView
 from operator import (
     itemgetter,
     methodcaller,
@@ -24,10 +24,8 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Iterator,
     NoReturn,
     TypedDict,
-    ValuesView,
     cast,
 )
 from uuid import uuid4
@@ -119,7 +117,7 @@ class Runner:
         self.target_user_classes_count: dict[str, int] = {}
         # target_user_count is set before the ramp-up/ramp-down occurs.
         self.target_user_count: int = 0
-        self.custom_messages: dict[str, Callable] = {}
+        self.custom_messages: dict[str, tuple[Callable, bool]] = {}
 
         self._users_dispatcher: UsersDispatcher | None = None
 
@@ -347,10 +345,10 @@ class Runner:
                 return
             elif self.shape_last_tick != current_tick:
                 if len(current_tick) == 2:
-                    user_count, spawn_rate = current_tick  # type: ignore
+                    user_count, spawn_rate = current_tick
                     user_classes = None
                 else:
-                    user_count, spawn_rate, user_classes = current_tick  # type: ignore
+                    user_count, spawn_rate, user_classes = current_tick
                 logger.info("Shape test updating to %d users at %.2f spawn rate" % (user_count, spawn_rate))
                 # TODO: This `self.start()` call is blocking until the ramp-up is completed. This can leads
                 #       to unexpected behaviours such as the one in the following example:
@@ -380,7 +378,7 @@ class Runner:
             caller = inspect.getframeinfo(inspect.stack()[1][0])
             logger.debug(f"Stopping all users (called from {caller.filename}:{caller.lineno})")
         except Exception:
-            logger.debug("Stopping all users (couldnt determine where stop() was called from)")
+            logger.debug("Stopping all users (couldn't determine where stop() was called from)")
         self.environment.events.test_stopping.fire(environment=self.environment)
         self.final_user_classes_count = {**self.user_classes_count}
         self.update_state(STATE_CLEANUP)
@@ -420,7 +418,7 @@ class Runner:
         row["nodes"].add(node_id)
         self.exceptions[key] = row
 
-    def register_message(self, msg_type: str, listener: Callable) -> None:
+    def register_message(self, msg_type: str, listener: Callable, concurrent=False) -> None:
         """
         Register a listener for a custom message from another node
 
@@ -429,7 +427,7 @@ class Runner:
         """
         if msg_type in self.custom_messages:
             raise Exception(f"Tried to register listener method for {msg_type}, but it already had a listener!")
-        self.custom_messages[msg_type] = listener
+        self.custom_messages[msg_type] = (listener, concurrent)
 
 
 class LocalRunner(Runner):
@@ -568,7 +566,7 @@ class LocalRunner(Runner):
         """
         logger.debug("Running locally: sending %s message to self" % msg_type)
         if msg_type in self.custom_messages:
-            listener = self.custom_messages[msg_type]
+            listener, concurrent = self.custom_messages[msg_type]
             msg = Message(msg_type, data, "local")
             listener(environment=self.environment, msg=msg)
         else:
@@ -1139,7 +1137,11 @@ class MasterRunner(DistributedRunner):
                     f"Received {msg.type} message from worker {msg.node_id} (index {self.get_worker_index(msg.node_id)})"
                 )
                 try:
-                    self.custom_messages[msg.type](environment=self.environment, msg=msg)
+                    listener, concurrent = self.custom_messages[msg.type]
+                    if not concurrent:
+                        listener(environment=self.environment, msg=msg)
+                    else:
+                        gevent.spawn(listener, environment=self.environment, msg=msg)
                 except Exception:
                     logging.error(f"Uncaught exception in handler for {msg.type}\n{traceback.format_exc()}")
 
@@ -1391,9 +1393,15 @@ class WorkerRunner(DistributedRunner):
                 self.reset_connection()
             elif msg.type == "heartbeat":
                 self.last_heartbeat_timestamp = time.time()
+            elif msg.type == "update_user_class":
+                self.environment.update_user_class(msg.data)
             elif msg.type in self.custom_messages:
                 logger.debug("Received %s message from master" % msg.type)
-                self.custom_messages[msg.type](environment=self.environment, msg=msg)
+                listener, concurrent = self.custom_messages[msg.type]
+                if not concurrent:
+                    listener(environment=self.environment, msg=msg)
+                else:
+                    gevent.spawn(listener, self.environment, msg)
             else:
                 logger.warning(f"Unknown message type received: {msg.type}")
 
@@ -1445,7 +1453,7 @@ class WorkerRunner(DistributedRunner):
 
 
 def _format_user_classes_count_for_log(user_classes_count: dict[str, int]) -> str:
-    return "{} ({} total users)".format(
+    return "{} ({} total users)".format(  # noqa: UP032
         json.dumps(dict(sorted(user_classes_count.items(), key=itemgetter(0)))),
         sum(user_classes_count.values()),
     )

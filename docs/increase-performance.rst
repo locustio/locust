@@ -90,6 +90,19 @@ For a complete example, see `rest.py <https://github.com/locustio/locust/blob/ma
     This feature is new and details of its interface/implementation may change in new versions of Locust.
 
 
+Connection Handling
+===================
+
+By default a User will reuse the same TCP/HTTP connection (unless it breaks somehow). To more realistically simulate new browsers connecting to your application this connection can be manually closed.
+
+.. code-block:: python
+
+        @task
+        def t(self):
+            self.client.client.clientpool.close() # self.client.client is not a typo
+            self.client.get("/")                  # Here a new connection will be created
+
+
 API
 ===
 

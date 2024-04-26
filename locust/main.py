@@ -182,6 +182,9 @@ def main():
         sys.stderr.write("[DEPRECATED] The --hatch-rate parameter has been renamed --spawn-rate\n")
         options.spawn_rate = options.hatch_rate
 
+    if options.legacy_ui:
+        sys.stderr.write("[DEPRECATED] The legacy UI is deprecated and will be removed soon\n")
+
     # setup logging
     if not options.skip_log_setup:
         if options.loglevel.upper() in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
@@ -213,12 +216,11 @@ def main():
         gc.collect()  # avoid freezing garbage
         gc.freeze()  # move all objects to perm gen so ref counts dont get updated
         for _ in range(options.processes):
-            child_pid = gevent.fork()
-            if child_pid:
+            if child_pid := gevent.fork():
                 children.append(child_pid)
                 logging.debug(f"Started child worker with pid #{child_pid}")
             else:
-                # child is always a worker, even when it wasnt set on command line
+                # child is always a worker, even when it wasn't set on command line
                 options.worker = True
                 # remove options that dont make sense on worker
                 options.run_time = None
@@ -247,12 +249,8 @@ def main():
                 # nothing more to do, just wait for the children to exit
                 for child_pid in children:
                     _, child_status = os.waitpid(child_pid, 0)
-                    try:
-                        if sys.version_info >= (3, 9):
-                            child_exit_code = os.waitstatus_to_exitcode(child_status)
-                            exit_code = max(exit_code, child_exit_code)
-                    except AttributeError:
-                        pass  # dammit python 3.8...
+                    child_exit_code = os.waitstatus_to_exitcode(child_status)
+                    exit_code = max(exit_code, child_exit_code)
                 sys.exit(exit_code)
             else:
                 options.master = True
@@ -267,12 +265,8 @@ def main():
                             try:
                                 _, child_status = os.waitpid(child_pid, os.WNOHANG)
                                 children.remove(child_pid)
-                                try:
-                                    if sys.version_info >= (3, 9):
-                                        child_exit_code = os.waitstatus_to_exitcode(child_status)
-                                        exit_code = max(exit_code, child_exit_code)
-                                except AttributeError:
-                                    pass  # dammit python 3.8...
+                                child_exit_code = os.waitstatus_to_exitcode(child_status)
+                                exit_code = max(exit_code, child_exit_code)
                             except OSError as e:
                                 if e.errno == errno.EINTR:
                                     time.sleep(0.1)
@@ -288,15 +282,11 @@ def main():
                             pass  # never mind, process was already dead
                     for child_pid in children:
                         _, child_status = os.waitpid(child_pid, 0)
-                        try:
-                            if sys.version_info >= (3, 9):
-                                child_exit_code = os.waitstatus_to_exitcode(child_status)
-                                exit_code = max(exit_code, child_exit_code)
-                        except AttributeError:
-                            pass  # dammit python 3.8...
+                        child_exit_code = os.waitstatus_to_exitcode(child_status)
+                        exit_code = max(exit_code, child_exit_code)
                     if exit_code > 1:
                         logging.error(f"Bad response code from worker children: {exit_code}")
-                    # ensure master doesnt finish until output from workers has arrived
+                    # ensure master doesn't finish until output from workers has arrived
                     # otherwise the terminal might look weird.
                     time.sleep(0.1)
 
@@ -324,8 +314,7 @@ def main():
 
     # make sure specified User exists
     if options.user_classes:
-        missing = set(options.user_classes) - set(user_classes.keys())
-        if missing:
+        if missing := set(options.user_classes) - set(user_classes.keys()):
             logger.error(f"Unknown User(s): {', '.join(missing)}\n")
             sys.exit(1)
         else:
@@ -352,9 +341,6 @@ def main():
 It's not high enough for load testing, and the OS didn't allow locust to increase it by itself.
 See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."""
             )
-
-    if sys.version_info < (3, 9):
-        logger.warning("Python 3.8 support is deprecated and will be removed soon")
 
     # create locust Environment
     locustfile_path = None if not locustfile else os.path.basename(locustfile)
@@ -394,7 +380,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
                     environment.update_user_class(user_config)
             except Exception as e:
-                logger.error(f"The --config-users arugment must be in valid JSON string or file: {e}")
+                logger.error(f"The --config-users argument must be in valid JSON string or file: {e}")
                 sys.exit(-1)
 
     if (
@@ -447,8 +433,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
     if options.run_time:
         if options.worker:
-            logger.error("--run-time should be specified on the master node, and not on worker nodes")
-            sys.exit(1)
+            logger.info("--run-time specified for a worker node will be ignored.")
         try:
             options.run_time = parse_timespan(options.run_time)
         except ValueError:

@@ -483,7 +483,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.assertIn("Shutting down (exit code 0)", stderr)
                     self.assertEqual(0, proc.returncode)
 
-    @unittest.skipIf(sys.version_info < (3, 9), reason="dies in 3.8 on GH and I cant be bothered to investigate it")
     def test_default_headless_spawn_options_with_shape(self):
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
             """
@@ -812,7 +811,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 try:
                     response = requests.get(f"http://localhost:{port}/")
                 except ConnectionError:
-                    succcess = False
+                    success = False
                 try:
                     _, stderr = proc.communicate(timeout=5)
                 except subprocess.TimeoutExpired:
@@ -833,7 +832,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_web_options(self):
         port = get_free_tcp_port()
         if platform.system() != "Darwin":
-            # MacOS only sets up the loopback interface for 127.0.0.1 and not for 127.*.*.*, so we cant test this
+            # MacOS only sets up the loopback interface for 127.0.0.1 and not for 127.*.*.*, so we can't test this
             with mock_locustfile() as mocked:
                 proc = subprocess.Popen(
                     ["locust", "-f", mocked.file_path, "--web-host", "127.0.0.2", "--web-port", str(port)],
@@ -1112,7 +1111,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile() as mocked:
             with temporary_file("", suffix=".html") as html_report_file_path:
                 try:
-                    output = subprocess.check_output(
+                    subprocess.check_output(
                         [
                             "locust",
                             "-f",
@@ -1645,9 +1644,10 @@ class SecondUser(HttpUser):
                     pass
             """
         )
-        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked, patch_env(
-            "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.01"
-        ) as _:
+        with (
+            mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked,
+            patch_env("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.01") as _,
+        ):
             proc = subprocess.Popen(
                 [
                     "locust",
@@ -2252,7 +2252,6 @@ class AnyUser(User):
 
             self.assertNotIn("Traceback", stderr)
             self.assertIn("INFO/locust.runners: sys.exit(42) called", stderr)
-            if sys.version_info >= (3, 9):
-                self.assertEqual(status_code, 42)
+            self.assertEqual(status_code, 42)
             self.assertNotIn("Traceback", master_stderr)
             self.assertIn("failed to send heartbeat, setting state to missing", master_stderr)

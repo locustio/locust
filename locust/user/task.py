@@ -10,7 +10,6 @@ from typing import (
     TYPE_CHECKING,
     Callable,
     Protocol,
-    Type,
     TypeVar,
     final,
     overload,
@@ -25,7 +24,7 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
-TaskT = TypeVar("TaskT", Callable[..., None], Type["TaskSet"])
+TaskT = TypeVar("TaskT", Callable[..., None], type["TaskSet"])
 
 LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING = ["running", "waiting", "stopping"]
 

@@ -131,7 +131,18 @@ order to coordinate the test. This can be easily accomplished with custom messag
             environment.runner.send_message('test_users', users)  
 
 Note that when running locally (i.e. non-distributed), this functionality will be preserved; 
-the messages will simply be handled by the runner that sends them.  
+the messages will simply be handled by the runner that sends them.
+
+.. note::
+    Using the default options while registering a message handler will run the listener function
+    in a **blocking** way, resulting in the heartbeat and other messages being delayed for the amount
+    of the execution.
+    If you think that your message handler will need to run for more than a second then you can register it
+    as **concurrent**. Locust will then make it run in its own greenlet. Note that these greenlets will never 
+    be join():ed.
+
+    .. code-block::
+        environment.runner.register_message('test_users', setup_test_users, concurrent=True)
 
 For more details, see the `complete example <https://github.com/locustio/locust/tree/master/examples/custom_messages.py>`_.
 

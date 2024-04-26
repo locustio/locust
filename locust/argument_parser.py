@@ -80,8 +80,7 @@ class LocustTomlConfigParser(configargparse.TomlConfigParser):
         result = OrderedDict()
 
         for section in self.sections:
-            data = configargparse.get_toml_section(config, section)
-            if data:
+            if data := configargparse.get_toml_section(config, section):
                 for key, value in data.items():
                     if isinstance(value, list):
                         result[key] = value
@@ -274,7 +273,7 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
         sys.exit(1)
 
     filename = msg.data["filename"]
-    with open(os.path.join(tempfile.gettempdir(), filename), "w") as locustfile:
+    with open(os.path.join(tempfile.gettempdir(), filename), "w", encoding="utf-8") as locustfile:
         locustfile.write(msg.data["contents"])
 
     def exit_handler():
@@ -515,7 +514,7 @@ def setup_parser_arguments(parser):
         "--legacy-ui",
         default=False,
         action="store_true",
-        help="Use the legacy frontend for the web UI",
+        help="Use the legacy frontend for the web UI (deprecated, support will be removed soon)",
         env_var="LOCUST_LEGACY_UI",
     )
 
@@ -623,7 +622,7 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         nargs="*",
         metavar="<tag>",
         env_var="LOCUST_TAGS",
-        help="List of tags to include in the test, so only tasks with any matching tags will be executed",
+        help="List of tags to include in the test, so only tasks with at least one matching tag will be executed",
     )
     tag_group.add_argument(
         "-E",

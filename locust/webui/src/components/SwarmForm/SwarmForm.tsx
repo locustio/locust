@@ -115,7 +115,7 @@ function SwarmForm({
           <TextField
             defaultValue={(isShape && '-') || spawnRate || 1}
             disabled={!!isShape}
-            label='Ramp Up (users started/second)'
+            label='Ramp up (users started/second)'
             name='spawnRate'
             title='Disabled for tests using LoadTestShape class'
           />
@@ -144,7 +144,7 @@ function SwarmForm({
           </Accordion>
           {!isEmpty(extraOptions) && <CustomParameters extraOptions={extraOptions} />}
           <Button size='large' type='submit' variant='contained'>
-            Start Swarm
+            Start
           </Button>
         </Box>
       </Form>

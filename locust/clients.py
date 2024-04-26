@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import re
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator
 from urllib.parse import urlparse, urlunparse
 
 import requests

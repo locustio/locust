@@ -5,7 +5,7 @@ import datetime
 import msgpack
 
 try:
-    from bson import ObjectId  # type: ignore
+    from bson import ObjectId
 except ImportError:
 
     class ObjectId:  # type: ignore

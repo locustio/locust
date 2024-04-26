@@ -24,7 +24,6 @@ jobs:
           - { name: "3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
           - { name: "3.10", python: "3.10", os: ubuntu-latest, tox: py310 }
           - { name: "3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
-          - { name: "3.8", python: "3.8", os: ubuntu-latest, tox: py38 }
 
     steps:
       - uses: actions/checkout@v3
@@ -152,7 +151,7 @@ jobs:
           python -m build
           echo "TAG=${GITHUB_REF#refs/*/}" | tee -a $GITHUB_ENV
       - name: Publish tagged version to PyPI
-        uses: pypa/gh-action-pypi-publish@master
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
@@ -191,7 +190,7 @@ jobs:
           python -m build
       - name: Publish prerelease version to PyPI
         if: ${{ env.NOT_MERGE_COMMIT == '' }}
-        uses: pypa/gh-action-pypi-publish@master
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}

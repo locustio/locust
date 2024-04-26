@@ -71,10 +71,32 @@ class TestFastHttpSession(WebserverTestCase):
         # download the content of the streaming response (so we don't get an ugly exception in the log)
         _ = r.content
 
+    def test_streaming_response_catch_response(self):
+        """
+        Test a request to an endpoint that returns a streaming response, and uses catch_response
+        """
+        s = self.get_client()
+
+        with s.get("/streaming/30", stream=True, catch_response=True) as r:
+            # typical usage of r when stream=True is to read the stream as desired,
+            # with the possibility to "fail fast" when some things are read early on
+            response_content = str(r.stream.read())
+            r.failure("some error")
+
+        self.assertRegex(response_content, "streaming response")
+
+        stats = self.runner.stats.get("/streaming/30", "GET")
+        self.assertEqual(1, stats.num_requests)
+        self.assertEqual(1, stats.num_failures)
+
+        # verify that response time does NOT include whole download time, when using stream=True
+        self.assertGreaterEqual(stats.avg_response_time, 0)
+        self.assertLess(stats.avg_response_time, 250)
+
     def test_slow_redirect(self):
         s = self.get_client()
         url = "/redirect?url=/redirect&delay=0.5"
-        r = s.get(url)
+        s.get(url)
         stats = self.runner.stats.get(url, method="GET")
         self.assertEqual(1, stats.num_requests)
         self.assertGreater(stats.avg_response_time, 500)
@@ -165,7 +187,7 @@ class TestFastHttpSession(WebserverTestCase):
             with s.get("/fail", catch_response=True) as r:
                 r.success()
                 raise OtherException("wtf")
-        except OtherException as e:
+        except OtherException:
             pass
         else:
             self.fail("OtherException should have been raised")
@@ -175,14 +197,14 @@ class TestFastHttpSession(WebserverTestCase):
 
     def test_catch_response_default_success(self):
         s = self.get_client()
-        with s.get("/ultra_fast", catch_response=True) as r:
+        with s.get("/ultra_fast", catch_response=True):
             pass
         self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_requests)
         self.assertEqual(0, self.environment.stats.get("/ultra_fast", "GET").num_failures)
 
     def test_catch_response_default_fail(self):
         s = self.get_client()
-        with s.get("/fail", catch_response=True) as r:
+        with s.get("/fail", catch_response=True):
             pass
         self.assertEqual(1, self.environment.stats.total.num_requests)
         self.assertEqual(1, self.environment.stats.total.num_failures)
@@ -279,7 +301,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
 
         l = MyUser(self.environment)
         path = "/no_content_length"
-        r = l.client.get(path)
+        l.client.get(path)
         self.assertEqual(
             self.runner.stats.get(path, "GET").avg_content_length,
             len("This response does not have content-length in the header"),
@@ -291,7 +313,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
 
         l = MyUser(self.environment)
         path = "/no_content_length"
-        r = l.client.get(path, stream=True)
+        l.client.get(path, stream=True)
         self.assertEqual(0, self.runner.stats.get(path, "GET").avg_content_length)
 
     def test_request_stats_named_endpoint(self):
@@ -484,7 +506,7 @@ class TestFastHttpUserClass(WebserverTestCase):
 
     def test_max_redirect_setting(self):
         class MyUser(FastHttpUser):
-            max_redirects = 1  # max_redirects and max_retries are funny names, because they are actually max attempts
+            max_redirects = 0
             host = "http://127.0.0.1:%i" % self.port
 
         l = MyUser(self.environment)
@@ -504,7 +526,7 @@ class TestFastHttpUserClass(WebserverTestCase):
     def test_slow_redirect(self):
         s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port, user=None)
         url = "/redirect?url=/redirect&delay=0.5"
-        r = s.get(url)
+        s.get(url)
         stats = self.runner.stats.get(url, method="GET")
         self.assertEqual(1, stats.num_requests)
         self.assertGreater(stats.avg_response_time, 500)
@@ -628,7 +650,7 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         self.assertEqual(1, self.num_success)
 
     def test_catch_response_http_fail(self):
-        with self.user.client.get("/fail", catch_response=True) as response:
+        with self.user.client.get("/fail", catch_response=True):
             pass
         self.assertEqual(1, self.num_failures)
         self.assertEqual(0, self.num_success)
@@ -661,7 +683,7 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         class MyTaskSet(TaskSet):
             @task
             def interrupted_task(self):
-                with self.client.get("/ultra_fast", catch_response=True) as r:
+                with self.client.get("/ultra_fast", catch_response=True):
                     raise InterruptTaskSet()
 
         class MyUser(FastHttpUser):

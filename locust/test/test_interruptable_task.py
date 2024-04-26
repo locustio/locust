@@ -3,12 +3,11 @@ from locust.env import Environment
 from locust.exception import StopUser
 
 from collections import defaultdict
-from typing import DefaultDict
 from unittest import TestCase
 
 
 class InterruptableTaskSet(SequentialTaskSet):
-    counter: DefaultDict[str, int] = defaultdict(int)
+    counter: defaultdict[str, int] = defaultdict(int)
 
     def on_start(self):
         super().on_start()

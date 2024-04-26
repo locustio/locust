@@ -5,8 +5,9 @@ import itertools
 import math
 import time
 from collections import defaultdict
+from collections.abc import Generator, Iterator
 from operator import attrgetter
-from typing import TYPE_CHECKING, Generator, Iterator
+from typing import TYPE_CHECKING
 
 import gevent
 from roundrobin import smooth
@@ -99,8 +100,7 @@ class UsersDispatcher(Iterator):
         self._no_user_to_spawn = False
 
     def get_current_user_count(self) -> int:
-        # need to ignore type due to https://github.com/python/mypy/issues/1507
-        return sum(map(sum, map(dict.values, self._users_on_workers.values())))  # type: ignore
+        return sum(map(sum, map(dict.values, self._users_on_workers.values())))
 
     @property
     def dispatch_in_progress(self):
@@ -366,18 +366,37 @@ class UsersDispatcher(Iterator):
             if not users:
                 return itertools.cycle([None])
 
-            # Normalize the weights so that the smallest weight will be equal to "target_min_weight".
-            # The value "2" was experimentally determined because it gave a better distribution especially
-            # when dealing with weights which are close to each others, e.g. 1.5, 2, 2.4, etc.
-            target_min_weight = 2
+            def _get_order_of_magnitude(n: float) -> int:
+                """Get how many times we need to multiply `n` to get an integer-like number.
+                For example:
+                    0.1 would return 10,
+                    0.04 would return 100,
+                    0.0007 would return 10000.
+                """
+                if n <= 0:
+                    raise ValueError("To get the order of magnitude, the number must be greater than 0.")
 
-            # 'Value' here means weight or fixed count
+                counter = 0
+                while n < 1:
+                    n *= 10
+                    counter += 1
+                return 10**counter
+
+            # Get maximum order of magnitude to "normalize the weights".
+            # "Normalizing the weights" is to multiply all weights by the same number so that
+            # they become integers. Then we can find the largest common divisor of all the
+            # weights, divide them by it and get the smallest possible numbers with the same
+            # ratio as the numbers originally had.
+            max_order_of_magnitude = _get_order_of_magnitude(min(abs(u[1]) for u in users))
+            weights = tuple(int(u[1] * max_order_of_magnitude) for u in users)
+
+            greatest_common_divisor = math.gcd(*weights)
             normalized_values = [
                 (
-                    user.__name__,
-                    round(target_min_weight * value / min(u[1] for u in users)),
+                    user[0].__name__,
+                    normalized_weight // greatest_common_divisor,
                 )
-                for user, value in users
+                for user, normalized_weight in zip(users, weights)
             ]
             generation_length_to_get_proper_distribution = sum(
                 normalized_val[1] for normalized_val in normalized_values
@@ -429,5 +448,4 @@ class UsersDispatcher(Iterator):
         The implementation was profiled and compared to other implementations such as dict-comprehensions
         and the one below is the most efficient.
         """
-        # type is ignored due to: https://github.com/python/mypy/issues/1507
-        return dict(zip(users_on_workers.keys(), map(dict.copy, users_on_workers.values())))  # type: ignore
+        return dict(zip(users_on_workers.keys(), map(dict.copy, users_on_workers.values())))

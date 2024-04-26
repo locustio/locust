@@ -10,6 +10,10 @@ import signal
 import time
 from abc import abstractmethod
 from collections import OrderedDict, defaultdict, namedtuple
+from collections import (
+    OrderedDict as OrderedDictType,
+)
+from collections.abc import Iterable
 from copy import copy
 from html import escape
 from itertools import chain
@@ -19,15 +23,11 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Iterable,
     NoReturn,
     Protocol,
     TypedDict,
     TypeVar,
     cast,
-)
-from typing import (
-    OrderedDict as OrderedDictType,
 )
 
 import gevent
@@ -177,8 +177,7 @@ def diff_response_time_dicts(latest: dict[int, int], old: dict[int, int]) -> dic
     """
     new = {}
     for t in latest:
-        diff = latest[t] - old.get(t, 0)
-        if diff:
+        if diff := latest[t] - old.get(t, 0):
             new[t] = diff
     return new
 
@@ -1041,7 +1040,7 @@ class StatsCSV:
 
 
 class StatsCSVFileWriter(StatsCSV):
-    """Write statistics to to CSV files"""
+    """Write statistics to CSV files"""
 
     def __init__(
         self,

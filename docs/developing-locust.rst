@@ -20,7 +20,9 @@ Now the ``locust`` command will run *your* code with no need for reinstalling af
 
 To contribute your changes, push to a branch in your repo and then `open a PR on github <https://github.com/locustio/locust/compare>`_. 
 
-Before you open a pull request, make sure all the checks work. And if you are adding a feature, make sure it is documented (in ``docs/*.rst``).
+If you install `pre-commit <https://pre-commit.com/>`_, linting and format checks/fixes will be automatically performed before each commit.
+
+Before you open a pull request, make sure all the tests work. And if you are adding a feature, make sure it is documented (in ``docs/*.rst``).
 
 Testing your changes
 ====================
@@ -32,10 +34,10 @@ We use `tox <https://tox.readthedocs.io/en/stable/>`_ to automate tests across m
     $ pip3 install tox
     $ tox
     ...
-    py38: install_deps> python -I -m pip install cryptography mock pyquery retry
-    py38: commands[0]> python3 -m pip install .
+    py39: install_deps> python -I -m pip install cryptography mock pyquery retry
+    py39: commands[0]> python3 -m pip install .
     ...
-    py38: commands[1]> python3 -m unittest discover
+    py39: commands[1]> python3 -m unittest discover
     ...
 
 To only run a specific suite or specific test you can call `pytest <https://docs.pytest.org/>`_ directly:
