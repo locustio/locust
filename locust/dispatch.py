@@ -374,8 +374,8 @@ class UsersDispatcher(Iterator):
     def _user_gen(self) -> Iterator[str | None]:
         fixed_users = {u.__name__: u for u in self._user_classes if u.fixed_count}
 
-        cycle_fixed_gen = _kl_generator([(u, u.fixed_count) for u in fixed_users.values()])
-        cycle_weighted_gen = _kl_generator([(u, u.weight) for u in self._user_classes if not u.fixed_count])
+        fixed_users_gen = _kl_generator([(u, u.fixed_count) for u in fixed_users.values()])
+        weighted_users_gen = _kl_generator([(u, u.weight) for u in self._user_classes if not u.fixed_count])
 
         # Spawn users
         while True:
@@ -384,7 +384,7 @@ class UsersDispatcher(Iterator):
                 current_fixed_users_count = {u: self._get_user_current_count(u) for u in fixed_users}
                 spawned_classes: set[str] = set()
                 while len(spawned_classes) != len(fixed_users):
-                    user_name: str | None = next(cycle_fixed_gen)
+                    user_name: str | None = next(fixed_users_gen)
                     if not user_name:
                         break
 
@@ -400,7 +400,7 @@ class UsersDispatcher(Iterator):
                     else:
                         spawned_classes.add(user_name)
 
-            yield next(cycle_weighted_gen)
+            yield next(weighted_users_gen)
 
     @staticmethod
     def _fast_users_on_workers_copy(users_on_workers: dict[str, dict[str, int]]) -> dict[str, dict[str, int]]:
