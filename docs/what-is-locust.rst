@@ -62,7 +62,6 @@ Authors
 - Jonatan Heyman (`@heyman <https://github.com/heyman>`_)
 - Lars Holmberg (`@cyberw <https://github.com/cyberw>`_)
 - Andrew Baldwin (`@andrewbaldwin44 <https://github.com/andrewbaldwin44>`_)
-- Carl Byström, Joakim Hamrén & Hugo Heyman
 
 Many thanks to our other great `contributors <https://github.com/locustio/locust/graphs/contributors>`_!
 

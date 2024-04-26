@@ -35,22 +35,7 @@ official Locust docker image as a base image::
     FROM locustio/locust
     RUN pip3 install some-python-package
 
-Running a distributed load test on Kubernetes
-==============================================
+Running Locust using Kubernetes
+===============================
 
-HELM
-*****
-
-One of the ways to run Locust on Kubernetes is to use a `Helm chart <https://helm.sh/>`_.
-
-There is a good helm chart here: `github.com/deliveryhero/helm-charts <https://github.com/deliveryhero/helm-charts/tree/master/stable/locust>`_.
-
-Note: this Helm chart is a separate project, and not supported by Locust maintainers. 
-
-Kubernetes Operator
-*******************
-Another way to run Locust on Kubernetes is to use the `Locust Kubernetes Operator <https://abdelrhmanhamouda.github.io/locust-k8s-operator/>`_.
-
-The Locust Operator is designed to unlock easy, seamless & effortless distributed performance testing in the cloud.
-
-Note: the Locust Kubernetes Operator is a separate project and is not supported by Locust maintainers. 
+See [Extensions](https://github.com/locustio/locust/wiki/Extensions#helm) in the wiki.
