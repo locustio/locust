@@ -1027,6 +1027,33 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Shutting down (exit code 0)", output)
                 self.assertEqual(0, proc.returncode)
 
+    def test_with_package_as_locustfile(self):
+        with TemporaryDirectory() as temp_dir:
+            with open(f"{temp_dir}/__init__.py", mode="w"):
+                with mock_locustfile(dir=temp_dir):
+                    proc = subprocess.Popen(
+                        [
+                            "locust",
+                            "-f",
+                            temp_dir,
+                            "--headless",
+                            "--exit-code-on-error",
+                            "0",
+                        ],
+                        stdout=PIPE,
+                        stderr=PIPE,
+                        text=True,
+                    )
+                    gevent.sleep(3)
+                    proc.send_signal(signal.SIGTERM)
+                    stdout, stderr = proc.communicate()
+                    self.assertIn("Starting Locust", stderr)
+                    self.assertIn("All users spawned:", stderr)
+                    self.assertIn('"TestUser": 1', stderr)
+                    self.assertIn('"UserSubclass": 1', stderr)
+                    self.assertIn("Shutting down (exit code 0)", stderr)
+                    self.assertEqual(0, proc.returncode)
+
     def test_command_line_user_selection(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """

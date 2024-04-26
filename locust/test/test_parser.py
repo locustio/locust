@@ -88,6 +88,7 @@ class TestArgumentParser(LocustTestCase):
         super().setUp()
         self.parent_dir = TemporaryDirectory()
         self.child_dir = TemporaryDirectory(dir=self.parent_dir.name)
+        self.child_dir2 = TemporaryDirectory(dir=self.parent_dir.name)
 
     def tearDown(self):
         super().tearDown()
@@ -253,6 +254,46 @@ class TestArgumentParser(LocustTestCase):
                         self.parent_dir.name,
                     ]
                 )
+
+    def test_parse_locustfile_and_directory(self):
+        with mock_locustfile(filename_prefix="mock_locustfile1", dir=self.parent_dir.name) as mock_locustfile1:
+            with mock_locustfile(filename_prefix="mock_locustfile2", dir=self.parent_dir.name) as mock_locustfile2:
+                with mock_locustfile(filename_prefix="mock_locustfile3", dir=self.child_dir.name) as mock_locustfile3:
+                    locustfiles = parse_locustfile_option(
+                        args=[
+                            "-f",
+                            f"{mock_locustfile1.file_path},{self.child_dir.name}",
+                        ]
+                    )
+                    self.assertIn(mock_locustfile1.file_path, locustfiles)
+                    self.assertNotIn(mock_locustfile2.file_path, locustfiles)
+                    self.assertIn(mock_locustfile3.file_path, locustfiles)
+
+    def test_parse_multiple_directories(self):
+        with mock_locustfile(filename_prefix="mock_locustfile1", dir=self.child_dir.name) as mock_locustfile1:
+            with mock_locustfile(filename_prefix="mock_locustfile2", dir=self.child_dir2.name) as mock_locustfile2:
+                locustfiles = parse_locustfile_option(
+                    args=[
+                        "-f",
+                        f"{self.child_dir.name},{self.child_dir2.name}",
+                    ]
+                )
+
+                self.assertIn(mock_locustfile1.file_path, locustfiles)
+                self.assertIn(mock_locustfile2.file_path, locustfiles)
+
+    def test_parse_python_package(self):
+        with open(f"{self.parent_dir.name}/__init__.py", mode="w"):
+            with mock_locustfile(filename_prefix="mock_locustfile1", dir=self.parent_dir.name) as mock_locustfile1:
+                locustfiles = parse_locustfile_option(
+                    args=[
+                        "-f",
+                        self.parent_dir.name,
+                    ],
+                )
+
+                self.assertIn(self.parent_dir.name, locustfiles)
+                self.assertEqual(len(locustfiles), 1)
 
     def test_parse_locustfile_invalid_directory_error(self):
         with mock.patch("sys.stderr", new=StringIO()):
