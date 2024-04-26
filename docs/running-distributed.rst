@@ -142,6 +142,7 @@ the messages will simply be handled by the runner that sends them.
     be join():ed.
 
     .. code-block::
+        
         environment.runner.register_message('test_users', setup_test_users, concurrent=True)
 
 For more details, see the `complete example <https://github.com/locustio/locust/tree/master/examples/custom_messages.py>`_.
