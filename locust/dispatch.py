@@ -28,7 +28,11 @@ if TYPE_CHECKING:
 
 
 def _kl_generator(users: list[tuple[type[User], float]]) -> Iterator[str | None]:
-    """Generator based on Kullback-Leibler divergence"""
+    """Generator based on Kullback-Leibler divergence
+
+    For example, given users A, B with weights 5 and 1 respectively,
+    this algorithm will yield AAABAAAAABAA.
+    """
     if not users:
         while True:
             yield None
@@ -41,11 +45,12 @@ def _kl_generator(users: list[tuple[type[User], float]]) -> Iterator[str | None]
     heapify(heap)
 
     while True:
-        i = heap[0][1]
+        i = heap[0][1]  # choose element which choosing minimizes divergence the most
         yield names[i]
         generated[i] += 1.0
         x = generated[i]
         kl_diff = weights[i] * log2(x / (x + 1.0))
+        # calculate how much choosing element i for (x + 1)th time decreases divergence
         heapreplace(heap, (kl_diff, i))
 
 
