@@ -18,7 +18,7 @@ A Locust test is essentially just a Python program making requests to the system
 
 This user will make an HTTP request to ``/hello``, then to ``/world``, and then repeat. For a full explanation and a more realistic example see :ref:`writing-a-locustfile`.
 
-Change ``/hello`` and ``/world`` to some actual paths on the web site/service you want to test, put the code in a file named ``locustfile.py`` in your current directory and then run ``locust``:
+Change ``/hello`` and ``/world`` to some actual paths on the website/service you want to test, put the code in a file named ``locustfile.py`` in your current directory and then run ``locust``:
 
 .. code-block:: console
     :substitutions:
@@ -36,7 +36,7 @@ Open http://localhost:8089
 
 | Provide the host name of your server and try it out!
 
-The following screenshots show what it might look like when running this test using 50 concurrent users, with a ramp up rate of 1 users/s
+The following screenshots show what it might look like when running this test using 50 concurrent users, with a ramp up rate of 1 user/s
 
 .. image:: images/webui-running-statistics.png
 
@@ -56,11 +56,7 @@ The following screenshots show what it might look like when running this test us
 
     If your response times are *not* increasing then add even more users until you find the service's breaking point, or celebrate that your service is already performant enough for your expected load.
 
-    If you need some help digging into server side problems, or you're having trouble generating enough load to saturate your system, have a look at the `Locust FAQ  <https://github.com/locustio/locust/wiki/FAQ#increase-my-request-raterps>`_.
-
-.. note::
-
-    Things looking a little different? We've updated the UI! If for whatever reason you need to use the old version, you can always revert back to it using the ``--legacy-ui`` flag.
+    If you need some help digging into server side problems, or you're having trouble generating enough load to saturate your system, take a look at the `Locust FAQ  <https://github.com/locustio/locust/wiki/FAQ#increase-my-request-raterps>`_.
 
 Direct command line usage / headless
 ====================================
