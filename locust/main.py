@@ -220,7 +220,7 @@ def main():
                 children.append(child_pid)
                 logging.debug(f"Started child worker with pid #{child_pid}")
             else:
-                # child is always a worker, even when it wasnt set on command line
+                # child is always a worker, even when it wasn't set on command line
                 options.worker = True
                 # remove options that dont make sense on worker
                 options.run_time = None
@@ -286,7 +286,7 @@ def main():
                         exit_code = max(exit_code, child_exit_code)
                     if exit_code > 1:
                         logging.error(f"Bad response code from worker children: {exit_code}")
-                    # ensure master doesnt finish until output from workers has arrived
+                    # ensure master doesn't finish until output from workers has arrived
                     # otherwise the terminal might look weird.
                     time.sleep(0.1)
 
@@ -433,8 +433,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
     if options.run_time:
         if options.worker:
-            logger.error("--run-time should be specified on the master node, and not on worker nodes")
-            sys.exit(1)
+            logger.info("--run-time specified for a worker node will be ignored.")
         try:
             options.run_time = parse_timespan(options.run_time)
         except ValueError:

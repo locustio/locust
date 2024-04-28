@@ -33,7 +33,6 @@ Running your Locust tests
     running-distributed
     running-in-debugger
     running-in-docker
-    running-cloud-integration
     running-without-web-ui
 
 

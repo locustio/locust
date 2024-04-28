@@ -3214,7 +3214,7 @@ class TestMasterRunner(LocustRunnerTestCase):
 
     def test_worker_sends_unrecognized_message_to_master(self):
         """
-        Validate master ignores message from worker when it cannot parse adddress info.
+        Validate master ignores message from worker when it cannot parse address info.
         """
 
         class TestUser(User):

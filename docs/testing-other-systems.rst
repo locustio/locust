@@ -10,9 +10,9 @@ Locust only comes with built-in support for HTTP/HTTPS but it can be extended to
 
     It is important that the protocol libraries you use can be `monkey-patched <https://www.gevent.org/intro.html#monkey-patching>`_ by gevent. 
     
-    Almost any libraries that are pure Python (using the Python ``socket`` module or some other standard library function like ``subprocess``) should work fine out of the box - but if they do their I/O calls in C, gevent will be unable to patch it. This will block the whole Locust/Python process (in practice limiting you to running a single User per worker process).
+    Almost any libraries that are pure Python (using the Python ``socket`` module or some other standard library function like ``subprocess``) should work fine out of the box - but if they do their I/O calls from compiled code C, gevent will be unable to patch it. This will block the whole Locust/Python process (in practice limiting you to running a single User per worker process).
 
-    Some C libraries allow for other workarounds. For example, if you want to use psycopg2 to performance test PostgreSQL, you can use `psycogreen <https://github.com/psycopg/psycogreen/>`_. If you are willing to get your hands dirty, you may also be able to patch a library yourself, but that is beyond the scope of this documentation.
+    Some C libraries allow for other workarounds. For example, if you want to use psycopg2 to performance test PostgreSQL, you can use `psycogreen <https://github.com/psycopg/psycogreen/>`_. If you are willing to get your hands dirty, you may be able to patch a library yourself, but that is beyond the scope of this documentation.
 
 XML-RPC
 =======

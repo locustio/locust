@@ -37,6 +37,12 @@
     "restructuredtext.confPath": "${workspaceFolder}/docs",
     "[python]": {
         "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        },
         "editor.defaultFormatter": "charliermarsh.ruff"
     },
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true
 }

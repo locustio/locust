@@ -56,7 +56,7 @@ class WindowsKeyPoller:
                 self.cur_keys_length = 0
                 self.captured_chars = []
             except pywintypes.error:
-                raise InitError("Terminal says its a tty but we couldnt enable line input. Keyboard input disabled.")
+                raise InitError("Terminal says its a tty but we couldn't enable line input. Keyboard input disabled.")
         else:
             raise InitError("Terminal was not a tty. Keyboard input disabled")
 
