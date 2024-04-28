@@ -15,509 +15,48 @@ import time
 
 from prettytable import PrettyTable
 
-
-class User1(User):
-    weight = 5
-
-
-class User2(User):
-    weight = 55
-
-
-class User3(User):
-    weight = 37
-
-
-class User4(User):
-    weight = 2
-
-
-class User5(User):
-    weight = 97
-
-
-class User6(User):
-    weight = 41
-
-
-class User7(User):
-    weight = 33
-
-
-class User8(User):
-    weight = 19
-
-
-class User9(User):
-    weight = 19
-
-
-class User10(User):
-    weight = 34
-
-
-class User11(User):
-    weight = 78
-
-
-class User12(User):
-    weight = 76
-
-
-class User13(User):
-    weight = 28
-
-
-class User14(User):
-    weight = 62
-
-
-class User15(User):
-    weight = 69
-
-
-class User16(User):
-    weight = 5
-
-
-class User17(User):
-    weight = 55
-
-
-class User18(User):
-    weight = 37
-
-
-class User19(User):
-    weight = 2
-
-
-class User20(User):
-    weight = 97
-
-
-class User21(User):
-    weight = 41
-
-
-class User22(User):
-    weight = 33
-
-
-class User23(User):
-    weight = 19
-
-
-class User24(User):
-    weight = 19
-
-
-class User25(User):
-    weight = 34
-
-
-class User26(User):
-    weight = 78
-
-
-class User27(User):
-    weight = 76
-
-
-class User28(User):
-    weight = 28
-
-
-class User29(User):
-    weight = 62
-
-
-class User30(User):
-    weight = 69
-
-
-class User31(User):
-    weight = 41
-
-
-class User32(User):
-    weight = 33
-
-
-class User33(User):
-    weight = 19
-
-
-class User34(User):
-    weight = 19
-
-
-class User35(User):
-    weight = 34
-
-
-class User36(User):
-    weight = 78
-
-
-class User37(User):
-    weight = 76
-
-
-class User38(User):
-    weight = 28
-
-
-class User39(User):
-    weight = 62
-
-
-class User40(User):
-    weight = 69
-
-
-class User41(User):
-    weight = 41
-
-
-class User42(User):
-    weight = 33
-
-
-class User43(User):
-    weight = 19
-
-
-class User44(User):
-    weight = 19
-
-
-class User45(User):
-    weight = 34
-
-
-class User46(User):
-    weight = 78
-
-
-class User47(User):
-    weight = 76
-
-
-class User48(User):
-    weight = 28
-
-
-class User49(User):
-    weight = 62
-
-
-class User50(User):
-    weight = 69
-
-
-class User51(User):
-    weight = 5
-
-
-class User52(User):
-    weight = 55
-
-
-class User53(User):
-    weight = 37
-
-
-class User54(User):
-    weight = 2
-
-
-class User55(User):
-    weight = 97
-
-
-class User56(User):
-    weight = 41
-
-
-class User57(User):
-    weight = 33
-
-
-class User58(User):
-    weight = 19
-
-
-class User59(User):
-    weight = 19
-
-
-class User60(User):
-    weight = 34
-
-
-class User61(User):
-    weight = 78
-
-
-class User62(User):
-    weight = 76
-
-
-class User63(User):
-    weight = 28
-
-
-class User64(User):
-    weight = 62
-
-
-class User65(User):
-    weight = 69
-
-
-class User66(User):
-    weight = 5
-
-
-class User67(User):
-    weight = 55
-
-
-class User68(User):
-    weight = 37
-
-
-class User69(User):
-    weight = 2
-
-
-class User70(User):
-    weight = 97
-
-
-class User71(User):
-    weight = 41
-
-
-class User72(User):
-    weight = 33
-
-
-class User73(User):
-    weight = 19
-
-
-class User74(User):
-    weight = 19
-
-
-class User75(User):
-    weight = 34
-
-
-class User76(User):
-    weight = 78
-
-
-class User77(User):
-    weight = 76
-
-
-class User78(User):
-    weight = 28
-
-
-class User79(User):
-    weight = 62
-
-
-class User80(User):
-    weight = 69
-
-
-class User81(User):
-    weight = 41
-
-
-class User82(User):
-    weight = 33
-
-
-class User83(User):
-    weight = 19
-
-
-class User84(User):
-    weight = 19
-
-
-class User85(User):
-    weight = 34
-
-
-class User86(User):
-    weight = 78
-
-
-class User87(User):
-    weight = 76
-
-
-class User88(User):
-    weight = 28
-
-
-class User89(User):
-    weight = 62
-
-
-class User90(User):
-    weight = 69
-
-
-class User91(User):
-    weight = 41
-
-
-class User92(User):
-    weight = 33
-
-
-class User93(User):
-    weight = 19
-
-
-class User94(User):
-    weight = 19
-
-
-class User95(User):
-    weight = 34
-
-
-class User96(User):
-    weight = 78
-
-
-class User97(User):
-    weight = 76
-
-
-class User98(User):
-    weight = 28
-
-
-class User99(User):
-    weight = 62
-
-
-class User100(User):
-    weight = 69
-
-
-USER_CLASSES = [
-    User1,
-    User2,
-    User3,
-    User4,
-    User5,
-    User6,
-    User7,
-    User8,
-    User9,
-    User10,
-    User11,
-    User12,
-    User13,
-    User14,
-    User15,
-    User16,
-    User17,
-    User18,
-    User19,
-    User20,
-    User21,
-    User22,
-    User23,
-    User24,
-    User25,
-    User26,
-    User27,
-    User28,
-    User29,
-    User30,
-    User31,
-    User32,
-    User33,
-    User34,
-    User35,
-    User36,
-    User37,
-    User38,
-    User39,
-    User40,
-    User41,
-    User42,
-    User43,
-    User44,
-    User45,
-    User46,
-    User47,
-    User48,
-    User49,
-    User50,
-    User51,
-    User52,
-    User53,
-    User54,
-    User55,
-    User56,
-    User57,
-    User58,
-    User59,
-    User60,
-    User61,
-    User62,
-    User63,
-    User64,
-    User65,
-    User66,
-    User67,
-    User68,
-    User69,
-    User70,
-    User71,
-    User72,
-    User73,
-    User74,
-    User75,
-    User76,
-    User77,
-    User78,
-    User79,
-    User80,
-    User81,
-    User82,
-    User83,
-    User84,
-    User85,
-    User86,
-    User87,
-    User88,
-    User89,
-    User90,
-    User91,
-    User92,
-    User93,
-    User94,
-    User95,
-    User96,
-    User97,
-    User98,
-    User99,
-    User100,
+# fmt: off
+WEIGHTS = [
+     5, 55, 37,  2, 97, 41, 33, 19, 19, 34,
+    78, 76, 28, 62, 69,  5, 55, 37,  2, 97,
+    41, 33, 19, 19, 34, 78, 76, 28, 62, 69,
+    41, 33, 19, 19, 34, 78, 76, 28, 62, 69,
+    41, 33, 19, 19, 34, 78, 76, 28, 62, 69,
+     5, 55, 37,  2, 97, 41, 33, 19, 19, 34,
+    78, 76, 28, 62, 69,  5, 55, 37,  2, 97,
+    41, 33, 19, 19, 34, 78, 76, 28, 62, 69,
+    41, 33, 19, 19, 34, 78, 76, 28, 62, 69,
+    41, 33, 19, 19, 34, 78, 76, 28, 62, 69,
 ]
+# fmt: on
+
+for i, x in enumerate(WEIGHTS):
+    exec(f"class User{i+1}(User): weight = {x}")
+
+# Equivalent to:
+#
+# class User1(User):
+#     weight = 5
+#
+# class User2(User):
+#     weight = 55
+# .
+# .
+# .
+# class User100(User):
+#     weight = 69
+
+exec("USER_CLASSES = [" + ",".join(f"User{i+1}" for i in range(len(WEIGHTS))) + "]")
+# Equivalent to:
+#
+# USER_CLASSES = [
+#     User1,
+#     User2,
+#     .
+#     .
+#     .
+#     User100,
+# ]
 
 
 if __name__ == "__main__":
@@ -545,7 +84,10 @@ if __name__ == "__main__":
             workers = [WorkerNode(str(i + 1)) for i in range(worker_count)]
 
             ts = time.perf_counter()
-            users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=USER_CLASSES[:number_of_user_classes])
+            users_dispatcher = UsersDispatcher(
+                worker_nodes=workers,
+                user_classes=USER_CLASSES[:number_of_user_classes],  # noqa: F821 (Undefined name `USER_CLASSES`) -> It's created inside "exec"
+            )
             instantiate_duration = time.perf_counter() - ts
 
             # Ramp-up
