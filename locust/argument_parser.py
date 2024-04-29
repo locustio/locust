@@ -110,10 +110,8 @@ def parse_locustfile_paths(paths: list[str]) -> list[str]:
     Returns:
         list[str]: Parsed locust file paths
     """
-    parsed_paths = []
-    for path in paths:
-        parsed_paths.extend(_parse_locustfile_path(path))
-    return parsed_paths
+    # Parse each path and unpack the returned lists as a single list
+    return [parsed for path in paths for parsed in _parse_locustfile_path(path)]
 
 
 def _parse_locustfile_path(path: str) -> list[str]:
