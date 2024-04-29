@@ -114,8 +114,7 @@ See :ref:`running-without-web-ui`
 Using multiple Locustfiles at once
 ==================================
 
-The ``-f/--locustfile`` option accepts a single directory of locustfiles as an option. Locust will recursively
-search the directory for ``*.py`` files, ignoring files that start with "_".
+``-f/--locustfile`` accepts multiple, comma-separated locustfiles.
 
 Example:
 
@@ -132,19 +131,22 @@ With the following file structure:
 
 .. code-block:: console
 
-    $ locust -f locustfiles
+    $ locust -f locustfiles/locustfile1.py,locustfiles/locustfile2.py,locustfiles/more_files/locustfile3.py
 
 Locust will use ``locustfile1.py``, ``locustfile2.py`` & ``more_files/locustfile3.py``
 
-Additionally, ``-f/--locustfile`` accepts multiple, comma-separated locustfiles.
+Additionally, ``-f/--locustfile`` accepts directories as an option. Locust will recursively
+search specified directories for ``*.py`` files, ignoring files that start with "_".
 
 Example:
 
 .. code-block:: console
 
-    $ locust -f locustfiles/locustfile1.py,locustfiles/locustfile2.py,locustfiles/more_files/locustfile3.py
+    $ locust -f locustfiles
 
 Locust will use ``locustfile1.py``, ``locustfile2.py`` & ``more_files/locustfile3.py``
+
+
 
 You can also use ``-f/--locustfile`` for web urls. This will download the file and use it as any normal locustfile.
 
