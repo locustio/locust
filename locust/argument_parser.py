@@ -120,22 +120,18 @@ def _parse_locustfile_path(path: str) -> list[str]:
         # Download the file and use the new path as locustfile
         parsed_paths.append(download_locustfile_from_url(path))
     elif os.path.isdir(path):
-        # Is path a python package?
-        if _is_package(path):
-            parsed_paths.append(os.path.abspath(path))
-        else:
-            # Find all .py files in directory tree
-            for root, _dirs, fs in os.walk(path):
-                parsed_paths.extend(
-                    [
-                        os.path.abspath(os.path.join(root, f))
-                        for f in fs
-                        if os.path.isfile(os.path.join(root, f)) and f.endswith(".py") and not f.startswith("_")
-                    ]
-                )
-            if not parsed_paths:
-                sys.stderr.write(f"Could not find any locustfiles in directory '{path}'")
-                sys.exit(1)
+        # Find all .py files in directory tree
+        for root, _dirs, fs in os.walk(path):
+            parsed_paths.extend(
+                [
+                    os.path.abspath(os.path.join(root, f))
+                    for f in fs
+                    if os.path.isfile(os.path.join(root, f)) and f.endswith(".py") and not f.startswith("_")
+                ]
+            )
+        if not parsed_paths:
+            sys.stderr.write(f"Could not find any locustfiles in directory '{path}'")
+            sys.exit(1)
     else:
         # If file exists add the abspath
         if os.path.exists(path) and path.endswith(".py"):
