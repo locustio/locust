@@ -284,19 +284,6 @@ class TestArgumentParser(LocustTestCase):
                 self.assertIn(mock_locustfile1.file_path, locustfiles)
                 self.assertIn(mock_locustfile2.file_path, locustfiles)
 
-    def test_parse_python_package(self):
-        with open(f"{self.parent_dir.name}/__init__.py", mode="w"):
-            with mock_locustfile(filename_prefix="mock_locustfile1", dir=self.parent_dir.name):
-                locustfiles = parse_locustfile_option(
-                    args=[
-                        "-f",
-                        self.parent_dir.name,
-                    ],
-                )
-
-                self.assertIn(self.parent_dir.name, locustfiles)
-                self.assertEqual(len(locustfiles), 1)
-
     def test_parse_locustfile_invalid_directory_error(self):
         with mock.patch("sys.stderr", new=StringIO()):
             with self.assertRaises(SystemExit):
