@@ -309,10 +309,12 @@ class Runner:
     @abstractmethod
     def start(
         self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: list[type[User]] | None = None
-    ) -> None: ...
+    ) -> None:
+        ...
 
     @abstractmethod
-    def send_message(self, msg_type: str, data: Any | None = None, client_id: str | None = None) -> None: ...
+    def send_message(self, msg_type: str, data: Any | None = None, client_id: str | None = None) -> None:
+        ...
 
     def start_shape(self) -> None:
         """
@@ -1032,11 +1034,7 @@ class MasterRunner(DistributedRunner):
             elif msg.type == "locustfile":
                 logging.debug("Worker requested locust file")
                 assert self.environment.parsed_options
-                filename = (
-                    "locustfile.py"
-                    if self.environment.parsed_options.locustfile == "locustfile"
-                    else self.environment.parsed_options.locustfile
-                )
+                filename = self.environment.parsed_options.locustfile
                 try:
                     with open(filename) as f:
                         file_contents = f.read()

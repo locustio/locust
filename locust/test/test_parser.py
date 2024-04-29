@@ -286,7 +286,7 @@ class TestArgumentParser(LocustTestCase):
 
     def test_parse_python_package(self):
         with open(f"{self.parent_dir.name}/__init__.py", mode="w"):
-            with mock_locustfile(filename_prefix="mock_locustfile1", dir=self.parent_dir.name) as mock_locustfile1:
+            with mock_locustfile(filename_prefix="mock_locustfile1", dir=self.parent_dir.name):
                 locustfiles = parse_locustfile_option(
                     args=[
                         "-f",
@@ -443,8 +443,7 @@ class TestFindLocustfiles(LocustTestCase):
     def test_find_locustfiles_with_multiple_locustfiles(self):
         with mock_locustfile() as mocked1:
             with mock_locustfile() as mocked2:
-                with mock_locustfile() as mocked3:
-                    locustfiles = parse_locustfile_paths([mocked1.file_path, mocked2.file_path])
+                locustfiles = parse_locustfile_paths([mocked1.file_path, mocked2.file_path])
 
                 self.assertIn(mocked1.file_path, locustfiles)
                 self.assertIn(mocked2.file_path, locustfiles)
