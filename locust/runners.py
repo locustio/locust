@@ -309,12 +309,10 @@ class Runner:
     @abstractmethod
     def start(
         self, user_count: int, spawn_rate: float, wait: bool = False, user_classes: list[type[User]] | None = None
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @abstractmethod
-    def send_message(self, msg_type: str, data: Any | None = None, client_id: str | None = None) -> None:
-        ...
+    def send_message(self, msg_type: str, data: Any | None = None, client_id: str | None = None) -> None: ...
 
     def start_shape(self) -> None:
         """
