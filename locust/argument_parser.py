@@ -93,13 +93,6 @@ class LocustTomlConfigParser(configargparse.TomlConfigParser):
         return result
 
 
-def _is_package(path):
-    """
-    Is the given path a Python package?
-    """
-    return os.path.isdir(path) and os.path.exists(os.path.join(path, "__init__.py"))
-
-
 def parse_locustfile_paths(paths: list[str]) -> list[str]:
     """
     Returns a list of relative file paths.

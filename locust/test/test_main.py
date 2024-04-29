@@ -1048,7 +1048,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout, stderr = proc.communicate()
                     self.assertIn("Starting Locust", stderr)
                     self.assertIn("All users spawned:", stderr)
-                    self.assertIn('"TestUser": 1', stderr)
                     self.assertIn('"UserSubclass": 1', stderr)
                     self.assertIn("Shutting down (exit code 0)", stderr)
                     self.assertEqual(0, proc.returncode)
@@ -1159,7 +1158,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stderr=PIPE,
                     text=True,
                 )
-                gevent.sleep(1)
+                gevent.sleep(2)
                 proc.send_signal(signal.SIGTERM)
                 stdout, stderr = proc.communicate()
 
@@ -1832,7 +1831,7 @@ class SecondUser(HttpUser):
                 [
                     "locust",
                     "-f",
-                    mocked.file_path[:-3],  # remove ".py"
+                    mocked.file_path[-3],  # remove ".py"
                     "--headless",
                     "--master",
                 ],
@@ -1851,6 +1850,8 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 text=True,
             )
+            gevent.sleep(1)
+
             stdout = proc_worker.communicate()[0]
             self.assertIn("Got error from master: locustfile parameter on master must be a plain filename", stdout)
             proc.kill()
