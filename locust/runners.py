@@ -1038,13 +1038,13 @@ class MasterRunner(DistributedRunner):
                         file_contents = f.read()
                 except Exception as e:
                     logger.error(
-                        f"--locustfile must be a plain filename (not a module name) for file distribution to work {e}"
+                        f"--locustfile must be a full path to a single locustfile for file distribution to work {e}"
                     )
                     self.send_message(
                         "locustfile",
                         client_id=client_id,
                         data={
-                            "error": f"locustfile parameter on master must be a plain filename (not a module name) (was '{filename}')"
+                            "error": f"locustfile must be a full path to a single locustfile for file distribution to work (was '{filename}')"
                         },
                     )
                 else:
