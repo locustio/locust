@@ -1038,13 +1038,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             "--headless",
                             "--exit-code-on-error",
                             "0",
+                            "--run-time",
+                            "2",
                         ],
                         stdout=PIPE,
                         stderr=PIPE,
                         text=True,
                     )
-                    gevent.sleep(3)
-                    proc.send_signal(signal.SIGTERM)
                     stdout, stderr = proc.communicate()
                     self.assertIn("Starting Locust", stderr)
                     self.assertIn("All users spawned:", stderr)
