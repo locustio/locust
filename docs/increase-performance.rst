@@ -17,7 +17,7 @@ In a *best case* scenario (doing small requests inside a ``while True``-loop) a 
 
 The relative improvement may be even bigger with bigger request payloads, but it may also be smaller if your test is doing CPU intensive things not related to requests.
 
-Of course, in reality you should run :ref:`one locust process per CPU core <running-distributed>`.
+Of course, in reality, you should run :ref:`one locust process per CPU core <running-distributed>`.
 
 .. note::
 
@@ -83,7 +83,7 @@ FastHttpUser provides a ``rest`` method for testing REST/JSON HTTP interfaces. I
                 elif resp.js["bar"] != 42:
                     resp.failure(f"'bar' had an unexpected value: {resp.js['bar']}")
 
-For a complete example, see `rest.py <https://github.com/locustio/locust/blob/master/examples/rest.py>`_. That also shows how you can use inheritance to provide behaviours specific to your REST API that are common to multiple requests/testplans.
+For a complete example, see `rest.py <https://github.com/locustio/locust/blob/master/examples/rest.py>`_. That also shows how you can use inheritance to provide behaviors specific to your REST API that are common to multiple requests/testplans.
 
 .. note::
 
@@ -93,7 +93,7 @@ For a complete example, see `rest.py <https://github.com/locustio/locust/blob/ma
 Connection Handling
 ===================
 
-By default a User will reuse the same TCP/HTTP connection (unless it breaks somehow). To more realistically simulate new browsers connecting to your application this connection can be manually closed.
+By default, a User will reuse the same TCP/HTTP connection (unless it breaks somehow). To more realistically simulate new browsers connecting to your application this connection can be manually closed.
 
 .. code-block:: python
 

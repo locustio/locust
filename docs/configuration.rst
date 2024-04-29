@@ -161,7 +161,7 @@ Running Locust with User class UI picker
 ========================================
 
 You can select which Shape class and which User classes to run in the WebUI when running locust with the ``--class-picker`` flag.
-No selection uses all of the available User classes.
+No selection uses all the available User classes.
 
 Example:
 

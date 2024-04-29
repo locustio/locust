@@ -109,13 +109,7 @@ to the Flask app instance and use that to set up a new route::
         def my_added_page():
             return "Another page"
 
-You should now be able to start locust and browse to http://127.0.0.1:8089/added_page
-
-.. note::
-
-    Please note that at the moment Locust does not show the extended Web UI under the default root path `"/"`. 
-    To view your extensions, navigate to the newly added web route. In this example, `"/added_page"`.
-
+You should now be able to start locust and browse to http://127.0.0.1:8089/added_page. Note that it doesn't get automatically added as a new tab - you'll need to enter the URL directly.
 
 Extending Web UI
 ================

@@ -786,7 +786,7 @@ Identical to previous version, but now built & deployed to Pypi using Travis.
 * Added sequential task support - https://github.com/locustio/locust/pull/827
 * Added support for user-defined wait_function - https://github.com/locustio/locust/pull/785
 * By default, Locust no longer resets the statistics when the hatching is complete.
-  Therefore :code:`--no-reset-stats` has been deprecated (since it's now the default behaviour),
+  Therefore :code:`--no-reset-stats` has been deprecated (since it's now the default behavior),
   and instead a new :code:`--reset-stats` option has been added.
 * Dropped support for Python 3.3
 * Updated documentation
@@ -1007,7 +1007,7 @@ Other changes
     Anyone who is currently using existing locust scripts and want to upgrade to 0.6
     should read through these changes.
 
-:py:class:`SubLocust <locust.core.SubLocust>` replaced by :py:class:`TaskSet <locust.core.TaskSet>` and :py:class:`Locust <locust.core.Locust>` class behaviour changed
+:py:class:`SubLocust <locust.core.SubLocust>` replaced by :py:class:`TaskSet <locust.core.TaskSet>` and :py:class:`Locust <locust.core.Locust>` class behavior changed
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 :py:class:`Locust <locust.core.Locust>` classes does no longer control task scheduling and execution.

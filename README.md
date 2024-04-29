@@ -62,7 +62,7 @@ Locust's code base is intentionally kept small and doesn't solve everything out 
 * [Send real time reporting data to TimescaleDB and visualize it in Grafana](https://github.com/SvenskaSpel/locust-plugins/blob/master/locust_plugins/dashboards/README.md)
 * [Wrap calls to handle the peculiarities of your REST API](https://github.com/SvenskaSpel/locust-plugins/blob/8af21862d8129a5c3b17559677fe92192e312d8f/examples/rest_ex.py#L87) 
 * [Use a totally custom load shape/profile](https://docs.locust.io/en/latest/custom-load-shape.html#custom-load-shape)
-* ...
+* [...](https://github.com/locustio/locust/wiki/Extensions)
 
 ## Links
 
