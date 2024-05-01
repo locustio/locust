@@ -126,7 +126,7 @@ def main():
 
             user_classes[key] = value
             available_user_classes[key] = value
-            available_user_tasks[key] = value.tasks or None
+            available_user_tasks[key] = value.tasks or {}
 
     if len(stats.PERCENTILES_TO_CHART) != 2:
         logging.error("stats.PERCENTILES_TO_CHART parameter should be 2 parameters \n")
