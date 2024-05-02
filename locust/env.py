@@ -222,14 +222,14 @@ class Environment:
 
         if self.tags is not None:
             tags = set(self.tags)
-        elif self.parsed_options and self.parsed_options.tags:
+        elif self.parsed_options and getattr(self.parsed_options, "tags", False):
             tags = set(self.parsed_options.tags)
         else:
             tags = None
 
         if self.exclude_tags is not None:
             exclude_tags = set(self.exclude_tags)
-        elif self.parsed_options and self.parsed_options.exclude_tags:
+        elif self.parsed_options and getattr(self.parsed_options, "exclude_tags", False):
             exclude_tags = set(self.parsed_options.exclude_tags)
         else:
             exclude_tags = None
