@@ -108,7 +108,8 @@ class HttpSession(requests.Session):
           response, even if the response code is ok (2xx). The opposite also works, one can use catch_response to catch a request
           and then mark it as successful even if the response code was not (i.e 500 or 404).
         :param params: (optional) Dictionary or bytes to be sent in the query string for the :class:`Request`.
-        :param data: (optional) Dictionary or bytes to send in the body of the :class:`Request`.
+        :param data: (optional) Dictionary, list of tuples, bytes, or file-like object to send in the body of the :class:`Request`.
+        :param json: (optional) json to send in the body of the :class:`Request`.
         :param headers: (optional) Dictionary of HTTP Headers to send with the :class:`Request`.
         :param cookies: (optional) Dict or CookieJar object to send with the :class:`Request`.
         :param files: (optional) Dictionary of ``'filename': file-like-objects`` for multipart encoding upload.
@@ -117,9 +118,17 @@ class HttpSession(requests.Session):
         :type timeout: float or tuple
         :param allow_redirects: (optional) Set to True by default.
         :type allow_redirects: bool
-        :param proxies: (optional) Dictionary mapping protocol to the URL of the proxy.
+        :param proxies: (optional) Dictionary mapping protocol or protocol and hostname to the URL of the proxy.
+        :param hooks: (optional) Dictionary mapping hook name to one event or list of events, event must be callable.
         :param stream: (optional) whether to immediately download the response content. Defaults to ``False``.
-        :param verify: (optional) if ``True``, the SSL cert will be verified. A CA_BUNDLE path can also be provided.
+        :param verify: (optional) Either a boolean, in which case it controls whether we verify
+          the server's TLS certificate, or a string, in which case it must be a path
+          to a CA bundle to use. Defaults to ``True``. When set to
+          ``False``, requests will accept any TLS certificate presented by
+          the server, and will ignore hostname mismatches and/or expired
+          certificates, which will make your application vulnerable to
+          man-in-the-middle (MitM) attacks. Setting verify to ``False``
+          may be useful during local development or testing.
         :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
         """
 
