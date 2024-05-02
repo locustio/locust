@@ -1026,6 +1026,32 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Shutting down (exit code 0)", output)
                 self.assertEqual(0, proc.returncode)
 
+    def test_with_package_as_locustfile(self):
+        with TemporaryDirectory() as temp_dir:
+            with open(f"{temp_dir}/__init__.py", mode="w"):
+                with mock_locustfile(dir=temp_dir):
+                    proc = subprocess.Popen(
+                        [
+                            "locust",
+                            "-f",
+                            temp_dir,
+                            "--headless",
+                            "--exit-code-on-error",
+                            "0",
+                            "--run-time",
+                            "2",
+                        ],
+                        stdout=PIPE,
+                        stderr=PIPE,
+                        text=True,
+                    )
+                    stdout, stderr = proc.communicate()
+                    self.assertIn("Starting Locust", stderr)
+                    self.assertIn("All users spawned:", stderr)
+                    self.assertIn('"UserSubclass": 1', stderr)
+                    self.assertIn("Shutting down (exit code 0)", stderr)
+                    self.assertEqual(0, proc.returncode)
+
     def test_command_line_user_selection(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
@@ -1132,7 +1158,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stderr=PIPE,
                     text=True,
                 )
-                gevent.sleep(1)
+                gevent.sleep(2)
                 proc.send_signal(signal.SIGTERM)
                 stdout, stderr = proc.communicate()
 
@@ -1801,34 +1827,49 @@ class SecondUser(HttpUser):
             """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path[:-3],  # remove ".py"
-                    "--headless",
-                    "--master",
-                ],
-                stderr=STDOUT,
-                stdout=PIPE,
-                text=True,
-            )
-            proc_worker = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    "-",
-                    "--worker",
-                ],
-                stderr=STDOUT,
-                stdout=PIPE,
-                text=True,
-            )
-            stdout = proc_worker.communicate()[0]
-            self.assertIn("Got error from master: locustfile parameter on master must be a plain filename", stdout)
-            proc.kill()
-            master_stdout = proc.communicate()[0]
-            self.assertIn("--locustfile must be a plain filename (not a module name) for file distribut", master_stdout)
+            with mock_locustfile() as mocked2:
+                proc = subprocess.Popen(
+                    [
+                        "locust",
+                        "-f",
+                        f"{mocked.file_path}, {mocked2.file_path}",
+                        "--headless",
+                        "--master",
+                        "-L",
+                        "debug",
+                    ],
+                    stderr=STDOUT,
+                    stdout=PIPE,
+                    text=True,
+                )
+                proc_worker = subprocess.Popen(
+                    [
+                        "locust",
+                        "-f",
+                        "-",
+                        "--worker",
+                    ],
+                    stderr=STDOUT,
+                    stdout=PIPE,
+                    text=True,
+                )
+
+                try:
+                    stdout = proc_worker.communicate(timeout=5)[0]
+                    self.assertIn(
+                        "Got error from master: locustfile must be a full path to a single locustfile for file distribution to work",
+                        stdout,
+                    )
+                    proc.kill()
+                    master_stdout = proc.communicate()[0]
+                    self.assertIn(
+                        "--locustfile must be a full path to a single locustfile for file distribution", master_stdout
+                    )
+                except Exception:
+                    proc.kill()
+                    proc_worker.kill()
+                    stdout, worker_stderr = proc_worker.communicate()
+                    assert False, f"worker never finished: {stdout}"
 
     def test_json_schema(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(

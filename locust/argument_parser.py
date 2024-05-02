@@ -93,90 +93,54 @@ class LocustTomlConfigParser(configargparse.TomlConfigParser):
         return result
 
 
-def _is_package(path):
+def parse_locustfile_paths(paths: list[str]) -> list[str]:
     """
-    Is the given path a Python package?
+    Returns a list of relative file paths.
+
+    Args:
+        paths (list[str]): paths taken from the -f command
+
+    Returns:
+        list[str]: Parsed locust file paths
     """
-    return os.path.isdir(path) and os.path.exists(os.path.join(path, "__init__.py"))
+    # Parse each path and unpack the returned lists as a single list
+    return [parsed for path in paths for parsed in _parse_locustfile_path(path)]
 
 
-def find_locustfile(locustfile: str) -> str | None:
-    """
-    Attempt to locate a locustfile, either explicitly or by searching parent dirs.
-    """
-    # Obtain env value
-    names = [locustfile]
-    # Create .py version if necessary
-    if not names[0].endswith(".py"):
-        names.append(names[0] + ".py")
-    # Does the name contain path elements?
-    if os.path.dirname(names[0]):
-        # If so, expand home-directory markers and test for existence
-        for name in names:
-            expanded = os.path.expanduser(name)
-            if os.path.exists(expanded):
-                if name.endswith(".py") or _is_package(expanded):
-                    return os.path.abspath(expanded)
+def _parse_locustfile_path(path: str) -> list[str]:
+    parsed_paths = []
+    if is_url(path):
+        # Download the file and use the new path as locustfile
+        parsed_paths.append(download_locustfile_from_url(path))
+    elif os.path.isdir(path):
+        # Find all .py files in directory tree
+        for root, _dirs, fs in os.walk(path):
+            parsed_paths.extend(
+                [
+                    os.path.abspath(os.path.join(root, f))
+                    for f in fs
+                    if os.path.isfile(os.path.join(root, f)) and f.endswith(".py") and not f.startswith("_")
+                ]
+            )
+        if not parsed_paths:
+            sys.stderr.write(f"Could not find any locustfiles in directory '{path}'")
+            sys.exit(1)
     else:
-        # Otherwise, start in cwd and work downwards towards filesystem root
-        path = os.path.abspath(".")
-        while True:
-            for name in names:
-                joined = os.path.join(path, name)
-                if os.path.exists(joined):
-                    if name.endswith(".py") or _is_package(joined):
-                        return os.path.abspath(joined)
-            parent_path = os.path.dirname(path)
-            if parent_path == path:
-                # we've reached the root path which has been checked this iteration
-                break
-            path = parent_path
-
-    return None
-
-
-def find_locustfiles(locustfiles: list[str], is_directory: bool) -> list[str]:
-    """
-    Returns a list of relative file paths for the Locustfile Picker. If is_directory is True,
-    locustfiles is expected to have a single index which is a directory that will be searched for
-    locustfiles.
-
-    Ignores files that start with _
-    """
-    file_paths = []
-
-    if is_directory:
-        locustdir = locustfiles[0]
-
-        if len(locustfiles) != 1:
-            sys.stderr.write(f"Multiple values passed in for directory: {locustfiles}\n")
+        # If file exists add the abspath
+        if os.path.exists(path) and path.endswith(".py"):
+            parsed_paths.append(os.path.abspath(path))
+        else:
+            note_about_file_endings = "Ensure your locustfile ends with '.py' or is a directory with locustfiles. "
+            sys.stderr.write(f"Could not find '{path}'. {note_about_file_endings}See --help for available options.\n")
             sys.exit(1)
 
-        if not os.path.exists(locustdir):
-            sys.stderr.write(f"Could not find directory '{locustdir}'\n")
-            sys.exit(1)
-
-        if not os.path.isdir(locustdir):
-            sys.stderr.write(f"'{locustdir} is not a directory\n")
-            sys.exit(1)
-
-        for root, dirs, files in os.walk(locustdir):
-            for file in files:
-                if not file.startswith("_") and file.endswith(".py"):
-                    file_path = os.path.join(root, file)
-                    file_paths.append(file_path)
-    else:
-        for file_path in locustfiles:
-            if not file_path.endswith(".py"):
-                sys.stderr.write(f"Invalid file '{file_path}'. File should have '.py' extension\n")
-                sys.exit(1)
-
-            file_paths.append(file_path)
-
-    return file_paths
+    return parsed_paths
 
 
 def is_url(url: str) -> bool:
+    """
+    Check if path is an url
+    """
     try:
         result = urlparse(url)
         if result.scheme == "https" or result.scheme == "http":
@@ -188,6 +152,10 @@ def is_url(url: str) -> bool:
 
 
 def download_locustfile_from_url(url: str) -> str:
+    """
+    Attempt to download and save locustfile from url.
+    Returns path to downloaded file.
+    """
     try:
         response = requests.get(url)
         # Check if response is valid python code
@@ -244,7 +212,7 @@ See documentation for more details, including how to set options using a file or
         "-f",
         "--locustfile",
         metavar="<filename>",
-        default="locustfile",
+        default="locustfile.py",
         help="The Python file or module that contains your test, e.g. 'my_test.py'. Accepts multiple comma-separated .py files, a package name/directory or a url to a remote locustfile. Defaults to 'locustfile'.",
         env_var="LOCUST_LOCUSTFILE",
     )
@@ -314,7 +282,7 @@ def parse_locustfile_option(args=None) -> list[str]:
     parser
 
     Returns:
-        Locustfiles (List): List of locustfile paths
+        parsed_paths (List): List of locustfile paths
     """
     parser = get_empty_argument_parser(add_help=False)
     parser.add_argument(
@@ -354,6 +322,10 @@ def parse_locustfile_option(args=None) -> list[str]:
 
     options, _ = parser.parse_known_args(args=args)
 
+    if options.help or options.version:
+        # if --help or --version is specified we'll call parse_options which will print the help/version message
+        parse_options(args=args)
+
     if options.locustfile == "-":
         if not options.worker:
             sys.stderr.write(
@@ -364,51 +336,21 @@ def parse_locustfile_option(args=None) -> list[str]:
         filename = download_locustfile_from_master(options.master_host, options.master_port)
         return [filename]
 
-    # Comma separated string to list
-    locustfile_as_list = [
-        download_locustfile_from_url(f) if is_url(f.strip()) else f.strip() for f in options.locustfile.split(",")
-    ]
+    locustfile_list = [f.strip() for f in options.locustfile.split(",")]
+    parsed_paths = parse_locustfile_paths(locustfile_list)
 
-    # Checking if the locustfile is a single file, multiple files or a directory
-    if locustfile_is_directory(locustfile_as_list):
-        locustfiles = find_locustfiles(locustfile_as_list, is_directory=True)
-        locustfile = None
+    if not parsed_paths:
+        note_about_file_endings = ""
+        user_friendly_locustfile_name = options.locustfile
 
-        if not locustfiles:
-            sys.stderr.write(
-                f"Could not find any locustfiles in directory '{locustfile_as_list[0]}'. See --help for available options.\n"
-            )
-            sys.exit(1)
-    else:
-        if len(locustfile_as_list) > 1:
-            # Is multiple files
-            locustfiles = find_locustfiles(locustfile_as_list, is_directory=False)
-            locustfile = None
-        else:
-            # Is a single file
-            locustfile = find_locustfile(locustfile_as_list[0])
-            locustfiles = []
+        if not options.locustfile.endswith(".py"):
+            note_about_file_endings = "Ensure your locustfile ends with '.py' or is a directory with parsed_paths. "
+        sys.stderr.write(
+            f"Could not find '{user_friendly_locustfile_name}'. {note_about_file_endings}See --help for available options.\n"
+        )
+        sys.exit(1)
 
-            if not locustfile:
-                if options.help or options.version:
-                    # if --help or --version is specified we'll call parse_options which will print the help/version message
-                    parse_options(args=args)
-                note_about_file_endings = ""
-                user_friendly_locustfile_name = options.locustfile
-                if options.locustfile == "locustfile":
-                    user_friendly_locustfile_name = "locustfile.py"
-                elif not options.locustfile.endswith(".py"):
-                    note_about_file_endings = (
-                        "Ensure your locustfile ends with '.py' or is a directory with locustfiles. "
-                    )
-                sys.stderr.write(
-                    f"Could not find '{user_friendly_locustfile_name}'. {note_about_file_endings}See --help for available options.\n"
-                )
-                sys.exit(1)
-            else:
-                locustfiles.append(locustfile)
-
-    return locustfiles
+    return parsed_paths
 
 
 def setup_parser_arguments(parser):
@@ -857,34 +799,3 @@ def ui_extra_args_dict(args=None) -> dict[str, dict[str, Any]]:
     }
 
     return extra_args
-
-
-def locustfile_is_directory(locustfiles: list[str]) -> bool:
-    """
-    If a user passes in a locustfile without a file extension and there is a directory with the same name,
-    this function defaults to using the file and will raise a warning.
-    In this example, foobar.py will be used:
-        ├── src/
-        │   ├── foobar.py
-        ├── foobar/
-        │   ├── locustfile.py
-
-        locust -f foobar
-    """
-    if len(locustfiles) > 1:
-        return False
-
-    locustfile = locustfiles[0]
-
-    # Checking if the locustfile could be both a file and a directory
-    if not locustfile.endswith(".py"):
-        if os.path.isfile(locustfile) and os.path.isdir(locustfile):
-            msg = f"WARNING: Using {locustfile}.py instead of directory {os.path.abspath(locustfile)}\n"
-            sys.stderr.write(msg)
-
-            return False
-
-    if os.path.isdir(locustfile):
-        return True
-
-    return False
