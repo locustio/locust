@@ -5,6 +5,7 @@ from locust.dispatch import UsersDispatcher
 from locust.runners import WorkerNode
 from locust.test.util import clear_all_functools_lru_cache
 
+import math
 import time
 import unittest
 from operator import attrgetter
@@ -3924,7 +3925,6 @@ class TestRampUpDifferentUsers(unittest.TestCase):
 
         user_dispatcher.new_dispatch(target_user_count=21, spawn_rate=21, user_classes=[User1, User2, User3])
         dispatched_users = next(user_dispatcher)
-        print(dispatched_users)
         self.assertDictEqual(
             dispatched_users,
             {
@@ -4121,6 +4121,40 @@ class TestRampUpDifferentUsers(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[0].id), 6)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 6)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 6)
+
+
+class TestFloatWeithts(unittest.TestCase):
+    def test_float_weights(self):
+        """Final distribution should be {"User1": 3, "User2": 3, "User3": 3}"""
+
+        for ratio in (1, 1.0, 10, 2.5, 0.3, 1 / 23, math.e, math.pi):
+
+            class User1(User):
+                weight = 1 * ratio
+
+            class User2(User):
+                weight = 2 * ratio
+
+            class User3(User):
+                weight = 3 * ratio
+
+            worker_node1 = WorkerNode("1")
+            worker_node2 = WorkerNode("2")
+            worker_node3 = WorkerNode("3")
+
+            sleep_time = 0  # Speed-up test
+
+            users_dispatcher = UsersDispatcher(
+                worker_nodes=[worker_node1, worker_node2, worker_node3], user_classes=[User1, User2, User3]
+            )
+            users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=0.5)
+            users_dispatcher._wait_between_dispatch = sleep_time
+
+            if ratio == 1:
+                reference = list(users_dispatcher)
+            else:
+                for x in reference:
+                    self.assertDictEqual(x, next(users_dispatcher))
 
 
 def _aggregate_dispatched_users(d: dict[str, dict[str, int]]) -> dict[str, int]:

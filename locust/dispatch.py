@@ -6,11 +6,12 @@ import math
 import time
 from collections import defaultdict
 from collections.abc import Generator, Iterator
+from heapq import heapify, heapreplace
+from math import log2
 from operator import attrgetter
 from typing import TYPE_CHECKING
 
 import gevent
-from roundrobin import smooth
 
 if TYPE_CHECKING:
     from locust import User
@@ -24,6 +25,33 @@ if TYPE_CHECKING:
 # import line_profiler
 #
 # profile = line_profiler.LineProfiler()
+
+
+def _kl_generator(users: list[tuple[type[User], float]]) -> Iterator[str | None]:
+    """Generator based on Kullback-Leibler divergence
+
+    For example, given users A, B with weights 5 and 1 respectively,
+    this algorithm will yield AAABAAAAABAA.
+    """
+    if not users:
+        while True:
+            yield None
+
+    names = [u[0].__name__ for u in users]
+    weights = [u[1] for u in users]
+    generated = weights.copy()
+
+    heap = [(x * log2(x / (x + 1.0)), i) for i, x in enumerate(generated)]
+    heapify(heap)
+
+    while True:
+        i = heap[0][1]  # choose element which choosing minimizes divergence the most
+        yield names[i]
+        generated[i] += 1.0
+        x = generated[i]
+        kl_diff = weights[i] * log2(x / (x + 1.0))
+        # calculate how much choosing element i for (x + 1)th time decreases divergence
+        heapreplace(heap, (kl_diff, i))
 
 
 class UsersDispatcher(Iterator):
@@ -319,9 +347,7 @@ class UsersDispatcher(Iterator):
 
     def _distribute_users(
         self, target_user_count: int
-    ) -> tuple[
-        dict[str, dict[str, int]], Generator[str | None, None, None], itertools.cycle, list[tuple[WorkerNode, str]]
-    ]:
+    ) -> tuple[dict[str, dict[str, int]], Iterator[str | None], itertools.cycle, list[tuple[WorkerNode, str]]]:
         """
         This function might take some time to complete if the `target_user_count` is a big number. A big number
         is typically > 50 000. However, this function is only called if a worker is added or removed while a test
@@ -350,71 +376,11 @@ class UsersDispatcher(Iterator):
 
         return users_on_workers, user_gen, worker_gen, active_users
 
-    def _user_gen(self) -> Generator[str | None, None, None]:
-        """
-        This method generates users according to their weights using
-        a smooth weighted round-robin algorithm implemented by https://github.com/linnik/roundrobin.
-
-        For example, given users A, B with weights 5 and 1 respectively, this algorithm
-        will yield AAABAAAAABAA. The smooth aspect of this algorithm is what makes it possible
-        to keep the distribution during ramp-up and ramp-down. If we were to use a normal
-        weighted round-robin algorithm, we'd get AAAAABAAAAAB which would make the distribution
-        less accurate during ramp-up/down.
-        """
-
-        def infinite_cycle_gen(users: list[tuple[type[User], int]]) -> itertools.cycle:
-            if not users:
-                return itertools.cycle([None])
-
-            def _get_order_of_magnitude(n: float) -> int:
-                """Get how many times we need to multiply `n` to get an integer-like number.
-                For example:
-                    0.1 would return 10,
-                    0.04 would return 100,
-                    0.0007 would return 10000.
-                """
-                if n <= 0:
-                    raise ValueError("To get the order of magnitude, the number must be greater than 0.")
-
-                counter = 0
-                while n < 1:
-                    n *= 10
-                    counter += 1
-                return 10**counter
-
-            # Get maximum order of magnitude to "normalize the weights".
-            # "Normalizing the weights" is to multiply all weights by the same number so that
-            # they become integers. Then we can find the largest common divisor of all the
-            # weights, divide them by it and get the smallest possible numbers with the same
-            # ratio as the numbers originally had.
-            max_order_of_magnitude = _get_order_of_magnitude(min(abs(u[1]) for u in users))
-            weights = tuple(int(u[1] * max_order_of_magnitude) for u in users)
-
-            greatest_common_divisor = math.gcd(*weights)
-            normalized_values = [
-                (
-                    user[0].__name__,
-                    normalized_weight // greatest_common_divisor,
-                )
-                for user, normalized_weight in zip(users, weights)
-            ]
-            generation_length_to_get_proper_distribution = sum(
-                normalized_val[1] for normalized_val in normalized_values
-            )
-            gen = smooth(normalized_values)
-
-            # Instead of calling `gen()` for each user, we cycle through a generator of fixed-length
-            # `generation_length_to_get_proper_distribution`. Doing so greatly improves performance because
-            # we only ever need to call `gen()` a relatively small number of times. The length of this generator
-            # is chosen as the sum of the normalized weights. So, for users A, B, C of weights 2, 5, 6, the length is
-            # 2 + 5 + 6 = 13 which would yield the distribution `CBACBCBCBCABC` that gets repeated over and over
-            # until the target user count is reached.
-            return itertools.cycle(gen() for _ in range(generation_length_to_get_proper_distribution))
-
+    def _user_gen(self) -> Iterator[str | None]:
         fixed_users = {u.__name__: u for u in self._user_classes if u.fixed_count}
 
-        cycle_fixed_gen = infinite_cycle_gen([(u, u.fixed_count) for u in fixed_users.values()])
-        cycle_weighted_gen = infinite_cycle_gen([(u, u.weight) for u in self._user_classes if not u.fixed_count])
+        fixed_users_gen = _kl_generator([(u, u.fixed_count) for u in fixed_users.values()])
+        weighted_users_gen = _kl_generator([(u, u.weight) for u in self._user_classes if not u.fixed_count])
 
         # Spawn users
         while True:
@@ -423,7 +389,7 @@ class UsersDispatcher(Iterator):
                 current_fixed_users_count = {u: self._get_user_current_count(u) for u in fixed_users}
                 spawned_classes: set[str] = set()
                 while len(spawned_classes) != len(fixed_users):
-                    user_name: str | None = next(cycle_fixed_gen)
+                    user_name: str | None = next(fixed_users_gen)
                     if not user_name:
                         break
 
@@ -439,7 +405,7 @@ class UsersDispatcher(Iterator):
                     else:
                         spawned_classes.add(user_name)
 
-            yield next(cycle_weighted_gen)
+            yield next(weighted_users_gen)
 
     @staticmethod
     def _fast_users_on_workers_copy(users_on_workers: dict[str, dict[str, int]]) -> dict[str, dict[str, int]]:
