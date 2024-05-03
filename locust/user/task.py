@@ -5,6 +5,7 @@ from locust.exception import InterruptTaskSet, MissingWaitTimeError, RescheduleT
 import logging
 import random
 import traceback
+from collections import deque
 from time import time
 from typing import (
     TYPE_CHECKING,
@@ -276,7 +277,7 @@ class TaskSet(metaclass=TaskSetMeta):
     _parent: User
 
     def __init__(self, parent: User) -> None:
-        self._task_queue: list[Callable] = []
+        self._task_queue: deque = deque()
         self._time_start = time()
 
         if isinstance(parent, TaskSet):
@@ -369,7 +370,7 @@ class TaskSet(metaclass=TaskSetMeta):
                     raise
 
     def execute_next_task(self):
-        self.execute_task(self._task_queue.pop(0))
+        self.execute_task(self._task_queue.popleft())
 
     def execute_task(self, task):
         # check if the function is a method bound to the current locust, and if so, don't pass self as first argument
@@ -391,7 +392,7 @@ class TaskSet(metaclass=TaskSetMeta):
         :param first: Optional keyword argument. If True, the task will be put first in the queue.
         """
         if first:
-            self._task_queue.insert(0, task_callable)
+            self._task_queue.appendleft(task_callable)
         else:
             self._task_queue.append(task_callable)
 
