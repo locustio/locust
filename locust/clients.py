@@ -246,13 +246,13 @@ class HttpSession(requests.Session):
     def head(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
         return super().head(url, **kwargs)  # type: ignore[misc]
 
-    def post(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
+    def post(self, url: str | bytes, data: Any | None = None, json: Any | None = None, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override, misc]
         return super().post(url, **kwargs)  # type: ignore[misc]
 
-    def put(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
+    def put(self, url: str | bytes, data: Any | None = None, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override, misc]
         return super().put(url, **kwargs)  # type: ignore[misc]
 
-    def patch(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
+    def patch(self, url: str | bytes, data: Any | None = None, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override, misc]
         return super().patch(url, **kwargs)  # type: ignore[misc]
 
     def delete(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
