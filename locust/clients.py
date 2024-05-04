@@ -42,6 +42,11 @@ if TYPE_CHECKING:
         cert: str | tuple[str, str] | None
         json: Any | None
 
+    class RESTKwargs(RequestKwargs, total=False):
+        name: str | None
+        catch_response: bool
+        context: dict
+
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
@@ -231,6 +236,27 @@ class HttpSession(requests.Session):
             r.status_code = 0  # with this status_code, content returns None
             r.request = Request(method, url).prepare()
             return r
+
+    def get(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
+        return super().get(url, **kwargs)  # type: ignore[misc]
+
+    def options(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
+        return super().options(url, **kwargs)  # type: ignore[misc]
+
+    def head(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
+        return super().head(url, **kwargs)  # type: ignore[misc]
+
+    def post(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
+        return super().post(url, **kwargs)  # type: ignore[misc]
+
+    def put(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
+        return super().put(url, **kwargs)  # type: ignore[misc]
+
+    def patch(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
+        return super().patch(url, **kwargs)  # type: ignore[misc]
+
+    def delete(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
+        return super().delete(url, **kwargs)  # type: ignore[misc]
 
 
 class ResponseContextManager(LocustResponse):
