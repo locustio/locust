@@ -4,6 +4,7 @@ import re
 import time
 from collections.abc import Generator
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse, urlunparse
 
 import requests
@@ -14,6 +15,33 @@ from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, Reques
 from urllib3 import PoolManager
 
 from .exception import CatchResponseError, LocustError, ResponseError
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable, Mapping, MutableMapping
+    from typing import Any, TypedDict
+
+    from requests.cookies import RequestsCookieJar
+    from typing_extensions import Unpack
+
+    # Annotations below were generated using output from mypy.
+    # Mypy underneath uses information from the https://github.com/python/typeshed repo.
+
+    class RequestKwargs(TypedDict, total=False):
+        params: Any | None  # simplified signature
+        data: Any | None  # simplified signature
+        headers: Mapping[str, str | bytes | None] | None
+        cookies: RequestsCookieJar | MutableMapping[str, str] | None
+        files: Any | None  # simplified signature
+        auth: Any | None  # simplified signature
+        timeout: float | tuple[float, float] | tuple[float, None] | None
+        allow_redirects: bool
+        proxies: MutableMapping[str, str] | None
+        hooks: Mapping[str, Iterable[Callable[[Response], Any]] | Callable[[Response], Any]] | None
+        stream: bool | None
+        verify: bool | str | None
+        cert: str | tuple[str, str] | None
+        json: Any | None
+
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
@@ -94,7 +122,15 @@ class HttpSession(requests.Session):
         finally:
             self.request_name = None
 
-    def request(self, method, url, name=None, catch_response=False, context={}, **kwargs):
+    def request(  # type: ignore[override]
+        self,
+        method: str | bytes,
+        url: str | bytes,
+        name: str | None = None,
+        catch_response: bool = False,
+        context: dict = {},
+        **kwargs: Unpack[RequestKwargs],
+    ):
         """
         Constructs and sends a :py:class:`requests.Request`.
         Returns :py:class:`requests.Response` object.
