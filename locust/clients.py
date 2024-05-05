@@ -236,6 +236,8 @@ class HttpSession(requests.Session):
             r.request = Request(method, url).prepare()
             return r
 
+    # These # type: ignore[override] comments below are needed because our overridden version of functions receives
+    # more arguments than functions in the base class.
     def get(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
         return super().get(url, **kwargs)  # type: ignore[misc]
 
@@ -245,6 +247,8 @@ class HttpSession(requests.Session):
     def head(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
         return super().head(url, **kwargs)  # type: ignore[misc]
 
+    # These # type: ignore[misc] comments below are needed because data and json parameters are already defined in the
+    # RESTKwargs TypedDict. An alternative approach is to define another TypedDict which doesn't contain them.
     def post(self, url: str | bytes, data: Any | None = None, json: Any | None = None, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override, misc]
         return super().post(url, data=data, json=json, **kwargs)  # type: ignore[misc]
 
