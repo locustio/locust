@@ -126,8 +126,7 @@ CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_
 PERCENTILES_TO_REPORT = [0.50, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 0.999, 0.9999, 1.0]
 
 PERCENTILES_TO_STATISTICS = [0.95, 0.99]
-PERCENTILES_TO_CHART = [0.50, 0.95]
-MODERN_UI_PERCENTILES_TO_CHART = [0.95]
+PERCENTILES_TO_CHART = [0.95]
 
 
 class RequestStatsAdditionError(Exception):
@@ -695,9 +694,7 @@ class StatsEntry:
             "current_rps": self.current_rps,
             "current_fail_per_sec": self.current_fail_per_sec,
             "median_response_time": self.median_response_time,
-            "ninetieth_response_time": self.get_response_time_percentile(0.9),  # for legacy ui
-            "ninety_ninth_response_time": self.get_response_time_percentile(0.99),  # for legacy ui
-            **response_time_percentiles,  # for modern ui
+            **response_time_percentiles,
             "avg_content_length": self.avg_content_length,
         }
 
@@ -920,7 +917,7 @@ def stats_history(runner: Runner) -> None:
             current_response_time_percentiles = {
                 f"response_time_percentile_{percentile}": stats.total.get_current_response_time_percentile(percentile)
                 or 0
-                for percentile in MODERN_UI_PERCENTILES_TO_CHART
+                for percentile in PERCENTILES_TO_CHART
             }
 
             r = {
@@ -928,10 +925,6 @@ def stats_history(runner: Runner) -> None:
                 "time": datetime.datetime.now(tz=datetime.timezone.utc).strftime("%H:%M:%S"),
                 "current_rps": stats.total.current_rps or 0,
                 "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
-                "response_time_percentile_1": stats.total.get_current_response_time_percentile(PERCENTILES_TO_CHART[0])
-                or 0,
-                "response_time_percentile_2": stats.total.get_current_response_time_percentile(PERCENTILES_TO_CHART[1])
-                or 0,
                 "total_avg_response_time": stats.total.avg_response_time,
                 "user_count": runner.user_count or 0,
             }

@@ -79,7 +79,29 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             web_ui.stop()
 
     def test_index(self):
-        self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % self.web_port).status_code)
+        self.assertEqual(self.web_ui, self.environment.web_ui)
+
+        html_to_option = {
+            "num_users": ["-u", "100"],
+            "spawn_rate": ["-r", "10.0"],
+        }
+
+        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+        d = pq(response.content.decode("utf-8"))
+
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(d("#root"))
+
+        for html_name_to_test in html_to_option.keys():
+            # Test that setting each spawn option individually populates the corresponding field in the html, and none of the others
+            self.environment.parsed_options = parse_options(html_to_option[html_name_to_test])
+
+            response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+            self.assertEqual(200, response.status_code)
+
+            d = pq(response.content.decode("utf-8"))
+
+            self.assertIn(f'"{html_name_to_test}": {html_to_option[html_name_to_test][1]}', str(d("script")))
 
     def test_index_with_spawn_options(self):
         html_to_option = {
@@ -1049,8 +1071,9 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         d = pq(response.content.decode("utf-8"))
 
-        self.assertIn("Script: <span>locust.py</span>", str(d))
-        self.assertIn("Target Host: <span>http://localhost</span>", str(d))
+        self.assertTrue(d("#root"))
+        self.assertIn('"locustfile": "locust.py"', str(d))
+        self.assertIn('"host": "http://localhost"', str(d))
 
     def test_logs(self):
         log_handler = LogReader()
@@ -1128,7 +1151,7 @@ class TestWebUIAuth(LocustTestCase):
         parser = get_parser(default_config_files=[])
         self.environment.parsed_options = parser.parse_args(["--web-login"])
 
-        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, modern_ui=True, web_login=True)
+        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, web_login=True)
 
         self.web_ui.app.secret_key = "secret!"
         gevent.sleep(0.01)
@@ -1280,99 +1303,3 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual("/test2", rows[2][3])
         self.assertEqual("", rows[3][2])
         self.assertEqual("Aggregated", rows[3][3])
-
-
-class TestModernWebUI(LocustTestCase, _HeaderCheckMixin):
-    def setUp(self):
-        super().setUp()
-
-        get_parser(default_config_files=[])
-        self.stats = self.environment.stats
-
-        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, modern_ui=True)
-        self.web_ui.app.view_functions["request_stats"].clear_cache()
-        gevent.sleep(0.01)
-        self.web_port = self.web_ui.server.server_port
-
-    def tearDown(self):
-        super().tearDown()
-        self.web_ui.stop()
-        self.runner.quit()
-
-    def test_index_with_modern_ui(self):
-        self.assertEqual(self.web_ui, self.environment.web_ui)
-
-        html_to_option = {
-            "num_users": ["-u", "100"],
-            "spawn_rate": ["-r", "10.0"],
-        }
-
-        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
-        d = pq(response.content.decode("utf-8"))
-
-        self.assertEqual(200, response.status_code)
-        self.assertTrue(d("#root"))
-
-        for html_name_to_test in html_to_option.keys():
-            # Test that setting each spawn option individually populates the corresponding field in the html, and none of the others
-            self.environment.parsed_options = parse_options(html_to_option[html_name_to_test])
-
-            response = requests.get("http://127.0.0.1:%i/" % self.web_port)
-            self.assertEqual(200, response.status_code)
-
-            d = pq(response.content.decode("utf-8"))
-
-            self.assertIn(f'"{html_name_to_test}": {html_to_option[html_name_to_test][1]}', str(d("script")))
-
-    def test_web_ui_no_runner(self):
-        env = Environment()
-        web_ui = WebUI(env, "127.0.0.1", 0)
-        gevent.sleep(0.01)
-        try:
-            response = requests.get("http://127.0.0.1:%i/" % web_ui.server.server_port)
-            self.assertEqual(500, response.status_code)
-            self.assertEqual("Error: Locust Environment does not have any runner", response.text)
-        finally:
-            web_ui.stop()
-
-    def test_html_stats_report(self):
-        self.environment.locustfile = "locust.py"
-        self.environment.host = "http://localhost"
-
-        response = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
-        self.assertEqual(200, response.status_code)
-
-        d = pq(response.content.decode("utf-8"))
-
-        self.assertTrue(d("#root"))
-        self.assertIn('"locustfile": "locust.py"', str(d))
-        self.assertIn('"host": "http://localhost"', str(d))
-
-    def test_update_user(self):
-        class MyUser1(User):
-            @task
-            def my_task(self):
-                pass
-
-            @task
-            def my_task_2(self):
-                pass
-
-        class MyUser2(User):
-            @task
-            def my_task(self):
-                pass
-
-        self.environment.user_classes = [MyUser1, MyUser2]
-        self.environment.available_user_classes = {"User1": MyUser1, "User2": MyUser2}
-        self.environment.available_user_tasks = {"User1": MyUser1.tasks, "User2": MyUser2.tasks}
-
-        requests.post(
-            "http://127.0.0.1:%i/user" % self.web_port,
-            json={"user_class_name": "User1", "host": "http://localhost", "tasks": ["my_task_2"]},
-        )
-
-        self.assertEqual(
-            self.environment.available_user_classes["User1"].json(),
-            {"host": "http://localhost", "tasks": ["my_task_2"], "fixed_count": 0, "weight": 1},
-        )

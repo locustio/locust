@@ -166,7 +166,6 @@ class Environment:
         stats_csv_writer: StatsCSV | None = None,
         delayed_start=False,
         userclass_picker_is_active=False,
-        modern_ui=False,
     ) -> WebUI:
         """
         Creates a :class:`WebUI <locust.web.WebUI>` instance for this Environment and start running the web server
@@ -193,7 +192,6 @@ class Environment:
             stats_csv_writer=stats_csv_writer,
             delayed_start=delayed_start,
             userclass_picker_is_active=userclass_picker_is_active,
-            modern_ui=modern_ui,
         )
         return self.web_ui
 
