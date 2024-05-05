@@ -90,7 +90,7 @@ Then the documentation should be build and available at ``docs/_build/index.html
 Making changes to Locust's Web UI
 =================================
 
-The modern Web UI is built using React and Typescript
+The Web UI is built using React and Typescript
 
 Setup
 -----
