@@ -247,13 +247,13 @@ class HttpSession(requests.Session):
         return super().head(url, **kwargs)  # type: ignore[misc]
 
     def post(self, url: str | bytes, data: Any | None = None, json: Any | None = None, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override, misc]
-        return super().post(url, **kwargs)  # type: ignore[misc]
+        return super().post(url, data=data, json=json, **kwargs)  # type: ignore[misc]
 
     def put(self, url: str | bytes, data: Any | None = None, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override, misc]
-        return super().put(url, **kwargs)  # type: ignore[misc]
+        return super().put(url, data=data, **kwargs)  # type: ignore[misc]
 
     def patch(self, url: str | bytes, data: Any | None = None, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override, misc]
-        return super().patch(url, **kwargs)  # type: ignore[misc]
+        return super().patch(url, data=data, **kwargs)  # type: ignore[misc]
 
     def delete(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
         return super().delete(url, **kwargs)  # type: ignore[misc]
