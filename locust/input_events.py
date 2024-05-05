@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import collections
 import logging
 import os
 import sys
@@ -54,7 +55,7 @@ class WindowsKeyPoller:
                 self.read_handle.SetConsoleMode(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT)
                 self.cur_event_length = 0
                 self.cur_keys_length = 0
-                self.captured_chars = []
+                self.captured_chars = collections.deque()
             except pywintypes.error:
                 raise InitError("Terminal says its a tty but we couldn't enable line input. Keyboard input disabled.")
         else:
@@ -65,7 +66,7 @@ class WindowsKeyPoller:
 
     def poll(self):
         if self.captured_chars:
-            return self.captured_chars.pop(0)
+            return self.captured_chars.popleft()
 
         events_peek = self.read_handle.PeekConsoleInput(10000)
 
@@ -82,7 +83,7 @@ class WindowsKeyPoller:
             self.cur_event_length = len(events_peek)
 
         if self.captured_chars:
-            return self.captured_chars.pop(0)
+            return self.captured_chars.popleft()
         else:
             return None
 
