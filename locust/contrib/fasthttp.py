@@ -335,7 +335,7 @@ class FastHttpUser(User):
 
     _callstack_regex = re.compile(r'  File "(\/.[^"]*)", line (\d*),(.*)')
 
-    def __init__(self, environment):
+    def __init__(self, environment) -> None:
         super().__init__(environment)
         if self.host is None:
             raise LocustError(
