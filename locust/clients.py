@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import re
 import time
-from collections.abc import Generator
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse, urlunparse
@@ -17,7 +16,7 @@ from urllib3 import PoolManager
 from .exception import CatchResponseError, LocustError, ResponseError
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable, Mapping, MutableMapping
+    from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping
     from typing import Any, TypedDict
 
     from requests.cookies import RequestsCookieJar
