@@ -596,7 +596,7 @@ class WorkerNode:
 
 
 class WorkerNodes(MutableMapping):
-    def __init__(self):
+    def __init__(self) -> None:
         self._worker_nodes: dict[str, WorkerNode] = {}
 
     def get_by_state(self, state) -> list[WorkerNode]:
@@ -648,7 +648,7 @@ class MasterRunner(DistributedRunner):
     :class:`WorkerRunners <WorkerRunner>` will aggregated.
     """
 
-    def __init__(self, environment, master_bind_host, master_bind_port):
+    def __init__(self, environment, master_bind_host, master_bind_port) -> None:
         """
         :param environment: Environment instance
         :param master_bind_host: Host/interface to use for incoming worker connections
