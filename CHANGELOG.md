@@ -1,6 +1,31 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.27.0](https://github.com/locustio/locust/tree/2.27.0) (2024-05-06)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.26.0...2.27.0)
+
+**Fixed bugs:**
+
+- User Classes with Empty Tasks Results in TypeError: 'NoneType' object is not iterable [\#2694](https://github.com/locustio/locust/issues/2694)
+
+**Closed issues:**
+
+- Why defining run\_time on worker node raises an error [\#2683](https://github.com/locustio/locust/issues/2683)
+
+**Merged pull requests:**
+
+- annotate return types of a few functions to enable more mypy check [\#2702](https://github.com/locustio/locust/pull/2702) ([tdadela](https://github.com/tdadela))
+- refactor\(WindowsKeyPoller\): change implementation of captured\_chars  [\#2701](https://github.com/locustio/locust/pull/2701) ([tdadela](https://github.com/tdadela))
+- refactor: replace deprecated utcfromtimestamp function [\#2700](https://github.com/locustio/locust/pull/2700) ([tdadela](https://github.com/tdadela))
+- Use deque for tasks in taskset instead of plain list [\#2698](https://github.com/locustio/locust/pull/2698) ([cyberw](https://github.com/cyberw))
+- fix: Ensure locust does not crash when an User class has no task [\#2696](https://github.com/locustio/locust/pull/2696) ([hangonlyra](https://github.com/hangonlyra))
+- Fix various spelling errors using codespell [\#2687](https://github.com/locustio/locust/pull/2687) ([cyberw](https://github.com/cyberw))
+- Dispatch/user distribution calculation using Kullback-Leibler divergence [\#2686](https://github.com/locustio/locust/pull/2686) ([tdadela](https://github.com/tdadela))
+- Allow worker process to run with --run-time specified, just log a warning about it being ignored [\#2685](https://github.com/locustio/locust/pull/2685) ([Sawiq](https://github.com/Sawiq))
+- Small cleanup: mypy type-ignore and dev deps [\#2684](https://github.com/locustio/locust/pull/2684) ([tdadela](https://github.com/tdadela))
+- Simplify how locustfiles are found \(using -f\). Don’t automatically append .py [\#2655](https://github.com/locustio/locust/pull/2655) ([DennisKrone](https://github.com/DennisKrone))
+
 ## [2.26.0](https://github.com/locustio/locust/tree/2.26.0) (2024-04-18)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.25.0...2.26.0)
@@ -35,7 +60,6 @@ The most important changes can also be found in [the documentation](https://docs
 - Add an example that displays cache stats using the new UI. [\#2669](https://github.com/locustio/locust/pull/2669) ([obriat](https://github.com/obriat))
 - Update User Classes in Distributed Mode [\#2666](https://github.com/locustio/locust/pull/2666) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
 - fix\(dispatch\): UserClasses weight distribution with gcd [\#2663](https://github.com/locustio/locust/pull/2663) ([llirrikk](https://github.com/llirrikk))
-- chore: fix some comments [\#2659](https://github.com/locustio/locust/pull/2659) ([JohnEndson](https://github.com/JohnEndson))
 - Fix issue with concurrent custom messages and docs [\#2654](https://github.com/locustio/locust/pull/2654) ([cyberw](https://github.com/cyberw))
 - Add functionality to run listener functions for `custom_messages` concurrently [\#2650](https://github.com/locustio/locust/pull/2650) ([samuelspagl](https://github.com/samuelspagl))
 - \[Modern UI\] Escape HTML Entities correctly in Exceptions Table [\#2648](https://github.com/locustio/locust/pull/2648) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
