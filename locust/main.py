@@ -411,8 +411,8 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         if options.worker:
             logger.error("The --master argument cannot be combined with --worker")
             sys.exit(-1)
-        if options.expect_workers_max_wait and not options.expect_workers:
-            logger.error("The --expect-workers-max-wait argument only makes sense when combined with --expect-workers")
+        if options.expect_workers < 1:
+            logger.error(f"Invalid --expect-workers argument ({options.expect_workers}), must be a positive number")
             sys.exit(-1)
         runner = environment.create_master_runner(
             master_bind_host=options.master_bind_host,
