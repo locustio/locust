@@ -179,7 +179,7 @@ def main():
         options.spawn_rate = options.hatch_rate
 
     if options.legacy_ui:
-        sys.stderr.write("[DEPRECATED] The legacy UI is deprecated")
+        sys.stderr.write("[REMOVED] The legacy UI has been removed. Remove this flag to use the new UI")
         sys.exit(1)
 
     # setup logging
