@@ -128,12 +128,8 @@ def main():
             available_user_classes[key] = value
             available_user_tasks[key] = value.tasks or {}
 
-    if len(stats.PERCENTILES_TO_CHART) != 2:
-        logging.error("stats.PERCENTILES_TO_CHART parameter should be 2 parameters \n")
-        sys.exit(1)
-
-    if len(stats.MODERN_UI_PERCENTILES_TO_CHART) > 6:
-        logging.error("stats.MODERN_UI_PERCENTILES_TO_CHART parameter should be a maximum of 6 parameters \n")
+    if len(stats.PERCENTILES_TO_CHART) > 6:
+        logging.error("stats.PERCENTILES_TO_CHART parameter should be a maximum of 6 parameters \n")
         sys.exit(1)
 
     def is_valid_percentile(parameter):
@@ -183,7 +179,8 @@ def main():
         options.spawn_rate = options.hatch_rate
 
     if options.legacy_ui:
-        sys.stderr.write("[DEPRECATED] The legacy UI is deprecated and will be removed soon\n")
+        sys.stderr.write("[REMOVED] The legacy UI has been removed. Remove this flag to use the new UI")
+        sys.exit(1)
 
     # setup logging
     if not options.skip_log_setup:
@@ -480,7 +477,6 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             stats_csv_writer=stats_csv_writer,
             delayed_start=True,
             userclass_picker_is_active=options.class_picker,
-            modern_ui=not options.legacy_ui,
         )
     else:
         web_ui = None
@@ -654,8 +650,8 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         logger.info("Got SIGTERM signal")
         shutdown()
 
-    def save_html_report(use_modern_ui=False):
-        html_report = get_html_report(environment, show_download_link=False, use_modern_ui=use_modern_ui)
+    def save_html_report():
+        html_report = get_html_report(environment, show_download_link=False)
         logger.info("writing html report to file: %s", options.html_file)
         with open(options.html_file, "w", encoding="utf-8") as file:
             file.write(html_report)
@@ -671,10 +667,10 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
         main_greenlet.join()
         if options.html_file:
-            save_html_report(not options.legacy_ui)
+            save_html_report()
     except KeyboardInterrupt:
         if options.html_file:
-            save_html_report(not options.legacy_ui)
+            save_html_report()
     except Exception:
         raise
     shutdown()

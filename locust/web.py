@@ -32,7 +32,7 @@ from gevent import pywsgi
 from . import __version__ as version
 from . import argument_parser
 from . import stats as stats_module
-from .html import get_html_report
+from .html import BUILD_PATH, ROOT_PATH, STATIC_PATH, get_html_report
 from .log import greenlet_exception_logger
 from .runners import STATE_MISSING, STATE_RUNNING, MasterRunner
 from .stats import StatsCSV, StatsCSVFileWriter, StatsErrorDict, sort_stats
@@ -95,7 +95,6 @@ class WebUI:
         stats_csv_writer: StatsCSV | None = None,
         delayed_start=False,
         userclass_picker_is_active=False,
-        modern_ui=False,
     ):
         """
         Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
@@ -118,20 +117,21 @@ class WebUI:
         self.tls_cert = tls_cert
         self.tls_key = tls_key
         self.userclass_picker_is_active = userclass_picker_is_active
-        self.modern_ui = modern_ui
         self.web_login = web_login
         app = Flask(__name__)
         CORS(app)
         self.app = app
         app.jinja_env.add_extension("jinja2.ext.do")
         app.debug = True
-        root_path = os.path.dirname(os.path.abspath(__file__))
-        app.root_path = root_path
-        self.webui_build_path = os.path.join(root_path, "webui", "dist")
+        app.root_path = ROOT_PATH
+        self.webui_build_path = BUILD_PATH
         self.greenlet: gevent.Greenlet | None = None
         self._swarm_greenlet: gevent.Greenlet | None = None
         self.template_args = {}
         self.auth_args = {}
+        self.app.template_folder = BUILD_PATH
+        self.app.static_folder = STATIC_PATH
+        self.app.static_url_path = "/assets/"
 
         if self.web_login:
             self.login_manager = LoginManager()
@@ -160,11 +160,7 @@ class WebUI:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             self.update_template_args()
 
-            if self.modern_ui:
-                self.set_static_modern_ui()
-
-                return render_template("index.html", template_args=self.template_args)
-            return render_template("index.html", **self.template_args)
+            return render_template("index.html", template_args=self.template_args)
 
         @app.route("/swarm", methods=["POST"])
         @self.auth_required_if_enabled
@@ -302,7 +298,6 @@ class WebUI:
             res = get_html_report(
                 self.environment,
                 show_download_link=not request.args.get("download"),
-                use_modern_ui=self.modern_ui,
                 theme=theme,
             )
             if request.args.get("download"):
@@ -416,25 +411,12 @@ class WebUI:
                 report["total_fail_per_sec"] = total_stats["current_fail_per_sec"]
                 report["total_avg_response_time"] = total_stats["avg_response_time"]
                 report["fail_ratio"] = environment.runner.stats.total.fail_ratio
-
-                if self.modern_ui:
-                    report["current_response_time_percentiles"] = {
-                        f"response_time_percentile_{percentile}": environment.runner.stats.total.get_current_response_time_percentile(
-                            percentile
-                        )
-                        for percentile in stats_module.MODERN_UI_PERCENTILES_TO_CHART
-                    }
-                else:
-                    report["current_response_time_percentile_1"] = (
-                        environment.runner.stats.total.get_current_response_time_percentile(
-                            stats_module.PERCENTILES_TO_CHART[0]
-                        )
+                report["current_response_time_percentiles"] = {
+                    f"response_time_percentile_{percentile}": environment.runner.stats.total.get_current_response_time_percentile(
+                        percentile
                     )
-                    report["current_response_time_percentile_2"] = (
-                        environment.runner.stats.total.get_current_response_time_percentile(
-                            stats_module.PERCENTILES_TO_CHART[1]
-                        )
-                    )
+                    for percentile in stats_module.PERCENTILES_TO_CHART
+                }
 
             if isinstance(environment.runner, MasterRunner):
                 workers = []
@@ -520,15 +502,10 @@ class WebUI:
             if not self.web_login:
                 return redirect(url_for("index"))
 
-            if self.modern_ui:
-                self.set_static_modern_ui()
-
-                return render_template(
-                    "auth.html",
-                    auth_args=self.auth_args,
-                )
-            else:
-                return "Web Auth is only available on the modern web ui."
+            return render_template(
+                "auth.html",
+                auth_args=self.auth_args,
+            )
 
         @app.route("/user", methods=["POST"])
         def update_user():
@@ -581,11 +558,6 @@ class WebUI:
 
         return wrapper
 
-    def set_static_modern_ui(self):
-        self.app.template_folder = self.webui_build_path
-        self.app.static_folder = os.path.join(self.webui_build_path, "assets")
-        self.app.static_url_path = "/assets/"
-
     def update_template_args(self):
         override_host_warning = False
         if self.environment.host:
@@ -634,17 +606,6 @@ class WebUI:
             else None
         )
 
-        if self.modern_ui:
-            percentiles = {
-                "percentiles_to_chart": stats_module.MODERN_UI_PERCENTILES_TO_CHART,
-                "percentiles_to_statistics": stats_module.PERCENTILES_TO_STATISTICS,
-            }
-        else:
-            percentiles = {
-                "percentile1": stats_module.PERCENTILES_TO_CHART[0],
-                "percentile2": stats_module.PERCENTILES_TO_CHART[1],
-            }
-
         self.template_args = {
             "locustfile": self.environment.locustfile,
             "state": self.environment.runner.state,
@@ -670,7 +631,8 @@ class WebUI:
             "available_shape_classes": available_shape_classes,
             "available_user_tasks": available_user_tasks,
             "users": users,
-            **percentiles,
+            "percentiles_to_chart": stats_module.PERCENTILES_TO_CHART,
+            "percentiles_to_statistics": stats_module.PERCENTILES_TO_STATISTICS,
         }
 
     def _update_shape_class(self, shape_class_name):

@@ -272,7 +272,5 @@ The list of statistics parameters that can be modified is:
 +-------------------------------------------+--------------------------------------------------------------------------------------+
 | PERCENTILES_TO_CHART                      | List of response time percentiles in the screen of chart for UI                      |
 +-------------------------------------------+--------------------------------------------------------------------------------------+
-| MODERN_UI_PERCENTILES_TO_CHART            | List of response time percentiles in the screen of chart for the UI                  |
-+-------------------------------------------+--------------------------------------------------------------------------------------+
 | PERCENTILES_TO_STATISTICS                 | List of response time percentiles in the screen of statistics for UI                 |
 +-------------------------------------------+--------------------------------------------------------------------------------------+
