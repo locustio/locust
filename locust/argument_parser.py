@@ -500,7 +500,7 @@ def setup_parser_arguments(parser):
         "--legacy-ui",
         default=False,
         action="store_true",
-        help="Use the legacy frontend for the web UI (deprecated, support will be removed soon)",
+        help=configargparse.SUPPRESS,
         env_var="LOCUST_LEGACY_UI",
     )
 
