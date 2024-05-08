@@ -215,11 +215,14 @@ class WebUI:
             for key, value in request.form.items():
                 if key == "user_count":  # if we just renamed this field to "users" we wouldn't need this
                     user_count = int(value)
+                    parsed_options_dict["users"] = user_count
                 elif key == "spawn_rate":
                     spawn_rate = float(value)
+                    parsed_options_dict[key] = spawn_rate
                 elif key == "host":
                     # Replace < > to guard against XSS
                     environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
+                    parsed_options_dict[key] = environment.host
                 elif key == "user_classes":
                     # Set environment.parsed_options.user_classes to the selected user_classes
                     parsed_options_dict[key] = request.form.getlist("user_classes")
