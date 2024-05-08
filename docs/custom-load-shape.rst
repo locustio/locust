@@ -101,7 +101,7 @@ This shape would create create in the first 10 seconds 10 User of ``UserA``. In 
 Reusing common options in custom shapes
 ---------------------------------------
 
-By default the *Users*, *Spawn Rate* and *Run Time* options will be hidden from the UI, and if you specify them on command line Locust will log a warning. This is because those options dont directly apply to shapes, and specifying them is most often a mistake.
+When using shapes, the the *Users*, *Spawn Rate* and *Run Time* options will be hidden from the UI, and if you specify them on command line Locust will log a warning. This is because those options dont directly apply to shapes, and specifying them might be a mistake.
 
 If you really want to combine a shape with these options, set the ``use_common_options`` attribute and access them from ``self.runner.environment.parsed_options``:
 
