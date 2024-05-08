@@ -32,6 +32,16 @@ version = locust.__version__
 DEFAULT_CONFIG_FILES = ("~/.locust.conf", "locust.conf", "pyproject.toml")
 
 
+# Clean up downloaded locustfile on exit
+def exit_handler(filename) -> None:
+    try:
+        os.remove(filename)
+    except FileNotFoundError:
+        pass  # when multiple workers are running on the same machine, another one may already have deleted it
+    except PermissionError:
+        pass  # this happens occasionally on windows on GH, maybe for the same reason?
+
+
 class LocustArgumentParser(configargparse.ArgumentParser):
     """Drop-in replacement for `configargparse.ArgumentParser` that adds support for
     optionally exclude arguments from the UI.
@@ -170,14 +180,7 @@ def download_locustfile_from_url(url: str) -> str:
     with open(os.path.join(tempfile.gettempdir(), url.rsplit("/", 1)[-1]), "w") as locustfile:
         locustfile.write(response.text)
 
-    # Clean up downloaded files on exit
-    def exit_handler():
-        try:
-            os.remove(locustfile.name)
-        except FileNotFoundError:
-            pass  # this is normal when multiple workers are running on the same machine
-
-    atexit.register(exit_handler)
+    atexit.register(exit_handler, locustfile.name)
     return locustfile.name
 
 
@@ -263,13 +266,7 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
     with open(os.path.join(tempfile.gettempdir(), filename), "w", encoding="utf-8") as locustfile:
         locustfile.write(msg.data["contents"])
 
-    def exit_handler():
-        try:
-            os.remove(locustfile.name)
-        except FileNotFoundError:
-            pass  # this is normal when multiple workers are running on the same machine
-
-    atexit.register(exit_handler)
+    atexit.register(exit_handler, locustfile.name)
 
     tempclient.close()
     return locustfile.name
