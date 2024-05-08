@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "locust"
 license = { text = "MIT" }
-description = "Developer friendly load testing framework"
+description = "Developer-friendly load testing framework"
 dynamic = ["version"]
 requires-python = ">=3.9"
 dependencies = [
