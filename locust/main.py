@@ -175,11 +175,11 @@ def main():
         sys.exit(1)
 
     if options.hatch_rate:
-        sys.stderr.write("[DEPRECATED] The --hatch-rate parameter has been renamed --spawn-rate\n")
-        options.spawn_rate = options.hatch_rate
+        sys.stderr.write("--hatch-rate parameter has been renamed --spawn-rate\n")
+        sys.exit(1)
 
     if options.legacy_ui:
-        sys.stderr.write("[REMOVED] The legacy UI has been removed. Remove this flag to use the new UI")
+        sys.stderr.write("--legacy-ui is no longer supported, remove the parameter to continue\n")
         sys.exit(1)
 
     # setup logging
