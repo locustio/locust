@@ -1,8 +1,9 @@
 import logging
 import logging.config
+import re
 import socket
 
-HOSTNAME = socket.gethostname()
+HOSTNAME = re.sub(r"\..*", "", socket.gethostname())
 
 # Global flag that we set to True if any unhandled exception occurs in a greenlet
 # Used by main.py to set the process return code to non-zero
