@@ -434,7 +434,9 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         try:
             options.run_time = parse_timespan(options.run_time)
         except ValueError:
-            logger.error("Valid --run-time formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
+            logger.error(
+                f"Invalid --run-time argument ({options.run_time}), accepted formats are for example 120, 120s, 2m, 3h, 3h30m10s."
+            )
             sys.exit(1)
 
     if options.csv_prefix:
