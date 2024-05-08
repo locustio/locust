@@ -101,23 +101,20 @@ This shape would create create in the first 10 seconds 10 User of ``UserA``. In 
 Reusing command line parameters in custom shapes
 ------------------------------------------------
 
-By default, using a custom shape will disregard default run parameters (in both the CLI and the Web UI):
-- `--run-time`
-- `--spawn-rate`
-- `--users`
+If you use custom load shape and the Users, Spawn Rate and Run Time options will be hidden from the UI, and if you specify them on command line Locust will log a warning. This is because those options dont apply to shapes, so it is most often a mistake.
 
-
-If you need one or all of those parameters, you can force locust to accept them by setting the `use_common_options` attribute to `True`:
-
+If you *do* want to combine a shape with these options, set the ``use_common_options`` attribute and access them from ``self.runner.environment.parsed_options``:
 
 .. code-block:: python
 
     class MyCustomShape(LoadTestShape):
-
         use_common_options = True
-
+        
         def tick(self):
-            expected_run_time = self.runner.environment.parsed_options.run_time
-            # Do something with this expected run time
-            ...
+            run_time = self.get_run_time()
+            if run_time < self.runner.environment.parsed_options.run_time:
+                # User count rounded to nearest hundred, just like in previous example
+                user_count = round(run_time, -2)
+                return (user_count, self.runner.environment.parsed_options.spawn_rate)
+                
             return None
