@@ -15,7 +15,7 @@ dependencies = [
     "requests >=2.26.0",
     "msgpack >=1.0.0",
     "pyzmq >=25.0.0",
-    "geventhttpclient ==2.2.1",
+    "geventhttpclient >=2.3.1",
     "ConfigArgParse >=1.5.5",
     "tomli >=1.1.0; python_version<'3.11'",
     "psutil >=5.9.1",
