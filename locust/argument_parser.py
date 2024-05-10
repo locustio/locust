@@ -706,7 +706,7 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         "-V",
         action="version",
         help="Show program's version number and exit",
-        version=f"locust {version} from {os.path.dirname(__file__)} (Python {platform.python_version()}, {" ".join(ssl.OPENSSL_VERSION.split(" ")[0:2])})",
+        version=f"locust {version} from {os.path.dirname(__file__)} (Python {platform.python_version()}, {' '.join(ssl.OPENSSL_VERSION.split(' ')[0:2])})",
     )
     other_group.add_argument(
         "--exit-code-on-error",
