@@ -10,7 +10,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from . import stats as stats_module
 from .runners import STATE_STOPPED, STATE_STOPPING, MasterRunner
-from .stats import sort_stats
+from .stats import sort_stats, update_stats_history
 from .user.inspectuser import get_ratio
 
 PERCENTILES_FOR_HTML_REPORT = [0.50, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1.0]
@@ -54,6 +54,7 @@ def get_html_report(
         {**exc, "nodes": ", ".join(exc["nodes"])} for exc in environment.runner.exceptions.values()
     ]
 
+    update_stats_history(environment.runner)
     history = stats.history
 
     static_js = []
