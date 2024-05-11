@@ -907,28 +907,32 @@ def sort_stats(stats: dict[Any, S]) -> list[S]:
     return [stats[key] for key in sorted(stats.keys())]
 
 
+def update_stats_history(runner: Runner) -> None:
+    stats = runner.stats
+    current_response_time_percentiles = {
+        f"response_time_percentile_{percentile}": stats.total.get_current_response_time_percentile(percentile) or 0
+        for percentile in PERCENTILES_TO_CHART
+    }
+
+    r = {
+        **current_response_time_percentiles,
+        "time": datetime.datetime.now(tz=datetime.timezone.utc).strftime("%H:%M:%S"),
+        "current_rps": stats.total.current_rps or 0,
+        "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
+        "total_avg_response_time": stats.total.avg_response_time,
+        "user_count": runner.user_count or 0,
+    }
+    stats.history.append(r)
+
+
 def stats_history(runner: Runner) -> None:
     """Save current stats info to history for charts of report."""
     while True:
-        stats = runner.stats
-        if not stats.total.use_response_times_cache:
+        if not runner.stats.total.use_response_times_cache:
             break
         if runner.state != "stopped":
-            current_response_time_percentiles = {
-                f"response_time_percentile_{percentile}": stats.total.get_current_response_time_percentile(percentile)
-                or 0
-                for percentile in PERCENTILES_TO_CHART
-            }
+            update_stats_history(runner)
 
-            r = {
-                **current_response_time_percentiles,
-                "time": datetime.datetime.now(tz=datetime.timezone.utc).strftime("%H:%M:%S"),
-                "current_rps": stats.total.current_rps or 0,
-                "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
-                "total_avg_response_time": stats.total.avg_response_time,
-                "user_count": runner.user_count or 0,
-            }
-            stats.history.append(r)
         gevent.sleep(HISTORY_STATS_INTERVAL_SEC)
 
 
