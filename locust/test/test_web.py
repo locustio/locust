@@ -183,10 +183,17 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self._check_csv_headers(response.headers, "failures")
 
     def test_request_stats_with_errors(self):
-        self.stats.log_error("GET", "/", Exception("Error1337"))
+        self.stats.log_error("GET", "/", Exception("Error with special characters {'foo':'bar'}"))
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
-        self.assertIn("Error1337", response.text)
+
+        # escaped, old school
+        # self.assertIn(
+        #     '"Exception(&quot;Error with special characters{&#x27;foo&#x27;:&#x27;bar&#x27;}&quot;)"', response.text
+        # )
+
+        # not html escaping, leave that to the frontend
+        self.assertIn("\"Exception(\\\"Error with special characters {'foo':'bar'}\\\")", response.text)
 
     def test_reset_stats(self):
         try:
