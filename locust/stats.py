@@ -708,7 +708,10 @@ class StatsError:
 
     @classmethod
     def parse_error(cls, error: Exception | str | None) -> str:
-        string_error = repr(error)
+        if isinstance(error, str):
+            string_error = error
+        else:
+            string_error = repr(error)
         target = "object at 0x"
         target_index = string_error.find(target)
         if target_index < 0:
@@ -730,16 +733,19 @@ class StatsError:
 
     def to_name(self) -> str:
         error = self.error
-        if isinstance(error, CatchResponseError):
-            # standalone
-            unwrapped_error = error.args[0]
-        if isinstance(error, str) and error.startswith("CatchResponseError("):
-            # distributed
-            length = len("CatchResponseError(")
-            unwrapped_error = error[length:-1]
-        else:
-            # standalone, unwrapped exception
-            unwrapped_error = repr(error)
+        if isinstance(error, str):  # in distributed mode, all errors have been converted to strings
+            if error.startswith("CatchResponseError("):
+                # unwrap CatchResponseErrors
+                length = len("CatchResponseError(")
+                unwrapped_error = error[length:-1]
+            else:
+                unwrapped_error = error
+        else:  # in standalone mode, errors are still objects
+            if isinstance(error, CatchResponseError):
+                # unwrap CatchResponseErrors
+                unwrapped_error = error.args[0]
+            else:
+                unwrapped_error = repr(error)
 
         return f"{self.method} {self.name}: {unwrapped_error}"
 
