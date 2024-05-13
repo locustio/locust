@@ -21,7 +21,7 @@ The most important changes can also be found in [the documentation](https://docs
 - Use deque for tasks in taskset instead of plain list [\#2698](https://github.com/locustio/locust/pull/2698) ([cyberw](https://github.com/cyberw))
 - fix: Ensure locust does not crash when an User class has no task [\#2696](https://github.com/locustio/locust/pull/2696) ([hangonlyra](https://github.com/hangonlyra))
 - Fix various spelling errors using codespell [\#2687](https://github.com/locustio/locust/pull/2687) ([cyberw](https://github.com/cyberw))
-- Dispatch/user distribution calculation using Kullback-Leibler divergence [\#2686](https://github.com/locustio/locust/pull/2686) ([tdadela](https://github.com/tdadela))
+- Dispatch/user distribution calculation using Kullback-Leibler divergence. Allow float weights. [\#2686](https://github.com/locustio/locust/pull/2686) ([tdadela](https://github.com/tdadela))
 - Allow worker process to run with --run-time specified, just log a warning about it being ignored [\#2685](https://github.com/locustio/locust/pull/2685) ([Sawiq](https://github.com/Sawiq))
 - Small cleanup: mypy type-ignore and dev deps [\#2684](https://github.com/locustio/locust/pull/2684) ([tdadela](https://github.com/tdadela))
 - Simplify how locustfiles are found \(using -f\). Don’t automatically append .py [\#2655](https://github.com/locustio/locust/pull/2655) ([DennisKrone](https://github.com/DennisKrone))

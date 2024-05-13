@@ -7,7 +7,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 2.27.0
 ======
 * Simplify how locustfiles are found (using -f). Don’t automatically append .py https://github.com/locustio/locust/pull/2655
-* Use more efficient algorithm to calculate user distribution https://github.com/locustio/locust/pull/2686
+* Use more efficient algorithm to calculate user distribution, and allow float weights https://github.com/locustio/locust/pull/2686
 * Various minor fixes
 
 2.26.0
