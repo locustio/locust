@@ -396,11 +396,7 @@ class WebUI:
             for s in chain(sort_stats(environment.runner.stats.entries), [environment.runner.stats.total]):
                 stats.append(s.to_dict())
 
-            for e in environment.runner.errors.values():
-                err_dict = e.serialize()
-                err_dict["name"] = escape(err_dict["name"])
-                err_dict["error"] = escape(err_dict["error"])
-                errors.append(err_dict)
+            errors = [e.serialize() for e in environment.runner.errors.values()]
 
             # Truncate the total number of stats and errors displayed since a large number of rows will cause the app
             # to render extremely slowly. Aggregate stats should be preserved.
