@@ -158,7 +158,7 @@ class TestLocustRunner(LocustRunnerTestCase):
         with self.assertRaises(AssertionError) as assert_raises_context:
             runner.spawn_users({BadUser.__name__: 1})
         self.assertIn(
-            "Perhaps you defined your own __init__ and forgot to call the base constructor",
+            "Attribute 'environment' is missing on user BadUser. Perhaps you defined your own __init__ and forgot to call the base constructor",
             str(assert_raises_context.exception),
         )
 
