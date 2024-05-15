@@ -144,6 +144,24 @@ class LocustRunnerTestCase(LocustTestCase):
 
 
 class TestLocustRunner(LocustRunnerTestCase):
+    def test_missing_constructor_call_in_user(self):
+        class BadUser(User):
+            def __init__(self, *args, **kwargs):
+                pass  # not calling base class constructor!!!
+
+            @task
+            def t(self):
+                pass
+
+        environment = Environment(user_classes=[BadUser])
+        runner = LocalRunner(environment)
+        with self.assertRaises(AssertionError) as assert_raises_context:
+            runner.spawn_users({BadUser.__name__: 1})
+        self.assertIn(
+            "Attribute 'environment' is missing on user BadUser. Perhaps you defined your own __init__ and forgot to call the base constructor",
+            str(assert_raises_context.exception),
+        )
+
     def test_cpu_warning(self):
         _monitor_interval = runners.CPU_MONITOR_INTERVAL
         runners.CPU_MONITOR_INTERVAL = 2.0
