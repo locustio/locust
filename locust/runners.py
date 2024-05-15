@@ -223,6 +223,9 @@ class Runner:
             new_users: list[User] = []
             while n < spawn_count:
                 new_user = self.user_classes_by_name[user_class](self.environment)
+                assert hasattr(
+                    new_user, "environment"
+                ), f"Attribute 'environment' is missing on user {user_class}. Perhaps you defined your own __init__ and forgot to call the base constructor? (super().__init__(*args, **kwargs))"
                 new_user.start(self.user_greenlets)
                 new_users.append(new_user)
                 n += 1
