@@ -723,7 +723,7 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         dest="stop_timeout",
         metavar="<number>",
         default="0",
-        help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. This parameter only needs to be specified for the master process when running Locust distributed.",
+        help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. When running distributed, this only needs to be specified on the master.",
         env_var="LOCUST_STOP_TIMEOUT",
     )
     other_group.add_argument(
