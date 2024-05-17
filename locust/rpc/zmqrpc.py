@@ -4,6 +4,7 @@ from locust.util.exception_handler import retry
 import msgpack.exceptions as msgerr
 import zmq.error as zmqerr
 import zmq.green as zmq
+from urllib3.util.connection import HAS_IPV6
 
 from .protocol import Message
 
@@ -15,7 +16,8 @@ class BaseSocket:
 
         self.socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
         self.socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 30)
-        self.socket.setsockopt(zmq.IPV6, 1)
+        if HAS_IPV6:
+            self.socket.setsockopt(zmq.IPV6, 1)
 
     @retry()
     def send(self, msg):
