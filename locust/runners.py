@@ -107,6 +107,7 @@ class Runner:
         self.shape_last_tick: tuple[int, float] | tuple[int, float, list[type[User]] | None] | None = None
         self.current_cpu_usage: int = 0
         self.cpu_warning_emitted: bool = False
+        self.time_diff_warning_emitted: bool = False
         self.worker_cpu_warning_emitted: bool = False
         self.current_memory_usage: int = 0
         self.greenlet.spawn(self.monitor_cpu_and_memory).link_exception(greenlet_exception_handler)
@@ -1029,9 +1030,11 @@ class MasterRunner(DistributedRunner):
                 )
                 if self.rebalancing_enabled() and self.state == STATE_RUNNING and self.spawning_completed:
                     self.start(self.target_user_count, self.spawn_rate)
-                # emit a warning if the worker's clock seem to be out of sync with our clock
-                # if abs(time() - msg.data["time"]) > 5.0:
-                #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
+                if not self.time_diff_warning_emitted and abs(time.time() - msg.data["time"]) > 5.0:
+                    logger.warning(
+                        f"The worker node's timestamp ({msg.data['time']} differs significantly from master's ({time.time()}). For the statistics to be correct the different locust servers need to have synchronized clocks."
+                    )
+                    self.time_diff_warning_emitted = True
             elif msg.type == "locustfile":
                 logging.debug("Worker requested locust file")
                 assert self.environment.parsed_options
