@@ -47,7 +47,7 @@ function TableRowContent({ content, formatter, round, markdown }: ITableRowConte
     return <Markdown skipHtml={false}>{content as string}</Markdown>;
   }
 
-  return <>{content}</>;
+  return content;
 }
 
 export default function Table<Row extends Record<string, any> = Record<string, string | number>>({
