@@ -47,7 +47,7 @@ function TableRowContent({ content, formatter, round, markdown }: ITableRowConte
     return <Markdown skipHtml={false}>{content as string}</Markdown>;
   }
 
-  return content;
+  return <>{content}</>;
 }
 
 export default function Table<Row extends Record<string, any> = Record<string, string | number>>({
@@ -62,9 +62,21 @@ export default function Table<Row extends Record<string, any> = Record<string, s
   });
 
   return (
-    <TableContainer component={Paper}>
+    <TableContainer
+      component={Paper}
+      sx={{
+        overflowX: 'visible',
+      }}
+    >
       <MuiTable>
-        <TableHead>
+        <TableHead
+          sx={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 2,
+            backgroundColor: 'background.paper',
+          }}
+        >
           <TableRow>
             {structure.map(({ title, key }) => (
               <TableCell
