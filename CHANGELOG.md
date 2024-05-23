@@ -1,6 +1,35 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.28.0](https://github.com/locustio/locust/tree/2.28.0) (2024-05-23)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.27.0...2.28.0)
+
+**Fixed bugs:**
+
+- The Charts presentation in the report downloaded by locust is problematic [\#2706](https://github.com/locustio/locust/issues/2706)
+- Locust insists on using IPv6 despite being in an IPv4 stack. [\#2689](https://github.com/locustio/locust/issues/2689)
+- When there is an error in the FAILURES of the front-end page when there is a worker, there is no escape. [\#2674](https://github.com/locustio/locust/issues/2674)
+
+**Closed issues:**
+
+- Pin the headers and aggregated row to the top and bottom of the window [\#2688](https://github.com/locustio/locust/issues/2688)
+- Remove legacy UI [\#2673](https://github.com/locustio/locust/issues/2673)
+- TaskSet's `_task_queue` should be a `collections.deque`? [\#2653](https://github.com/locustio/locust/issues/2653)
+
+**Merged pull requests:**
+
+- Pin the headers to the top of the window [\#2717](https://github.com/locustio/locust/pull/2717) ([JavierUhagon](https://github.com/JavierUhagon))
+- Dont enable ipv6 for zmq if no ipv6 stack exists [\#2715](https://github.com/locustio/locust/pull/2715) ([cyberw](https://github.com/cyberw))
+- Give better error message if User subclass doesnt call base constructor [\#2713](https://github.com/locustio/locust/pull/2713) ([cyberw](https://github.com/cyberw))
+- Stop quoting error messages an extra time in distributed mode [\#2712](https://github.com/locustio/locust/pull/2712) ([cyberw](https://github.com/cyberw))
+- Lower log levels for exceptions in flask [\#2711](https://github.com/locustio/locust/pull/2711) ([cyberw](https://github.com/cyberw))
+- Stop HTML escaping errors for /stats/requests endpoint [\#2710](https://github.com/locustio/locust/pull/2710) ([cyberw](https://github.com/cyberw))
+- Update Stats History on HTML Report [\#2709](https://github.com/locustio/locust/pull/2709) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Logging: Only print hostname instead of FQDN [\#2705](https://github.com/locustio/locust/pull/2705) ([cyberw](https://github.com/cyberw))
+- Remove legacy UI [\#2703](https://github.com/locustio/locust/pull/2703) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- WebUI: update users, spawn\_rate, host and run\_time in `parsed_options` \(for LoadShapes that might access it\) [\#2656](https://github.com/locustio/locust/pull/2656) ([raulparada](https://github.com/raulparada))
+
 ## [2.27.0](https://github.com/locustio/locust/tree/2.27.0) (2024-05-06)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.26.0...2.27.0)
