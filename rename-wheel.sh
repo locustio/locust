@@ -8,7 +8,7 @@
 python_ver=$(python -c 'import platform; print("".join(platform.python_version_tuple()[:2]))')
 
 wheel_file=$(find dist/ -type f -name '*.whl')
-new_wheel_file=$(echo ${wheel_file} | sed "s/-cp[0-9].*$/-py3-none-any/")
+new_wheel_file=$(echo ${wheel_file} | sed "s/-cp[0-9].*$/-py3-none-any.whl/")
 
 echo "Renaming ${wheel_file} to ${new_wheel_file}"
 mv ${wheel_file} ${new_wheel_file}
