@@ -530,7 +530,17 @@ class WebUI:
                 (self.host, self.port), self.app, log=None, keyfile=self.tls_key, certfile=self.tls_cert
             )
         else:
-            self.server = pywsgi.WSGIServer((self.host, self.port), self.app, log=None)
+
+            class RewriteFilter(logging.Filter):
+                def filter(self, record) -> bool:
+                    msg = record.msg
+                    if msg.find("gevent._socket3.socket at") and msg.find("Invalid HTTP method: '\x16\x03"):
+                        record.msg = f"A request against Locust's Web UI was made using https:// instead of http:// (underlying error was {record.msg})"
+                    return True
+
+            logger.addFilter(RewriteFilter())
+            self.server = pywsgi.WSGIServer((self.host, self.port), self.app, log=None, error_log=logger)
+
         self.server.serve_forever()
 
     def stop(self):
