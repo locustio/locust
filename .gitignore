@@ -30,3 +30,5 @@ yarn-error.log
 .venv
 .DS_Store
 .python-version
+poetry.lock
+locust/webui/dist
