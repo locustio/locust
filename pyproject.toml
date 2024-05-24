@@ -34,7 +34,13 @@ classifiers = [
 ]
 
 packages = [{ include = "locust" }]
-include = ["locust/webui/dist/**/*", "locust/_version.py", "poetry.lock"]
+include = [
+    "locust/webui/dist/**/*",
+    "locust/_version.py",
+    { path = "poetry.lock", format = [
+        "sdist",
+    ] },
+]
 exclude = [
     "locust/webui/public",
     "locust/webui/src",
