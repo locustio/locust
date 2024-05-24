@@ -8,6 +8,9 @@ setup_build::
 build: setup_build
 	rm -f dist/* && poetry build && ./rename-wheel.sh
 
+install: setup_build
+	poetry install
+
 frontend_build:
 	yarn webui:install && yarn webui:build
 
