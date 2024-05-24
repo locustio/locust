@@ -1,9 +1,12 @@
 test:
 	tox
 
+setup_build::
+	python3 -m pip install --upgrade poetry && poetry self add "poetry-dynamic-versioning[plugin]"  
+
 .PHONY: build
-build:
-	rm -f dist/* && python3 -m pip install --upgrade poetry && poetry build && ./rename-wheel.sh
+build: setup_build
+	rm -f dist/* && poetry build && ./rename-wheel.sh
 
 frontend_build:
 	yarn webui:install && yarn webui:build
