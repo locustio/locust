@@ -1,8 +1,9 @@
 test:
 	tox
 
+.PHONY: build
 build:
-	rm -f dist/* && python3 -m pip install --upgrade build && python3 -m build .
+	rm -f dist/* && python3 -m pip install --upgrade poetry && poetry build && ./rename-wheel.sh
 
 frontend_build:
 	yarn webui:install && yarn webui:build
@@ -15,9 +16,3 @@ build_docs:
 
 changelog:
 	@echo "Not supported any more. Run ./generate_changelog.py <version_number> instead!"
-
-sass_watch:
-	sass --watch locust/static/sass:locust/static/css
-
-sass_build:
-	sass --update locust/static/sass:locust/static/css
