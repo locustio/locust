@@ -34,7 +34,7 @@ classifiers = [
 ]
 
 packages = [{ include = "locust" }]
-include = ["locust/webui/dist/**/*", "locust/_version"]
+include = ["locust/webui/dist/**/*", "locust/_version.py", "poetry.lock"]
 exclude = [
     "locust/webui/public",
     "locust/webui/src",
