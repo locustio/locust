@@ -60,6 +60,13 @@ const createOptions = ({ charts, title, seriesData, colors }: ICreateOptions) =>
     x: 10,
     y: 10,
   },
+  dataZoom: [
+    {
+      type: 'inside',
+      start: 0,
+      end: 50,
+    },
+  ],
   tooltip: {
     trigger: 'axis',
     formatter: (params: TooltipComponentOption) => {
