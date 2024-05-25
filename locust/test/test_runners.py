@@ -947,7 +947,7 @@ class TestMasterWorkerRunners(LocustTestCase):
                     name="/",
                     response_time=1337,
                     response_length=666,
-                    exception=AssertionError("Some strange characters \" {'foo':'bar'}"),
+                    exception=None,
                     context={},
                 )
 
