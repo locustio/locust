@@ -16,7 +16,7 @@ setup_build: check-yarn
 .SILENT:
 .PHONY: check-yarn
 check-yarn:
-	command -v foo >/dev/null 2>&1 || { echo >&2 "Locust requires the yarn binary to be available in this shell to build the web front-end.\nSee: https://classic.yarnpkg.com/lang/en/docs/install"; exit 1; }
+	command -v yarn >/dev/null 2>&1 || { echo >&2 "Locust requires the yarn binary to be available in this shell to build the web front-end.\nSee: https://classic.yarnpkg.com/lang/en/docs/install"; exit 1; }
 
 frontend_build:
 	yarn webui:install && yarn webui:build
