@@ -10,7 +10,8 @@ install: setup_build
 
 .ONESHELL:
 setup_build: check-yarn
-	python3 -m pip install --upgrade poetry
+	python -m pip install --upgrade poetry
+	poetry config virtualenvs.create false
 	poetry self add "poetry-dynamic-versioning[plugin]"
 
 .SILENT:
