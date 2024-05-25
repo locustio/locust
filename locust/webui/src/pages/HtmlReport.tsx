@@ -11,7 +11,7 @@ import { SwarmRatios } from 'components/SwarmRatios/SwarmRatios';
 import { INITIAL_THEME } from 'constants/theme';
 import createTheme from 'styles/theme';
 import { IReport } from 'types/swarm.types';
-import { formatLocalDate } from 'utils/date';
+import { formatLocaleString } from 'utils/date';
 
 const theme = createTheme(window.theme || INITIAL_THEME);
 
@@ -52,7 +52,7 @@ export default function HtmlReport({
           <Box sx={{ display: 'flex', columnGap: 0.5 }}>
             <Typography fontWeight={600}>During:</Typography>
             <Typography>
-              {formatLocalDate(startTime)} - {formatLocalDate(endTime)}
+              {formatLocaleString(startTime)} - {formatLocaleString(endTime)}
             </Typography>
           </Box>
 
