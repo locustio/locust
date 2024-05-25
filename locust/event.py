@@ -162,11 +162,11 @@ class Events:
 
     spawning_complete: EventHook
     """
-    Fired when all simulated users has been spawned.
+    Fired when all simulated users has been spawned. The event is fired on master first, and then distributed to workers.
 
     Event arguments:
 
-    :param user_count: Number of users that were spawned
+    :param user_count: Number of users that were spawned (in total, not per-worker)
     """
 
     quitting: EventHook
