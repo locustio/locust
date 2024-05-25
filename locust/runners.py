@@ -1284,6 +1284,7 @@ class WorkerRunner(DistributedRunner):
         self.spawn_users(user_classes_spawn_count)
         self.stop_users(user_classes_stop_count)
         self.spawning_complete(sum(self.user_classes_count.values()))
+        self.worker_state = STATE_RUNNING
 
     def heartbeat(self) -> NoReturn:
         while True:
