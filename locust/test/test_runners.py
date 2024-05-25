@@ -2590,7 +2590,7 @@ class TestMasterRunner(LocustRunnerTestCase):
             master.start(100, 20)
             self.assertEqual(7, len(server.get_messages()))
             spawn_messages = server.get_messages("spawn")
-            for i, (_, msg) in enumerate(spawn_messages):
+            for i, msg in enumerate(server.get_messages("spawn")):
                 self.assertDictEqual({"TestUser": int((i + 1) * 20)}, msg.data["user_classes_count"])
 
             # Normally, this attribute would be updated when the
@@ -2775,11 +2775,8 @@ class TestMasterRunner(LocustRunnerTestCase):
             master.start(7, 7)
             self.assertEqual(15, len(server.outbox))
 
-            num_users = sum(
-                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type == "spawn"
-            )
-
-            self.assertEqual(7, num_users, "Total number of locusts that would have been spawned is not 7")
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for msg in server.get_messages("spawn"))
+            self.assertEqual(7, num_users)
 
     def test_spawn_fewer_locusts_than_workers(self):
         class TestUser(User):
@@ -2796,9 +2793,7 @@ class TestMasterRunner(LocustRunnerTestCase):
             master.start(2, 2)
             self.assertEqual(15, len(server.outbox))
 
-            num_users = sum(
-                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type == "spawn"
-            )
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for msg in server.get_messages("spawn"))
 
             self.assertEqual(2, num_users, "Total number of locusts that would have been spawned is not 2")
 
@@ -2865,27 +2860,21 @@ class TestMasterRunner(LocustRunnerTestCase):
 
             # Wait for shape_worker to update user_count
             sleep(0.5)
-            num_users = sum(
-                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type == "spawn"
-            )
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for msg in server.get_messages("spawn"))
             self.assertEqual(
                 1, num_users, "Total number of users in first stage of shape test is not 1: %i" % num_users
             )
 
             # Wait for shape_worker to update user_count again
             sleep(1.5)
-            num_users = sum(
-                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type == "spawn"
-            )
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for msg in server.get_messages("spawn"))
             self.assertEqual(
                 1, num_users, "Total number of users in second stage of shape test is not 1: %i" % num_users
             )
 
             # Wait for shape_worker to update user_count few times but not reach the end yet
             sleep(2.5)
-            num_users = sum(
-                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type == "spawn"
-            )
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for msg in server.get_messages("spawn"))
             self.assertEqual(
                 3, num_users, "Total number of users in second stage of shape test is not 3: %i" % num_users
             )
@@ -2923,18 +2912,14 @@ class TestMasterRunner(LocustRunnerTestCase):
             sleep(0.5)
 
             # Wait for shape_worker to update user_count
-            num_users = sum(
-                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type == "spawn"
-            )
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for msg in server.get_messages("spawn"))
             self.assertEqual(
                 1, num_users, "Total number of users in first stage of shape test is not 1: %i" % num_users
             )
 
             # Wait for shape_worker to update user_count again
             sleep(2)
-            num_users = sum(
-                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type == "spawn"
-            )
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for msg in server.get_messages("spawn"))
             self.assertEqual(
                 3, num_users, "Total number of users in second stage of shape test is not 3: %i" % num_users
             )
@@ -2972,9 +2957,7 @@ class TestMasterRunner(LocustRunnerTestCase):
             sleep(0.5)
 
             # Wait for shape_worker to update user_count
-            num_users = sum(
-                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type == "spawn"
-            )
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for msg in server.get_messages("spawn"))
             self.assertEqual(
                 5, num_users, "Total number of users in first stage of shape test is not 5: %i" % num_users
             )
@@ -2982,9 +2965,7 @@ class TestMasterRunner(LocustRunnerTestCase):
             # Wait for shape_worker to update user_count again
             sleep(2)
             msgs = defaultdict(dict)
-            for _, msg in server.outbox:
-                if msg.type != "spawn":
-                    continue
+            for msg in server.get_messages("spawn"):
                 msgs[msg.node_id][msg.data["timestamp"]] = sum(msg.data["user_classes_count"].values())
             # Count users for the last received messages
             num_users = sum(v[max(v.keys())] for v in msgs.values())
