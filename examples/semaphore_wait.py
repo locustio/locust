@@ -16,7 +16,6 @@ class WebsiteUser(HttpUser):
 
     def on_start(self):
         all_users_spawned.wait()
-        self.wait()
 
     @task
     def index(self):
