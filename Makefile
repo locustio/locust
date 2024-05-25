@@ -1,12 +1,14 @@
 test:
 	tox
 
-setup_build::
-	python3 -m pip install --upgrade poetry && poetry self add "poetry-dynamic-versioning[plugin]"  
+.ONESHELL:
+setup_build:
+	python3 -m pip install --upgrade poetry
+	poetry self add "poetry-dynamic-versioning[plugin]"  
 
 .PHONY: build
 build: setup_build
-	rm -f dist/* && poetry build && ./rename-wheel.sh
+	rm -rf dist/* && poetry build && ./rename-wheel.sh
 
 install: setup_build
 	poetry install
