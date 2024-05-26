@@ -1,3 +1,4 @@
+===============================
 Some common installation issues
 ===============================
 
@@ -61,96 +62,30 @@ Deploy on local enviroment
 For those who want to deploy a local environment, follow the steps
 below.
 
-.. raw:: html
-
-   <h4>
-
 :construction: Work enviroment:
 
-.. raw:: html
-
-   </h4>
-
-.. raw:: html
-
-   <li>
 
 Create Python’s enviroment: py -m venv env
 
-.. raw:: html
-
-   </li>
-
-.. raw:: html
-
-   <li>
 
 Activate the enviroment on WINDOWS:
-env:raw-latex:`\Scripts`:raw-latex:`\activate`
+env: ``\Scripts\activate```
 
-.. raw:: html
-
-   </li>
-
-.. raw:: html
-
-   <li>
 
 Activate the enviroment on MAC: source env/bin/activate
 
-.. raw:: html
-
-   </li>
-
-.. raw:: html
-
-   <h4>
-
 :books: Dependencies
 
-.. raw:: html
-
-   </h4>
-
-.. raw:: html
-
-   <li>
 
 Install dependencies with: pip3 install -r requirements.txt
 
-.. raw:: html
-
-   </li>
-
-.. raw:: html
-
-   <h4>
-
 :signal_strength: Load testing
 
-.. raw:: html
-
-   </h4>
-
-.. raw:: html
-
-   <li>
 
 Launch locust -f scripts/locustfile.py
 
-.. raw:: html
-
-   </li>
-
-.. raw:: html
-
-   <li>
 
 Open http://localhost:8089/ on your browser
-
-.. raw:: html
-
-   </li>
 
 .. _some-common-installation-issues-1:
 
@@ -229,93 +164,22 @@ Deploy on local enviroment
 For those who want to deploy a local environment, follow the steps
 below.
 
-.. raw:: html
-
-   <h4>
-
 :construction: Work enviroment:
 
-.. raw:: html
 
-   </h4>
-
-.. raw:: html
-
-   <li>
-
-Create Python’s enviroment: py -m venv env
-
-.. raw:: html
-
-   </li>
-
-.. raw:: html
-
-   <li>
-
-Activate the enviroment on WINDOWS:
-env:raw-latex:`\Scripts`:raw-latex:`\activate`
-
-.. raw:: html
-
-   </li>
-
-.. raw:: html
-
-   <li>
-
-Activate the enviroment on MAC: source env/bin/activate
-
-.. raw:: html
-
-   </li>
-
-.. raw:: html
-
-   <h4>
+#. Create Python’s enviroment: py -m venv env
+   - Activate the enviroment on WINDOWS: ``env:\Scripts:\activate``
+   - Activate the enviroment on MAC: ``source env/bin/activate``
 
 :books: Dependencies
 
-.. raw:: html
-
-   </h4>
-
-.. raw:: html
-
-   <li>
 
 Install dependencies with: pip3 install -r requirements.txt
 
-.. raw:: html
-
-   </li>
-
-.. raw:: html
-
-   <h4>
-
 :signal_strength: Load testing
 
-.. raw:: html
-
-   </h4>
-
-.. raw:: html
-
-   <li>
 
 Launch locust -f scripts/locustfile.py
 
-.. raw:: html
-
-   </li>
-
-.. raw:: html
-
-   <li>
 
 Open http://localhost:8089/ on your browser
-
-.. raw:: html
-
-   </li>

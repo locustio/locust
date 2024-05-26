@@ -1,5 +1,6 @@
-Add things that you ran into and solved here! Anyone with a GitHub
-account can contribute!
+===
+FAQ
+===
 
 If you have questions about Locust that are not answered here, please
 check

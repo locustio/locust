@@ -11,6 +11,7 @@ Getting started
 
     what-is-locust
     installation
+    Installation
     quickstart
 
 
@@ -49,6 +50,7 @@ Other functionalities
     extending-locust
     logging
     use-as-lib
+    Extensions
 
 
 Further reading / knowledgebase
@@ -59,6 +61,8 @@ Further reading / knowledgebase
 
     developing-locust
     further-reading
+    FAQ
+    Articles
 
 
 API
