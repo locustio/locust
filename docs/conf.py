@@ -12,6 +12,7 @@ from locust.argument_parser import get_empty_argument_parser, setup_parser_argum
 import os
 import subprocess
 
+
 # Run command `locust --help` and store output in cli-help-output.txt which is included in the docs
 def save_locust_help_output():
     cli_help_output_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "cli-help-output.txt")
