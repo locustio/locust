@@ -1,8 +1,8 @@
 .. _developing-locust:
 
-=================
-Developing Locust
-=================
+================================
+Developing and Documening Locust
+================================
 
 You want to contribute to Locust? Great! Here is a list of `open bugs/feature requests <https://github.com/locustio/locust/issues>`_.
 
@@ -72,19 +72,28 @@ You can validate the whole project using tox:
 Build documentation
 ===================
 
-The documentation source is in the `docs/ <https://github.com/locustio/locust/tree/master/docs/>`_ directory. To build the documentation you first need to install the required Python packages:
+The documentation source is in the `docs/ <https://github.com/locustio/locust/tree/master/docs/>`_ directory. To build the documentation
 
-.. code-block:: console
+#. Fork Locust on `GitHub <https://github.com/locustio/locust/>`_ and install Lucust in editable mode:
 
-    $ pip3 install -r docs/requirements.txt
+    .. code-block:: console
 
-Then you can build the documentation locally using:
+        $ git clone git://github.com/<YourName>/locust.git # clone the repo
+        $ pip3 install -e locust/                          # install in editable mode
 
-.. code-block:: console
+#. Install the documentation requirements:
 
-    $ make build_docs
+    .. code-block:: console
+
+        $ pip3 install -r docs/requirements.txt
+
+#. Build the documentation locally:
+
+    .. code-block:: console
+
+        $ make build_docs
     
-Then the documentation should be build and available at ``docs/_build/index.html``.
+View your generated documentation by opening ``docs/_build/index.html``.
 
 
 Making changes to Locust's Web UI
