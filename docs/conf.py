@@ -142,6 +142,7 @@ exclude_dirnames = []
 
 html_show_sourcelink = False
 html_file_suffix = ".html"
+html_theme = "sphinx_rtd_theme"
 
 # Custom CSS overrides
 html_static_path = ["_static"]
