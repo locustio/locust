@@ -147,9 +147,11 @@ html_theme = "sphinx_rtd_theme"
 
 # Custom CSS overrides
 html_static_path = ["_static"]
-html_context = {
-    "css_files": ["_static/theme-overrides.css", "_static/css/rtd_sphinx_search.min.css"],
-}
+html_css_files = [
+    "_static/theme-overrides.css",
+    "_static/css/rtd_sphinx_search.min.css"
+]
+
 
 
 # HTML theme
