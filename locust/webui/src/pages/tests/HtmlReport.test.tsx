@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 
 import HtmlReport from 'pages/HtmlReport';
 import { swarmReportMock } from 'test/mocks/swarmState.mock';
-import { formatLocalDate } from 'utils/date';
+import { formatLocaleString } from 'utils/date';
 
 describe('HtmlReport', () => {
   test('renders a report', () => {
@@ -24,7 +24,7 @@ describe('HtmlReport', () => {
 
     expect(
       getByText(
-        `${formatLocalDate(swarmReportMock.startTime)} - ${formatLocalDate(
+        `${formatLocaleString(swarmReportMock.startTime)} - ${formatLocaleString(
           swarmReportMock.endTime,
         )}`,
       ),
