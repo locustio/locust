@@ -925,7 +925,7 @@ def update_stats_history(runner: Runner) -> None:
         "time": format_utc_timestamp(time.time()),
         "current_rps": stats.total.current_rps or 0,
         "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
-        "total_avg_response_time": stats.total.avg_response_time,
+        "total_avg_response_time": proper_round(stats.total.avg_response_time, digits=2),
         "user_count": runner.user_count or 0,
     }
     stats.history.append(r)
