@@ -85,6 +85,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
     "sphinx_search.extension",
+    "sphinx_rtd_theme",
 ]
 
 # autoclass options
