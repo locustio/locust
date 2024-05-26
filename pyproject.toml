@@ -53,8 +53,11 @@ script = "build.py"
 generate-setup-file = false
 
 [tool.poetry.urls]
-"Help/Questions" = "https://stackoverflow.com/questions/tagged/locust"
-"Issue tracker" = "https://github.com/locustio/locust/issues"
+"Help/Questions" = "https://github.com/orgs/locustio/discussions/"
+"Issue Tracker" = "https://github.com/locustio/locust/issues"
+
+"Stack Overflow" = "https://stackoverflow.com/questions/tagged/locust"
+"Slack" = "https://locustio.slack.com/"
 
 [tool.poetry-dynamic-versioning]
 enable = true
