@@ -1,4 +1,5 @@
-export const formatLocaleString = (utcTimestamp: string) => new Date(utcTimestamp).toLocaleString();
+export const formatLocaleString = (utcTimestamp: string) =>
+  utcTimestamp ? new Date(utcTimestamp).toLocaleString() : '';
 
 export const formatLocaleTime = (utcTimestamp: string) =>
-  new Date(utcTimestamp).toLocaleTimeString();
+  utcTimestamp ? new Date(utcTimestamp).toLocaleTimeString() : '';
