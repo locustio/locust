@@ -1,8 +1,8 @@
 .. _developing-locust:
 
-================================
-Developing and Documening Locust
-================================
+=================================
+Developing and Documenting Locust
+=================================
 
 You want to contribute to Locust? Great! Here is a list of `open bugs/feature requests <https://github.com/locustio/locust/issues>`_.
 
