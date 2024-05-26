@@ -12,8 +12,6 @@ from locust.argument_parser import get_empty_argument_parser, setup_parser_argum
 import os
 import subprocess
 
-import sphinx_rtd_theme
-
 
 # Run command `locust --help` and store output in cli-help-output.txt which is included in the docs
 def save_locust_help_output():
@@ -146,14 +144,10 @@ exclude_dirnames = []
 html_show_sourcelink = False
 html_file_suffix = ".html"
 html_theme = "sphinx_rtd_theme"
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-
 
 # Custom CSS overrides
 html_static_path = ["_static"]
-html_context = {
-    "css_files": ["_static/theme-overrides.css", "_static/css/rtd_sphinx_search.min.css"],
-}
+html_css_files = ["_static/theme-overrides.css", "_static/css/rtd_sphinx_search.min.css"]
 
 
 # HTML theme

@@ -5,7 +5,7 @@ Sphinx-Substitution-Extensions==2020.9.30.0
 Pygments==2.16.1
 alabaster==0.7.16
 babel==2.13.0
-docutils==0.20.1
+docutils==0.18.1
 imagesize==1.4.1
 snowballstemmer==2.2.0
 sphinx-prompt==1.5.0
