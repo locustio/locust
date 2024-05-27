@@ -534,8 +534,8 @@ class WebUI:
             class RewriteFilter(logging.Filter):
                 def filter(self, record) -> bool:
                     msg = record.msg
-                    if msg.find("gevent._socket3.socket at") and msg.find("Invalid HTTP method: '\x16\x03"):
-                        record.msg = f"A request against Locust's Web UI was made using https:// instead of http:// (underlying error was {record.msg})"
+                    if "gevent._socket3.socket at" in msg and "Invalid HTTP method: '\x16\x03" in msg:
+                        record.msg = f"An https request was made against Locust's Web UI (which was expecting http). Underlying error was: {record.msg}"
                     return True
 
             logger.addFilter(RewriteFilter())
