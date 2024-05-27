@@ -88,7 +88,7 @@ class User(metaclass=UserMeta):
     Method that returns the time between the execution of locust tasks in milliseconds
     """
 
-    tasks: list[TaskSet | Callable] = []
+    tasks: dict[TaskSet | Callable, int | float] = {}
     """
     Collection of python callables and/or TaskSet classes that the Locust user(s) will run.
 

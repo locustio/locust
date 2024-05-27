@@ -32,7 +32,7 @@ LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING = ["running", 
 
 @runtime_checkable
 class TaskHolder(Protocol[TaskT]):
-    tasks: list[TaskT]
+    tasks: dict[TaskT, int | float]
 
 
 @overload
@@ -226,7 +226,7 @@ class TaskSet(metaclass=TaskSetMeta):
     will then continue in the first TaskSet).
     """
 
-    tasks: dict[Callable | TaskSet, int | float] = []
+    tasks: dict[Callable | TaskSet, int | float] = dict()
     """
     Collection of python callables and/or TaskSet classes that the User(s) will run.
 
