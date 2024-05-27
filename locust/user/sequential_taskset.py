@@ -26,8 +26,12 @@ class SequentialTaskSetMeta(TaskSetMeta):
                 # compared to methods declared with @task
                 if isinstance(value, list):
                     new_tasks.extend(value)
+                elif isinstance(value, dict):
+                    for task, weight in value.items():
+                        for _ in range(weight):
+                            new_tasks.append(task)
                 else:
-                    raise ValueError("On SequentialTaskSet the task attribute can only be set to a list")
+                    raise ValueError("The 'tasks' attribute can only be set to list or dict")
 
             if "locust_task_weight" in dir(value):
                 # method decorated with @task
