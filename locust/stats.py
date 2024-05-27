@@ -113,7 +113,7 @@ HISTORY_STATS_INTERVAL_SEC = 5
 
 """Default interval for how frequently CSV files are written if this option is configured."""
 CSV_STATS_INTERVAL_SEC = 1
-CSV_STATS_FLUSH_INTERVAL_SEC = 10
+CSV_STATS_FLUSH_INTERVAL_SEC = 5
 
 """
 Default window size/resolution - in seconds - when calculating the current
