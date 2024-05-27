@@ -121,6 +121,7 @@ def tag(*tags: str) -> Callable[[TaskT], TaskT]:
 
     def decorator_func(decorated):
         if hasattr(decorated, "tasks"):
+            # TODO Tasks should become a dict
             decorated.tasks = list(map(tag(*tags), decorated.tasks))
         else:
             if "locust_tag_set" not in decorated.__dict__:
@@ -155,6 +156,8 @@ def get_tasks_from_base_classes(bases, class_dict) -> dict[Callable | TaskSet, i
                     new_tasks[task] = count
                 else:
                     new_tasks[task] = 1
+        else:
+            raise ValueError("The 'tasks' attribute can only be set to list or dict")
 
     for item in class_dict.values():
         if "locust_task_weight" in dir(item):
@@ -223,7 +226,7 @@ class TaskSet(metaclass=TaskSetMeta):
     will then continue in the first TaskSet).
     """
 
-    tasks: list[TaskSet | Callable] = []
+    tasks: dict[Callable | TaskSet, int | float] = []
     """
     Collection of python callables and/or TaskSet classes that the User(s) will run.
 
