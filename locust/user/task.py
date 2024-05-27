@@ -5,6 +5,7 @@ from locust.exception import InterruptTaskSet, MissingWaitTimeError, RescheduleT
 import logging
 import random
 import traceback
+from itertools import accumulate
 from collections import deque
 from time import time
 from typing import (
@@ -272,6 +273,9 @@ class TaskSet(metaclass=TaskSetMeta):
         self._task_queue: deque = deque()
         self._time_start = time()
 
+        self.task_list = list(self.tasks.keys())
+        self.task_cum_weights = list(accumulate(self.tasks.values()))
+
         if isinstance(parent, TaskSet):
             self._user = parent.user
         else:
@@ -397,7 +401,7 @@ class TaskSet(metaclass=TaskSetMeta):
             raise Exception(
                 f"No tasks defined on {self.__class__.__name__}{extra_message} use the @task decorator or set the 'tasks' attribute of the TaskSet"
             )
-        return random.choice(self.tasks)
+        return random.choices(self.task_list, cum_weights=self.task_cum_weights)
 
     def wait_time(self):
         """
@@ -471,7 +475,7 @@ class DefaultTaskSet(TaskSet):
             raise Exception(
                 f"No tasks defined on {self.user.__class__.__name__}{extra_message} Use the @task decorator or set the 'tasks' attribute of the User (or mark it as abstract = True if you only intend to subclass it)"
             )
-        return random.choice(self.user.tasks)
+        return random.choices(self.user.task_list, cum_weights=self.user.task_cum_weights)
 
     def execute_task(self, task):
         if hasattr(task, "tasks") and issubclass(task, TaskSet):

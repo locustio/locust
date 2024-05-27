@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from itertools import accumulate
+
 from locust.clients import HttpSession
 from locust.exception import LocustError, StopUser
 from locust.user.task import (
@@ -120,6 +122,8 @@ class User(metaclass=UserMeta):
         super().__init__()
         self.environment = environment
         """A reference to the :py:class:`Environment <locust.env.Environment>` in which this user is running"""
+        self.task_list = list(self.tasks.keys())
+        self.task_cum_weights = list(accumulate(self.tasks.values()))
         self._state: str | None = None
         self._greenlet: greenlet.Greenlet | None = None
         self._group: Group
