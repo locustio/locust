@@ -8,7 +8,6 @@ from locust.user.task import (
     LOCUST_STATE_RUNNING,
     LOCUST_STATE_STOPPING,
     LOCUST_STATE_WAITING,
-    DefaultTaskSet,
     TaskSet,
     get_tasks_from_base_classes,
 )
@@ -145,7 +144,7 @@ class User(metaclass=UserMeta):
     @final
     def run(self):
         self._state = LOCUST_STATE_RUNNING
-        self._taskset_instance = DefaultTaskSet(self)
+        self._taskset_instance = TaskSet(self)
         try:
             # run the TaskSet on_start method, if it has one
             try:

@@ -278,10 +278,21 @@ class TaskSet(metaclass=TaskSetMeta):
 
         if isinstance(parent, TaskSet):
             self._user = parent.user
+            self._isdefaulttaskset = False
         else:
             self._user = parent
+            self._isdefaulttaskset = True
 
         self._parent = parent
+        s = self.user if isinstance(self._parent, TaskSet) else self
+        if not s.tasks:
+            if getattr(s, "task", None):
+                extra_message = ", but you have set a 'task' attribute - maybe you meant to set 'tasks'?"
+            else:
+                extra_message = "."
+            raise Exception(
+                f"No tasks defined on {s.__class__.__name__}{extra_message} Use the @task decorator or set the 'tasks' attribute"
+            )
 
         # if this class doesn't have a min_wait, max_wait or wait_function defined, copy it from Locust
         if not self.min_wait:
@@ -369,16 +380,23 @@ class TaskSet(metaclass=TaskSetMeta):
         self.execute_task(self._task_queue.popleft())
 
     def execute_task(self, task):
-        # check if the function is a method bound to the current locust, and if so, don't pass self as first argument
-        if hasattr(task, "__self__") and task.__self__ == self:
-            # task is a bound method on self
-            task()
-        elif hasattr(task, "tasks") and issubclass(task, TaskSet):
+        # Check if this is a nested TaskSet or User's internal
+        if not self._isdefaulttaskset:  # Nested case
+            s = self
+        else:  # We are in User
+            # check if the function is a method bound to the current locust, and if so, don't pass self as first argument
+            if hasattr(task, "__self__") and task.__self__ == self:
+                # task is a bound method on self
+                task()
+                return
+            s = self.user
+
+        if hasattr(task, "tasks") and issubclass(task, TaskSet):
             # task is another (nested) TaskSet class
-            task(self).run()
+            task(s).run()
         else:
             # task is a function
-            task(self)
+            task(s)
 
     def schedule_task(self, task_callable, first=False):
         """
@@ -393,15 +411,9 @@ class TaskSet(metaclass=TaskSetMeta):
             self._task_queue.append(task_callable)
 
     def get_next_task(self):
-        if not self.tasks:
-            if getattr(self, "task", None):
-                extra_message = ", but you have set a 'task' attribute - maybe you meant to set 'tasks'?"
-            else:
-                extra_message = "."
-            raise Exception(
-                f"No tasks defined on {self.__class__.__name__}{extra_message} use the @task decorator or set the 'tasks' attribute of the TaskSet"
-            )
-        return random.choices(self.task_list, cum_weights=self.task_cum_weights)
+        return random.choices(self.user.task_list, cum_weights=self.user.task_cum_weights) if self._isdefaulttaskset\
+            else random.choices(self.task_list, cum_weights=self.task_cum_weights)
+
 
     def wait_time(self):
         """
@@ -458,29 +470,3 @@ class TaskSet(metaclass=TaskSetMeta):
         Shortcut to the client :py:attr:`client <locust.User.client>` attribute of this TaskSet's :py:class:`User <locust.User>`
         """
         return self.user.client
-
-
-class DefaultTaskSet(TaskSet):
-    """
-    Default root TaskSet that executes tasks in User.tasks.
-    It executes tasks declared directly on the Locust with the user instance as the task argument.
-    """
-
-    def get_next_task(self):
-        if not self.user.tasks:
-            if getattr(self.user, "task", None):
-                extra_message = ", but you have set a 'task' attribute on your class - maybe you meant to set 'tasks'?"
-            else:
-                extra_message = "."
-            raise Exception(
-                f"No tasks defined on {self.user.__class__.__name__}{extra_message} Use the @task decorator or set the 'tasks' attribute of the User (or mark it as abstract = True if you only intend to subclass it)"
-            )
-        return random.choices(self.user.task_list, cum_weights=self.user.task_cum_weights)
-
-    def execute_task(self, task):
-        if hasattr(task, "tasks") and issubclass(task, TaskSet):
-            # task is  (nested) TaskSet class
-            task(self.user).run()
-        else:
-            # task is a function
-            task(self.user)
