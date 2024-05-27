@@ -121,8 +121,8 @@ def tag(*tags: str) -> Callable[[TaskT], TaskT]:
 
     def decorator_func(decorated):
         if hasattr(decorated, "tasks"):
-            # TODO Tasks should become a dict
-            decorated.tasks = list(map(tag(*tags), decorated.tasks))
+            tagged_tasks = map(tag(*tags), decorated.tasks.keys())
+            decorated.tasks = {task: weight for task, weight in zip(tagged_tasks, decorated.tasks.values())}
         else:
             if "locust_tag_set" not in decorated.__dict__:
                 decorated.locust_tag_set = set()
